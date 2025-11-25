@@ -154,21 +154,24 @@
             return text.replace(/<[^>]*>?/gm, '');
         };
         
-        // REINFORCED: Prepares a string for CSV cell insertion using standard quoting.
-        // It removes custom comma/semicolon replacement and focuses only on:
-        // 1. Stripping HTML tags.
-        // 2. Escaping internal double quotes by doubling them (" becomes "")
-        // 3. Wrapping the entire field in double quotes.
+        // CRITICAL FIX: Reinforced CSV safety with multi-step normalization
         const safe = (t) => {
             // Ensure input is a string
             const str = String(t);
             // 1. Remove HTML tags
-            const stripped = stripHtmlTags(str);
+            let stripped = stripHtmlTags(str);
             
-            // 2. Escape internal double quotes by doubling them (This is the standard CSV escape)
+            // 2. Normalize: Remove newlines and carriage returns, which break CSV rows unexpectedly.
+            stripped = stripped.replace(/(\r\n|\n|\r)/gm, ' '); 
+
+            // 3. Aggressive CSV Separator Protection: Replace all commas with a semicolon (safer internal delimiter).
+            // This prevents data overflow if quotes fail or if the LLM adds commas outside quotes.
+            stripped = stripped.replace(/,/g, ';');
+            
+            // 4. Escape internal double quotes by doubling them (This is the standard CSV escape)
             const escaped = (stripped || '').replace(/"/g, '""');
 
-            // 3. Wrap the entire field in double quotes.
+            // 5. Wrap the entire field in double quotes.
             return `"${escaped}"`;
         };
         
@@ -277,8 +280,12 @@
                     options = { A: optA, B: optB, C: optC, D: optD };
                 }
 
+                // Use crypto.randomUUID() for a globally unique ID (UUID)
+                const uniqueId = crypto.randomUUID(); 
+
                 parsed.push({
-                    id: Date.now() + index + Math.random(),
+                    id: Date.now() + index + Math.random(), // Temporary React key
+                    uniqueId: uniqueId,                     // Permanent tracking ID
                     discipline,
                     type,
                     difficulty,
@@ -640,8 +647,15 @@
             // Tracks the language of the currently loaded questions (for translation checks)
             const [contentLanguage, setContentLanguage] = useState('English');
             
+            // NEW: State for search term
+            const [searchTerm, setSearchTerm] = useState('');
+
             // Filter state for the question list view
             const [filterMode, setFilterMode] = useState('all');
+
+            // NEW: State for storing historical questions retrieved from Firebase
+            const [historicalQuestions, setHistoricalQuestions] = useState([]);
+            const [showHistory, setShowHistory] = useState(false);
 
             const fileInputRef = useRef(null);
 
@@ -800,6 +814,7 @@
                     }
 
                     setQuestions([]); // Clear local state after database wipe
+                    setHistoricalQuestions([]); // Clear history view as well
                 } catch (e) {
                     console.error("Database deletion failed:", e);
                     showMessage(`Failed to clear database: ${e.message}`, 5000);
@@ -851,6 +866,7 @@
                                 type: q.type,
                                 difficulty: q.difficulty,
                                 dateAdded: new Date().toISOString(),
+                                uniqueId: q.uniqueId // Store the new unique ID
                             }));
                         }
                     });
@@ -871,6 +887,56 @@
                     console.error("Firestore operation failed:", e);
                     setStatus(`Database Error: Skipping persistence. ${e.message}`);
                     return newQuestions; // Return all to the user if saving fails
+                }
+            };
+
+            // NEW FUNCTION: Loads all question metadata from Firestore history
+            const loadHistory = async () => {
+                if (!db || !isAuthReady) {
+                    showMessage("Database connection not ready. Try again in a moment.", 3000);
+                    return;
+                }
+
+                setShowHistory(true);
+                setStatus('Loading historical records...');
+
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const collectionPath = window.Firebase.collection(db, `artifacts/${appId}/public/data/${QUESTION_COLLECTION}`);
+                
+                try {
+                    const snapshot = await window.Firebase.getDocs(collectionPath);
+                    const loadedHistory = snapshot.docs.map(doc => doc.data()).map(data => ({
+                        // Reconstruct minimal object structure for display
+                        id: data.id || data.uniqueId,
+                        uniqueId: data.uniqueId || data.id,
+                        discipline: data.discipline || 'N/A',
+                        difficulty: data.difficulty || 'N/A',
+                        // Use cleanQuestion for display in history mode
+                        question: data.cleanQuestion || 'Question text unavailable',
+                        status: 'accepted', // All items in history are considered accepted
+                        sourceUrl: '', // URLs not stored in metadata for space
+                        dateAdded: data.dateAdded || 'N/A'
+                    }));
+
+                    setHistoricalQuestions(loadedHistory);
+                    setStatus(`Loaded ${loadedHistory.length} historical unique questions.`);
+                } catch (e) {
+                    console.error("Failed to load history:", e);
+                    showMessage(`Failed to load history: ${e.message}`, 5000);
+                    setHistoricalQuestions([]);
+                }
+            };
+            
+            const handleToggleHistory = () => {
+                if (showHistory) {
+                    // Switching back to session view
+                    setShowHistory(false);
+                    setHistoricalQuestions([]);
+                    setFilterMode('all');
+                } else {
+                    // Switching to history view
+                    loadHistory();
+                    setFilterMode('all');
                 }
             };
 
@@ -1022,6 +1088,7 @@ ${getFileContext()}
                 }
 
                 setIsGenerating(true);
+                setShowHistory(false); // Hide history when generating new content
                 setStatus('Drafting Scenarios...');
                 const systemPrompt = constructSystemPrompt();
                 const userPrompt = `Generate ${config.batchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}. Ensure links work for UE 5.7 or latest available.`;
@@ -1087,7 +1154,7 @@ ${getFileContext()}
                              setStatus('Translated');
                              setContentLanguage(toLang);
                     }
-                } catch(e) { console.error(e); setStatus('Fail'); } finally { setIsProcessing(false); }
+                } catch(e) { setStatus('Fail'); } finally { setIsProcessing(false); }
             };
 
             const handleTranslateClick = () => {
@@ -1159,10 +1226,10 @@ ${getFileContext()}
                 URL.revokeObjectURL(url);
             };
 
-            // Helper function to convert questions array to CSV content string (Standard Export)
+            // Helper function to convert questions array to CSV content string
             const getCSVContent = (validQuestions, creatorName, reviewerName, exportLanguage, includeHeaders = true) => {
-                // Header must match the order of data constructed below
-                const headers = ["ID", "Discipline", "Type", "Difficulty", "Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer", "Generation Date", "Source URL", "Source Excerpt", "Creator", "Reviewer"];
+                // NEW HEADER: Added "Question ID"
+                const headers = ["ID", "Question ID", "Discipline", "Type", "Difficulty", "Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer", "Generation Date", "Source URL", "Source Excerpt", "Creator", "Reviewer"];
                 let csvContent = includeHeaders ? headers.map(safe).join(',') + '\n' : '';
                 
                 const generationDate = formatDate(new Date());
@@ -1171,7 +1238,8 @@ ${getFileContext()}
                     const o = row.options || {};
                     // Data row construction must match headers
                     const rowData = [
-                        (i + 1).toString(), // ID
+                        (i + 1).toString(), // ID (Sequential)
+                        row.uniqueId,       // NEW: Question ID (UUID)
                         row.discipline,     // Discipline
                         row.type,           // Type
                         row.difficulty,     // Difficulty
@@ -1281,8 +1349,14 @@ ${getFileContext()}
                         const translatedQuestions = parseQuestions(translatedText);
 
                         if (translatedQuestions.length > 0) {
+                            // Map the translated content back to the original unique ID for integrity
+                            const finalTranslatedQuestions = translatedQuestions.map((tq, i) => ({
+                                ...tq, 
+                                uniqueId: validQuestions[i]?.uniqueId || tq.uniqueId
+                            }));
+
                             // Generate CSV content for the translated batch
-                            const csvContent = getCSVContent(translatedQuestions, config.creatorName, config.reviewerName, targetLang);
+                            const csvContent = getCSVContent(finalTranslatedQuestions, config.creatorName, config.reviewerName, targetLang);
 
                             const disciplinePart = config.discipline.replace(/\s/g,'_');
                             const langPart = targetLang.replace(/\s/g,'_');
@@ -1321,19 +1395,78 @@ ${getFileContext()}
                 </div>
             );
 
+            // Component to display historical question metadata
+            const HistoryDisplay = ({ history }) => {
+                const filteredHistory = history.filter(q => 
+                    q.question.toLowerCase().includes(normalizedSearchTerm) ||
+                    q.uniqueId.toLowerCase().includes(normalizedSearchTerm) ||
+                    q.discipline.toLowerCase().includes(normalizedSearchTerm) ||
+                    q.difficulty.toLowerCase().includes(normalizedSearchTerm)
+                );
+
+                return (
+                    <div className="space-y-4">
+                        {filteredHistory.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-48 text-slate-600">
+                                <Icon name="archive" size={40} className="mb-3 text-slate-800"/>
+                                <p className="font-medium text-slate-500">No matching historical questions found.</p>
+                                <p className="text-xs text-slate-600 mt-1">Try clearing the search or generating new content.</p>
+                            </div>
+                        ) : (
+                            filteredHistory.map((q, index) => (
+                                <div key={q.uniqueId} className="p-4 bg-slate-900 border border-slate-800 rounded-lg shadow-md">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="flex gap-2">
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-950 text-blue-400 border border-blue-900">{q.discipline}</span>
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700">{q.difficulty}</span>
+                                        </div>
+                                        <span className="text-xs text-slate-500">
+                                            Added: {new Date(q.dateAdded).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-slate-300 leading-relaxed mb-2">
+                                        {q.question}
+                                    </p>
+                                    <p className="text-[10px] text-slate-500 font-mono break-all">
+                                        ID: {q.uniqueId}
+                                    </p>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                );
+            };
+
 
             // Progress Logic
             const progress = Math.min((approvedCount / TARGET_TOTAL) * 100, 100);
             const getProgColor = (p) => p >= 100 ? 'bg-blue-500 shadow-lg' : p >= 75 ? 'bg-green-500' : p >= 25 ? 'bg-orange-500' : 'bg-red-500';
+            
+            // Search filter logic
+            const normalizedSearchTerm = searchTerm.toLowerCase();
 
-            // Filtered Questions Logic
-            const filteredQuestions = questions.filter(q => {
-                if (filterMode === 'all') return true;
-                if (filterMode === 'pending') return q.status === 'pending';
-                if (filterMode === 'accepted') return q.status === 'accepted';
-                if (filterMode === 'rejected') return q.status === 'rejected';
-                return true;
+            // Selects which question list to display/filter
+            const currentQuestionList = showHistory ? historicalQuestions : questions;
+
+            const filteredQuestions = currentQuestionList.filter(q => {
+                // 1. Status Filter (Only applied to Session View)
+                const statusMatch = showHistory || filterMode === 'all' || q.status === filterMode;
+
+                // 2. Text Search Filter (Question, Options, ID)
+                const textMatch = 
+                    (q.question && q.question.toLowerCase().includes(normalizedSearchTerm)) ||
+                    (q.uniqueId && q.uniqueId.toLowerCase().includes(normalizedSearchTerm)) ||
+                    (q.discipline && q.discipline.toLowerCase().includes(normalizedSearchTerm)) ||
+                    (q.difficulty && q.difficulty.toLowerCase().includes(normalizedSearchTerm)) ||
+                    // Only search options if available (i.e., not in history mode)
+                    (!showHistory && q.options && ((q.options.A && q.options.A.toLowerCase().includes(normalizedSearchTerm)) ||
+                    (q.options.B && q.options.B.toLowerCase().includes(normalizedSearchTerm)) ||
+                    (q.options.C && q.options.C.toLowerCase().includes(normalizedSearchTerm)) ||
+                    (q.options.D && q.options.D.toLowerCase().includes(normalizedSearchTerm))));
+
+                return statusMatch && textMatch;
             });
+
 
             // Filter Button Component (defined inside App for easier access to state)
             const FilterButton = ({ mode, current, setFilter, label, count, color }) => {
@@ -1350,6 +1483,7 @@ ${getFileContext()}
                     <button
                         onClick={() => setFilter(mode)}
                         className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
+                        disabled={showHistory && mode !== 'all'} // Disable filters in History mode except "All"
                     >
                         <Icon name={mode === 'accepted' ? 'check' : mode === 'rejected' ? 'x' : mode === 'pending' ? 'clock' : 'list'} size={12}/>
                         {label} <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">{count}</span>
@@ -1358,12 +1492,13 @@ ${getFileContext()}
             };
             
             // Component to display the granular progress bars
-            const GranularProgress = ({ approvedCounts, target, isTargetMet, selectedDifficulty }) => {
+            const GranularProgress = ({ approvedCounts, target, isTargetMet, selectedDifficulty, handleSelectCategory }) => {
                 const categories = CATEGORY_KEYS.map(key => {
                     const current = approvedCounts[key] || 0;
                     const remaining = Math.max(0, target - current);
                     const isComplete = current >= target;
                     const isSelected = key === selectedDifficulty;
+                    const isDisabled = isComplete; // Cannot select a completed category
 
                     let barColor = 'bg-slate-800';
                     if (isComplete) {
@@ -1375,9 +1510,19 @@ ${getFileContext()}
                     }
 
                     const percentage = Math.min(100, (current / target) * 100);
+                    
+                    const handleClick = () => {
+                        if (!isDisabled) {
+                            handleSelectCategory(key);
+                        }
+                    };
 
                     return (
-                        <div key={key} className={`p-2 rounded transition-all ${isSelected ? 'bg-slate-800 border border-orange-600 shadow-lg' : 'bg-slate-900'}`}>
+                        <div 
+                            key={key} 
+                            onClick={handleClick}
+                            className={`p-2 rounded transition-all cursor-pointer border ${isSelected ? 'bg-slate-800 border-orange-600 shadow-lg' : 'bg-slate-900 border-slate-800 hover:bg-slate-800/70'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
                             <div className="flex justify-between items-center text-xs mb-1">
                                 <span className={`font-semibold ${isComplete ? 'text-blue-300' : 'text-slate-200'}`}>{key}</span>
                                 <span className={`text-[10px] font-bold ${isComplete ? 'text-blue-400' : 'text-slate-400'}`}>
@@ -1390,19 +1535,35 @@ ${getFileContext()}
                         </div>
                     );
                 });
+                
+                // Add the "Balanced All" button at the top
+                const isBalancedSelected = selectedDifficulty === 'Balanced All';
+
+                const balancedAllButton = (
+                    <div 
+                        onClick={() => handleSelectCategory('Balanced All')}
+                        className={`p-2 rounded transition-all cursor-pointer border mb-3 ${isBalancedSelected ? 'bg-orange-600 border-orange-400 shadow-lg' : 'bg-slate-800 border-slate-700 hover:bg-slate-700/50'}`}
+                    >
+                        <div className="flex justify-between items-center text-sm font-bold">
+                            <span>Balanced All</span>
+                            <span className="text-[10px] uppercase">{isBalancedSelected ? 'Active' : 'Select'}</span>
+                        </div>
+                    </div>
+                );
+
 
                 return (
                     <div className="space-y-2">
-                        <h3 className="text-sm font-bold uppercase text-slate-400 flex items-center gap-2 border-b border-slate-700/50 pb-1.5 mb-1"><Icon name="list-checks" size={14} /> Quota Breakdown (Target: {TARGET_TOTAL})</h3>
-                        {isTargetMet && (
-                            <div className="p-3 bg-red-900/30 border border-red-700 text-xs rounded text-red-200 flex items-start gap-2">
-                                <Icon name="alert-triangle" size={16} className="flex-shrink-0 mt-0.5" />
-                                <span>Target of {target} for <strong>{selectedDifficulty}</strong> met. Change mode or discipline to proceed.</span>
-                            </div>
-                        )}
+                        <h3 className="text-sm font-bold uppercase text-slate-400 flex items-center gap-2 border-b border-slate-700/50 pb-1.5 mb-1"><Icon name="list-checks" size={14} /> Generation Target (Total: {TARGET_TOTAL})</h3>
+                        {balancedAllButton}
                         {categories}
                     </div>
                 );
+            };
+
+            // NEW HANDLER: Set the generation target by clicking a category card
+            const handleSelectCategory = (categoryKey) => {
+                 setConfig(prev => ({ ...prev, difficulty: categoryKey }));
             };
 
 
@@ -1416,12 +1577,13 @@ ${getFileContext()}
                     <div className="flex flex-1 overflow-hidden">
                         <aside className="w-80 flex-shrink-0 z-10 shadow-xl border-r border-slate-700 bg-slate-950 p-6 overflow-y-auto flex flex-col gap-6">
                             
-                            {/* Granular Progress */}
+                            {/* Granular Progress / Target Selector */}
                             <GranularProgress 
                                 approvedCounts={approvedCounts}
                                 target={TARGET_PER_CATEGORY}
                                 isTargetMet={isTargetMet}
                                 selectedDifficulty={config.difficulty}
+                                handleSelectCategory={handleSelectCategory}
                             />
                             
                             {/* Batch Size Input */}
@@ -1478,22 +1640,7 @@ ${getFileContext()}
                                         <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
                                     </select>
                                 </div>
-                                <div className="space-y-1">
-                                    <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Difficulty & Type</label><InfoTooltip text="Select a specific combination or choose 'Balanced All' for a mix."/></div>
-                                    <select name="difficulty" value={config.difficulty} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none">
-                                        <option value="Balanced All">Balanced All (E, M, H / MC, T/F)</option>
-                                        <optgroup label="Multiple Choice (MC)">
-                                            <option value="Easy MC">Easy Multiple Choice</option>
-                                            <option value="Medium MC">Medium Multiple Choice</option>
-                                            <option value="Hard MC">Hard Multiple Choice</option>
-                                        </optgroup>
-                                        <optgroup label="True/False (T/F)">
-                                            <option value="Easy T/F">Easy True/False</option>
-                                            <option value="Medium T/F">Medium True/False</option>
-                                            <option value="Hard T/F">Hard True/False</option>
-                                        </optgroup>
-                                    </select>
-                                </div>
+                                {/* REMOVED DIFFICULTY DROPDOWN HERE */}
                             </div>
 
                             <div className="mt-auto pt-6 border-t border-slate-800 space-y-3">
@@ -1534,18 +1681,33 @@ ${getFileContext()}
                                 </div>
 
                                 {/* Filter Buttons (Center) */}
-                                {questions.length > 0 && (
-                                    <div className="flex gap-2 items-center bg-slate-950 p-1 rounded-lg border border-slate-800 shadow-inner">
-                                        <FilterButton mode="all" current={filterMode} setFilter={setFilterMode} label="All" count={questions.length} />
-                                        <FilterButton mode="pending" current={filterMode} setFilter={setFilterMode} label="Pending" count={pendingCount} />
-                                        <FilterButton mode="accepted" current={filterMode} setFilter={setFilterMode} label="Accepted" count={approvedCount} />
-                                        <FilterButton mode="rejected" current={filterMode} setFilter={setFilterMode} label="Rejected" count={rejectedCount} />
-                                    </div>
-                                )}
+                                <div className="flex gap-2 items-center bg-slate-950 p-1 rounded-lg border border-slate-800 shadow-inner">
+                                    {/* History/Session Toggle */}
+                                    <button 
+                                        onClick={handleToggleHistory} 
+                                        className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${showHistory ? 'bg-purple-600 text-white shadow-md shadow-purple-900/50' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50'}`}
+                                        title={showHistory ? 'Back to Current Session' : 'View Full Question History'}
+                                    >
+                                        <Icon name={showHistory ? 'list' : 'archive'} size={12}/>
+                                        {showHistory ? 'Current Session' : 'Full History'} 
+                                        <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">{showHistory ? historicalQuestions.length : questions.length}</span>
+                                    </button>
+
+                                    {/* Standard Filters (Visible in Session Mode only) */}
+                                    {!showHistory && questions.length > 0 && (
+                                        <>
+                                            {/* SWAPPED ORDER: Pending, All, Accepted, Rejected */}
+                                            <FilterButton mode="pending" current={filterMode} setFilter={setFilterMode} label="Pending" count={pendingCount} />
+                                            <FilterButton mode="all" current={filterMode} setFilter={setFilterMode} label="All" count={questions.length} />
+                                            <FilterButton mode="accepted" current={filterMode} setFilter={setFilterMode} label="Accepted" count={approvedCount} />
+                                            <FilterButton mode="rejected" current={filterMode} setFilter={setFilterMode} label="Rejected" count={rejectedCount} />
+                                        </>
+                                    )}
+                                </div>
 
                                 {/* Actions (Right) */}
                                 <div className="flex gap-2 items-center relative">
-                                    {questions.length > 0 && (
+                                    {questions.length > 0 && !showHistory && (
                                         <>
                                             <div className="flex gap-1 mr-2 border-r border-slate-700 pr-3">
                                                 <button onClick={() => setShowExportMenu(prev => !prev)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-900/20 border border-emerald-800/50 rounded hover:bg-emerald-900/40" title="View Export Options">
@@ -1568,16 +1730,36 @@ ${getFileContext()}
                                     )}
                                 </div>
                             </div>
+                            
+                            {/* Search Bar */}
+                            <div className="p-4 border-b border-slate-800 bg-slate-900 flex items-center gap-3">
+                                <Icon name="search" size={18} className="text-slate-500 flex-shrink-0" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by ID, Question Text, Option, or Discipline..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full bg-slate-900 text-slate-300 placeholder-slate-600 border-none outline-none focus:ring-0 text-sm"
+                                />
+                                {searchTerm && (
+                                    <button onClick={() => setSearchTerm('')} className="text-slate-500 hover:text-red-400 p-1 rounded">
+                                        <Icon name="x" size={16} />
+                                    </button>
+                                )}
+                            </div>
 
                             {/* Content */}
                             <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4">
-                                {questions.length === 0 && !status && (
+                                {showHistory && filteredQuestions.length > 0 && <HistoryDisplay history={filteredQuestions} />}
+                                {showHistory && filteredQuestions.length === 0 && !status && <HistoryDisplay history={[]} />}
+
+                                {!showHistory && filteredQuestions.length === 0 && questions.length === 0 && !status && (
                                     <div className="flex flex-col items-center justify-center h-full text-slate-600">
                                         <Icon name="terminal" size={48} className="mb-4 text-slate-800"/>
                                         <p className="font-medium text-slate-500">Ready. Click 'GENERATE QUESTIONS' to begin or upload a source file.</p>
                                     </div>
                                 )}
-                                {filteredQuestions.map(q => (
+                                {!showHistory && filteredQuestions.map(q => (
                                     <QuestionItem 
                                         key={q.id} q={q} 
                                         onUpdateStatus={handleUpdateStatus} 
@@ -1587,11 +1769,10 @@ ${getFileContext()}
                                         isProcessing={isProcessing} 
                                     />
                                 ))}
-                                {filteredQuestions.length === 0 && questions.length > 0 && (
+                                {!showHistory && filteredQuestions.length === 0 && questions.length > 0 && (
                                     <div className="flex flex-col items-center justify-center h-full text-slate-600 pt-10">
                                         <Icon name="search" size={32} className="mb-3 text-slate-800"/>
-                                        <p className="font-medium text-slate-500">No questions match the current filter: <strong className="text-orange-500">{filterMode.toUpperCase()}</strong>.</p>
-                                        <p className="text-xs text-slate-600 mt-1">Try changing the filter or generating a new batch.</p>
+                                        <p className="font-medium text-slate-500">No session questions match the current filter/search.</p>
                                     </div>
                                 )}
                             </div>
