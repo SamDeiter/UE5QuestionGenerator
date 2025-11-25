@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UE5 STE Question Generator</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Lucide Icons (Global) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Firebase SDK (Firestore and Auth) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, addDoc, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Expose Firebase modules globally for use in the Babel script block
+        window.Firebase = {
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut,
+            getFirestore, collection, query, where, getDocs, addDoc, setDoc, doc, deleteDoc
+        };
+    </script>
+
+
+    <style>
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in { animation: fadeIn 0.3s ease-out forwards; }
+
+        /* Custom styling for the Export Options dropdown */
+        .export-options-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 50;
+            width: 280px;
+            padding: 12px;
+            background-color: #0f172a; /* slate-950 */
+            border: 1px solid #334155; /* slate-700 */
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 h-screen overflow-hidden">
+    <div id="root" class="h-full"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+        
+        // --- Icon Component for Browser CDN (Lucide) ---
+        // Converts PascalCase icon names from Lucide library to SVG HTML for React rendering.
+        const Icon = ({ name, size = 16, className = "" }) => {
+            const [svgHtml, setSvgHtml] = useState("");
+
+            useEffect(() => {
+                if (typeof lucide === 'undefined') return;
+
+                const pascalName = name
+                    .split('-')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join('');
+
+                const iconDef = lucide.icons[pascalName];
+                
+                if (iconDef) {
+                    const tempElement = document.createElement('div');
+                    const svgNode = lucide.createElement(iconDef);
+                    
+                    svgNode.setAttribute('width', size);
+                    svgNode.setAttribute('height', size);
+                    if (className) svgNode.setAttribute('class', `lucide lucide-${name} ${className}`);
+                    
+                    setSvgHtml(svgNode.outerHTML);
+                }
+            }, [name, size, className]);
+
+            if (!svgHtml) return <span style={{width: size, height: size, display: 'inline-block'}} />;
+            
+            return <span dangerouslySetInnerHTML={{ __html: svgHtml }} className="inline-flex items-center justify-center" />;
+        };
+
+        // --- API Configuration ---
+        const systemApiKey = ""; // Relies entirely on the hosted environment to inject credentials.
+
+        // --- Helper Functions ---
+        
+        // Ensures URLs are prefixed with 'https://' if missing, for browser safety.
+        const formatUrl = (url) => {
+            if (!url) return '';
+            let cleanUrl = url.trim();
+            if (!/^[a-zA-Z]+:\/\//.test(cleanUrl) && (cleanUrl.includes('.') && !cleanUrl.includes(' '))) {
+                if (!cleanUrl.toLowerCase().endsWith('.csv') && !cleanUrl.toLowerCase().endsWith('.txt')) {
+                cleanUrl = 'https://' + cleanUrl;
+                }
+            }
+            return cleanUrl;
+        };
+        
+        // Sanitizes text for display in the UI. Converts **markdown** to <b>HTML</b> and aggressively strips remnants.
+        const sanitizeText = (text) => {
+            if (typeof text !== 'string') return String(text); // Ensure it's treated as a string immediately
+            
+            let output = text;
+
+            // 1. Convert Markdown **bold** to <b>bold</b> 
+            output = output.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            
+            // 2. Aggressively CLEANUP: Strip any remaining double asterisks
+            output = output.replace(/\*\*/g, '');
+
+            // 3. Simple HTML sanitization wrapper to prevent injection while keeping <b> tags.
+            
+            const temp = document.createElement('div');
+            // Safely set the content, relying on the browser to strip harmful tags internally
+            temp.innerHTML = output; 
+            
+            // Reconstruct the HTML string ensuring only safe formatting remains (like <b>)
+            let cleanOutput = '';
+            for (let i = 0; i < temp.childNodes.length; i++) {
+                const node = temp.childNodes[i];
+                if (node.nodeType === 3) { // Text node
+                    cleanOutput += node.textContent;
+                } else if (node.nodeType === 1 && node.tagName.toLowerCase() === 'b') { // Preserve B tag
+                    cleanOutput += `<b>${node.innerHTML}</b>`;
+                } else if (node.nodeType === 1) { // Other elements are treated as plain text
+                    cleanOutput += node.textContent;
+                }
+            }
+            
+            return cleanOutput;
+        };
+
+        // Strips all HTML tags for use in plain CSV/spreadsheet cells.
+        const stripHtmlTags = (text) => {
+            if (typeof text !== 'string') return text;
+            return text.replace(/<[^>]*>?/gm, '');
+        };
+        
+        // REINFORCED: Prepares a string for CSV cell insertion using standard quoting.
+        // It removes custom comma/semicolon replacement and focuses only on:
+        // 1. Stripping HTML tags.
+        // 2. Escaping internal double quotes by doubling them (" becomes "")
+        // 3. Wrapping the entire field in double quotes.
+        const safe = (t) => {
+            // Ensure input is a string
+            const str = String(t);
+            // 1. Remove HTML tags
+            const stripped = stripHtmlTags(str);
+            
+            // 2. Escape internal double quotes by doubling them (This is the standard CSV escape)
+            const escaped = (stripped || '').replace(/"/g, '""');
+
+            // 3. Wrap the entire field in double quotes.
+            return `"${escaped}"`;
+        };
+        
+        // Helper: Formats date as MM.DD.YYYY
+        const formatDate = (date = new Date()) => {
+            const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+            const dd = date.getDate().toString().padStart(2, '0');
+            const yyyy = date.getFullYear();
+            return `${mm}.${dd}.${yyyy}`;
+        };
+
+
+        // Handles the core call to the Gemini API with search grounding enabled.
+        const generateContent = async (systemPrompt, userPrompt, setStatus) => {
+            const effectiveKey = systemApiKey; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${effectiveKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                tools: [{ google_search: {} }], // Enables real-time, grounded search
+                generationConfig: {
+                    temperature: 0.2, 
+                    maxOutputTokens: 8192
+                }
+            };
+
+            let retries = 0;
+            const maxRetries = 2;
+            const backoffDelays = [2000, 5000];
+
+            while (retries <= maxRetries) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    
+                    if (!textResponse) throw new Error("No content generated");
+                    
+                    return textResponse;
+
+                } catch (error) {
+                    console.error(`Attempt ${retries + 1} failed:`, error);
+                    if (retries === maxRetries) throw error;
+                    setStatus(`Retrying... (${retries + 1}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, backoffDelays[retries]));
+                    retries++;
+                }
+            }
+        };
+
+        // Parses the Markdown table output from the model into a structured JavaScript array.
+        const parseQuestions = (text) => {
+            const parsed = [];
+            const lines = text.split('\n');
+            
+            const dataLines = lines.filter(line => 
+                line.trim().startsWith('|') && 
+                !line.includes('| ID |') && 
+                !line.includes('|---')
+            );
+
+            dataLines.forEach((line, index) => {
+                // Split the line by the pipe character and trim whitespace
+                const cols = line.split('|').map(c => c.trim());
+                
+                // The expected number of columns is 14 based on the prompt's 13 columns + the empty first column split by |
+                if (cols.length < 14) {
+                    console.warn(`Skipping malformed row: ${line}`);
+                    return; 
+                }
+
+                // Indices based on the strict prompt format: | ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |
+                // Note: The empty column 0 is created by the leading pipe.
+                // cols[1] = ID
+                // cols[6] = Answer (should be empty/ignored)
+
+                const discipline = cols[2];
+                const typeRaw = cols[3];
+                const difficulty = cols[4];
+                const question = cols[5];
+                const optA = cols[7];
+                const optB = cols[8];
+                const optC = cols[9];
+                const optD = cols[10];
+                const correctLetter = cols[11]; 
+                const sourceUrl = cols[12];
+                const sourceExcerpt = cols[13];
+
+                const type = typeRaw.toLowerCase().includes('true') ? 'True/False' : 'Multiple Choice';
+
+                let options = {};
+                if (type === 'True/False') {
+                    options = { A: 'TRUE', B: 'FALSE' };
+                } else {
+                    options = { A: optA, B: optB, C: optC, D: optD };
+                }
+
+                parsed.push({
+                    id: Date.now() + index + Math.random(),
+                    discipline,
+                    type,
+                    difficulty,
+                    question,
+                    options,
+                    correct: correctLetter, 
+                    sourceUrl,
+                    sourceExcerpt,
+                    status: 'pending' ,
+                    critique: null
+                });
+            });
+
+            return parsed;
+        };
+
+        // --- Components ---
+        
+        const InfoTooltip = ({ text, direction = "up" }) => (
+            <div className="group relative inline-flex items-center ml-1.5 align-middle">
+                <Icon name="info" size={12} className="text-slate-600 hover:text-orange-500 cursor-help transition-colors" />
+                <div className={`invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 absolute left-1/2 -translate-x-1/2 w-48 p-2.5 bg-slate-800 border border-slate-700 text-slate-200 text-[10px] leading-relaxed rounded-md shadow-xl z-50 pointer-events-none text-center ${direction === 'down' ? 'top-full mt-2' : 'bottom-full mb-2'}`}>
+                    {text}
+                    <div className={`absolute left-1/2 -translate-x-1/2 border-4 border-transparent ${direction === 'down' ? 'bottom-full border-b-slate-800' : 'top-full border-t-slate-800'}`}></div>
+                </div>
+            </div>
+        );
+
+        // Modal for capturing the Creator name at startup.
+        const NameEntryModal = ({ onSave }) => {
+            const [name, setName] = useState('');
+            const [sillyPlaceholder, setSillyPlaceholder] = useState('');
+
+            useEffect(() => {
+                const sillyNames = [ "Captain Blueprint", "Sir Render-Lot", "Polygon Prince", "Texture Titan", "Lady Logic", "Count Compile", "Duke of Debug", "Baron von Build" ];
+                setSillyPlaceholder(`e.g. ${sillyNames[Math.floor(Math.random() * sillyNames.length)]}`);
+            }, []);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (name.trim()) onSave(name);
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center backdrop-blur-sm p-4">
+                    <div className="bg-slate-900 border border-slate-700 p-8 rounded-xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-300">
+                        <div className="flex flex-col items-center text-center mb-6">
+                            <div className="bg-orange-600 p-3 rounded-full mb-4 shadow-lg shadow-orange-900/50">
+                                <Icon name="user" size={32} className="text-white" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-white mb-2">Welcome, Creator</h2>
+                            <p className="text-slate-400 text-sm">Please enter your name. This will be recorded as the Creator for all generated questions.</p>
+                        </div>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="space-y-1 text-left">
+                                <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Creator Full Name</label>
+                                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={sillyPlaceholder} className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-white placeholder-slate-600 transition-all" autoFocus />
+                            </div>
+                            <button type="submit" disabled={!name.trim()} className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all shadow-lg active:scale-[0.98]">
+                                Start Creating
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const Header = () => (
+            <header className="bg-slate-950 text-white p-6 shadow-xl border-b border-orange-600 relative z-20">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-orange-600 p-2 rounded-lg shadow-lg shadow-orange-900/50">
+                            <Icon name="terminal" size={24} className="text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold tracking-tight uppercase text-orange-50">UE5 STE Question Generator</h1>
+                            <p className="text-slate-400 text-xs">Universal Scenario-Based Generator • Official Docs Only (v5.7 / Latest)</p>
+                        </div>
+                    </div>
+                    <div className="hidden md:flex items-center gap-2 text-xs font-mono text-orange-400 bg-slate-900 px-3 py-1 rounded border border-slate-700">
+                        <span>MODE: TECHNICAL WRITER</span>
+                    </div>
+                </div>
+            </header>
+        );
+
+        const CritiqueDisplay = ({ critique }) => {
+            return (
+                <div className="mb-3 p-3 bg-red-950/30 border border-red-500/30 rounded-lg animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center gap-2 mb-2 text-red-300 text-xs font-bold uppercase">
+                        <Icon name="zap" size={12} /> AI Critique
+                    </div>
+                    <div className="text-xs text-slate-300 leading-relaxed space-y-1.5">
+                        {critique.split('\n').map((line, index) => {
+                            if (line.match(/^(\*|-|\d+\.)\s/)) {
+                                return <p key={index} className="pl-3 text-red-100/80 indent-[-12px]">{line.trim()}</p>;
+                            }
+                            return <p key={index}>{line.trim()}</p>;
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        // Single Question Card Component
+        const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, isProcessing }) => {
+            const getStatusStyle = (status) => {
+                switch(status) {
+                    case 'accepted': return 'ring-1 ring-green-500/50';
+                    case 'rejected': return 'border-red-900/50 bg-slate-950/80 opacity-50 grayscale';
+                    default: return '';
+                }
+            };
+
+            const getGradient = (d) => {
+                switch(d?.toLowerCase()) {
+                    // PRONOUNCED COLORS for card background
+                    case 'easy': return 'bg-gradient-to-br from-slate-900/50 to-green-950 border-green-700 shadow-[0_0_15px_-5px_rgba(34,197,94,0.3)]';
+                    case 'medium': return 'bg-gradient-to-br from-slate-900/50 to-yellow-950 border-yellow-700 shadow-[0_0_15px_-5px_rgba(234,179,8,0.3)]';
+                    case 'hard': return 'bg-gradient-to-br from-slate-900/50 to-red-950 border-red-700 shadow-[0_0_15px_-5px_rgba(239,68,68,0.3)]';
+                    default: return 'bg-slate-900 border-slate-800';
+                }
+            };
+
+            const getDiffBadgeColor = (d) => {
+                // Colors for the small difficulty badge
+                switch(d?.toLowerCase()) {
+                    case 'easy': return 'bg-green-950 text-green-400 border-green-900';
+                    case 'medium': return 'bg-yellow-950 text-yellow-400 border-yellow-900';
+                    case 'hard': return 'bg-red-950 text-red-400 border-red-900';
+                    default: return 'bg-slate-800 text-slate-400 border-slate-700';
+                }
+            };
+            
+            const isRejected = q.status === 'rejected';
+
+            return (
+                <div className={`group rounded-lg border shadow-sm transition-all p-4 relative ${getGradient(q.difficulty)} ${getStatusStyle(q.status)}`}>
+                    <div className="flex justify-between items-start mb-3">
+                        <div className="flex gap-2">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${getDiffBadgeColor(q.difficulty)}`}>
+                                {q.difficulty}
+                            </span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">
+                                {q.type === 'True/False' ? 'T/F' : 'MC'}
+                            </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
+                                {/* CRITIQUE BUTTON: Only visible for rejected items */}
+                                {isRejected && (
+                                    <button onClick={() => onCritique(q)} disabled={isProcessing} className="p-1.5 text-red-400 hover:text-red-200 hover:bg-red-900/50 rounded-md transition-colors" title="Get AI Fix Suggestions">
+                                        <Icon name="zap" size={16} />
+                                    </button>
+                                )}
+                                <button onClick={() => onExplain(q)} disabled={isProcessing} className="p-1.5 text-indigo-400 hover:text-indigo-200 hover:bg-indigo-900/50 rounded-md transition-colors" title="Explain Correct Answer">
+                                    <Icon name="lightbulb" size={16} />
+                                </button>
+                                <button onClick={() => onVariate(q)} disabled={isProcessing} className="p-1.5 text-purple-400 hover:text-purple-200 hover:bg-purple-900/50 rounded-md transition-colors" title="Create Variations">
+                                    <Icon name="copy" size={16} />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-1 bg-slate-950 rounded-lg p-0.5 border border-slate-800">
+                                <button onClick={() => onUpdateStatus(q.id, 'accepted')} className={`p-1.5 rounded-md transition-all ${q.status === 'accepted' ? 'bg-green-600 text-white shadow-sm' : 'text-slate-600 hover:text-green-400 hover:bg-slate-900'}`} title="Accept">
+                                    <Icon name="check" size={16} />
+                                </button>
+                                <div className="w-px h-4 bg-slate-800 mx-0.5"></div>
+                                <button onClick={() => onUpdateStatus(q.id, 'rejected')} className={`p-1.5 rounded-md transition-all ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-sm' : 'text-slate-600 hover:text-red-400 hover:bg-slate-900'}`} title="Reject">
+                                    <Icon name="x" size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <h3 
+                            className={`text-sm font-medium leading-relaxed ${q.status === 'rejected' ? 'text-slate-600 line-through decoration-slate-700' : 'text-slate-200'}`}
+                            // Renders HTML for bolding key concepts
+                            dangerouslySetInnerHTML={{ __html: sanitizeText(q.question) }}
+                        />
+                        
+                        {q.sourceUrl && (
+                            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-blue-500 truncate max-w-full">
+                                <Icon name="external-link" size={12} className="flex-shrink-0" />
+                                <a href={formatUrl(q.sourceUrl)} target="_blank" rel="noreferrer" className="hover:underline truncate text-blue-500 hover:text-blue-400">
+                                    {q.sourceUrl}
+                                </a>
+                            </div>
+                        )}
+                    </div>
+
+                    {q.type === 'Multiple Choice' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+                            {Object.entries(q.options || {}).map(([key, val]) => {
+                                const isCorrect = key === q.correct;
+                                return (
+                                    <div key={key} className={`text-xs p-2 rounded border transition-all ${isCorrect ? 'bg-green-700/50 border-green-400 text-white shadow-[0_0_10px_-3px_rgba(34,197,94,0.5)]' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
+                                        <span className={`font-bold mr-2 ${isCorrect ? 'text-white' : 'text-slate-600'}`}>{key})</span> 
+                                        <span dangerouslySetInnerHTML={{ __html: sanitizeText(val) }} />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {q.type === 'True/False' && (
+                        <div className="flex gap-4 mb-4">
+                            <div className={`px-3 py-1 rounded text-xs border transition-all ${q.correct === 'A' ? 'bg-green-700/50 border-green-400 text-white shadow-[0_0_10px_-3px_rgba(34,197,94,0.5)]' : 'bg-slate-950 border-slate-800 text-slate-500'}`}>TRUE</div>
+                            <div className={`px-3 py-1 rounded text-xs border transition-all ${q.correct === 'B' ? 'bg-green-700/50 border-green-400 text-white shadow-[0_0_10px_-3px_rgba(34,197,94,0.5)]' : 'bg-slate-950 border-slate-800 text-slate-500'}`}>FALSE</div>
+                        </div>
+                    )}
+
+                    {q.critique && <CritiqueDisplay critique={q.critique} />}
+
+                    {q.explanation && (
+                        <div className="mb-3 p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-lg animate-in fade-in slide-in-from-top-2">
+                            <div className="flex items-center gap-2 mb-1 text-indigo-300 text-xs font-bold uppercase">
+                                <Icon name="lightbulb" size={12} /> Explanation
+                            </div>
+                            <p className="text-xs text-slate-300 leading-relaxed">{q.explanation}</p>
+                        </div>
+                    )}
+
+                    {q.sourceExcerpt && (
+                        <div className="pt-3 border-t border-slate-800 flex flex-col gap-1">
+                            <div className="flex items-start gap-1.5 text-[10px] text-slate-500 italic bg-slate-950 p-2 rounded border border-slate-800">
+                                <Icon name="message-square" size={12} className="mt-0.5 flex-shrink-0" />
+                                "{q.sourceExcerpt}"
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- Export Components ---
+        
+        const ExportOptions = ({ onExportByGroup, onBulkTranslateExport, isProcessing, setMenuOpen, creatorName, reviewerName, approvedCount }) => {
+            const [selectedLanguages, setSelectedLanguages] = useState([]);
+            
+            const availableLanguages = [
+                'Chinese (Simplified)', 'Japanese', 'Korean', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Russian'
+            ];
+
+            const toggleLanguage = (lang) => {
+                setSelectedLanguages(prev => 
+                    prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]
+                );
+            };
+
+            const handleTranslateClick = () => {
+                if (selectedLanguages.length > 0) {
+                    onBulkTranslateExport(selectedLanguages);
+                    setMenuOpen(false);
+                }
+            };
+
+            return (
+                <div className="export-options-menu animate-in fade-in slide-in-from-top-2">
+                    <div className="space-y-4">
+                        <div className="border-b border-slate-700 pb-3 space-y-2">
+                            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="layout-list" size={16}/> Segmented Export (Native Language)</h3>
+                            <p className="text-xs text-slate-400">Exports multiple files, one for each unique Discipline/Difficulty/Type combination.</p>
+                            <button 
+                                onClick={onExportByGroup} 
+                                disabled={isProcessing}
+                                className="w-full py-2 text-xs font-bold text-green-300 bg-green-900/30 border border-green-800 rounded hover:bg-green-900/50 transition-colors"
+                            >
+                                <Icon name="folder-open" size={14} className="mr-1 inline-block"/>
+                                Export {approvedCount} Questions by Group (.csv)
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="globe" size={16}/> Bulk Translation Export</h3>
+                            <p className="text-xs text-slate-400">Generates and exports separate files for the selected languages.</p>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs h-32 overflow-y-auto pr-1">
+                                {availableLanguages.map(lang => (
+                                    <div 
+                                        key={lang} 
+                                        onClick={() => toggleLanguage(lang)}
+                                        className={`flex items-center p-1 rounded cursor-pointer transition-colors ${selectedLanguages.includes(lang) ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                                    >
+                                        <Icon name={selectedLanguages.includes(lang) ? 'check' : 'square'} size={12} className="mr-2 flex-shrink-0"/>
+                                        {lang}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button 
+                                onClick={handleTranslateClick} 
+                                disabled={isProcessing || selectedLanguages.length === 0}
+                                className="w-full py-2 text-xs font-bold text-indigo-300 bg-indigo-900/30 border border-indigo-800 rounded hover:bg-indigo-900/50 transition-colors disabled:bg-slate-700 disabled:text-slate-500"
+                            >
+                                {isProcessing ? 'Translating...' : `Export ${selectedLanguages.length} Translated File(s)`}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+        // --- End Export Components ---
+
+
+        // Main Application Component
+        const App = () => {
+            // --- Firebase State ---
+            const [db, setDb] = useState(null);
+            const [auth, setAuth] = useState(null);
+            const [userId, setUserId] = useState(null);
+            const [isAuthReady, setIsAuthReady] = useState(false);
+            const [showClearModal, setShowClearModal] = useState(false);
+            const [showExportMenu, setShowExportMenu] = useState(false);
+
+
+            // --- Goal Constants (Granular Quota Tracking) ---
+            const TARGET_TOTAL = 200;
+            const TARGET_PER_CATEGORY = 33; // 6 categories * 33 = 198 (close enough to 200)
+            const CATEGORY_KEYS = ['Easy MC', 'Easy T/F', 'Medium MC', 'Medium T/F', 'Hard MC', 'Hard T/F'];
+
+
+            // Load saved config, or use defaults
+            const [config, setConfig] = useState(() => {
+                const saved = localStorage.getItem('ue5_gen_config');
+                const defaults = { 
+                    discipline: 'Technical Art', 
+                    batchSize: '6', 
+                    difficulty: 'Balanced All', 
+                    language: 'English',
+                    creatorName: '', 
+                    reviewerName: '', 
+                };
+                const constInitialConfig = saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+                // Ensure reviewerName starts empty on first load if not explicitly saved as non-empty
+                constInitialConfig.reviewerName = constInitialConfig.reviewerName || '';
+                return constInitialConfig;
+            });
+            
+            // Local state for generated questions (synced with Firestore for deduplication)
+            const [questions, setQuestions] = useState(() => {
+                const saved = localStorage.getItem('ue5_gen_questions');
+                return saved ? JSON.parse(saved) : [];
+            });
+            
+            // Local state for file uploads (used for source context)
+            const [files, setFiles] = useState([]);
+            
+            // UI Status/Loading states
+            const [status, setStatus] = useState('');
+            const [isGenerating, setIsGenerating] = useState(false);
+            const [isDetecting, setIsDetecting] = useState(false);
+            const [isProcessing, setIsProcessing] = useState(false);
+            
+            // Modal visibility
+            const [showNameModal, setShowNameModal] = useState(false);
+            // Tracks the language of the currently loaded questions (for translation checks)
+            const [contentLanguage, setContentLanguage] = useState('English');
+            
+            // Filter state for the question list view
+            const [filterMode, setFilterMode] = useState('all');
+
+            const fileInputRef = useRef(null);
+
+            // --- UI Helper: Show Temporary Status Message (Replaces alert()) ---
+            const showMessage = (msg, duration = 3000) => {
+                setStatus(msg);
+                setTimeout(() => setStatus(''), duration);
+            };
+
+            // --- Approved Counts Calculation (Memoized for performance) ---
+            const approvedCounts = useMemo(() => {
+                const counts = CATEGORY_KEYS.reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
+
+                questions.filter(q => q.status === 'accepted').forEach(q => {
+                    const typeAbbrev = q.type === 'True/False' ? 'T/F' : 'MC';
+                    const key = `${q.difficulty} ${typeAbbrev}`;
+                    if (counts.hasOwnProperty(key)) {
+                        counts[key]++;
+                    }
+                });
+                return counts;
+            }, [questions]);
+            
+            // Derived counts for filter buttons
+            const approvedCount = questions.filter(q => q.status === 'accepted').length;
+            const rejectedCount = questions.filter(q => q.status === 'rejected').length;
+            const pendingCount = questions.length - approvedCount - rejectedCount;
+
+
+            // --- Generation Disablement Check (Memoized) ---
+            const isTargetMet = useMemo(() => {
+                // If Balanced All is selected, we never disable the button based on category count
+                if (config.difficulty === 'Balanced All') {
+                    return false;
+                }
+                
+                // For specific modes (e.g., "Easy MC"), check if the quota is hit
+                const currentCount = approvedCounts[config.difficulty];
+                return currentCount >= TARGET_PER_CATEGORY;
+            }, [config.difficulty, approvedCounts]);
+
+            // --- Dynamic Batch Size Calculation ---
+            const maxBatchSize = useMemo(() => {
+                if (config.difficulty === 'Balanced All') {
+                    // Find the largest remaining category, then find the batch size that satisfies all 6 categories
+                    const maxRemaining = Math.max(...CATEGORY_KEYS.map(key => TARGET_PER_CATEGORY - approvedCounts[key]));
+                    
+                    if (maxRemaining <= 0) return 0;
+
+                    // Calculate maximum batch size that is a multiple of 6 and doesn't exceed maxRemaining * 6
+                    const maxPossible = Math.min(30, Math.floor(TARGET_TOTAL / 6) * 6);
+                    return maxPossible;
+
+                } else {
+                    // For specific modes, max batch size is the smaller of the quota remaining or the hard cap (33)
+                    const remaining = TARGET_PER_CATEGORY - approvedCounts[config.difficulty];
+                    return Math.min(33, Math.max(0, remaining));
+                }
+            }, [config.difficulty, approvedCounts]);
+
+            // --- Effect to automatically update batch size based on selection/quota ---
+            useEffect(() => {
+                if (maxBatchSize > 0 && config.difficulty !== 'Balanced All') {
+                    // Set batch size to half of remaining, rounded down, but at least 1, max 10 for focused generation
+                    const recommendedSize = Math.max(1, Math.min(10, Math.floor(maxBatchSize / 2)));
+                    setConfig(prev => ({ ...prev, batchSize: recommendedSize.toString() }));
+                } else if (config.difficulty === 'Balanced All') {
+                    // Set balanced batch size to a safe multiple of 6, e.g., 6 or 12
+                    setConfig(prev => ({ ...prev, batchSize: Math.max(6, Math.min(12, maxBatchSize)).toString() }));
+                } else if (maxBatchSize === 0 && config.difficulty !== 'Balanced All') {
+                     // Quota met for specific type, set to 0 and rely on isTargetMet for disabling button
+                     setConfig(prev => ({ ...prev, batchSize: '0' }));
+                }
+            }, [config.difficulty, maxBatchSize]);
+
+
+            // --- Persistence Effects ---
+            // 1. Show Creator Modal on startup if name is missing
+            useEffect(() => { if (!config.creatorName) setShowNameModal(true); }, []); 
+            // 2. Save config changes to localStorage
+            useEffect(() => {
+                localStorage.setItem('ue5_gen_config', JSON.stringify(config));
+            }, [config]);
+            // 3. Save questions array to localStorage
+            useEffect(() => localStorage.setItem('ue5_gen_questions', JSON.stringify(questions)), [questions]);
+
+            // --- FIREBASE INITIALIZATION & AUTH ---
+            const QUESTION_COLLECTION = "generatedQuestions";
+
+            // Initializes Firebase services and handles authentication on component mount.
+            useEffect(() => {
+                if (typeof window.Firebase === 'undefined') return;
+
+                const initFirebase = async () => {
+                    try {
+                        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+                        const app = window.Firebase.initializeApp(firebaseConfig);
+                        const newDb = window.Firebase.getFirestore(app);
+                        const newAuth = window.Firebase.getAuth(app);
+
+                        setDb(newDb);
+                        setAuth(newAuth);
+
+                        // Authenticate using custom token or anonymously
+                        const authPromise = (typeof __initial_auth_token !== 'undefined' && __initial_auth_token)
+                            ? window.Firebase.signInWithCustomToken(newAuth, __initial_auth_token)
+                            : window.Firebase.signInAnonymously(newAuth);
+                        
+                        await authPromise.catch(e => {
+                            console.error("Firebase Sign-in Failed:", e);
+                            throw e;
+                        });
+
+                        // Monitor auth state changes
+                        window.Firebase.onAuthStateChanged(newAuth, (user) => {
+                            if (user) {
+                                setUserId(user.uid);
+                            } else {
+                                setUserId(null);
+                            }
+                            setIsAuthReady(true); // Flag indicating auth process is complete
+                        });
+                    } catch (e) {
+                        console.error("Firebase Initialization Failed:", e);
+                        // Fallback: Still set ready flag even if initialization fails
+                        setIsAuthReady(true); 
+                    }
+                };
+                initFirebase();
+            }, []);
+
+            // Deletes all question history from the current user's database path.
+            const handleDeleteAllQuestions = async () => {
+                setShowClearModal(false);
+                if (!db || !isAuthReady) {
+                    showMessage("Database connection not ready. Try again in a moment.", 3000);
+                    return;
+                }
+
+                setStatus('Wiping database history...');
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const collectionPath = window.Firebase.collection(db, `artifacts/${appId}/public/data/${QUESTION_COLLECTION}`);
+                
+                try {
+                    const snapshot = await window.Firebase.getDocs(collectionPath);
+                    const deletePromises = [];
+                    
+                    if (snapshot.docs.length === 0) {
+                         setStatus('Database already empty. Clearing local list.');
+                    } else {
+                        snapshot.docs.forEach(doc => {
+                            deletePromises.push(window.Firebase.deleteDoc(doc.ref));
+                        });
+                        await Promise.all(deletePromises);
+                        setStatus(`Successfully cleared ${snapshot.docs.length} historical records.`);
+                    }
+
+                    setQuestions([]); // Clear local state after database wipe
+                } catch (e) {
+                    console.error("Database deletion failed:", e);
+                    showMessage(`Failed to clear database: ${e.message}`, 5000);
+                }
+            };
+
+
+            // Checks newly generated questions against the persistent database for duplicates and stores unique ones.
+            const checkAndStoreQuestions = async (newQuestions) => {
+                if (!db || !isAuthReady) {
+                    console.warn("Firestore not ready. Skipping deduplication and persistence.");
+                    return newQuestions;
+                }
+
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const collectionPath = window.Firebase.collection(db, `artifacts/${appId}/public/data/${QUESTION_COLLECTION}`);
+                
+                const uniqueQuestions = [];
+                const generatedQuestionsMap = new Map();
+                newQuestions.forEach(q => {
+                    // Use stripped and sanitized question text as the primary key for deduplication
+                    const cleanQuestion = stripHtmlTags(q.question);
+                    generatedQuestionsMap.set(cleanQuestion, q);
+                });
+
+                setStatus(`Checking ${newQuestions.length} questions for duplicates...`);
+
+                try {
+                    // Step 1: Query database for existing questions (optimally retrieving only the question text)
+                    const snapshot = await window.Firebase.getDocs(collectionPath);
+                    const existingQuestions = new Set(snapshot.docs.map(doc => doc.data().cleanQuestion));
+
+                    // Step 2: Filter out duplicates and prepare batch write
+                    const batchWrites = [];
+                    let duplicateCount = 0;
+
+                    generatedQuestionsMap.forEach((q, cleanQuestion) => {
+                        if (existingQuestions.has(cleanQuestion)) {
+                            duplicateCount++;
+                        } else {
+                            uniqueQuestions.push(q);
+
+                            // Add to Firestore batch for writing (uses question ID as document ID)
+                            const docRef = window.Firebase.doc(collectionPath, q.id.toString());
+                            batchWrites.push(window.Firebase.setDoc(docRef, {
+                                id: q.id.toString(),
+                                cleanQuestion: cleanQuestion,
+                                discipline: q.discipline,
+                                type: q.type,
+                                difficulty: q.difficulty,
+                                dateAdded: new Date().toISOString(),
+                            }));
+                        }
+                    });
+
+                    // Step 3: Commit unique questions to Firestore
+                    if (batchWrites.length > 0) {
+                        await Promise.all(batchWrites);
+                        setStatus(`Saved ${batchWrites.length} new unique questions. ${duplicateCount} duplicates found.`);
+                    } else if (duplicateCount > 0) {
+                        setStatus(`All ${duplicateCount} questions were duplicates! No new questions added.`);
+                    } else {
+                        setStatus(`Generated batch was empty.`);
+                    }
+
+                    return uniqueQuestions;
+
+                } catch (e) {
+                    console.error("Firestore operation failed:", e);
+                    setStatus(`Database Error: Skipping persistence. ${e.message}`);
+                    return newQuestions; // Return all to the user if saving fails
+                }
+            };
+
+
+            const needsTranslation = questions.length > 0 && contentLanguage !== config.language;
+
+            const handleChange = (e) => {
+                const { name, value } = e.target;
+                
+                // Enforce multiple of 6 for Balanced All mode
+                if (name === 'batchSize' && config.difficulty === 'Balanced All') {
+                    const num = parseInt(value);
+                    if (num % 6 !== 0) {
+                        // Allow user to type, but warn if not a multiple of 6
+                        showMessage("For Balanced All mode, the batch size should be a multiple of 6 (e.g., 6, 12, 18) for an even distribution.", 3000);
+                    }
+                }
+
+                setConfig(prev => ({ ...prev, [name]: value }));
+            };
+
+            // Saves creator name from modal, ensures reviewer name is left empty.
+            const handleNameSave = (name) => {
+                setConfig(prev => ({ ...prev, creatorName: name, reviewerName: '' })); 
+                setShowNameModal(false);
+            };
+
+            // Handles local file upload for context
+            const handleFileChange = (e) => {
+                const newFiles = Array.from(e.target.files);
+                newFiles.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        setFiles(prev => [...prev, { name: file.name, content: ev.target.result, size: file.size }]);
+                    };
+                    reader.readAsText(file);
+                });
+            };
+
+            const removeFile = (index) => {
+                setFiles(prev => prev.filter((_, i) => i !== index));
+            };
+
+            // Constructs the string context from uploaded files to send to the LLM.
+            const getFileContext = () => {
+                let fileContext = "";
+                if (files.length > 0) {
+                    fileContext = "\n\n### ATTACHED LOCAL SOURCE FILES:\n";
+                    files.forEach(f => { fileContext += `\n--- START FILE: ${f.name} ---\n${f.content}\n--- END FILE: ${f.name} ---\n`; });
+                }
+                return fileContext;
+            };
+
+            // Constructs the system-level instruction prompt for the Gemini API.
+            const constructSystemPrompt = () => {
+                let batchNum = parseInt(config.batchSize) || 6;
+                let easyCount = 0;
+                let mediumCount = 0;
+                let hardCount = 0;
+                let targetType = 'Multiple Choice and True/False';
+                let mcCount = 0;
+                let tfCount = 0;
+
+                const [difficulty, type] = config.difficulty.split(' ');
+
+                if (difficulty === 'Balanced') {
+                    // Logic for Balanced All mode: enforces 1/6 split for each of the 6 categories.
+                    if (batchNum % 6 !== 0) {
+                        batchNum = Math.ceil(batchNum / 6) * 6;
+                    }
+                    const countPerCategory = batchNum / 6;
+                    easyCount = countPerCategory;
+                    mediumCount = countPerCategory;
+                    hardCount = countPerCategory;
+                    targetType = 'Multiple Choice and True/False';
+                    mcCount = countPerCategory * 3; 
+                    tfCount = countPerCategory * 3; 
+                    
+                } else {
+                    // Logic for specific Difficulty/Type modes (Easy MC, Hard T/F, etc.)
+                    if (difficulty === 'Easy') {
+                        easyCount = batchNum;
+                    } else if (difficulty === 'Medium') {
+                        mediumCount = batchNum;
+                    } else if (difficulty === 'Hard') {
+                        hardCount = batchNum;
+                    }
+                    
+                    if (type === 'MC') {
+                        targetType = 'Multiple Choice ONLY';
+                        mcCount = batchNum;
+                    } else if (type === 'T/F') {
+                        targetType = 'True/False ONLY';
+                        tfCount = batchNum;
+                    }
+                }
+                
+                const difficultyPrompt = (difficulty === 'Balanced') 
+                    ? `Generate exactly ${easyCount} Easy, ${mediumCount} Medium, and ${hardCount} Hard questions. Additionally, ensure the total output contains exactly ${mcCount} Multiple Choice questions and exactly ${tfCount} True/False questions for a perfectly balanced batch across all six possible combinations (Easy MC, Easy T/F, Medium MC, Medium T/F, Hard MC, Hard T/F).`
+                    : `Generate exactly ${batchNum} questions of difficulty: ${difficulty}.`;
+
+                return `
+## Universal UE5 Scenario-Based Question Generator — Gemini Version
+
+Role:
+You are a senior Unreal Engine 5 technical writer. Create short, clear, scenario-driven questions in Simplified Technical English (STE).
+**FORMATTING INSTRUCTION:** You MUST enclose key technical concepts (like Nanite, Lumen, Blueprints, Virtual Shadow Maps) in HTML bold tags (e.g., <b>Nanite</b>) in the Question and Answer columns.
+
+Discipline Setup:
+Discipline: ${config.discipline}
+Target Language: ${config.language}
+Question Type: ${targetType}
+**LANGUAGE STRICTNESS:** Output ONLY in ${config.language}. Do NOT provide bilingual text.
+
+Question Format:
+| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |
+
+- ID starts at 1.
+- Difficulty levels: Easy / Medium / Hard.
+- For True/False questions: OptionA=TRUE, OptionB=FALSE. CorrectLetter=A/B.
+- **CRITICAL RULE:** True/False questions must be a SINGLE assertion.
+- **TYPE RULE:** If Question Type is 'Multiple Choice ONLY', do NOT generate True/False questions. If Question Type is 'True/False ONLY', do NOT generate Multiple Choice questions.
+
+Sourcing:
+1. Official Epic Games Documentation (dev.epicgames.com/documentation)
+2. Official Unreal Engine YouTube Channel (https://www.youtube.com/unrealengine) - SourceExcerpt MUST be spoken text.
+3. Attached Local Files
+**FORBIDDEN SOURCES:** Do NOT use forums, Reddit, or community wikis.
+
+Output:
+- **STRICT BALANCE REQUIREMENT:** ${difficultyPrompt}
+${getFileContext()}
+`;
+            };
+
+            // Main function to trigger question generation, deduplication, and state update.
+            const handleGenerate = async () => {
+                
+                if (!config.creatorName) {
+                    showMessage("Please enter your Creator Name to start generating.", 5000);
+                    setShowNameModal(true);
+                    return;
+                }
+                
+                // Check if the current specific category quota is met
+                if (config.difficulty !== 'Balanced All' && isTargetMet) {
+                    showMessage(`Quota met for ${config.difficulty}! Change difficulty/type or discipline to continue.`, 5000);
+                    return;
+                }
+
+                setIsGenerating(true);
+                setStatus('Drafting Scenarios...');
+                const systemPrompt = constructSystemPrompt();
+                const userPrompt = `Generate ${config.batchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}. Ensure links work for UE 5.7 or latest available.`;
+
+                try {
+                    // 1. Generate Content (waits for API response)
+                    const text = await generateContent(systemPrompt, userPrompt, setStatus);
+                    let newQuestions = parseQuestions(text);
+                    if (newQuestions.length === 0) throw new Error("Failed to parse generated questions.");
+                    
+                    // 2. Deduplicate and Store (waits for Firestore operations)
+                    const uniqueNewQuestions = await checkAndStoreQuestions(newQuestions);
+
+                    // 3. Update UI State with only unique questions
+                    setQuestions(prev => [...prev, ...uniqueNewQuestions]);
+                    setContentLanguage(config.language);
+                    setStatus('');
+                } catch (err) {
+                    console.error(err);
+                    setStatus('Error');
+                    showMessage(`Generation Error: ${err.message}. Please try again.`, 10000);
+                } finally {
+                    setIsGenerating(false);
+                }
+            };
+
+            // Detects discipline from uploaded files (if any)
+            const handleDetectTopics = async () => {
+                if (files.length === 0) return;
+                setIsDetecting(true);
+                setStatus('Scanning...');
+                const prompt = `Analyze content. Identify 3 prominent technical disciplines. Return ONLY comma-separated list. ${getFileContext()}`;
+                try {
+                    const detected = await generateContent("Technical Analyst", prompt, setStatus);
+                    setConfig(prev => ({ ...prev, discipline: detected.split(',')[0].trim() }));
+                    setStatus('Detected'); setTimeout(() => setStatus(''), 2000);
+                } catch (err) { setStatus('Failed'); } finally { setIsDetecting(false); }
+            };
+
+            // Translates all existing questions to the new target language
+            const handleTranslate = async (fromLang, toLang) => {
+                if (questions.length === 0) return;
+                setIsProcessing(true);
+                setStatus(`Translating to ${toLang}...`);
+                let rawTable = "| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
+                questions.forEach((q, i) => {
+                    const opts = q.options || {};
+                    rawTable += `| ${i+1} | ${q.discipline} | ${q.type} | ${q.difficulty} | ${q.question} | | ${opts.A || ''} | ${opts.B || ''} | ${opts.C || ''} | ${opts.D || ''} | ${q.correct} | ${q.sourceUrl} | ${q.sourceExcerpt} |\n`;
+                });
+
+                const prompt = `
+                You are a professional technical translator. Translate from ${fromLang} to ${toLang}.
+                Keep Markdown table structure. Translate Question, Options, and SourceExcerpt.
+                Do NOT translate Discipline, Type, Difficulty, or SourceURL.
+                Content: ${rawTable}
+                `;
+                
+                try {
+                    const text = await generateContent("You are a translator.", prompt, setStatus);
+                    const translatedQuestions = parseQuestions(text);
+                    if (translatedQuestions.length > 0) {
+                             setQuestions(translatedQuestions.map((tq, i) => ({ ...tq, id: questions[i]?.id || tq.id, status: questions[i]?.status || 'pending' })));
+                             setStatus('Translated');
+                             setContentLanguage(toLang);
+                    }
+                } catch(e) { console.error(e); setStatus('Fail'); } finally { setIsProcessing(false); }
+            };
+
+            const handleTranslateClick = () => {
+                handleTranslate(contentLanguage, config.language);
+            };
+
+            // Generates an explanation for the correct answer
+            const handleExplain = async (q) => {
+                setIsProcessing(true);
+                setStatus('Explaining...');
+                const prompt = `Explain WHY the answer is correct in simple terms: "${q.question}" Answer: "${q.correct === 'A' ? q.options.A : q.options.B}"`;
+                try {
+                    const exp = await generateContent("Technical Assistant", prompt, setStatus);
+                    setQuestions(prev => prev.map(i => i.id === q.id ? { ...i, explanation: exp } : i));
+                    setStatus('');
+                } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
+            };
+
+            // Generates two variations based on the current question
+            const handleVariate = async (q) => {
+                setIsProcessing(true);
+                setStatus('Creating variations...');
+                const sys = constructSystemPrompt();
+                const prompt = `Generate 2 NEW unique questions based on: "${q.question}". Output in Markdown Table.`;
+                try {
+                    const text = await generateContent(sys, prompt, setStatus);
+                    const newQs = parseQuestions(text);
+                    if(newQs.length > 0) { 
+                        // Deduplicate and store the new variations
+                        const uniqueNewQuestions = await checkAndStoreQuestions(newQs);
+                        setQuestions(prev => [...prev, ...uniqueNewQuestions]); 
+                        showMessage(`Added ${uniqueNewQuestions.length} new variations.`, 3000); 
+                    }
+                } catch(e) { setStatus('Fail'); } finally { setIsProcessing(false); }
+            };
+
+            // Generates AI critique/suggestions for a rejected question
+            const handleCritique = async (q) => {
+                setIsProcessing(true);
+                setStatus('Critiquing...');
+                
+                const questionDetails = `Question: ${q.question}\nDiscipline: ${q.discipline}\nDifficulty: ${q.difficulty}\nCorrect Answer: ${q.correct}: ${q.options[q.correct] || 'N/A'}`;
+
+                const systemPrompt = `You are a Technical Writing Editor specialized in Unreal Engine 5 content. Analyze this REJECTED quiz question and provide actionable, numbered suggestions for improvement. Focus on: Clarity and technical accuracy. Output ONLY a brief, numbered list of 3-5 concrete suggestions.`;
+                
+                try {
+                    const critiqueText = await generateContent(systemPrompt, `Critique and suggest fixes for the following rejected question:\n${questionDetails}`, setStatus);
+                    setQuestions(prev => prev.map(i => i.id === q.id ? { ...i, critique: critiqueText } : i));
+                    showMessage('Critique Ready', 3000);
+
+                } catch (e) {
+                    console.error("Critique failed:", e);
+                    setStatus('Critique Fail');
+                } finally {
+                    setIsProcessing(false);
+                }
+            };
+
+            // Triggers file download in the browser
+            const downloadFile = (data, filename, type) => {
+                const blob = new Blob([data], { type: type });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            // Helper function to convert questions array to CSV content string (Standard Export)
+            const getCSVContent = (validQuestions, creatorName, reviewerName, exportLanguage, includeHeaders = true) => {
+                // Header must match the order of data constructed below
+                const headers = ["ID", "Discipline", "Type", "Difficulty", "Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer", "Generation Date", "Source URL", "Source Excerpt", "Creator", "Reviewer"];
+                let csvContent = includeHeaders ? headers.map(safe).join(',') + '\n' : '';
+                
+                const generationDate = formatDate(new Date());
+
+                validQuestions.forEach((row, i) => {
+                    const o = row.options || {};
+                    // Data row construction must match headers
+                    const rowData = [
+                        (i + 1).toString(), // ID
+                        row.discipline,     // Discipline
+                        row.type,           // Type
+                        row.difficulty,     // Difficulty
+                        row.question,       // Question
+                        o.A, o.B, o.C, o.D, // Options A, B, C, D
+                        row.correct,        // Correct Answer (Letter)
+                        generationDate,     // Generation Date (MM.DD.YYYY)
+                        row.sourceUrl,      // Source URL
+                        row.sourceExcerpt,  // Source Excerpt
+                        creatorName,        // Creator
+                        reviewerName        // Reviewer
+                    ];
+                    csvContent += rowData.map(safe).join(',') + '\n';
+                });
+                return csvContent;
+            };
+
+            // Standard CSV export (all accepted questions in one batch)
+            const handleStandardExport = () => {
+                const valid = questions.filter(q => q.status !== 'rejected');
+                if(valid.length === 0) { showMessage("No accepted questions to export.", 3000); return; }
+                
+                const typePart = config.difficulty.replace(/\s/g,'_');
+                const disciplinePart = config.discipline.replace(/\s/g,'_');
+                const datePart = new Date().toISOString().split('T')[0].replace(/-/g, '');
+
+                const csvContent = getCSVContent(valid, config.creatorName, config.reviewerName, config.language);
+                // Filename includes discipline and the selected difficulty/type
+                const filename = `${disciplinePart}_${typePart}_${datePart}.csv`;
+                downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
+                showMessage(`Exported ${valid.length} questions to ${filename}`, 5000);
+                setShowExportMenu(false);
+            };
+            
+            // NEW FUNCTION: Exports segregated CSV files for each unique Discipline_Difficulty_Type combination.
+            const handleExportByGroup = () => {
+                const valid = questions.filter(q => q.status !== 'rejected');
+                if(valid.length === 0) { showMessage("No accepted questions to export.", 3000); return; }
+
+                // Group questions by composite key
+                const groupedData = valid.reduce((acc, q) => {
+                    const typeAbbrev = q.type === 'True/False' ? 'T/F' : 'MC';
+                    const key = `${q.discipline} ${q.difficulty} ${typeAbbrev}`;
+                    if (!acc[key]) {
+                        acc[key] = [];
+                    }
+                    acc[key].push(q);
+                    return acc;
+                }, {});
+
+                let filesGenerated = 0;
+                const exportDate = new Date();
+                const datePart = formatDate(exportDate).replace(/\./g, '');
+
+                // Iterate over each group and export a separate file
+                Object.keys(groupedData).forEach(groupKey => {
+                    const groupQuestions = groupedData[groupKey];
+                    
+                    // Generate CSV content for this specific group
+                    const csvContent = getCSVContent(groupQuestions, config.creatorName, config.reviewerName, config.language);
+                    
+                    // Create secure filename: Discipline_Difficulty_Type_Date.csv
+                    const fileNameParts = groupKey.replace(/ & /g, '_').replace(/ /g, '_');
+                    const filename = `${fileNameParts}_${datePart}.csv`; 
+                    
+                    downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
+                    filesGenerated++;
+                });
+
+                showMessage(`Exported ${filesGenerated} separate files grouped by Discipline, Difficulty, and Type.`, 7000);
+                setShowExportMenu(false);
+            };
+
+            // NEW FUNCTION: Handles bulk translation and export
+            const handleBulkTranslateExport = async (targetLanguages) => {
+                const validQuestions = questions.filter(q => q.status === 'accepted');
+                if(validQuestions.length === 0 || targetLanguages.length === 0) return;
+
+                setIsProcessing(true);
+                const exportDate = new Date();
+                const datePart = formatDate(exportDate).replace(/\./g, '');
+
+                // 1. Convert ALL accepted questions to a single large Markdown table
+                let rawTable = "| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
+                validQuestions.forEach((q, i) => {
+                    const opts = q.options || {};
+                    // Use stripped content to ensure markdown table integrity for the model
+                    rawTable += `| ${i+1} | ${stripHtmlTags(q.discipline)} | ${stripHtmlTags(q.type)} | ${stripHtmlTags(q.difficulty)} | ${stripHtmlTags(q.question)} | | ${stripHtmlTags(opts.A || '')} | ${stripHtmlTags(opts.B || '')} | ${stripHtmlTags(opts.C || '')} | ${stripHtmlTags(opts.D || '')} | ${q.correct} | ${stripHtmlTags(q.sourceUrl)} | ${stripHtmlTags(q.sourceExcerpt)} |\n`;
+                });
+
+                const sourceLang = contentLanguage;
+                let filesGenerated = 0;
+
+                for (const targetLang of targetLanguages) {
+                    setStatus(`Translating to ${targetLang}...`);
+                    
+                    const systemPrompt = `
+                        You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided Markdown table from ${sourceLang} to ${targetLang}.
+                        CRITICAL INSTRUCTIONS:
+                        1. Preserve the exact Markdown table structure, including the pipe characters (|) and the header row.
+                        2. Translate ONLY the following columns: Question, OptionA, OptionB, OptionC, OptionD, and SourceExcerpt.
+                        3. DO NOT translate: ID, Discipline, Type, Difficulty, Answer (column 6), CorrectLetter, and SourceURL.
+                    `;
+                    
+                    try {
+                        const translatedText = await generateContent(systemPrompt, `Translate the following ${sourceLang} question bank table to ${targetLang}:\n${rawTable}`, setStatus);
+                        const translatedQuestions = parseQuestions(translatedText);
+
+                        if (translatedQuestions.length > 0) {
+                            // Generate CSV content for the translated batch
+                            const csvContent = getCSVContent(translatedQuestions, config.creatorName, config.reviewerName, targetLang);
+
+                            const disciplinePart = config.discipline.replace(/\s/g,'_');
+                            const langPart = targetLang.replace(/\s/g,'_');
+                            const filename = `${disciplinePart}_${langPart}_EXPORT_${datePart}.csv`;
+
+                            downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
+                            filesGenerated++;
+                        }
+                    } catch (e) {
+                        console.error(`Translation to ${targetLang} failed:`, e);
+                        showMessage(`Error translating to ${targetLang}. See console for details.`, 5000);
+                    }
+                }
+                
+                setStatus(`Successfully exported ${filesGenerated} translated file(s).`);
+                setIsProcessing(false);
+            };
+
+
+            const handleUpdateStatus = (id, newStatus) => {
+                // Clear critique if accepted, update status otherwise
+                setQuestions(prev => prev.map(q => q.id === id ? { ...q, status: newStatus, critique: newStatus === 'accepted' ? null : q.critique } : q));
+            };
+            
+            // Component for the "Are you sure?" confirmation modal
+            const ClearConfirmationModal = ({ onConfirm, onCancel }) => (
+                <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-300 space-y-4">
+                        <h3 className="text-xl font-bold text-red-500 flex items-center gap-2"><Icon name="alert-triangle" size={20}/> CONFIRM DATABASE WIPE</h3>
+                        <p className="text-sm text-slate-300">This action will permanently delete all accepted questions saved in the database for this application. Are you sure you want to proceed?</p>
+                        <div className="flex justify-end gap-3">
+                            <button onClick={onCancel} className="px-4 py-2 text-sm rounded bg-slate-700 hover:bg-slate-600 text-white transition-colors">Cancel</button>
+                            <button onClick={onConfirm} className="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-bold transition-colors">Wipe All Data</button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+
+            // Progress Logic
+            const progress = Math.min((approvedCount / TARGET_TOTAL) * 100, 100);
+            const getProgColor = (p) => p >= 100 ? 'bg-blue-500 shadow-lg' : p >= 75 ? 'bg-green-500' : p >= 25 ? 'bg-orange-500' : 'bg-red-500';
+
+            // Filtered Questions Logic
+            const filteredQuestions = questions.filter(q => {
+                if (filterMode === 'all') return true;
+                if (filterMode === 'pending') return q.status === 'pending';
+                if (filterMode === 'accepted') return q.status === 'accepted';
+                if (filterMode === 'rejected') return q.status === 'rejected';
+                return true;
+            });
+
+            // Filter Button Component (defined inside App for easier access to state)
+            const FilterButton = ({ mode, current, setFilter, label, count, color }) => {
+                const isActive = mode === current;
+                const baseClasses = "px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1";
+                let activeClasses = "bg-orange-600 text-white shadow-md shadow-orange-900/50";
+                let inactiveClasses = "bg-slate-800 text-slate-400 hover:bg-slate-700/50";
+
+                if (mode === 'accepted' && !isActive) inactiveClasses = "bg-green-900/20 text-green-400 hover:bg-green-900/30";
+                if (mode === 'rejected' && !isActive) inactiveClasses = "bg-red-900/20 text-red-400 hover:bg-red-900/30";
+                if (mode === 'pending' && !isActive) inactiveClasses = "bg-yellow-900/20 text-yellow-400 hover:bg-yellow-900/30";
+
+                return (
+                    <button
+                        onClick={() => setFilter(mode)}
+                        className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
+                    >
+                        <Icon name={mode === 'accepted' ? 'check' : mode === 'rejected' ? 'x' : mode === 'pending' ? 'clock' : 'list'} size={12}/>
+                        {label} <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">{count}</span>
+                    </button>
+                );
+            };
+            
+            // Component to display the granular progress bars
+            const GranularProgress = ({ approvedCounts, target, isTargetMet, selectedDifficulty }) => {
+                const categories = CATEGORY_KEYS.map(key => {
+                    const current = approvedCounts[key] || 0;
+                    const remaining = Math.max(0, target - current);
+                    const isComplete = current >= target;
+                    const isSelected = key === selectedDifficulty;
+
+                    let barColor = 'bg-slate-800';
+                    if (isComplete) {
+                        barColor = 'bg-blue-600';
+                    } else if (isSelected) {
+                        barColor = 'bg-orange-600';
+                    } else if (current > 0) {
+                         barColor = 'bg-green-600';
+                    }
+
+                    const percentage = Math.min(100, (current / target) * 100);
+
+                    return (
+                        <div key={key} className={`p-2 rounded transition-all ${isSelected ? 'bg-slate-800 border border-orange-600 shadow-lg' : 'bg-slate-900'}`}>
+                            <div className="flex justify-between items-center text-xs mb-1">
+                                <span className={`font-semibold ${isComplete ? 'text-blue-300' : 'text-slate-200'}`}>{key}</span>
+                                <span className={`text-[10px] font-bold ${isComplete ? 'text-blue-400' : 'text-slate-400'}`}>
+                                    {current} / {target} ({remaining} left)
+                                </span>
+                            </div>
+                            <div className="w-full h-1.5 rounded overflow-hidden bg-slate-700">
+                                <div className={`h-full transition-all duration-500 ${barColor}`} style={{ width: `${percentage}%` }}></div>
+                            </div>
+                        </div>
+                    );
+                });
+
+                return (
+                    <div className="space-y-2">
+                        <h3 className="text-sm font-bold uppercase text-slate-400 flex items-center gap-2 border-b border-slate-700/50 pb-1.5 mb-1"><Icon name="list-checks" size={14} /> Quota Breakdown (Target: {TARGET_TOTAL})</h3>
+                        {isTargetMet && (
+                            <div className="p-3 bg-red-900/30 border border-red-700 text-xs rounded text-red-200 flex items-start gap-2">
+                                <Icon name="alert-triangle" size={16} className="flex-shrink-0 mt-0.5" />
+                                <span>Target of {target} for <strong>{selectedDifficulty}</strong> met. Change mode or discipline to proceed.</span>
+                            </div>
+                        )}
+                        {categories}
+                    </div>
+                );
+            };
+
+
+            return (
+                <div className="flex flex-col h-screen bg-slate-950 font-sans text-slate-200">
+                    {/* The Name Modal is shown if config.creatorName is empty */}
+                    {showNameModal && <NameEntryModal onSave={handleNameSave} />}
+                    {showClearModal && <ClearConfirmationModal onConfirm={handleDeleteAllQuestions} onCancel={() => setShowClearModal(false)} />}
+
+                    <Header />
+                    <div className="flex flex-1 overflow-hidden">
+                        <aside className="w-80 flex-shrink-0 z-10 shadow-xl border-r border-slate-700 bg-slate-950 p-6 overflow-y-auto flex flex-col gap-6">
+                            
+                            {/* Granular Progress */}
+                            <GranularProgress 
+                                approvedCounts={approvedCounts}
+                                target={TARGET_PER_CATEGORY}
+                                isTargetMet={isTargetMet}
+                                selectedDifficulty={config.difficulty}
+                            />
+                            
+                            {/* Batch Size Input */}
+                            <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner">
+                                <div className="flex items-center mb-2">
+                                    <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2"><Icon name="hash" size={12}/> Batch Size (Max {maxBatchSize})</label>
+                                    <InfoTooltip text="Number of questions to generate in one batch. Dynamically capped by remaining quota." />
+                                </div>
+                                <input 
+                                    type="number" 
+                                    min="1" 
+                                    max={maxBatchSize} 
+                                    name="batchSize" 
+                                    value={config.batchSize} 
+                                    onChange={handleChange} 
+                                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500" 
+                                    placeholder="e.g. 6, 12, 18" 
+                                />
+                            </div>
+
+                            <div className="pb-4">
+                                <button onClick={handleGenerate} disabled={isGenerating || isTargetMet || maxBatchSize === 0} className={`w-full py-4 px-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isGenerating || isTargetMet || maxBatchSize === 0 ? 'bg-slate-700 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 active:scale-[0.98]'}`}>
+                                    {isGenerating ? <><Icon name="loader" size={16} className="animate-spin"/> GENERATING...</> : <><Icon name="book-open" size={16}/> GENERATE QUESTIONS</>}
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-1">
+                                    <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Creator Name</label><InfoTooltip text="The author who generated this batch."/></div>
+                                    <input type="text" name="creatorName" value={config.creatorName} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500" placeholder="Creator Name" />
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Reviewer Name</label><InfoTooltip text="The current reviewer for this session. Leave blank if none."/></div>
+                                    <input type="text" name="reviewerName" value={config.reviewerName} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500" placeholder="Reviewer Name (Optional)" />
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Discipline</label><InfoTooltip text="Topic focus"/></div>
+                                    <select name="discipline" value={config.discipline} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
+                                        <option value="Technical Art">Technical Art</option>
+                                        <option value="Animation & Rigging">Animation & Rigging</option>
+                                        <option value="Game Logic & Systems">Game Logic & Systems</option>
+                                        <option value="Look Development (Materials)">Look Development (Materials)</option>
+                                        <option value="Networking">Networking</option>
+                                        <option value="C++ Programming">C++ Programming</option>
+                                        <option value="VFX (Niagara)">VFX (Niagara)</option>
+                                        <option value="World Building & Level Design">World Building & Level Design</option>
+                                        <option value="Blueprints">Blueprints</option>
+                                        <option value="Lighting & Rendering">Lighting & Rendering</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Language</label></div>
+                                    <select name="language" value={config.language} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
+                                        <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Difficulty & Type</label><InfoTooltip text="Select a specific combination or choose 'Balanced All' for a mix."/></div>
+                                    <select name="difficulty" value={config.difficulty} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none">
+                                        <option value="Balanced All">Balanced All (E, M, H / MC, T/F)</option>
+                                        <optgroup label="Multiple Choice (MC)">
+                                            <option value="Easy MC">Easy Multiple Choice</option>
+                                            <option value="Medium MC">Medium Multiple Choice</option>
+                                            <option value="Hard MC">Hard Multiple Choice</option>
+                                        </optgroup>
+                                        <optgroup label="True/False (T/F)">
+                                            <option value="Easy T/F">Easy True/False</option>
+                                            <option value="Medium T/F">Medium True/False</option>
+                                            <option value="Hard T/F">Hard True/False</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="mt-auto pt-6 border-t border-slate-800 space-y-3">
+                                
+                                <div className="flex justify-between items-end"><label className="text-xs font-bold uppercase text-slate-400">Source Files</label>
+                                {files.length > 0 && <button onClick={handleDetectTopics} disabled={isDetecting} className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50">{isDetecting ? "..." : "Detect"}</button>}
+                                </div>
+                                <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-900 cursor-pointer text-center bg-slate-900/50">
+                                    <Icon name="upload" className="mx-auto text-slate-600 mb-2"/>
+                                    <p className="text-xs text-slate-500">Upload .csv</p>
+                                    <input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" />
+                                </div>
+                                {files.map((f,i) => <div key={i} className="flex justify-between bg-slate-900 p-2 rounded border border-slate-800 text-xs text-slate-400"><span className="truncate">{f.name}</span><button onClick={()=>removeFile(i)} className="text-red-500">x</button></div>)}
+                            </div>
+                        </aside>
+
+                        <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
+                            {/* Warning Bar */}
+                            {needsTranslation && (
+                                <div className="bg-orange-900/30 border-b border-orange-800 p-2 flex justify-between px-4 items-center animate-in">
+                                    <div className="flex items-center gap-2 text-orange-200 text-xs"><Icon name="globe" size={14}/> Content in <strong>{contentLanguage}</strong>, target is <strong>{config.language}</strong>.</div>
+                                    <button onClick={handleTranslateClick} disabled={isProcessing} className="text-[10px] bg-orange-600 text-white px-3 py-1 rounded font-bold hover:bg-orange-500">{isProcessing ? "..." : "Translate Now"}</button>
+                                </div>
+                            )}
+
+                            {/* Toolbar (Status, Filters, Actions) */}
+                            <div className="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900 shadow-md z-10">
+                                {/* Status Bar (Left) */}
+                                <div className="flex gap-4 items-center">
+                                    {isAuthReady ? (
+                                        <>
+                                            {status && <span className="text-xs text-orange-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="loader" size={12} className="animate-spin"/> {status}</span>}
+                                            {!status && <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Icon name="database" size={14}/> DB Ready</span>}
+                                        </>
+                                    ) : (
+                                        <span className="text-xs text-yellow-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="plug" size={12} className="animate-pulse"/> Connecting to DB...</span>
+                                    )}
+                                </div>
+
+                                {/* Filter Buttons (Center) */}
+                                {questions.length > 0 && (
+                                    <div className="flex gap-2 items-center bg-slate-950 p-1 rounded-lg border border-slate-800 shadow-inner">
+                                        <FilterButton mode="all" current={filterMode} setFilter={setFilterMode} label="All" count={questions.length} />
+                                        <FilterButton mode="pending" current={filterMode} setFilter={setFilterMode} label="Pending" count={pendingCount} />
+                                        <FilterButton mode="accepted" current={filterMode} setFilter={setFilterMode} label="Accepted" count={approvedCount} />
+                                        <FilterButton mode="rejected" current={filterMode} setFilter={setFilterMode} label="Rejected" count={rejectedCount} />
+                                    </div>
+                                )}
+
+                                {/* Actions (Right) */}
+                                <div className="flex gap-2 items-center relative">
+                                    {questions.length > 0 && (
+                                        <>
+                                            <div className="flex gap-1 mr-2 border-r border-slate-700 pr-3">
+                                                <button onClick={() => setShowExportMenu(prev => !prev)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-900/20 border border-emerald-800/50 rounded hover:bg-emerald-900/40" title="View Export Options">
+                                                    <Icon name="download" size={12}/> Export Options
+                                                </button>
+                                            </div>
+                                            <button onClick={() => setShowClearModal(true)} className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-red-400 flex items-center gap-1"><Icon name="trash-2" size={12}/> Clear</button>
+                                        </>
+                                    )}
+                                    {showExportMenu && (
+                                        <ExportOptions 
+                                            onExportByGroup={handleExportByGroup} 
+                                            onBulkTranslateExport={handleBulkTranslateExport}
+                                            isProcessing={isProcessing}
+                                            setMenuOpen={setShowExportMenu}
+                                            creatorName={config.creatorName}
+                                            reviewerName={config.reviewerName}
+                                            approvedCount={approvedCount}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4">
+                                {questions.length === 0 && !status && (
+                                    <div className="flex flex-col items-center justify-center h-full text-slate-600">
+                                        <Icon name="terminal" size={48} className="mb-4 text-slate-800"/>
+                                        <p className="font-medium text-slate-500">Ready. Click 'GENERATE QUESTIONS' to begin or upload a source file.</p>
+                                    </div>
+                                )}
+                                {filteredQuestions.map(q => (
+                                    <QuestionItem 
+                                        key={q.id} q={q} 
+                                        onUpdateStatus={handleUpdateStatus} 
+                                        onExplain={handleExplain} 
+                                        onVariate={handleVariate} 
+                                        onCritique={handleCritique}
+                                        isProcessing={isProcessing} 
+                                    />
+                                ))}
+                                {filteredQuestions.length === 0 && questions.length > 0 && (
+                                    <div className="flex flex-col items-center justify-center h-full text-slate-600 pt-10">
+                                        <Icon name="search" size={32} className="mb-3 text-slate-800"/>
+                                        <p className="font-medium text-slate-500">No questions match the current filter: <strong className="text-orange-500">{filterMode.toUpperCase()}</strong>.</p>
+                                        <p className="text-xs text-slate-600 mt-1">Try changing the filter or generating a new batch.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </main>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
