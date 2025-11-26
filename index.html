@@ -63,6 +63,9 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
+        // --- APPLICATION VERSION ---
+        const APP_VERSION = "v1.1";
+
         // --- Configuration & Constants ---
         const LANGUAGE_FLAGS = {
             'English': '🇺🇸',
@@ -432,7 +435,7 @@
             </div>
         );
 
-        const Header = ({ apiKeyStatus, isCloudReady, onHome }) => (
+        const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName }) => (
             <header className="bg-slate-950 text-white p-6 shadow-xl border-b border-orange-600 relative z-20">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer" onClick={onHome} title="Back to Home">
@@ -440,20 +443,31 @@
                             <Icon name="terminal" size={24} className="text-white" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold tracking-tight uppercase text-orange-50">UE5 STE Question Generator</h1>
+                            <h1 className="text-xl font-bold tracking-tight uppercase text-orange-50">
+                                UE5 STE Question Generator
+                                <span className="text-xs text-slate-400 font-normal ml-3 border border-slate-700 rounded-full px-2 py-0.5 align-top inline-block">{APP_VERSION}</span>
+                            </h1>
                             <p className="text-slate-400 text-xs">Universal Scenario-Based Generator • Official Docs Only</p>
                         </div>
                     </div>
-                    <div className="hidden md:flex items-center gap-2 text-xs font-mono px-3 py-1 rounded border border-slate-700">
-                        <span className={`font-bold ${apiKeyStatus === 'Loaded' ? 'text-green-400' : 'text-red-400'}`}>API Key: {apiKeyStatus}</span>
-                        {isCloudReady ? (
-                            <div className="flex items-center gap-1.5 text-blue-400 font-bold border-l border-slate-700 pl-2 ml-2">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                                <span>CLOUD LIVE</span>
+                    <div className="hidden md:flex items-center gap-4 text-xs font-mono">
+                        {creatorName && (
+                            <div className="flex items-center gap-1.5 font-bold text-slate-300 px-3 py-1 bg-slate-800/50 rounded-lg">
+                                <Icon name="user-check" size={14} className="text-green-500"/> 
+                                <span>{creatorName}</span>
                             </div>
-                        ) : (
-                            <span className="text-orange-400 font-bold border-l border-slate-700 pl-2 ml-2">LOCAL MODE</span>
                         )}
+                        <div className="flex items-center gap-2 px-3 py-1 rounded border border-slate-700">
+                            <span className={`font-bold ${apiKeyStatus === 'Loaded' ? 'text-green-400' : 'text-red-400'}`}>API Key: {apiKeyStatus}</span>
+                            {isCloudReady ? (
+                                <div className="flex items-center gap-1.5 text-blue-400 font-bold border-l border-slate-700 pl-2 ml-2">
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                    <span>CLOUD LIVE</span>
+                                </div>
+                            ) : (
+                                <span className="text-orange-400 font-bold border-l border-slate-700 pl-2 ml-2">LOCAL MODE</span>
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>
@@ -794,6 +808,22 @@
                             </div>
                         </div>
                     )}
+
+                    {/* NEW: Creator/Reviewer Info */}
+                    <div className="pt-3 mt-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-600">
+                        <div className="flex items-center gap-1.5">
+                            <Icon name="user" size={12} className="text-slate-700"/>
+                            <span className="font-medium">Created by: </span>
+                            <span className="font-bold text-orange-400">{q.creatorName || 'N/A'}</span>
+                        </div>
+                        {q.reviewerName && q.reviewerName !== q.creatorName && (
+                            <div className="flex items-center gap-1.5">
+                                <Icon name="list-checks" size={12} className="text-slate-700"/>
+                                <span className="font-medium">Reviewed by: </span>
+                                <span className="font-bold text-indigo-400">{q.reviewerName}</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
         };
@@ -1453,7 +1483,7 @@ ${getFileContext()}
                     const detected = await generateContent(config.apiKey, "Technical Analyst", prompt, setStatus);
                     setConfig(prev => ({ ...prev, discipline: detected.split(',')[0].trim() }));
                     setStatus('Detected'); setTimeout(() => setStatus(''), 2000);
-                } catch (err) { setStatus('Failed'); } finally { setIsDetecting(false); }
+                } catch (err) { setStatus('Fail'); } finally { setIsDetecting(false); }
             };
 
             const handleTranslate = async (fromLang, toLang) => {
@@ -2000,7 +2030,7 @@ ${getFileContext()}
                         />
                     )}
                     
-                    <Header apiKeyStatus={apiKeyStatus} isCloudReady={isCloudReady} onHome={handleGoHome} />
+                    <Header apiKeyStatus={apiKeyStatus} isCloudReady={isCloudReady} onHome={handleGoHome} creatorName={config.creatorName} />
                     <div className="flex flex-1 overflow-hidden">
                         {/* Sidebar: Only show in Creation Mode */}
                         {appMode === 'create' && (
