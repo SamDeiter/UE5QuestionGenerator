@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UE5 STE Question Generator (Review Mode Enabled)</title>
+    <title>UE5 STE Question Generator (Real-Time Cloud)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,12 +22,12 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, where, getDocs, addDoc, setDoc, updateDoc, doc, deleteDoc, writeBatch, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, addDoc, setDoc, doc, deleteDoc, writeBatch, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Expose Firebase modules globally for use in the Babel script block
         window.Firebase = {
             initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut,
-            getFirestore, collection, query, where, getDocs, addDoc, setDoc, updateDoc, doc, deleteDoc, writeBatch, onSnapshot
+            getFirestore, collection, query, where, getDocs, addDoc, setDoc, doc, deleteDoc, writeBatch, onSnapshot
         };
         window.isFirebaseLoaded = true;
     </script>
@@ -77,23 +77,35 @@
             'Russian': '🇷🇺'
         };
 
+        // Short codes for the "missing translation" state
         const LANGUAGE_CODES = {
-            'English': 'US', 'Chinese (Simplified)': 'CN', 'Japanese': 'JP', 'Korean': 'KR', 'Spanish': 'ES',
-            'French': 'FR', 'German': 'DE', 'Italian': 'IT', 'Portuguese': 'PT', 'Russian': 'RU'
+            'English': 'US',
+            'Chinese (Simplified)': 'CN',
+            'Japanese': 'JP',
+            'Korean': 'KR',
+            'Spanish': 'ES',
+            'French': 'FR',
+            'German': 'DE',
+            'Italian': 'IT',
+            'Portuguese': 'PT',
+            'Russian': 'RU'
         };
         
         const CATEGORY_KEYS = ['Easy MC', 'Easy T/F', 'Medium MC', 'Medium T/F', 'Hard MC', 'Hard T/F'];
         const TARGET_PER_CATEGORY = 33; 
         const TARGET_TOTAL = 200;
-        const FIELD_DELIMITER = ',';
+        const FIELD_DELIMITER = ','; // CSV Standard
 
-        // --- Icon Component ---
+        // --- Icon Component for Browser CDN (Lucide) ---
         const Icon = ({ name, size = 16, className = "" }) => {
             const [svgHtml, setSvgHtml] = useState("");
+
             useEffect(() => {
                 if (typeof lucide === 'undefined') return;
+
                 const pascalName = name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
                 const iconDef = lucide.icons[pascalName];
+                
                 if (iconDef) {
                     const svgNode = lucide.createElement(iconDef);
                     svgNode.setAttribute('width', size);
@@ -102,14 +114,18 @@
                     setSvgHtml(svgNode.outerHTML);
                 }
             }, [name, size, className]);
+
             if (!svgHtml) return <span style={{width: size, height: size, display: 'inline-block'}} />;
             return <span dangerouslySetInnerHTML={{ __html: svgHtml }} className="inline-flex items-center justify-center" />;
         };
 
-        // --- Utilities ---
+        // --- API Configuration & Utilities (Ensured Global Scope) ---
+
         const chunkArray = (array, size) => {
             const result = [];
-            for (let i = 0; i < array.length; i += size) result.push(array.slice(i, i + size));
+            for (let i = 0; i < array.length; i += size) {
+                result.push(array.slice(i, i + size));
+            }
             return result;
         };
 
@@ -117,7 +133,9 @@
             if (!url) return '';
             let cleanUrl = url.trim();
             if (!/^[a-zA-Z]+:\/\//.test(cleanUrl) && (cleanUrl.includes('.') && !cleanUrl.includes(' '))) {
-                if (!cleanUrl.toLowerCase().endsWith('.csv') && !cleanUrl.toLowerCase().endsWith('.txt')) cleanUrl = 'https://' + cleanUrl;
+                if (!cleanUrl.toLowerCase().endsWith('.csv') && !cleanUrl.toLowerCase().endsWith('.txt')) {
+                    cleanUrl = 'https://' + cleanUrl;
+                }
             }
             return cleanUrl;
         };
@@ -140,15 +158,19 @@
         const safe = (t) => {
             const str = String(t);
             let content = stripHtmlTags(str);
-            content = (content || '').trim().replace(/[\u200B\uFEFF\u00A0]/g, ' ').replace(/\s\s+/g, ' ').trim().replace(/(\r\n|\n|\r|\t)/gm, ' ').replace(/['"]/g, '');
+            content = (content || '').trim();
+            content = content.replace(/[\u200B\uFEFF\u00A0]/g, ' ').replace(/\s\s+/g, ' ').trim(); 
+            content = content.replace(/(\r\n|\n|\r|\t)/gm, ' '); 
+            content = content.replace(/['"]/g, '');
             const escaped = content.replace(/"/g, '""');
             return `"${escaped}"`;
         };
         
-        const formatDate = (dateStr) => {
-            const date = dateStr ? new Date(dateStr) : new Date();
-            if (isNaN(date.getTime())) return 'N/A';
-            return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        const formatDate = (date = new Date()) => {
+            const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+            const dd = date.getDate().toString().padStart(2, '0');
+            const yyyy = date.getFullYear();
+            return `${yyyy}-${mm}-${dd}`;
         };
         
         const parseCSVLine = (text) => {
@@ -158,8 +180,19 @@
             for (let i = 0; i < text.length; i++) {
                 const char = text[i];
                 if (char === '"') {
-                    if (insideQuote && text[i + 1] === '"') { cell += '"'; i++; } else { insideQuote = !insideQuote; }
-                } else if (char === ',' && !insideQuote) { result.push(cell); cell = ''; } else { cell += char; }
+                    if (insideQuote && text[i + 1] === '"') {
+                        cell += '"';
+                        i++;
+                    } else {
+                        insideQuote = !insideQuote;
+                    }
+                } else if (char === ',' && !insideQuote) {
+                    result.push(cell);
+                    cell = '';
+                } else {
+                    cell += char;
+                    cell += char;
+                }
             }
             result.push(cell);
             return result;
@@ -167,22 +200,47 @@
         
         const generateContent = async (effectiveKey, systemPrompt, userPrompt, setStatus) => {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${effectiveKey}`;
+            
             const payload = {
                 contents: [{ parts: [{ text: userPrompt }] }],
                 systemInstruction: { parts: [{ text: systemPrompt }] },
                 tools: [{ google_search: {} }], 
-                generationConfig: { temperature: 0.2, maxOutputTokens: 8192 }
+                generationConfig: {
+                    temperature: 0.2, 
+                    maxOutputTokens: 8192
+                }
             };
-            let retries = 0; const maxRetries = 2; const backoffDelays = [2000, 5000];
+
+            let retries = 0;
+            const maxRetries = 2;
+            const backoffDelays = [2000, 5000];
+
             while (retries <= maxRetries) {
                 try {
-                    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error((await response.json()).error?.message || `API Error: ${response.status}`);
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+                    }
+
                     const data = await response.json();
-                    const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (!textResponse && data.candidates?.[0]?.finishReason !== 'STOP') throw new Error('No content generated');
+                    const candidate = data.candidates?.[0];
+                    const textResponse = candidate?.content?.parts?.[0]?.text;
+                    const finishReason = candidate?.finishReason;
+
+                    if (!textResponse && finishReason !== 'STOP') {
+                        throw new Error(finishReason || 'No content generated');
+                    }
+                    
                     return textResponse || "";
+
                 } catch (error) {
+                    console.error(`Attempt ${retries + 1} failed:`, error);
                     if (retries === maxRetries) throw error;
                     setStatus(`Retrying... (${retries + 1}/${maxRetries})`);
                     await new Promise(resolve => setTimeout(resolve, backoffDelays[retries]));
@@ -194,87 +252,181 @@
         const parseQuestions = (text) => {
             const parsed = [];
             const lines = text.split('\n');
+            
             const dataLines = lines.filter(line => {
                 const trimmed = line.trim();
-                return (trimmed.startsWith('|') || trimmed.startsWith('｜')) && !trimmed.includes('| ID |') && !trimmed.includes('｜ ID ｜') && !trimmed.includes('|---');
+                return (trimmed.startsWith('|') || trimmed.startsWith('｜')) && 
+                        !trimmed.includes('| ID |') && 
+                        !trimmed.includes('｜ ID ｜') && 
+                        !trimmed.includes('|---');
             });
+
             dataLines.forEach((line, index) => {
                 const normalizedLine = line.replace(/｜/g, '|');
                 let cols = normalizedLine.split('|').map(c => c.trim());
+                
                 if (cols[0] === '') cols.shift();
                 if (cols[cols.length - 1] === '') cols.pop();
+
                 if (cols.length >= 10) {
-                   if (cols[9] && /^[A-D]$/.test(cols[9]) && cols[10] && cols[10].startsWith('http')) cols.splice(5, 0, "");
+                   const looksLikeAnswer = (val) => /^[A-D]$/.test(val);
+                   const looksLikeUrl = (val) => val && val.startsWith('http');
+                   if (cols[9] && looksLikeAnswer(cols[9]) && cols[10] && looksLikeUrl(cols[10])) {
+                       cols.splice(5, 0, "");
+                   }
                 }
-                const [_, discipline, typeRaw, difficulty, question, , optA, optB, optC, optD, correctLetter, sourceUrl, sourceExcerpt] = cols;
+
+                const discipline = cols[1];
+                const typeRaw = cols[2];
+                const difficulty = cols[3];
+                const question = cols[4];
+                const optA = cols[6];
+                const optB = cols[7];
+                const optC = cols[8];
+                const optD = cols[9];
+                const correctLetter = cols[10]; 
+                const sourceUrl = cols[11];
+                const sourceExcerpt = cols[12];
+
                 if (!question || !correctLetter || question.includes('---')) return;
+
                 const type = typeRaw && typeRaw.toLowerCase().includes('true') ? 'True/False' : 'Multiple Choice';
-                const options = type === 'True/False' ? { A: 'TRUE', B: 'FALSE' } : { A: optA || '', B: optB || '', C: optC || '', D: optD || '' };
+
+                let options = {};
+                if (type === 'True/False') {
+                    options = { A: 'TRUE', B: 'FALSE' };
+                } else {
+                    options = { A: optA || '', B: optB || '', C: optC || '', D: optD || '' };
+                }
+
                 const uniqueId = crypto.randomUUID(); 
+
                 parsed.push({
-                    id: Date.now() + index + Math.random(), uniqueId, discipline: discipline || "General", type: type || "Multiple Choice", difficulty: difficulty || "Easy",
-                    question: question || "", options, correct: correctLetter || "", sourceUrl: sourceUrl || "", sourceExcerpt: sourceExcerpt || "", status: 'pending', critique: null
+                    id: Date.now() + index + Math.random(),
+                    uniqueId: uniqueId,
+                    discipline: discipline || "General",
+                    type: type || "Multiple Choice",
+                    difficulty: difficulty || "Easy",
+                    question: question || "",
+                    options,
+                    correct: correctLetter || "", 
+                    sourceUrl: sourceUrl || "",
+                    sourceExcerpt: sourceExcerpt || "",
+                    status: 'pending',
+                    critique: null
                 });
             });
+
             return parsed;
         };
+        // --- End of Utilities ---
 
-        // --- UI Components ---
+        // --- Shared Components (Defined early for scope safety) ---
         
-        const InfoTooltip = ({ text }) => (
+        const InfoTooltip = ({ text, direction = "up" }) => (
             <div className="group relative inline-flex items-center ml-1.5 align-middle">
                 <Icon name="info" size={12} className="text-slate-600 hover:text-orange-500 cursor-help transition-colors" />
-                <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 absolute left-1/2 -translate-x-1/2 w-48 p-2.5 bg-slate-800 border border-slate-700 text-slate-200 text-[10px] leading-relaxed rounded-md shadow-xl z-50 pointer-events-none text-center bottom-full mb-2">
-                    {text} <div className="absolute left-1/2 -translate-x-1/2 border-4 border-transparent top-full border-t-slate-800"></div>
+                <div className={`invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 absolute left-1/2 -translate-x-1/2 w-48 p-2.5 bg-slate-800 border border-slate-700 text-slate-200 text-[10px] leading-relaxed rounded-md shadow-xl z-50 pointer-events-none text-center ${direction === 'down' ? 'top-full mt-2' : 'bottom-full mb-2'}`}>
+                    {text}
+                    <div className={`absolute left-1/2 -translate-x-1/2 border-4 border-transparent ${direction === 'down' ? 'bottom-full border-b-slate-800' : 'top-full border-t-slate-800'}`}></div>
                 </div>
             </div>
         );
 
         const NameEntryModal = ({ onSave }) => {
             const [name, setName] = useState('');
+            const [sillyPlaceholder, setSillyPlaceholder] = useState('');
+
+            useEffect(() => {
+                const sillyNames = [ "Captain Blueprint", "Sir Render-Lot", "Polygon Prince", "Texture Titan" ];
+                setSillyPlaceholder(`e.g. ${sillyNames[Math.floor(Math.random() * sillyNames.length)]}`);
+            }, []);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (name.trim()) onSave(name);
+            };
+
             return (
                 <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center backdrop-blur-sm p-4">
                     <div className="bg-slate-900 border border-slate-700 p-8 rounded-xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-300">
                         <div className="flex flex-col items-center text-center mb-6">
-                            <div className="bg-orange-600 p-3 rounded-full mb-4 shadow-lg shadow-orange-900/50"><Icon name="user" size={32} className="text-white" /></div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Welcome, Creator</h2>
-                            <p className="text-slate-400 text-sm">Please enter your name.</p>
-                        </div>
-                        <form onSubmit={(e) => { e.preventDefault(); if (name.trim()) onSave(name); }} className="space-y-4">
-                            <div className="space-y-1 text-left">
-                                <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Creator Full Name</label>
-                                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-white" autoFocus />
+                            <div className="bg-orange-600 p-3 rounded-full mb-4 shadow-lg shadow-orange-900/50">
+                                <Icon name="user" size={32} className="text-white" />
                             </div>
-                            <button type="submit" disabled={!name.trim()} className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold rounded-lg">Start Creating</button>
+                            <h2 className="text-2xl font-bold text-white mb-2">Welcome, Creator / Reviewer</h2>
+                            <p className="text-slate-400 text-sm">Please enter your name to identify your contributions.</p>
+                        </div>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="space-y-1 text-left">
+                                <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Your Full Name (For Creating & Reviewing)</label>
+                                <input type="text" name="creatorName" value={name} onChange={(e) => setName(e.target.value)} placeholder={sillyPlaceholder} className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-white placeholder-slate-600 transition-all" autoFocus />
+                            </div>
+                            <button type="submit" disabled={!name.trim()} className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all shadow-lg active:scale-[0.98]">
+                                Set Identity & Start
+                            </button>
                         </form>
                     </div>
                 </div>
             );
         };
 
+        // --- New Components (Defined Outside App) ---
+
         const LandingPage = ({ onSelectMode, apiKeyStatus, isCloudReady }) => (
             <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-white p-4 relative overflow-hidden">
+                {/* Background Decoration */}
+                <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-600 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600 rounded-full blur-3xl"></div>
+                </div>
+
                 <div className="z-10 text-center space-y-8 max-w-2xl animate-in fade-in zoom-in-95 duration-500">
                     <div className="space-y-4">
-                        <div className="inline-flex items-center justify-center p-4 bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl mb-4"><Icon name="terminal" size={48} className="text-orange-500" /></div>
-                        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">UE5 STE <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">Question Generator</span></h1>
-                        <p className="text-lg text-slate-400 max-w-lg mx-auto">Create, review, and manage scenario-based technical questions for Unreal Engine 5 documentation.</p>
+                        <div className="inline-flex items-center justify-center p-4 bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl mb-4">
+                            <Icon name="terminal" size={48} className="text-orange-500" />
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+                            UE5 STE <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">Question Generator</span>
+                        </h1>
+                        <p className="text-lg text-slate-400 max-w-lg mx-auto">
+                            Create, review, and manage scenario-based technical questions for Unreal Engine 5 documentation.
+                        </p>
                     </div>
+
                     <div className="flex flex-col sm:flex-row gap-4 justify-center w-full">
-                        <button onClick={() => onSelectMode('create')} className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-orange-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-orange-900/20">
-                            <div className="p-3 bg-orange-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform"><Icon name="plus-circle" size={32} className="text-orange-500" /></div>
+                        <button 
+                            onClick={() => onSelectMode('create')}
+                            className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-orange-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-orange-900/20"
+                        >
+                            <div className="p-3 bg-orange-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
+                                <Icon name="plus-circle" size={32} className="text-orange-500" />
+                            </div>
                             <h3 className="text-xl font-bold mb-2">Creation Mode</h3>
                             <p className="text-xs text-slate-400 text-center">Generate new questions, upload CSVs, and translate content.</p>
                         </button>
-                        <button onClick={() => onSelectMode('review')} className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-indigo-900/20">
-                            <div className="p-3 bg-indigo-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform"><Icon name="list-checks" size={32} className="text-indigo-500" /></div>
+
+                        <button 
+                            onClick={() => onSelectMode('review')}
+                            className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-indigo-900/20"
+                        >
+                            <div className="p-3 bg-indigo-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
+                                <Icon name="list-checks" size={32} className="text-indigo-500" />
+                            </div>
                             <h3 className="text-xl font-bold mb-2">Review Mode</h3>
                             <p className="text-xs text-slate-400 text-center">Manage existing database, approve/reject questions, and bulk export.</p>
                         </button>
                     </div>
+
                     <div className="flex items-center justify-center gap-6 text-xs text-slate-500 font-mono pt-8">
-                        <div className="flex items-center gap-2"><div className={`w-2 h-2 rounded-full ${apiKeyStatus === 'Loaded' ? 'bg-green-500' : 'bg-red-500'}`}></div> API Key: {apiKeyStatus}</div>
-                        <div className="flex items-center gap-2"><div className={`w-2 h-2 rounded-full ${isCloudReady ? 'bg-blue-500' : 'bg-orange-500'}`}></div> {isCloudReady ? 'Cloud Connected' : 'Local Mode'}</div>
+                        <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${apiKeyStatus === 'Loaded' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                            API Key: {apiKeyStatus}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${isCloudReady ? 'bg-blue-500' : 'bg-orange-500'}`}></div>
+                            {isCloudReady ? 'Cloud Connected' : 'Local Mode'}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -284,12 +436,24 @@
             <header className="bg-slate-950 text-white p-6 shadow-xl border-b border-orange-600 relative z-20">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer" onClick={onHome} title="Back to Home">
-                        <div className="bg-orange-600 p-2 rounded-lg shadow-lg shadow-orange-900/50"><Icon name="terminal" size={24} className="text-white" /></div>
-                        <div><h1 className="text-xl font-bold tracking-tight uppercase text-orange-50">UE5 STE Question Generator</h1><p className="text-slate-400 text-xs">Universal Scenario-Based Generator • Official Docs Only</p></div>
+                        <div className="bg-orange-600 p-2 rounded-lg shadow-lg shadow-orange-900/50">
+                            <Icon name="terminal" size={24} className="text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold tracking-tight uppercase text-orange-50">UE5 STE Question Generator</h1>
+                            <p className="text-slate-400 text-xs">Universal Scenario-Based Generator • Official Docs Only</p>
+                        </div>
                     </div>
                     <div className="hidden md:flex items-center gap-2 text-xs font-mono px-3 py-1 rounded border border-slate-700">
                         <span className={`font-bold ${apiKeyStatus === 'Loaded' ? 'text-green-400' : 'text-red-400'}`}>API Key: {apiKeyStatus}</span>
-                        {isCloudReady ? ( <div className="flex items-center gap-1.5 text-blue-400 font-bold border-l border-slate-700 pl-2 ml-2"><div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div><span>CLOUD LIVE</span></div> ) : ( <span className="text-orange-400 font-bold border-l border-slate-700 pl-2 ml-2">LOCAL MODE</span> )}
+                        {isCloudReady ? (
+                            <div className="flex items-center gap-1.5 text-blue-400 font-bold border-l border-slate-700 pl-2 ml-2">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                <span>CLOUD LIVE</span>
+                            </div>
+                        ) : (
+                            <span className="text-orange-400 font-bold border-l border-slate-700 pl-2 ml-2">LOCAL MODE</span>
+                        )}
                     </div>
                 </div>
             </header>
@@ -297,47 +461,84 @@
 
         const CritiqueDisplay = ({ critique }) => (
             <div className="mb-3 p-3 bg-red-950/30 border border-red-500/30 rounded-lg animate-in fade-in slide-in-from-top-2">
-                <div className="flex items-center gap-2 mb-2 text-red-300 text-xs font-bold uppercase"><Icon name="zap" size={12} /> AI Critique</div>
-                <div className="text-xs text-slate-300 leading-relaxed space-y-1.5">{critique.split('\n').map((line, i) => <p key={i} className={line.match(/^(\*|-|\d+\.)\s/) ? "pl-3 text-red-100/80 indent-[-12px]" : ""}>{line.trim()}</p>)}</div>
+                <div className="flex items-center gap-2 mb-2 text-red-300 text-xs font-bold uppercase">
+                    <Icon name="zap" size={12} /> AI Critique
+                </div>
+                <div className="text-xs text-slate-300 leading-relaxed space-y-1.5">
+                    {critique.split('\n').map((line, index) => {
+                        if (line.match(/^(\*|-|\d+\.)\s/)) {
+                            return <p key={index} className="pl-3 text-red-100/80 indent-[-12px]">{line.trim()}</p>;
+                        }
+                        return <p key={index}>{line.trim()}</p>;
+                    })}
+                </div>
             </div>
         );
 
+        // Blocking Modal Component 
         const BlockingProcessModal = ({ isProcessing, status, translationProgress }) => {
             if (!isProcessing) return null;
+
             return (
                 <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-slate-900 border border-orange-600 p-8 rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-300 space-y-4 text-center">
                         <Icon name="loader" size={32} className="text-orange-500 mx-auto animate-spin mb-4" />
                         <h3 className="text-xl font-bold text-white">Working on Data...</h3>
                         <p className="text-sm text-slate-300">{status}</p>
-                        {translationProgress > 0 && translationProgress < 100 && (<div className="relative h-2 w-full bg-indigo-900 rounded-lg overflow-hidden mt-4"><div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${translationProgress}%` }}></div></div>)}
+                        {translationProgress > 0 && translationProgress < 100 && (
+                            <div className="relative h-2 w-full bg-indigo-900 rounded-lg overflow-hidden mt-4">
+                                <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${translationProgress}%` }}></div>
+                            </div>
+                        )}
                         {translationProgress > 0 && <span className="text-xs text-indigo-400 font-bold">{translationProgress}% Complete</span>}
                     </div>
                 </div>
             );
         };
 
-        const ExportOptions = ({ onExportByGroup, onBulkTranslateExport, onExportCurrentTarget, currentTarget, isProcessing, onClose, approvedCount }) => {
+        // Export Options Content Component (Inner Menu)
+        const ExportOptions = ({ onExportByGroup, onBulkTranslateExport, onExportCurrentTarget, currentTarget, isProcessing, onClose, creatorName, reviewerName, approvedCount, translationProgress }) => {
             const [selectedLanguages, setSelectedLanguages] = useState([]);
             const availableLanguages = [ 'Chinese (Simplified)', 'Japanese', 'Korean', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Russian' ];
+
             const toggleLanguage = (lang) => setSelectedLanguages(prev => prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]);
+            const handleTranslateClick = () => { if (selectedLanguages.length > 0) onBulkTranslateExport(selectedLanguages); };
+            
+            const translateButtonContent = isProcessing && translationProgress > 0 && translationProgress < 100 ? (
+                <div className="relative h-8 w-full bg-indigo-900 rounded-lg overflow-hidden">
+                    <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${translationProgress}%` }}></div>
+                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">{translationProgress}% Translating...</span>
+                </div>
+            ) : (
+                <button onClick={handleTranslateClick} disabled={isProcessing || selectedLanguages.length === 0} className="w-full py-2 text-xs font-bold text-indigo-300 bg-indigo-900/30 border border-indigo-800 rounded hover:bg-indigo-900/50 transition-colors disabled:bg-slate-700 disabled:text-slate-500">
+                    {isProcessing ? <><Icon name="loader" size={14} className="mr-1 inline-block animate-spin"/> Exporting...</> : `Export ${selectedLanguages.length} Translated File(s)`}
+                </button>
+            );
+
             return (
                 <div className="export-options-menu animate-in fade-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-between items-center border-b border-slate-700 pb-3 mb-3">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="download-cloud" size={20}/> Export Settings</h2>
-                        <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:text-white hover:bg-slate-700 transition-colors"><Icon name="x" size={18} /></button>
+                        <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:text-white hover:bg-slate-700 transition-colors">
+                            <Icon name="x" size={18} />
+                        </button>
                     </div>
+
                     <div className="space-y-4">
                         <div className="border-b border-slate-700 pb-3 space-y-2">
                             <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="filter" size={16}/> Export Current Target</h3>
+                            <p className="text-xs text-slate-400">Exports only accepted questions matching the current Difficulty/Type/Discipline selection (or all if 'VIEW ALL' is selected).</p>
                             <button onClick={onExportCurrentTarget} disabled={isProcessing} className="w-full py-2 text-xs font-bold text-blue-300 bg-blue-900/30 border border-blue-800 rounded hover:bg-blue-900/50 transition-colors"><Icon name="target" size={14} className="mr-1 inline-block"/> Export "{currentTarget}" Only</button>
                         </div>
+
                         <div className="border-b border-slate-700 pb-3 space-y-2">
                             <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="layout-list" size={16}/> Segmented Export (By Language)</h3>
+                            <p className="text-xs text-slate-400">Exports multiple files, separating by **Language**, Discipline, Difficulty, and Type.</p>
                             <button onClick={onExportByGroup} disabled={isProcessing} className="w-full py-2 text-xs font-bold text-green-300 bg-green-900/30 border border-green-800 rounded hover:bg-green-900/50 transition-colors"><Icon name="folder-open" size={14} className="mr-1 inline-block"/> Export {approvedCount} Questions by Group (.csv)</button>
                         </div>
                         <div className="space-y-2">
                             <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="globe" size={16}/> Bulk Translation Export</h3>
+                            <p className="text-xs text-slate-400">Generates and exports separate files for the selected languages.</p>
                             <div className="grid grid-cols-2 gap-2 text-xs h-32 overflow-y-auto pr-1">
                                 {availableLanguages.map(lang => (
                                     <div key={lang} onClick={() => toggleLanguage(lang)} className={`flex items-center p-1 rounded cursor-pointer transition-colors ${selectedLanguages.includes(lang) ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}>
@@ -345,170 +546,392 @@
                                     </div>
                                 ))}
                             </div>
-                            <button onClick={() => { if(selectedLanguages.length > 0) onBulkTranslateExport(selectedLanguages) }} disabled={isProcessing || selectedLanguages.length === 0} className="w-full py-2 text-xs font-bold text-indigo-300 bg-indigo-900/30 border border-indigo-800 rounded hover:bg-indigo-900/50 transition-colors disabled:bg-slate-700 disabled:text-slate-500">
-                                {isProcessing ? <><Icon name="loader" size={14} className="mr-1 inline-block animate-spin"/> Exporting...</> : `Export ${selectedLanguages.length} Translated File(s)`}
-                            </button>
+                            {translateButtonContent}
                         </div>
                     </div>
                 </div>
             );
         };
         
-        const ExportOptionsModal = ({ children, onClose }) => (
-            <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 backdrop-blur-sm" onClick={onClose}>{children}</div>
-        );
+        // Modal Wrapper for ExportOptions
+        const ExportOptionsModal = ({ children, onClose }) => {
+            return (
+                <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 backdrop-blur-sm" onClick={onClose}>
+                    {children}
+                </div>
+            );
+        };
 
         const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onTranslateSingle, onSwitchLanguage, availableLanguages, isProcessing }) => {
             const [menuOpen, setMenuOpen] = useState(false);
             const menuRef = useRef(null);
-            const isRejected = q.status === 'rejected';
-            const [loadingLang, setLoadingLang] = useState(null);
 
             useEffect(() => {
-                const handleClickOutside = (event) => { if (menuRef.current && !menuRef.current.contains(event.target)) setMenuOpen(false); };
+                const handleClickOutside = (event) => {
+                    if (menuRef.current && !menuRef.current.contains(event.target)) {
+                        setMenuOpen(false);
+                    }
+                };
                 document.addEventListener("mousedown", handleClickOutside);
                 return () => document.removeEventListener("mousedown", handleClickOutside);
             }, []);
 
+            const getStatusStyle = (status) => {
+                switch(status) {
+                    case 'accepted': return 'ring-1 ring-green-500/50';
+                    case 'rejected': return 'border-red-900/50 bg-slate-950/80 opacity-50 grayscale';
+                    default: return '';
+                }
+            };
+
+            const getGradient = (d) => {
+                switch(d?.toLowerCase()) {
+                    case 'easy': return 'bg-gradient-to-br from-slate-900/50 to-green-950 border-green-700 shadow-[0_0_15px_-5px_rgba(34,197,94,0.3)]';
+                    case 'medium': return 'bg-gradient-to-br from-slate-900/50 to-yellow-950 border-yellow-700 shadow-[0_0_15px_-5px_rgba(234,179,8,0.3)]';
+                    case 'hard': return 'bg-gradient-to-br from-slate-900/50 to-red-950 border-red-700 shadow-[0_0_15px_-5px_rgba(239,68,68,0.3)]';
+                    default: return 'bg-slate-900 border-slate-800';
+                }
+            };
+
+            const getDiffBadgeColor = (d) => {
+                switch(d?.toLowerCase()) {
+                    case 'easy': return 'bg-green-950 text-green-400 border-green-900';
+                    case 'medium': return 'bg-yellow-950 text-yellow-400 border-yellow-900';
+                    case 'hard': return 'bg-red-950 text-red-400 border-red-900';
+                    default: return 'bg-slate-800 text-slate-400 border-slate-700';
+                }
+            };
+            
+            const isRejected = q.status === 'rejected';
+
+            // Track loading state per specific language flag
+            const [loadingLang, setLoadingLang] = useState(null);
+
             const handleFlagClick = async (e, lang) => {
                 e.stopPropagation();
-                if (availableLanguages && availableLanguages.has(lang)) onSwitchLanguage(lang);
-                else { setLoadingLang(lang); await onTranslateSingle(q, lang); setLoadingLang(null); }
+                
+                // Check if the translation ALREADY exists
+                if (availableLanguages && availableLanguages.has(lang)) {
+                    // It exists -> SWITCH VIEW
+                    onSwitchLanguage(lang);
+                } else {
+                    // It doesn't exist -> GENERATE
+                    setLoadingLang(lang);
+                    await onTranslateSingle(q, lang);
+                    setLoadingLang(null);
+                }
             };
 
             const renderLanguageFlags = () => {
+                // Get all available language names, excluding the current language of the displayed card.
                 const allLanguageNames = Object.keys(LANGUAGE_FLAGS).filter(lang => (q.language || 'English').trim() !== lang);
+
                 return allLanguageNames.map(lang => {
                     const hasLang = availableLanguages && availableLanguages.has(lang);
                     const langCode = LANGUAGE_CODES[lang] || lang.substring(0, 2).toUpperCase();
+                    const flag = LANGUAGE_FLAGS[lang];
                     const isLoading = loadingLang === lang;
-                    if (hasLang) return <button key={lang} onClick={(e) => handleFlagClick(e, lang)} className="text-sm px-1 inline-flex items-center justify-center opacity-100 hover:scale-125 transition-transform cursor-pointer" title={`Switch to ${lang} translation`}>{LANGUAGE_FLAGS[lang]}</button>;
-                    return <button key={lang} onClick={(e) => handleFlagClick(e, lang)} disabled={isProcessing} className={`text-[10px] font-bold px-1 py-0.5 text-slate-600 hover:text-slate-300 transition-colors ${isLoading ? 'animate-pulse text-orange-500' : ''}`} title={`Generate ${lang} translation`}>{isLoading ? <Icon name="loader" size={10} className="animate-spin"/> : langCode}</button>;
+
+                    // If Translation Exists -> Show FLAG (Switch button)
+                    if (hasLang) {
+                        return (
+                            <button 
+                                key={lang}
+                                onClick={(e) => handleFlagClick(e, lang)}
+                                className="text-sm px-1 inline-flex items-center justify-center opacity-100 hover:scale-125 transition-transform cursor-pointer"
+                                title={`Switch to ${lang} translation`}
+                            >
+                                {flag}
+                            </button>
+                        );
+                    }
+
+                    // If Missing -> Show 2-Letter Code (Generate button)
+                    return (
+                        <button 
+                            key={lang}
+                            onClick={(e) => handleFlagClick(e, lang)}
+                            disabled={isProcessing}
+                            className={`text-[10px] font-bold px-1 py-0.5 text-slate-600 hover:text-slate-300 transition-colors ${isLoading ? 'animate-pulse text-orange-500' : ''}`}
+                            title={`Generate ${lang} translation`}
+                        >
+                            {isLoading ? <Icon name="loader" size={10} className="animate-spin"/> : langCode}
+                        </button>
+                    );
                 });
             };
 
-            const MetadataFooter = () => (
-                <div className="mt-3 pt-2 border-t border-slate-800/50 flex flex-wrap gap-4 text-[10px] text-slate-500 font-mono">
-                    <div className="flex items-center gap-1.5"><Icon name="user" size={12} className="text-slate-600"/><span>Created by <span className="text-slate-400 font-bold">{q.creatorName || "Unknown"}</span></span></div>
-                    {q.reviewerName && <div className="flex items-center gap-1.5"><Icon name="check-circle" size={12} className="text-slate-600"/><span>Reviewed by <span className="text-slate-400 font-bold">{q.reviewerName}</span> on {formatDate(q.reviewedDate)}</span></div>}
-                    <div className="flex-1 text-right text-slate-600">ID: {q.uniqueId.substring(0,6)}</div>
-                </div>
-            );
-
             return (
-                <div className={`group rounded-lg border shadow-sm transition-all p-4 relative ${q.difficulty === 'Easy' ? 'bg-gradient-to-br from-slate-900/50 to-green-950 border-green-700' : q.difficulty === 'Medium' ? 'bg-gradient-to-br from-slate-900/50 to-yellow-950 border-yellow-700' : 'bg-gradient-to-br from-slate-900/50 to-red-950 border-red-700'} ${isRejected ? 'border-red-900/50 bg-slate-950/80 opacity-50 grayscale' : ''}`}>
+                <div className={`group rounded-lg border shadow-sm transition-all p-4 relative ${getGradient(q.difficulty)} ${getStatusStyle(q.status)}`}>
                     <div className="flex flex-col gap-2 mb-3">
+                        {/* Top Row: Badges */}
                         <div className="flex justify-between items-start">
                             <div className="flex flex-col gap-1">
                                 <div className="flex gap-2 items-center">
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-slate-800 border-slate-600">{q.difficulty}</span>
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${getDiffBadgeColor(q.difficulty)}`}>{q.difficulty}</span>
                                     <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">{q.type === 'True/False' ? 'T/F' : 'MC'}</span>
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-slate-700 text-slate-300 border-slate-600 flex items-center gap-1">{LANGUAGE_CODES[q.language || 'English']} {(q.language || 'English').toUpperCase()}</span>
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-slate-700 text-slate-300 border-slate-600 flex items-center gap-1">
+                                        {LANGUAGE_CODES[q.language || 'English']} { (q.language || 'English').toUpperCase() }
+                                    </span>
                                 </div>
                             </div>
+                            
                             <div className="flex items-center gap-2">
+                                {/* More Menu */}
                                 <div className="relative" ref={menuRef}>
-                                    <button onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"><Icon name="more-vertical" size={16} /></button>
+                                    <button onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
+                                        <Icon name="more-vertical" size={16} />
+                                    </button>
+
+                                    {/* Dropdown */}
                                     {menuOpen && (
                                         <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                             <div className="py-1">
-                                                {isRejected && <button onClick={(e) => { e.stopPropagation(); onCritique(q); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-xs text-red-400 hover:bg-slate-700 flex items-center gap-2"><Icon name="zap" size={14} /> AI Critique</button>}
-                                                <button onClick={(e) => { e.stopPropagation(); onExplain(q); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-xs text-indigo-300 hover:bg-slate-700 flex items-center gap-2"><Icon name="lightbulb" size={14} /> Explain Answer</button>
-                                                <button onClick={(e) => { e.stopPropagation(); onVariate(q); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-xs text-purple-300 hover:bg-slate-700 flex items-center gap-2"><Icon name="copy" size={14} /> Create Variations</button>
-                                                <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(stripHtmlTags(q.question)); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2"><Icon name="clipboard" size={14} /> Copy Question</button>
+                                                {isRejected && (
+                                                    <button onClick={(e) => { e.stopPropagation(); onCritique(q); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-xs text-red-400 hover:bg-slate-700 flex items-center gap-2">
+                                                        <Icon name="zap" size={14} /> AI Critique
+                                                    </button>
+                                                )}
+                                                <button onClick={(e) => { e.stopPropagation(); onExplain(q); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-xs text-indigo-300 hover:bg-slate-700 flex items-center gap-2">
+                                                    <Icon name="lightbulb" size={14} /> Explain Answer
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); onVariate(q); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-xs text-purple-300 hover:bg-slate-700 flex items-center gap-2">
+                                                    <Icon name="copy" size={14} /> Create Variations
+                                                </button>
+                                                <button onClick={(e) => { 
+                                                    e.stopPropagation(); 
+                                                    const textArea = document.createElement("textarea");
+                                                    // FIX: Use stripHtmlTags for clean copy
+                                                    textArea.value = stripHtmlTags(q.question); 
+                                                    document.body.appendChild(textArea);
+                                                    textArea.select();
+                                                    try {
+                                                        document.execCommand('copy');
+                                                    } catch (err) {
+                                                        console.error('Fallback: Oops, unable to copy', err);
+                                                    }
+                                                    document.body.removeChild(textArea);
+                                                    setMenuOpen(false); 
+                                                }} className="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2">
+                                                    <Icon name="clipboard" size={14} /> Copy Question
+                                                </button>
                                             </div>
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Action Buttons (Large) */}
                                 <div className="flex items-center gap-2">
-                                    <button onClick={() => onUpdateStatus(q.id, 'accepted')} className={`p-2 rounded-lg transition-all ${q.status === 'accepted' ? 'bg-green-600 text-white shadow-lg' : 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'}`} title="Accept"><Icon name="check" size={18} /></button>
-                                    <button onClick={() => onUpdateStatus(q.id, 'rejected')} className={`p-2 rounded-lg transition-all ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-lg' : 'bg-slate-800 text-slate-500 hover:bg-red-900/20 hover:text-red-500'}`} title="Reject"><Icon name="x" size={18} /></button>
+                                    <button onClick={() => onUpdateStatus(q.id, 'accepted')} className={`p-2 rounded-lg transition-all ${q.status === 'accepted' ? 'bg-green-600 text-white shadow-lg shadow-green-900/50' : 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'}`} title="Accept">
+                                        <Icon name="check" size={18} />
+                                    </button>
+                                    <button onClick={() => onUpdateStatus(q.id, 'rejected')} className={`p-2 rounded-lg transition-all ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'bg-slate-800 text-slate-500 hover:bg-red-900/20 hover:text-red-500'}`} title="Reject">
+                                        <Icon name="x" size={18} />
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex flex-wrap gap-1.5 items-center pt-1">{renderLanguageFlags()}</div>
+
+                        {/* Second Row: Language Indicators (Flags or Codes) */}
+                        <div className="flex flex-wrap gap-1.5 items-center pt-1">
+                            {renderLanguageFlags()}
+                        </div>
                     </div>
+
                     <div className="mb-4">
                         <h3 className={`text-sm font-medium leading-relaxed ${q.status === 'rejected' ? 'text-slate-600 line-through decoration-slate-700' : 'text-slate-200'}`} dangerouslySetInnerHTML={{ __html: sanitizeText(q.question) }} />
                         <div className="flex items-center gap-3 mt-2">
-                            {q.sourceUrl && <div className="flex items-center gap-1.5 text-[10px] text-blue-500 truncate max-w-[70%]"><Icon name="external-link" size={12} className="flex-shrink-0" /><a href={formatUrl(q.sourceUrl)} target="_blank" rel="noreferrer" className="hover:underline truncate text-blue-500 hover:text-blue-400">{q.sourceUrl}</a></div>}
-                            <div className="text-[9px] text-slate-700 font-mono cursor-help" title={`Unique ID: ${q.uniqueId} (Use this to link translations)`}>#{q.uniqueId.substring(0, 8)}</div>
+                            {q.sourceUrl && (
+                                <div className="flex items-center gap-1.5 text-[10px] text-blue-500 truncate max-w-[70%]">
+                                    <Icon name="external-link" size={12} className="flex-shrink-0" />
+                                    <a href={formatUrl(q.sourceUrl)} target="_blank" rel="noreferrer" className="hover:underline truncate text-blue-500 hover:text-blue-400">{q.sourceUrl}</a>
+                                </div>
+                            )}
+                            {/* DEBUG ID: Helps verify linking */}
+                            <div className="text-[9px] text-slate-700 font-mono cursor-help" title={`Unique ID: ${q.uniqueId} (Use this to link translations)`}>
+                                #{q.uniqueId.substring(0, 8)}
+                            </div>
                         </div>
                     </div>
-                    {q.type === 'Multiple Choice' && <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">{Object.entries(q.options || {}).map(([key, val]) => (<div key={key} className={`text-xs p-2 rounded border transition-all ${q.correct === key ? 'bg-green-700/50 border-green-400 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'}`}><span className={`font-bold mr-2 ${q.correct === key ? 'text-white' : 'text-slate-600'}`}>{key})</span><span dangerouslySetInnerHTML={{ __html: sanitizeText(val && val.trim() ? val : "(Empty)") }} /></div>))}</div>}
-                    {q.type === 'True/False' && <div className="flex gap-4 mb-4"><div className={`px-3 py-1 rounded text-xs border transition-all ${q.correct === 'A' ? 'bg-green-700/50 border-green-400 text-white' : 'bg-slate-950 border-slate-800 text-slate-500'}`}>TRUE</div><div className={`px-3 py-1 rounded text-xs border transition-all ${q.correct === 'B' ? 'bg-red-700/50 border-red-400 text-white' : 'bg-slate-950 border-slate-800 text-slate-500'}`}>FALSE</div></div>}
+
+                    {q.type === 'Multiple Choice' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+                            {Object.entries(q.options || {}).map(([key, val]) => {
+                                const isCorrect = q.correct === key;
+                                // SAFEGUARD: If option text is missing/empty, show placeholder to maintain layout
+                                const optionText = val && val.trim() ? val : "(Empty)";
+                                return (
+                                    <div key={key} className={`text-xs p-2 rounded border transition-all ${isCorrect ? 'bg-green-700/50 border-green-400 text-white shadow-[0_0_10px_-3px_rgba(34,197,94,0.5)]' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
+                                        <span className={`font-bold mr-2 ${isCorrect ? 'text-white' : 'text-slate-600'}`}>{key})</span> 
+                                        <span dangerouslySetInnerHTML={{ __html: sanitizeText(optionText) }} />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {q.type === 'True/False' && (
+                        <div className="flex gap-4 mb-4">
+                            <div className={`px-3 py-1 rounded text-xs border transition-all ${q.correct === 'A' ? 'bg-green-700/50 border-green-400 text-white shadow-[0_0_10px_-3px_rgba(34,197,94,0.5)]' : 'bg-slate-950 border-slate-800 text-slate-500'}`}>TRUE</div>
+                            <div className={`px-3 py-1 rounded text-xs border transition-all ${q.correct === 'B' ? 'bg-red-700/50 border-red-400 text-white shadow-[0_0_10px_-3px_rgba(239,68,68,0.5)]' : 'bg-slate-950 border-slate-800 text-slate-500'}`}>FALSE</div>
+                        </div>
+                    )}
+
                     {q.critique && <CritiqueDisplay critique={q.critique} />}
-                    {q.explanation && <div className="mb-3 p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-lg animate-in fade-in slide-in-from-top-2"><div className="flex items-center gap-2 mb-1 text-indigo-300 text-xs font-bold uppercase"><Icon name="lightbulb" size={12} /> Explanation</div><p className="text-xs text-slate-300 leading-relaxed">{q.explanation}</p></div>}
-                    {q.sourceExcerpt && <div className="pt-3 border-t border-slate-800 flex flex-col gap-1"><div className="flex items-start gap-1.5 text-[10px] text-slate-500 italic bg-slate-950 p-2 rounded border border-slate-800"><Icon name="message-square" size={12} className="mt-0.5 flex-shrink-0" />"{q.sourceExcerpt}"</div></div>}
-                    
-                    <MetadataFooter />
+
+                    {q.explanation && (
+                        <div className="mb-3 p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-lg animate-in fade-in slide-in-from-top-2">
+                            <div className="flex items-center gap-2 mb-1 text-indigo-300 text-xs font-bold uppercase"><Icon name="lightbulb" size={12} /> Explanation</div>
+                            <p className="text-xs text-slate-300 leading-relaxed">{q.explanation}</p>
+                        </div>
+                    )}
+
+                    {q.sourceExcerpt && (
+                        <div className="pt-3 border-t border-slate-800 flex flex-col gap-1">
+                            <div className="flex items-start gap-1.5 text-[10px] text-slate-500 italic bg-slate-950 p-2 rounded border border-slate-800">
+                                <Icon name="message-square" size={12} className="mt-0.5 flex-shrink-0" />
+                                "{q.sourceExcerpt}"
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         };
 
         const GranularProgress = ({ approvedCounts, target, isTargetMet, selectedDifficulty, handleSelectCategory }) => {
             const categories = ['Easy MC', 'Easy T/F', 'Medium MC', 'Medium T/F', 'Hard MC', 'Hard T/F'].map(key => {
-                const current = approvedCounts[key] || 0; const hardTarget = 33; const remaining = Math.max(0, hardTarget - current); const isComplete = current >= hardTarget; const isSelected = key === selectedDifficulty;
+                const current = approvedCounts[key] || 0;
+                const hardTarget = 33; 
+                const remaining = Math.max(0, hardTarget - current);
+                const isComplete = current >= hardTarget;
+                const isSelected = key === selectedDifficulty;
+                const isDisabled = isComplete; 
+
+                let barColor = 'bg-slate-800';
+                if (isComplete) barColor = 'bg-blue-600'; 
+                else if (isSelected) barColor = 'bg-orange-600'; 
+                else if (current > 0) barColor = 'bg-green-600';
+                
+                const percentage = Math.min(100, (current / hardTarget) * 100);
+                
+                const handleClick = () => { 
+                    handleSelectCategory(key); 
+                };
+
                 return (
-                    <div key={key} onClick={() => handleSelectCategory(key)} className={`p-2 rounded transition-all cursor-pointer border ${isSelected ? 'bg-slate-800 border-orange-600 shadow-lg' : 'bg-slate-900 border-slate-800 hover:bg-slate-800/70'} ${isComplete ? 'opacity-75' : ''}`}>
-                        <div className="flex justify-between items-center text-xs mb-1"><span className={`font-semibold ${isComplete ? 'text-blue-300' : 'text-slate-200'}`}>{key}</span><span className={`text-[10px] font-bold ${isComplete ? 'text-blue-400' : 'text-slate-400'}`}>{current} / {hardTarget}</span></div>
-                        <div className="w-full h-1.5 rounded overflow-hidden bg-slate-700"><div className={`h-full transition-all duration-500 ${isComplete ? 'bg-blue-600' : isSelected ? 'bg-orange-600' : 'bg-green-600'}`} style={{ width: `${Math.min(100, (current / hardTarget) * 100)}%` }}></div></div>
+                    <div 
+                        key={key} 
+                        onClick={handleClick}
+                        className={`p-2 rounded transition-all cursor-pointer border ${isSelected ? 'bg-slate-800 border-orange-600 shadow-lg' : 'bg-slate-900 border-slate-800 hover:bg-slate-800/70'} ${isDisabled ? 'opacity-75' : ''}`}
+                    >
+                        <div className="flex justify-between items-center text-xs mb-1">
+                            <span className={`font-semibold ${isComplete ? 'text-blue-300' : 'text-slate-200'}`}>{key}</span>
+                            <span className={`text-[10px] font-bold ${isComplete ? 'text-blue-400' : 'text-slate-400'}`}>
+                                {current} / {hardTarget} ({remaining} left)
+                            </span>
+                        </div>
+                        <div className="w-full h-1.5 rounded overflow-hidden bg-slate-700">
+                            <div className={`h-full transition-all duration-500 ${barColor}`} style={{ width: `${percentage}%` }}></div>
+                        </div>
                     </div>
                 );
             });
+            
+            const isBalancedSelected = selectedDifficulty === 'Balanced All';
             return (
-                <div className="space-y-2"><h3 className="text-sm font-bold uppercase text-slate-400 flex items-center gap-2 border-b border-slate-700/50 pb-1.5 mb-1"><Icon name="list-checks" size={14} /> Generation Target (Cap: 33)</h3>{categories}<button onClick={() => handleSelectCategory('Balanced All')} className={`w-full p-2 rounded transition-all cursor-pointer border mt-3 ${selectedDifficulty === 'Balanced All' ? 'bg-orange-600 border-orange-400 shadow-lg' : 'bg-slate-800 border-slate-700 hover:bg-slate-700/50'}`}><div className="flex justify-center items-center text-sm font-bold gap-2"><Icon name="archive" size={14}/> VIEW ALL/BULK EXPORT</div></button></div>
+                <div className="space-y-2">
+                    <h3 className="text-sm font-bold uppercase text-slate-400 flex items-center gap-2 border-b border-slate-700/50 pb-1.5 mb-1"><Icon name="list-checks" size={14} /> Generation Target (Cap: 33)</h3>
+                    {categories}
+                    <button onClick={() => handleSelectCategory('Balanced All')} className={`w-full p-2 rounded transition-all cursor-pointer border mt-3 ${isBalancedSelected ? 'bg-orange-600 border-orange-400 shadow-lg' : 'bg-slate-800 border-slate-700 hover:bg-slate-700/50'}`}>
+                        <div className="flex justify-center items-center text-sm font-bold gap-2">
+                             <Icon name="archive" size={14}/> VIEW ALL/BULK EXPORT
+                        </div>
+                    </button>
+                </div>
             );
         };
 
         const ClearConfirmationModal = ({ onConfirm, onCancel }) => (
-            <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-                <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-300 space-y-4">
-                    <h3 className="text-xl font-bold text-red-500 flex items-center gap-2"><Icon name="alert-triangle" size={20}/> CONFIRM DATABASE WIPE</h3>
-                    <p className="text-sm text-slate-300">This action will permanently delete all accepted questions saved in the database. Are you sure?</p>
-                    <div className="flex justify-end gap-3"><button onClick={onCancel} className="px-4 py-2 text-sm rounded bg-slate-700 hover:bg-slate-600 text-white">Cancel</button><button onClick={onConfirm} className="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-bold">Wipe All Data</button></div>
+                <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-300 space-y-4">
+                        <h3 className="text-xl font-bold text-red-500 flex items-center gap-2"><Icon name="alert-triangle" size={20}/> CONFIRM DATABASE WIPE</h3>
+                        <p className="text-sm text-slate-300">This action will permanently delete all accepted questions saved in the database for this application. Are you sure you want to proceed?</p>
+                        <div className="flex justify-end gap-3">
+                            <button onClick={onCancel} className="px-4 py-2 text-sm rounded bg-slate-700 hover:bg-slate-600 text-white transition-colors">Cancel</button>
+                            <button onClick={onConfirm} className="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-bold transition-colors">Wipe All Data</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        );
+            );
+            
+        const FilterButton = ({ mode, current, setFilter, label, count, color }) => {
+            const isActive = mode === current;
+            const baseClasses = "px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1";
+            let activeClasses = "bg-orange-600 text-white shadow-md shadow-orange-900/50";
+            let inactiveClasses = "bg-slate-800 text-slate-400 hover:bg-slate-700/50";
+            if (mode === 'accepted' && !isActive) inactiveClasses = "bg-green-900/20 text-green-400 hover:bg-green-900/30";
+            if (mode === 'rejected' && !isActive) inactiveClasses = "bg-red-900/20 text-red-400 hover:bg-red-900/30";
+            if (mode === 'pending' && !isActive) inactiveClasses = "bg-yellow-900/20 text-yellow-400 hover:bg-yellow-900/30";
+            return (
+                <button onClick={() => setFilter(mode)} className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}>
+                    <Icon name={mode === 'accepted' ? 'check' : mode === 'rejected' ? 'x' : mode === 'pending' ? 'clock' : 'list'} size={12}/>
+                    {label} <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">{count}</span>
+                </button>
+            );
+        };
 
-        const FilterButton = ({ mode, current, setFilter, label, count }) => (
-            <button onClick={() => setFilter(mode)} className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${mode === current ? 'bg-orange-600 text-white shadow-md' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50'}`}>
-                <Icon name={mode === 'accepted' ? 'check' : mode === 'rejected' ? 'x' : mode === 'pending' ? 'clock' : 'list'} size={12}/> {label} <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">{count}</span>
-            </button>
-        );
 
         const App = () => {
-            const [appMode, setAppMode] = useState('landing'); 
+            const [appMode, setAppMode] = useState('landing'); // 'landing', 'create', 'review'
             const [db, setDb] = useState(null);
             const [auth, setAuth] = useState(null);
             const [userId, setUserId] = useState(null);
             const [isAuthReady, setIsAuthReady] = useState(false);
-            const [isCloudReady, setIsCloudReady] = useState(false); 
+            const [isCloudReady, setIsCloudReady] = useState(false); // Track actual cloud connection status
             const [showClearModal, setShowClearModal] = useState(false);
             const [showExportMenu, setShowExportMenu] = useState(false);
             const [translationProgress, setTranslationProgress] = useState(0);
-            const [filterByCreator, setFilterByCreator] = useState(false);
             
+            const [filterByCreator, setFilterByCreator] = useState(false);
+
+            const TARGET_TOTAL = 200;
+            const TARGET_PER_CATEGORY = 33; 
+
             const [config, setConfig] = useState(() => {
                 const saved = localStorage.getItem('ue5_gen_config');
+                // ADDED: apiKey to defaults
                 const defaults = { discipline: 'Technical Art', batchSize: '6', difficulty: 'Easy MC', language: 'English', creatorName: '', reviewerName: '', apiKey: '' };
-                return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+                const constInitialConfig = saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+                // Ensure creatorName and reviewerName defaults are restored if removed from storage
+                constInitialConfig.creatorName = constInitialConfig.creatorName || '';
+                constInitialConfig.reviewerName = constInitialConfig.reviewerName || '';
+                constInitialConfig.apiKey = constInitialConfig.apiKey || ''; // Ensure API key is loaded
+                if (constInitialConfig.difficulty === 'Balanced All') constInitialConfig.difficulty = 'Easy MC';
+                return constInitialConfig;
             });
-
+            
+            // Map of UniqueID -> List of Question Objects (all languages)
             const [allQuestionsMap, setAllQuestionsMap] = useState(new Map());
-            const [questions, setQuestions] = useState(() => JSON.parse(localStorage.getItem('ue5_gen_questions')) || []);
+
+            const [questions, setQuestions] = useState(() => {
+                const saved = localStorage.getItem('ue5_gen_questions');
+                return saved ? JSON.parse(saved) : [];
+            });
+            
             const [files, setFiles] = useState([]);
             const [status, setStatus] = useState('');
             const [isGenerating, setIsGenerating] = useState(false);
             const [isDetecting, setIsDetecting] = useState(false);
             const [isProcessing, setIsProcessing] = useState(false);
             const [showNameModal, setShowNameModal] = useState(false);
+            
             const [searchTerm, setSearchTerm] = useState('');
             const [filterMode, setFilterMode] = useState('pending');
             const [historicalQuestions, setHistoricalQuestions] = useState([]);
             const [showHistory, setShowHistory] = useState(false);
             const fileInputRef = useRef(null);
             
+            // Recompute allQuestionsMap whenever session or historical questions change
             useEffect(() => {
                 const combined = [...questions, ...historicalQuestions];
                 const newMap = new Map();
@@ -520,6 +943,7 @@
                 setAllQuestionsMap(newMap);
             }, [questions, historicalQuestions]);
 
+            // Recompute the translation map (set of available languages per question ID)
             const translationMap = useMemo(() => {
                 const map = new Map();
                 Array.from(allQuestionsMap.keys()).forEach(uniqueId => {
@@ -530,25 +954,36 @@
                 return map;
             }, [allQuestionsMap]);
 
-            const showMessage = useCallback((msg, duration = 3000) => { setStatus(msg); setTimeout(() => setStatus(''), duration); }, []);
-            
+
+            const showMessage = useCallback((msg, duration = 3000) => {
+                setStatus(msg);
+                setTimeout(() => setStatus(''), duration);
+            }, []);
+
+            // Helper to safely add new questions without creating duplicates in React state
             const addQuestionsToState = (newItems, isHistory = false) => {
                 const targetSet = isHistory ? setHistoricalQuestions : setQuestions;
                 targetSet(prev => {
                     const existingIds = new Set(prev.map(p => p.id));
-                    return [...prev, ...newItems.filter(item => !existingIds.has(item.id))];
+                    const uniqueNew = newItems.filter(item => !existingIds.has(item.id));
+                    return [...prev, ...uniqueNew];
                 });
             };
 
             const approvedCounts = useMemo(() => {
                 const counts = CATEGORY_KEYS.reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
                 const countedIds = new Set();
+                
                 Array.from(allQuestionsMap.values()).forEach(variants => {
                     const baseQ = variants.find(v => (v.language || 'English') === 'English') || variants[0];
+
                     if (baseQ && baseQ.status === 'accepted' && !countedIds.has(baseQ.uniqueId)) {
                         const typeAbbrev = baseQ.type === 'True/False' ? 'T/F' : 'MC';
-                        counts[`${baseQ.difficulty} ${typeAbbrev}`]++;
-                        countedIds.add(baseQ.uniqueId);
+                        const key = `${baseQ.difficulty} ${typeAbbrev}`;
+                        if (counts.hasOwnProperty(key)) {
+                            counts[key]++;
+                            countedIds.add(baseQ.uniqueId);
+                        }
                     }
                 });
                 return counts;
@@ -557,187 +992,294 @@
             const approvedCount = questions.filter(q => q.status !== 'rejected').length;
             const rejectedCount = questions.filter(q => q.status === 'rejected').length;
             const pendingCount = questions.length - approvedCount - rejectedCount;
-            const isTargetMet = useMemo(() => config.difficulty !== 'Balanced All' && approvedCounts[config.difficulty] >= TARGET_PER_CATEGORY, [config.difficulty, approvedCounts]);
+
+            const isTargetMet = useMemo(() => {
+                if (config.difficulty === 'Balanced All') return false;
+                const currentCount = approvedCounts[config.difficulty];
+                return currentCount >= TARGET_PER_CATEGORY;
+            }, [config.difficulty, approvedCounts]);
+
             const maxBatchSize = useMemo(() => {
                 if (config.difficulty === 'Balanced All') {
                     const maxRemaining = Math.max(...CATEGORY_KEYS.map(key => TARGET_PER_CATEGORY - approvedCounts[key]));
-                    return maxRemaining <= 0 ? 0 : Math.min(30, Math.floor(TARGET_TOTAL / 6) * 6);
+                    if (maxRemaining <= 0) return 0;
+                    return Math.min(30, Math.floor(TARGET_TOTAL / 6) * 6);
+                } else {
+                    const remaining = TARGET_PER_CATEGORY - approvedCounts[config.difficulty];
+                    return Math.min(33, Math.max(0, remaining));
                 }
-                return Math.min(33, Math.max(0, TARGET_PER_CATEGORY - approvedCounts[config.difficulty]));
             }, [config.difficulty, approvedCounts]);
+
+            useEffect(() => {
+                if (maxBatchSize > 0 && config.difficulty !== 'Balanced All') {
+                    const recommendedSize = Math.max(1, Math.min(10, Math.floor(maxBatchSize / 2)));
+                    setConfig(prev => ({ ...prev, batchSize: recommendedSize.toString() }));
+                } else if (config.difficulty === 'Balanced All') {
+                    setConfig(prev => ({ ...prev, batchSize: Math.max(6, Math.min(12, maxBatchSize)).toString() }));
+                } else if (maxBatchSize === 0 && config.difficulty !== 'Balanced All') {
+                    setConfig(prev => ({ ...prev, batchSize: '0' }));
+                }
+            }, [config.difficulty, maxBatchSize]);
 
             useEffect(() => { if (!config.creatorName) setShowNameModal(true); }, []); 
             useEffect(() => { localStorage.setItem('ue5_gen_config', JSON.stringify(config)); }, [config]);
             useEffect(() => localStorage.setItem('ue5_gen_questions', JSON.stringify(questions)), [questions]);
-            
-            // Cloud Init
+
+            const QUESTION_COLLECTION = "generatedQuestions";
+
             useEffect(() => {
+                const checkFirebase = setInterval(() => {
+                    if (typeof window.Firebase !== 'undefined' && window.isFirebaseLoaded) {
+                        clearInterval(checkFirebase);
+                        initFirebase();
+                    }
+                }, 100);
+
                 const initFirebase = async () => {
                     try {
+                        // Only initialize if config exists (cloud mode)
                         if (typeof __firebase_config !== 'undefined') {
                             const firebaseConfig = JSON.parse(__firebase_config);
                             const app = window.Firebase.initializeApp(firebaseConfig);
                             const newDb = window.Firebase.getFirestore(app);
                             const newAuth = window.Firebase.getAuth(app);
-                            setDb(newDb); setAuth(newAuth);
-                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await window.Firebase.signInWithCustomToken(newAuth, __initial_auth_token);
-                            else await window.Firebase.signInAnonymously(newAuth);
+                            
+                            setDb(newDb);
+                            setAuth(newAuth);
+                            
+                            // Robust Auth Pattern from Demo
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                await window.Firebase.signInWithCustomToken(newAuth, __initial_auth_token);
+                            } else {
+                                await window.Firebase.signInAnonymously(newAuth);
+                            }
+                            
                             window.Firebase.onAuthStateChanged(newAuth, (user) => {
-                                setUserId(user ? user.uid : null);
-                                setIsCloudReady(!!user);
+                                if (user) {
+                                    setUserId(user.uid);
+                                    setIsCloudReady(true); // Mark as successfully connected to cloud
+                                } else {
+                                    setUserId(null);
+                                    setIsCloudReady(false);
+                                }
                                 setIsAuthReady(true);
                             });
-                        } else { setIsAuthReady(true); setIsCloudReady(false); }
-                    } catch (e) { console.error("Firebase Error:", e); setIsAuthReady(true); setIsCloudReady(false); }
+                        } else {
+                            // Local mode fallback
+                            console.log("No cloud config found. Running in Local Mode.");
+                            setIsAuthReady(true); 
+                            setIsCloudReady(false);
+                        }
+                    } catch (e) { 
+                        console.error("Firebase Initialization Failed (Defaulting to Local Mode):", e); 
+                        setIsAuthReady(true);
+                        setIsCloudReady(false);
+                    }
                 };
-                const timer = setInterval(() => { if (window.Firebase) { clearInterval(timer); initFirebase(); } }, 100);
-                return () => clearInterval(timer);
+
+                return () => clearInterval(checkFirebase);
             }, []);
             
-            // Cloud Listener
+            // Modified: Use onSnapshot for REAL-TIME updates
             useEffect(() => {
                 if (isAuthReady && isCloudReady && db) {
                     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                    const q = window.Firebase.query(window.Firebase.collection(db, `artifacts/${appId}/public/data/generatedQuestions`));
-                    const unsubscribe = window.Firebase.onSnapshot(q, (snapshot) => {
-                        const loadedHistory = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.data().id || doc.data().uniqueId, uniqueId: doc.data().uniqueId || doc.data().id, status: doc.data().status || 'accepted' }));
+                    const collectionPath = window.Firebase.collection(db, `artifacts/${appId}/public/data/${QUESTION_COLLECTION}`);
+                    
+                    // Set up listener
+                    const unsubscribe = window.Firebase.onSnapshot(collectionPath, (snapshot) => {
+                        const loadedHistory = snapshot.docs.map(doc => {
+                            const d = doc.data();
+                            return {
+                                ...d,
+                                id: d.id || d.uniqueId, // Ensure ID exists
+                                uniqueId: d.uniqueId || d.id,
+                                status: 'accepted' // Anything in DB is treated as accepted history
+                            };
+                        });
+                        
+                        // Sort by dateAdded if available, newest first
                         loadedHistory.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
+                        
                         setHistoricalQuestions(loadedHistory);
-                    }, (err) => { console.error("Sync Error:", err); setIsCloudReady(false); });
+                        // If this is the first load, maybe show a message? 
+                        // showMessage("Cloud Sync Active", 2000); 
+                    }, (error) => {
+                        console.error("Sync Error:", error);
+                        setIsCloudReady(false); // Downgrade to local if sync fails
+                    });
+
                     return () => unsubscribe();
                 }
             }, [isAuthReady, isCloudReady, db]);
             
-            const checkAndStoreQuestions = async (newQuestions) => {
-                if (!db || !isCloudReady) return newQuestions;
+            const handleDeleteAllQuestions = async () => {
+                setShowClearModal(false);
+                if (!db || !isCloudReady) { showMessage("Local Mode: Cleared browser storage.", 3000); setQuestions([]); setHistoricalQuestions([]); return; }
+                
+                setStatus('Wiping cloud database...');
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const collectionPath = window.Firebase.collection(db, `artifacts/${appId}/public/data/generatedQuestions`);
-                const uniqueQuestions = [];
-                setStatus(`Syncing...`);
+                const collectionPath = window.Firebase.collection(db, `artifacts/${appId}/public/data/${QUESTION_COLLECTION}`);
+                
                 try {
                     const snapshot = await window.Firebase.getDocs(collectionPath);
+                    if (snapshot.empty) { 
+                        setStatus('Database already empty.'); 
+                        setQuestions([]); 
+                        return;
+                    }
+
+                    const CHUNK_SIZE = 500;
+                    const chunks = [];
+                    const docs = snapshot.docs;
+
+                    for (let i = 0; i < docs.length; i += CHUNK_SIZE) {
+                        chunks.push(docs.slice(i, i + CHUNK_SIZE));
+                    }
+
+                    for (const chunk of chunks) {
+                        const batch = window.Firebase.writeBatch(db);
+                        chunk.forEach(doc => {
+                            batch.delete(doc.ref);
+                        });
+                        await batch.commit();
+                    }
+
+                    setStatus(`Cloud wiped successfully.`);
+                    setQuestions([]); 
+                    // historicalQuestions will auto-clear via onSnapshot listener
+
+                } catch (e) { 
+                    console.error("Database deletion failed:", e); 
+                    showMessage(`Failed to clear database: ${e.message}`, 5000); 
+                }
+            };
+
+            const checkAndStoreQuestions = async (newQuestions) => {
+                // If not cloud ready, just return the questions (they stay in local state)
+                if (!db || !isCloudReady) { return newQuestions; }
+                
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const collectionPath = window.Firebase.collection(db, `artifacts/${appId}/public/data/${QUESTION_COLLECTION}`);
+                const uniqueQuestions = [];
+                const generatedQuestionsMap = new Map();
+                
+                // Deduplication logic
+                newQuestions.forEach(q => { 
+                    const cleanQuestion = stripHtmlTags(q.question); 
+                    generatedQuestionsMap.set(cleanQuestion, q); 
+                });
+                
+                setStatus(`Syncing ${newQuestions.length} questions to cloud...`);
+                
+                try {
+                    // We fetch current state once to check duplicates before writing
+                    // (Optimization: In a massive DB, you might skip this and rely on unique IDs, 
+                    // but here we want to avoid overwriting existing with same content if IDs differ)
+                    const snapshot = await window.Firebase.getDocs(collectionPath);
                     const existingKeys = new Set(snapshot.docs.map(doc => `${doc.data().uniqueId}_${doc.data().language || 'English'}`));
+                    
                     const batchWrites = [];
-                    newQuestions.forEach(q => {
-                        const cleanQuestion = stripHtmlTags(q.question);
+                    let duplicateCount = 0;
+                    
+                    generatedQuestionsMap.forEach((q, cleanQuestion) => {
                         const key = `${q.uniqueId}_${q.language || 'English'}`;
-                        if (!existingKeys.has(key)) {
+                        if (existingKeys.has(key)) { 
+                            duplicateCount++; 
+                        } else {
                             uniqueQuestions.push(q);
-                            const docRef = window.Firebase.doc(collectionPath, key);
+                            const docId = `${q.uniqueId}_${q.language || 'English'}`; 
+                            const docRef = window.Firebase.doc(collectionPath, docId);
                             batchWrites.push(window.Firebase.setDoc(docRef, {
-                                ...q, id: q.id.toString(), cleanQuestion: cleanQuestion,
-                                creatorName: q.creatorName || config.creatorName, 
+                                id: q.id.toString(),
+                                uniqueId: q.uniqueId,
+                                cleanQuestion: cleanQuestion, 
+                                question: q.question, 
+                                discipline: q.discipline,
+                                type: q.type,
+                                difficulty: q.difficulty,
+                                options: q.options,
+                                correct: q.correct,
+                                sourceUrl: q.sourceUrl,
+                                sourceExcerpt: q.sourceExcerpt,
+                                dateAdded: q.dateAdded || new Date().toISOString(),
+                                creatorName: config.creatorName, 
                                 reviewerName: config.reviewerName,
                                 language: q.language || config.language 
                             }));
                         }
                     });
-                    if (batchWrites.length > 0) { await Promise.all(batchWrites); setStatus(`Saved ${batchWrites.length} to Cloud.`); } 
-                    else { setStatus(`Cloud sync complete.`); }
+                    
+                    if (batchWrites.length > 0) { 
+                        await Promise.all(batchWrites); 
+                        setStatus(`Saved ${batchWrites.length} items to Cloud.`); 
+                    } else { 
+                        setStatus(`Cloud sync complete (No new items).`); 
+                    }
                     return uniqueQuestions;
-                } catch (e) { console.error("Cloud Error:", e); setStatus(`Cloud Error.`); return newQuestions; }
-            };
-
-            const handleUpdateStatus = async (id, newStatus) => {
-                const currentReviewer = config.creatorName; 
-                const timestamp = new Date().toISOString();
-
-                const updateLocal = (prev) => prev.map(q => q.id === id ? { ...q, status: newStatus, reviewerName: currentReviewer, reviewedDate: timestamp, critique: newStatus === 'accepted' ? null : q.critique } : q);
-                if (showHistory) setHistoricalQuestions(updateLocal);
-                else setQuestions(updateLocal);
-
-                if (isCloudReady && db) {
-                    const targetQ = (showHistory ? historicalQuestions : questions).find(i => i.id === id);
-                    if (targetQ) {
-                         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                         const docId = `${targetQ.uniqueId}_${targetQ.language || 'English'}`;
-                         const docRef = window.Firebase.doc(db, `artifacts/${appId}/public/data/generatedQuestions`, docId);
-                         try {
-                             await window.Firebase.updateDoc(docRef, {
-                                 status: newStatus,
-                                 reviewerName: currentReviewer,
-                                 reviewedDate: timestamp
-                             });
-                         } catch (e) {
-                             console.error("Cloud update failed", e);
-                         }
-                    }
+                } catch (e) { 
+                    console.error("Firestore operation failed:", e); 
+                    setStatus(`Cloud Error: Saved locally only.`); 
+                    return newQuestions; 
                 }
             };
 
-            const handleDeleteAllQuestions = async () => { setShowClearModal(false); if (!db || !isCloudReady) { setQuestions([]); setHistoricalQuestions([]); return; } const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const col = window.Firebase.collection(db, `artifacts/${appId}/public/data/generatedQuestions`); const snap = await window.Firebase.getDocs(col); const batch = window.Firebase.writeBatch(db); snap.docs.forEach(d => batch.delete(d.ref)); await batch.commit(); setQuestions([]); };
-            const handleLanguageSwitch = (l) => setConfig(p => ({...p, language: l}));
-            const handleChange = (e) => setConfig(p => ({...p, [e.target.name]: e.target.value}));
-            const handleNameSave = (n) => { setConfig(p => ({...p, creatorName: n})); setShowNameModal(false); };
-            const removeFile = (i) => setFiles(p => p.filter((_, x) => x !== i));
-            const getFileContext = () => files.length ? `\n### FILES:\n` + files.map(f => f.content.substring(0,10000)).join('\n') : '';
-            const constructSystemPrompt = () => `Generate ${config.batchSize} questions for ${config.discipline}. Difficulty: ${config.difficulty}. Language: ${config.language}. Output ONLY CSV-style pipe table.`; 
-            
-            // --- Missing Functions Restored ---
-            const handleSelectCategory = (categoryKey) => { 
-                setConfig(prev => ({ ...prev, difficulty: categoryKey })); 
-            };
-
-            const handleGenerate = async () => { 
-                setIsGenerating(true); 
-                try { 
-                    const text = await generateContent(config.apiKey, constructSystemPrompt(), "Generate questions", setStatus); 
-                    const newQs = parseQuestions(text).map(q => ({...q, language: config.language, creatorName: config.creatorName})); 
-                    await checkAndStoreQuestions(newQs); 
-                    addQuestionsToState(newQs); 
-                    setStatus('');
-                } catch(e) { 
-                    console.error(e); 
-                    setStatus('Error');
-                    showMessage(`Generation Error: ${e.message}. Please try again.`, 10000);
-                } finally { 
-                    setIsGenerating(false); 
+            const loadHistory = async () => {
+                // Replaced by useEffect onSnapshot, but kept for manual trigger consistency
+                if (!db || !isCloudReady) { 
+                    // If local, historicalQuestions is just empty or whatever was loaded from local storage if we implemented that
+                    setHistoricalQuestions([]); 
+                    return; 
                 }
-            }; 
-
-            const handleDetectTopics = async () => {
-                if (files.length === 0) return;
-                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
-                setIsDetecting(true); setStatus('Scanning...');
-                const prompt = `Analyze content. Identify 3 prominent technical disciplines. Return ONLY comma-separated list. ${getFileContext()}`;
-                try {
-                    const detected = await generateContent(config.apiKey, "Technical Analyst", prompt, setStatus);
-                    setConfig(prev => ({ ...prev, discipline: detected.split(',')[0].trim() }));
-                    setStatus('Detected'); setTimeout(() => setStatus(''), 2000);
-                } catch (err) { setStatus('Failed'); } finally { setIsDetecting(false); }
+                setShowHistory(true);
+                // The useEffect will handle the actual fetching
             };
-
-            const handleTranslate = async (fromLang, toLang) => {
-                if (questions.length === 0) return;
-                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
-                setIsProcessing(true); setStatus(`Translating to ${toLang}...`);
-                let rawTable = "| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
-                questions.forEach((q, i) => {
-                    const opts = q.options || {};
-                    rawTable += `| ${i+1} | ${stripHtmlTags(q.discipline)} | ${stripHtmlTags(q.type)} | ${stripHtmlTags(q.difficulty)} | ${stripHtmlTags(q.question)} | | ${stripHtmlTags(opts.A || '')} | ${stripHtmlTags(opts.B || '')} | ${stripHtmlTags(opts.C || '')} | ${stripHtmlTags(opts.D || '')} | ${q.correct} | ${stripHtmlTags(q.sourceUrl)} | ${stripHtmlTags(q.sourceExcerpt)} |\n`;
-                });
-                const prompt = `Translate table from ${fromLang} to ${toLang}.\n${rawTable}`;
-                try {
-                    const text = await generateContent(config.apiKey, "You are a translator.", prompt, setStatus);
-                    const translatedQuestions = parseQuestions(text);
-                    if (translatedQuestions.length > 0) {
-                             setQuestions(translatedQuestions.map((tq, i) => ({ ...tq, id: questions[i]?.id || tq.id, status: questions[i]?.status || 'pending' })));
-                             setStatus('Translated');
-                             handleLanguageSwitch(toLang);
-                    }
-                } catch(e) { setStatus('Fail'); } finally { setIsProcessing(false); }
-            };
-
-            const handleTranslateSingle = async (q, lang) => { 
-                if(!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
-                setIsProcessing(true); 
-                try { 
-                    const text = await generateContent(config.apiKey, "Translator", `Translate to ${lang}:\n${q.question}`, setStatus); 
-                    // Parsing logic omitted for brevity in one-liner, but would go here
-                } catch(e){} finally { setIsProcessing(false); }
-            }; 
             
-            // --- Full Function Definitions Restored ---
+            const handleToggleHistory = () => {
+                if (showHistory) { 
+                    setShowHistory(false); 
+                    // Don't clear historicalQuestions here, let them stay cached in background
+                    setFilterMode('pending'); 
+                } else { 
+                    setSearchTerm(''); 
+                    // loadHistory(); // Not needed, useEffect handles it
+                    setShowHistory(true);
+                    setFilterMode('all'); 
+                }
+            };
+            
+            const handleSyncToDatabase = async () => {
+                const validQuestions = questions.filter(q => q.status !== 'rejected');
+                if (validQuestions.length === 0) {
+                    showMessage("No valid questions to sync.", 3000);
+                    return;
+                }
+                await checkAndStoreQuestions(validQuestions);
+            };
+
+            const handleLanguageSwitch = (lang) => {
+                setConfig(prev => ({ ...prev, language: lang }));
+            };
+
+            const handleChange = (e) => {
+                const { name, value } = e.target;
+                if (name === 'batchSize' && config.difficulty === 'Balanced All') {
+                    const num = parseInt(value);
+                    if (num % 6 !== 0) showMessage("For Balanced All mode, the batch size should be a multiple of 6 (e.g., 6, 12, 18) for an even distribution.", 3000);
+                }
+                setConfig(prev => ({ ...prev, [name]: value }));
+                // If user changes language in dropdown, update global language filter
+                if (name === 'language') {
+                    handleLanguageSwitch(value);
+                }
+            };
+
+            // MODIFIED: Set both creatorName and reviewerName to the entered name
+            const handleNameSave = (name) => { 
+                setConfig(prev => ({ ...prev, creatorName: name, reviewerName: name })); 
+                setShowNameModal(false); 
+            };
+            
             const handleFileChange = (e) => {
                 const newFiles = Array.from(e.target.files);
                 const allowedTypes = ['text/', 'application/json', 'application/javascript', 'application/xml', 'application/csv'];
@@ -770,37 +1312,37 @@
                             });
                             
                             if (header.length > 5 && header[0].includes('ID') && header[2].includes('Discipline')) {
-                                   lines.slice(1).forEach((line, idx) => {
-                                       if (!line.trim()) return;
-                                       const cols = parseCSVLine(line);
-                                       if (cols.length < 10) return;
-                                       const uniqueId = cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID();
-                                       importedQuestions.push({
-                                           id: Date.now() + idx + Math.random(),
-                                           uniqueId: uniqueId,
-                                           discipline: cols[2] || "Imported",
-                                           type: cols[3] || "Multiple Choice",
-                                           difficulty: cols[4] || "Easy",
-                                           question: cols[5] || "",
-                                           options: { A: cols[6] || "", B: cols[7] || "", C: cols[8] || "", D: cols[9] || "" },
-                                           correct: cols[10] || "",
-                                           dateAdded: cols[11] || new Date().toISOString(),
-                                           sourceUrl: cols[12] || "",
-                                           sourceExcerpt: cols[13] || "",
-                                           creatorName: cols[14] || config.creatorName || "",
-                                           reviewerName: cols[15] || "",
-                                           status: 'accepted',
-                                           language: cols[16] || fileLanguage || "English" 
-                                       });
-                                   });
-                                   if (importedQuestions.length > 0) {
-                                       addQuestionsToState(importedQuestions, showHistory);
-                                       await checkAndStoreQuestions(importedQuestions);
-                                       showMessage(`Imported ${importedQuestions.length} questions from CSV.`, 4000);
-                                       if (showHistory) {
-                                           // loadHistory(); // Handled by onSnapshot
-                                       }
-                                   }
+                                    lines.slice(1).forEach((line, idx) => {
+                                        if (!line.trim()) return;
+                                        const cols = parseCSVLine(line);
+                                        if (cols.length < 10) return;
+                                        const uniqueId = cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID();
+                                        importedQuestions.push({
+                                            id: Date.now() + idx + Math.random(),
+                                            uniqueId: uniqueId,
+                                            discipline: cols[2] || "Imported",
+                                            type: cols[3] || "Multiple Choice",
+                                            difficulty: cols[4] || "Easy",
+                                            question: cols[5] || "",
+                                            options: { A: cols[6] || "", B: cols[7] || "", C: cols[8] || "", D: cols[9] || "" },
+                                            correct: cols[10] || "",
+                                            dateAdded: cols[11] || new Date().toISOString(),
+                                            sourceUrl: cols[12] || "",
+                                            sourceExcerpt: cols[13] || "",
+                                            creatorName: cols[14] || config.creatorName || "",
+                                            reviewerName: cols[15] || "",
+                                            status: 'accepted',
+                                            language: cols[16] || fileLanguage || "English" 
+                                        });
+                                    });
+                                    if (importedQuestions.length > 0) {
+                                        addQuestionsToState(importedQuestions, showHistory);
+                                        await checkAndStoreQuestions(importedQuestions);
+                                        showMessage(`Imported ${importedQuestions.length} questions from CSV.`, 4000);
+                                        if (showHistory) {
+                                            loadHistory();
+                                        }
+                                    }
                             } else {
                                 setFiles(prev => [...prev, { name: file.name, content: content, size: file.size }]);
                             }
@@ -817,183 +1359,848 @@
                 }
                 if (validFiles.length < newFiles.length) showMessage("Skipped non-text files (images/binaries). Upload text-based files only.", 5000);
             };
-            
-            const handleBulkTranslateMissing = async () => {
-                if (isProcessing) return;
+
+            const removeFile = (index) => { setFiles(prev => prev.filter((_, i) => i !== index)); };
+
+            const getFileContext = () => {
+                const MAX_FILE_CONTENT_LENGTH = 10000; // Reduced to mitigate MAX_TOKENS issues
+                let fileContext = "";
+                if (files.length > 0) {
+                    fileContext = "\n\n### ATTACHED LOCAL SOURCE FILES:\n";
+                    files.forEach(f => { 
+                        const content = f.content.substring(0, MAX_FILE_CONTENT_LENGTH); 
+                        const isTruncated = f.content.length > MAX_FILE_CONTENT_LENGTH;
+                        fileContext += `\n--- START FILE: ${f.name} (Size: ${f.size} bytes) ---\n`;
+                        fileContext += content;
+                        if (isTruncated) fileContext += `\n[... File content truncated to ${MAX_FILE_CONTENT_LENGTH} characters for prompt size safety]`;
+                        fileContext += "\n--- END FILE ---\n"; 
+                    });
+                }
+                return fileContext;
+            };
+
+            const constructSystemPrompt = () => {
+                let batchNum = parseInt(config.batchSize) || 6;
+                let easyCount = 0; let mediumCount = 0; let hardCount = 0;
+                let targetType = 'Multiple Choice and True/False';
+                let mcCount = 0; let tfCount = 0;
+                const [difficulty, type] = config.difficulty.split(' ');
+                if (difficulty === 'Balanced') {
+                    if (batchNum % 6 !== 0) batchNum = Math.ceil(batchNum / 6) * 6;
+                    const countPerCategory = batchNum / 6;
+                    easyCount = countPerCategory; mediumCount = countPerCategory; hardCount = countPerCategory;
+                    targetType = 'Multiple Choice and True/False'; mcCount = countPerCategory * 3; tfCount = countPerCategory * 3; 
+                } else {
+                    if (difficulty === 'Easy') easyCount = batchNum; else if (difficulty === 'Medium') mediumCount = batchNum; else if (difficulty === 'Hard') hardCount = batchNum;
+                    if (type === 'MC') { targetType = 'Multiple Choice ONLY'; mcCount = batchNum; } else if (type === 'T/F') { targetType = 'True/False ONLY'; tfCount = batchNum; }
+                }
+                const difficultyPrompt = (difficulty === 'Balanced') ? `Generate approximately ${easyCount} Easy, ${mediumCount} Medium, and ${hardCount} Hard questions. Aim for ${mcCount} Multiple Choice questions and ${tfCount} True/False questions for a balanced batch.` : `Generate exactly ${batchNum} questions of difficulty: ${difficulty}.`;
+                return `
+## Universal UE5 Scenario-Based Question Generator — Gemini Version
+Role: You are a senior Unreal Engine 5 technical writer. Create short, clear, scenario-driven questions in Simplified Technical English (STE).
+**FORMATTING INSTRUCTION:** You MUST enclose key technical concepts (like Nanite, Lumen, Blueprints, Virtual Shadow Maps) in HTML bold tags (e.g., <b>Nanite</b>) in the Question and Answer columns.
+Discipline: ${config.discipline}
+Target Language: ${config.language}
+Question Type: ${targetType}
+**LANGUAGE STRICTNESS:** Output ONLY in ${config.language}. Do NOT provide bilingual text.
+Question Format:
+| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |
+- ID starts at 1.
+- Difficulty levels: Easy / Medium / Hard.
+- For True/False questions: OptionA=TRUE, OptionB=FALSE. CorrectLetter=A/B.
+- **CRITICAL RULE:** True/False questions must be a SINGLE assertion.
+- **TYPE RULE:** If Question Type is 'Multiple Choice ONLY', do NOT generate True/False questions. If Question Type is 'True/False ONLY', do NOT generate Multiple Choice questions.
+Sourcing:
+1. Official Epic Games Documentation (dev.epicgames.com/documentation)
+3. Attached Local Files
+**FORBIDDEN SOURCES:** Do NOT use forums, Reddit, community wikis, or external video platforms like YouTube.
+Output:
+- **OUTPUT INSTRUCTION:** ${difficultyPrompt}
+${getFileContext()}
+`;
+            };
+
+            const handleGenerate = async () => {
+                if (!config.creatorName) { showMessage("Please enter your Creator Name to start generating.", 5000); setShowNameModal(true); return; }
+                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                if (config.difficulty !== 'Balanced All' && isTargetMet) { showMessage(`Quota met for ${config.difficulty}! Change difficulty/type or discipline to continue.`, 5000); return; }
+                setIsGenerating(true); setShowHistory(false); setStatus('Drafting Scenarios...');
+                const systemPrompt = constructSystemPrompt();
+                const userPrompt = `Generate ${config.batchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}. Ensure links work for UE 5.7 or latest available.`;
+                try {
+                    // UPDATED: Pass API key
+                    const text = await generateContent(config.apiKey, systemPrompt, userPrompt, setStatus);
+                    let newQuestions = parseQuestions(text);
+                    if (newQuestions.length === 0) throw new Error("Failed to parse generated questions.");
+                    // NOTE: We add 'language' property to newly generated questions
+                    const taggedQuestions = newQuestions.map(q => ({ ...q, language: config.language }));
+                    const uniqueNewQuestions = await checkAndStoreQuestions(taggedQuestions);
+                    
+                    // SAFE STATE UPDATE
+                    addQuestionsToState(uniqueNewQuestions, false);
+                    
+                    setStatus('');
+                } catch (err) { console.error(err); setStatus('Error'); showMessage(`Generation Error: ${err.message}. Please try again.`, 10000); } finally { setIsGenerating(false); }
+            };
+
+            const handleDetectTopics = async () => {
+                if (files.length === 0) return;
+                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                setIsDetecting(true); setStatus('Scanning...');
+                const prompt = `Analyze content. Identify 3 prominent technical disciplines. Return ONLY comma-separated list. ${getFileContext()}`;
+                try {
+                    // UPDATED: Pass API key
+                    const detected = await generateContent(config.apiKey, "Technical Analyst", prompt, setStatus);
+                    setConfig(prev => ({ ...prev, discipline: detected.split(',')[0].trim() }));
+                    setStatus('Detected'); setTimeout(() => setStatus(''), 2000);
+                } catch (err) { setStatus('Failed'); } finally { setIsDetecting(false); }
+            };
+
+            const handleTranslate = async (fromLang, toLang) => {
+                if (questions.length === 0) return;
+                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                setIsProcessing(true); setStatus(`Translating to ${toLang}...`);
+                let rawTable = "| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
+                questions.forEach((q, i) => {
+                    const opts = q.options || {};
+                    rawTable += `| ${i+1} | ${stripHtmlTags(q.discipline)} | ${stripHtmlTags(q.type)} | ${stripHtmlTags(q.difficulty)} | ${stripHtmlTags(q.question)} | | ${stripHtmlTags(opts.A || '')} | ${stripHtmlTags(opts.B || '')} | ${stripHtmlTags(opts.C || '')} | ${stripHtmlTags(opts.D || '')} | ${q.correct} | ${stripHtmlTags(q.sourceUrl)} | ${stripHtmlTags(q.sourceExcerpt)} |\n`;
+                });
+                const prompt = `
+                You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided Markdown table from ${fromLang} to ${toLang}.
+                CRITICAL INSTRUCTIONS:
+                1. Preserve the exact Markdown table structure, including the pipe characters (|) and the header row.
+                2. Translate ONLY the following columns: Question, OptionA, OptionB, OptionC, OptionD, and SourceExcerpt.
+                3. DO NOT translate: ID, Discipline, Type, Difficulty, Answer (column 6), CorrectLetter, and SourceURL.
+                4. **Translate ALL rows. Do not summarize or skip any rows.**
+                5. Ensure you use standard half-width pipe characters (|) for column separators, not full-width (｜).
+                Content: ${rawTable}
+                `;
+                try {
+                    // UPDATED: Pass API key
+                    const text = await generateContent(config.apiKey, "You are a translator.", prompt, setStatus);
+                    const translatedQuestions = parseQuestions(text);
+                    if (translatedQuestions.length > 0) {
+                             setQuestions(translatedQuestions.map((tq, i) => ({ ...tq, id: questions[i]?.id || tq.id, status: questions[i]?.status || 'pending' })));
+                             setStatus('Translated');
+                             // Force language update
+                             handleLanguageSwitch(toLang);
+                    }
+                } catch(e) { setStatus('Fail'); } finally { setIsProcessing(false); }
+            };
+
+            // NEW: Handle single question translation (used by flags/codes)
+            const handleTranslateSingle = async (q, targetLang) => {
                 if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
                 setIsProcessing(true);
-                setShowHistory(false);
-                const targetLangs = ['Chinese (Simplified)', 'Japanese', 'Korean'];
-                const translationQueue = [];
-                const baseQuestions = Array.from(allQuestionsMap.values()).map(variants => variants.find(v => (v.language || 'English') === 'English') || variants[0]);
-                baseQuestions.forEach(q => {
-                    const existingLangs = translationMap.get(q.uniqueId) || new Set();
-                    targetLangs.forEach(targetLang => {
-                        if (q.status === 'accepted' && !existingLangs.has(targetLang)) {
-                            translationQueue.push({ question: q, targetLang });
-                        }
-                    });
-                });
-                if (translationQueue.length === 0) { showMessage("All CN, JP, and KR translations already exist for all accepted questions.", 5000); setIsProcessing(false); return; }
-                showMessage(`Found ${translationQueue.length} missing translations. Starting bulk generation...`);
-                let generatedCount = 0;
-                let totalProgress = 0;
-                const totalQueueSize = translationQueue.length;
-                for (const { question: q, targetLang } of translationQueue) {
-                    const rawTable = `| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| 1 | ${q.discipline} | ${q.type} | ${q.difficulty} | ${q.question} | | ${q.options.A} | ${q.options.B} | ${q.options.C || ''} | ${q.options.D || ''} | ${q.correct} | ${q.sourceUrl} | ${q.sourceExcerpt} |`;
-                    const prompt = `Translate this single row from ${q.language || 'English'} to ${targetLang}. Keep format EXACT. \n${rawTable}`;
-                    const systemPrompt = `You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided Markdown table from ${q.language || 'English'} to ${targetLang}. CRITICAL INSTRUCTIONS: 1. Preserve the exact Markdown table structure. 2. Translate ONLY: Question, OptionA, OptionB, OptionC, OptionD, and SourceExcerpt. 3. DO NOT translate: ID, Discipline, Type, Difficulty, Answer, CorrectLetter, and SourceURL.`;
-                    try {
-                        setStatus(`Translating: ${q.uniqueId.substring(0, 4)} -> ${targetLang}...`);
-                        const text = await generateContent(config.apiKey, systemPrompt, prompt, setStatus);
-                        const translatedQs = parseQuestions(text);
-                        if (translatedQs.length > 0) {
-                            const tq = translatedQs[0];
-                            const newQuestion = { ...tq, id: Date.now() + Math.random(), uniqueId: q.uniqueId, discipline: q.discipline, type: q.type, difficulty: q.difficulty, language: targetLang, status: 'accepted', dateAdded: new Date().toISOString() };
-                            await checkAndStoreQuestions([newQuestion]);
-                            addQuestionsToState([newQuestion], showHistory);
-                            generatedCount++;
-                        }
-                    } catch (e) { console.error(`Failed to generate translation for ${q.uniqueId} to ${targetLang}:`, e); }
-                    totalProgress = Math.floor((generatedCount / totalQueueSize) * 100);
-                    setTranslationProgress(totalProgress);
+                setStatus(`Translating question to ${targetLang}...`);
+                
+                const rawTable = `| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| 1 | ${q.discipline} | ${q.type} | ${q.difficulty} | ${q.question} | | ${q.options.A} | ${q.options.B} | ${q.options.C || ''} | ${q.options.D || ''} | ${q.correct} | ${q.sourceUrl} | ${q.sourceExcerpt} |`;
+
+                const prompt = `Translate this single row from ${q.language || 'English'} to ${targetLang}. Keep format EXACT. \n${rawTable}`;
+
+                try {
+                    // UPDATED: Pass API key
+                    const text = await generateContent(config.apiKey, "Translator", prompt, setStatus);
+                    const translatedQs = parseQuestions(text);
+                    if (translatedQs.length > 0) {
+                        const tq = translatedQs[0];
+                        const newQuestion = {
+                            ...tq,
+                            id: Date.now(),
+                            uniqueId: q.uniqueId, 
+                            discipline: q.discipline,
+                            type: q.type,
+                            difficulty: q.difficulty,
+                            language: targetLang,
+                            status: 'accepted',
+                            dateAdded: new Date().toISOString()
+                        };
+                        
+                        await checkAndStoreQuestions([newQuestion]);
+                        addQuestionsToState([newQuestion], showHistory);
+                        
+                        // Switch the entire view to the new translated language
+                        handleLanguageSwitch(targetLang);
+
+                        showMessage(`Translated to ${targetLang} and saved.`, 3000);
+                    }
+                } catch(e) {
+                    console.error(e);
+                    setStatus('Translation Failed');
+                } finally {
+                    setIsProcessing(false);
                 }
-                showMessage(`Bulk translation complete! Generated ${generatedCount} new translations.`, 7000);
-                setIsProcessing(false);
             };
-            
+
             const handleExplain = async (q) => {
                 if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
                 setIsProcessing(true); setStatus('Explaining...');
                 const prompt = `Explain WHY the answer is correct in simple terms: "${q.question}" Answer: "${q.correct === 'A' ? q.options.A : q.options.B}"`;
                 try {
+                    // UPDATED: Pass API key
                     const exp = await generateContent(config.apiKey, "Technical Assistant", prompt, setStatus);
                     const targetSet = showHistory ? setHistoricalQuestions : setQuestions;
                     targetSet(prev => prev.map(i => i.id === q.id ? { ...i, explanation: exp } : i));
                     setStatus('');
                 } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
             };
-
+            
             const handleVariate = async (q) => {
                 if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
                 setIsProcessing(true); setStatus('Creating variations...');
                 const sys = constructSystemPrompt();
                 const prompt = `Generate 2 NEW unique questions based on: "${q.question}". Output in Markdown Table.`;
                 try {
+                    // UPDATED: Pass API key
                     const text = await generateContent(config.apiKey, sys, prompt, setStatus);
                     const newQs = parseQuestions(text);
                     if(newQs.length > 0) { 
                         const uniqueNewQuestions = await checkAndStoreQuestions(newQs);
                         addQuestionsToState(uniqueNewQuestions, showHistory);
+                        
                         if (showHistory) showMessage(`Added ${uniqueNewQuestions.length} variations to Session view.`, 4000);
                         else showMessage(`Added ${uniqueNewQuestions.length} new variations.`, 3000); 
                     }
                 } catch(e) { setStatus('Fail'); } finally { setIsProcessing(false); }
             };
-
+            
             const handleCritique = async (q) => {
                 if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
                 setIsProcessing(true); setStatus('Critiquing...');
                 const questionDetails = `Question: ${q.question}\nDiscipline: ${q.discipline}\nDifficulty: ${q.difficulty}\nCorrect Answer: ${q.correct}: ${q.options[q.correct] || 'N/A'}`;
                 const systemPrompt = `You are a Technical Writing Editor specialized in Unreal Engine 5 content. Analyze this REJECTED quiz question and provide actionable, numbered suggestions for improvement. Focus on: Clarity and technical accuracy. Output ONLY a brief, numbered list of 3-5 concrete suggestions.`;
                 try {
+                    // UPDATED: Pass API key
                     const critiqueText = await generateContent(config.apiKey, systemPrompt, `Critique and suggest fixes for the following rejected question:\n${questionDetails}`, setStatus);
                     const targetSet = showHistory ? setHistoricalQuestions : setQuestions;
                     targetSet(prev => prev.map(i => i.id === q.id ? { ...i, critique: critiqueText } : i));
                     showMessage('Critique Ready', 3000);
                 } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
             };
+
+            const downloadFile = (data, filename) => {
+                const BOM = "\uFEFF"; 
+                const finalType = 'text/csv;charset=utf-8;';
+                const blob = new Blob([BOM + data], { type: finalType });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            const getCSVContent = (validQuestions, creatorName, reviewerName, includeHeaders = true) => {
+                const headers = ["ID", "Question ID", "Discipline", "Type", "Difficulty", "Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer", "Generation Date", "Source URL", "Source Excerpt", "Creator", "Reviewer", "Language"];
+                let csvContent = includeHeaders ? headers.map(safe).join(FIELD_DELIMITER) + '\n' : '';
+                const generationDate = formatDate(new Date());
+                validQuestions.forEach((row, i) => {
+                    const cleanedSourceUrl = row.sourceUrl && !row.sourceUrl.includes("grounding-api") ? row.sourceUrl : "";
+                    const o = row.options || {};
+                    const rowData = [ (i + 1).toString(), row.uniqueId, row.discipline, row.type, row.difficulty, row.question, o.A, o.B, o.C, o.D || "", row.correct, generationDate, cleanedSourceUrl, row.sourceExcerpt, creatorName, reviewerName, row.language || "English" ];
+                    csvContent += rowData.map(safe).join(FIELD_DELIMITER) + '\n';
+                });
+                return csvContent;
+            };
+
+            const handleExportByGroup = () => {
+                const sourceList = showHistory ? historicalQuestions : questions;
+                const valid = sourceList.filter(q => q.status !== 'rejected');
+
+                if(valid.length === 0) { showMessage("No accepted questions to export.", 3000); return; }
+
+                // NEW GROUPING: Language, Discipline, Difficulty, Type
+                const groupedData = valid.reduce((acc, q) => {
+                    const typeAbbrev = q.type === 'True/False' ? 'T/F' : 'MC';
+                    // Use a unique key combining all segmentation requirements
+                    const key = `${q.language || 'English'}_${q.discipline}_${q.difficulty}_${typeAbbrev}`;
+                    if (!acc[key]) acc[key] = [];
+                    acc[key].push(q);
+                    return acc;
+                }, {});
+
+                let filesGenerated = 0;
+                const exportDate = new Date();
+                const datePart = formatDate(exportDate).replace(/-/g, '');
+
+                Object.keys(groupedData).forEach(groupKey => {
+                    const groupQuestions = groupedData[groupKey];
+                    const csvContent = getCSVContent(groupQuestions, config.creatorName, config.reviewerName);
+                    
+                    // Format filename: Language_Discipline_Difficulty_Type_Date.csv
+                    const fileNameParts = groupKey.replace(/ & /g, '_').replace(/ /g, '_');
+                    const filename = `${fileNameParts}_${datePart}.csv`; 
+                    
+                    downloadFile(csvContent, filename);
+                    filesGenerated++;
+                });
+
+                showMessage(`Exported ${filesGenerated} segmented files.`, 7000);
+                setShowExportMenu(false);
+            };
             
-            const handleToggleHistory = () => {
-                if (showHistory) { 
-                    setShowHistory(false); 
-                    setFilterMode('pending'); 
-                } else { 
-                    setSearchTerm(''); 
+            const handleExportCurrentTarget = () => {
+                const sourceList = showHistory ? historicalQuestions : questions;
+                
+                const targetString = config.difficulty; // e.g., "Easy MC"
+                
+                const [targetDiff, targetTypeAbbrev] = targetString.split(' ');
+                const targetType = targetTypeAbbrev === 'MC' ? 'Multiple Choice' : 'True/False';
+
+                // Filter by current language, discipline, difficulty, and type
+                const valid = sourceList.filter(q => 
+                    q.status !== 'rejected' &&
+                    (q.language || 'English') === config.language && // Include language filter
+                    q.discipline === config.discipline &&
+                    q.difficulty === targetDiff &&
+                    q.type === targetType
+                );
+
+                if (valid.length === 0) {
+                    showMessage(`No accepted questions found for target: ${config.language} - ${targetString}`, 3000);
+                    return;
+                }
+
+                const typePart = targetString.replace(/\s/g,'_');
+                const disciplinePart = config.discipline.replace(/\s/g,'_');
+                const datePart = new Date().toISOString().split('T')[0].replace(/-/g, '');
+                const langPart = (config.language || 'English').replace(/ /g, '_');
+                
+                const csvContent = getCSVContent(valid, config.creatorName, config.reviewerName);
+                const filename = `${langPart}_${disciplinePart}_${typePart}_${datePart}.csv`;
+                downloadFile(csvContent, filename);
+                showMessage(`Exported ${valid.length} questions for target ${targetString}`, 5000);
+                setShowExportMenu(false);
+            };
+
+            const handleBulkTranslateExport = async (targetLanguages) => {
+                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                const sourceList = showHistory ? historicalQuestions : questions;
+                const validQuestions = sourceList.filter(q => q.status !== 'rejected');
+
+                if(validQuestions.length === 0 || targetLanguages.length === 0) return;
+                setIsProcessing(true); setTranslationProgress(0);
+                const exportDate = new Date();
+                const datePart = formatDate(exportDate).replace(/-/g, '');
+                const totalLanguages = targetLanguages.length;
+
+                const groupedData = validQuestions.reduce((acc, q) => {
+                    const typeAbbrev = q.type === 'True/False' ? 'T/F' : 'MC';
+                    const key = `${q.discipline} ${q.difficulty} ${typeAbbrev}`;
+                    if (!acc[key]) acc[key] = [];
+                    acc[key].push(q);
+                    return acc;
+                }, {});
+
+                let filesGenerated = 0;
+                let completedCount = 0;
+
+                for (const targetLang of targetLanguages) {
+                    for (const groupKey of Object.keys(groupedData)) {
+                        const groupQuestions = groupedData[groupKey];
+                        setStatus(`Translating ${groupKey} to ${targetLang} (Batching)...`);
+
+                        const batches = chunkArray(groupQuestions, 6);
+                        let finalTranslatedGroup = [];
+
+                        try {
+                            for (const batch of batches) {
+                                let rawTable = "| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
+                                batch.forEach((q, i) => {
+                                    const opts = q.options || {};
+                                    rawTable += `| ${i+1} | ${stripHtmlTags(q.discipline)} | ${stripHtmlTags(q.type)} | ${stripHtmlTags(q.difficulty)} | ${stripHtmlTags(q.question)} | | ${stripHtmlTags(opts.A || '')} | ${stripHtmlTags(opts.B || '')} | ${stripHtmlTags(opts.C || '')} | ${stripHtmlTags(opts.D || '')} | ${q.correct} | ${stripHtmlTags(q.sourceUrl)} | ${stripHtmlTags(q.sourceExcerpt)} |\n`;
+                                });
+
+                                const sourceLang = config.language;
+                                const systemPrompt = `
+                                    You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided Markdown table from ${sourceLang} to ${targetLang}.
+                                    CRITICAL INSTRUCTIONS:
+                                    1. Preserve the exact Markdown table structure, including the pipe characters (|) and the header row.
+                                    2. Translate ONLY the following columns: Question, OptionA, OptionB, OptionC, OptionD, and SourceExcerpt.
+                                    3. DO NOT translate: ID, Discipline, Type, Difficulty, Answer (column 6), CorrectLetter, and SourceURL.
+                                    4. **Translate ALL rows. Do not summarize or skip any rows.**
+                                    5. Ensure you use standard half-width pipe characters (|) for column separators, not full-width (｜).
+                                    `;
+                                
+                                // UPDATED: Pass API key
+                                const translatedText = await generateContent(config.apiKey, systemPrompt, `Translate the following ${sourceLang} question bank table to ${targetLang}:\n${rawTable}`, setStatus);
+                                const translatedQuestions = parseQuestions(translatedText);
+
+                                const remappedBatch = translatedQuestions.map((tq, i) => ({
+                                    ...tq,
+                                    id: Date.now() + Math.random(), 
+                                    uniqueId: batch[i]?.uniqueId || tq.uniqueId, 
+                                    discipline: batch[i].discipline,
+                                    type: batch[i].type,
+                                    difficulty: batch[i].difficulty,
+                                    language: targetLang, 
+                                    status: 'accepted'
+                                }));
+                                
+                                await checkAndStoreQuestions(remappedBatch);
+
+                                finalTranslatedGroup.push(...remappedBatch);
+                            }
+
+                            if (finalTranslatedGroup.length > 0) {
+                                const csvContent = getCSVContent(finalTranslatedGroup, config.creatorName, config.reviewerName);
+                                const fileNameParts = groupKey.replace(/ & /g, '_').replace(/ /g, '_');
+                                const langPart = targetLang.replace(/ /g, '_');
+                                const filename = `${fileNameParts}_${datePart}_${langPart}.csv`;
+                                downloadFile(csvContent, filename);
+                                filesGenerated++;
+                            }
+
+                        } catch (e) {
+                            console.error(`Translation of group ${groupKey} to ${targetLang} failed:`, e);
+                            showMessage(`Error translating group ${groupKey} to ${targetLang}. See console.`, 5000);
+                        }
+                    }
+                    completedCount++;
+                    setTranslationProgress(Math.floor((completedCount / totalLanguages) * 100));
+                }
+                setStatus(`Successfully exported ${filesGenerated} translated file(s).`);
+                setTranslationProgress(100);
+                setIsProcessing(false);
+            };
+
+            const handleBulkTranslateMissing = async () => {
+                if (isProcessing) return;
+                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+
+                setIsProcessing(true);
+                setShowHistory(false);
+                
+                // 1. Identify unique questions that need CN, JP, or KR translations
+                const targetLangs = ['Chinese (Simplified)', 'Japanese', 'Korean'];
+                const translationQueue = [];
+                
+                // Find English/Base versions
+                const baseQuestions = Array.from(allQuestionsMap.values()).map(variants => 
+                    variants.find(v => (v.language || 'English') === 'English') || variants[0]
+                );
+
+                baseQuestions.forEach(q => {
+                    const existingLangs = translationMap.get(q.uniqueId) || new Set();
+                    
+                    targetLangs.forEach(targetLang => {
+                        if (q.status === 'accepted' && !existingLangs.has(targetLang)) {
+                            // Only queue accepted, missing translations
+                            translationQueue.push({ question: q, targetLang });
+                        }
+                    });
+                });
+
+                if (translationQueue.length === 0) {
+                    showMessage("All CN, JP, and KR translations already exist for all accepted questions.", 5000);
+                    setIsProcessing(false);
+                    return;
+                }
+
+                showMessage(`Found ${translationQueue.length} missing translations. Starting bulk generation...`);
+                let generatedCount = 0;
+                let totalProgress = 0;
+                const totalQueueSize = translationQueue.length;
+
+                for (const { question: q, targetLang } of translationQueue) {
+                    const rawTable = `| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| 1 | ${q.discipline} | ${q.type} | ${q.difficulty} | ${q.question} | | ${q.options.A} | ${q.options.B} | ${q.options.C || ''} | ${q.options.D || ''} | ${q.correct} | ${q.sourceUrl} | ${q.sourceExcerpt} |`;
+                    const prompt = `Translate this single row from ${q.language || 'English'} to ${targetLang}. Keep format EXACT. \n${rawTable}`;
+                    const systemPrompt = `You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided Markdown table from ${q.language || 'English'} to ${targetLang}. CRITICAL INSTRUCTIONS: 1. Preserve the exact Markdown table structure. 2. Translate ONLY: Question, OptionA, OptionB, OptionC, OptionD, and SourceExcerpt. 3. DO NOT translate: ID, Discipline, Type, Difficulty, Answer, CorrectLetter, and SourceURL.`;
+
+                    try {
+                        setStatus(`Translating: ${q.uniqueId.substring(0, 4)} -> ${targetLang}...`);
+                        // UPDATED: Pass API key
+                        const text = await generateContent(config.apiKey, systemPrompt, prompt, setStatus);
+                        const translatedQs = parseQuestions(text);
+
+                        if (translatedQs.length > 0) {
+                            const tq = translatedQs[0];
+                            const newQuestion = {
+                                ...tq,
+                                id: Date.now() + Math.random(),
+                                uniqueId: q.uniqueId, 
+                                discipline: q.discipline,
+                                type: q.type,
+                                difficulty: q.difficulty,
+                                language: targetLang,
+                                status: 'accepted',
+                                dateAdded: new Date().toISOString()
+                            };
+                            
+                            await checkAndStoreQuestions([newQuestion]);
+                            addQuestionsToState([newQuestion], showHistory);
+                            generatedCount++;
+                        }
+                    } catch (e) {
+                        console.error(`Failed to generate translation for ${q.uniqueId} to ${targetLang}:`, e);
+                    }
+                    
+                    totalProgress = Math.floor((generatedCount / totalQueueSize) * 100);
+                    setTranslationProgress(totalProgress);
+                }
+
+                showMessage(`Bulk translation complete! Generated ${generatedCount} new translations.`, 7000);
+                setIsProcessing(false);
+            };
+
+
+            const handleUpdateStatus = (id, newStatus) => {
+                const targetSet = showHistory ? setHistoricalQuestions : setQuestions;
+                targetSet(prev => prev.map(q => q.id === id ? { ...q, status: newStatus, critique: newStatus === 'accepted' ? null : q.critique } : q));
+            };
+            
+            const handleSelectCategory = (categoryKey) => { 
+                setConfig(prev => ({ ...prev, difficulty: categoryKey })); 
+            };
+
+            // --- ALL FILTERING LOGIC COMBINED (useMemo provides stable array) ---
+            const uniqueFilteredQuestions = useMemo(() => {
+                const sourceList = showHistory ? historicalQuestions : questions;
+                const currentLanguage = config.language;
+                const targetDifficulty = config.difficulty.split(' ')[0];
+                const targetTypeAbbrev = config.difficulty.split(' ')[1];
+                const targetType = targetTypeAbbrev === 'MC' ? 'Multiple Choice' : 'True/False';
+                
+                // 1. Apply Global Filters (Status, Search Term, Creator, and DISCIPLINE)
+                const filteredByGlobal = sourceList.filter(q => {
+                    
+                    // --- FIX: Ensure status filter works correctly for session questions ---
+                    let statusMatch = true;
+                    if (!showHistory && filterMode !== 'all') {
+                        statusMatch = q.status === filterMode;
+                    }
+                    
+                    const textMatch = (q.question && q.question.toLowerCase().includes(searchTerm.toLowerCase())) || 
+                                             (q.uniqueId && q.uniqueId.toLowerCase().includes(searchTerm.toLowerCase())) || 
+                                             (q.discipline && q.discipline.toLowerCase().includes(searchTerm.toLowerCase())) || 
+                                             (q.difficulty && q.difficulty.toLowerCase().includes(searchTerm.toLowerCase()));
+                    
+                    let creatorMatch = true;
+                    if (filterByCreator && config.creatorName) {
+                        const qCreator = (q.creatorName || '').toLowerCase().trim();
+                        const configCreator = config.creatorName.toLowerCase().trim();
+                        creatorMatch = (qCreator === configCreator);
+                    }
+                    
+                    // --- Discipline Filter (REQUIRED by user) ---
+                    const disciplineMatch = q.discipline === config.discipline;
+
+                    return statusMatch && textMatch && creatorMatch && disciplineMatch;
+                });
+                
+                // 2. Group by uniqueId
+                const grouped = new Map();
+                filteredByGlobal.forEach(q => {
+                    const id = q.uniqueId;
+                    if (!grouped.has(id)) grouped.set(id, []);
+                    grouped.get(id).push(q);
+                });
+
+                const finalDisplayList = [];
+
+                // 3. For each unique question ID, select the best language version AND apply category filter
+                grouped.forEach((variants) => {
+                    
+                    // Filter variants by Difficulty/Type based on sidebar selection
+                    let filteredVariants = variants;
+                    if (config.difficulty !== 'Balanced All') {
+                        filteredVariants = variants.filter(v => {
+                             const qDiff = (v.difficulty || '').toLowerCase();
+                             const vType = (v.type || '').toLowerCase();
+                             return (qDiff === targetDifficulty.toLowerCase() && vType === targetType.toLowerCase());
+                        });
+                    }
+
+                    if (filteredVariants.length === 0) return; // Skip if no variant matches difficulty/type filter
+
+                    let selected = null;
+                    
+                    // A. Try to find an exact language match
+                    selected = filteredVariants.find(v => (v.language || 'English') === currentLanguage);
+
+                    // B. Fallback 1: English
+                    if (!selected) {
+                        selected = filteredVariants.find(v => (v.language || 'English') === 'English');
+                    }
+                    
+                    // C. Fallback 2: Any available language (take the first one)
+                    if (!selected) {
+                       selected = filteredVariants[0];
+                    }
+                    
+                    if (selected) {
+                        finalDisplayList.push(selected);
+                    }
+                });
+
+                return finalDisplayList;
+            }, [historicalQuestions, questions, config.language, config.discipline, config.difficulty, filterMode, searchTerm, filterByCreator, config.creatorName, showHistory]);
+
+            // Expose the raw array for UI checks outside useMemo
+            const filteredQuestions = uniqueFilteredQuestions;
+            
+            // Calculate overall stats for visibility
+            const totalApproved = useMemo(() => {
+                return CATEGORY_KEYS.reduce((sum, key) => sum + approvedCounts[key], 0);
+            }, [approvedCounts]);
+
+            const overallPercentage = useMemo(() => {
+                return Math.min(100, (totalApproved / TARGET_TOTAL) * 100);
+            }, [totalApproved]);
+
+            const apiKeyStatus = config.apiKey.length > 5 ? 'Loaded' : 'Missing';
+
+            const handleModeSelect = (mode) => {
+                setAppMode(mode);
+                if (mode === 'review') {
                     setShowHistory(true);
-                    setFilterMode('all'); 
+                    setFilterMode('all');
+                } else {
+                    // Creation mode defaults
+                    setShowHistory(false);
+                    setFilterMode('pending');
                 }
             };
 
-            const uniqueFilteredQuestions = useMemo(() => {
-                const sourceList = showHistory ? historicalQuestions : questions;
-                return sourceList.filter(q => {
-                    if (!showHistory && filterMode !== 'all' && q.status !== filterMode) return false;
-                    if (searchTerm && !JSON.stringify(q).toLowerCase().includes(searchTerm.toLowerCase())) return false;
-                    if (filterByCreator && (q.creatorName || '').toLowerCase() !== config.creatorName.toLowerCase()) return false;
-                    return (q.language || 'English') === config.language && q.discipline === config.discipline && (config.difficulty === 'Balanced All' || (q.difficulty === config.difficulty.split(' ')[0] && q.type === (config.difficulty.includes('MC') ? 'Multiple Choice' : 'True/False')));
-                });
-            }, [historicalQuestions, questions, config, filterMode, searchTerm, filterByCreator, showHistory]);
-            
-            const totalApproved = uniqueFilteredQuestions.length;
-            const apiKeyStatus = config.apiKey && config.apiKey.length > 5 ? 'Loaded' : 'Missing';
+            const handleGoHome = () => {
+                setAppMode('landing');
+            };
 
-            const handleModeSelect = (mode) => { setAppMode(mode); setShowHistory(mode === 'review'); setFilterMode(mode === 'review' ? 'all' : 'pending'); };
-            const handleGoHome = () => setAppMode('landing');
-
-            if (appMode === 'landing') return <LandingPage onSelectMode={handleModeSelect} apiKeyStatus={apiKeyStatus} isCloudReady={isCloudReady} />;
+            if (appMode === 'landing') {
+                return <LandingPage onSelectMode={handleModeSelect} apiKeyStatus={apiKeyStatus} isCloudReady={isCloudReady} />;
+            }
 
             return (
                 <div className="flex flex-col h-screen bg-slate-950 font-sans text-slate-200">
-                    {showNameModal && <NameEntryModal onSave={handleNameSave} />}
+                    {config.creatorName === '' && <NameEntryModal onSave={handleNameSave} />}
                     {showClearModal && <ClearConfirmationModal onConfirm={handleDeleteAllQuestions} onCancel={() => setShowClearModal(false)} />}
-                    <BlockingProcessModal isProcessing={isProcessing || isGenerating} status={status} translationProgress={translationProgress} />
-                    {showExportMenu && <ExportOptionsModal onClose={() => setShowExportMenu(false)} children={<ExportOptions onExportByGroup={handleExportByGroup} onBulkTranslateExport={handleBulkTranslateExport} onExportCurrentTarget={handleExportCurrentTarget} currentTarget={config.difficulty} isProcessing={isProcessing} onClose={() => setShowExportMenu(false)} creatorName={config.creatorName} approvedCount={totalApproved} />} />}
+                    
+                    {/* NEW: Blocking Export Modal */}
+                    <BlockingProcessModal isProcessing={isProcessing} status={status} translationProgress={translationProgress} />
+
+                    {showExportMenu && (
+                        <ExportOptionsModal 
+                            onClose={() => setShowExportMenu(false)} 
+                            children={
+                                <ExportOptions 
+                                    onExportByGroup={handleExportByGroup} 
+                                    onBulkTranslateExport={handleBulkTranslateExport} 
+                                    onExportCurrentTarget={handleExportCurrentTarget} 
+                                    currentTarget={config.difficulty} 
+                                    isProcessing={isProcessing} 
+                                    onClose={() => setShowExportMenu(false)}
+                                    creatorName={config.creatorName} 
+                                    reviewerName={config.reviewerName} 
+                                    approvedCount={approvedCounts[config.difficulty] || 0} 
+                                    translationProgress={translationProgress} 
+                                />
+                            }
+                        />
+                    )}
                     
                     <Header apiKeyStatus={apiKeyStatus} isCloudReady={isCloudReady} onHome={handleGoHome} />
-                    
                     <div className="flex flex-1 overflow-hidden">
+                        {/* Sidebar: Only show in Creation Mode */}
                         {appMode === 'create' && (
                             <aside className="w-80 flex-shrink-0 z-10 shadow-xl border-r border-slate-700 bg-slate-950 p-6 overflow-y-auto flex flex-col gap-6">
-                                <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner text-center">
-                                    <h3 className="text-xl font-extrabold text-white">{allQuestionsMap.size}</h3><p className="text-xs font-semibold uppercase text-slate-400">Unique Items</p>
+                                
+                                {/* NEW OVERALL PROGRESS BOX */}
+                                <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-3">
+                                    <div className="text-center">
+                                        <h3 className="text-xl font-extrabold text-white">{allQuestionsMap.size}</h3>
+                                        <p className="text-xs font-semibold uppercase text-slate-400">UNIQUE QUESTIONS IN DB</p>
+                                    </div>
+                                    <div className="border-t border-slate-800 pt-3 space-y-1">
+                                        <div className="flex justify-between items-end">
+                                            <h3 className="text-xs font-bold text-slate-300">APPROVED QUOTA ({totalApproved}/{TARGET_TOTAL})</h3>
+                                            <span className="text-xs font-bold text-orange-400">{overallPercentage.toFixed(1)}%</span>
+                                        </div>
+                                        <div className="w-full h-1.5 rounded-full overflow-hidden bg-slate-700">
+                                            <div className="h-full bg-orange-600 transition-all duration-500" style={{ width: `${overallPercentage}%` }}></div>
+                                        </div>
+                                    </div>
                                 </div>
+                                
                                 <GranularProgress approvedCounts={approvedCounts} target={TARGET_PER_CATEGORY} isTargetMet={isTargetMet} selectedDifficulty={config.difficulty} handleSelectCategory={handleSelectCategory} />
+                                
+                                {/* API Key Configuration */}
                                 <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-2">
-                                    <label className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2"><Icon name="key" size={12}/> Gemini API Key</label>
-                                    <input type="password" name="apiKey" value={config.apiKey} onChange={handleChange} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded text-sm outline-none focus:border-orange-500" placeholder="Enter key..." />
+                                    <div className="flex items-center">
+                                        <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
+                                            <Icon name="key" size={12}/> Gemini API Key
+                                        </label>
+                                        <InfoTooltip text="Enter your personal Gemini API key here. This is required for generation and persistence." />
+                                    </div>
+                                    <input 
+                                        type="password"
+                                        name="apiKey"
+                                        value={config.apiKey}
+                                        onChange={handleChange}
+                                        className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500"
+                                        placeholder="Enter your key..."
+                                    />
+                                    <div className={`text-xs font-mono text-right ${apiKeyStatus === 'Loaded' ? 'text-green-500' : 'text-red-500'}`}>
+                                        {apiKeyStatus}
+                                    </div>
                                 </div>
-                                <div className="space-y-3">
-                                    <button onClick={handleGenerate} disabled={isGenerating} className="w-full py-4 px-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg flex items-center justify-center gap-2">{isGenerating ? "Generating..." : "Generate Questions"}</button>
-                                    <button onClick={handleBulkTranslateMissing} disabled={isProcessing} className="w-full py-2 px-4 border border-indigo-700 text-indigo-400 hover:bg-indigo-900/50 rounded-lg text-xs flex items-center justify-center gap-2">Translate Missing</button>
+
+                                <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner">
+                                    <div className="flex items-center mb-2">
+                                        <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2"><Icon name="hash" size={12}/> Batch Size (Max {maxBatchSize})</label>
+                                        <InfoTooltip text="Number of questions to generate in one batch. Dynamically capped by remaining quota." />
+                                    </div>
+                                    <input type="number" min="1" max={maxBatchSize} name="batchSize" value={config.batchSize} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500" placeholder="e.g. 6, 12, 18" />
                                 </div>
-                                <div className="mt-auto pt-4 border-t border-slate-800"><div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-700 rounded p-4 text-center cursor-pointer hover:bg-slate-900"><Icon name="upload" className="mx-auto mb-2 text-slate-600"/><span className="text-xs text-slate-500">Upload CSV Source</span><input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" /></div></div>
+                                <div className="pb-4 space-y-3">
+                                    <button onClick={handleGenerate} disabled={isGenerating || isTargetMet || maxBatchSize === 0 || !config.apiKey} className={`w-full py-4 px-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isGenerating || isTargetMet || maxBatchSize === 0 || !config.apiKey ? 'bg-slate-700 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 active:scale-[0.98]'}`}>
+                                        {isGenerating ? <><Icon name="loader" size={16} className="animate-spin"/> GENERATING...</> : <><Icon name="book-open" size={16}/> GENERATE QUESTIONS</>}
+                                    </button>
+                                    
+                                    <button onClick={handleBulkTranslateMissing} disabled={isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !config.apiKey} className={`w-full py-2 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all border ${isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !config.apiKey ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-indigo-950/50 text-indigo-400 hover:bg-indigo-900/50 border-indigo-700'}`}>
+                                        <Icon name="languages" size={14}/> BULK TRANSLATE (CN/JP/KR)
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    
+                                    <div className="space-y-1">
+                                        <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Discipline</label><InfoTooltip text="Topic focus"/></div>
+                                        <select name="discipline" value={config.discipline} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
+                                            <option value="Technical Art">Technical Art</option><option value="Animation & Rigging">Animation & Rigging</option><option value="Game Logic & Systems">Game Logic & Systems</option><option value="Look Development (Materials)">Look Development (Materials)</option><option value="Networking">Networking</option><option value="C++ Programming">C++ Programming</option><option value="VFX (Niagara)">VFX (Niagara)</option><option value="World Building & Level Design">World Building & Level Design</option><option value="Blueprints">Blueprints</option><option value="Lighting & Rendering">Lighting & Rendering</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Language</label></div>
+                                        <select name="language" value={config.language} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
+                                            <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="mt-auto pt-6 border-t border-slate-800 space-y-3">
+                                    <div className="flex justify-between items-end"><label className="text-xs font-bold uppercase text-slate-400">Source Files</label>{files.length > 0 && <button onClick={handleDetectTopics} disabled={isDetecting || !config.apiKey} className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50">{isDetecting ? "..." : "Detect"}</button>}</div>
+                                    <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-900 cursor-pointer text-center bg-slate-900/50"><Icon name="upload" className="mx-auto text-slate-600 mb-2"/><p className="text-xs text-slate-500">Upload .csv</p><input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" /></div>
+                                    {files.map((f,i) => <div key={i} className="flex justify-between bg-slate-900 p-2 rounded border border-slate-800 text-xs text-slate-400"><span className="truncate">{f.name}</span><button onClick={()=>removeFile(i)} className="text-red-500">x</button></div>)}
+                                </div>
                             </aside>
                         )}
                         <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
                             <div className="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900 shadow-md z-10">
                                 <div className="flex gap-4 items-center">
-                                    {isAuthReady ? (status ? <span className="text-xs text-orange-500 font-medium animate-pulse">{status}</span> : <span className="text-xs font-bold text-slate-500 flex gap-2"><Icon name="database" size={14}/> DB Ready</span>) : <span className="text-xs text-yellow-500 animate-pulse">Connecting...</span>}
-                                    {appMode === 'review' && <span className="px-3 py-1 bg-indigo-900/30 border border-indigo-700/50 rounded text-xs text-indigo-300 font-bold">REVIEW MODE</span>}
+                                    {isAuthReady ? (<>{status && <span className="text-xs text-orange-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="loader" size={12} className="animate-spin"/> {status}</span>}{!status && <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Icon name="database" size={14}/> DB Ready</span>}</>) : (<span className="text-xs text-yellow-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="plug" size={12} className="animate-pulse"/> Connecting to DB...</span>)}
+                                    
+                                    {/* Only show filters/stats if NOT in Review Mode, or if Review Mode and data loaded */}
+                                    {appMode === 'review' && (
+                                        <div className="flex gap-2 items-center ml-4">
+                                            <div className="px-3 py-1 bg-indigo-900/30 border border-indigo-700/50 rounded text-xs text-indigo-300 font-bold flex items-center gap-2">
+                                                <Icon name="list-checks" size={14} />
+                                                REVIEW MODE: {historicalQuestions.length} Items
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex gap-2">
-                                    {appMode === 'create' && <button onClick={handleToggleHistory} className={`px-3 py-1 text-xs font-medium rounded ${showHistory ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400'}`}>{showHistory ? 'Session' : 'History'}</button>}
-                                    <FilterButton mode="all" current={filterMode} setFilter={setFilterMode} label="All" count={showHistory ? historicalQuestions.length : questions.length} />
-                                    <FilterButton mode="rejected" current={filterMode} setFilter={setFilterMode} label="Rejected" count={rejectedCount} />
+                                <div className="flex gap-2 items-center bg-slate-950 p-1 rounded-lg border border-slate-800 shadow-inner">
+                                    {/* Only show history toggle in Creation Mode */}
+                                    {appMode === 'create' && (
+                                        <button onClick={handleToggleHistory} className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${showHistory ? 'bg-purple-600 text-white shadow-md shadow-purple-900/50' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50'}`} title={showHistory ? 'Back to Current Session' : 'View Full Question History'}><Icon name={showHistory ? 'list' : 'archive'} size={12}/>{showHistory ? 'Current Session' : 'Full History'} <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">{showHistory ? historicalQuestions.length : questions.length}</span></button>
+                                    )}
+                                    
+                                    {/* In Review Mode or History view, filter by status makes sense */}
+                                    {((!showHistory && questions.length > 0) || (showHistory && historicalQuestions.length > 0) || appMode === 'review') && (
+                                        <>
+                                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
+                                            {/* In Review Mode, usually everything is 'accepted' unless rejected in this session, but let's keep filters */}
+                                            {appMode !== 'review' && <FilterButton mode="pending" current={filterMode} setFilter={setFilterMode} label="Pending" count={pendingCount} />}
+                                            <FilterButton mode="all" current={filterMode} setFilter={setFilterMode} label="All" count={appMode === 'review' ? historicalQuestions.length : questions.length} />
+                                            {appMode !== 'review' && <FilterButton mode="accepted" current={filterMode} setFilter={setFilterMode} label="Accepted" count={approvedCount} />}
+                                            <FilterButton mode="rejected" current={filterMode} setFilter={setFilterMode} label="Rejected" count={rejectedCount} />
+                                        </>
+                                    )}
+                                    
                                     <div className="w-px h-4 bg-slate-700 mx-1"></div>
-                                    <button onClick={() => setFilterByCreator(!filterByCreator)} className={`px-3 py-1 text-xs font-medium rounded ${filterByCreator ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>{filterByCreator ? 'My Items' : 'All'}</button>
+                                    <button 
+                                        onClick={() => setFilterByCreator(!filterByCreator)} 
+                                        className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${filterByCreator ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                                        title={filterByCreator ? `Showing only items by ${config.creatorName}` : 'Showing all items from everyone'}
+                                    >
+                                        <Icon name="user-check" size={12}/> 
+                                        {filterByCreator ? 'My Questions Only' : 'All Creators'}
+                                    </button>
                                 </div>
-                                <div className="flex gap-2">
-                                    <button onClick={() => setShowExportMenu(true)} className="px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-900/20 border border-emerald-800/50 rounded hover:bg-emerald-900/40 flex gap-1"><Icon name="download" size={12}/> Export</button>
-                                    <button onClick={() => setShowClearModal(true)} className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-red-400"><Icon name="trash-2" size={12}/></button>
+                                <div className="flex gap-2 items-center relative">
+                                    {((!showHistory && questions.length > 0) || (showHistory && historicalQuestions.length > 0) || appMode === 'review') && (
+                                        <>
+                                            {/* Hide Save to Cloud in Review Mode (it's auto-synced/historical) unless editing happens locally */}
+                                            {appMode === 'create' && !showHistory && questions.length > 0 && (
+                                                <div className="flex gap-1 mr-2 border-r border-slate-700 pr-3">
+                                                    <button onClick={handleSyncToDatabase} disabled={isProcessing} className="px-3 py-1.5 text-xs font-medium text-blue-400 bg-blue-900/20 border border-blue-800/50 rounded hover:bg-blue-900/40 flex items-center gap-1" title="Save to cloud"><Icon name="cloud-upload" size={12}/> Save to Cloud</button>
+                                                </div>
+                                            )}
+                                            
+                                            <div className="flex gap-1 mr-2 border-r border-slate-700 pr-3">
+                                                <button onClick={() => setShowExportMenu(true)} disabled={isProcessing} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-900/20 border border-emerald-800/50 rounded hover:bg-emerald-900/40" title="View Export Options"><Icon name="download" size={12}/> Export Options</button>
+                                            </div>
+                                            
+                                            <button onClick={() => setShowClearModal(true)} className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-red-400 flex items-center gap-1"><Icon name="trash-2" size={12}/> Clear</button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
-                            <div className="p-4 border-b border-slate-800 bg-slate-900 flex gap-3">
-                                <Icon name="search" size={18} className="text-slate-500"/>
-                                <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search..." className="w-full bg-slate-900 text-slate-300 border-none outline-none text-sm" />
-                                {appMode === 'review' && <select name="language" value={config.language} onChange={handleChange} className="bg-slate-800 border border-slate-700 rounded text-xs px-2"><option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option></select>}
+                            
+                            {/* Search and Filter Bar - Full Width */}
+                            <div className="p-4 border-b border-slate-800 bg-slate-900 flex items-center gap-3">
+                                <Icon name="search" size={18} className="text-slate-500 flex-shrink-0" />
+                                <input type="text" placeholder="Search by ID, Question Text, Option, or Discipline..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-900 text-slate-300 placeholder-slate-600 border-none outline-none focus:ring-0 text-sm" />
+                                {searchTerm && (<button onClick={() => setSearchTerm('')} className="text-slate-500 hover:text-red-400 p-1 rounded"><Icon name="x" size={16} /></button>)}
+                                
+                                {/* In Review Mode, add a Language Filter Dropdown here since sidebar is gone */}
+                                {appMode === 'review' && (
+                                    <div className="flex items-center gap-2 ml-4 border-l border-slate-700 pl-4">
+                                        <label className="text-xs font-bold uppercase text-slate-500 whitespace-nowrap">Language:</label>
+                                        <select name="language" value={config.language} onChange={handleChange} className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs outline-none focus:border-indigo-500">
+                                            <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
+                                        </select>
+                                    </div>
+                                )}
                             </div>
+
                             <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4">
+                                {!showHistory && uniqueFilteredQuestions.length === 0 && questions.length === 0 && !status && appMode === 'create' && (<div className="flex flex-col items-center justify-center h-full text-slate-600"><Icon name="terminal" size={48} className="mb-4 text-slate-800"/><p className="font-medium text-slate-500">Ready. Click 'GENERATE QUESTIONS' to begin or upload a source file.</p></div>)}
+                                
                                 {uniqueFilteredQuestions.map(q => (
-                                    <QuestionItem key={q.uniqueId} q={q} onUpdateStatus={handleUpdateStatus} onExplain={handleExplain} onVariate={handleVariate} onCritique={handleCritique} onTranslateSingle={handleTranslateSingle} onSwitchLanguage={handleLanguageSwitch} availableLanguages={translationMap.get(q.uniqueId)} isProcessing={isProcessing} />
+                                    <QuestionItem 
+                                        key={q.uniqueId} 
+                                        q={q} 
+                                        onUpdateStatus={handleUpdateStatus} 
+                                        onExplain={handleExplain} 
+                                        onVariate={handleVariate} 
+                                        onCritique={handleCritique}
+                                        onTranslateSingle={handleTranslateSingle}
+                                        onSwitchLanguage={handleLanguageSwitch}
+                                        availableLanguages={translationMap.get(q.uniqueId)} 
+                                        isProcessing={isProcessing} 
+                                    />
                                 ))}
-                                {uniqueFilteredQuestions.length === 0 && <div className="text-center text-slate-600 pt-10">No questions found.</div>}
+                                
+                                {uniqueFilteredQuestions.length === 0 && filteredQuestions.length > 0 && (
+                                    <div className="flex flex-col items-center justify-center h-full text-slate-600 pt-10">
+                                        <Icon name="filter" size={32} className="mb-3 text-slate-800"/>
+                                        <p className="font-medium text-slate-500">No questions match current filters.</p>
+                                        {filterByCreator && (
+                                            <p className="text-xs text-slate-600 mt-2">
+                                                Filtering by Creator: <span className="text-blue-500 font-bold">{config.creatorName}</span>. 
+                                                <button onClick={() => setFilterByCreator(false)} className="ml-2 underline hover:text-blue-400">Show All Creators?</button>
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </main>
                     </div>
                 </div>
             );
         };
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
