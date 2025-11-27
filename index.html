@@ -1825,6 +1825,38 @@ ${getFileContext()}
                 setIsProcessing(true);
 
                 setStatus("Sending data to Google Sheets...");
+                setShowExportMenu(false);
+
+                try {
+                    // WORKAROUND: Since "Anyone" access is restricted, we cannot use fetch().
+                    // We must use a Form Submission to a new tab. This forces the browser to send
+                    // your authentication cookies, allowing the script to run as "You".
+                    
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = sheetUrl;
+                    form.target = '_blank'; // Open in new tab to ensure cookies are sent
+
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'data';
+                    input.value = JSON.stringify(payloadData);
+                    form.appendChild(input);
+
+                    document.body.appendChild(form);
+                    form.submit();
+                    document.body.removeChild(form);
+
+                    showMessage(`Export launched in new tab! Check it for "Success" message.`, 7000);
+
+                } catch (e) {
+                    console.error("Error pushing to Sheets endpoint:", e);
+                    showMessage(`Error connecting to endpoint. Check URL/Console: ${e.message}`, 10000);
+                } finally {
+                    setIsProcessing(false);
+                }
+            };
+
 
                 const handleBulkTranslateExport = async (targetLanguages) => {
 
