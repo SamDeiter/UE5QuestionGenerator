@@ -133,7 +133,8 @@ const App = () => {
         Array.from(allQuestionsMap.values()).forEach(variants => {
             const baseQ = variants.find(v => (v.language || 'English') === 'English') || variants[0];
 
-            if (baseQ && baseQ.status === 'accepted' && !countedIds.has(baseQ.uniqueId)) {
+            // Only count questions that match the current discipline
+            if (baseQ && baseQ.status === 'accepted' && !countedIds.has(baseQ.uniqueId) && baseQ.discipline === config.discipline) {
                 const typeAbbrev = baseQ.type === 'True/False' ? 'T/F' : 'MC';
                 const key = `${baseQ.difficulty} ${typeAbbrev}`;
                 if (counts.hasOwnProperty(key)) {
@@ -143,7 +144,7 @@ const App = () => {
             }
         });
         return counts;
-    }, [allQuestionsMap]);
+    }, [allQuestionsMap, config.discipline]);
 
     const approvedCount = questions.filter(q => q.status !== 'rejected').length;
     const rejectedCount = questions.filter(q => q.status === 'rejected').length;
@@ -637,9 +638,27 @@ ${getFileContext()}
 
         try {
             const data = await fetchQuestionsFromSheets(config.sheetUrl);
-            // Mark as accepted since they are from the DB
-            const loadedQuestions = data.map(q => ({
-                ...q,
+            // Map Google Sheets field names to JavaScript property names
+            const loadedQuestions = data.map((q, index) => ({
+                id: Date.now() + index + Math.random(),
+                uniqueId: q['Unique ID'] || q.uniqueId || crypto.randomUUID(),
+                discipline: q.Discipline || q.discipline || 'Imported',
+                difficulty: q.Difficulty || q.difficulty || 'Easy',
+                type: q['Question Type'] || q.Type || q.type || 'Multiple Choice',
+                question: q.Question || q.question || '',
+                options: {
+                    A: q['Option A'] || q.OptionA || '',
+                    B: q['Option B'] || q.OptionB || '',
+                    C: q['Option C'] || q.OptionC || '',
+                    D: q['Option D'] || q.OptionD || ''
+                },
+                correct: q.Answer || q.correct || '',
+                explanation: q.Explanation || q.explanation || '',
+                language: q.Language || q.language || 'English',
+                sourceUrl: q.SourceFile || q.sourceUrl || '',
+                sourceExcerpt: q.sourceExcerpt || '',
+                creatorName: q.creator || q.creatorName || '',
+                reviewerName: q.reviewer || q.reviewerName || '',
                 status: 'accepted'
             }));
 
@@ -886,12 +905,18 @@ ${getFileContext()}
         }
     };
 
-    const handleViewDatabase = () => {
-        if (databaseQuestions.length === 0) {
-            handleLoadFromSheets();
-        } else {
-            setAppMode('database');
+    const handleViewDatabase = async () => {
+        // Always auto-load fresh data from Google Sheets when entering database view
+        if (!config.sheetUrl) {
+            showMessage("Please configure Google Sheets URL in settings first.", 5000);
+            return;
         }
+
+        // Set mode first to show the database view with loading state
+        setAppMode('database');
+
+        // Then load the data
+        await handleLoadFromSheets();
     };
 
     const handleBulkExport = async (exportOptions) => {
@@ -1052,8 +1077,26 @@ ${getFileContext()}
                             <input type="number" min="1" max={maxBatchSize} name="batchSize" value={config.batchSize} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500" placeholder="e.g. 6, 12, 18" />
                         </div>
                         <div className="pb-4 space-y-3">
-                            <button onClick={handleGenerate} disabled={isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady} className={`w-full py-4 px-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady ? 'bg-slate-700 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 active:scale-[0.98]'}`}>
-                                {isGenerating ? <><Icon name="loader" size={16} className="animate-spin" /> GENERATING...</> : <><Icon name="book-open" size={16} /> GENERATE QUESTIONS</>}
+                            <button
+                                onClick={handleGenerate}
+                                disabled={isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady}
+                                className={`w-full py-4 px-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady ? 'bg-slate-700 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 active:scale-[0.98]'}`}
+                                title={
+                                    !isApiReady ? '⚠️ API Key Required - Configure in Settings' :
+                                        isTargetMet ? '✓ Quota Met for this Category' :
+                                            maxBatchSize === 0 ? '✓ All Categories Complete' :
+                                                'Generate new questions'
+                                }
+                            >
+                                {isGenerating ? (
+                                    <><Icon name="loader" size={16} className="animate-spin" /> GENERATING...</>
+                                ) : !isApiReady ? (
+                                    <><Icon name="alert-circle" size={16} /> API KEY REQUIRED</>
+                                ) : isTargetMet ? (
+                                    <><Icon name="check-circle" size={16} /> QUOTA MET</>
+                                ) : (
+                                    <><Icon name="book-open" size={16} /> GENERATE QUESTIONS</>
+                                )}
                             </button>
 
                             <button onClick={handleBulkTranslateMissing} disabled={isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady} className={`w-full py-2 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all border ${isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-indigo-950/50 text-indigo-400 hover:bg-indigo-900/50 border-indigo-700'}`}>

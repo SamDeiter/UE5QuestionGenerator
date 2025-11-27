@@ -215,9 +215,11 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                         </div>
                     )}
                     {/* DEBUG ID: Helps verify linking */}
-                    <div className="text-[9px] text-slate-700 font-mono cursor-help" title={`Unique ID: ${q.uniqueId} (Use this to link translations)`}>
-                        #{q.uniqueId.substring(0, 8)}
-                    </div>
+                    {q.uniqueId && (
+                        <div className="text-[9px] text-slate-700 font-mono cursor-help" title={`Unique ID: ${q.uniqueId} (Use this to link translations)`}>
+                            #{q.uniqueId.substring(0, 8)}
+                        </div>
+                    )}
                 </div>
             </div>
 
