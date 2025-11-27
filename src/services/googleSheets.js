@@ -56,7 +56,8 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  if (!e || !e.parameter || !e.parameter.data) {
+  // Allow 'clear' action without data, but require 'data' for everything else
+  if (!e || !e.parameter || (!e.parameter.data && e.parameter.action !== 'clear')) {
     return ContentService.createTextOutput("Error: No data received");
   }
 
