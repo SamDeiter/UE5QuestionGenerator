@@ -121,8 +121,8 @@
 - [x] Set up Jest + React Testing Library (Using Vitest + RTL)
 - [x] Write tests for utility functions (`helpers.test.js`, `questionFilters.test.js`)
 - [x] Test question filtering logic
-- [ ] Test CSV parsing
-- [ ] Test export functions
+- [x] Test CSV parsing (`fileProcessor.test.js`)
+- [x] Test export functions (`exportUtils.test.js`)
 
 **Estimated Time:** 4-6 hours  
 **Impact:** Confidence in code changes
@@ -145,9 +145,9 @@
 
 #### 5.1 User Documentation
 **Tasks:**
-- [ ] Create user guide with screenshots
-- [ ] Document all features
-- [ ] Add troubleshooting section
+- [x] Create user guide with screenshots (See `USER_GUIDE.md`)
+- [x] Document all features
+- [x] Add troubleshooting section
 - [ ] Create video tutorials
 
 **Estimated Time:** 4-6 hours  
@@ -155,10 +155,10 @@
 
 #### 5.2 Developer Documentation
 **Tasks:**
-- [ ] Document architecture decisions
-- [ ] Create component diagram
-- [ ] Document data flow
-- [ ] Add contribution guidelines
+- [x] Document architecture decisions (See `DEVELOPER_GUIDE.md`)
+- [x] Create component diagram
+- [x] Document data flow
+- [x] Add contribution guidelines
 
 **Estimated Time:** 2-3 hours  
 **Impact:** Easier collaboration
