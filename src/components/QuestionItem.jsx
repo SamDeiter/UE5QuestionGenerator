@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Icon from './Icon';
+import FlagIcon from './FlagIcon';
 import CritiqueDisplay from './CritiqueDisplay';
 import { sanitizeText, formatUrl, stripHtmlTags } from '../utils/helpers';
 import { LANGUAGE_CODES, LANGUAGE_FLAGS } from '../utils/constants';
 
-const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onTranslateSingle, onSwitchLanguage, availableLanguages, isProcessing }) => {
+const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onTranslateSingle, onSwitchLanguage, onDelete, availableLanguages, isProcessing }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -71,39 +72,40 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
         return allLanguageNames.map(lang => {
             const hasLang = availableLanguages && availableLanguages.has(lang);
             const langCode = LANGUAGE_CODES[lang] || lang.substring(0, 2).toUpperCase();
-            const flag = LANGUAGE_FLAGS[lang];
             const isLoading = loadingLang === lang;
 
-            // If Translation Exists -> Show FLAG (Switch button)
+            // If Translation Exists -> Show SVG Flag (Switch button)
             if (hasLang) {
                 return (
                     <button
                         key={lang}
                         onClick={(e) => handleFlagClick(e, lang)}
-                        className="text-base px-1 inline-flex items-center justify-center opacity-100 hover:scale-125 transition-transform cursor-pointer"
-                        style={{ fontFamily: 'Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif' }}
+                        className="p-0.5 rounded border border-slate-700 hover:border-indigo-500 hover:scale-110 transition-all opacity-100"
                         title={`Switch to ${lang} translation`}
                     >
-                        {flag}
+                        <FlagIcon code={langCode} size={18} />
                     </button>
                 );
             }
 
-            // If Missing -> Show FLAG (Generate button) - Faded with + indicator
+            // If Missing -> Show Faded SVG Flag with + (Generate button)
             return (
                 <button
                     key={lang}
                     onClick={(e) => handleFlagClick(e, lang)}
                     disabled={isProcessing}
-                    className={`text-base px-1 inline-flex items-center justify-center transition-all cursor-pointer relative ${isLoading ? 'animate-pulse scale-110' : 'opacity-50 hover:opacity-100 hover:scale-125'}`}
-                    style={{ fontFamily: 'Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif' }}
+                    className={`p-0.5 rounded border transition-all relative ${isLoading ? 'border-orange-500 animate-pulse' : 'border-slate-800 opacity-50 hover:opacity-100 hover:scale-110'}`}
                     title={`Generate ${lang} translation`}
                 >
-                    {isLoading ? <Icon name="loader" size={14} className="animate-spin text-orange-500" /> : (
-                        <span className="relative">
-                            {flag}
-                            <span className="absolute -top-1 -right-1 text-[8px] bg-orange-500 text-white rounded-full w-3 h-3 flex items-center justify-center">+</span>
-                        </span>
+                    {isLoading ? <Icon name="loader" size={18} className="animate-spin text-orange-500" /> : (
+                        <div className="relative flex items-center justify-center">
+                            <div className="opacity-50 grayscale">
+                                <FlagIcon code={langCode} size={18} />
+                            </div>
+                            <span className="absolute inset-0 flex items-center justify-center">
+                                <span className="bg-slate-900/80 text-orange-500 rounded-full w-3 h-3 flex items-center justify-center text-[10px] font-bold shadow-sm border border-orange-500/50">+</span>
+                            </span>
+                        </div>
                     )}
                 </button>
             );
@@ -188,6 +190,11 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                             <button onClick={() => onUpdateStatus(q.id, 'rejected')} className={`p-2 rounded-lg transition-all ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'bg-slate-800 text-slate-500 hover:bg-red-900/20 hover:text-red-500'}`} title="Reject">
                                 <Icon name="x" size={18} />
                             </button>
+                            {isRejected && (
+                                <button onClick={() => onDelete(q.id)} className="p-2 rounded-lg transition-all bg-slate-900 text-red-400 hover:bg-red-900/30 hover:text-red-300 border border-red-900/50" title="Delete Permanently">
+                                    <Icon name="trash-2" size={18} />
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

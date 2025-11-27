@@ -12,7 +12,7 @@ import InfoTooltip from './components/InfoTooltip';
 import BulkExportModal from './components/BulkExportModal';
 
 import { generateContent } from './services/gemini';
-import { fetchQuestionsFromSheets, saveQuestionsToSheets } from './services/googleSheets';
+import { fetchQuestionsFromSheets, saveQuestionsToSheets, clearQuestionsFromSheets } from './services/googleSheets';
 import { chunkArray, formatUrl, sanitizeText, stripHtmlTags, safe, formatDate, parseCSVLine, parseQuestions, downloadFile, filterDuplicateQuestions } from './utils/helpers';
 import { APP_VERSION, LANGUAGE_FLAGS, LANGUAGE_CODES, CATEGORY_KEYS, TARGET_PER_CATEGORY, TARGET_TOTAL, FIELD_DELIMITER } from './utils/constants';
 
@@ -33,7 +33,7 @@ const App = () => {
 
     const [config, setConfig] = useState(() => {
         const saved = localStorage.getItem('ue5_gen_config');
-        const defaults = { discipline: 'Technical Art', batchSize: '6', difficulty: 'Easy MC', language: 'English', creatorName: '', reviewerName: '', apiKey: '', sheetUrl: '' };
+        const defaults = { discipline: 'Technical Art', batchSize: '6', difficulty: 'Easy MC', language: 'English', creatorName: '', reviewerName: '', apiKey: '', sheetUrl: 'https://script.google.com/a/macros/epicgames.com/s/AKfycbxssaKhw3pOWkC9sPJE_6oMZuG66JYCgeEQFEHh010Q90wlHqH64oiVhFjE1JQkSTV6/exec' };
         const constInitialConfig = saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
         // Ensure creatorName and reviewerName defaults are restored if removed from storage
         constInitialConfig.creatorName = constInitialConfig.creatorName || '';
@@ -69,6 +69,11 @@ const App = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
     const fileInputRef = useRef(null);
+
+    // Database View State
+    const [databaseQuestions, setDatabaseQuestions] = useState([]);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showApiKey, setShowApiKey] = useState(false);
 
 
 
@@ -248,7 +253,7 @@ const App = () => {
                     // 2. Fallback: Check for language codes (e.g. _CN_, _JP_) if no full name found
                     if (!fileLanguage) {
                         Object.entries(LANGUAGE_CODES).forEach(([lang, code]) => {
-                            const regex = new RegExp(`(^|[_\-])${code}([_\-\.]|$)`, 'i');
+                            const regex = new RegExp(`(^|[._-])${code}([._-] |$)`, 'i');
                             if (regex.test(fileName)) {
                                 fileLanguage = lang;
                             }
@@ -604,15 +609,15 @@ ${getFileContext()}
 
         try {
             const data = await fetchQuestionsFromSheets(config.sheetUrl);
+            // Mark as accepted since they are from the DB
             const loadedQuestions = data.map(q => ({
                 ...q,
-                id: Date.now() + Math.random(),
                 status: 'accepted'
             }));
 
-            const uniqueNew = await checkAndStoreQuestions(loadedQuestions);
-            addQuestionsToState(uniqueNew, false);
-            showMessage(`Successfully loaded ${loadedQuestions.length} questions from Sheets!`, 5000);
+            setDatabaseQuestions(loadedQuestions);
+            setAppMode('database');
+            showMessage(`Loaded ${loadedQuestions.length} questions from Database View!`, 3000);
         } catch (e) {
             console.error("Load Error:", e);
             showMessage(`Load Failed: ${e.message}. (Ensure Script Access is set to 'Anyone')`, 7000);
@@ -724,6 +729,12 @@ ${getFileContext()}
             status: newStatus,
             critique: newStatus === 'accepted' ? null : q.critique
         }));
+    };
+
+    const handleDelete = (id) => {
+        setQuestions(prev => prev.filter(q => q.id !== id));
+        setHistoricalQuestions(prev => prev.filter(q => q.id !== id));
+        showMessage('Question deleted permanently.', 2000);
     };
 
     const handleSelectCategory = (categoryKey) => {
@@ -847,8 +858,16 @@ ${getFileContext()}
         }
     };
 
+    const handleViewDatabase = () => {
+        if (databaseQuestions.length === 0) {
+            handleLoadFromSheets();
+        } else {
+            setAppMode('database');
+        }
+    };
+
     const handleBulkExport = async (exportOptions) => {
-        const { format, includeRejected, languages, scope, segmentFiles } = exportOptions;
+        const { format, includeRejected, languages, scope, segmentFiles, limit } = exportOptions;
 
         // 1. Determine Source Questions
         let sourceQuestions = [];
@@ -870,6 +889,11 @@ ${getFileContext()}
             return langMatch && statusMatch;
         });
 
+        // 2.5 Apply Limit if set
+        if (limit && limit > 0) {
+            questionsToExport = questionsToExport.slice(0, limit);
+        }
+
         if (questionsToExport.length === 0) {
             showMessage('No questions to export with selected options.', 3000);
             return;
@@ -877,24 +901,24 @@ ${getFileContext()}
 
         // 3. Handle Google Sheets
         if (format === 'sheets') {
-             if (!config.sheetUrl) { showMessage("Please enter a Google Apps Script URL in settings.", 5000); return; }
-             setIsProcessing(true);
-             setStatus("Sending data to Google Sheets...");
-             try {
+            if (!config.sheetUrl) { showMessage("Please enter a Google Apps Script URL in settings.", 5000); return; }
+            setIsProcessing(true);
+            setStatus("Sending data to Google Sheets...");
+            try {
                 await saveQuestionsToSheets(config.sheetUrl, questionsToExport);
                 showMessage(`Export launched! Check new tab for status.`, 5000);
-             } catch (e) {
+            } catch (e) {
                 console.error(e);
                 showMessage(`Error: ${e.message}`, 5000);
-             } finally {
+            } finally {
                 setIsProcessing(false);
-             }
-             return;
+            }
+            return;
         }
 
         // 4. Handle Segmentation (CSV only)
         if (segmentFiles && format === 'csv') {
-             const groupedData = questionsToExport.reduce((acc, q) => {
+            const groupedData = questionsToExport.reduce((acc, q) => {
                 const typeAbbrev = q.type === 'True/False' ? 'T/F' : 'MC';
                 const key = `${q.language || 'English'}_${q.discipline}_${q.difficulty}_${typeAbbrev}`;
                 if (!acc[key]) acc[key] = [];
@@ -1056,6 +1080,16 @@ ${getFileContext()}
                                 <button onClick={handleLoadFromSheets} disabled={!config.sheetUrl || isProcessing} className="flex-1 py-1 px-2 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-600 text-slate-300">Load</button>
                                 <button onClick={handleExportToSheets} disabled={!config.sheetUrl || isProcessing} className="flex-1 py-1 px-2 bg-green-900/50 hover:bg-green-800/50 text-xs rounded border border-green-700 text-green-400">Save</button>
                             </div>
+
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-slate-800">
+                            <button
+                                onClick={() => setShowSettings(true)}
+                                className="w-full py-2 px-4 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded flex items-center justify-center gap-2 transition-colors text-xs font-bold uppercase tracking-wider"
+                            >
+                                <Icon name="settings" size={14} /> Open Settings
+                            </button>
                         </div>
                     </aside>
                 )}
@@ -1113,7 +1147,19 @@ ${getFileContext()}
                             )}
                         </div>
                         <div className="flex gap-2 items-center bg-slate-950 p-1 rounded-lg border border-slate-800 shadow-inner">
-                            {/* EXPORT BUTTON */}
+                            {/* LOAD BUTTON */}
+                            <button
+                                onClick={handleLoadFromSheets}
+                                disabled={isProcessing || !config.sheetUrl}
+                                className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${!config.sheetUrl ? 'opacity-50 cursor-not-allowed' : ''} bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white`}
+                                title={config.sheetUrl ? "Load Approved Questions from Google Sheets" : "Configure Sheets URL in Settings first"}
+                            >
+                                <Icon name="table" size={14} /> Load
+                            </button>
+
+
+
+                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
                             <div className="relative">
                                 <button
                                     onClick={() => setShowBulkExportModal(true)}
@@ -1123,13 +1169,18 @@ ${getFileContext()}
                                     <Icon name="download" size={14} /> Export
                                 </button>
                             </div>
-
                             <div className="w-px h-4 bg-slate-700 mx-1"></div>
 
-                            {/* Only show history toggle in Creation Mode */}
-                            {appMode === 'create' && (
-                                <button onClick={() => setShowHistory(!showHistory)} className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${showHistory ? 'bg-purple-600 text-white shadow-md shadow-purple-900/50' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50'}`} title={showHistory ? 'Back to Current Session' : 'View Full Question History'}><Icon name={showHistory ? 'list' : 'archive'} size={12} />{showHistory ? 'Current Session' : 'Full History'} <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">{showHistory ? historicalQuestions.length : questions.length}</span></button>
-                            )}
+                            {/* DATABASE TOGGLE */}
+                            <button
+                                onClick={handleViewDatabase}
+                                className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'database' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
+                                title="Switch to Database View"
+                            >
+                                <Icon name="database" size={14} /> DB View
+                            </button>
+
+
 
                             {/* In Review Mode or History view, filter by status makes sense */}
                             {((!showHistory && questions.length > 0) || (showHistory && historicalQuestions.length > 0) || appMode === 'review') && (
@@ -1185,7 +1236,53 @@ ${getFileContext()}
                     <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4">
                         {!showHistory && uniqueFilteredQuestions.length === 0 && questions.length === 0 && !status && appMode === 'create' && (<div className="flex flex-col items-center justify-center h-full text-slate-600"><Icon name="terminal" size={48} className="mb-4 text-slate-800" /><p className="font-medium text-slate-500">Ready. Click 'GENERATE QUESTIONS' to begin or upload a source file.</p></div>)}
 
-                        {appMode === 'review' && uniqueFilteredQuestions.length > 0 ? (
+                        {appMode === 'database' ? (
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center bg-blue-900/20 p-4 rounded border border-blue-800/50">
+                                    <div>
+                                        <h2 className="text-lg font-bold text-blue-400 flex items-center gap-2"><Icon name="database" /> Database View</h2>
+                                        <p className="text-xs text-blue-300/70">Viewing {databaseQuestions.length} approved questions from Google Sheets (Read Only)</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => {
+                                            if (window.confirm("ARE YOU SURE? This will permanently DELETE ALL questions from the Cloud Database (Master_DB). This cannot be undone.")) {
+                                                clearQuestionsFromSheets(config.sheetUrl);
+                                                setDatabaseQuestions([]);
+                                            }
+                                        }} className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded border border-red-500 flex items-center gap-2 font-bold shadow-sm shadow-red-900/50">
+                                            <Icon name="alert-triangle" size={12} /> HARD RESET
+                                        </button>
+                                        <button onClick={() => setDatabaseQuestions([])} className="px-3 py-1 bg-red-900/50 hover:bg-red-800 text-red-200 text-xs rounded border border-red-800 flex items-center gap-2">
+                                            <Icon name="trash-2" size={12} /> Clear View
+                                        </button>
+                                        <button onClick={handleLoadFromSheets} disabled={isProcessing} className="px-3 py-1 bg-blue-800 hover:bg-blue-700 text-blue-200 text-xs rounded border border-blue-600 flex items-center gap-2">
+                                            <Icon name="refresh-cw" size={12} className={isProcessing ? "animate-spin" : ""} /> Refresh
+                                        </button>
+                                    </div>
+                                </div>
+                                {databaseQuestions.length === 0 ? (
+                                    <div className="text-center py-10 text-slate-500">No questions loaded from database. Click Refresh.</div>
+                                ) : (
+                                    databaseQuestions.map((q, i) => (
+                                        <div key={i} className="opacity-75 hover:opacity-100 transition-opacity">
+                                            <QuestionItem
+                                                q={q}
+                                                // Pass dummy handlers or read-only mode if supported
+                                                onUpdateStatus={() => { }}
+                                                onExplain={() => { }}
+                                                onVariate={() => { }}
+                                                onCritique={() => { }}
+                                                onTranslateSingle={() => { }}
+                                                onSwitchLanguage={() => { }}
+                                                onDelete={() => { }}
+                                                availableLanguages={new Set()}
+                                                isProcessing={false}
+                                            />
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        ) : appMode === 'review' && uniqueFilteredQuestions.length > 0 ? (
                             <div className="flex flex-col items-center justify-start h-full max-w-4xl mx-auto w-full pt-4">
                                 <div className="w-full mb-6 flex justify-between items-center text-slate-400 text-xs font-mono bg-slate-900/50 p-2 rounded-lg border border-slate-800">
                                     <button
@@ -1220,6 +1317,7 @@ ${getFileContext()}
                                         onCritique={handleCritique}
                                         onTranslateSingle={handleTranslateSingle}
                                         onSwitchLanguage={handleLanguageSwitch}
+                                        onDelete={handleDelete}
                                         availableLanguages={translationMap.get(uniqueFilteredQuestions[currentReviewIndex].uniqueId)}
                                         isProcessing={isProcessing}
                                     />
@@ -1236,6 +1334,7 @@ ${getFileContext()}
                                     onCritique={handleCritique}
                                     onTranslateSingle={handleTranslateSingle}
                                     onSwitchLanguage={handleLanguageSwitch}
+                                    onDelete={handleDelete}
                                     availableLanguages={translationMap.get(q.uniqueId)}
                                     isProcessing={isProcessing}
                                 />
@@ -1257,7 +1356,110 @@ ${getFileContext()}
                     </div>
                 </main>
             </div>
-        </div>
+
+            {/* SETTINGS MODAL */}
+            {
+                showSettings && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+                            <div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
+                                <h2 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="settings" /> Settings</h2>
+                                <button onClick={() => setShowSettings(false)} className="text-slate-400 hover:text-white"><Icon name="x" /></button>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Google Gemini API Key</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showApiKey ? "text" : "password"}
+                                            name="apiKey"
+                                            value={config.apiKey}
+                                            onChange={handleChange}
+                                            placeholder="AIzaSy..."
+                                            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:border-blue-500 outline-none pr-10"
+                                        />
+                                        <button
+                                            onClick={() => setShowApiKey(!showApiKey)}
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                                        >
+                                            <Icon name={showApiKey ? "eye-off" : "eye"} size={16} />
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 mt-1">Required for generating questions. Stored locally.</p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Google Apps Script URL</label>
+                                    <input
+                                        type="text"
+                                        name="sheetUrl"
+                                        value={config.sheetUrl}
+                                        onChange={handleChange}
+                                        placeholder="https://script.google.com/..."
+                                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:border-blue-500 outline-none"
+                                    />
+                                    <p className="text-[10px] text-slate-500 mt-1">Required for Load/Export to Sheets.</p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Creator Name</label>
+                                        <input
+                                            type="text"
+                                            name="creatorName"
+                                            value={config.creatorName}
+                                            onChange={handleChange}
+                                            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:border-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Reviewer Name</label>
+                                        <input
+                                            type="text"
+                                            name="reviewerName"
+                                            value={config.reviewerName}
+                                            onChange={handleChange}
+                                            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:border-blue-500 outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-slate-700 mt-4">
+                                    <button
+                                        onClick={() => {
+                                            if (window.confirm("This will delete ALL your local questions and settings. Are you sure?")) {
+                                                localStorage.removeItem('ue5_gen_config');
+                                                localStorage.removeItem('ue5_gen_questions');
+                                                setQuestions([]);
+                                                setDatabaseQuestions([]);
+                                                window.location.reload();
+                                            }
+                                        }}
+                                        className="w-full py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 text-xs rounded border border-red-900/50 flex items-center justify-center gap-2 transition-colors"
+                                    >
+                                        <Icon name="trash" size={14} /> Clear Local Data & Reset App
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* BULK EXPORT MODAL */}
+            {
+                showBulkExportModal && (
+                    <BulkExportModal
+                        isOpen={showBulkExportModal}
+                        onClose={() => setShowBulkExportModal(false)}
+                        onExport={handleBulkExport}
+                        totalQuestions={questions.length}
+                        filteredQuestionsCount={uniqueFilteredQuestions.length}
+                        rejectedCount={rejectedCount}
+                    />
+                )
+            }
+        </div >
     );
 };
 

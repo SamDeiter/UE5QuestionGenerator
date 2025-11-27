@@ -1,7 +1,7 @@
 import React from 'react';
 import Icon from './Icon';
 
-const APP_VERSION = "v1.4";
+const APP_VERSION = "v1.5";
 
 const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode }) => {
     const isReview = appMode === 'review';
@@ -22,8 +22,8 @@ const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode }) =>
                             <h1 className={`text-xl font-bold tracking-tight uppercase ${titleColor} transition-colors duration-500`}>
                                 {isReview ? 'Review & Audit Console' : 'UE5 STE Question Generator'}
                             </h1>
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${isReview ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50' : 'bg-orange-500/20 text-orange-300 border-orange-500/50'}`}>
-                                {isReview ? 'REVIEW MODE' : 'CREATE MODE'}
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${isReview ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50' : appMode === 'database' ? 'bg-blue-500/20 text-blue-300 border-blue-500/50' : 'bg-orange-500/20 text-orange-300 border-orange-500/50'}`}>
+                                {isReview ? 'REVIEW MODE' : appMode === 'database' ? 'DATABASE VIEW' : 'CREATE MODE'}
                             </span>
                             <span className="text-xs text-slate-500 font-mono border border-slate-800 rounded px-1.5 py-0.5">{APP_VERSION}</span>
                         </div>

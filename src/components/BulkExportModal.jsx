@@ -5,12 +5,13 @@ import { LANGUAGE_FLAGS } from '../utils/constants';
 
 const BulkExportModal = ({ onClose, onExport, questionCount }) => {
     const [exportOptions, setExportOptions] = React.useState({
-        format: 'csv',
+        format: 'sheets',
         includeRejected: false,
         languages: ['English'],
         disciplines: 'all',
         scope: 'all',
-        segmentFiles: false
+        segmentFiles: false,
+        limit: null
     });
 
     const availableLanguages = Object.keys(LANGUAGE_FLAGS);
@@ -83,7 +84,7 @@ const BulkExportModal = ({ onClose, onExport, questionCount }) => {
                         <div className="space-y-3">
                             <label className="text-xs font-bold uppercase text-slate-400 tracking-wider">2. Select Format</label>
                             <div className="grid grid-cols-2 gap-2">
-                                {['csv', 'json', 'markdown', 'sheets'].map(fmt => (
+                                {['sheets', 'csv', 'json', 'markdown'].map(fmt => (
                                     <label key={fmt} className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-all ${exportOptions.format === fmt ? 'bg-indigo-900/30 border-indigo-500' : 'bg-slate-800/50 border-slate-700 hover:bg-slate-800'}`}>
                                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${exportOptions.format === fmt ? 'bg-indigo-500 border-indigo-400' : 'border-slate-600 bg-slate-900'}`}>
                                             {exportOptions.format === fmt && <div className="w-2 h-2 bg-white rounded-full" />}
@@ -96,6 +97,12 @@ const BulkExportModal = ({ onClose, onExport, questionCount }) => {
                                     </label>
                                 ))}
                             </div>
+                            {exportOptions.format === 'sheets' && (
+                                <p className="text-xs text-amber-400 flex items-center gap-1 mt-2">
+                                    <Icon name="alert-circle" size={12} />
+                                    <span>Tip: If columns look wrong, delete the top header row in your Sheet and try again.</span>
+                                </p>
+                            )}
                         </div>
 
                         {/* Additional Options */}
@@ -119,6 +126,23 @@ const BulkExportModal = ({ onClose, onExport, questionCount }) => {
                                         <span className="text-sm text-slate-300">Segment Files (Separate by Language/Discipline)</span>
                                     </label>
                                 )}
+
+                                <div className="flex items-center gap-3 p-2">
+                                    <div className="w-5 flex justify-center"><Icon name="hash" size={14} className="text-slate-500" /></div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm text-slate-300">Limit to:</span>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max={questionCount}
+                                            placeholder="All"
+                                            className="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:border-indigo-500 outline-none"
+                                            value={exportOptions.limit || ''}
+                                            onChange={(e) => setExportOptions(prev => ({ ...prev, limit: e.target.value ? parseInt(e.target.value) : null }))}
+                                        />
+                                        <span className="text-xs text-slate-500">questions</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

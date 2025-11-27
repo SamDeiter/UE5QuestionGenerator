@@ -1,20 +1,35 @@
 import { stripHtmlTags, formatDate } from '../utils/helpers';
 
-export const fetchQuestionsFromSheets = async (sheetUrl) => {
-    // We use a simple GET request. 
-    // NOTE: This requires the script deployment to be "Anyone" for it to work 
-    // without a complex Google Sign-In flow.
-    const response = await fetch(sheetUrl);
+export const fetchQuestionsFromSheets = (sheetUrl) => {
+    return new Promise((resolve, reject) => {
+        // Create a unique callback name
+        const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
 
-    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        // Define the callback function globally
+        window[callbackName] = (data) => {
+            delete window[callbackName];
+            document.body.removeChild(script);
+            if (data.status === 'Success' && Array.isArray(data.data)) {
+                resolve(data.data);
+            } else {
+                reject(new Error(data.message || "Invalid data format received"));
+            }
+        };
 
-    const json = await response.json();
+        // Create the script element
+        const script = document.createElement('script');
+        // Append callback parameter to URL
+        const separator = sheetUrl.includes('?') ? '&' : '?';
+        script.src = `${sheetUrl}${separator}callback=${callbackName}&action=read`;
+        script.onerror = () => {
+            delete window[callbackName];
+            document.body.removeChild(script);
+            reject(new Error("Connection failed. 1. Ensure you added the 'doGet' function. 2. Redeploy as 'New Version'. 3. Set Access to 'Anyone'."));
+        };
 
-    if (json.status === 'Success' && Array.isArray(json.data)) {
-        return json.data;
-    } else {
-        throw new Error(json.message || "Invalid data format received");
-    }
+        // Append to body to trigger request
+        document.body.appendChild(script);
+    });
 };
 
 export const saveQuestionsToSheets = async (sheetUrl, questions) => {
@@ -22,44 +37,35 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
     const payloadData = questions.map((row, i) => {
         const cleanedSourceUrl = row.sourceUrl && !row.sourceUrl.includes("grounding-api") ? row.sourceUrl : "";
         const o = row.options || {};
-        // Return data fields in the exact order the Google Apps Script expects (matching CSV format)
+        // Return data fields matching the User's Google Apps Script expected keys
         return {
-            "ID": (i + 1).toString(),
-            "Question ID": row.uniqueId,
-            "Discipline": row.discipline,
-            "Type": row.type,
-            "Difficulty": row.difficulty,
-            "Question": stripHtmlTags(row.question),
-            "Option A": stripHtmlTags(o.A),
-            "Option B": stripHtmlTags(o.B),
-            "Option C": stripHtmlTags(o.C),
-            "Option D": stripHtmlTags(o.D || ""),
-            "Correct Answer": row.correct,
-            "Generation Date": formatDate(new Date()),
-            "Source URL": cleanedSourceUrl,
-            "Source Excerpt": stripHtmlTags(row.sourceExcerpt),
-            "Creator": row.creatorName,
-            "Reviewer": row.reviewerName,
-            "Language": row.language || "English"
+            "id": (i + 1).toString(),
+            "uniqueId": row.uniqueId,
+            "discipline": row.discipline,
+            "type": row.type,
+            "difficulty": row.difficulty,
+            "question": stripHtmlTags(row.question),
+            "optionA": stripHtmlTags(o.A),
+            "optionB": stripHtmlTags(o.B),
+            "optionC": stripHtmlTags(o.C),
+            "optionD": stripHtmlTags(o.D || ""),
+            "correctAnswer": row.correct,
+            "generationDate": formatDate(new Date()),
+            "sourceUrl": cleanedSourceUrl,
+            "sourceExcerpt": stripHtmlTags(row.sourceExcerpt),
+            "creator": row.creatorName,
+            "reviewer": row.reviewerName,
+            "language": row.language || "English"
         };
     });
 
-    // WORKAROUND: Use a hidden iframe to submit the form silently.
-    // This allows the browser to send cookies (auth) without opening a new tab.
-    const iframeId = 'hidden_upload_iframe';
-    let iframe = document.getElementById(iframeId);
-    if (!iframe) {
-        iframe = document.createElement('iframe');
-        iframe.id = iframeId;
-        iframe.name = iframeId;
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-    }
-
+    // Use a new tab to submit the form. 
+    // This ensures that if there is an Auth/Permission error (403), the user SEES it.
+    // Hidden iframes swallow auth errors silently.
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = sheetUrl;
-    form.target = iframeId; // Target the hidden iframe
+    form.target = '_blank'; // Open in new tab
 
     const input = document.createElement('input');
     input.type = 'hidden';
@@ -70,7 +76,27 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
     document.body.appendChild(form);
     form.submit();
 
-    // Clean up form after a short delay (iframe stays for next time)
+    // Clean up form after submission
+    setTimeout(() => {
+        document.body.removeChild(form);
+    }, 1000);
+};
+
+export const clearQuestionsFromSheets = async (sheetUrl) => {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = sheetUrl;
+    form.target = '_blank';
+
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'action';
+    input.value = 'clear';
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+    form.submit();
+
     setTimeout(() => {
         document.body.removeChild(form);
     }, 1000);
