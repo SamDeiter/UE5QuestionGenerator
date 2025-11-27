@@ -26,7 +26,6 @@ const App = () => {
 
     // --- ENVIRONMENT AND API KEY STATUS CHECK ---
     // If __app_id is defined, assume we are in the Canvas environment and the API key will be auto-injected.
-    // If __app_id is defined, assume we are in the Canvas environment and the API key will be auto-injected.
     const isInternalEnvironment = typeof window.__app_id !== 'undefined';
     const isAuthReady = true; // In local/Sheets mode, we are always "ready" for local ops.
 
@@ -470,10 +469,83 @@ ${getFileContext()}
         return csvContent;
     };
 
+    const handleExportByGroup = () => {
+        const sourceList = showHistory ? [...questions, ...historicalQuestions] : questions;
+        const valid = sourceList.filter(q => q.status !== 'rejected');
+
+        if (valid.length === 0) { setStatus("No accepted questions to export."); setTimeout(() => setStatus(''), 3000); return; }
+
+        // NEW GROUPING: Language, Discipline, Difficulty, Type
+        const groupedData = valid.reduce((acc, q) => {
+            const typeAbbrev = q.type === 'True/False' ? 'T/F' : 'MC';
+            // Use a unique key combining all segmentation requirements
+            const key = `${q.language || 'English'}_${q.discipline}_${q.difficulty}_${typeAbbrev}`;
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(q);
+            return acc;
+        }, {});
+
+        let filesGenerated = 0;
+        const exportDate = new Date();
+        const datePart = formatDate(exportDate).replace(/-/g, '');
+
+        Object.keys(groupedData).forEach(groupKey => {
+            const groupQuestions = groupedData[groupKey];
+            const csvContent = getCSVContent(groupQuestions, config.creatorName, config.reviewerName);
+
+            // Format filename: Language_Discipline_Difficulty_Type_Date.csv
+            const fileNameParts = groupKey.replace(/ & /g, '_').replace(/ /g, '_');
+            const filename = `${fileNameParts}_${datePart}.csv`;
+
+            downloadFile(csvContent, filename);
+            filesGenerated++;
+        });
+
+        setStatus(`Exported ${filesGenerated} segmented files.`);
+        setTimeout(() => setStatus(''), 5000);
+        setShowExportMenu(false);
+    };
+
+    const handleExportCurrentTarget = () => {
+        const sourceList = showHistory ? [...questions, ...historicalQuestions] : questions;
+
+        const targetString = config.difficulty; // e.g., "Easy MC"
+
+        const [targetDiff, targetTypeAbbrev] = targetString.split(' ');
+        const targetType = targetTypeAbbrev === 'MC' ? 'Multiple Choice' : 'True/False';
+
+        // Filter by current language, discipline, difficulty, and type
+        const valid = sourceList.filter(q =>
+            q.status !== 'rejected' &&
+            (q.language || 'English') === config.language && // Include language filter
+            q.discipline === config.discipline &&
+            q.difficulty === targetDiff &&
+            q.type === targetType
+        );
+
+        if (valid.length === 0) {
+            setStatus(`No accepted questions found for target: ${config.language} - ${targetString}`);
+            setTimeout(() => setStatus(''), 3000);
+            return;
+        }
+
+        const typePart = targetString.replace(/\s/g, '_');
+        const disciplinePart = config.discipline.replace(/\s/g, '_');
+        const datePart = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        const langPart = (config.language || 'English').replace(/ /g, '_');
+
+        const csvContent = getCSVContent(valid, config.creatorName, config.reviewerName);
+        const filename = `${langPart}_${disciplinePart}_${typePart}_${datePart}.csv`;
+        downloadFile(csvContent, filename);
+        setStatus(`Exported ${valid.length} questions for target ${targetString}`);
+        setTimeout(() => setStatus(''), 5000);
+        setShowExportMenu(false);
+    };
+
     const handleExportToSheets = async () => {
         if (!config.sheetUrl) { showMessage("Please enter a Google Apps Script URL in settings.", 5000); return; }
 
-        const sourceList = showHistory ? historicalQuestions : questions;
+        const sourceList = showHistory ? [...questions, ...historicalQuestions] : questions;
         const validQuestions = sourceList.filter(q => q.status !== 'rejected');
 
         if (validQuestions.length === 0) {
@@ -835,6 +907,32 @@ ${getFileContext()}
                             )}
                         </div>
                         <div className="flex gap-2 items-center bg-slate-950 p-1 rounded-lg border border-slate-800 shadow-inner">
+                            {/* EXPORT BUTTON */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowExportMenu(!showExportMenu)}
+                                    className="px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white"
+                                    title="Export Options"
+                                >
+                                    <Icon name="download" size={14} /> Export
+                                </button>
+                                {showExportMenu && (
+                                    <div className="absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                                        <button onClick={handleExportByGroup} className="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 flex items-center gap-2">
+                                            <Icon name="folder-archive" size={14} /> Export All (Segmented)
+                                        </button>
+                                        <button onClick={handleExportCurrentTarget} className="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 flex items-center gap-2">
+                                            <Icon name="file-text" size={14} /> Export Current Filter
+                                        </button>
+                                        <button onClick={handleExportToSheets} className="w-full text-left px-4 py-2 text-xs text-green-400 hover:bg-slate-800 flex items-center gap-2 border-t border-slate-800">
+                                            <Icon name="table" size={14} /> Export to Google Sheets
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
+
                             {/* Only show history toggle in Creation Mode */}
                             {appMode === 'create' && (
                                 <button onClick={() => setShowHistory(!showHistory)} className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${showHistory ? 'bg-purple-600 text-white shadow-md shadow-purple-900/50' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50'}`} title={showHistory ? 'Back to Current Session' : 'View Full Question History'}><Icon name={showHistory ? 'list' : 'archive'} size={12} />{showHistory ? 'Current Session' : 'Full History'} <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">{showHistory ? historicalQuestions.length : questions.length}</span></button>
@@ -865,13 +963,27 @@ ${getFileContext()}
                             <input type="text" placeholder="Search by ID, Question Text, Option, or Discipline..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-64 bg-slate-900 text-slate-300 placeholder-slate-600 border-none outline-none focus:ring-0 text-sm px-2 rounded" />
                             {searchTerm && (<button onClick={() => setSearchTerm('')} className="text-slate-500 hover:text-red-400 p-1 rounded"><Icon name="x" size={16} /></button>)}
 
-                            {/* In Review Mode, add a Language Filter Dropdown here since sidebar is gone */}
+                            {/* In Review Mode, add Filters for Language, Discipline, and Difficulty */}
                             {appMode === 'review' && (
                                 <div className="flex items-center gap-2 ml-4 border-l border-slate-700 pl-4">
-                                    <label className="text-xs font-bold uppercase text-slate-500 whitespace-nowrap">Language:</label>
-                                    <select name="language" value={config.language} onChange={handleChange} className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs outline-none focus:border-indigo-500">
-                                        <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
-                                    </select>
+                                    <div className="flex items-center gap-1">
+                                        <label className="text-xs font-bold uppercase text-slate-500 whitespace-nowrap">Lang:</label>
+                                        <select name="language" value={config.language} onChange={handleChange} className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs outline-none focus:border-indigo-500">
+                                            <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <label className="text-xs font-bold uppercase text-slate-500 whitespace-nowrap">Disc:</label>
+                                        <select name="discipline" value={config.discipline} onChange={handleChange} className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs outline-none focus:border-indigo-500 max-w-[100px]">
+                                            <option value="Technical Art">Tech Art</option><option value="Animation & Rigging">Anim</option><option value="Game Logic & Systems">Logic</option><option value="Look Development (Materials)">LookDev</option><option value="Networking">Net</option><option value="C++ Programming">C++</option><option value="VFX (Niagara)">VFX</option><option value="World Building & Level Design">World</option><option value="Blueprints">BP</option><option value="Lighting & Rendering">Light</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <label className="text-xs font-bold uppercase text-slate-500 whitespace-nowrap">Diff:</label>
+                                        <select name="difficulty" value={config.difficulty} onChange={(e) => handleSelectCategory(e.target.value)} className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs outline-none focus:border-indigo-500">
+                                            {CATEGORY_KEYS.map(key => <option key={key} value={key}>{key}</option>)}
+                                        </select>
+                                    </div>
                                 </div>
                             )}
                         </div>
