@@ -23,6 +23,7 @@ export const detectLanguageFromFilename = (fileName) => {
     if (!fileLanguage) {
         Object.entries(LANGUAGE_CODES).forEach(([lang, code]) => {
             const regex = new RegExp(`(^|[._-])${code}([._-] |$)`, 'i');
+            console.log(`Checking ${lang} code ${code} against ${fileName}: ${regex.test(fileName)}`);
             if (regex.test(fileName)) {
                 fileLanguage = lang;
             }

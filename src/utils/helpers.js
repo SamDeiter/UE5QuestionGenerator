@@ -33,6 +33,7 @@ export const stripHtmlTags = (text) => {
 };
 
 export const safe = (t) => {
+    if (t === null || t === undefined) return '""';
     const str = String(t);
     let content = stripHtmlTags(str);
     content = (content || '').trim();
