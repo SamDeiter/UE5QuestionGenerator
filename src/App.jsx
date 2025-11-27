@@ -4,6 +4,7 @@
 
 // React core hooks
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Virtuoso } from 'react-virtuoso';
 
 // UI Components
 import LandingPage from './components/LandingPage';
@@ -17,6 +18,7 @@ import GranularProgress from './components/GranularProgress';
 import Icon from './components/Icon';
 import InfoTooltip from './components/InfoTooltip';
 import BulkExportModal from './components/BulkExportModal';
+import Toast from './components/Toast';
 
 // Services - External integrations
 import { generateContent } from './services/gemini';
@@ -207,10 +209,21 @@ const App = () => {
     }, [allQuestionsMap]);
 
 
-    const showMessage = useCallback((msg, duration = 3000) => {
-        setStatus(msg);
-        setTimeout(() => setStatus(''), duration);
+    // Toast notifications state
+    const [toasts, setToasts] = useState([]);
+
+    const addToast = useCallback((message, type = 'info', duration = 3000) => {
+        const id = Date.now() + Math.random();
+        setToasts(prev => [...prev, { id, message, type, duration }]);
     }, []);
+
+    const removeToast = useCallback((id) => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+    }, []);
+
+    const showMessage = useCallback((msg, duration = 3000) => {
+        addToast(msg, 'info', duration);
+    }, [addToast]);
 
     // Helper to safely add new questions without creating duplicates in React state
     const addQuestionsToState = (newItems, isHistory = false) => {
@@ -1566,21 +1579,27 @@ const App = () => {
                                 </div>
                             </div>
                         ) : (
-                            uniqueFilteredQuestions.map(q => (
-                                <QuestionItem
-                                    key={q.uniqueId}
-                                    q={q}
-                                    onUpdateStatus={handleUpdateStatus}
-                                    onExplain={handleExplain}
-                                    onVariate={handleVariate}
-                                    onCritique={handleCritique}
-                                    onTranslateSingle={handleTranslateSingle}
-                                    onSwitchLanguage={handleLanguageSwitch}
-                                    onDelete={handleDelete}
-                                    availableLanguages={translationMap.get(q.uniqueId)}
-                                    isProcessing={isProcessing}
-                                />
-                            ))
+                            <Virtuoso
+                                style={{ height: '100%' }}
+                                data={uniqueFilteredQuestions}
+                                itemContent={(index, q) => (
+                                    <div className="mb-4">
+                                        <QuestionItem
+                                            key={q.uniqueId}
+                                            q={q}
+                                            onUpdateStatus={handleUpdateStatus}
+                                            onExplain={handleExplain}
+                                            onVariate={handleVariate}
+                                            onCritique={handleCritique}
+                                            onTranslateSingle={handleTranslateSingle}
+                                            onSwitchLanguage={handleLanguageSwitch}
+                                            onDelete={handleDelete}
+                                            availableLanguages={translationMap.get(q.uniqueId)}
+                                            isProcessing={isProcessing}
+                                        />
+                                    </div>
+                                )}
+                            />
                         )}
 
                         {uniqueFilteredQuestions.length === 0 && filteredQuestions.length > 0 && (
@@ -1711,6 +1730,15 @@ const App = () => {
                     />
                 )
             }
+
+            {/* TOAST NOTIFICATIONS */}
+            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+                {toasts.map(toast => (
+                    <div key={toast.id} className="pointer-events-auto">
+                        <Toast {...toast} onClose={removeToast} />
+                    </div>
+                ))}
+            </div>
         </div >
     );
 };

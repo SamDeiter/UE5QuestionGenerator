@@ -42,66 +42,59 @@
 **Estimated Time:** 30-45 minutes  
 **Risk if Skipped:** Medium - May have introduced regressions
 
-### Completed Fixes (Session 2)
+### Completed Fixes (Session 2 & 3)
 - [x] Fixed `ReferenceError: handleBulkExport` by reordering `useEffect`.
 - [x] Hardcoded Google Sheets URL to load on first launch.
+- [x] **Refactoring:** Extracted `handleFileChange` to `src/utils/fileProcessor.js`.
+- [x] **Refactoring:** Extracted `constructSystemPrompt` to `src/services/promptBuilder.js`.
+- [x] **Refactoring:** Extracted export logic to `src/utils/exportUtils.js`.
+- [x] **Security:** Implemented file upload validation (size, type, content).
+- [x] **UX:** Added `Ctrl+Enter` keyboard shortcut for generation.
+- [x] **UX:** Persisted user preferences (filters, view mode) to `localStorage`.
+- [x] **Deployment:** Fixed `vite.svg` 404 and `main.jsx` MIME type errors.
+- [x] **Testing:** Added unit tests for `googleSheets.js`.
 
 ---
 
 ### Priority 2: Code Quality Improvements (Short-term)
 
-#### 2.1 Remove Unused Code
-**Goal:** Reduce technical debt and improve maintainability
+#### 2.1 Remove Unused Code (Completed)
+- [x] Audit all imported components for actual usage
+- [x] Remove unused state variables
+- [x] Check for dead code paths
 
-**Tasks:**
-- [ ] Audit all imported components for actual usage
-- [ ] Remove unused state variables (if any)
-- [ ] Check for dead code paths
-- [ ] Remove commented-out code blocks
-
-**Estimated Time:** 20 minutes  
-**Impact:** Cleaner codebase, faster load times
-
-#### 2.2 Extract Large Functions
-**Goal:** Improve readability and testability
-
-**Candidates for Extraction:**
-- [ ] `handleFileChange` (470+ lines) → Split into:
-  - `parseCSVFile()`
-  - `detectLanguageFromFilename()`
-  - `importQuestionsFromCSV()`
-- [ ] `constructSystemPrompt()` → Extract to `services/promptBuilder.js`
-- [ ] `handleBulkExport()` → Extract segmentation logic
-
-**Estimated Time:** 1-2 hours  
-**Impact:** Better testability, easier maintenance
+#### 2.2 Extract Large Functions (Completed)
+- [x] `handleFileChange` → `utils/fileProcessor.js`
+- [x] `constructSystemPrompt` → `services/promptBuilder.js`
+- [x] `handleBulkExport` / `getCSVContent` → `utils/exportUtils.js`
 
 ---
 
 ### Priority 3: Feature Enhancements (Medium-term)
 
-#### 3.1 Enhanced Error Reporting
-**Goal:** Better user feedback for failures
+#### 3.1 Enhanced Error Reporting (Completed ✅)
+**Goal:** Better user feedback for failures and crash prevention
 
 **Tasks:**
-- [ ] Add error boundary component
-- [ ] Implement toast notification system
-- [ ] Add detailed error logging
+- [x] Add **Error Boundary** component to prevent white screen crashes
+- [x] Implement toast notification system
+- [x] Add detailed error logging (console errors)
 - [ ] Create error recovery flows
 
-**Estimated Time:** 2-3 hours  
-**Impact:** Better UX, easier debugging
+**Completed:** Error boundary and toast notifications implemented
 
-#### 3.2 Performance Optimization
+#### 3.2 Performance Optimization (Completed ✅)
 **Goal:** Faster rendering and smoother UX
 
 **Tasks:**
-- [ ] Implement virtual scrolling for large question lists
+- [x] Implement **Virtual Scrolling** for large question lists using `react-virtuoso`
 - [ ] Add debouncing to search input
 - [ ] Memoize expensive computations
 - [ ] Lazy load components
 
-**Estimated Time:** 3-4 hours  
+**Completed:** Virtual scrolling implemented for question lists
+
+**Estimated Time:** 3-4 hours
 **Impact:** Better performance with large datasets
 
 #### 3.3 Accessibility Improvements
