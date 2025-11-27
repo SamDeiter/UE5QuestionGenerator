@@ -9,10 +9,11 @@ import FilterButton from './components/FilterButton';
 import GranularProgress from './components/GranularProgress';
 import Icon from './components/Icon';
 import InfoTooltip from './components/InfoTooltip';
+import BulkExportModal from './components/BulkExportModal';
 
 import { generateContent } from './services/gemini';
 import { fetchQuestionsFromSheets, saveQuestionsToSheets } from './services/googleSheets';
-import { chunkArray, formatUrl, sanitizeText, stripHtmlTags, safe, formatDate, parseCSVLine, parseQuestions, downloadFile } from './utils/helpers';
+import { chunkArray, formatUrl, sanitizeText, stripHtmlTags, safe, formatDate, parseCSVLine, parseQuestions, downloadFile, filterDuplicateQuestions } from './utils/helpers';
 import { APP_VERSION, LANGUAGE_FLAGS, LANGUAGE_CODES, CATEGORY_KEYS, TARGET_PER_CATEGORY, TARGET_TOTAL, FIELD_DELIMITER } from './utils/constants';
 
 const App = () => {
@@ -20,6 +21,7 @@ const App = () => {
     const [isCloudReady, setIsCloudReady] = useState(false); // Track actual cloud connection status
     const [showClearModal, setShowClearModal] = useState(false);
     const [showExportMenu, setShowExportMenu] = useState(false);
+    const [showBulkExportModal, setShowBulkExportModal] = useState(false);
     const [translationProgress, setTranslationProgress] = useState(0);
 
     const [filterByCreator, setFilterByCreator] = useState(false);
@@ -65,7 +67,10 @@ const App = () => {
     const [filterMode, setFilterMode] = useState('pending');
     const [historicalQuestions, setHistoricalQuestions] = useState([]);
     const [showHistory, setShowHistory] = useState(false);
+    const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
     const fileInputRef = useRef(null);
+
+
 
     // Recompute allQuestionsMap whenever session or historical questions change
     useEffect(() => {
@@ -87,6 +92,15 @@ const App = () => {
             const langSet = new Set(variants.map(v => v.language || 'English'));
             map.set(uniqueId, langSet);
         });
+        console.log(`[Translation Map] Updated with ${map.size} unique questions`);
+        if (map.size > 0) {
+            const sample = Array.from(map.entries()).slice(0, 3);
+            console.log(`[Translation Map] Sample:`, sample.map(([id, langs]) => ({
+                id: id.substring(0, 8) + '...',
+                languages: Array.from(langs),
+                count: langs.size
+            })));
+        }
         return map;
     }, [allQuestionsMap]);
 
@@ -99,9 +113,10 @@ const App = () => {
     // Helper to safely add new questions without creating duplicates in React state
     const addQuestionsToState = (newItems, isHistory = false) => {
         const targetSet = isHistory ? setHistoricalQuestions : setQuestions;
+
         targetSet(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const uniqueNew = newItems.filter(item => !existingIds.has(item.id));
+            const otherList = isHistory ? questions : historicalQuestions;
+            const uniqueNew = filterDuplicateQuestions(newItems, prev, otherList);
             return [...prev, ...uniqueNew];
         });
     };
@@ -221,12 +236,24 @@ const App = () => {
 
                     const fileName = file.name;
                     let fileLanguage = null;
+
+                    // 1. Check for full language names (e.g. "Chinese_(Simplified)")
                     Object.keys(LANGUAGE_FLAGS).forEach(lang => {
                         const safeLang = lang.replace(/ /g, '_');
                         if (fileName.toLowerCase().includes(safeLang.toLowerCase()) || fileName.toLowerCase().includes(lang.toLowerCase())) {
                             fileLanguage = lang;
                         }
                     });
+
+                    // 2. Fallback: Check for language codes (e.g. _CN_, _JP_) if no full name found
+                    if (!fileLanguage) {
+                        Object.entries(LANGUAGE_CODES).forEach(([lang, code]) => {
+                            const regex = new RegExp(`(^|[_\-])${code}([_\-\.]|$)`, 'i');
+                            if (regex.test(fileName)) {
+                                fileLanguage = lang;
+                            }
+                        });
+                    }
 
                     if (header.length > 5 && header[0].includes('ID') && header[2].includes('Discipline')) {
                         lines.slice(1).forEach((line, idx) => {
@@ -253,8 +280,10 @@ const App = () => {
                             });
                         });
                         if (importedQuestions.length > 0) {
+                            console.log(`[CSV Import] Detected file language: ${fileLanguage || 'None (defaulting to English)'}`);
+                            console.log(`[CSV Import] Sample question languages:`, importedQuestions.slice(0, 3).map(q => ({ id: q.uniqueId, lang: q.language })));
                             addQuestionsToState(importedQuestions, showHistory);
-                            showMessage(`Imported ${importedQuestions.length} questions from CSV.`, 4000);
+                            showMessage(`Imported ${importedQuestions.length} questions from CSV (Language: ${fileLanguage || 'English'}).`, 4000);
                         }
                     } else {
                         setFiles(prev => [...prev, { name: file.name, content: content, size: file.size }]);
@@ -417,8 +446,7 @@ ${getFileContext()}
         const prompt = `Explain WHY the answer is correct in simple terms: "${q.question}" Answer: "${q.correct === 'A' ? q.options.A : q.options.B}"`;
         try {
             const exp = await generateContent(effectiveApiKey, "Technical Assistant", prompt, setStatus);
-            const targetSet = showHistory ? setHistoricalQuestions : setQuestions;
-            targetSet(prev => prev.map(i => i.id === q.id ? { ...i, explanation: exp } : i));
+            updateQuestionInState(q.id, (item) => ({ ...item, explanation: exp }));
             setStatus('');
         } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
     };
@@ -450,8 +478,7 @@ ${getFileContext()}
         const systemPrompt = `You are a Technical Writing Editor specialized in Unreal Engine 5 content. Analyze this REJECTED quiz question and provide actionable, numbered suggestions for improvement. Focus on: Clarity and technical accuracy. Output ONLY a brief, numbered list of 3-5 concrete suggestions.`;
         try {
             const critiqueText = await generateContent(effectiveApiKey, systemPrompt, `Critique and suggest fixes for the following rejected question:\n${questionDetails}`, setStatus);
-            const targetSet = showHistory ? setHistoricalQuestions : setQuestions;
-            targetSet(prev => prev.map(i => i.id === q.id ? { ...i, critique: critiqueText } : i));
+            updateQuestionInState(q.id, (item) => ({ ...item, critique: critiqueText }));
             showMessage('Critique Ready', 3000);
         } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
     };
@@ -669,9 +696,34 @@ ${getFileContext()}
         setIsProcessing(false);
     };
 
+    const updateQuestionInState = (id, updateFn) => {
+        let foundInQuestions = false;
+        setQuestions(prev => {
+            const idx = prev.findIndex(q => q.id === id);
+            if (idx === -1) return prev;
+            foundInQuestions = true;
+            const newArr = [...prev];
+            newArr[idx] = updateFn(newArr[idx]);
+            return newArr;
+        });
+
+        if (!foundInQuestions) {
+            setHistoricalQuestions(prev => {
+                const idx = prev.findIndex(q => q.id === id);
+                if (idx === -1) return prev;
+                const newArr = [...prev];
+                newArr[idx] = updateFn(newArr[idx]);
+                return newArr;
+            });
+        }
+    };
+
     const handleUpdateStatus = (id, newStatus) => {
-        const targetSet = showHistory ? setHistoricalQuestions : setQuestions;
-        targetSet(prev => prev.map(q => q.id === id ? { ...q, status: newStatus, critique: newStatus === 'accepted' ? null : q.critique } : q));
+        updateQuestionInState(id, (q) => ({
+            ...q,
+            status: newStatus,
+            critique: newStatus === 'accepted' ? null : q.critique
+        }));
     };
 
     const handleSelectCategory = (categoryKey) => {
@@ -747,6 +799,27 @@ ${getFileContext()}
         return finalDisplayList;
     }, [historicalQuestions, questions, config.language, config.discipline, config.difficulty, filterMode, searchTerm, filterByCreator, config.creatorName, showHistory]);
 
+    // Reset review index when entering review mode or when filters change
+    useEffect(() => {
+        setCurrentReviewIndex(0);
+    }, [appMode, config.discipline, config.difficulty, config.language, filterMode, searchTerm]);
+
+    // Keyboard navigation for Review Mode
+    useEffect(() => {
+        if (appMode !== 'review') return;
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowRight') {
+                setCurrentReviewIndex(prev => Math.min(prev + 1, uniqueFilteredQuestions.length - 1));
+            } else if (e.key === 'ArrowLeft') {
+                setCurrentReviewIndex(prev => Math.max(prev - 1, 0));
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [appMode, uniqueFilteredQuestions.length]);
+
     const filteredQuestions = uniqueFilteredQuestions;
 
     const totalApproved = useMemo(() => {
@@ -759,8 +832,12 @@ ${getFileContext()}
 
     const apiKeyStatus = isInternalEnvironment ? 'Auto-Auth' : (config.apiKey.length > 5 ? 'Loaded' : 'Missing');
 
+    const [showProgressMenu, setShowProgressMenu] = useState(false);
+
     const handleModeSelect = (mode) => {
         setAppMode(mode);
+        setShowExportMenu(false);
+        setShowProgressMenu(false);
         if (mode === 'review') {
             setShowHistory(true);
             setFilterMode('all');
@@ -768,6 +845,92 @@ ${getFileContext()}
             setShowHistory(false);
             setFilterMode('pending');
         }
+    };
+
+    const handleBulkExport = async (exportOptions) => {
+        const { format, includeRejected, languages, scope, segmentFiles } = exportOptions;
+
+        // 1. Determine Source Questions
+        let sourceQuestions = [];
+        if (scope === 'filtered') {
+            // Get IDs of currently visible questions
+            const visibleIds = new Set(uniqueFilteredQuestions.map(q => q.uniqueId));
+            // Get all variants for these IDs
+            sourceQuestions = Array.from(allQuestionsMap.values())
+                .flatMap(variants => variants.filter(v => visibleIds.has(v.uniqueId)));
+        } else {
+            // All questions
+            sourceQuestions = Array.from(allQuestionsMap.values()).flat();
+        }
+
+        // 2. Filter by Language and Status
+        let questionsToExport = sourceQuestions.filter(q => {
+            const langMatch = languages.includes(q.language || 'English');
+            const statusMatch = includeRejected || q.status !== 'rejected';
+            return langMatch && statusMatch;
+        });
+
+        if (questionsToExport.length === 0) {
+            showMessage('No questions to export with selected options.', 3000);
+            return;
+        }
+
+        // 3. Handle Google Sheets
+        if (format === 'sheets') {
+             if (!config.sheetUrl) { showMessage("Please enter a Google Apps Script URL in settings.", 5000); return; }
+             setIsProcessing(true);
+             setStatus("Sending data to Google Sheets...");
+             try {
+                await saveQuestionsToSheets(config.sheetUrl, questionsToExport);
+                showMessage(`Export launched! Check new tab for status.`, 5000);
+             } catch (e) {
+                console.error(e);
+                showMessage(`Error: ${e.message}`, 5000);
+             } finally {
+                setIsProcessing(false);
+             }
+             return;
+        }
+
+        // 4. Handle Segmentation (CSV only)
+        if (segmentFiles && format === 'csv') {
+             const groupedData = questionsToExport.reduce((acc, q) => {
+                const typeAbbrev = q.type === 'True/False' ? 'T/F' : 'MC';
+                const key = `${q.language || 'English'}_${q.discipline}_${q.difficulty}_${typeAbbrev}`;
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(q);
+                return acc;
+            }, {});
+
+            let filesGenerated = 0;
+            const datePart = formatDate(new Date()).replace(/-/g, '');
+
+            Object.keys(groupedData).forEach(groupKey => {
+                const groupQuestions = groupedData[groupKey];
+                const csvContent = getCSVContent(groupQuestions, config.creatorName, config.reviewerName);
+                const fileNameParts = groupKey.replace(/ & /g, '_').replace(/ /g, '_');
+                const filename = `${fileNameParts}_${datePart}.csv`;
+                downloadFile(csvContent, filename);
+                filesGenerated++;
+            });
+            showMessage(`Exported ${filesGenerated} segmented files.`, 4000);
+            return;
+        }
+
+        // 5. Standard Export (Single File)
+        if (format === 'csv') {
+            const csvContent = getCSVContent(questionsToExport, config.creatorName, config.reviewerName);
+            downloadFile(csvContent, `bulk_export_${Date.now()}.csv`, 'text/csv');
+        } else if (format === 'json') {
+            downloadFile(JSON.stringify(questionsToExport, null, 2), `bulk_export_${Date.now()}.json`, 'application/json');
+        } else if (format === 'markdown') {
+            const md = questionsToExport.map(q => {
+                return `## ${q.question}\n\n**Difficulty:** ${q.difficulty} | **Type:** ${q.type} | **Language:** ${q.language}\n\n**Options:**\n- A: ${q.options?.A}\n- B: ${q.options?.B}\n${q.options?.C ? `- C: ${q.options.C}\n` : ''}${q.options?.D ? `- D: ${q.options.D}\n` : ''}\n**Correct:** ${q.correct}\n\n---\n`;
+            }).join('\n');
+            downloadFile(md, `bulk_export_${Date.now()}.md`, 'text/markdown');
+        }
+
+        showMessage(`Exported ${questionsToExport.length} questions as ${format.toUpperCase()}.`, 4000);
     };
 
     const handleGoHome = () => {
@@ -780,15 +943,33 @@ ${getFileContext()}
 
     return (
         <div className="flex flex-col h-screen bg-slate-950 font-sans text-slate-200">
-            <Header apiKeyStatus={apiKeyStatus} isCloudReady={isCloudReady} onHome={handleGoHome} creatorName={config.creatorName} />
+            <Header apiKeyStatus={apiKeyStatus} isCloudReady={isCloudReady} onHome={handleGoHome} creatorName={config.creatorName} appMode={appMode} />
 
             {config.creatorName === '' && <NameEntryModal onSave={handleNameSave} />}
             {showClearModal && <ClearConfirmationModal onConfirm={handleDeleteAllQuestions} onCancel={() => setShowClearModal(false)} />}
             {isProcessing && <BlockingProcessModal isProcessing={isProcessing} status={status} translationProgress={translationProgress} />}
+            {showBulkExportModal && <BulkExportModal onClose={() => setShowBulkExportModal(false)} onExport={handleBulkExport} questionCount={allQuestionsMap.size} />}
 
             <div className="flex flex-1 overflow-hidden">
                 {appMode === 'create' && (
                     <aside className="w-80 flex-shrink-0 z-10 shadow-xl border-r border-slate-700 bg-slate-950 p-6 overflow-y-auto flex flex-col gap-6">
+
+
+                        {/* Discipline & Language - Moved to Top */}
+                        <div className="space-y-3 mb-6">
+                            <div className="space-y-1">
+                                <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Discipline</label><InfoTooltip text="Topic focus" /></div>
+                                <select name="discipline" value={config.discipline} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
+                                    <option value="Technical Art">Technical Art</option><option value="Animation & Rigging">Animation & Rigging</option><option value="Game Logic & Systems">Game Logic & Systems</option><option value="Look Development (Materials)">Look Development (Materials)</option><option value="Networking">Networking</option><option value="C++ Programming">C++ Programming</option><option value="VFX (Niagara)">VFX (Niagara)</option><option value="World Building & Level Design">World Building & Level Design</option><option value="Blueprints">Blueprints</option><option value="Lighting & Rendering">Lighting & Rendering</option>
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Language</label></div>
+                                <select name="language" value={config.language} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
+                                    <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
+                                </select>
+                            </div>
+                        </div>
 
                         {/* NEW OVERALL PROGRESS BOX */}
                         <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-3">
@@ -809,7 +990,31 @@ ${getFileContext()}
 
                         <GranularProgress approvedCounts={approvedCounts} target={TARGET_PER_CATEGORY} isTargetMet={isTargetMet} selectedDifficulty={config.difficulty} handleSelectCategory={handleSelectCategory} />
 
-                        {/* API Key Configuration */}
+
+
+                        <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner">
+                            <div className="flex items-center mb-2">
+                                <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2"><Icon name="hash" size={12} /> Batch Size (Max {maxBatchSize})</label>
+                                <InfoTooltip text="Number of questions to generate in one batch. Dynamically capped by remaining quota." />
+                            </div>
+                            <input type="number" min="1" max={maxBatchSize} name="batchSize" value={config.batchSize} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500" placeholder="e.g. 6, 12, 18" />
+                        </div>
+                        <div className="pb-4 space-y-3">
+                            <button onClick={handleGenerate} disabled={isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady} className={`w-full py-4 px-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady ? 'bg-slate-700 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 active:scale-[0.98]'}`}>
+                                {isGenerating ? <><Icon name="loader" size={16} className="animate-spin" /> GENERATING...</> : <><Icon name="book-open" size={16} /> GENERATE QUESTIONS</>}
+                            </button>
+
+                            <button onClick={handleBulkTranslateMissing} disabled={isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady} className={`w-full py-2 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all border ${isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-indigo-950/50 text-indigo-400 hover:bg-indigo-900/50 border-indigo-700'}`}>
+                                <Icon name="languages" size={14} /> BULK TRANSLATE (CN/JP/KR)
+                            </button>
+                        </div>
+                        <div className="pt-6 border-t border-slate-800 space-y-3">
+                            <div className="flex justify-between items-end"><label className="text-xs font-bold uppercase text-slate-400">Source Files</label>{files.length > 0 && <button onClick={handleDetectTopics} disabled={isDetecting || !isApiReady} className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50">{isDetecting ? "..." : "Detect"}</button>}</div>
+                            <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-900 cursor-pointer text-center bg-slate-900/50"><Icon name="upload" className="mx-auto text-slate-600 mb-2" /><p className="text-xs text-slate-500">Upload .csv</p><input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" /></div>
+                            {files.map((f, i) => <div key={i} className="flex justify-between bg-slate-900 p-2 rounded border border-slate-800 text-xs text-slate-400"><span className="truncate">{f.name}</span><button onClick={() => removeFile(i)} className="text-red-500">x</button></div>)}
+                        </div>
+
+                        {/* API Key Configuration - Moved to bottom */}
                         <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-2">
                             <div className="flex items-center">
                                 <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
@@ -831,7 +1036,7 @@ ${getFileContext()}
                             </div>
                         </div>
 
-                        {/* Google Sheets URL Configuration */}
+                        {/* Google Sheets URL Configuration - Moved to bottom */}
                         <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-2">
                             <div className="flex items-center">
                                 <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
@@ -852,43 +1057,6 @@ ${getFileContext()}
                                 <button onClick={handleExportToSheets} disabled={!config.sheetUrl || isProcessing} className="flex-1 py-1 px-2 bg-green-900/50 hover:bg-green-800/50 text-xs rounded border border-green-700 text-green-400">Save</button>
                             </div>
                         </div>
-
-                        <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner">
-                            <div className="flex items-center mb-2">
-                                <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2"><Icon name="hash" size={12} /> Batch Size (Max {maxBatchSize})</label>
-                                <InfoTooltip text="Number of questions to generate in one batch. Dynamically capped by remaining quota." />
-                            </div>
-                            <input type="number" min="1" max={maxBatchSize} name="batchSize" value={config.batchSize} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500" placeholder="e.g. 6, 12, 18" />
-                        </div>
-                        <div className="pb-4 space-y-3">
-                            <button onClick={handleGenerate} disabled={isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady} className={`w-full py-4 px-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady ? 'bg-slate-700 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 active:scale-[0.98]'}`}>
-                                {isGenerating ? <><Icon name="loader" size={16} className="animate-spin" /> GENERATING...</> : <><Icon name="book-open" size={16} /> GENERATE QUESTIONS</>}
-                            </button>
-
-                            <button onClick={handleBulkTranslateMissing} disabled={isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady} className={`w-full py-2 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all border ${isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-indigo-950/50 text-indigo-400 hover:bg-indigo-900/50 border-indigo-700'}`}>
-                                <Icon name="languages" size={14} /> BULK TRANSLATE (CN/JP/KR)
-                            </button>
-                        </div>
-                        <div className="space-y-4">
-
-                            <div className="space-y-1">
-                                <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Discipline</label><InfoTooltip text="Topic focus" /></div>
-                                <select name="discipline" value={config.discipline} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
-                                    <option value="Technical Art">Technical Art</option><option value="Animation & Rigging">Animation & Rigging</option><option value="Game Logic & Systems">Game Logic & Systems</option><option value="Look Development (Materials)">Look Development (Materials)</option><option value="Networking">Networking</option><option value="C++ Programming">C++ Programming</option><option value="VFX (Niagara)">VFX (Niagara)</option><option value="World Building & Level Design">World Building & Level Design</option><option value="Blueprints">Blueprints</option><option value="Lighting & Rendering">Lighting & Rendering</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Language</label></div>
-                                <select name="language" value={config.language} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
-                                    <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="mt-auto pt-6 border-t border-slate-800 space-y-3">
-                            <div className="flex justify-between items-end"><label className="text-xs font-bold uppercase text-slate-400">Source Files</label>{files.length > 0 && <button onClick={handleDetectTopics} disabled={isDetecting || !isApiReady} className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50">{isDetecting ? "..." : "Detect"}</button>}</div>
-                            <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-900 cursor-pointer text-center bg-slate-900/50"><Icon name="upload" className="mx-auto text-slate-600 mb-2" /><p className="text-xs text-slate-500">Upload .csv</p><input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" /></div>
-                            {files.map((f, i) => <div key={i} className="flex justify-between bg-slate-900 p-2 rounded border border-slate-800 text-xs text-slate-400"><span className="truncate">{f.name}</span><button onClick={() => removeFile(i)} className="text-red-500">x</button></div>)}
-                        </div>
                     </aside>
                 )}
                 <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
@@ -897,11 +1065,49 @@ ${getFileContext()}
                             {isAuthReady ? (<>{status && <span className="text-xs text-orange-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="loader" size={12} className="animate-spin" /> {status}</span>}{!status && <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Icon name="database" size={14} /> DB Ready</span>}</>) : (<span className="text-xs text-yellow-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="plug" size={12} className="animate-pulse" /> Connecting to DB...</span>)}
 
                             {/* Only show filters/stats if NOT in Review Mode, or if Review Mode and data loaded */}
+                            {/* Only show filters/stats if NOT in Review Mode, or if Review Mode and data loaded */}
                             {appMode === 'review' && (
-                                <div className="flex gap-2 items-center ml-4">
+                                <div className="flex gap-4 items-center ml-4">
                                     <div className="px-3 py-1 bg-indigo-900/30 border border-indigo-700/50 rounded text-xs text-indigo-300 font-bold flex items-center gap-2">
                                         <Icon name="list-checks" size={14} />
-                                        REVIEW MODE: {historicalQuestions.length} Items
+                                        REVIEW MODE: {uniqueFilteredQuestions.length} Items
+                                    </div>
+
+                                    {/* Progress Summary Popover for Review Mode */}
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setShowProgressMenu(!showProgressMenu)}
+                                            className={`px-3 py-1 border rounded text-xs font-bold flex items-center gap-2 transition-colors ${showProgressMenu ? 'bg-slate-700 border-slate-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'}`}
+                                        >
+                                            <Icon name="bar-chart-2" size={14} />
+                                            Progress: {overallPercentage.toFixed(1)}%
+                                        </button>
+
+                                        {showProgressMenu && (
+                                            <>
+                                                {/* Backdrop to close on click outside */}
+                                                <div className="fixed inset-0 z-40" onClick={() => setShowProgressMenu(false)}></div>
+
+                                                <div className="absolute left-0 top-full mt-2 w-80 bg-slate-950 border border-slate-700 rounded-lg shadow-2xl z-50 p-4 animate-in fade-in zoom-in-95 duration-200">
+                                                    <div className="space-y-4">
+                                                        <div className="text-center pb-2 border-b border-slate-800">
+                                                            <h3 className="text-lg font-extrabold text-white">{allQuestionsMap.size}</h3>
+                                                            <p className="text-[10px] font-semibold uppercase text-slate-500">UNIQUE QUESTIONS IN DB</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <div className="flex justify-between items-end">
+                                                                <h3 className="text-[10px] font-bold text-slate-400">APPROVED QUOTA ({totalApproved}/{TARGET_TOTAL})</h3>
+                                                                <span className="text-[10px] font-bold text-orange-400">{overallPercentage.toFixed(1)}%</span>
+                                                            </div>
+                                                            <div className="w-full h-1.5 rounded-full overflow-hidden bg-slate-800">
+                                                                <div className="h-full bg-orange-600 transition-all duration-500" style={{ width: `${overallPercentage}%` }}></div>
+                                                            </div>
+                                                        </div>
+                                                        <GranularProgress approvedCounts={approvedCounts} target={TARGET_PER_CATEGORY} isTargetMet={isTargetMet} selectedDifficulty={config.difficulty} handleSelectCategory={handleSelectCategory} />
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -910,25 +1116,12 @@ ${getFileContext()}
                             {/* EXPORT BUTTON */}
                             <div className="relative">
                                 <button
-                                    onClick={() => setShowExportMenu(!showExportMenu)}
+                                    onClick={() => setShowBulkExportModal(true)}
                                     className="px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white"
-                                    title="Export Options"
+                                    title="Open Export Options"
                                 >
                                     <Icon name="download" size={14} /> Export
                                 </button>
-                                {showExportMenu && (
-                                    <div className="absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
-                                        <button onClick={handleExportByGroup} className="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 flex items-center gap-2">
-                                            <Icon name="folder-archive" size={14} /> Export All (Segmented)
-                                        </button>
-                                        <button onClick={handleExportCurrentTarget} className="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 flex items-center gap-2">
-                                            <Icon name="file-text" size={14} /> Export Current Filter
-                                        </button>
-                                        <button onClick={handleExportToSheets} className="w-full text-left px-4 py-2 text-xs text-green-400 hover:bg-slate-800 flex items-center gap-2 border-t border-slate-800">
-                                            <Icon name="table" size={14} /> Export to Google Sheets
-                                        </button>
-                                    </div>
-                                )}
                             </div>
 
                             <div className="w-px h-4 bg-slate-700 mx-1"></div>
@@ -992,20 +1185,62 @@ ${getFileContext()}
                     <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4">
                         {!showHistory && uniqueFilteredQuestions.length === 0 && questions.length === 0 && !status && appMode === 'create' && (<div className="flex flex-col items-center justify-center h-full text-slate-600"><Icon name="terminal" size={48} className="mb-4 text-slate-800" /><p className="font-medium text-slate-500">Ready. Click 'GENERATE QUESTIONS' to begin or upload a source file.</p></div>)}
 
-                        {uniqueFilteredQuestions.map(q => (
-                            <QuestionItem
-                                key={q.uniqueId}
-                                q={q}
-                                onUpdateStatus={handleUpdateStatus}
-                                onExplain={handleExplain}
-                                onVariate={handleVariate}
-                                onCritique={handleCritique}
-                                onTranslateSingle={handleTranslateSingle}
-                                onSwitchLanguage={handleLanguageSwitch}
-                                availableLanguages={translationMap.get(q.uniqueId)}
-                                isProcessing={isProcessing}
-                            />
-                        ))}
+                        {appMode === 'review' && uniqueFilteredQuestions.length > 0 ? (
+                            <div className="flex flex-col items-center justify-start h-full max-w-4xl mx-auto w-full pt-4">
+                                <div className="w-full mb-6 flex justify-between items-center text-slate-400 text-xs font-mono bg-slate-900/50 p-2 rounded-lg border border-slate-800">
+                                    <button
+                                        onClick={() => setCurrentReviewIndex(prev => Math.max(prev - 1, 0))}
+                                        disabled={currentReviewIndex === 0}
+                                        className="flex items-center gap-2 px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold"
+                                    >
+                                        <Icon name="arrow-left" size={16} /> PREV
+                                    </button>
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-slate-500 uppercase text-[10px] tracking-widest">Review Progress</span>
+                                        <span className="text-lg">
+                                            <span className="text-white font-bold">{currentReviewIndex + 1}</span> <span className="text-slate-600">/</span> <span className="text-slate-400 font-bold">{uniqueFilteredQuestions.length}</span>
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={() => setCurrentReviewIndex(prev => Math.min(prev + 1, uniqueFilteredQuestions.length - 1))}
+                                        disabled={currentReviewIndex === uniqueFilteredQuestions.length - 1}
+                                        className="flex items-center gap-2 px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold"
+                                    >
+                                        NEXT <Icon name="arrow-right" size={16} />
+                                    </button>
+                                </div>
+
+                                <div className="w-full transform transition-all duration-300">
+                                    <QuestionItem
+                                        key={uniqueFilteredQuestions[currentReviewIndex].uniqueId}
+                                        q={uniqueFilteredQuestions[currentReviewIndex]}
+                                        onUpdateStatus={handleUpdateStatus}
+                                        onExplain={handleExplain}
+                                        onVariate={handleVariate}
+                                        onCritique={handleCritique}
+                                        onTranslateSingle={handleTranslateSingle}
+                                        onSwitchLanguage={handleLanguageSwitch}
+                                        availableLanguages={translationMap.get(uniqueFilteredQuestions[currentReviewIndex].uniqueId)}
+                                        isProcessing={isProcessing}
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            uniqueFilteredQuestions.map(q => (
+                                <QuestionItem
+                                    key={q.uniqueId}
+                                    q={q}
+                                    onUpdateStatus={handleUpdateStatus}
+                                    onExplain={handleExplain}
+                                    onVariate={handleVariate}
+                                    onCritique={handleCritique}
+                                    onTranslateSingle={handleTranslateSingle}
+                                    onSwitchLanguage={handleLanguageSwitch}
+                                    availableLanguages={translationMap.get(q.uniqueId)}
+                                    isProcessing={isProcessing}
+                                />
+                            ))
+                        )}
 
                         {uniqueFilteredQuestions.length === 0 && filteredQuestions.length > 0 && (
                             <div className="flex flex-col items-center justify-center h-full text-slate-600 pt-10">

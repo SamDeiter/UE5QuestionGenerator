@@ -158,3 +158,33 @@ export const downloadFile = (data, filename) => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 };
+
+export const filterDuplicateQuestions = (newItems, currentList, otherList = []) => {
+    // Create a Set of existing IDs from the current state
+    const existingIds = new Set(currentList.map(p => p.id));
+
+    // Create a Set of normalized question text from the current state to prevent semantic duplicates
+    const existingTexts = new Set(currentList.map(p => p.question.trim().toLowerCase()));
+
+    // Also check against the OTHER list to ensure global uniqueness across session and history
+    const otherIds = new Set(otherList.map(p => p.id));
+    const otherTexts = new Set(otherList.map(p => p.question.trim().toLowerCase()));
+
+    const uniqueNew = newItems.filter(item => {
+        const normalizedText = item.question.trim().toLowerCase();
+
+        // Check ID uniqueness
+        if (existingIds.has(item.id) || otherIds.has(item.id)) return false;
+
+        // Check Text uniqueness (prevent duplicates even if IDs differ)
+        if (existingTexts.has(normalizedText) || otherTexts.has(normalizedText)) return false;
+
+        return true;
+    });
+
+    if (uniqueNew.length < newItems.length) {
+        console.log(`Filtered out ${newItems.length - uniqueNew.length} duplicate questions.`);
+    }
+
+    return uniqueNew;
+};

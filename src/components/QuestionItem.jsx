@@ -80,7 +80,8 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                     <button
                         key={lang}
                         onClick={(e) => handleFlagClick(e, lang)}
-                        className="text-sm px-1 inline-flex items-center justify-center opacity-100 hover:scale-125 transition-transform cursor-pointer"
+                        className="text-base px-1 inline-flex items-center justify-center opacity-100 hover:scale-125 transition-transform cursor-pointer"
+                        style={{ fontFamily: 'Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif' }}
                         title={`Switch to ${lang} translation`}
                     >
                         {flag}
@@ -88,16 +89,22 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                 );
             }
 
-            // If Missing -> Show 2-Letter Code (Generate button)
+            // If Missing -> Show FLAG (Generate button) - Faded with + indicator
             return (
                 <button
                     key={lang}
                     onClick={(e) => handleFlagClick(e, lang)}
                     disabled={isProcessing}
-                    className={`text-[10px] font-bold px-1 py-0.5 text-slate-600 hover:text-slate-300 transition-colors ${isLoading ? 'animate-pulse text-orange-500' : ''}`}
+                    className={`text-base px-1 inline-flex items-center justify-center transition-all cursor-pointer relative ${isLoading ? 'animate-pulse scale-110' : 'opacity-50 hover:opacity-100 hover:scale-125'}`}
+                    style={{ fontFamily: 'Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif' }}
                     title={`Generate ${lang} translation`}
                 >
-                    {isLoading ? <Icon name="loader" size={10} className="animate-spin" /> : langCode}
+                    {isLoading ? <Icon name="loader" size={14} className="animate-spin text-orange-500" /> : (
+                        <span className="relative">
+                            {flag}
+                            <span className="absolute -top-1 -right-1 text-[8px] bg-orange-500 text-white rounded-full w-3 h-3 flex items-center justify-center">+</span>
+                        </span>
+                    )}
                 </button>
             );
         });
@@ -112,9 +119,20 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                         <div className="flex gap-2 items-center">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${getDiffBadgeColor(q.difficulty)}`}>{q.difficulty}</span>
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">{q.type === 'True/False' ? 'T/F' : 'MC'}</span>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-slate-700 text-slate-300 border-slate-600 flex items-center gap-1">
-                                {LANGUAGE_CODES[q.language || 'English']} {(q.language || 'English').toUpperCase()}
-                            </span>
+
+                            {/* Creator / Reviewer Info - Moved to Top */}
+                            <div className="flex items-center gap-2 ml-1 border-l border-slate-700/50 pl-2">
+                                <div className="flex items-center gap-1 text-[10px] text-slate-500" title="Creator">
+                                    <Icon name="user" size={10} />
+                                    <span className="font-bold text-slate-400">{q.creatorName || 'N/A'}</span>
+                                </div>
+                                {q.reviewerName && q.reviewerName !== q.creatorName && (
+                                    <div className="flex items-center gap-1 text-[10px] text-slate-500" title="Reviewer">
+                                        <Icon name="check" size={10} />
+                                        <span className="font-bold text-indigo-400">{q.reviewerName}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -237,21 +255,7 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                 </div>
             )}
 
-            {/* NEW: Creator/Reviewer Info */}
-            <div className="pt-3 mt-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-600">
-                <div className="flex items-center gap-1.5">
-                    <Icon name="user" size={12} className="text-slate-700" />
-                    <span className="font-medium">Created by: </span>
-                    <span className="font-bold text-orange-400">{q.creatorName || 'N/A'}</span>
-                </div>
-                {q.reviewerName && q.reviewerName !== q.creatorName && (
-                    <div className="flex items-center gap-1.5">
-                        <Icon name="list-checks" size={12} className="text-slate-700" />
-                        <span className="font-medium">Reviewed by: </span>
-                        <span className="font-bold text-indigo-400">{q.reviewerName}</span>
-                    </div>
-                )}
-            </div>
+
         </div>
     );
 };

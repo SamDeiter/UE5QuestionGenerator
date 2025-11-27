@@ -44,13 +44,22 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
         };
     });
 
-    // WORKAROUND: Since "Anyone" access is restricted, we cannot use fetch().
-    // We must use a Form Submission to a new tab. This forces the browser to send
-    // your authentication cookies, allowing the script to run as "You".
+    // WORKAROUND: Use a hidden iframe to submit the form silently.
+    // This allows the browser to send cookies (auth) without opening a new tab.
+    const iframeId = 'hidden_upload_iframe';
+    let iframe = document.getElementById(iframeId);
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = iframeId;
+        iframe.name = iframeId;
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+    }
+
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = sheetUrl;
-    form.target = '_blank'; // Open in new tab to ensure cookies are sent
+    form.target = iframeId; // Target the hidden iframe
 
     const input = document.createElement('input');
     input.type = 'hidden';
@@ -60,5 +69,9 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
 
     document.body.appendChild(form);
     form.submit();
-    document.body.removeChild(form);
+
+    // Clean up form after a short delay (iframe stays for next time)
+    setTimeout(() => {
+        document.body.removeChild(form);
+    }, 1000);
 };
