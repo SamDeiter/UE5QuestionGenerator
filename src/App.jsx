@@ -607,7 +607,8 @@ ${getFileContext()}
     };
 
     const uniqueFilteredQuestions = useMemo(() => {
-        const sourceList = showHistory ? historicalQuestions : questions;
+        // Fix: When showing history (or Review Mode), we should show ALL questions (current + history), not just history.
+        const sourceList = showHistory ? [...questions, ...historicalQuestions] : questions;
         const currentLanguage = config.language;
         const targetDifficulty = config.difficulty.split(' ')[0];
         const targetTypeAbbrev = config.difficulty.split(' ')[1];
