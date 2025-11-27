@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UE5 STE Question Generator (Real-Time Cloud)</title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
+
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
@@ -35,28 +36,54 @@
 
     <style>
         /* Custom Scrollbar for dark theme */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-        .animate-in { animation: fadeIn 0.3s ease-out forwards; }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
 
         /* Custom styling for the Export Options dropdown */
         .export-options-menu {
             z-index: 50;
             width: 320px;
             padding: 12px;
-            background-color: #0f172a; /* slate-950 */
-            border: 1px solid #334155; /* slate-700 */
+            background-color: #0f172a;
+            /* slate-950 */
+            border: 1px solid #334155;
+            /* slate-700 */
             border-radius: 8px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
+
 <body class="bg-slate-950 text-slate-200 h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
 
@@ -64,7 +91,7 @@
         const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
         // --- APPLICATION VERSION ---
-        const APP_VERSION = "v1.1";
+        const APP_VERSION = "v1.3"; // Updated version
 
         // --- Configuration & Constants ---
         const LANGUAGE_FLAGS = {
@@ -93,9 +120,9 @@
             'Portuguese': 'PT',
             'Russian': 'RU'
         };
-        
+
         const CATEGORY_KEYS = ['Easy MC', 'Easy T/F', 'Medium MC', 'Medium T/F', 'Hard MC', 'Hard T/F'];
-        const TARGET_PER_CATEGORY = 33; 
+        const TARGET_PER_CATEGORY = 33;
         const TARGET_TOTAL = 200;
         const FIELD_DELIMITER = ','; // CSV Standard
 
@@ -108,7 +135,7 @@
 
                 const pascalName = name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
                 const iconDef = lucide.icons[pascalName];
-                
+
                 if (iconDef) {
                     const svgNode = lucide.createElement(iconDef);
                     svgNode.setAttribute('width', size);
@@ -118,7 +145,7 @@
                 }
             }, [name, size, className]);
 
-            if (!svgHtml) return <span style={{width: size, height: size, display: 'inline-block'}} />;
+            if (!svgHtml) return <span style={{ width: size, height: size, display: 'inline-block' }} />;
             return <span dangerouslySetInnerHTML={{ __html: svgHtml }} className="inline-flex items-center justify-center" />;
         };
 
@@ -142,12 +169,12 @@
             }
             return cleanUrl;
         };
-        
+
         const sanitizeText = (text) => {
             if (typeof text !== 'string') return String(text);
             let output = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*\*/g, '');
             const temp = document.createElement('div');
-            temp.innerHTML = output; 
+            temp.innerHTML = output;
             return temp.innerHTML;
         };
 
@@ -157,25 +184,25 @@
             tmp.innerHTML = text;
             return tmp.textContent || tmp.innerText || "";
         };
-        
+
         const safe = (t) => {
             const str = String(t);
             let content = stripHtmlTags(str);
             content = (content || '').trim();
-            content = content.replace(/[\u200B\uFEFF\u00A0]/g, ' ').replace(/\s\s+/g, ' ').trim(); 
-            content = content.replace(/(\r\n|\n|\r|\t)/gm, ' '); 
+            content = content.replace(/[\u200B\uFEFF\u00A0]/g, ' ').replace(/\s\s+/g, ' ').trim();
+            content = content.replace(/(\r\n|\n|\r|\t)/gm, ' ');
             content = content.replace(/['"]/g, '');
             const escaped = content.replace(/"/g, '""');
             return `"${escaped}"`;
         };
-        
+
         const formatDate = (date = new Date()) => {
             const mm = (date.getMonth() + 1).toString().padStart(2, '0');
             const dd = date.getDate().toString().padStart(2, '0');
             const yyyy = date.getFullYear();
             return `${yyyy}-${mm}-${dd}`;
         };
-        
+
         const parseCSVLine = (text) => {
             const result = [];
             let cell = '';
@@ -200,16 +227,17 @@
             result.push(cell);
             return result;
         };
-        
+
         const generateContent = async (effectiveKey, systemPrompt, userPrompt, setStatus) => {
+            // Note: If effectiveKey is "", the platform runtime will inject the correct key.
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${effectiveKey}`;
-            
+
             const payload = {
                 contents: [{ parts: [{ text: userPrompt }] }],
                 systemInstruction: { parts: [{ text: systemPrompt }] },
-                tools: [{ google_search: {} }], 
+                tools: [{ google_search: {} }],
                 generationConfig: {
-                    temperature: 0.2, 
+                    temperature: 0.2,
                     maxOutputTokens: 8192
                 }
             };
@@ -239,7 +267,7 @@
                     if (!textResponse && finishReason !== 'STOP') {
                         throw new Error(finishReason || 'No content generated');
                     }
-                    
+
                     return textResponse || "";
 
                 } catch (error) {
@@ -255,28 +283,28 @@
         const parseQuestions = (text) => {
             const parsed = [];
             const lines = text.split('\n');
-            
+
             const dataLines = lines.filter(line => {
                 const trimmed = line.trim();
-                return (trimmed.startsWith('|') || trimmed.startsWith('｜')) && 
-                        !trimmed.includes('| ID |') && 
-                        !trimmed.includes('｜ ID ｜') && 
-                        !trimmed.includes('|---');
+                return (trimmed.startsWith('|') || trimmed.startsWith('｜')) &&
+                    !trimmed.includes('| ID |') &&
+                    !trimmed.includes('｜ ID ｜') &&
+                    !trimmed.includes('|---');
             });
 
             dataLines.forEach((line, index) => {
                 const normalizedLine = line.replace(/｜/g, '|');
                 let cols = normalizedLine.split('|').map(c => c.trim());
-                
+
                 if (cols[0] === '') cols.shift();
                 if (cols[cols.length - 1] === '') cols.pop();
 
                 if (cols.length >= 10) {
-                   const looksLikeAnswer = (val) => /^[A-D]$/.test(val);
-                   const looksLikeUrl = (val) => val && val.startsWith('http');
-                   if (cols[9] && looksLikeAnswer(cols[9]) && cols[10] && looksLikeUrl(cols[10])) {
-                       cols.splice(5, 0, "");
-                   }
+                    const looksLikeAnswer = (val) => /^[A-D]$/.test(val);
+                    const looksLikeUrl = (val) => val && val.startsWith('http');
+                    if (cols[9] && looksLikeAnswer(cols[9]) && cols[10] && looksLikeUrl(cols[10])) {
+                        cols.splice(5, 0, "");
+                    }
                 }
 
                 const discipline = cols[1];
@@ -287,7 +315,7 @@
                 const optB = cols[7];
                 const optC = cols[8];
                 const optD = cols[9];
-                const correctLetter = cols[10]; 
+                const correctLetter = cols[10];
                 const sourceUrl = cols[11];
                 const sourceExcerpt = cols[12];
 
@@ -302,7 +330,7 @@
                     options = { A: optA || '', B: optB || '', C: optC || '', D: optD || '' };
                 }
 
-                const uniqueId = crypto.randomUUID(); 
+                const uniqueId = crypto.randomUUID();
 
                 parsed.push({
                     id: Date.now() + index + Math.random(),
@@ -312,7 +340,7 @@
                     difficulty: difficulty || "Easy",
                     question: question || "",
                     options,
-                    correct: correctLetter || "", 
+                    correct: correctLetter || "",
                     sourceUrl: sourceUrl || "",
                     sourceExcerpt: sourceExcerpt || "",
                     status: 'pending',
@@ -325,7 +353,7 @@
         // --- End of Utilities ---
 
         // --- Shared Components (Defined early for scope safety) ---
-        
+
         const InfoTooltip = ({ text, direction = "up" }) => (
             <div className="group relative inline-flex items-center ml-1.5 align-middle">
                 <Icon name="info" size={12} className="text-slate-600 hover:text-orange-500 cursor-help transition-colors" />
@@ -341,7 +369,7 @@
             const [sillyPlaceholder, setSillyPlaceholder] = useState('');
 
             useEffect(() => {
-                const sillyNames = [ "Captain Blueprint", "Sir Render-Lot", "Polygon Prince", "Texture Titan" ];
+                const sillyNames = ["Captain Blueprint", "Sir Render-Lot", "Polygon Prince", "Texture Titan"];
                 setSillyPlaceholder(`e.g. ${sillyNames[Math.floor(Math.random() * sillyNames.length)]}`);
             }, []);
 
@@ -398,7 +426,7 @@
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center w-full">
-                        <button 
+                        <button
                             onClick={() => onSelectMode('create')}
                             className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-orange-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-orange-900/20"
                         >
@@ -409,7 +437,7 @@
                             <p className="text-xs text-slate-400 text-center">Generate new questions, upload CSVs, and translate content.</p>
                         </button>
 
-                        <button 
+                        <button
                             onClick={() => onSelectMode('review')}
                             className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-indigo-900/20"
                         >
@@ -423,7 +451,7 @@
 
                     <div className="flex items-center justify-center gap-6 text-xs text-slate-500 font-mono pt-8">
                         <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${apiKeyStatus === 'Loaded' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                            <div className={`w-2 h-2 rounded-full ${apiKeyStatus.includes('Loaded') || apiKeyStatus.includes('Auto') ? 'bg-green-500' : 'bg-red-500'}`}></div>
                             API Key: {apiKeyStatus}
                         </div>
                         <div className="flex items-center gap-2">
@@ -453,12 +481,12 @@
                     <div className="hidden md:flex items-center gap-4 text-xs font-mono">
                         {creatorName && (
                             <div className="flex items-center gap-1.5 font-bold text-slate-300 px-3 py-1 bg-slate-800/50 rounded-lg">
-                                <Icon name="user-check" size={14} className="text-green-500"/> 
+                                <Icon name="user-check" size={14} className="text-green-500" />
                                 <span>{creatorName}</span>
                             </div>
                         )}
                         <div className="flex items-center gap-2 px-3 py-1 rounded border border-slate-700">
-                            <span className={`font-bold ${apiKeyStatus === 'Loaded' ? 'text-green-400' : 'text-red-400'}`}>API Key: {apiKeyStatus}</span>
+                            <span className={`font-bold ${apiKeyStatus.includes('Loaded') || apiKeyStatus.includes('Auto') ? 'text-green-400' : 'text-red-400'}`}>API Key: {apiKeyStatus}</span>
                             {isCloudReady ? (
                                 <div className="flex items-center gap-1.5 text-blue-400 font-bold border-l border-slate-700 pl-2 ml-2">
                                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
@@ -511,13 +539,14 @@
         };
 
         // Export Options Content Component (Inner Menu)
-        const ExportOptions = ({ onExportByGroup, onBulkTranslateExport, onExportCurrentTarget, currentTarget, isProcessing, onClose, creatorName, reviewerName, approvedCount, translationProgress }) => {
+        const ExportOptions = ({ onExportByGroup, onBulkTranslateExport, onExportCurrentTarget, onExportToSheets, currentTarget, isProcessing, onClose, creatorName, reviewerName, approvedCount, translationProgress }) => {
             const [selectedLanguages, setSelectedLanguages] = useState([]);
-            const availableLanguages = [ 'Chinese (Simplified)', 'Japanese', 'Korean', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Russian' ];
+            const availableLanguages = ['Chinese (Simplified)', 'Japanese', 'Korean', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Russian'];
+            const [sheetUrl, setSheetUrl] = useState('');
 
             const toggleLanguage = (lang) => setSelectedLanguages(prev => prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]);
             const handleTranslateClick = () => { if (selectedLanguages.length > 0) onBulkTranslateExport(selectedLanguages); };
-            
+
             const translateButtonContent = isProcessing && translationProgress > 0 && translationProgress < 100 ? (
                 <div className="relative h-8 w-full bg-indigo-900 rounded-lg overflow-hidden">
                     <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${translationProgress}%` }}></div>
@@ -525,38 +554,59 @@
                 </div>
             ) : (
                 <button onClick={handleTranslateClick} disabled={isProcessing || selectedLanguages.length === 0} className="w-full py-2 text-xs font-bold text-indigo-300 bg-indigo-900/30 border border-indigo-800 rounded hover:bg-indigo-900/50 transition-colors disabled:bg-slate-700 disabled:text-slate-500">
-                    {isProcessing ? <><Icon name="loader" size={14} className="mr-1 inline-block animate-spin"/> Exporting...</> : `Export ${selectedLanguages.length} Translated File(s)`}
+                    {isProcessing ? <><Icon name="loader" size={14} className="mr-1 inline-block animate-spin" /> Exporting...</> : `Export ${selectedLanguages.length} Translated File(s)`}
                 </button>
             );
 
             return (
                 <div className="export-options-menu animate-in fade-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-between items-center border-b border-slate-700 pb-3 mb-3">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="download-cloud" size={20}/> Export Settings</h2>
+                        <h2 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="download-cloud" size={20} /> Export Settings</h2>
                         <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:text-white hover:bg-slate-700 transition-colors">
                             <Icon name="x" size={18} />
                         </button>
                     </div>
 
                     <div className="space-y-4">
+
+                        {/* NEW: Export to Google Sheets Section */}
                         <div className="border-b border-slate-700 pb-3 space-y-2">
-                            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="filter" size={16}/> Export Current Target</h3>
-                            <p className="text-xs text-slate-400">Exports only accepted questions matching the current Difficulty/Type/Discipline selection (or all if 'VIEW ALL' is selected).</p>
-                            <button onClick={onExportCurrentTarget} disabled={isProcessing} className="w-full py-2 text-xs font-bold text-blue-300 bg-blue-900/30 border border-blue-800 rounded hover:bg-blue-900/50 transition-colors"><Icon name="target" size={14} className="mr-1 inline-block"/> Export "{currentTarget}" Only</button>
+                            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="sheet" size={16} /> Push to Google Sheets</h3>
+                            <p className="text-xs text-slate-400">Requires a deployed Google Apps Script endpoint URL to function.</p>
+                            <input
+                                type="url"
+                                placeholder="Paste Google Apps Script URL here..."
+                                value={sheetUrl}
+                                onChange={(e) => setSheetUrl(e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-purple-500"
+                            />
+                            <button
+                                onClick={() => onExportToSheets(sheetUrl)}
+                                disabled={isProcessing || !sheetUrl.startsWith('http')}
+                                className="w-full py-2 text-xs font-bold text-purple-300 bg-purple-900/30 border border-purple-800 rounded hover:bg-purple-900/50 transition-colors disabled:bg-slate-700 disabled:text-slate-500"
+                            >
+                                {isProcessing ? 'Pushing...' : 'Push Accepted Questions to Sheet'}
+                            </button>
                         </div>
 
                         <div className="border-b border-slate-700 pb-3 space-y-2">
-                            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="layout-list" size={16}/> Segmented Export (By Language)</h3>
+                            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="filter" size={16} /> Export Current Target (CSV)</h3>
+                            <p className="text-xs text-slate-400">Exports only accepted questions matching the current Difficulty/Type/Discipline selection (or all if 'VIEW ALL' is selected).</p>
+                            <button onClick={onExportCurrentTarget} disabled={isProcessing} className="w-full py-2 text-xs font-bold text-blue-300 bg-blue-900/30 border border-blue-800 rounded hover:bg-blue-900/50 transition-colors disabled:bg-slate-700 disabled:text-slate-500"><Icon name="target" size={14} className="mr-1 inline-block" /> Export "{currentTarget}" Only</button>
+                        </div>
+
+                        <div className="border-b border-slate-700 pb-3 space-y-2">
+                            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="layout-list" size={16} /> Segmented Export (CSV)</h3>
                             <p className="text-xs text-slate-400">Exports multiple files, separating by **Language**, Discipline, Difficulty, and Type.</p>
-                            <button onClick={onExportByGroup} disabled={isProcessing} className="w-full py-2 text-xs font-bold text-green-300 bg-green-900/30 border border-green-800 rounded hover:bg-green-900/50 transition-colors"><Icon name="folder-open" size={14} className="mr-1 inline-block"/> Export {approvedCount} Questions by Group (.csv)</button>
+                            <button onClick={onExportByGroup} disabled={isProcessing} className="w-full py-2 text-xs font-bold text-green-300 bg-green-900/30 border border-green-800 rounded hover:bg-green-900/50 transition-colors disabled:bg-slate-700 disabled:text-slate-500"><Icon name="folder-open" size={14} className="mr-1 inline-block" /> Export {approvedCount} Questions by Group (.csv)</button>
                         </div>
                         <div className="space-y-2">
-                            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="globe" size={16}/> Bulk Translation Export</h3>
+                            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2"><Icon name="globe" size={16} /> Bulk Translation Export (CSV)</h3>
                             <p className="text-xs text-slate-400">Generates and exports separate files for the selected languages.</p>
                             <div className="grid grid-cols-2 gap-2 text-xs h-32 overflow-y-auto pr-1">
                                 {availableLanguages.map(lang => (
                                     <div key={lang} onClick={() => toggleLanguage(lang)} className={`flex items-center p-1 rounded cursor-pointer transition-colors ${selectedLanguages.includes(lang) ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}>
-                                        <Icon name={selectedLanguages.includes(lang) ? 'check' : 'square'} size={12} className="mr-2 flex-shrink-0"/> {lang}
+                                        <Icon name={selectedLanguages.includes(lang) ? 'check' : 'square'} size={12} className="mr-2 flex-shrink-0" /> {lang}
                                     </div>
                                 ))}
                             </div>
@@ -566,7 +616,7 @@
                 </div>
             );
         };
-        
+
         // Modal Wrapper for ExportOptions
         const ExportOptionsModal = ({ children, onClose }) => {
             return (
@@ -591,7 +641,7 @@
             }, []);
 
             const getStatusStyle = (status) => {
-                switch(status) {
+                switch (status) {
                     case 'accepted': return 'ring-1 ring-green-500/50';
                     case 'rejected': return 'border-red-900/50 bg-slate-950/80 opacity-50 grayscale';
                     default: return '';
@@ -599,7 +649,7 @@
             };
 
             const getGradient = (d) => {
-                switch(d?.toLowerCase()) {
+                switch (d?.toLowerCase()) {
                     case 'easy': return 'bg-gradient-to-br from-slate-900/50 to-green-950 border-green-700 shadow-[0_0_15px_-5px_rgba(34,197,94,0.3)]';
                     case 'medium': return 'bg-gradient-to-br from-slate-900/50 to-yellow-950 border-yellow-700 shadow-[0_0_15px_-5px_rgba(234,179,8,0.3)]';
                     case 'hard': return 'bg-gradient-to-br from-slate-900/50 to-red-950 border-red-700 shadow-[0_0_15px_-5px_rgba(239,68,68,0.3)]';
@@ -608,14 +658,14 @@
             };
 
             const getDiffBadgeColor = (d) => {
-                switch(d?.toLowerCase()) {
+                switch (d?.toLowerCase()) {
                     case 'easy': return 'bg-green-950 text-green-400 border-green-900';
                     case 'medium': return 'bg-yellow-950 text-yellow-400 border-yellow-900';
                     case 'hard': return 'bg-red-950 text-red-400 border-red-900';
                     default: return 'bg-slate-800 text-slate-400 border-slate-700';
                 }
             };
-            
+
             const isRejected = q.status === 'rejected';
 
             // Track loading state per specific language flag
@@ -623,7 +673,7 @@
 
             const handleFlagClick = async (e, lang) => {
                 e.stopPropagation();
-                
+
                 // Check if the translation ALREADY exists
                 if (availableLanguages && availableLanguages.has(lang)) {
                     // It exists -> SWITCH VIEW
@@ -649,7 +699,7 @@
                     // If Translation Exists -> Show FLAG (Switch button)
                     if (hasLang) {
                         return (
-                            <button 
+                            <button
                                 key={lang}
                                 onClick={(e) => handleFlagClick(e, lang)}
                                 className="text-sm px-1 inline-flex items-center justify-center opacity-100 hover:scale-125 transition-transform cursor-pointer"
@@ -662,14 +712,14 @@
 
                     // If Missing -> Show 2-Letter Code (Generate button)
                     return (
-                        <button 
+                        <button
                             key={lang}
                             onClick={(e) => handleFlagClick(e, lang)}
                             disabled={isProcessing}
                             className={`text-[10px] font-bold px-1 py-0.5 text-slate-600 hover:text-slate-300 transition-colors ${isLoading ? 'animate-pulse text-orange-500' : ''}`}
                             title={`Generate ${lang} translation`}
                         >
-                            {isLoading ? <Icon name="loader" size={10} className="animate-spin"/> : langCode}
+                            {isLoading ? <Icon name="loader" size={10} className="animate-spin" /> : langCode}
                         </button>
                     );
                 });
@@ -685,11 +735,11 @@
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${getDiffBadgeColor(q.difficulty)}`}>{q.difficulty}</span>
                                     <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">{q.type === 'True/False' ? 'T/F' : 'MC'}</span>
                                     <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-slate-700 text-slate-300 border-slate-600 flex items-center gap-1">
-                                        {LANGUAGE_CODES[q.language || 'English']} { (q.language || 'English').toUpperCase() }
+                                        {LANGUAGE_CODES[q.language || 'English']} {(q.language || 'English').toUpperCase()}
                                     </span>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-center gap-2">
                                 {/* More Menu */}
                                 <div className="relative" ref={menuRef}>
@@ -712,11 +762,11 @@
                                                 <button onClick={(e) => { e.stopPropagation(); onVariate(q); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-xs text-purple-300 hover:bg-slate-700 flex items-center gap-2">
                                                     <Icon name="copy" size={14} /> Create Variations
                                                 </button>
-                                                <button onClick={(e) => { 
-                                                    e.stopPropagation(); 
+                                                <button onClick={(e) => {
+                                                    e.stopPropagation();
                                                     const textArea = document.createElement("textarea");
                                                     // FIX: Use stripHtmlTags for clean copy
-                                                    textArea.value = stripHtmlTags(q.question); 
+                                                    textArea.value = stripHtmlTags(q.question);
                                                     document.body.appendChild(textArea);
                                                     textArea.select();
                                                     try {
@@ -725,7 +775,7 @@
                                                         console.error('Fallback: Oops, unable to copy', err);
                                                     }
                                                     document.body.removeChild(textArea);
-                                                    setMenuOpen(false); 
+                                                    setMenuOpen(false);
                                                 }} className="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2">
                                                     <Icon name="clipboard" size={14} /> Copy Question
                                                 </button>
@@ -776,7 +826,7 @@
                                 const optionText = val && val.trim() ? val : "(Empty)";
                                 return (
                                     <div key={key} className={`text-xs p-2 rounded border transition-all ${isCorrect ? 'bg-green-700/50 border-green-400 text-white shadow-[0_0_10px_-3px_rgba(34,197,94,0.5)]' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
-                                        <span className={`font-bold mr-2 ${isCorrect ? 'text-white' : 'text-slate-600'}`}>{key})</span> 
+                                        <span className={`font-bold mr-2 ${isCorrect ? 'text-white' : 'text-slate-600'}`}>{key})</span>
                                         <span dangerouslySetInnerHTML={{ __html: sanitizeText(optionText) }} />
                                     </div>
                                 );
@@ -812,13 +862,13 @@
                     {/* NEW: Creator/Reviewer Info */}
                     <div className="pt-3 mt-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-600">
                         <div className="flex items-center gap-1.5">
-                            <Icon name="user" size={12} className="text-slate-700"/>
+                            <Icon name="user" size={12} className="text-slate-700" />
                             <span className="font-medium">Created by: </span>
                             <span className="font-bold text-orange-400">{q.creatorName || 'N/A'}</span>
                         </div>
                         {q.reviewerName && q.reviewerName !== q.creatorName && (
                             <div className="flex items-center gap-1.5">
-                                <Icon name="list-checks" size={12} className="text-slate-700"/>
+                                <Icon name="list-checks" size={12} className="text-slate-700" />
                                 <span className="font-medium">Reviewed by: </span>
                                 <span className="font-bold text-indigo-400">{q.reviewerName}</span>
                             </div>
@@ -831,26 +881,26 @@
         const GranularProgress = ({ approvedCounts, target, isTargetMet, selectedDifficulty, handleSelectCategory }) => {
             const categories = ['Easy MC', 'Easy T/F', 'Medium MC', 'Medium T/F', 'Hard MC', 'Hard T/F'].map(key => {
                 const current = approvedCounts[key] || 0;
-                const hardTarget = 33; 
+                const hardTarget = 33;
                 const remaining = Math.max(0, hardTarget - current);
                 const isComplete = current >= hardTarget;
                 const isSelected = key === selectedDifficulty;
-                const isDisabled = isComplete; 
+                const isDisabled = isComplete;
 
                 let barColor = 'bg-slate-800';
-                if (isComplete) barColor = 'bg-blue-600'; 
-                else if (isSelected) barColor = 'bg-orange-600'; 
+                if (isComplete) barColor = 'bg-blue-600';
+                else if (isSelected) barColor = 'bg-orange-600';
                 else if (current > 0) barColor = 'bg-green-600';
-                
+
                 const percentage = Math.min(100, (current / hardTarget) * 100);
-                
-                const handleClick = () => { 
-                    handleSelectCategory(key); 
+
+                const handleClick = () => {
+                    handleSelectCategory(key);
                 };
 
                 return (
-                    <div 
-                        key={key} 
+                    <div
+                        key={key}
                         onClick={handleClick}
                         className={`p-2 rounded transition-all cursor-pointer border ${isSelected ? 'bg-slate-800 border-orange-600 shadow-lg' : 'bg-slate-900 border-slate-800 hover:bg-slate-800/70'} ${isDisabled ? 'opacity-75' : ''}`}
                     >
@@ -866,7 +916,7 @@
                     </div>
                 );
             });
-            
+
             const isBalancedSelected = selectedDifficulty === 'Balanced All';
             return (
                 <div className="space-y-2">
@@ -874,7 +924,7 @@
                     {categories}
                     <button onClick={() => handleSelectCategory('Balanced All')} className={`w-full p-2 rounded transition-all cursor-pointer border mt-3 ${isBalancedSelected ? 'bg-orange-600 border-orange-400 shadow-lg' : 'bg-slate-800 border-slate-700 hover:bg-slate-700/50'}`}>
                         <div className="flex justify-center items-center text-sm font-bold gap-2">
-                             <Icon name="archive" size={14}/> VIEW ALL/BULK EXPORT
+                            <Icon name="archive" size={14} /> VIEW ALL/BULK EXPORT
                         </div>
                     </button>
                 </div>
@@ -882,18 +932,18 @@
         };
 
         const ClearConfirmationModal = ({ onConfirm, onCancel }) => (
-                <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-300 space-y-4">
-                        <h3 className="text-xl font-bold text-red-500 flex items-center gap-2"><Icon name="alert-triangle" size={20}/> CONFIRM DATABASE WIPE</h3>
-                        <p className="text-sm text-slate-300">This action will permanently delete all accepted questions saved in the database for this application. Are you sure you want to proceed?</p>
-                        <div className="flex justify-end gap-3">
-                            <button onClick={onCancel} className="px-4 py-2 text-sm rounded bg-slate-700 hover:bg-slate-600 text-white transition-colors">Cancel</button>
-                            <button onClick={onConfirm} className="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-bold transition-colors">Wipe All Data</button>
-                        </div>
+            <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-300 space-y-4">
+                    <h3 className="text-xl font-bold text-red-500 flex items-center gap-2"><Icon name="alert-triangle" size={20} /> CONFIRM DATABASE WIPE</h3>
+                    <p className="text-sm text-slate-300">This action will permanently delete all accepted questions saved in the database for this application. Are you sure you want to proceed?</p>
+                    <div className="flex justify-end gap-3">
+                        <button onClick={onCancel} className="px-4 py-2 text-sm rounded bg-slate-700 hover:bg-slate-600 text-white transition-colors">Cancel</button>
+                        <button onClick={onConfirm} className="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-bold transition-colors">Wipe All Data</button>
                     </div>
                 </div>
-            );
-            
+            </div>
+        );
+
         const FilterButton = ({ mode, current, setFilter, label, count, color }) => {
             const isActive = mode === current;
             const baseClasses = "px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1";
@@ -904,7 +954,7 @@
             if (mode === 'pending' && !isActive) inactiveClasses = "bg-yellow-900/20 text-yellow-400 hover:bg-yellow-900/30";
             return (
                 <button onClick={() => setFilter(mode)} className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}>
-                    <Icon name={mode === 'accepted' ? 'check' : mode === 'rejected' ? 'x' : mode === 'pending' ? 'clock' : 'list'} size={12}/>
+                    <Icon name={mode === 'accepted' ? 'check' : mode === 'rejected' ? 'x' : mode === 'pending' ? 'clock' : 'list'} size={12} />
                     {label} <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">{count}</span>
                 </button>
             );
@@ -921,11 +971,15 @@
             const [showClearModal, setShowClearModal] = useState(false);
             const [showExportMenu, setShowExportMenu] = useState(false);
             const [translationProgress, setTranslationProgress] = useState(0);
-            
+
             const [filterByCreator, setFilterByCreator] = useState(false);
 
             const TARGET_TOTAL = 200;
-            const TARGET_PER_CATEGORY = 33; 
+            const TARGET_PER_CATEGORY = 33;
+
+            // --- ENVIRONMENT AND API KEY STATUS CHECK ---
+            // If __app_id is defined, assume we are in the Canvas environment and the API key will be auto-injected.
+            const isInternalEnvironment = typeof __app_id !== 'undefined';
 
             const [config, setConfig] = useState(() => {
                 const saved = localStorage.getItem('ue5_gen_config');
@@ -939,7 +993,11 @@
                 if (constInitialConfig.difficulty === 'Balanced All') constInitialConfig.difficulty = 'Easy MC';
                 return constInitialConfig;
             });
-            
+
+            // Computed values for API key status and effective key
+            const isApiReady = isInternalEnvironment || (config.apiKey && config.apiKey.length > 5);
+            const effectiveApiKey = isInternalEnvironment ? "" : config.apiKey;
+
             // Map of UniqueID -> List of Question Objects (all languages)
             const [allQuestionsMap, setAllQuestionsMap] = useState(new Map());
 
@@ -947,20 +1005,20 @@
                 const saved = localStorage.getItem('ue5_gen_questions');
                 return saved ? JSON.parse(saved) : [];
             });
-            
+
             const [files, setFiles] = useState([]);
             const [status, setStatus] = useState('');
             const [isGenerating, setIsGenerating] = useState(false);
             const [isDetecting, setIsDetecting] = useState(false);
             const [isProcessing, setIsProcessing] = useState(false);
             const [showNameModal, setShowNameModal] = useState(false);
-            
+
             const [searchTerm, setSearchTerm] = useState('');
             const [filterMode, setFilterMode] = useState('pending');
             const [historicalQuestions, setHistoricalQuestions] = useState([]);
             const [showHistory, setShowHistory] = useState(false);
             const fileInputRef = useRef(null);
-            
+
             // Recompute allQuestionsMap whenever session or historical questions change
             useEffect(() => {
                 const combined = [...questions, ...historicalQuestions];
@@ -1003,7 +1061,7 @@
             const approvedCounts = useMemo(() => {
                 const counts = CATEGORY_KEYS.reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
                 const countedIds = new Set();
-                
+
                 Array.from(allQuestionsMap.values()).forEach(variants => {
                     const baseQ = variants.find(v => (v.language || 'English') === 'English') || variants[0];
 
@@ -1018,7 +1076,7 @@
                 });
                 return counts;
             }, [allQuestionsMap]);
-            
+
             const approvedCount = questions.filter(q => q.status !== 'rejected').length;
             const rejectedCount = questions.filter(q => q.status === 'rejected').length;
             const pendingCount = questions.length - approvedCount - rejectedCount;
@@ -1051,7 +1109,7 @@
                 }
             }, [config.difficulty, maxBatchSize]);
 
-            useEffect(() => { if (!config.creatorName) setShowNameModal(true); }, []); 
+            useEffect(() => { if (!config.creatorName) setShowNameModal(true); }, []);
             useEffect(() => { localStorage.setItem('ue5_gen_config', JSON.stringify(config)); }, [config]);
             useEffect(() => localStorage.setItem('ue5_gen_questions', JSON.stringify(questions)), [questions]);
 
@@ -1073,17 +1131,17 @@
                             const app = window.Firebase.initializeApp(firebaseConfig);
                             const newDb = window.Firebase.getFirestore(app);
                             const newAuth = window.Firebase.getAuth(app);
-                            
+
                             setDb(newDb);
                             setAuth(newAuth);
-                            
+
                             // Robust Auth Pattern from Demo
                             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                                 await window.Firebase.signInWithCustomToken(newAuth, __initial_auth_token);
                             } else {
                                 await window.Firebase.signInAnonymously(newAuth);
                             }
-                            
+
                             window.Firebase.onAuthStateChanged(newAuth, (user) => {
                                 if (user) {
                                     setUserId(user.uid);
@@ -1097,11 +1155,11 @@
                         } else {
                             // Local mode fallback
                             console.log("No cloud config found. Running in Local Mode.");
-                            setIsAuthReady(true); 
+                            setIsAuthReady(true);
                             setIsCloudReady(false);
                         }
-                    } catch (e) { 
-                        console.error("Firebase Initialization Failed (Defaulting to Local Mode):", e); 
+                    } catch (e) {
+                        console.error("Firebase Initialization Failed (Defaulting to Local Mode):", e);
                         setIsAuthReady(true);
                         setIsCloudReady(false);
                     }
@@ -1109,13 +1167,13 @@
 
                 return () => clearInterval(checkFirebase);
             }, []);
-            
+
             // Modified: Use onSnapshot for REAL-TIME updates
             useEffect(() => {
                 if (isAuthReady && isCloudReady && db) {
                     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                     const collectionPath = window.Firebase.collection(db, `artifacts/${appId}/public/data/${QUESTION_COLLECTION}`);
-                    
+
                     // Set up listener
                     const unsubscribe = window.Firebase.onSnapshot(collectionPath, (snapshot) => {
                         const loadedHistory = snapshot.docs.map(doc => {
@@ -1127,10 +1185,10 @@
                                 status: 'accepted' // Anything in DB is treated as accepted history
                             };
                         });
-                        
+
                         // Sort by dateAdded if available, newest first
                         loadedHistory.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
-                        
+
                         setHistoricalQuestions(loadedHistory);
                         // If this is the first load, maybe show a message? 
                         // showMessage("Cloud Sync Active", 2000); 
@@ -1142,20 +1200,20 @@
                     return () => unsubscribe();
                 }
             }, [isAuthReady, isCloudReady, db]);
-            
+
             const handleDeleteAllQuestions = async () => {
                 setShowClearModal(false);
                 if (!db || !isCloudReady) { showMessage("Local Mode: Cleared browser storage.", 3000); setQuestions([]); setHistoricalQuestions([]); return; }
-                
+
                 setStatus('Wiping cloud database...');
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                 const collectionPath = window.Firebase.collection(db, `artifacts/${appId}/public/data/${QUESTION_COLLECTION}`);
-                
+
                 try {
                     const snapshot = await window.Firebase.getDocs(collectionPath);
-                    if (snapshot.empty) { 
-                        setStatus('Database already empty.'); 
-                        setQuestions([]); 
+                    if (snapshot.empty) {
+                        setStatus('Database already empty.');
+                        setQuestions([]);
                         return;
                     }
 
@@ -1176,55 +1234,55 @@
                     }
 
                     setStatus(`Cloud wiped successfully.`);
-                    setQuestions([]); 
+                    setQuestions([]);
                     // historicalQuestions will auto-clear via onSnapshot listener
 
-                } catch (e) { 
-                    console.error("Database deletion failed:", e); 
-                    showMessage(`Failed to clear database: ${e.message}`, 5000); 
+                } catch (e) {
+                    console.error("Database deletion failed:", e);
+                    showMessage(`Failed to clear database: ${e.message}`, 5000);
                 }
             };
 
             const checkAndStoreQuestions = async (newQuestions) => {
                 // If not cloud ready, just return the questions (they stay in local state)
                 if (!db || !isCloudReady) { return newQuestions; }
-                
+
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                 const collectionPath = window.Firebase.collection(db, `artifacts/${appId}/public/data/${QUESTION_COLLECTION}`);
                 const uniqueQuestions = [];
                 const generatedQuestionsMap = new Map();
-                
+
                 // Deduplication logic
-                newQuestions.forEach(q => { 
-                    const cleanQuestion = stripHtmlTags(q.question); 
-                    generatedQuestionsMap.set(cleanQuestion, q); 
+                newQuestions.forEach(q => {
+                    const cleanQuestion = stripHtmlTags(q.question);
+                    generatedQuestionsMap.set(cleanQuestion, q);
                 });
-                
+
                 setStatus(`Syncing ${newQuestions.length} questions to cloud...`);
-                
+
                 try {
                     // We fetch current state once to check duplicates before writing
                     // (Optimization: In a massive DB, you might skip this and rely on unique IDs, 
                     // but here we want to avoid overwriting existing with same content if IDs differ)
                     const snapshot = await window.Firebase.getDocs(collectionPath);
                     const existingKeys = new Set(snapshot.docs.map(doc => `${doc.data().uniqueId}_${doc.data().language || 'English'}`));
-                    
+
                     const batchWrites = [];
                     let duplicateCount = 0;
-                    
+
                     generatedQuestionsMap.forEach((q, cleanQuestion) => {
                         const key = `${q.uniqueId}_${q.language || 'English'}`;
-                        if (existingKeys.has(key)) { 
-                            duplicateCount++; 
+                        if (existingKeys.has(key)) {
+                            duplicateCount++;
                         } else {
                             uniqueQuestions.push(q);
-                            const docId = `${q.uniqueId}_${q.language || 'English'}`; 
+                            const docId = `${q.uniqueId}_${q.language || 'English'}`;
                             const docRef = window.Firebase.doc(collectionPath, docId);
                             batchWrites.push(window.Firebase.setDoc(docRef, {
                                 id: q.id.toString(),
                                 uniqueId: q.uniqueId,
-                                cleanQuestion: cleanQuestion, 
-                                question: q.question, 
+                                cleanQuestion: cleanQuestion,
+                                question: q.question,
                                 discipline: q.discipline,
                                 type: q.type,
                                 difficulty: q.difficulty,
@@ -1233,51 +1291,51 @@
                                 sourceUrl: q.sourceUrl,
                                 sourceExcerpt: q.sourceExcerpt,
                                 dateAdded: q.dateAdded || new Date().toISOString(),
-                                creatorName: config.creatorName, 
+                                creatorName: config.creatorName,
                                 reviewerName: config.reviewerName,
-                                language: q.language || config.language 
+                                language: q.language || config.language
                             }));
                         }
                     });
-                    
-                    if (batchWrites.length > 0) { 
-                        await Promise.all(batchWrites); 
-                        setStatus(`Saved ${batchWrites.length} items to Cloud.`); 
-                    } else { 
-                        setStatus(`Cloud sync complete (No new items).`); 
+
+                    if (batchWrites.length > 0) {
+                        await Promise.all(batchWrites);
+                        setStatus(`Saved ${batchWrites.length} items to Cloud.`);
+                    } else {
+                        setStatus(`Cloud sync complete (No new items).`);
                     }
                     return uniqueQuestions;
-                } catch (e) { 
-                    console.error("Firestore operation failed:", e); 
-                    setStatus(`Cloud Error: Saved locally only.`); 
-                    return newQuestions; 
+                } catch (e) {
+                    console.error("Firestore operation failed:", e);
+                    setStatus(`Cloud Error: Saved locally only.`);
+                    return newQuestions;
                 }
             };
 
             const loadHistory = async () => {
                 // Replaced by useEffect onSnapshot, but kept for manual trigger consistency
-                if (!db || !isCloudReady) { 
+                if (!db || !isCloudReady) {
                     // If local, historicalQuestions is just empty or whatever was loaded from local storage if we implemented that
-                    setHistoricalQuestions([]); 
-                    return; 
+                    setHistoricalQuestions([]);
+                    return;
                 }
                 setShowHistory(true);
                 // The useEffect will handle the actual fetching
             };
-            
+
             const handleToggleHistory = () => {
-                if (showHistory) { 
-                    setShowHistory(false); 
+                if (showHistory) {
+                    setShowHistory(false);
                     // Don't clear historicalQuestions here, let them stay cached in background
-                    setFilterMode('pending'); 
-                } else { 
-                    setSearchTerm(''); 
+                    setFilterMode('pending');
+                } else {
+                    setSearchTerm('');
                     // loadHistory(); // Not needed, useEffect handles it
                     setShowHistory(true);
-                    setFilterMode('all'); 
+                    setFilterMode('all');
                 }
             };
-            
+
             const handleSyncToDatabase = async () => {
                 const validQuestions = questions.filter(q => q.status !== 'rejected');
                 if (validQuestions.length === 0) {
@@ -1305,11 +1363,11 @@
             };
 
             // MODIFIED: Set both creatorName and reviewerName to the entered name
-            const handleNameSave = (name) => { 
-                setConfig(prev => ({ ...prev, creatorName: name, reviewerName: name })); 
-                setShowNameModal(false); 
+            const handleNameSave = (name) => {
+                setConfig(prev => ({ ...prev, creatorName: name, reviewerName: name }));
+                setShowNameModal(false);
             };
-            
+
             const handleFileChange = (e) => {
                 const newFiles = Array.from(e.target.files);
                 const allowedTypes = ['text/', 'application/json', 'application/javascript', 'application/xml', 'application/csv'];
@@ -1319,7 +1377,7 @@
                     const hasTextExt = allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
                     return isTextType || hasTextExt;
                 });
-                
+
                 const csvFiles = validFiles.filter(f => f.name.toLowerCase().endsWith('.csv'));
                 const otherFiles = validFiles.filter(f => !f.name.toLowerCase().endsWith('.csv'));
 
@@ -1331,7 +1389,7 @@
                             const importedQuestions = [];
                             const lines = content.split('\n');
                             const header = lines[0] ? lines[0].split(FIELD_DELIMITER) : [];
-                            
+
                             const fileName = file.name;
                             let fileLanguage = null;
                             Object.keys(LANGUAGE_FLAGS).forEach(lang => {
@@ -1340,39 +1398,39 @@
                                     fileLanguage = lang;
                                 }
                             });
-                            
+
                             if (header.length > 5 && header[0].includes('ID') && header[2].includes('Discipline')) {
-                                    lines.slice(1).forEach((line, idx) => {
-                                        if (!line.trim()) return;
-                                        const cols = parseCSVLine(line);
-                                        if (cols.length < 10) return;
-                                        const uniqueId = cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID();
-                                        importedQuestions.push({
-                                            id: Date.now() + idx + Math.random(),
-                                            uniqueId: uniqueId,
-                                            discipline: cols[2] || "Imported",
-                                            type: cols[3] || "Multiple Choice",
-                                            difficulty: cols[4] || "Easy",
-                                            question: cols[5] || "",
-                                            options: { A: cols[6] || "", B: cols[7] || "", C: cols[8] || "", D: cols[9] || "" },
-                                            correct: cols[10] || "",
-                                            dateAdded: cols[11] || new Date().toISOString(),
-                                            sourceUrl: cols[12] || "",
-                                            sourceExcerpt: cols[13] || "",
-                                            creatorName: cols[14] || config.creatorName || "",
-                                            reviewerName: cols[15] || "",
-                                            status: 'accepted',
-                                            language: cols[16] || fileLanguage || "English" 
-                                        });
+                                lines.slice(1).forEach((line, idx) => {
+                                    if (!line.trim()) return;
+                                    const cols = parseCSVLine(line);
+                                    if (cols.length < 10) return;
+                                    const uniqueId = cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID();
+                                    importedQuestions.push({
+                                        id: Date.now() + idx + Math.random(),
+                                        uniqueId: uniqueId,
+                                        discipline: cols[2] || "Imported",
+                                        type: cols[3] || "Multiple Choice",
+                                        difficulty: cols[4] || "Easy",
+                                        question: cols[5] || "",
+                                        options: { A: cols[6] || "", B: cols[7] || "", C: cols[8] || "", D: cols[9] || "" },
+                                        correct: cols[10] || "",
+                                        dateAdded: cols[11] || new Date().toISOString(),
+                                        sourceUrl: cols[12] || "",
+                                        sourceExcerpt: cols[13] || "",
+                                        creatorName: cols[14] || config.creatorName || "",
+                                        reviewerName: cols[15] || "",
+                                        status: 'accepted',
+                                        language: cols[16] || fileLanguage || "English"
                                     });
-                                    if (importedQuestions.length > 0) {
-                                        addQuestionsToState(importedQuestions, showHistory);
-                                        await checkAndStoreQuestions(importedQuestions);
-                                        showMessage(`Imported ${importedQuestions.length} questions from CSV.`, 4000);
-                                        if (showHistory) {
-                                            loadHistory();
-                                        }
+                                });
+                                if (importedQuestions.length > 0) {
+                                    addQuestionsToState(importedQuestions, showHistory);
+                                    await checkAndStoreQuestions(importedQuestions);
+                                    showMessage(`Imported ${importedQuestions.length} questions from CSV.`, 4000);
+                                    if (showHistory) {
+                                        loadHistory();
                                     }
+                                }
                             } else {
                                 setFiles(prev => [...prev, { name: file.name, content: content, size: file.size }]);
                             }
@@ -1397,13 +1455,13 @@
                 let fileContext = "";
                 if (files.length > 0) {
                     fileContext = "\n\n### ATTACHED LOCAL SOURCE FILES:\n";
-                    files.forEach(f => { 
-                        const content = f.content.substring(0, MAX_FILE_CONTENT_LENGTH); 
+                    files.forEach(f => {
+                        const content = f.content.substring(0, MAX_FILE_CONTENT_LENGTH);
                         const isTruncated = f.content.length > MAX_FILE_CONTENT_LENGTH;
                         fileContext += `\n--- START FILE: ${f.name} (Size: ${f.size} bytes) ---\n`;
                         fileContext += content;
                         if (isTruncated) fileContext += `\n[... File content truncated to ${MAX_FILE_CONTENT_LENGTH} characters for prompt size safety]`;
-                        fileContext += "\n--- END FILE ---\n"; 
+                        fileContext += "\n--- END FILE ---\n";
                     });
                 }
                 return fileContext;
@@ -1419,7 +1477,7 @@
                     if (batchNum % 6 !== 0) batchNum = Math.ceil(batchNum / 6) * 6;
                     const countPerCategory = batchNum / 6;
                     easyCount = countPerCategory; mediumCount = countPerCategory; hardCount = countPerCategory;
-                    targetType = 'Multiple Choice and True/False'; mcCount = countPerCategory * 3; tfCount = countPerCategory * 3; 
+                    targetType = 'Multiple Choice and True/False'; mcCount = countPerCategory * 3; tfCount = countPerCategory * 3;
                 } else {
                     if (difficulty === 'Easy') easyCount = batchNum; else if (difficulty === 'Medium') mediumCount = batchNum; else if (difficulty === 'Hard') hardCount = batchNum;
                     if (type === 'MC') { targetType = 'Multiple Choice ONLY'; mcCount = batchNum; } else if (type === 'T/F') { targetType = 'True/False ONLY'; tfCount = batchNum; }
@@ -1452,48 +1510,52 @@ ${getFileContext()}
 
             const handleGenerate = async () => {
                 if (!config.creatorName) { showMessage("Please enter your Creator Name to start generating.", 5000); setShowNameModal(true); return; }
-                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                if (!isApiReady) { showMessage("API key is required for generation. Please enter it in the settings panel.", 5000); return; }
+
                 if (config.difficulty !== 'Balanced All' && isTargetMet) { showMessage(`Quota met for ${config.difficulty}! Change difficulty/type or discipline to continue.`, 5000); return; }
+
                 setIsGenerating(true); setShowHistory(false); setStatus('Drafting Scenarios...');
                 const systemPrompt = constructSystemPrompt();
                 const userPrompt = `Generate ${config.batchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}. Ensure links work for UE 5.7 or latest available.`;
                 try {
-                    // UPDATED: Pass API key
-                    const text = await generateContent(config.apiKey, systemPrompt, userPrompt, setStatus);
+                    // Pass effectiveKey (which is "" if internal, or user's key if external)
+                    const text = await generateContent(effectiveApiKey, systemPrompt, userPrompt, setStatus);
                     let newQuestions = parseQuestions(text);
                     if (newQuestions.length === 0) throw new Error("Failed to parse generated questions.");
                     // NOTE: We add 'language' property to newly generated questions
                     const taggedQuestions = newQuestions.map(q => ({ ...q, language: config.language }));
                     const uniqueNewQuestions = await checkAndStoreQuestions(taggedQuestions);
-                    
+
                     // SAFE STATE UPDATE
                     addQuestionsToState(uniqueNewQuestions, false);
-                    
+
                     setStatus('');
                 } catch (err) { console.error(err); setStatus('Error'); showMessage(`Generation Error: ${err.message}. Please try again.`, 10000); } finally { setIsGenerating(false); }
             };
 
             const handleDetectTopics = async () => {
                 if (files.length === 0) return;
-                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                if (!isApiReady) { showMessage("API key is required for detection. Please enter it in the settings panel.", 5000); return; }
+
                 setIsDetecting(true); setStatus('Scanning...');
                 const prompt = `Analyze content. Identify 3 prominent technical disciplines. Return ONLY comma-separated list. ${getFileContext()}`;
                 try {
-                    // UPDATED: Pass API key
-                    const detected = await generateContent(config.apiKey, "Technical Analyst", prompt, setStatus);
+                    // Pass effectiveKey
+                    const detected = await generateContent(effectiveApiKey, "Technical Analyst", prompt, setStatus);
                     setConfig(prev => ({ ...prev, discipline: detected.split(',')[0].trim() }));
                     setStatus('Detected'); setTimeout(() => setStatus(''), 2000);
-                } catch (err) { setStatus('Fail'); } finally { setIsDetecting(false); }
+                } catch (err) { setStatus('Failed'); } finally { setIsDetecting(false); }
             };
 
             const handleTranslate = async (fromLang, toLang) => {
                 if (questions.length === 0) return;
-                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                if (!isApiReady) { showMessage("API key is required for translation. Please enter it in the settings panel.", 5000); return; }
+
                 setIsProcessing(true); setStatus(`Translating to ${toLang}...`);
                 let rawTable = "| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
                 questions.forEach((q, i) => {
                     const opts = q.options || {};
-                    rawTable += `| ${i+1} | ${stripHtmlTags(q.discipline)} | ${stripHtmlTags(q.type)} | ${stripHtmlTags(q.difficulty)} | ${stripHtmlTags(q.question)} | | ${stripHtmlTags(opts.A || '')} | ${stripHtmlTags(opts.B || '')} | ${stripHtmlTags(opts.C || '')} | ${stripHtmlTags(opts.D || '')} | ${q.correct} | ${stripHtmlTags(q.sourceUrl)} | ${stripHtmlTags(q.sourceExcerpt)} |\n`;
+                    rawTable += `| ${i + 1} | ${stripHtmlTags(q.discipline)} | ${stripHtmlTags(q.type)} | ${stripHtmlTags(q.difficulty)} | ${stripHtmlTags(q.question)} | | ${stripHtmlTags(opts.A || '')} | ${stripHtmlTags(opts.B || '')} | ${stripHtmlTags(opts.C || '')} | ${stripHtmlTags(opts.D || '')} | ${q.correct} | ${stripHtmlTags(q.sourceUrl)} | ${stripHtmlTags(q.sourceExcerpt)} |\n`;
                 });
                 const prompt = `
                 You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided Markdown table from ${fromLang} to ${toLang}.
@@ -1506,38 +1568,39 @@ ${getFileContext()}
                 Content: ${rawTable}
                 `;
                 try {
-                    // UPDATED: Pass API key
-                    const text = await generateContent(config.apiKey, "You are a translator.", prompt, setStatus);
+                    // Pass effectiveKey
+                    const text = await generateContent(effectiveApiKey, "You are a translator.", prompt, setStatus);
                     const translatedQuestions = parseQuestions(text);
                     if (translatedQuestions.length > 0) {
-                             setQuestions(translatedQuestions.map((tq, i) => ({ ...tq, id: questions[i]?.id || tq.id, status: questions[i]?.status || 'pending' })));
-                             setStatus('Translated');
-                             // Force language update
-                             handleLanguageSwitch(toLang);
+                        setQuestions(translatedQuestions.map((tq, i) => ({ ...tq, id: questions[i]?.id || tq.id, status: questions[i]?.status || 'pending' })));
+                        setStatus('Translated');
+                        // Force language update
+                        handleLanguageSwitch(toLang);
                     }
-                } catch(e) { setStatus('Fail'); } finally { setIsProcessing(false); }
+                } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
             };
 
             // NEW: Handle single question translation (used by flags/codes)
             const handleTranslateSingle = async (q, targetLang) => {
-                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                if (!isApiReady) { showMessage("API key is required for translation. Please enter it in the settings panel.", 5000); return; }
+
                 setIsProcessing(true);
                 setStatus(`Translating question to ${targetLang}...`);
-                
+
                 const rawTable = `| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| 1 | ${q.discipline} | ${q.type} | ${q.difficulty} | ${q.question} | | ${q.options.A} | ${q.options.B} | ${q.options.C || ''} | ${q.options.D || ''} | ${q.correct} | ${q.sourceUrl} | ${q.sourceExcerpt} |`;
 
                 const prompt = `Translate this single row from ${q.language || 'English'} to ${targetLang}. Keep format EXACT. \n${rawTable}`;
 
                 try {
-                    // UPDATED: Pass API key
-                    const text = await generateContent(config.apiKey, "Translator", prompt, setStatus);
+                    // Pass effectiveKey
+                    const text = await generateContent(effectiveApiKey, "Translator", prompt, setStatus);
                     const translatedQs = parseQuestions(text);
                     if (translatedQs.length > 0) {
                         const tq = translatedQs[0];
                         const newQuestion = {
                             ...tq,
                             id: Date.now(),
-                            uniqueId: q.uniqueId, 
+                            uniqueId: q.uniqueId,
                             discipline: q.discipline,
                             type: q.type,
                             difficulty: q.difficulty,
@@ -1545,16 +1608,16 @@ ${getFileContext()}
                             status: 'accepted',
                             dateAdded: new Date().toISOString()
                         };
-                        
+
                         await checkAndStoreQuestions([newQuestion]);
                         addQuestionsToState([newQuestion], showHistory);
-                        
+
                         // Switch the entire view to the new translated language
                         handleLanguageSwitch(targetLang);
 
                         showMessage(`Translated to ${targetLang} and saved.`, 3000);
                     }
-                } catch(e) {
+                } catch (e) {
                     console.error(e);
                     setStatus('Translation Failed');
                 } finally {
@@ -1563,45 +1626,48 @@ ${getFileContext()}
             };
 
             const handleExplain = async (q) => {
-                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                if (!isApiReady) { showMessage("API key is required for explanation. Please enter it in the settings panel.", 5000); return; }
+
                 setIsProcessing(true); setStatus('Explaining...');
                 const prompt = `Explain WHY the answer is correct in simple terms: "${q.question}" Answer: "${q.correct === 'A' ? q.options.A : q.options.B}"`;
                 try {
-                    // UPDATED: Pass API key
-                    const exp = await generateContent(config.apiKey, "Technical Assistant", prompt, setStatus);
+                    // Pass effectiveKey
+                    const exp = await generateContent(effectiveApiKey, "Technical Assistant", prompt, setStatus);
                     const targetSet = showHistory ? setHistoricalQuestions : setQuestions;
                     targetSet(prev => prev.map(i => i.id === q.id ? { ...i, explanation: exp } : i));
                     setStatus('');
                 } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
             };
-            
+
             const handleVariate = async (q) => {
-                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                if (!isApiReady) { showMessage("API key is required for creation. Please enter it in the settings panel.", 5000); return; }
+
                 setIsProcessing(true); setStatus('Creating variations...');
                 const sys = constructSystemPrompt();
                 const prompt = `Generate 2 NEW unique questions based on: "${q.question}". Output in Markdown Table.`;
                 try {
-                    // UPDATED: Pass API key
-                    const text = await generateContent(config.apiKey, sys, prompt, setStatus);
+                    // Pass effectiveKey
+                    const text = await generateContent(effectiveApiKey, sys, prompt, setStatus);
                     const newQs = parseQuestions(text);
-                    if(newQs.length > 0) { 
+                    if (newQs.length > 0) {
                         const uniqueNewQuestions = await checkAndStoreQuestions(newQs);
                         addQuestionsToState(uniqueNewQuestions, showHistory);
-                        
+
                         if (showHistory) showMessage(`Added ${uniqueNewQuestions.length} variations to Session view.`, 4000);
-                        else showMessage(`Added ${uniqueNewQuestions.length} new variations.`, 3000); 
+                        else showMessage(`Added ${uniqueNewQuestions.length} new variations.`, 3000);
                     }
-                } catch(e) { setStatus('Fail'); } finally { setIsProcessing(false); }
+                } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
             };
-            
+
             const handleCritique = async (q) => {
-                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                if (!isApiReady) { showMessage("API key is required for critique. Please enter it in the settings panel.", 5000); return; }
+
                 setIsProcessing(true); setStatus('Critiquing...');
                 const questionDetails = `Question: ${q.question}\nDiscipline: ${q.discipline}\nDifficulty: ${q.difficulty}\nCorrect Answer: ${q.correct}: ${q.options[q.correct] || 'N/A'}`;
                 const systemPrompt = `You are a Technical Writing Editor specialized in Unreal Engine 5 content. Analyze this REJECTED quiz question and provide actionable, numbered suggestions for improvement. Focus on: Clarity and technical accuracy. Output ONLY a brief, numbered list of 3-5 concrete suggestions.`;
                 try {
-                    // UPDATED: Pass API key
-                    const critiqueText = await generateContent(config.apiKey, systemPrompt, `Critique and suggest fixes for the following rejected question:\n${questionDetails}`, setStatus);
+                    // Pass effectiveKey
+                    const critiqueText = await generateContent(effectiveApiKey, systemPrompt, `Critique and suggest fixes for the following rejected question:\n${questionDetails}`, setStatus);
                     const targetSet = showHistory ? setHistoricalQuestions : setQuestions;
                     targetSet(prev => prev.map(i => i.id === q.id ? { ...i, critique: critiqueText } : i));
                     showMessage('Critique Ready', 3000);
@@ -1609,7 +1675,7 @@ ${getFileContext()}
             };
 
             const downloadFile = (data, filename) => {
-                const BOM = "\uFEFF"; 
+                const BOM = "\uFEFF";
                 const finalType = 'text/csv;charset=utf-8;';
                 const blob = new Blob([BOM + data], { type: finalType });
                 const url = URL.createObjectURL(blob);
@@ -1629,7 +1695,7 @@ ${getFileContext()}
                 validQuestions.forEach((row, i) => {
                     const cleanedSourceUrl = row.sourceUrl && !row.sourceUrl.includes("grounding-api") ? row.sourceUrl : "";
                     const o = row.options || {};
-                    const rowData = [ (i + 1).toString(), row.uniqueId, row.discipline, row.type, row.difficulty, row.question, o.A, o.B, o.C, o.D || "", row.correct, generationDate, cleanedSourceUrl, row.sourceExcerpt, creatorName, reviewerName, row.language || "English" ];
+                    const rowData = [(i + 1).toString(), row.uniqueId, row.discipline, row.type, row.difficulty, row.question, o.A, o.B, o.C, o.D || "", row.correct, generationDate, cleanedSourceUrl, row.sourceExcerpt, creatorName, reviewerName, row.language || "English"];
                     csvContent += rowData.map(safe).join(FIELD_DELIMITER) + '\n';
                 });
                 return csvContent;
@@ -1639,7 +1705,7 @@ ${getFileContext()}
                 const sourceList = showHistory ? historicalQuestions : questions;
                 const valid = sourceList.filter(q => q.status !== 'rejected');
 
-                if(valid.length === 0) { showMessage("No accepted questions to export.", 3000); return; }
+                if (valid.length === 0) { showMessage("No accepted questions to export.", 3000); return; }
 
                 // NEW GROUPING: Language, Discipline, Difficulty, Type
                 const groupedData = valid.reduce((acc, q) => {
@@ -1658,11 +1724,11 @@ ${getFileContext()}
                 Object.keys(groupedData).forEach(groupKey => {
                     const groupQuestions = groupedData[groupKey];
                     const csvContent = getCSVContent(groupQuestions, config.creatorName, config.reviewerName);
-                    
+
                     // Format filename: Language_Discipline_Difficulty_Type_Date.csv
                     const fileNameParts = groupKey.replace(/ & /g, '_').replace(/ /g, '_');
-                    const filename = `${fileNameParts}_${datePart}.csv`; 
-                    
+                    const filename = `${fileNameParts}_${datePart}.csv`;
+
                     downloadFile(csvContent, filename);
                     filesGenerated++;
                 });
@@ -1670,17 +1736,17 @@ ${getFileContext()}
                 showMessage(`Exported ${filesGenerated} segmented files.`, 7000);
                 setShowExportMenu(false);
             };
-            
+
             const handleExportCurrentTarget = () => {
                 const sourceList = showHistory ? historicalQuestions : questions;
-                
+
                 const targetString = config.difficulty; // e.g., "Easy MC"
-                
+
                 const [targetDiff, targetTypeAbbrev] = targetString.split(' ');
                 const targetType = targetTypeAbbrev === 'MC' ? 'Multiple Choice' : 'True/False';
 
                 // Filter by current language, discipline, difficulty, and type
-                const valid = sourceList.filter(q => 
+                const valid = sourceList.filter(q =>
                     q.status !== 'rejected' &&
                     (q.language || 'English') === config.language && // Include language filter
                     q.discipline === config.discipline &&
@@ -1693,11 +1759,11 @@ ${getFileContext()}
                     return;
                 }
 
-                const typePart = targetString.replace(/\s/g,'_');
-                const disciplinePart = config.discipline.replace(/\s/g,'_');
+                const typePart = targetString.replace(/\s/g, '_');
+                const disciplinePart = config.discipline.replace(/\s/g, '_');
                 const datePart = new Date().toISOString().split('T')[0].replace(/-/g, '');
                 const langPart = (config.language || 'English').replace(/ /g, '_');
-                
+
                 const csvContent = getCSVContent(valid, config.creatorName, config.reviewerName);
                 const filename = `${langPart}_${disciplinePart}_${typePart}_${datePart}.csv`;
                 downloadFile(csvContent, filename);
@@ -1705,12 +1771,133 @@ ${getFileContext()}
                 setShowExportMenu(false);
             };
 
-            const handleBulkTranslateExport = async (targetLanguages) => {
-                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+            // NEW: Export to Sheets Functionality
+            const handleExportToSheets = async (sheetUrl) => {
                 const sourceList = showHistory ? historicalQuestions : questions;
                 const validQuestions = sourceList.filter(q => q.status !== 'rejected');
 
+                if (validQuestions.length === 0) {
+                    showMessage("No accepted questions to export.", 3000);
+                    return;
+                }
+
+                if (!sheetUrl || !sheetUrl.startsWith('http')) {
+                    showMessage("Please provide a valid Google Apps Script Web App URL.", 5000);
+                    return;
+                }
+
+
+                // Transform into JSON array matching CSV structure (without headers)
+                const payloadData = validQuestions.map((row, i) => {
+                    const cleanedSourceUrl = row.sourceUrl && !row.sourceUrl.includes("grounding-api") ? row.sourceUrl : "";
+                    const o = row.options || {};
+                    // Return data fields in the exact order the Google Apps Script expects (matching CSV format)
+                    return {
+                        id: (i + 1).toString(),
+                        uniqueId: row.uniqueId,
+                        discipline: row.discipline,
+                        type: row.type,
+                        difficulty: row.difficulty,
+                        question: stripHtmlTags(row.question),
+                        optionA: stripHtmlTags(o.A),
+                        optionB: stripHtmlTags(o.B),
+                        optionC: stripHtmlTags(o.C),
+                        optionD: stripHtmlTags(o.D || ""),
+                        correctAnswer: row.correct,
+                        generationDate: formatDate(new Date()),
+
+                        sourceUrl: cleanedSourceUrl,
+
+                        sourceExcerpt: stripHtmlTags(row.sourceExcerpt),
+
+                        creator: config.creatorName,
+
+                        reviewer: config.reviewerName,
+
+                        language: row.language || "English"
+
+                    };
+
+                });
+
+                
+
+                setIsProcessing(true);
+
+                setStatus("Sending data to Google Sheets...");
+
+                setShowExportMenu(false);
+
+
+
+                try {
+
+                    // Google Apps Script expects form-encoded data, not JSON body
+
+                    const formData = new URLSearchParams();
+
+                    formData.append('data', JSON.stringify(payloadData));
+
+                    
+
+                    const response = await fetch(sheetUrl, {
+
+                        method: 'POST',
+
+                        mode: 'no-cors', // Essential for Google Apps Script deployed as Web App
+
+                        headers: {
+
+                            'Content-Type': 'application/x-www-form-urlencoded',
+
+                        },
+
+                        body: formData.toString()
+
+                    });
+
+
+
+                    // Since we use 'no-cors', we can't inspect the response status directly, 
+
+                    // but a successful fetch attempt usually means the script received the request.
+
+                    showMessage(`Data sent to external endpoint. Check Google Sheet for update! (${payloadData.length} rows)`, 7000);
+
+
+
+                } catch (e) {
+
+                    console.error("Error pushing to Sheets endpoint:", e);
+
+                    showMessage(`Error connecting to endpoint. Check URL/Console: ${e.message}`, 10000);
+
+                } finally {
+
+                    setIsProcessing(false);
+
+                }
+
+            };
+
+
+
+
+
+            const handleBulkTranslateExport = async (targetLanguages) => {
+
+                if (!isApiReady) { showMessage("API key is required for bulk translation. Please enter it in the settings panel.", 5000); return; }
+
+
+
+                const sourceList = showHistory ? historicalQuestions : questions;
+
+                const validQuestions = sourceList.filter(q => q.status !== 'rejected');
+
+
+
                 if(validQuestions.length === 0 || targetLanguages.length === 0) return;
+
                 setIsProcessing(true); setTranslationProgress(0);
                 const exportDate = new Date();
                 const datePart = formatDate(exportDate).replace(/-/g, '');
@@ -1740,7 +1927,7 @@ ${getFileContext()}
                                 let rawTable = "| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
                                 batch.forEach((q, i) => {
                                     const opts = q.options || {};
-                                    rawTable += `| ${i+1} | ${stripHtmlTags(q.discipline)} | ${stripHtmlTags(q.type)} | ${stripHtmlTags(q.difficulty)} | ${stripHtmlTags(q.question)} | | ${stripHtmlTags(opts.A || '')} | ${stripHtmlTags(opts.B || '')} | ${stripHtmlTags(opts.C || '')} | ${stripHtmlTags(opts.D || '')} | ${q.correct} | ${stripHtmlTags(q.sourceUrl)} | ${stripHtmlTags(q.sourceExcerpt)} |\n`;
+                                    rawTable += `| ${i + 1} | ${stripHtmlTags(q.discipline)} | ${stripHtmlTags(q.type)} | ${stripHtmlTags(q.difficulty)} | ${stripHtmlTags(q.question)} | | ${stripHtmlTags(opts.A || '')} | ${stripHtmlTags(opts.B || '')} | ${stripHtmlTags(opts.C || '')} | ${stripHtmlTags(opts.D || '')} | ${q.correct} | ${stripHtmlTags(q.sourceUrl)} | ${stripHtmlTags(q.sourceExcerpt)} |\n`;
                                 });
 
                                 const sourceLang = config.language;
@@ -1753,22 +1940,22 @@ ${getFileContext()}
                                     4. **Translate ALL rows. Do not summarize or skip any rows.**
                                     5. Ensure you use standard half-width pipe characters (|) for column separators, not full-width (｜).
                                     `;
-                                
-                                // UPDATED: Pass API key
-                                const translatedText = await generateContent(config.apiKey, systemPrompt, `Translate the following ${sourceLang} question bank table to ${targetLang}:\n${rawTable}`, setStatus);
+
+                                // Pass effectiveKey
+                                const translatedText = await generateContent(effectiveApiKey, systemPrompt, `Translate the following ${sourceLang} question bank table to ${targetLang}:\n${rawTable}`, setStatus);
                                 const translatedQuestions = parseQuestions(translatedText);
 
                                 const remappedBatch = translatedQuestions.map((tq, i) => ({
                                     ...tq,
-                                    id: Date.now() + Math.random(), 
-                                    uniqueId: batch[i]?.uniqueId || tq.uniqueId, 
+                                    id: Date.now() + Math.random(),
+                                    uniqueId: batch[i]?.uniqueId || tq.uniqueId,
                                     discipline: batch[i].discipline,
                                     type: batch[i].type,
                                     difficulty: batch[i].difficulty,
-                                    language: targetLang, 
+                                    language: targetLang,
                                     status: 'accepted'
                                 }));
-                                
+
                                 await checkAndStoreQuestions(remappedBatch);
 
                                 finalTranslatedGroup.push(...remappedBatch);
@@ -1798,23 +1985,23 @@ ${getFileContext()}
 
             const handleBulkTranslateMissing = async () => {
                 if (isProcessing) return;
-                if (!config.apiKey) { showMessage("Please enter your Gemini API Key in the settings panel.", 5000); return; }
+                if (!isApiReady) { showMessage("API key is required for bulk translation. Please enter it in the settings panel.", 5000); return; }
 
                 setIsProcessing(true);
                 setShowHistory(false);
-                
+
                 // 1. Identify unique questions that need CN, JP, or KR translations
                 const targetLangs = ['Chinese (Simplified)', 'Japanese', 'Korean'];
                 const translationQueue = [];
-                
+
                 // Find English/Base versions
-                const baseQuestions = Array.from(allQuestionsMap.values()).map(variants => 
+                const baseQuestions = Array.from(allQuestionsMap.values()).map(variants =>
                     variants.find(v => (v.language || 'English') === 'English') || variants[0]
                 );
 
                 baseQuestions.forEach(q => {
                     const existingLangs = translationMap.get(q.uniqueId) || new Set();
-                    
+
                     targetLangs.forEach(targetLang => {
                         if (q.status === 'accepted' && !existingLangs.has(targetLang)) {
                             // Only queue accepted, missing translations
@@ -1841,8 +2028,8 @@ ${getFileContext()}
 
                     try {
                         setStatus(`Translating: ${q.uniqueId.substring(0, 4)} -> ${targetLang}...`);
-                        // UPDATED: Pass API key
-                        const text = await generateContent(config.apiKey, systemPrompt, prompt, setStatus);
+                        // Pass effectiveKey
+                        const text = await generateContent(effectiveApiKey, systemPrompt, prompt, setStatus);
                         const translatedQs = parseQuestions(text);
 
                         if (translatedQs.length > 0) {
@@ -1850,7 +2037,7 @@ ${getFileContext()}
                             const newQuestion = {
                                 ...tq,
                                 id: Date.now() + Math.random(),
-                                uniqueId: q.uniqueId, 
+                                uniqueId: q.uniqueId,
                                 discipline: q.discipline,
                                 type: q.type,
                                 difficulty: q.difficulty,
@@ -1858,7 +2045,7 @@ ${getFileContext()}
                                 status: 'accepted',
                                 dateAdded: new Date().toISOString()
                             };
-                            
+
                             await checkAndStoreQuestions([newQuestion]);
                             addQuestionsToState([newQuestion], showHistory);
                             generatedCount++;
@@ -1866,7 +2053,7 @@ ${getFileContext()}
                     } catch (e) {
                         console.error(`Failed to generate translation for ${q.uniqueId} to ${targetLang}:`, e);
                     }
-                    
+
                     totalProgress = Math.floor((generatedCount / totalQueueSize) * 100);
                     setTranslationProgress(totalProgress);
                 }
@@ -1880,9 +2067,9 @@ ${getFileContext()}
                 const targetSet = showHistory ? setHistoricalQuestions : setQuestions;
                 targetSet(prev => prev.map(q => q.id === id ? { ...q, status: newStatus, critique: newStatus === 'accepted' ? null : q.critique } : q));
             };
-            
-            const handleSelectCategory = (categoryKey) => { 
-                setConfig(prev => ({ ...prev, difficulty: categoryKey })); 
+
+            const handleSelectCategory = (categoryKey) => {
+                setConfig(prev => ({ ...prev, difficulty: categoryKey }));
             };
 
             // --- ALL FILTERING LOGIC COMBINED (useMemo provides stable array) ---
@@ -1892,34 +2079,34 @@ ${getFileContext()}
                 const targetDifficulty = config.difficulty.split(' ')[0];
                 const targetTypeAbbrev = config.difficulty.split(' ')[1];
                 const targetType = targetTypeAbbrev === 'MC' ? 'Multiple Choice' : 'True/False';
-                
+
                 // 1. Apply Global Filters (Status, Search Term, Creator, and DISCIPLINE)
                 const filteredByGlobal = sourceList.filter(q => {
-                    
+
                     // --- FIX: Ensure status filter works correctly for session questions ---
                     let statusMatch = true;
                     if (!showHistory && filterMode !== 'all') {
                         statusMatch = q.status === filterMode;
                     }
-                    
-                    const textMatch = (q.question && q.question.toLowerCase().includes(searchTerm.toLowerCase())) || 
-                                             (q.uniqueId && q.uniqueId.toLowerCase().includes(searchTerm.toLowerCase())) || 
-                                             (q.discipline && q.discipline.toLowerCase().includes(searchTerm.toLowerCase())) || 
-                                             (q.difficulty && q.difficulty.toLowerCase().includes(searchTerm.toLowerCase()));
-                    
+
+                    const textMatch = (q.question && q.question.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                        (q.uniqueId && q.uniqueId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                        (q.discipline && q.discipline.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                        (q.difficulty && q.difficulty.toLowerCase().includes(searchTerm.toLowerCase()));
+
                     let creatorMatch = true;
                     if (filterByCreator && config.creatorName) {
                         const qCreator = (q.creatorName || '').toLowerCase().trim();
                         const configCreator = config.creatorName.toLowerCase().trim();
                         creatorMatch = (qCreator === configCreator);
                     }
-                    
+
                     // --- Discipline Filter (REQUIRED by user) ---
                     const disciplineMatch = q.discipline === config.discipline;
 
                     return statusMatch && textMatch && creatorMatch && disciplineMatch;
                 });
-                
+
                 // 2. Group by uniqueId
                 const grouped = new Map();
                 filteredByGlobal.forEach(q => {
@@ -1932,21 +2119,21 @@ ${getFileContext()}
 
                 // 3. For each unique question ID, select the best language version AND apply category filter
                 grouped.forEach((variants) => {
-                    
+
                     // Filter variants by Difficulty/Type based on sidebar selection
                     let filteredVariants = variants;
                     if (config.difficulty !== 'Balanced All') {
                         filteredVariants = variants.filter(v => {
-                             const qDiff = (v.difficulty || '').toLowerCase();
-                             const vType = (v.type || '').toLowerCase();
-                             return (qDiff === targetDifficulty.toLowerCase() && vType === targetType.toLowerCase());
+                            const qDiff = (v.difficulty || '').toLowerCase();
+                            const vType = (v.type || '').toLowerCase();
+                            return (qDiff === targetDifficulty.toLowerCase() && vType === targetType.toLowerCase());
                         });
                     }
 
                     if (filteredVariants.length === 0) return; // Skip if no variant matches difficulty/type filter
 
                     let selected = null;
-                    
+
                     // A. Try to find an exact language match
                     selected = filteredVariants.find(v => (v.language || 'English') === currentLanguage);
 
@@ -1954,12 +2141,12 @@ ${getFileContext()}
                     if (!selected) {
                         selected = filteredVariants.find(v => (v.language || 'English') === 'English');
                     }
-                    
+
                     // C. Fallback 2: Any available language (take the first one)
                     if (!selected) {
-                       selected = filteredVariants[0];
+                        selected = filteredVariants[0];
                     }
-                    
+
                     if (selected) {
                         finalDisplayList.push(selected);
                     }
@@ -1970,7 +2157,7 @@ ${getFileContext()}
 
             // Expose the raw array for UI checks outside useMemo
             const filteredQuestions = uniqueFilteredQuestions;
-            
+
             // Calculate overall stats for visibility
             const totalApproved = useMemo(() => {
                 return CATEGORY_KEYS.reduce((sum, key) => sum + approvedCounts[key], 0);
@@ -1980,7 +2167,7 @@ ${getFileContext()}
                 return Math.min(100, (totalApproved / TARGET_TOTAL) * 100);
             }, [totalApproved]);
 
-            const apiKeyStatus = config.apiKey.length > 5 ? 'Loaded' : 'Missing';
+            const apiKeyStatus = isInternalEnvironment ? 'Auto-Auth' : (config.apiKey.length > 5 ? 'Loaded' : 'Missing');
 
             const handleModeSelect = (mode) => {
                 setAppMode(mode);
@@ -2006,36 +2193,37 @@ ${getFileContext()}
                 <div className="flex flex-col h-screen bg-slate-950 font-sans text-slate-200">
                     {config.creatorName === '' && <NameEntryModal onSave={handleNameSave} />}
                     {showClearModal && <ClearConfirmationModal onConfirm={handleDeleteAllQuestions} onCancel={() => setShowClearModal(false)} />}
-                    
+
                     {/* NEW: Blocking Export Modal */}
                     <BlockingProcessModal isProcessing={isProcessing} status={status} translationProgress={translationProgress} />
 
                     {showExportMenu && (
-                        <ExportOptionsModal 
-                            onClose={() => setShowExportMenu(false)} 
+                        <ExportOptionsModal
+                            onClose={() => setShowExportMenu(false)}
                             children={
-                                <ExportOptions 
-                                    onExportByGroup={handleExportByGroup} 
-                                    onBulkTranslateExport={handleBulkTranslateExport} 
-                                    onExportCurrentTarget={handleExportCurrentTarget} 
-                                    currentTarget={config.difficulty} 
-                                    isProcessing={isProcessing} 
+                                <ExportOptions
+                                    onExportByGroup={handleExportByGroup}
+                                    onBulkTranslateExport={handleBulkTranslateExport}
+                                    onExportCurrentTarget={handleExportCurrentTarget}
+                                    onExportToSheets={handleExportToSheets} // Pass new function
+                                    currentTarget={config.difficulty}
+                                    isProcessing={isProcessing}
                                     onClose={() => setShowExportMenu(false)}
-                                    creatorName={config.creatorName} 
-                                    reviewerName={config.reviewerName} 
-                                    approvedCount={approvedCounts[config.difficulty] || 0} 
-                                    translationProgress={translationProgress} 
+                                    creatorName={config.creatorName}
+                                    reviewerName={config.reviewerName}
+                                    approvedCount={approvedCounts[config.difficulty] || 0}
+                                    translationProgress={translationProgress}
                                 />
                             }
                         />
                     )}
-                    
+
                     <Header apiKeyStatus={apiKeyStatus} isCloudReady={isCloudReady} onHome={handleGoHome} creatorName={config.creatorName} />
                     <div className="flex flex-1 overflow-hidden">
                         {/* Sidebar: Only show in Creation Mode */}
                         {appMode === 'create' && (
                             <aside className="w-80 flex-shrink-0 z-10 shadow-xl border-r border-slate-700 bg-slate-950 p-6 overflow-y-auto flex flex-col gap-6">
-                                
+
                                 {/* NEW OVERALL PROGRESS BOX */}
                                 <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-3">
                                     <div className="text-center">
@@ -2052,50 +2240,51 @@ ${getFileContext()}
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <GranularProgress approvedCounts={approvedCounts} target={TARGET_PER_CATEGORY} isTargetMet={isTargetMet} selectedDifficulty={config.difficulty} handleSelectCategory={handleSelectCategory} />
-                                
+
                                 {/* API Key Configuration */}
                                 <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-2">
                                     <div className="flex items-center">
                                         <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
-                                            <Icon name="key" size={12}/> Gemini API Key
+                                            <Icon name="key" size={12} /> Gemini API Key
                                         </label>
-                                        <InfoTooltip text="Enter your personal Gemini API key here. This is required for generation and persistence." />
+                                        <InfoTooltip text="Enter your personal Gemini API key here. Required if running outside the Canvas environment." />
                                     </div>
-                                    <input 
+                                    <input
                                         type="password"
                                         name="apiKey"
                                         value={config.apiKey}
                                         onChange={handleChange}
                                         className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500"
-                                        placeholder="Enter your key..."
+                                        placeholder={isInternalEnvironment ? "Auto-Auth Enabled" : "Enter your key..."}
+                                        disabled={isInternalEnvironment}
                                     />
-                                    <div className={`text-xs font-mono text-right ${apiKeyStatus === 'Loaded' ? 'text-green-500' : 'text-red-500'}`}>
+                                    <div className={`text-xs font-mono text-right ${apiKeyStatus.includes('Loaded') || apiKeyStatus.includes('Auto') ? 'text-green-500' : 'text-red-500'}`}>
                                         {apiKeyStatus}
                                     </div>
                                 </div>
 
                                 <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner">
                                     <div className="flex items-center mb-2">
-                                        <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2"><Icon name="hash" size={12}/> Batch Size (Max {maxBatchSize})</label>
+                                        <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2"><Icon name="hash" size={12} /> Batch Size (Max {maxBatchSize})</label>
                                         <InfoTooltip text="Number of questions to generate in one batch. Dynamically capped by remaining quota." />
                                     </div>
                                     <input type="number" min="1" max={maxBatchSize} name="batchSize" value={config.batchSize} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500" placeholder="e.g. 6, 12, 18" />
                                 </div>
                                 <div className="pb-4 space-y-3">
-                                    <button onClick={handleGenerate} disabled={isGenerating || isTargetMet || maxBatchSize === 0 || !config.apiKey} className={`w-full py-4 px-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isGenerating || isTargetMet || maxBatchSize === 0 || !config.apiKey ? 'bg-slate-700 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 active:scale-[0.98]'}`}>
-                                        {isGenerating ? <><Icon name="loader" size={16} className="animate-spin"/> GENERATING...</> : <><Icon name="book-open" size={16}/> GENERATE QUESTIONS</>}
+                                    <button onClick={handleGenerate} disabled={isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady} className={`w-full py-4 px-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady ? 'bg-slate-700 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 active:scale-[0.98]'}`}>
+                                        {isGenerating ? <><Icon name="loader" size={16} className="animate-spin" /> GENERATING...</> : <><Icon name="book-open" size={16} /> GENERATE QUESTIONS</>}
                                     </button>
-                                    
-                                    <button onClick={handleBulkTranslateMissing} disabled={isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !config.apiKey} className={`w-full py-2 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all border ${isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !config.apiKey ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-indigo-950/50 text-indigo-400 hover:bg-indigo-900/50 border-indigo-700'}`}>
-                                        <Icon name="languages" size={14}/> BULK TRANSLATE (CN/JP/KR)
+
+                                    <button onClick={handleBulkTranslateMissing} disabled={isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady} className={`w-full py-2 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all border ${isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-indigo-950/50 text-indigo-400 hover:bg-indigo-900/50 border-indigo-700'}`}>
+                                        <Icon name="languages" size={14} /> BULK TRANSLATE (CN/JP/KR)
                                     </button>
                                 </div>
                                 <div className="space-y-4">
-                                    
+
                                     <div className="space-y-1">
-                                        <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Discipline</label><InfoTooltip text="Topic focus"/></div>
+                                        <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Discipline</label><InfoTooltip text="Topic focus" /></div>
                                         <select name="discipline" value={config.discipline} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
                                             <option value="Technical Art">Technical Art</option><option value="Animation & Rigging">Animation & Rigging</option><option value="Game Logic & Systems">Game Logic & Systems</option><option value="Look Development (Materials)">Look Development (Materials)</option><option value="Networking">Networking</option><option value="C++ Programming">C++ Programming</option><option value="VFX (Niagara)">VFX (Niagara)</option><option value="World Building & Level Design">World Building & Level Design</option><option value="Blueprints">Blueprints</option><option value="Lighting & Rendering">Lighting & Rendering</option>
                                         </select>
@@ -2108,17 +2297,17 @@ ${getFileContext()}
                                     </div>
                                 </div>
                                 <div className="mt-auto pt-6 border-t border-slate-800 space-y-3">
-                                    <div className="flex justify-between items-end"><label className="text-xs font-bold uppercase text-slate-400">Source Files</label>{files.length > 0 && <button onClick={handleDetectTopics} disabled={isDetecting || !config.apiKey} className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50">{isDetecting ? "..." : "Detect"}</button>}</div>
-                                    <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-900 cursor-pointer text-center bg-slate-900/50"><Icon name="upload" className="mx-auto text-slate-600 mb-2"/><p className="text-xs text-slate-500">Upload .csv</p><input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" /></div>
-                                    {files.map((f,i) => <div key={i} className="flex justify-between bg-slate-900 p-2 rounded border border-slate-800 text-xs text-slate-400"><span className="truncate">{f.name}</span><button onClick={()=>removeFile(i)} className="text-red-500">x</button></div>)}
+                                    <div className="flex justify-between items-end"><label className="text-xs font-bold uppercase text-slate-400">Source Files</label>{files.length > 0 && <button onClick={handleDetectTopics} disabled={isDetecting || !isApiReady} className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50">{isDetecting ? "..." : "Detect"}</button>}</div>
+                                    <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-900 cursor-pointer text-center bg-slate-900/50"><Icon name="upload" className="mx-auto text-slate-600 mb-2" /><p className="text-xs text-slate-500">Upload .csv</p><input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" /></div>
+                                    {files.map((f, i) => <div key={i} className="flex justify-between bg-slate-900 p-2 rounded border border-slate-800 text-xs text-slate-400"><span className="truncate">{f.name}</span><button onClick={() => removeFile(i)} className="text-red-500">x</button></div>)}
                                 </div>
                             </aside>
                         )}
                         <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
                             <div className="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900 shadow-md z-10">
                                 <div className="flex gap-4 items-center">
-                                    {isAuthReady ? (<>{status && <span className="text-xs text-orange-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="loader" size={12} className="animate-spin"/> {status}</span>}{!status && <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Icon name="database" size={14}/> DB Ready</span>}</>) : (<span className="text-xs text-yellow-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="plug" size={12} className="animate-pulse"/> Connecting to DB...</span>)}
-                                    
+                                    {isAuthReady ? (<>{status && <span className="text-xs text-orange-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="loader" size={12} className="animate-spin" /> {status}</span>}{!status && <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Icon name="database" size={14} /> DB Ready</span>}</>) : (<span className="text-xs text-yellow-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="plug" size={12} className="animate-pulse" /> Connecting to DB...</span>)}
+
                                     {/* Only show filters/stats if NOT in Review Mode, or if Review Mode and data loaded */}
                                     {appMode === 'review' && (
                                         <div className="flex gap-2 items-center ml-4">
@@ -2132,9 +2321,9 @@ ${getFileContext()}
                                 <div className="flex gap-2 items-center bg-slate-950 p-1 rounded-lg border border-slate-800 shadow-inner">
                                     {/* Only show history toggle in Creation Mode */}
                                     {appMode === 'create' && (
-                                        <button onClick={handleToggleHistory} className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${showHistory ? 'bg-purple-600 text-white shadow-md shadow-purple-900/50' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50'}`} title={showHistory ? 'Back to Current Session' : 'View Full Question History'}><Icon name={showHistory ? 'list' : 'archive'} size={12}/>{showHistory ? 'Current Session' : 'Full History'} <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">{showHistory ? historicalQuestions.length : questions.length}</span></button>
+                                        <button onClick={handleToggleHistory} className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${showHistory ? 'bg-purple-600 text-white shadow-md shadow-purple-900/50' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50'}`} title={showHistory ? 'Back to Current Session' : 'View Full Question History'}><Icon name={showHistory ? 'list' : 'archive'} size={12} />{showHistory ? 'Current Session' : 'Full History'} <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">{showHistory ? historicalQuestions.length : questions.length}</span></button>
                                     )}
-                                    
+
                                     {/* In Review Mode or History view, filter by status makes sense */}
                                     {((!showHistory && questions.length > 0) || (showHistory && historicalQuestions.length > 0) || appMode === 'review') && (
                                         <>
@@ -2146,14 +2335,14 @@ ${getFileContext()}
                                             <FilterButton mode="rejected" current={filterMode} setFilter={setFilterMode} label="Rejected" count={rejectedCount} />
                                         </>
                                     )}
-                                    
+
                                     <div className="w-px h-4 bg-slate-700 mx-1"></div>
-                                    <button 
-                                        onClick={() => setFilterByCreator(!filterByCreator)} 
+                                    <button
+                                        onClick={() => setFilterByCreator(!filterByCreator)}
                                         className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${filterByCreator ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
                                         title={filterByCreator ? `Showing only items by ${config.creatorName}` : 'Showing all items from everyone'}
                                     >
-                                        <Icon name="user-check" size={12}/> 
+                                        <Icon name="user-check" size={12} />
                                         {filterByCreator ? 'My Questions Only' : 'All Creators'}
                                     </button>
                                 </div>
@@ -2163,26 +2352,26 @@ ${getFileContext()}
                                             {/* Hide Save to Cloud in Review Mode (it's auto-synced/historical) unless editing happens locally */}
                                             {appMode === 'create' && !showHistory && questions.length > 0 && (
                                                 <div className="flex gap-1 mr-2 border-r border-slate-700 pr-3">
-                                                    <button onClick={handleSyncToDatabase} disabled={isProcessing} className="px-3 py-1.5 text-xs font-medium text-blue-400 bg-blue-900/20 border border-blue-800/50 rounded hover:bg-blue-900/40 flex items-center gap-1" title="Save to cloud"><Icon name="cloud-upload" size={12}/> Save to Cloud</button>
+                                                    <button onClick={handleSyncToDatabase} disabled={isProcessing} className="px-3 py-1.5 text-xs font-medium text-blue-400 bg-blue-900/20 border border-blue-800/50 rounded hover:bg-blue-900/40 flex items-center gap-1" title="Save to cloud"><Icon name="cloud-upload" size={12} /> Save to Cloud</button>
                                                 </div>
                                             )}
-                                            
+
                                             <div className="flex gap-1 mr-2 border-r border-slate-700 pr-3">
-                                                <button onClick={() => setShowExportMenu(true)} disabled={isProcessing} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-900/20 border border-emerald-800/50 rounded hover:bg-emerald-900/40" title="View Export Options"><Icon name="download" size={12}/> Export Options</button>
+                                                <button onClick={() => setShowExportMenu(true)} disabled={isProcessing} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-900/20 border border-emerald-800/50 rounded hover:bg-emerald-900/40" title="View Export Options"><Icon name="download" size={12} /> Export Options</button>
                                             </div>
-                                            
-                                            <button onClick={() => setShowClearModal(true)} className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-red-400 flex items-center gap-1"><Icon name="trash-2" size={12}/> Clear</button>
+
+                                            <button onClick={() => setShowClearModal(true)} className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-red-400 flex items-center gap-1"><Icon name="trash-2" size={12} /> Clear</button>
                                         </>
                                     )}
                                 </div>
                             </div>
-                            
+
                             {/* Search and Filter Bar - Full Width */}
                             <div className="p-4 border-b border-slate-800 bg-slate-900 flex items-center gap-3">
                                 <Icon name="search" size={18} className="text-slate-500 flex-shrink-0" />
                                 <input type="text" placeholder="Search by ID, Question Text, Option, or Discipline..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-900 text-slate-300 placeholder-slate-600 border-none outline-none focus:ring-0 text-sm" />
                                 {searchTerm && (<button onClick={() => setSearchTerm('')} className="text-slate-500 hover:text-red-400 p-1 rounded"><Icon name="x" size={16} /></button>)}
-                                
+
                                 {/* In Review Mode, add a Language Filter Dropdown here since sidebar is gone */}
                                 {appMode === 'review' && (
                                     <div className="flex items-center gap-2 ml-4 border-l border-slate-700 pl-4">
@@ -2195,30 +2384,30 @@ ${getFileContext()}
                             </div>
 
                             <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4">
-                                {!showHistory && uniqueFilteredQuestions.length === 0 && questions.length === 0 && !status && appMode === 'create' && (<div className="flex flex-col items-center justify-center h-full text-slate-600"><Icon name="terminal" size={48} className="mb-4 text-slate-800"/><p className="font-medium text-slate-500">Ready. Click 'GENERATE QUESTIONS' to begin or upload a source file.</p></div>)}
-                                
+                                {!showHistory && uniqueFilteredQuestions.length === 0 && questions.length === 0 && !status && appMode === 'create' && (<div className="flex flex-col items-center justify-center h-full text-slate-600"><Icon name="terminal" size={48} className="mb-4 text-slate-800" /><p className="font-medium text-slate-500">Ready. Click 'GENERATE QUESTIONS' to begin or upload a source file.</p></div>)}
+
                                 {uniqueFilteredQuestions.map(q => (
-                                    <QuestionItem 
-                                        key={q.uniqueId} 
-                                        q={q} 
-                                        onUpdateStatus={handleUpdateStatus} 
-                                        onExplain={handleExplain} 
-                                        onVariate={handleVariate} 
+                                    <QuestionItem
+                                        key={q.uniqueId}
+                                        q={q}
+                                        onUpdateStatus={handleUpdateStatus}
+                                        onExplain={handleExplain}
+                                        onVariate={handleVariate}
                                         onCritique={handleCritique}
                                         onTranslateSingle={handleTranslateSingle}
                                         onSwitchLanguage={handleLanguageSwitch}
-                                        availableLanguages={translationMap.get(q.uniqueId)} 
-                                        isProcessing={isProcessing} 
+                                        availableLanguages={translationMap.get(q.uniqueId)}
+                                        isProcessing={isProcessing}
                                     />
                                 ))}
-                                
+
                                 {uniqueFilteredQuestions.length === 0 && filteredQuestions.length > 0 && (
                                     <div className="flex flex-col items-center justify-center h-full text-slate-600 pt-10">
-                                        <Icon name="filter" size={32} className="mb-3 text-slate-800"/>
+                                        <Icon name="filter" size={32} className="mb-3 text-slate-800" />
                                         <p className="font-medium text-slate-500">No questions match current filters.</p>
                                         {filterByCreator && (
                                             <p className="text-xs text-slate-600 mt-2">
-                                                Filtering by Creator: <span className="text-blue-500 font-bold">{config.creatorName}</span>. 
+                                                Filtering by Creator: <span className="text-blue-500 font-bold">{config.creatorName}</span>.
                                                 <button onClick={() => setFilterByCreator(false)} className="ml-2 underline hover:text-blue-400">Show All Creators?</button>
                                             </p>
                                         )}
@@ -2235,4 +2424,5 @@ ${getFileContext()}
         root.render(<App />);
     </script>
 </body>
+
 </html>
