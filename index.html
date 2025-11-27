@@ -216,8 +216,18 @@
                     } else {
                         insideQuote = !insideQuote;
                     }
+                } else if (char === ',' && !insideQuote) {
+                    result.push(cell);
+                    cell = '';
+                } else {
+                    cell += char;
+                }
+            }
+            result.push(cell);
+            return result;
+        };
 
-                    const generateContent = async (effectiveKey, systemPrompt, userPrompt, setStatus) => {
+        const generateContent = async (effectiveKey, systemPrompt, userPrompt, setStatus) => {
                         // Note: If effectiveKey is "", the platform runtime will inject the correct key.
                         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${effectiveKey}`;
 
