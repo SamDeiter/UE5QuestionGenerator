@@ -39,7 +39,7 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
     const getDiffBadgeColor = (d) => {
         switch (d?.toLowerCase()) {
             case 'easy': return 'bg-green-950 text-green-400 border-green-900';
-            case 'medium': return 'bg-yellow-950 text-yellow-400 border-yellow-900';
+            case 'medium': return 'bg-yellow-950 text-amber-300 border-yellow-900';
             case 'hard': return 'bg-red-950 text-red-400 border-red-900';
             default: return 'bg-slate-800 text-slate-400 border-slate-700';
         }
@@ -82,6 +82,7 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                         onClick={(e) => handleFlagClick(e, lang)}
                         className="p-0.5 rounded border border-slate-700 hover:border-indigo-500 hover:scale-110 transition-all opacity-100"
                         title={`Switch to ${lang} translation`}
+                        aria-label={`Switch to ${lang} translation`}
                     >
                         <FlagIcon code={langCode} size={18} />
                     </button>
@@ -96,6 +97,7 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                     disabled={isProcessing}
                     className={`p-0.5 rounded border transition-all relative ${isLoading ? 'border-orange-500 animate-pulse' : 'border-slate-800 opacity-50 hover:opacity-100 hover:scale-110'}`}
                     title={`Generate ${lang} translation`}
+                    aria-label={`Generate ${lang} translation`}
                 >
                     {isLoading ? <Icon name="loader" size={18} className="animate-spin text-orange-500" /> : (
                         <div className="relative flex items-center justify-center">
@@ -119,18 +121,18 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                 <div className="flex justify-between items-start">
                     <div className="flex flex-col gap-1">
                         <div className="flex gap-2 items-center">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${getDiffBadgeColor(q.difficulty)}`}>{q.difficulty}</span>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">{q.type === 'True/False' ? 'T/F' : 'MC'}</span>
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(q.difficulty)}`}>{q.difficulty}</span>
+                            <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">{q.type === 'True/False' ? 'T/F' : 'MC'}</span>
 
                             {/* Creator / Reviewer Info - Moved to Top */}
                             <div className="flex items-center gap-2 ml-1 border-l border-slate-700/50 pl-2">
-                                <div className="flex items-center gap-1 text-[10px] text-slate-500" title="Creator">
-                                    <Icon name="user" size={10} />
+                                <div className="flex items-center gap-1 text-xs text-slate-500" title="Creator">
+                                    <Icon name="user" size={12} />
                                     <span className="font-bold text-slate-400">{q.creatorName || 'N/A'}</span>
                                 </div>
                                 {q.reviewerName && q.reviewerName !== q.creatorName && (
-                                    <div className="flex items-center gap-1 text-[10px] text-slate-500" title="Reviewer">
-                                        <Icon name="check" size={10} />
+                                    <div className="flex items-center gap-1 text-xs text-slate-500" title="Reviewer">
+                                        <Icon name="check" size={12} />
                                         <span className="font-bold text-indigo-400">{q.reviewerName}</span>
                                     </div>
                                 )}
@@ -141,7 +143,11 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                     <div className="flex items-center gap-2">
                         {/* More Menu */}
                         <div className="relative" ref={menuRef}>
-                            <button onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
+                                className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
+                                aria-label="More options"
+                            >
                                 <Icon name="more-vertical" size={16} />
                             </button>
 
@@ -184,14 +190,29 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
 
                         {/* Action Buttons (Large) */}
                         <div className="flex items-center gap-2">
-                            <button onClick={() => onUpdateStatus(q.id, 'accepted')} className={`p-2 rounded-lg transition-all ${q.status === 'accepted' ? 'bg-green-600 text-white shadow-lg shadow-green-900/50' : 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'}`} title="Accept">
+                            <button
+                                onClick={() => onUpdateStatus(q.id, 'accepted')}
+                                className={`p-2 rounded-lg transition-all ${q.status === 'accepted' ? 'bg-green-600 text-white shadow-lg shadow-green-900/50' : 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'}`}
+                                title="Accept"
+                                aria-label="Accept question"
+                            >
                                 <Icon name="check" size={18} />
                             </button>
-                            <button onClick={() => onUpdateStatus(q.id, 'rejected')} className={`p-2 rounded-lg transition-all ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'bg-slate-800 text-slate-500 hover:bg-red-900/20 hover:text-red-500'}`} title="Reject">
+                            <button
+                                onClick={() => onUpdateStatus(q.id, 'rejected')}
+                                className={`p-2 rounded-lg transition-all ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'bg-slate-800 text-slate-500 hover:bg-red-900/20 hover:text-red-500'}`}
+                                title="Reject"
+                                aria-label="Reject question"
+                            >
                                 <Icon name="x" size={18} />
                             </button>
                             {isRejected && (
-                                <button onClick={() => onDelete(q.id)} className="p-2 rounded-lg transition-all bg-slate-900 text-red-400 hover:bg-red-900/30 hover:text-red-300 border border-red-900/50" title="Delete Permanently">
+                                <button
+                                    onClick={() => onDelete(q.id)}
+                                    className="p-2 rounded-lg transition-all bg-slate-900 text-red-400 hover:bg-red-900/30 hover:text-red-300 border border-red-900/50"
+                                    title="Delete Permanently"
+                                    aria-label="Delete question permanently"
+                                >
                                     <Icon name="trash-2" size={18} />
                                 </button>
                             )}
@@ -206,10 +227,10 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
             </div>
 
             <div className="mb-4">
-                <h3 className={`text-sm font-medium leading-relaxed ${q.status === 'rejected' ? 'text-slate-600 line-through decoration-slate-700' : 'text-slate-200'}`} dangerouslySetInnerHTML={{ __html: sanitizeText(q.question) }} />
+                <h3 className={`text-base font-medium leading-relaxed ${q.status === 'rejected' ? 'text-slate-600 line-through decoration-slate-700' : 'text-slate-200'}`} dangerouslySetInnerHTML={{ __html: sanitizeText(q.question) }} />
                 <div className="flex items-center gap-3 mt-2">
                     {q.sourceUrl && (
-                        <div className="flex items-center gap-1.5 text-[10px] text-blue-500 truncate max-w-[70%]">
+                        <div className="flex items-center gap-1.5 text-xs text-blue-500 truncate max-w-[70%]">
                             <Icon name="external-link" size={12} className="flex-shrink-0" />
                             <a href={formatUrl(q.sourceUrl)} target="_blank" rel="noreferrer" className="hover:underline truncate text-blue-500 hover:text-blue-400">{q.sourceUrl}</a>
                         </div>
@@ -230,7 +251,7 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                         // SAFEGUARD: If option text is missing/empty, show placeholder to maintain layout
                         const optionText = val && val.trim() ? val : "(Empty)";
                         return (
-                            <div key={key} className={`text-xs p-2 rounded border transition-all ${isCorrect ? 'bg-green-700/50 border-green-400 text-white shadow-[0_0_10px_-3px_rgba(34,197,94,0.5)]' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
+                            <div key={key} className={`text-sm p-2 rounded border transition-all ${isCorrect ? 'bg-green-700/50 border-green-400 text-white shadow-[0_0_10px_-3px_rgba(34,197,94,0.5)]' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
                                 <span className={`font-bold mr-2 ${isCorrect ? 'text-white' : 'text-slate-600'}`}>{key})</span>
                                 <span dangerouslySetInnerHTML={{ __html: sanitizeText(optionText) }} />
                             </div>
@@ -250,15 +271,15 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
 
             {q.explanation && (
                 <div className="mb-3 p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-lg animate-in fade-in slide-in-from-top-2">
-                    <div className="flex items-center gap-2 mb-1 text-indigo-300 text-xs font-bold uppercase"><Icon name="lightbulb" size={12} /> Explanation</div>
-                    <p className="text-xs text-slate-300 leading-relaxed">{q.explanation}</p>
+                    <div className="flex items-center gap-2 mb-1 text-indigo-300 text-sm font-bold uppercase"><Icon name="lightbulb" size={14} /> Explanation</div>
+                    <p className="text-sm text-slate-300 leading-relaxed">{q.explanation}</p>
                 </div>
             )}
 
             {q.sourceExcerpt && (
                 <div className="pt-3 border-t border-slate-800 flex flex-col gap-1">
-                    <div className="flex items-start gap-1.5 text-[10px] text-slate-500 italic bg-slate-950 p-2 rounded border border-slate-800">
-                        <Icon name="message-square" size={12} className="mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-1.5 text-sm text-slate-400 italic bg-slate-950 p-2 rounded border border-slate-800">
+                        <Icon name="message-square" size={14} className="mt-0.5 flex-shrink-0" />
                         "{q.sourceExcerpt}"
                     </div>
                 </div>

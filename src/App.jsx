@@ -21,15 +21,14 @@ import BulkExportModal from './components/BulkExportModal';
 // Services - External integrations
 import { generateContent } from './services/gemini';
 import { fetchQuestionsFromSheets, saveQuestionsToSheets } from './services/googleSheets';
+import { constructSystemPrompt } from './services/promptBuilder';
 
 // Utilities - Helper functions
-import { safe, formatDate, parseQuestions, downloadFile, parseCSVLine, filterDuplicateQuestions } from './utils/helpers';
+import { safe, formatDate, parseQuestions, downloadFile, filterDuplicateQuestions, sanitizeText, formatUrl, stripHtmlTags } from './utils/helpers';
+import { processUploadedFile } from './utils/fileProcessor';
+import { getCSVContent, segmentQuestions } from './utils/exportUtils';
 import { CATEGORY_KEYS, TARGET_PER_CATEGORY, TARGET_TOTAL, FIELD_DELIMITER, LANGUAGE_FLAGS, LANGUAGE_CODES } from './utils/constants';
 import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
-
-// ============================================================================
-// MAIN APP COMPONENT
-// ============================================================================
 
 const App = () => {
     // ========================================================================
@@ -85,7 +84,7 @@ const App = () => {
         constInitialConfig.creatorName = constInitialConfig.creatorName || '';
         constInitialConfig.reviewerName = constInitialConfig.reviewerName || '';
         constInitialConfig.apiKey = constInitialConfig.apiKey || '';
-        constInitialConfig.sheetUrl = constInitialConfig.sheetUrl || '';
+        constInitialConfig.sheetUrl = constInitialConfig.sheetUrl || defaults.sheetUrl;
 
         // Reset deprecated difficulty setting
         if (constInitialConfig.difficulty === 'Balanced All') {
@@ -142,22 +141,36 @@ const App = () => {
 
     // Modal visibility
     const [showNameModal, setShowNameModal] = useState(false); // Creator name entry prompt
+    const [deleteConfirmId, setDeleteConfirmId] = useState(null); // ID of question pending deletion
 
     // ========================================================================
     // STATE - Filtering & Search
     // ========================================================================
 
     // Search term for filtering questions by text content
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem('ue5_pref_search') || '');
 
     // Filter mode: 'pending', 'accepted', 'rejected', or 'all'
-    const [filterMode, setFilterMode] = useState('pending');
+    const [filterMode, setFilterMode] = useState(() => localStorage.getItem('ue5_pref_filter') || 'pending');
 
     // Toggle between current session and all-time view
-    const [showHistory, setShowHistory] = useState(false);
+    const [showHistory, setShowHistory] = useState(() => localStorage.getItem('ue5_pref_history') === 'true');
+
+    // Persist preferences
+    useEffect(() => {
+        localStorage.setItem('ue5_pref_search', searchTerm);
+        localStorage.setItem('ue5_pref_filter', filterMode);
+        localStorage.setItem('ue5_pref_history', showHistory);
+    }, [searchTerm, filterMode, showHistory]);
 
     // Review mode: current question index for card-by-card review
     const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+
+    // Toggle for advanced configuration in Create sidebar
+    const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
+
+    // Inline validation state for API Key
+    const [showApiError, setShowApiError] = useState(false);
 
 
 
@@ -332,6 +345,10 @@ const App = () => {
         if (name === 'language') {
             handleLanguageSwitch(value);
         }
+        // Clear API error if user starts typing key
+        if (name === 'apiKey') {
+            setShowApiError(false);
+        }
     };
 
     /**
@@ -351,124 +368,47 @@ const App = () => {
      * Other text files are stored as reference material for AI generation
      * @param {Event} e - File input change event
      */
-    const handleFileChange = (e) => {
+    /**
+     * Handles file upload and processing
+     * Uses processUploadedFile utility to handle validation, parsing, and security checks
+     * @param {Event} e - File input change event
+     */
+    const handleFileChange = async (e) => {
         const newFiles = Array.from(e.target.files);
-        const allowedTypes = ['text/', 'application/json', 'application/javascript', 'application/xml', 'application/csv'];
-        const allowedExtensions = ['.txt', '.md', '.csv', '.json', '.js', '.html', '.css', '.xml', '.py', '.cpp', '.h', '.cs'];
+        if (newFiles.length === 0) return;
 
-        // Filter for text-based files only
-        const validFiles = newFiles.filter(file => {
-            const isTextType = file.type.startsWith('text/') || allowedTypes.includes(file.type);
-            const hasTextExt = allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
-            return isTextType || hasTextExt;
-        });
+        let importedCount = 0;
+        let referenceCount = 0;
+        let errors = [];
 
-        const csvFiles = validFiles.filter(f => f.name.toLowerCase().endsWith('.csv'));
-        const otherFiles = validFiles.filter(f => !f.name.toLowerCase().endsWith('.csv'));
+        for (const file of newFiles) {
+            const result = await processUploadedFile(file, config.creatorName);
 
-        if (csvFiles.length > 0) {
-            csvFiles.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = async (ev) => {
-                    const content = ev.target.result;
-                    const importedQuestions = [];
-                    const lines = content.split('\n');
-                    const header = lines[0] ? lines[0].split(FIELD_DELIMITER) : [];
+            if (result.error) {
+                errors.push(`${file.name}: ${result.error}`);
+                continue;
+            }
 
-                    const fileName = file.name;
-                    let fileLanguage = null;
-
-                    // 1. Check for full language names (e.g. "Chinese_(Simplified)")
-                    Object.keys(LANGUAGE_FLAGS).forEach(lang => {
-                        const safeLang = lang.replace(/ /g, '_');
-                        if (fileName.toLowerCase().includes(safeLang.toLowerCase()) || fileName.toLowerCase().includes(lang.toLowerCase())) {
-                            fileLanguage = lang;
-                        }
-                    });
-
-                    // 2. Fallback: Check for language codes (e.g. _CN_, _JP_) if no full name found
-                    if (!fileLanguage) {
-                        Object.entries(LANGUAGE_CODES).forEach(([lang, code]) => {
-                            const regex = new RegExp(`(^|[._-])${code}([._-] |$)`, 'i');
-                            if (regex.test(fileName)) {
-                                fileLanguage = lang;
-                            }
-                        });
-                    }
-
-                    // Check for v1.7 Format (Discipline at index 3) or v1.6 Format (Discipline at index 2)
-                    const isV17 = header[3] && header[3].includes('Discipline');
-                    const isV16 = header[2] && header[2].includes('Discipline');
-
-                    if (header.length > 5 && header[0].includes('ID') && (isV17 || isV16)) {
-                        lines.slice(1).forEach((line, idx) => {
-                            if (!line.trim()) return;
-                            const cols = parseCSVLine(line);
-                            if (cols.length < 10) return;
-
-                            // v1.7 Mapping: 0:ID, 1:Unique, 2:Status, 3:Disc, 4:Diff, 5:Type, 6:Q, 7-10:Opts, 11:Ans, 12:Expl, 13:Lang, 14:Src, 15:Date
-                            // v1.6 Mapping: 0:ID, 1:Unique, 2:Disc, 3:Type, 4:Diff, 5:Q, 6-9:Opts, 10:Ans, 11:Date, 12:Src, 13:Exc, 14:Cr, 15:Rev, 16:Lang
-
-                            let qObj = {};
-                            if (isV17) {
-                                qObj = {
-                                    id: Date.now() + idx + Math.random(),
-                                    uniqueId: cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID(),
-                                    discipline: cols[3] || "Imported",
-                                    difficulty: cols[4] || "Easy",
-                                    type: cols[5] || "Multiple Choice",
-                                    question: cols[6] || "",
-                                    options: { A: cols[7] || "", B: cols[8] || "", C: cols[9] || "", D: cols[10] || "" },
-                                    correct: cols[11] || "",
-                                    explanation: cols[12] || "",
-                                    language: cols[13] || fileLanguage || "English",
-                                    sourceUrl: cols[14] || "",
-                                    status: 'accepted',
-                                    creatorName: config.creatorName || "",
-                                    reviewerName: ""
-                                };
-                            } else {
-                                // Fallback to v1.6
-                                qObj = {
-                                    id: Date.now() + idx + Math.random(),
-                                    uniqueId: cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID(),
-                                    discipline: cols[2] || "Imported",
-                                    type: cols[3] || "Multiple Choice",
-                                    difficulty: cols[4] || "Easy",
-                                    question: cols[5] || "",
-                                    options: { A: cols[6] || "", B: cols[7] || "", C: cols[8] || "", D: cols[9] || "" },
-                                    correct: cols[10] || "",
-                                    sourceUrl: cols[12] || "",
-                                    sourceExcerpt: cols[13] || "",
-                                    creatorName: cols[14] || config.creatorName || "",
-                                    reviewerName: cols[15] || "",
-                                    status: 'accepted',
-                                    language: cols[16] || fileLanguage || "English"
-                                };
-                            }
-                            importedQuestions.push(qObj);
-                        });
-                        if (importedQuestions.length > 0) {
-                            console.log(`[CSV Import] Detected file language: ${fileLanguage || 'None (defaulting to English)'}`);
-                            console.log(`[CSV Import] Sample question languages:`, importedQuestions.slice(0, 3).map(q => ({ id: q.uniqueId, lang: q.language })));
-                            addQuestionsToState(importedQuestions, showHistory);
-                            showMessage(`Imported ${importedQuestions.length} questions from CSV (Language: ${fileLanguage || 'English'}).`, 4000);
-                        }
-                    } else {
-                        setFiles(prev => [...prev, { name: file.name, content: content, size: file.size }]);
-                    }
-                };
-                reader.readAsText(file);
-            });
+            if (result.type === 'questions') {
+                addQuestionsToState(result.data, showHistory);
+                importedCount += result.data.length;
+                console.log(`[Import] Imported ${result.data.length} questions from ${file.name} (${result.language})`);
+            } else if (result.type === 'reference') {
+                setFiles(prev => [...prev, result.data]);
+                referenceCount++;
+            }
         }
-        if (otherFiles.length > 0) {
-            otherFiles.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (ev) => { setFiles(prev => [...prev, { name: file.name, content: ev.target.result, size: file.size }]); };
-                reader.readAsText(file);
-            });
+
+        // Feedback to user
+        if (importedCount > 0) showMessage(`Successfully imported ${importedCount} questions.`, 4000);
+        if (referenceCount > 0) showMessage(`Added ${referenceCount} reference files.`, 3000);
+        if (errors.length > 0) {
+            console.error("File processing errors:", errors);
+            showMessage(`Some files failed: ${errors.slice(0, 2).join(', ')}`, 6000);
         }
-        if (validFiles.length < newFiles.length) showMessage("Skipped non-text files (images/binaries). Upload text-based files only.", 5000);
+
+        // Reset input
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     /**
@@ -499,53 +439,6 @@ const App = () => {
         return fileContext;
     };
 
-    /**
-     * Constructs the system prompt for AI question generation
-     * Dynamically adjusts batch distribution based on difficulty mode
-     * Enforces strict formatting rules and sourcing requirements
-     * @returns {string} Complete system prompt for Gemini API
-     */
-    const constructSystemPrompt = () => {
-        let batchNum = parseInt(config.batchSize) || 6;
-        let easyCount = 0; let mediumCount = 0; let hardCount = 0;
-        let targetType = 'Multiple Choice and True/False';
-        let mcCount = 0; let tfCount = 0;
-        const [difficulty, type] = config.difficulty.split(' ');
-        if (difficulty === 'Balanced') {
-            if (batchNum % 6 !== 0) batchNum = Math.ceil(batchNum / 6) * 6;
-            const countPerCategory = batchNum / 6;
-            easyCount = countPerCategory; mediumCount = countPerCategory; hardCount = countPerCategory;
-            targetType = 'Multiple Choice and True/False'; mcCount = countPerCategory * 3; tfCount = countPerCategory * 3;
-        } else {
-            if (difficulty === 'Easy') easyCount = batchNum; else if (difficulty === 'Medium') mediumCount = batchNum; else if (difficulty === 'Hard') hardCount = batchNum;
-            if (type === 'MC') { targetType = 'Multiple Choice ONLY'; mcCount = batchNum; } else if (type === 'T/F') { targetType = 'True/False ONLY'; tfCount = batchNum; }
-        }
-        const difficultyPrompt = (difficulty === 'Balanced') ? `Generate approximately ${easyCount} Easy, ${mediumCount} Medium, and ${hardCount} Hard questions. Aim for ${mcCount} Multiple Choice questions and ${tfCount} True/False questions for a balanced batch.` : `Generate exactly ${batchNum} questions of difficulty: ${difficulty}.`;
-        return `
-## Universal UE5 Scenario-Based Question Generator — Gemini Version
-Role: You are a senior Unreal Engine 5 technical writer. Create short, clear, scenario-driven questions in Simplified Technical English (STE).
-**FORMATTING INSTRUCTION:** You MUST enclose key technical concepts (like Nanite, Lumen, Blueprints, Virtual Shadow Maps) in HTML bold tags (e.g., <b>Nanite</b>) in the Question and Answer columns.
-Discipline: ${config.discipline}
-Target Language: ${config.language}
-Question Type: ${targetType}
-**LANGUAGE STRICTNESS:** Output ONLY in ${config.language}. Do NOT provide bilingual text.
-Question Format:
-| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |
-- ID starts at 1.
-- Difficulty levels: Easy / Medium / Hard.
-- For True/False questions: OptionA=TRUE, OptionB=FALSE. CorrectLetter=A/B.
-- **CRITICAL RULE:** True/False questions must be a SINGLE assertion.
-- **TYPE RULE:** If Question Type is 'Multiple Choice ONLY', do NOT generate True/False questions. If Question Type is 'True/False ONLY', do NOT generate Multiple Choice questions.
-Sourcing:
-1. Official Epic Games Documentation (dev.epicgames.com/documentation)
-2. Attached Local Files
-**FORBIDDEN SOURCES:** Do NOT use forums, Reddit, community wikis, or external video platforms like YouTube.
-Output:
-- **OUTPUT INSTRUCTION:** ${difficultyPrompt}
-${getFileContext()}
-`;
-    };
-
     // ========================================================================
     // HANDLERS - AI Generation & Translation
     // ========================================================================
@@ -557,12 +450,17 @@ ${getFileContext()}
      */
     const handleGenerate = async () => {
         if (!config.creatorName) { showMessage("Please enter your Creator Name to start generating.", 5000); setShowNameModal(true); return; }
-        if (!isApiReady) { showMessage("API key is required for generation. Please enter it in the settings panel.", 5000); return; }
+        if (!isApiReady) {
+            setShowApiError(true);
+            setShowAdvancedConfig(true);
+            showMessage("API key is required. Please enter it below.", 5000);
+            return;
+        }
 
         if (config.difficulty !== 'Balanced All' && isTargetMet) { showMessage(`Quota met for ${config.difficulty}! Change difficulty/type or discipline to continue.`, 5000); return; }
 
         setIsGenerating(true); setShowHistory(false); setStatus('Drafting Scenarios...');
-        const systemPrompt = constructSystemPrompt();
+        const systemPrompt = constructSystemPrompt(config, getFileContext());
         const userPrompt = `Generate ${config.batchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}. Ensure links work for UE 5.7 or latest available.`;
         try {
             const text = await generateContent(effectiveApiKey, systemPrompt, userPrompt, setStatus);
@@ -593,6 +491,21 @@ ${getFileContext()}
             setStatus('Detected'); setTimeout(() => setStatus(''), 2000);
         } catch (err) { setStatus('Failed'); } finally { setIsDetecting(false); }
     };
+
+    // Keyboard Shortcut: Ctrl+Enter to Generate
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (appMode === 'create' && !isGenerating && !isTargetMet && isApiReady && maxBatchSize > 0) {
+                    e.preventDefault();
+                    handleGenerate();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [appMode, isGenerating, isTargetMet, isApiReady, maxBatchSize, handleGenerate]);
 
     /**
      * Translates a single question to target language
@@ -667,7 +580,7 @@ ${getFileContext()}
         if (!isApiReady) { showMessage("API key is required for creation. Please enter it in the settings panel.", 5000); return; }
 
         setIsProcessing(true); setStatus('Creating variations...');
-        const sys = constructSystemPrompt();
+        const sys = constructSystemPrompt(config, getFileContext());
         const prompt = `Generate 2 NEW unique questions based on: "${q.question}". Output in Markdown Table.`;
         try {
             const text = await generateContent(effectiveApiKey, sys, prompt, setStatus);
@@ -705,27 +618,6 @@ ${getFileContext()}
     // ========================================================================
 
     /**
-     * Generates CSV content from question array
-     * @param {Array} validQuestions - Questions to export
-     * @param {string} creatorName - Creator name for CSV
-     * @param {string} reviewerName - Reviewer name for CSV
-     * @param {boolean} includeHeaders - Whether to include CSV header row
-     * @returns {string} CSV-formatted string
-     */
-    const getCSVContent = (validQuestions, creatorName, reviewerName, includeHeaders = true) => {
-        const headers = ["ID", "Question ID", "Discipline", "Type", "Difficulty", "Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer", "Generation Date", "Source URL", "Source Excerpt", "Creator", "Reviewer", "Language"];
-        let csvContent = includeHeaders ? headers.map(safe).join(FIELD_DELIMITER) + '\n' : '';
-        const generationDate = formatDate(new Date());
-        validQuestions.forEach((row, i) => {
-            const cleanedSourceUrl = row.sourceUrl && !row.sourceUrl.includes("grounding-api") ? row.sourceUrl : "";
-            const o = row.options || {};
-            const rowData = [(i + 1).toString(), row.uniqueId, row.discipline, row.type, row.difficulty, row.question, o.A, o.B, o.C, o.D || "", row.correct, generationDate, cleanedSourceUrl, row.sourceExcerpt, creatorName, reviewerName, row.language || "English"];
-            csvContent += rowData.map(safe).join(FIELD_DELIMITER) + '\n';
-        });
-        return csvContent;
-    };
-
-    /**
      * Exports questions segmented by Language, Discipline, Difficulty, and Type
      * Creates separate CSV files for each unique combination
      * Useful for organizing large question banks
@@ -737,14 +629,7 @@ ${getFileContext()}
         if (valid.length === 0) { setStatus("No accepted questions to export."); setTimeout(() => setStatus(''), 3000); return; }
 
         // NEW GROUPING: Language, Discipline, Difficulty, Type
-        const groupedData = valid.reduce((acc, q) => {
-            const typeAbbrev = q.type === 'True/False' ? 'T/F' : 'MC';
-            // Use a unique key combining all segmentation requirements
-            const key = `${q.language || 'English'}_${q.discipline}_${q.difficulty}_${typeAbbrev}`;
-            if (!acc[key]) acc[key] = [];
-            acc[key].push(q);
-            return acc;
-        }, {});
+        const groupedData = segmentQuestions(valid);
 
         let filesGenerated = 0;
         const exportDate = new Date();
@@ -1007,13 +892,23 @@ ${getFileContext()}
     };
 
     /**
-     * Permanently deletes a question from all state
+     * Initiates the delete process by showing a confirmation modal
      * @param {number|string} id - Question ID to delete
      */
     const handleDelete = (id) => {
-        setQuestions(prev => prev.filter(q => q.id !== id));
-        setHistoricalQuestions(prev => prev.filter(q => q.id !== id));
-        showMessage('Question deleted permanently.', 2000);
+        setDeleteConfirmId(id);
+    };
+
+    /**
+     * Executes the actual deletion after user confirmation
+     */
+    const confirmDelete = () => {
+        if (deleteConfirmId) {
+            setQuestions(prev => prev.filter(q => q.id !== deleteConfirmId));
+            setHistoricalQuestions(prev => prev.filter(q => q.id !== deleteConfirmId));
+            showMessage('Question deleted permanently.', 2000);
+            setDeleteConfirmId(null);
+        }
     };
 
     /**
@@ -1070,6 +965,8 @@ ${getFileContext()}
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [appMode, uniqueFilteredQuestions.length]);
+
+
 
     const totalApproved = useMemo(() => {
         return CATEGORY_KEYS.reduce((sum, key) => sum + approvedCounts[key], 0);
@@ -1214,6 +1111,35 @@ ${getFileContext()}
         showMessage(`Exported ${questionsToExport.length} questions as ${format.toUpperCase()}.`, 4000);
     };
 
+    // Global Keyboard Shortcuts (Ctrl+S, Ctrl+E)
+    useEffect(() => {
+        const handleGlobalKeyDown = (e) => {
+            // Ctrl+S: Save/Export
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (config.sheetUrl) {
+                    handleExportToSheets();
+                } else {
+                    // Default quick export: CSV, current language, all questions
+                    handleBulkExport({
+                        format: 'csv',
+                        includeRejected: false,
+                        languages: [config.language],
+                        scope: 'all'
+                    });
+                }
+            }
+            // Ctrl+E: Open Export Modal
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                setShowBulkExportModal(true);
+            }
+        };
+
+        window.addEventListener('keydown', handleGlobalKeyDown);
+        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    }, [config.sheetUrl, config.language, handleExportToSheets, handleBulkExport]);
+
     const handleGoHome = () => {
         setAppMode('landing');
     };
@@ -1230,6 +1156,21 @@ ${getFileContext()}
 
             {config.creatorName === '' && <NameEntryModal onSave={handleNameSave} />}
             {showClearModal && <ClearConfirmationModal onConfirm={handleDeleteAllQuestions} onCancel={() => setShowClearModal(false)} />}
+
+            {/* Single Delete Confirmation Modal */}
+            {deleteConfirmId && (
+                <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-300 space-y-4">
+                        <h3 className="text-xl font-bold text-red-500 flex items-center gap-2"><Icon name="trash-2" size={20} /> DELETE QUESTION?</h3>
+                        <p className="text-sm text-slate-300">This action will permanently delete this question. This cannot be undone.</p>
+                        <div className="flex justify-end gap-3">
+                            <button onClick={() => setDeleteConfirmId(null)} className="px-4 py-2 text-sm rounded bg-slate-700 hover:bg-slate-600 text-white transition-colors">Cancel</button>
+                            <button onClick={confirmDelete} className="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-bold transition-colors">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {isProcessing && <BlockingProcessModal isProcessing={isProcessing} status={status} translationProgress={translationProgress} />}
             {showBulkExportModal && <BulkExportModal onClose={() => setShowBulkExportModal(false)} onExport={handleBulkExport} questionCount={allQuestionsMap.size} />}
 
@@ -1282,83 +1223,107 @@ ${getFileContext()}
                             </div>
                             <input type="number" min="1" max={maxBatchSize} name="batchSize" value={config.batchSize} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500" placeholder="e.g. 6, 12, 18" />
                         </div>
-                        <div className="pb-4 space-y-3">
+                        {/* Sticky Action Footer */}
+                        <div className="sticky bottom-0 bg-slate-950 pt-4 pb-2 border-t border-slate-800 z-20 -mx-6 px-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)]">
+                            <div className="space-y-3">
+                                <button
+                                    onClick={handleGenerate}
+                                    disabled={isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady}
+                                    className={`w-full py-4 px-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady ? 'bg-slate-700 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 active:scale-[0.98]'}`}
+                                    title={
+                                        !isApiReady ? '⚠️ API Key Required - Configure in Settings' :
+                                            isTargetMet ? '✓ Quota Met for this Category' :
+                                                maxBatchSize === 0 ? '✓ All Categories Complete' :
+                                                    'Generate new questions'
+                                    }
+                                >
+                                    {isGenerating ? (
+                                        <><Icon name="loader" size={16} className="animate-spin" /> GENERATING...</>
+                                    ) : !isApiReady ? (
+                                        <><Icon name="alert-circle" size={16} /> API KEY REQUIRED</>
+                                    ) : isTargetMet ? (
+                                        <><Icon name="check-circle" size={16} /> QUOTA MET</>
+                                    ) : (
+                                        <><Icon name="book-open" size={16} /> GENERATE QUESTIONS</>
+                                    )}
+                                </button>
+
+                                <button onClick={handleBulkTranslateMissing} disabled={isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady} className={`w-full py-2 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all border ${isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-indigo-950/50 text-indigo-400 hover:bg-indigo-900/50 border-indigo-700'}`}>
+                                    <Icon name="languages" size={14} /> BULK TRANSLATE (CN/JP/KR)
+                                </button>
+                            </div>
+                        </div>
+                        {/* Advanced Configuration Toggle */}
+                        <div className="pt-4 border-t border-slate-800">
                             <button
-                                onClick={handleGenerate}
-                                disabled={isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady}
-                                className={`w-full py-4 px-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady ? 'bg-slate-700 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 active:scale-[0.98]'}`}
-                                title={
-                                    !isApiReady ? '⚠️ API Key Required - Configure in Settings' :
-                                        isTargetMet ? '✓ Quota Met for this Category' :
-                                            maxBatchSize === 0 ? '✓ All Categories Complete' :
-                                                'Generate new questions'
-                                }
+                                onClick={() => setShowAdvancedConfig(!showAdvancedConfig)}
+                                className="w-full flex items-center justify-between text-xs font-bold uppercase text-slate-400 hover:text-white transition-colors"
                             >
-                                {isGenerating ? (
-                                    <><Icon name="loader" size={16} className="animate-spin" /> GENERATING...</>
-                                ) : !isApiReady ? (
-                                    <><Icon name="alert-circle" size={16} /> API KEY REQUIRED</>
-                                ) : isTargetMet ? (
-                                    <><Icon name="check-circle" size={16} /> QUOTA MET</>
-                                ) : (
-                                    <><Icon name="book-open" size={16} /> GENERATE QUESTIONS</>
-                                )}
-                            </button>
-
-                            <button onClick={handleBulkTranslateMissing} disabled={isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady} className={`w-full py-2 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all border ${isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-indigo-950/50 text-indigo-400 hover:bg-indigo-900/50 border-indigo-700'}`}>
-                                <Icon name="languages" size={14} /> BULK TRANSLATE (CN/JP/KR)
+                                <span>Advanced Configuration</span>
+                                <Icon name={showAdvancedConfig ? "chevron-up" : "chevron-down"} size={14} />
                             </button>
                         </div>
-                        <div className="pt-6 border-t border-slate-800 space-y-3">
-                            <div className="flex justify-between items-end"><label className="text-xs font-bold uppercase text-slate-400">Source Files</label>{files.length > 0 && <button onClick={handleDetectTopics} disabled={isDetecting || !isApiReady} className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50">{isDetecting ? "..." : "Detect"}</button>}</div>
-                            <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-900 cursor-pointer text-center bg-slate-900/50"><Icon name="upload" className="mx-auto text-slate-600 mb-2" /><p className="text-xs text-slate-500">Upload .csv</p><input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" /></div>
-                            {files.map((f, i) => <div key={i} className="flex justify-between bg-slate-900 p-2 rounded border border-slate-800 text-xs text-slate-400"><span className="truncate">{f.name}</span><button onClick={() => removeFile(i)} className="text-red-500">x</button></div>)}
-                        </div>
 
-                        {/* API Key Configuration - Moved to bottom */}
-                        <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-2">
-                            <div className="flex items-center">
-                                <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
-                                    <Icon name="key" size={12} /> Gemini API Key
-                                </label>
-                                <InfoTooltip text="Enter your personal Gemini API key here. Required if running outside the Canvas environment." />
-                            </div>
-                            <input
-                                type="password"
-                                name="apiKey"
-                                value={config.apiKey}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500"
-                                placeholder={isInternalEnvironment ? "Auto-Auth Enabled" : "Enter your key..."}
-                                disabled={isInternalEnvironment}
-                            />
-                            <div className={`text-xs font-mono text-right ${apiKeyStatus.includes('Loaded') || apiKeyStatus.includes('Auto') ? 'text-green-500' : 'text-red-500'}`}>
-                                {apiKeyStatus}
-                            </div>
-                        </div>
+                        {/* Collapsible Advanced Section */}
+                        {showAdvancedConfig && (
+                            <div className="space-y-6 animate-in slide-in-from-top-2 duration-200">
+                                {/* Source Files */}
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-end"><label className="text-xs font-bold uppercase text-slate-400">Source Files</label>{files.length > 0 && <button onClick={handleDetectTopics} disabled={isDetecting || !isApiReady} className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50">{isDetecting ? "..." : "Detect"}</button>}</div>
+                                    <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-900 cursor-pointer text-center bg-slate-900/50"><Icon name="upload" className="mx-auto text-slate-600 mb-2" /><p className="text-xs text-slate-500">Upload .csv</p><input type="file" ref={fileInputRef} onChange={handleFileChange} multiple className="hidden" /></div>
+                                    {files.map((f, i) => <div key={i} className="flex justify-between bg-slate-900 p-2 rounded border border-slate-800 text-xs text-slate-400"><span className="truncate">{f.name}</span><button onClick={() => removeFile(i)} className="text-red-500">x</button></div>)}
+                                </div>
 
-                        {/* Google Sheets URL Configuration - Moved to bottom */}
-                        <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-2">
-                            <div className="flex items-center">
-                                <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
-                                    <Icon name="table" size={12} /> Google Sheets App URL
-                                </label>
-                                <InfoTooltip text="Enter the Web App URL of your Google Apps Script deployment." />
-                            </div>
-                            <input
-                                type="text"
-                                name="sheetUrl"
-                                value={config.sheetUrl}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500"
-                                placeholder="https://script.google.com/..."
-                            />
-                            <div className="flex gap-2 mt-2">
-                                <button onClick={handleLoadFromSheets} disabled={!config.sheetUrl || isProcessing} className="flex-1 py-1 px-2 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-600 text-slate-300">Load</button>
-                                <button onClick={handleExportToSheets} disabled={!config.sheetUrl || isProcessing} className="flex-1 py-1 px-2 bg-green-900/50 hover:bg-green-800/50 text-xs rounded border border-green-700 text-green-400">Save</button>
-                            </div>
+                                {/* API Key Configuration */}
+                                <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-2">
+                                    <div className="flex items-center">
+                                        <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
+                                            <Icon name="key" size={12} /> Gemini API Key
+                                        </label>
+                                        <InfoTooltip text="Enter your personal Gemini API key here. Required if running outside the Canvas environment." />
+                                    </div>
+                                    <input
+                                        type="password"
+                                        name="apiKey"
+                                        value={config.apiKey}
+                                        onChange={handleChange}
+                                        className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500"
+                                        placeholder={isInternalEnvironment ? "Auto-Auth Enabled" : "Enter your key..."}
+                                        disabled={isInternalEnvironment}
+                                    />
+                                    <div className={`text-xs font-mono text-right ${apiKeyStatus.includes('Loaded') || apiKeyStatus.includes('Auto') ? 'text-green-500' : 'text-red-500'}`}>
+                                        {apiKeyStatus}
+                                    </div>
+                                    {showApiError && (
+                                        <div className="text-xs text-red-500 font-bold animate-pulse mt-1 flex items-center gap-1">
+                                            <Icon name="alert-circle" size={12} /> API Key is required to generate.
+                                        </div>
+                                    )}
+                                </div>
 
-                        </div>
+                                {/* Google Sheets URL Configuration */}
+                                <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-2">
+                                    <div className="flex items-center">
+                                        <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
+                                            <Icon name="table" size={12} /> Google Sheets App URL
+                                        </label>
+                                        <InfoTooltip text="Enter the Web App URL of your Google Apps Script deployment." />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        name="sheetUrl"
+                                        value={config.sheetUrl}
+                                        onChange={handleChange}
+                                        className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500"
+                                        placeholder="https://script.google.com/..."
+                                    />
+                                    <div className="flex gap-2 mt-2">
+                                        <button onClick={handleLoadFromSheets} disabled={!config.sheetUrl || isProcessing} className="flex-1 py-1 px-2 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-600 text-slate-300">Load</button>
+                                        <button onClick={handleExportToSheets} disabled={!config.sheetUrl || isProcessing} className="flex-1 py-1 px-2 bg-green-900/50 hover:bg-green-800/50 text-xs rounded border border-green-700 text-green-400">Save</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="mt-4 pt-4 border-t border-slate-800">
                             <button

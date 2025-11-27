@@ -12,10 +12,10 @@ const LandingPage = ({ onSelectMode, apiKeyStatus, isCloudReady }) => (
         <div className="z-10 text-center space-y-8 max-w-2xl animate-in fade-in zoom-in-95 duration-500">
             <div className="space-y-4">
                 <div className="inline-flex items-center justify-center p-4 bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl mb-4">
-                    <Icon name="terminal" size={48} className="text-orange-500" />
+                    <img src="/UE5QuestionGenerator/logos/UE-Icon-2023-White.svg" alt="UE5 Logo" className="w-20 h-20 object-contain" />
                 </div>
                 <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-                    UE5 STE <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">Question Generator</span>
+                    UE5 <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">Question Generator</span>
                 </h1>
                 <p className="text-lg text-slate-400 max-w-lg mx-auto">
                     Create, review, and manage scenario-based technical questions for Unreal Engine 5 documentation.

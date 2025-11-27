@@ -14,13 +14,13 @@ const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode }) =>
         <header className={`${headerBg} text-white p-6 shadow-xl border-b ${borderColor} relative z-20 transition-all duration-500`}>
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <div className="flex items-center gap-3 cursor-pointer" onClick={onHome} title="Back to Home">
-                    <div className={`${iconBg} p-2 rounded-lg shadow-lg transition-colors duration-500`}>
-                        <Icon name={isReview ? "list-checks" : "terminal"} size={24} className="text-white" />
+                    <div className="p-2 transition-colors duration-500">
+                        <img src="/UE5QuestionGenerator/logos/UE-Icon-2023-White.svg" alt="UE5 Logo" className="w-10 h-10 object-contain" />
                     </div>
                     <div>
                         <div className="flex items-center gap-3">
                             <h1 className={`text-xl font-bold tracking-tight uppercase ${titleColor} transition-colors duration-500`}>
-                                {isReview ? 'Review & Audit Console' : 'UE5 STE Question Generator'}
+                                {isReview ? 'Review & Audit Console' : 'UE5 Question Generator'}
                             </h1>
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${isReview ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50' : appMode === 'database' ? 'bg-blue-500/20 text-blue-300 border-blue-500/50' : 'bg-orange-500/20 text-orange-300 border-orange-500/50'}`}>
                                 {isReview ? 'REVIEW MODE' : appMode === 'database' ? 'DATABASE VIEW' : 'CREATE MODE'}
