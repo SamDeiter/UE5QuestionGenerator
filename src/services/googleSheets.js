@@ -114,19 +114,6 @@ function doPost(e) {
       
       // Group Key: "English_TF_Easy"
       const groupKey = \`\${lang}_\${typeShort}_\${diffShort}\`;
-      
-      if (!granularGroups[groupKey]) granularGroups[groupKey] = [];
-      granularGroups[groupKey].push(q);
-    });
-
-    // Create ONE new Spreadsheet for this batch
-    const batchName = \`UE5_Export_\${Object.keys(granularGroups)[0].split('_')[0]}_\${Utilities.formatDate(timestamp, Session.getScriptTimeZone(), "yyyy-MM-dd_HH-mm-ss")}\`;
-    const newSS = SpreadsheetApp.create(batchName);
-    const fileId = newSS.getId();
-    
-    // Create tabs for each granular group
-    Object.keys(granularGroups).forEach(groupName => {
-      let sheet = newSS.getSheetByName(groupName);
       if (!sheet) {
         sheet = newSS.insertSheet(groupName);
       }
