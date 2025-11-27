@@ -1,4 +1,11 @@
+// ============================================================================
+// IMPORTS
+// ============================================================================
+
+// React core hooks
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+
+// UI Components
 import LandingPage from './components/LandingPage';
 import Header from './components/Header';
 import QuestionItem from './components/QuestionItem';
@@ -11,69 +18,146 @@ import Icon from './components/Icon';
 import InfoTooltip from './components/InfoTooltip';
 import BulkExportModal from './components/BulkExportModal';
 
+// Services - External integrations
 import { generateContent } from './services/gemini';
-import { fetchQuestionsFromSheets, saveQuestionsToSheets, clearQuestionsFromSheets } from './services/googleSheets';
-import { chunkArray, formatUrl, sanitizeText, stripHtmlTags, safe, formatDate, parseCSVLine, parseQuestions, downloadFile, filterDuplicateQuestions } from './utils/helpers';
-import { APP_VERSION, LANGUAGE_FLAGS, LANGUAGE_CODES, CATEGORY_KEYS, TARGET_PER_CATEGORY, TARGET_TOTAL, FIELD_DELIMITER } from './utils/constants';
+import { fetchQuestionsFromSheets, saveQuestionsToSheets } from './services/googleSheets';
+
+// Utilities - Helper functions
+import { safe, formatDate, parseQuestions, downloadFile, parseCSVLine, filterDuplicateQuestions } from './utils/helpers';
+import { CATEGORY_KEYS, TARGET_PER_CATEGORY, TARGET_TOTAL, FIELD_DELIMITER, LANGUAGE_FLAGS, LANGUAGE_CODES } from './utils/constants';
+import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
+
+// ============================================================================
+// MAIN APP COMPONENT
+// ============================================================================
 
 const App = () => {
-    const [appMode, setAppMode] = useState('landing'); // 'landing', 'create', 'review'
-    const [isCloudReady, setIsCloudReady] = useState(false); // Track actual cloud connection status
-    const [showClearModal, setShowClearModal] = useState(false);
-    const [showExportMenu, setShowExportMenu] = useState(false);
-    const [showBulkExportModal, setShowBulkExportModal] = useState(false);
+    // ========================================================================
+    // STATE - Application Mode & UI Controls
+    // ========================================================================
+
+    // Application mode: 'landing' (home screen), 'create' (generation mode), 'review' (review mode), 'database' (view all)
+    const [appMode, setAppMode] = useState('landing');
+
+    // Cloud connectivity status (used for displaying connection state in UI)
+    const [isCloudReady, setIsCloudReady] = useState(false);
+
+    // Modal visibility controls
+    const [showClearModal, setShowClearModal] = useState(false); // Confirmation dialog for clearing all questions
+    const [showBulkExportModal, setShowBulkExportModal] = useState(false); // Bulk export options modal
+    const [showExportMenu, setShowExportMenu] = useState(false); // Export menu visibility
+    const [showSettings, setShowSettings] = useState(false); // Settings modal visibility
+    const [showApiKey, setShowApiKey] = useState(false); // Toggle API key visibility in settings
+
+    // Translation progress (0-100) for bulk translation operations
     const [translationProgress, setTranslationProgress] = useState(0);
 
+    // Filter toggle: when true, only shows questions created by the current user
     const [filterByCreator, setFilterByCreator] = useState(false);
 
-    // --- ENVIRONMENT AND API KEY STATUS CHECK ---
-    // If __app_id is defined, assume we are in the Canvas environment and the API key will be auto-injected.
-    const isInternalEnvironment = typeof window.__app_id !== 'undefined';
-    const isAuthReady = true; // In local/Sheets mode, we are always "ready" for local ops.
+    // ========================================================================
+    // ENVIRONMENT & API CONFIGURATION
+    // ========================================================================
 
+    // Check if running in internal Canvas environment (has auto-injected API key)
+    const isInternalEnvironment = typeof window.__app_id !== 'undefined';
+
+    // Authentication status - always ready for local/Sheets operations
+    const isAuthReady = true;
+
+    // Main application configuration (persisted to localStorage)
     const [config, setConfig] = useState(() => {
         const saved = localStorage.getItem('ue5_gen_config');
-        const defaults = { discipline: 'Technical Art', batchSize: '6', difficulty: 'Easy MC', language: 'English', creatorName: '', reviewerName: '', apiKey: '', sheetUrl: 'https://script.google.com/a/macros/epicgames.com/s/AKfycbxssaKhw3pOWkC9sPJE_6oMZuG66JYCgeEQFEHh010Q90wlHqH64oiVhFjE1JQkSTV6/exec' };
+        const defaults = {
+            discipline: 'Technical Art',
+            batchSize: '6',
+            difficulty: 'Easy MC',
+            language: 'English',
+            creatorName: '',
+            reviewerName: '',
+            apiKey: '',
+            sheetUrl: 'https://script.google.com/a/macros/epicgames.com/s/AKfycbxssaKhw3pOWkC9sPJE_6oMZuG66JYCgeEQFEHh010Q90wlHqH64oiVhFjE1JQkSTV6/exec'
+        };
+
         const constInitialConfig = saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
-        // Ensure creatorName and reviewerName defaults are restored if removed from storage
+
+        // Ensure all required fields have default values
         constInitialConfig.creatorName = constInitialConfig.creatorName || '';
         constInitialConfig.reviewerName = constInitialConfig.reviewerName || '';
-        constInitialConfig.apiKey = constInitialConfig.apiKey || ''; // Ensure API key is loaded
+        constInitialConfig.apiKey = constInitialConfig.apiKey || '';
         constInitialConfig.sheetUrl = constInitialConfig.sheetUrl || '';
-        if (constInitialConfig.difficulty === 'Balanced All') constInitialConfig.difficulty = 'Easy MC';
+
+        // Reset deprecated difficulty setting
+        if (constInitialConfig.difficulty === 'Balanced All') {
+            constInitialConfig.difficulty = 'Easy MC';
+        }
+
         return constInitialConfig;
     });
 
-    // Computed values for API key status and effective key
+    // API key status computed values
     const isApiReady = isInternalEnvironment || (config.apiKey && config.apiKey.length > 5);
     const effectiveApiKey = isInternalEnvironment ? "" : config.apiKey;
+    const apiKeyStatus = isInternalEnvironment ? "Auto-Injected" : (isApiReady ? "Loaded" : "Not Set");
 
-    // Map of UniqueID -> List of Question Objects (all languages)
+    // ========================================================================
+    // STATE - Question Data Management
+    // ========================================================================
+
+    // Central question storage: Map of uniqueId -> array of question variants (different languages)
+    // This allows efficient lookup and management of multi-language questions
     const [allQuestionsMap, setAllQuestionsMap] = useState(new Map());
 
+    // Current session questions (active generation session, persisted to localStorage)
     const [questions, setQuestions] = useState(() => {
         const saved = localStorage.getItem('ue5_gen_questions');
         return saved ? JSON.parse(saved) : [];
     });
 
-    const [files, setFiles] = useState([]);
-    const [status, setStatus] = useState('');
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [isDetecting, setIsDetecting] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [showNameModal, setShowNameModal] = useState(false);
-
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterMode, setFilterMode] = useState('pending');
+    // Historical questions from previous sessions (loaded separately)
     const [historicalQuestions, setHistoricalQuestions] = useState([]);
-    const [showHistory, setShowHistory] = useState(false);
-    const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+
+    // Database view: questions loaded from Google Sheets
+    const [databaseQuestions, setDatabaseQuestions] = useState([]);
+
+    // ========================================================================
+    // STATE - File Upload & Processing
+    // ========================================================================
+
+    // Uploaded reference files (CSV, text, etc.) for context-aware generation
+    const [files, setFiles] = useState([]);
     const fileInputRef = useRef(null);
 
-    // Database View State
-    const [databaseQuestions, setDatabaseQuestions] = useState([]);
-    const [showSettings, setShowSettings] = useState(false);
-    const [showApiKey, setShowApiKey] = useState(false);
+    // ========================================================================
+    // STATE - UI & Loading States
+    // ========================================================================
+
+    // Status message displayed to user (e.g., "Generating...", "Saved")
+    const [status, setStatus] = useState('');
+
+    // Loading states for async operations
+    const [isGenerating, setIsGenerating] = useState(false); // AI question generation in progress
+    const [isDetecting, setIsDetecting] = useState(false); // Topic detection in progress
+    const [isProcessing, setIsProcessing] = useState(false); // Generic blocking operation
+
+    // Modal visibility
+    const [showNameModal, setShowNameModal] = useState(false); // Creator name entry prompt
+
+    // ========================================================================
+    // STATE - Filtering & Search
+    // ========================================================================
+
+    // Search term for filtering questions by text content
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // Filter mode: 'pending', 'accepted', 'rejected', or 'all'
+    const [filterMode, setFilterMode] = useState('pending');
+
+    // Toggle between current session and all-time view
+    const [showHistory, setShowHistory] = useState(false);
+
+    // Review mode: current question index for card-by-card review
+    const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
 
 
 
@@ -167,21 +251,42 @@ const App = () => {
         }
     }, [config.difficulty, approvedCounts]);
 
+    // ========================================================================
+    // EFFECTS - Auto-adjust batch size and persistence
+    // ========================================================================
+
+    // Auto-adjust batch size based on remaining quota for selected difficulty/type
     useEffect(() => {
         if (maxBatchSize > 0 && config.difficulty !== 'Balanced All') {
+            // For specific categories, recommend half of remaining quota (max 10)
             const recommendedSize = Math.max(1, Math.min(10, Math.floor(maxBatchSize / 2)));
             setConfig(prev => ({ ...prev, batchSize: recommendedSize.toString() }));
         } else if (config.difficulty === 'Balanced All') {
+            // For balanced mode, ensure batch size is between 6-12 and divisible by 6
             setConfig(prev => ({ ...prev, batchSize: Math.max(6, Math.min(12, maxBatchSize)).toString() }));
         } else if (maxBatchSize === 0 && config.difficulty !== 'Balanced All') {
+            // Quota met - set batch size to 0
             setConfig(prev => ({ ...prev, batchSize: '0' }));
         }
     }, [config.difficulty, maxBatchSize]);
 
+    // Prompt for creator name on first load if not set
     useEffect(() => { if (!config.creatorName) setShowNameModal(true); }, []);
+
+    // Persist configuration to localStorage whenever it changes
     useEffect(() => { localStorage.setItem('ue5_gen_config', JSON.stringify(config)); }, [config]);
+
+    // Persist current session questions to localStorage
     useEffect(() => localStorage.setItem('ue5_gen_questions', JSON.stringify(questions)), [questions]);
 
+    // ========================================================================
+    // HANDLERS - Question Management
+    // ========================================================================
+
+    /**
+     * Clears all questions from local state and localStorage
+     * Called when user confirms the "Clear All" action
+     */
     const handleDeleteAllQuestions = async () => {
         setShowClearModal(false);
         setQuestions([]);
@@ -189,6 +294,12 @@ const App = () => {
         showMessage("Local session cleared.", 3000);
     };
 
+    /**
+     * Validates and prepares questions for storage
+     * In Google Sheets mode, this doesn't auto-sync - user must explicitly export
+     * @param {Array} newQuestions - Array of question objects to store
+     * @returns {Array} The validated questions ready for local state
+     */
     const checkAndStoreQuestions = async (newQuestions) => {
         // In Google Sheets mode, we don't automatically sync every generation to the sheet.
         // We only sync when the user explicitly exports/saves.
@@ -196,12 +307,22 @@ const App = () => {
         return newQuestions;
     };
 
+    /**
+     * Updates the active language filter
+     * @param {string} lang - Language code (e.g., 'English', 'Chinese (Simplified)')
+     */
     const handleLanguageSwitch = (lang) => {
         setConfig(prev => ({ ...prev, language: lang }));
     };
 
+    /**
+     * Handles form input changes for configuration settings
+     * Validates batch size for Balanced All mode (must be multiple of 6)
+     * @param {Event} e - Change event from input/select elements
+     */
     const handleChange = (e) => {
         const { name, value } = e.target;
+        // Validate batch size for Balanced All mode
         if (name === 'batchSize' && config.difficulty === 'Balanced All') {
             const num = parseInt(value);
             if (num % 6 !== 0) showMessage("For Balanced All mode, the batch size should be a multiple of 6 (e.g., 6, 12, 18) for an even distribution.", 3000);
@@ -213,15 +334,29 @@ const App = () => {
         }
     };
 
+    /**
+     * Saves the creator name and closes the name entry modal
+     * Sets both creator and reviewer to the same name
+     * @param {string} name - The creator's name
+     */
     const handleNameSave = (name) => {
         setConfig(prev => ({ ...prev, creatorName: name, reviewerName: name }));
         setShowNameModal(false);
     };
 
+    /**
+     * Handles file upload and processing
+     * Supports CSV import (with auto-language detection) and text files for context
+     * CSV files are parsed and imported as questions
+     * Other text files are stored as reference material for AI generation
+     * @param {Event} e - File input change event
+     */
     const handleFileChange = (e) => {
         const newFiles = Array.from(e.target.files);
         const allowedTypes = ['text/', 'application/json', 'application/javascript', 'application/xml', 'application/csv'];
         const allowedExtensions = ['.txt', '.md', '.csv', '.json', '.js', '.html', '.css', '.xml', '.py', '.cpp', '.h', '.cs'];
+
+        // Filter for text-based files only
         const validFiles = newFiles.filter(file => {
             const isTextType = file.type.startsWith('text/') || allowedTypes.includes(file.type);
             const hasTextExt = allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
@@ -336,8 +471,17 @@ const App = () => {
         if (validFiles.length < newFiles.length) showMessage("Skipped non-text files (images/binaries). Upload text-based files only.", 5000);
     };
 
+    /**
+     * Removes a file from the uploaded files list
+     * @param {number} index - Index of file to remove
+     */
     const removeFile = (index) => { setFiles(prev => prev.filter((_, i) => i !== index)); };
 
+    /**
+     * Constructs context string from uploaded files for AI prompt
+     * Truncates large files to prevent token limit issues
+     * @returns {string} Formatted file content for inclusion in AI prompt
+     */
     const getFileContext = () => {
         const MAX_FILE_CONTENT_LENGTH = 10000; // Reduced to mitigate MAX_TOKENS issues
         let fileContext = "";
@@ -355,6 +499,12 @@ const App = () => {
         return fileContext;
     };
 
+    /**
+     * Constructs the system prompt for AI question generation
+     * Dynamically adjusts batch distribution based on difficulty mode
+     * Enforces strict formatting rules and sourcing requirements
+     * @returns {string} Complete system prompt for Gemini API
+     */
     const constructSystemPrompt = () => {
         let batchNum = parseInt(config.batchSize) || 6;
         let easyCount = 0; let mediumCount = 0; let hardCount = 0;
@@ -396,6 +546,15 @@ ${getFileContext()}
 `;
     };
 
+    // ========================================================================
+    // HANDLERS - AI Generation & Translation
+    // ========================================================================
+
+    /**
+     * Main question generation handler
+     * Validates API readiness, quota limits, and creator name before generation
+     * Parses AI response and adds unique questions to state
+     */
     const handleGenerate = async () => {
         if (!config.creatorName) { showMessage("Please enter your Creator Name to start generating.", 5000); setShowNameModal(true); return; }
         if (!isApiReady) { showMessage("API key is required for generation. Please enter it in the settings panel.", 5000); return; }
@@ -418,6 +577,10 @@ ${getFileContext()}
         } catch (err) { console.error(err); setStatus('Error'); showMessage(`Generation Error: ${err.message}. Please try again.`, 10000); } finally { setIsGenerating(false); }
     };
 
+    /**
+     * Uses AI to detect technical disciplines from uploaded files
+     * Auto-sets the discipline dropdown to the most prominent topic
+     */
     const handleDetectTopics = async () => {
         if (files.length === 0) return;
         if (!isApiReady) { showMessage("API key is required for detection. Please enter it in the settings panel.", 5000); return; }
@@ -431,6 +594,12 @@ ${getFileContext()}
         } catch (err) { setStatus('Failed'); } finally { setIsDetecting(false); }
     };
 
+    /**
+     * Translates a single question to target language
+     * Preserves uniqueId to maintain question variant linking
+     * @param {Object} q - Question object to translate
+     * @param {string} targetLang - Target language (e.g., 'Chinese (Simplified)')
+     */
     const handleTranslateSingle = async (q, targetLang) => {
         if (!isApiReady) { showMessage("API key is required for translation. Please enter it in the settings panel.", 5000); return; }
 
@@ -473,6 +642,10 @@ ${getFileContext()}
         }
     };
 
+    /**
+     * Generates AI explanation for why an answer is correct
+     * @param {Object} q - Question object
+     */
     const handleExplain = async (q) => {
         if (!isApiReady) { showMessage("API key is required for explanation. Please enter it in the settings panel.", 5000); return; }
 
@@ -485,6 +658,11 @@ ${getFileContext()}
         } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
     };
 
+    /**
+     * Generates variations of an existing question
+     * Creates new unique questions based on the original concept
+     * @param {Object} q - Source question to create variations from
+     */
     const handleVariate = async (q) => {
         if (!isApiReady) { showMessage("API key is required for creation. Please enter it in the settings panel.", 5000); return; }
 
@@ -504,6 +682,11 @@ ${getFileContext()}
         } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
     };
 
+    /**
+     * Generates AI critique for rejected questions
+     * Provides actionable suggestions for improvement
+     * @param {Object} q - Question object to critique
+     */
     const handleCritique = async (q) => {
         if (!isApiReady) { showMessage("API key is required for critique. Please enter it in the settings panel.", 5000); return; }
 
@@ -517,6 +700,18 @@ ${getFileContext()}
         } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
     };
 
+    // ========================================================================
+    // HANDLERS - Export Functions
+    // ========================================================================
+
+    /**
+     * Generates CSV content from question array
+     * @param {Array} validQuestions - Questions to export
+     * @param {string} creatorName - Creator name for CSV
+     * @param {string} reviewerName - Reviewer name for CSV
+     * @param {boolean} includeHeaders - Whether to include CSV header row
+     * @returns {string} CSV-formatted string
+     */
     const getCSVContent = (validQuestions, creatorName, reviewerName, includeHeaders = true) => {
         const headers = ["ID", "Question ID", "Discipline", "Type", "Difficulty", "Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer", "Generation Date", "Source URL", "Source Excerpt", "Creator", "Reviewer", "Language"];
         let csvContent = includeHeaders ? headers.map(safe).join(FIELD_DELIMITER) + '\n' : '';
@@ -530,6 +725,11 @@ ${getFileContext()}
         return csvContent;
     };
 
+    /**
+     * Exports questions segmented by Language, Discipline, Difficulty, and Type
+     * Creates separate CSV files for each unique combination
+     * Useful for organizing large question banks
+     */
     const handleExportByGroup = () => {
         const sourceList = showHistory ? [...questions, ...historicalQuestions] : questions;
         const valid = sourceList.filter(q => q.status !== 'rejected');
@@ -567,6 +767,10 @@ ${getFileContext()}
         setShowExportMenu(false);
     };
 
+    /**
+     * Exports only questions matching current filter settings
+     * Filters by language, discipline, difficulty, and type
+     */
     const handleExportCurrentTarget = () => {
         const sourceList = showHistory ? [...questions, ...historicalQuestions] : questions;
 
@@ -603,6 +807,10 @@ ${getFileContext()}
         setShowExportMenu(false);
     };
 
+    /**
+     * Exports questions to Google Sheets via Apps Script Web App
+     * Opens new tab for user to verify success
+     */
     const handleExportToSheets = async () => {
         if (!config.sheetUrl) { showMessage("Please enter a Google Apps Script URL in settings.", 5000); return; }
 
@@ -629,6 +837,10 @@ ${getFileContext()}
         }
     };
 
+    /**
+     * Loads questions from Google Sheets into Database View
+     * Maps Google Sheets column names to application schema
+     */
     const handleLoadFromSheets = async () => {
         if (!config.sheetUrl) { showMessage("Please enter a Google Apps Script URL first.", 3000); return; }
 
@@ -673,6 +885,11 @@ ${getFileContext()}
         }
     };
 
+    /**
+     * Bulk translates all accepted English questions to CN, JP, and KR
+     * Only translates missing language variants (skips existing translations)
+     * Uses uniqueId to link translations to original questions
+     */
     const handleBulkTranslateMissing = async () => {
         if (isProcessing) return;
         if (!isApiReady) { showMessage("API key is required for bulk translation. Please enter it in the settings panel.", 5000); return; }
@@ -748,6 +965,11 @@ ${getFileContext()}
         setIsProcessing(false);
     };
 
+    /**
+     * Updates a question in state (searches both current and historical)
+     * @param {number|string} id - Question ID to update
+     * @param {Function} updateFn - Function that receives current question and returns updated version
+     */
     const updateQuestionInState = (id, updateFn) => {
         let foundInQuestions = false;
         setQuestions(prev => {
@@ -770,6 +992,12 @@ ${getFileContext()}
         }
     };
 
+    /**
+     * Updates question status (accepted/rejected/pending)
+     * Clears critique when accepting a previously rejected question
+     * @param {number|string} id - Question ID
+     * @param {string} newStatus - New status value
+     */
     const handleUpdateStatus = (id, newStatus) => {
         updateQuestionInState(id, (q) => ({
             ...q,
@@ -778,84 +1006,49 @@ ${getFileContext()}
         }));
     };
 
+    /**
+     * Permanently deletes a question from all state
+     * @param {number|string} id - Question ID to delete
+     */
     const handleDelete = (id) => {
         setQuestions(prev => prev.filter(q => q.id !== id));
         setHistoricalQuestions(prev => prev.filter(q => q.id !== id));
         showMessage('Question deleted permanently.', 2000);
     };
 
+    /**
+     * Handles category selection from the progress panel
+     * @param {string} categoryKey - Category key (e.g., 'Easy MC', 'Hard T/F')
+     */
     const handleSelectCategory = (categoryKey) => {
         setConfig(prev => ({ ...prev, difficulty: categoryKey }));
     };
 
-    const uniqueFilteredQuestions = useMemo(() => {
-        // Fix: When showing history (or Review Mode), we should show ALL questions (current + history), not just history.
-        const sourceList = showHistory ? [...questions, ...historicalQuestions] : questions;
-        const currentLanguage = config.language;
-        const targetDifficulty = config.difficulty.split(' ')[0];
-        const targetTypeAbbrev = config.difficulty.split(' ')[1];
-        const targetType = targetTypeAbbrev === 'MC' ? 'Multiple Choice' : 'True/False';
+    // ========================================================================
+    // COMPUTED VALUES - Question Filtering
+    // ========================================================================
 
-        const filteredByGlobal = sourceList.filter(q => {
-            let statusMatch = true;
-            if (!showHistory && filterMode !== 'all') {
-                statusMatch = q.status === filterMode;
-            }
+    // Primary filter: Apply status, creator, search, discipline, difficulty, type filters
+    const filteredQuestions = useMemo(() => createFilteredQuestions(
+        questions,
+        historicalQuestions,
+        showHistory,
+        filterMode,
+        filterByCreator,
+        searchTerm,
+        config.creatorName,
+        config.discipline,
+        config.difficulty,
+        config.language
+    ), [questions, historicalQuestions, showHistory, filterMode, filterByCreator, searchTerm, config.creatorName, config.discipline, config.difficulty, config.language]);
 
-            const textMatch = (q.question && q.question.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (q.uniqueId && q.uniqueId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (q.discipline && q.discipline.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (q.difficulty && q.difficulty.toLowerCase().includes(searchTerm.toLowerCase()));
+    // Secondary filter: Deduplicate by uniqueId and select preferred language variant
+    // For each uniqueId, prioritizes the currently selected language
+    const uniqueFilteredQuestions = useMemo(() => createUniqueFilteredQuestions(
+        filteredQuestions,
+        config.language
+    ), [filteredQuestions, config.language]);
 
-            let creatorMatch = true;
-            if (filterByCreator && config.creatorName) {
-                const qCreator = (q.creatorName || '').toLowerCase().trim();
-                const configCreator = config.creatorName.toLowerCase().trim();
-                creatorMatch = (qCreator === configCreator);
-            }
-
-            const disciplineMatch = q.discipline === config.discipline;
-
-            return statusMatch && textMatch && creatorMatch && disciplineMatch;
-        });
-
-        const grouped = new Map();
-        filteredByGlobal.forEach(q => {
-            const id = q.uniqueId;
-            if (!grouped.has(id)) grouped.set(id, []);
-            grouped.get(id).push(q);
-        });
-
-        const finalDisplayList = [];
-
-        grouped.forEach((variants) => {
-            let filteredVariants = variants;
-            if (config.difficulty !== 'Balanced All') {
-                filteredVariants = variants.filter(v => {
-                    const qDiff = (v.difficulty || '').toLowerCase();
-                    const vType = (v.type || '').toLowerCase();
-                    return (qDiff === targetDifficulty.toLowerCase() && vType === targetType.toLowerCase());
-                });
-            }
-
-            if (filteredVariants.length === 0) return;
-
-            let selected = null;
-            selected = filteredVariants.find(v => (v.language || 'English') === currentLanguage);
-            if (!selected) {
-                selected = filteredVariants.find(v => (v.language || 'English') === 'English');
-            }
-            if (!selected) {
-                selected = filteredVariants[0];
-            }
-
-            if (selected) {
-                finalDisplayList.push(selected);
-            }
-        });
-
-        return finalDisplayList;
-    }, [historicalQuestions, questions, config.language, config.discipline, config.difficulty, filterMode, searchTerm, filterByCreator, config.creatorName, showHistory]);
 
     // Reset review index when entering review mode or when filters change
     useEffect(() => {
@@ -878,8 +1071,6 @@ ${getFileContext()}
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [appMode, uniqueFilteredQuestions.length]);
 
-    const filteredQuestions = uniqueFilteredQuestions;
-
     const totalApproved = useMemo(() => {
         return CATEGORY_KEYS.reduce((sum, key) => sum + approvedCounts[key], 0);
     }, [approvedCounts]);
@@ -888,10 +1079,13 @@ ${getFileContext()}
         return Math.min(100, (totalApproved / TARGET_TOTAL) * 100);
     }, [totalApproved]);
 
-    const apiKeyStatus = isInternalEnvironment ? 'Auto-Auth' : (config.apiKey.length > 5 ? 'Loaded' : 'Missing');
-
     const [showProgressMenu, setShowProgressMenu] = useState(false);
 
+    /**
+     * Handles app mode selection from landing page
+     * Configures appropriate filter settings for each mode
+     * @param {string} mode - App mode ('create', 'review', 'database')
+     */
     const handleModeSelect = (mode) => {
         setAppMode(mode);
         setShowExportMenu(false);
@@ -905,6 +1099,10 @@ ${getFileContext()}
         }
     };
 
+    /**
+     * Switches to database view and auto-loads from Google Sheets
+     * Requires Google Sheets URL to be configured
+     */
     const handleViewDatabase = async () => {
         // Always auto-load fresh data from Google Sheets when entering database view
         if (!config.sheetUrl) {
@@ -919,6 +1117,12 @@ ${getFileContext()}
         await handleLoadFromSheets();
     };
 
+    /**
+     * Advanced bulk export with multiple format and filtering options
+     * Supports CSV, JSON, Markdown, and Google Sheets
+     * Can segment files by language/discipline/difficulty/type
+     * @param {Object} exportOptions - Export configuration object
+     */
     const handleBulkExport = async (exportOptions) => {
         const { format, includeRejected, languages, scope, segmentFiles, limit } = exportOptions;
 
@@ -1013,6 +1217,8 @@ ${getFileContext()}
     const handleGoHome = () => {
         setAppMode('landing');
     };
+
+
 
     if (appMode === 'landing') {
         return <LandingPage onSelectMode={handleModeSelect} apiKeyStatus={apiKeyStatus} isCloudReady={isCloudReady} />;
