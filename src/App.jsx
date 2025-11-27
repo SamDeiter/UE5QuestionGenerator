@@ -1357,6 +1357,16 @@ ${getFileContext()}
                 </main>
             </div>
 
+            {/* NAME ENTRY MODAL */}
+            {showNameModal && (
+                <NameEntryModal
+                    onSave={(name) => {
+                        setConfig(prev => ({ ...prev, creatorName: name, reviewerName: name }));
+                        setShowNameModal(false);
+                    }}
+                />
+            )}
+
             {/* SETTINGS MODAL */}
             {
                 showSettings && (
