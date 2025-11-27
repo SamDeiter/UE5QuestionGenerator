@@ -26,7 +26,9 @@ const App = () => {
 
     // --- ENVIRONMENT AND API KEY STATUS CHECK ---
     // If __app_id is defined, assume we are in the Canvas environment and the API key will be auto-injected.
+    // If __app_id is defined, assume we are in the Canvas environment and the API key will be auto-injected.
     const isInternalEnvironment = typeof window.__app_id !== 'undefined';
+    const isAuthReady = true; // In local/Sheets mode, we are always "ready" for local ops.
 
     const [config, setConfig] = useState(() => {
         const saved = localStorage.getItem('ue5_gen_config');
