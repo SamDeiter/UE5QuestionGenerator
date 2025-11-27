@@ -64,9 +64,9 @@ This analysis evaluates the UE5 Question Generator against the "Specialized UX P
 3.  **Contrast Fix:** Adjust "Medium" difficulty badge colors. (✅ Done)
 
 ### P1 (High Value - Usability)
-1.  **Progressive Disclosure:** Group "Create" mode settings into an accordion.
-2.  **Sticky Actions:** Ensure "Generate" is always visible.
+1.  **Progressive Disclosure:** Group "Create" mode settings into an accordion. (✅ Done)
+2.  **Sticky Actions:** Ensure "Generate" is always visible. (✅ Done)
 
 ### P2 (Nice to Have)
-1.  **Inline Validation:** Replace some toasts with inline errors.
-2.  **Keyboard Shortcuts:** Add `Ctrl+Enter` to generate.
+1.  **Inline Validation:** Replace some toasts with inline errors. (✅ Done)
+2.  **Keyboard Shortcuts:** Add `Ctrl+Enter` to generate. (✅ Done)

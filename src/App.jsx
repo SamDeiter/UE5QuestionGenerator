@@ -152,11 +152,23 @@ const App = () => {
     // Search term for filtering questions by text content
     const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem('ue5_pref_search') || '');
 
+    // Debounced search term (updates 300ms after user stops typing)
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
     // Filter mode: 'pending', 'accepted', 'rejected', or 'all'
     const [filterMode, setFilterMode] = useState(() => localStorage.getItem('ue5_pref_filter') || 'pending');
 
     // Toggle between current session and all-time view
     const [showHistory, setShowHistory] = useState(() => localStorage.getItem('ue5_pref_history') === 'true');
+
+    // Debounce search term to avoid expensive filtering on every keystroke
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     // Persist preferences
     useEffect(() => {
@@ -170,9 +182,11 @@ const App = () => {
 
     // Toggle for advanced configuration in Create sidebar
     const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
+    const [showGenSettings, setShowGenSettings] = useState(true); // Toggle for primary generation settings
 
     // Inline validation state for API Key
     const [showApiError, setShowApiError] = useState(false);
+    const [batchSizeWarning, setBatchSizeWarning] = useState('');
 
 
 
@@ -348,11 +362,21 @@ const App = () => {
      */
     const handleChange = (e) => {
         const { name, value } = e.target;
+
         // Validate batch size for Balanced All mode
-        if (name === 'batchSize' && config.difficulty === 'Balanced All') {
-            const num = parseInt(value);
-            if (num % 6 !== 0) showMessage("For Balanced All mode, the batch size should be a multiple of 6 (e.g., 6, 12, 18) for an even distribution.", 3000);
+        if (name === 'batchSize') {
+            if (config.difficulty === 'Balanced All') {
+                const num = parseInt(value);
+                if (num % 6 !== 0) {
+                    setBatchSizeWarning("Batch size must be a multiple of 6 for Balanced Mode.");
+                } else {
+                    setBatchSizeWarning('');
+                }
+            } else {
+                setBatchSizeWarning('');
+            }
         }
+
         setConfig(prev => ({ ...prev, [name]: value }));
         // If user changes language in dropdown, update global language filter
         if (name === 'language') {
@@ -930,6 +954,16 @@ const App = () => {
      */
     const handleSelectCategory = (categoryKey) => {
         setConfig(prev => ({ ...prev, difficulty: categoryKey }));
+
+        // Re-validate batch size if switching to Balanced All
+        if (categoryKey === 'Balanced All') {
+            const num = parseInt(config.batchSize);
+            if (num % 6 !== 0) {
+                setBatchSizeWarning("Batch size must be a multiple of 6 for Balanced Mode.");
+            }
+        } else {
+            setBatchSizeWarning('');
+        }
     };
 
     // ========================================================================
@@ -1192,50 +1226,74 @@ const App = () => {
                     <aside className="w-80 flex-shrink-0 z-10 shadow-xl border-r border-slate-700 bg-slate-950 p-6 overflow-y-auto flex flex-col gap-6">
 
 
-                        {/* Discipline & Language - Moved to Top */}
-                        <div className="space-y-3 mb-6">
-                            <div className="space-y-1">
-                                <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Discipline</label><InfoTooltip text="Topic focus" /></div>
-                                <select name="discipline" value={config.discipline} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
-                                    <option value="Technical Art">Technical Art</option><option value="Animation & Rigging">Animation & Rigging</option><option value="Game Logic & Systems">Game Logic & Systems</option><option value="Look Development (Materials)">Look Development (Materials)</option><option value="Networking">Networking</option><option value="C++ Programming">C++ Programming</option><option value="VFX (Niagara)">VFX (Niagara)</option><option value="World Building & Level Design">World Building & Level Design</option><option value="Blueprints">Blueprints</option><option value="Lighting & Rendering">Lighting & Rendering</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Language</label></div>
-                                <select name="language" value={config.language} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
-                                    <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
-                                </select>
-                            </div>
+                        {/* Generation Settings Toggle */}
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <Icon name="sliders" size={14} /> Generation Settings
+                            </h2>
+                            <button
+                                onClick={() => setShowGenSettings(!showGenSettings)}
+                                className="text-slate-500 hover:text-white transition-colors p-1 rounded hover:bg-slate-800"
+                                title={showGenSettings ? "Collapse Settings" : "Expand Settings"}
+                            >
+                                <Icon name={showGenSettings ? "chevron-up" : "chevron-down"} size={16} />
+                            </button>
                         </div>
 
-                        {/* NEW OVERALL PROGRESS BOX */}
-                        <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-3">
-                            <div className="text-center">
-                                <h3 className="text-xl font-extrabold text-white">{allQuestionsMap.size}</h3>
-                                <p className="text-xs font-semibold uppercase text-slate-400">UNIQUE QUESTIONS IN DB</p>
-                            </div>
-                            <div className="border-t border-slate-800 pt-3 space-y-1">
-                                <div className="flex justify-between items-end">
-                                    <h3 className="text-xs font-bold text-slate-300">APPROVED QUOTA ({totalApproved}/{TARGET_TOTAL})</h3>
-                                    <span className="text-xs font-bold text-orange-400">{overallPercentage.toFixed(1)}%</span>
+                        {/* Collapsible Generation Settings */}
+                        {showGenSettings && (
+                            <div className="space-y-6 animate-in slide-in-from-top-2 duration-200 mb-6">
+                                {/* Discipline & Language */}
+                                <div className="space-y-3">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Discipline</label><InfoTooltip text="Topic focus" /></div>
+                                        <select name="discipline" value={config.discipline} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
+                                            <option value="Technical Art">Technical Art</option><option value="Animation & Rigging">Animation & Rigging</option><option value="Game Logic & Systems">Game Logic & Systems</option><option value="Look Development (Materials)">Look Development (Materials)</option><option value="Networking">Networking</option><option value="C++ Programming">C++ Programming</option><option value="VFX (Niagara)">VFX (Niagara)</option><option value="World Building & Level Design">World Building & Level Design</option><option value="Blueprints">Blueprints</option><option value="Lighting & Rendering">Lighting & Rendering</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Language</label></div>
+                                        <select name="language" value={config.language} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
+                                            <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="w-full h-1.5 rounded-full overflow-hidden bg-slate-700">
-                                    <div className="h-full bg-orange-600 transition-all duration-500" style={{ width: `${overallPercentage}%` }}></div>
+
+                                {/* NEW OVERALL PROGRESS BOX */}
+                                <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner space-y-3">
+                                    <div className="text-center">
+                                        <h3 className="text-xl font-extrabold text-white">{allQuestionsMap.size}</h3>
+                                        <p className="text-xs font-semibold uppercase text-slate-400">UNIQUE QUESTIONS IN DB</p>
+                                    </div>
+                                    <div className="border-t border-slate-800 pt-3 space-y-1">
+                                        <div className="flex justify-between items-end">
+                                            <h3 className="text-xs font-bold text-slate-300">APPROVED QUOTA ({totalApproved}/{TARGET_TOTAL})</h3>
+                                            <span className="text-xs font-bold text-orange-400">{overallPercentage.toFixed(1)}%</span>
+                                        </div>
+                                        <div className="w-full h-1.5 rounded-full overflow-hidden bg-slate-700">
+                                            <div className="h-full bg-orange-600 transition-all duration-500" style={{ width: `${overallPercentage}%` }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <GranularProgress approvedCounts={approvedCounts} target={TARGET_PER_CATEGORY} isTargetMet={isTargetMet} selectedDifficulty={config.difficulty} handleSelectCategory={handleSelectCategory} />
+
+
+
+                                <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner">
+                                    <div className="flex items-center mb-2">
+                                        <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2"><Icon name="hash" size={12} /> Batch Size (Max {maxBatchSize})</label>
+                                        <InfoTooltip text="Number of questions to generate in one batch. Dynamically capped by remaining quota." />
+                                    </div>
+                                    <input type="number" min="1" max={maxBatchSize} name="batchSize" value={config.batchSize} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500" placeholder="e.g. 6, 12, 18" />
+                                    {batchSizeWarning && (
+                                        <div className="text-xs text-yellow-500 mt-1 flex items-center gap-1 animate-pulse">
+                                            <Icon name="alert-triangle" size={12} /> {batchSizeWarning}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
-
-                        <GranularProgress approvedCounts={approvedCounts} target={TARGET_PER_CATEGORY} isTargetMet={isTargetMet} selectedDifficulty={config.difficulty} handleSelectCategory={handleSelectCategory} />
-
-
-
-                        <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner">
-                            <div className="flex items-center mb-2">
-                                <label className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2"><Icon name="hash" size={12} /> Batch Size (Max {maxBatchSize})</label>
-                                <InfoTooltip text="Number of questions to generate in one batch. Dynamically capped by remaining quota." />
-                            </div>
-                            <input type="number" min="1" max={maxBatchSize} name="batchSize" value={config.batchSize} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-orange-500" placeholder="e.g. 6, 12, 18" />
-                        </div>
+                        )}
                         {/* Sticky Action Footer */}
                         <div className="sticky bottom-0 bg-slate-950 pt-4 pb-2 border-t border-slate-800 z-20 -mx-6 px-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)]">
                             <div className="space-y-3">

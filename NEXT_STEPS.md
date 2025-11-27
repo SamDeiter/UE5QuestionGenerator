@@ -88,8 +88,8 @@
 
 **Tasks:**
 - [x] Implement **Virtual Scrolling** for large question lists using `react-virtuoso`
-- [ ] Add debouncing to search input
-- [ ] Memoize expensive computations
+- [x] Add debouncing to search input
+- [x] Memoize expensive computations
 - [ ] Lazy load components
 
 **Completed:** Virtual scrolling implemented for question lists
@@ -101,11 +101,11 @@
 **Goal:** WCAG 2.1 AA compliance
 
 **Tasks:**
-- [ ] Add ARIA labels to interactive elements
-- [ ] Ensure keyboard navigation works everywhere
+- [x] Add ARIA labels to interactive elements
+- [x] Ensure keyboard navigation works everywhere
 - [ ] Add focus indicators
 - [ ] Test with screen reader
-- [ ] Improve color contrast ratios
+- [x] Improve color contrast ratios
 
 **Estimated Time:** 2-3 hours  
 **Impact:** Wider user accessibility
@@ -118,9 +118,9 @@
 **Goal:** Prevent regressions
 
 **Tasks:**
-- [ ] Set up Jest + React Testing Library
-- [ ] Write tests for utility functions
-- [ ] Test question filtering logic
+- [x] Set up Jest + React Testing Library (Using Vitest + RTL)
+- [x] Write tests for utility functions (`helpers.test.js`, `questionFilters.test.js`)
+- [x] Test question filtering logic
 - [ ] Test CSV parsing
 - [ ] Test export functions
 
