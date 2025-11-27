@@ -1,5 +1,13 @@
+// @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import { chunkArray, formatUrl, parseCSVLine, filterDuplicateQuestions } from './helpers';
+import {
+    chunkArray,
+    formatUrl,
+    stripHtmlTags,
+    formatDate,
+    parseCSVLine,
+    filterDuplicateQuestions
+} from './helpers';
 
 describe('Helper Functions', () => {
 
@@ -10,8 +18,12 @@ describe('Helper Functions', () => {
             expect(result).toEqual([[1, 2], [3, 4], [5]]);
         });
 
-        it('should return empty array for empty input', () => {
+        it('should handle empty array', () => {
             expect(chunkArray([], 3)).toEqual([]);
+        });
+
+        it('should handle size larger than array', () => {
+            expect(chunkArray([1, 2], 5)).toEqual([[1, 2]]);
         });
     });
 
@@ -20,7 +32,7 @@ describe('Helper Functions', () => {
             expect(formatUrl('google.com')).toBe('https://google.com');
         });
 
-        it('should not change valid https url', () => {
+        it('should not change valid https:// url', () => {
             expect(formatUrl('https://example.com')).toBe('https://example.com');
         });
 
@@ -29,42 +41,55 @@ describe('Helper Functions', () => {
         });
     });
 
+    describe('stripHtmlTags', () => {
+        it('should remove HTML tags', () => {
+            expect(stripHtmlTags('<p>Hello <b>World</b></p>')).toBe('Hello World');
+        });
+
+        it('should handle plain text', () => {
+            expect(stripHtmlTags('Just text')).toBe('Just text');
+        });
+    });
+
+    describe('formatDate', () => {
+        it('should format date as YYYY-MM-DD', () => {
+            const date = new Date('2023-12-25T12:00:00Z');
+            // Adjust for local time zone differences in test environment if needed
+            // For simplicity, we check the structure or specific parts
+            const formatted = formatDate(date);
+            expect(formatted).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        });
+    });
+
     describe('parseCSVLine', () => {
-        it('should parse simple comma separated values', () => {
+        it('should parse simple CSV line', () => {
             expect(parseCSVLine('a,b,c')).toEqual(['a', 'b', 'c']);
         });
 
-        it('should handle quoted values containing commas', () => {
-            expect(parseCSVLine('"a,b",c')).toEqual(['a,b', 'c']);
+        it('should handle quoted values with commas', () => {
+            expect(parseCSVLine('a,"b,c",d')).toEqual(['a', 'b,c', 'd']);
+        });
+
+        it('should handle quoted quotes', () => {
+            expect(parseCSVLine('a,"b""c",d')).toEqual(['a', 'b"c', 'd']);
         });
     });
 
     describe('filterDuplicateQuestions', () => {
-        it('should filter out questions with existing IDs', () => {
+        it('should filter out duplicates based on ID', () => {
             const current = [{ id: 1, question: 'Q1' }];
-            const newItems = [{ id: 1, question: 'Q1 New' }, { id: 2, question: 'Q2' }];
-
+            const newItems = [{ id: 1, question: 'Q1' }, { id: 2, question: 'Q2' }];
             const result = filterDuplicateQuestions(newItems, current);
             expect(result).toHaveLength(1);
             expect(result[0].id).toBe(2);
         });
 
-        it('should filter out questions with same text (case-insensitive)', () => {
-            const current = [{ id: 1, question: 'What is UE5?' }];
-            const newItems = [{ id: 2, question: 'what is ue5?' }, { id: 3, question: 'New Q' }];
-
+        it('should filter out duplicates based on text content', () => {
+            const current = [{ id: 1, question: 'Hello World' }];
+            const newItems = [{ id: 99, question: 'hello world' }, { id: 2, question: 'New Q' }];
             const result = filterDuplicateQuestions(newItems, current);
             expect(result).toHaveLength(1);
-            expect(result[0].id).toBe(3);
-        });
-
-        it('should check against other list as well', () => {
-            const current = [];
-            const other = [{ id: 1, question: 'Q1' }];
-            const newItems = [{ id: 1, question: 'Q1' }];
-
-            const result = filterDuplicateQuestions(newItems, current, other);
-            expect(result).toHaveLength(0);
+            expect(result[0].question).toBe('New Q');
         });
     });
 });

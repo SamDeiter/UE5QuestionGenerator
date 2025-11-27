@@ -260,29 +260,57 @@ const App = () => {
                         });
                     }
 
-                    if (header.length > 5 && header[0].includes('ID') && header[2].includes('Discipline')) {
+                    // Check for v1.7 Format (Discipline at index 3) or v1.6 Format (Discipline at index 2)
+                    const isV17 = header[3] && header[3].includes('Discipline');
+                    const isV16 = header[2] && header[2].includes('Discipline');
+
+                    if (header.length > 5 && header[0].includes('ID') && (isV17 || isV16)) {
                         lines.slice(1).forEach((line, idx) => {
                             if (!line.trim()) return;
                             const cols = parseCSVLine(line);
                             if (cols.length < 10) return;
-                            const uniqueId = cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID();
-                            importedQuestions.push({
-                                id: Date.now() + idx + Math.random(),
-                                uniqueId: uniqueId,
-                                discipline: cols[2] || "Imported",
-                                type: cols[3] || "Multiple Choice",
-                                difficulty: cols[4] || "Easy",
-                                question: cols[5] || "",
-                                options: { A: cols[6] || "", B: cols[7] || "", C: cols[8] || "", D: cols[9] || "" },
-                                correct: cols[10] || "",
-                                dateAdded: cols[11] || new Date().toISOString(),
-                                sourceUrl: cols[12] || "",
-                                sourceExcerpt: cols[13] || "",
-                                creatorName: cols[14] || config.creatorName || "",
-                                reviewerName: cols[15] || "",
-                                status: 'accepted',
-                                language: cols[16] || fileLanguage || "English"
-                            });
+
+                            // v1.7 Mapping: 0:ID, 1:Unique, 2:Status, 3:Disc, 4:Diff, 5:Type, 6:Q, 7-10:Opts, 11:Ans, 12:Expl, 13:Lang, 14:Src, 15:Date
+                            // v1.6 Mapping: 0:ID, 1:Unique, 2:Disc, 3:Type, 4:Diff, 5:Q, 6-9:Opts, 10:Ans, 11:Date, 12:Src, 13:Exc, 14:Cr, 15:Rev, 16:Lang
+
+                            let qObj = {};
+                            if (isV17) {
+                                qObj = {
+                                    id: Date.now() + idx + Math.random(),
+                                    uniqueId: cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID(),
+                                    discipline: cols[3] || "Imported",
+                                    difficulty: cols[4] || "Easy",
+                                    type: cols[5] || "Multiple Choice",
+                                    question: cols[6] || "",
+                                    options: { A: cols[7] || "", B: cols[8] || "", C: cols[9] || "", D: cols[10] || "" },
+                                    correct: cols[11] || "",
+                                    explanation: cols[12] || "",
+                                    language: cols[13] || fileLanguage || "English",
+                                    sourceUrl: cols[14] || "",
+                                    status: 'accepted',
+                                    creatorName: config.creatorName || "",
+                                    reviewerName: ""
+                                };
+                            } else {
+                                // Fallback to v1.6
+                                qObj = {
+                                    id: Date.now() + idx + Math.random(),
+                                    uniqueId: cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID(),
+                                    discipline: cols[2] || "Imported",
+                                    type: cols[3] || "Multiple Choice",
+                                    difficulty: cols[4] || "Easy",
+                                    question: cols[5] || "",
+                                    options: { A: cols[6] || "", B: cols[7] || "", C: cols[8] || "", D: cols[9] || "" },
+                                    correct: cols[10] || "",
+                                    sourceUrl: cols[12] || "",
+                                    sourceExcerpt: cols[13] || "",
+                                    creatorName: cols[14] || config.creatorName || "",
+                                    reviewerName: cols[15] || "",
+                                    status: 'accepted',
+                                    language: cols[16] || fileLanguage || "English"
+                                };
+                            }
+                            importedQuestions.push(qObj);
                         });
                         if (importedQuestions.length > 0) {
                             console.log(`[CSV Import] Detected file language: ${fileLanguage || 'None (defaulting to English)'}`);
