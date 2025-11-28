@@ -5,7 +5,7 @@ import CritiqueDisplay from './CritiqueDisplay';
 import { sanitizeText, formatUrl, stripHtmlTags } from '../utils/helpers';
 import { LANGUAGE_CODES, LANGUAGE_FLAGS } from '../utils/constants';
 
-const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onTranslateSingle, onSwitchLanguage, onDelete, availableLanguages, isProcessing, appMode }) => {
+const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onRewrite, onTranslateSingle, onSwitchLanguage, onDelete, availableLanguages, isProcessing, appMode }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -158,11 +158,6 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                             {menuOpen && (
                                 <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                     <div className="py-1">
-                                        {isRejected && (
-                                            <button onClick={(e) => { e.stopPropagation(); onCritique(q); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-xs text-red-400 hover:bg-slate-700 flex items-center gap-2">
-                                                <Icon name="zap" size={14} /> AI Critique
-                                            </button>
-                                        )}
                                         <button onClick={(e) => { e.stopPropagation(); onExplain(q); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-xs text-indigo-300 hover:bg-slate-700 flex items-center gap-2">
                                             <Icon name="lightbulb" size={14} /> Explain Answer
                                         </button>
@@ -222,6 +217,18 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                                     >
                                         <Icon name="x" size={18} />
                                     </button>
+                                    {/* AI Critique Button - Always visible in Review mode */}
+                                    {appMode === 'review' && (
+                                        <button
+                                            onClick={() => onCritique(q)}
+                                            disabled={isProcessing}
+                                            className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400 disabled:opacity-50"
+                                            title="AI Critique"
+                                            aria-label="Get AI critique for this question"
+                                        >
+                                            <Icon name="zap" size={18} />
+                                        </button>
+                                    )}
                                     {isRejected && (
                                         <button
                                             onClick={() => onDelete(q.id)}
@@ -285,7 +292,7 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                 </div>
             )}
 
-            {q.critique && <CritiqueDisplay critique={q.critique} />}
+            {q.critique && <CritiqueDisplay critique={q.critique} onRewrite={() => onRewrite(q)} isProcessing={isProcessing} />}
 
             {q.explanation && (
                 <div className="mb-3 p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-lg animate-in fade-in slide-in-from-top-2">
