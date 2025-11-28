@@ -3,7 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { Virtuoso } from 'react-virtuoso';
 
 // UI Components
@@ -16,14 +16,21 @@ import BlockingProcessModal from './components/BlockingProcessModal';
 import FilterButton from './components/FilterButton';
 import GranularProgress from './components/GranularProgress';
 import Icon from './components/Icon';
-import BulkExportModal from './components/BulkExportModal';
 import Toast from './components/Toast';
 import Sidebar from './components/Sidebar';
 
-// Refactored Components
-import SettingsModal from './components/SettingsModal';
-import ReviewMode from './components/ReviewMode';
-import DatabaseView from './components/DatabaseView';
+// Lazy Loaded Components
+const SettingsModal = React.lazy(() => import('./components/SettingsModal'));
+const ReviewMode = React.lazy(() => import('./components/ReviewMode'));
+const DatabaseView = React.lazy(() => import('./components/DatabaseView'));
+const BulkExportModal = React.lazy(() => import('./components/BulkExportModal'));
+
+// Loading Fallback
+const LoadingSpinner = () => (
+    <div className="flex items-center justify-center p-10 text-slate-500">
+        <Icon name="loader" className="animate-spin mr-2" /> Loading...
+    </div>
+);
 
 // Custom Hooks
 import { useAppConfig } from './hooks/useAppConfig';
@@ -475,54 +482,56 @@ const App = () => {
                             </div>
                         )}
 
-                        {appMode === 'database' ? (
-                            <DatabaseView
-                                questions={databaseQuestions}
-                                sheetUrl={config.sheetUrl}
-                                onLoad={handleLoadFromSheets}
-                                onClearView={() => setDatabaseQuestions([])}
-                                onHardReset={() => setDatabaseQuestions([])}
-                                isProcessing={isProcessing}
-                            />
-                        ) : appMode === 'review' && uniqueFilteredQuestions.length > 0 ? (
-                            <ReviewMode
-                                questions={uniqueFilteredQuestions}
-                                currentIndex={currentReviewIndex}
-                                setCurrentIndex={setCurrentReviewIndex}
-                                onUpdateStatus={handleUpdateStatus}
-                                onExplain={handleExplain}
-                                onVariate={handleVariate}
-                                onCritique={handleCritique}
-                                onTranslateSingle={handleTranslateSingle}
-                                onSwitchLanguage={handleLanguageSwitch}
-                                onDelete={handleDelete}
-                                translationMap={translationMap}
-                                isProcessing={isProcessing}
-                            />
-                        ) : (
-                            <Virtuoso
-                                style={{ height: '100%' }}
-                                data={uniqueFilteredQuestions}
-                                itemContent={(index, q) => (
-                                    <div className="mb-4">
-                                        <QuestionItem
-                                            key={q.uniqueId}
-                                            q={q}
-                                            onUpdateStatus={handleUpdateStatus}
-                                            onExplain={handleExplain}
-                                            onVariate={handleVariate}
-                                            onCritique={handleCritique}
-                                            onTranslateSingle={handleTranslateSingle}
-                                            onSwitchLanguage={handleLanguageSwitch}
-                                            onDelete={handleDelete}
-                                            availableLanguages={translationMap.get(q.uniqueId)}
-                                            isProcessing={isProcessing}
-                                            appMode={appMode}
-                                        />
-                                    </div>
-                                )}
-                            />
-                        )}
+                        <Suspense fallback={<LoadingSpinner />}>
+                            {appMode === 'database' ? (
+                                <DatabaseView
+                                    questions={databaseQuestions}
+                                    sheetUrl={config.sheetUrl}
+                                    onLoad={handleLoadFromSheets}
+                                    onClearView={() => setDatabaseQuestions([])}
+                                    onHardReset={() => setDatabaseQuestions([])}
+                                    isProcessing={isProcessing}
+                                />
+                            ) : appMode === 'review' && uniqueFilteredQuestions.length > 0 ? (
+                                <ReviewMode
+                                    questions={uniqueFilteredQuestions}
+                                    currentIndex={currentReviewIndex}
+                                    setCurrentIndex={setCurrentReviewIndex}
+                                    onUpdateStatus={handleUpdateStatus}
+                                    onExplain={handleExplain}
+                                    onVariate={handleVariate}
+                                    onCritique={handleCritique}
+                                    onTranslateSingle={handleTranslateSingle}
+                                    onSwitchLanguage={handleLanguageSwitch}
+                                    onDelete={handleDelete}
+                                    translationMap={translationMap}
+                                    isProcessing={isProcessing}
+                                />
+                            ) : (
+                                <Virtuoso
+                                    style={{ height: '100%' }}
+                                    data={uniqueFilteredQuestions}
+                                    itemContent={(index, q) => (
+                                        <div className="mb-4">
+                                            <QuestionItem
+                                                key={q.uniqueId}
+                                                q={q}
+                                                onUpdateStatus={handleUpdateStatus}
+                                                onExplain={handleExplain}
+                                                onVariate={handleVariate}
+                                                onCritique={handleCritique}
+                                                onTranslateSingle={handleTranslateSingle}
+                                                onSwitchLanguage={handleLanguageSwitch}
+                                                onDelete={handleDelete}
+                                                availableLanguages={translationMap.get(q.uniqueId)}
+                                                isProcessing={isProcessing}
+                                                appMode={appMode}
+                                            />
+                                        </div>
+                                    )}
+                                />
+                            )}
+                        </Suspense>
 
                         {uniqueFilteredQuestions.length === 0 && filteredQuestions.length > 0 && (
                             <div className="flex flex-col items-center justify-center h-full text-slate-600 pt-10">
@@ -540,23 +549,25 @@ const App = () => {
                 </main >
             </div >
 
-            <SettingsModal
-                showSettings={showSettings}
-                setShowSettings={setShowSettings}
-                config={config}
-                handleChange={handleChange}
-                showApiKey={showApiKey}
-                setShowApiKey={setShowApiKey}
-                onClearData={() => {
-                    if (window.confirm("This will delete ALL your local questions and settings. Are you sure?")) {
-                        localStorage.removeItem('ue5_gen_config');
-                        localStorage.removeItem('ue5_gen_questions');
-                        setQuestions([]);
-                        setDatabaseQuestions([]);
-                        window.location.reload();
-                    }
-                }}
-            />
+            <Suspense fallback={null}>
+                <SettingsModal
+                    showSettings={showSettings}
+                    setShowSettings={setShowSettings}
+                    config={config}
+                    handleChange={handleChange}
+                    showApiKey={showApiKey}
+                    setShowApiKey={setShowApiKey}
+                    onClearData={() => {
+                        if (window.confirm("This will delete ALL your local questions and settings. Are you sure?")) {
+                            localStorage.removeItem('ue5_gen_config');
+                            localStorage.removeItem('ue5_gen_questions');
+                            setQuestions([]);
+                            setDatabaseQuestions([]);
+                            window.location.reload();
+                        }
+                    }}
+                />
+            </Suspense>
 
             {/* TOAST NOTIFICATIONS */}
             <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">

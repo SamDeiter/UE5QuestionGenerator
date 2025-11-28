@@ -315,4 +315,4 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
     );
 };
 
-export default QuestionItem;
+export default React.memo(QuestionItem);
