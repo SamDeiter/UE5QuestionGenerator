@@ -83,6 +83,26 @@ This pushes the `dist/` folder to the `gh-pages` branch.
 
 ---
 
+## 🔧 Troubleshooting
+
+### API Rate Limits (429 Errors)
+If you encounter `429 Too Many Requests` errors, it means you have exceeded the quota for the free tier of the Gemini API.
+
+**Symptoms:**
+- Generation fails midway through a batch.
+- "Resource Exhausted" errors in the console.
+
+**Mitigation:**
+1.  **Reduce Batch Size:** Lower the batch size in the Sidebar settings (e.g., from 12 to 6).
+2.  **Wait:** The quota resets every minute/day. Wait a few moments and try again.
+3.  **Check Quota:** Visit [Google AI Studio](https://aistudio.google.com/) to check your current usage.
+
+**Long-term Fix:**
+- Upgrade to a paid plan (Vertex AI).
+- Implement more aggressive request throttling in `src/services/gemini.js`.
+
+---
+
 ## 🤝 Contribution Guidelines
 1.  **Code Style:** Follow standard React/ES6+ conventions.
 2.  **Commits:** Use descriptive commit messages (e.g., `feat: Add new filter`, `fix: CSV parsing error`).

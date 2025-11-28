@@ -165,6 +165,28 @@
 
 ---
 
+### Priority 6: Scaling & Optimization (Future)
+
+#### 6.1 Vertex AI Fine-tuning
+**Goal:** Improve question quality and reduce prompt size by training a custom model.
+**Why:**
+- **Consistency:** Fine-tuned models follow strict formatting rules better than prompted models.
+- **Quality:** Learns the specific "tone" and difficulty from a dataset of approved questions.
+- **Efficiency:** Reduces token usage by removing large system instructions.
+
+**Prerequisites:**
+- A dataset of 100-500 manually approved, high-quality questions.
+- Google Cloud Platform (GCP) project with billing enabled.
+
+#### 6.2 Handling Rate Limits
+**Issue:** The free tier of Gemini API (AI Studio) has strict rate limits (RPM/TPM).
+**Solutions:**
+- **Implement Backoff:** Add exponential backoff to API calls (already partially handled).
+- **Batch Processing:** Reduce concurrency or increase delays between batch items.
+- **Upgrade to Paid Tier:** Move to Vertex AI or paid AI Studio tier for higher quotas.
+
+---
+
 ## 🚀 Quick Wins (Can Do Now)
 
 These are small improvements with high impact:
