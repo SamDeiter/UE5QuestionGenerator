@@ -462,6 +462,27 @@ const App = () => {
                     <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4">
                         {!showHistory && uniqueFilteredQuestions.length === 0 && questions.length === 0 && !status && appMode === 'create' && (<div className="flex flex-col items-center justify-center h-full text-slate-600"><Icon name="terminal" size={48} className="mb-4 text-slate-800" /><p className="font-medium text-slate-500">Ready. Click 'GENERATE QUESTIONS' to begin or upload a source file.</p></div>)}
 
+                        {/* CREATE MODE: Call-to-Action Banner */}
+                        {appMode === 'create' && questions.length > 0 && (
+                            <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 border border-indigo-700/50 rounded-lg p-4 mb-4 animate-in fade-in slide-in-from-top-2">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="info" size={20} className="text-indigo-400" />
+                                        <div>
+                                            <h3 className="text-sm font-bold text-indigo-300">Questions Generated!</h3>
+                                            <p className="text-xs text-slate-400">Switch to Review Mode to accept or reject questions.</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleModeSelect('review')}
+                                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-indigo-900/50"
+                                    >
+                                        Go to Review <Icon name="arrow-right" size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {appMode === 'database' ? (
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center bg-blue-900/20 p-4 rounded border border-blue-800/50">

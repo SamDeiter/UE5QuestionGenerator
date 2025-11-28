@@ -193,7 +193,18 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
 
                         {/* Action Buttons (Large) */}
                         <div className="flex items-center gap-2">
-                            {appMode !== 'creation' && (
+                            {appMode === 'create' ? (
+                                // CREATE MODE: Only show Delete (Discard) button
+                                <button
+                                    onClick={() => onDelete(q.id)}
+                                    className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-red-900/30 hover:text-red-400 border border-slate-700 hover:border-red-900/50"
+                                    title="Discard this question"
+                                    aria-label="Discard question"
+                                >
+                                    <Icon name="trash-2" size={18} />
+                                </button>
+                            ) : (
+                                // REVIEW/DATABASE MODE: Show Accept/Reject/Delete
                                 <>
                                     <button
                                         onClick={() => onUpdateStatus(q.id, 'accepted')}
