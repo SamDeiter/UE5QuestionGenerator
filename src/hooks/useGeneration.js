@@ -48,8 +48,7 @@ export const useGeneration = (
 
         // Analyze token usage before API call
         const tokenAnalysis = analyzeRequest(systemPrompt, userPrompt, 2000, config.model || 'gemini-1.5-flash');
-        console.log('📊 Token Analysis:', tokenAnalysis);
-        console.log(`💰 Estimated cost: ${tokenAnalysis.cost.formatted}`);
+
 
         try {
             const text = await generateContent(effectiveApiKey, systemPrompt, userPrompt, setStatus, config.temperature, config.model);
@@ -96,7 +95,7 @@ export const useGeneration = (
 
             addQuestionsToState(uniqueNewQuestions, false);
 
-            console.log(`✅ Generated ${uniqueNewQuestions.length} questions in ${(duration / 1000).toFixed(1)}s`);
+
             setStatus('');
         } catch (err) {
             const endTime = Date.now();

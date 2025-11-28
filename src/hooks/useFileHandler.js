@@ -24,7 +24,7 @@ export const useFileHandler = (config, setConfig, addQuestionsToState, showMessa
         const analysis = analyzeOptimization(originalContext, optimizedContext);
 
         if (analysis.reduction.percentage > 0) {
-            console.log(`📉 Context optimized: ${analysis.reduction.percentage}% reduction (${analysis.reduction.tokens} tokens saved)`);
+
         }
 
         return "\n\n### ATTACHED LOCAL SOURCE FILES:\n" + optimizedContext;
@@ -49,7 +49,7 @@ export const useFileHandler = (config, setConfig, addQuestionsToState, showMessa
             if (result.type === 'questions') {
                 addQuestionsToState(result.data, showHistory);
                 importedCount += result.data.length;
-                console.log(`[Import] Imported ${result.data.length} questions from ${file.name} (${result.language})`);
+
             } else if (result.type === 'reference') {
                 setFiles(prev => [...prev, result.data]);
                 referenceCount++;

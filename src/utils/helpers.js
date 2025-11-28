@@ -227,7 +227,7 @@ export const filterDuplicateQuestions = (newItems, currentList, otherList = []) 
     });
 
     if (uniqueNew.length < newItems.length) {
-        console.log(`Filtered out ${newItems.length - uniqueNew.length} duplicate questions.`);
+
     }
 
     return uniqueNew;
