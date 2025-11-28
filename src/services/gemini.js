@@ -1,13 +1,13 @@
-export const generateContent = async (effectiveKey, systemPrompt, userPrompt, setStatus) => {
+export const generateContent = async (effectiveKey, systemPrompt, userPrompt, setStatus, temperature = 0.2, model = 'gemini-1.5-flash') => {
     // Note: If effectiveKey is "", the platform runtime will inject the correct key.
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${effectiveKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${effectiveKey}`;
 
     const payload = {
         contents: [{ parts: [{ text: userPrompt }] }],
         systemInstruction: { parts: [{ text: systemPrompt }] },
         tools: [{ google_search: {} }],
         generationConfig: {
-            temperature: 0.2,
+            temperature: temperature,
             maxOutputTokens: 8192
         }
     };

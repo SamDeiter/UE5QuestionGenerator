@@ -5,7 +5,7 @@ import CritiqueDisplay from './CritiqueDisplay';
 import { sanitizeText, formatUrl, stripHtmlTags } from '../utils/helpers';
 import { LANGUAGE_CODES, LANGUAGE_FLAGS } from '../utils/constants';
 
-const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onTranslateSingle, onSwitchLanguage, onDelete, availableLanguages, isProcessing }) => {
+const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onTranslateSingle, onSwitchLanguage, onDelete, availableLanguages, isProcessing, appMode }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -121,7 +121,10 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
                 <div className="flex justify-between items-start">
                     <div className="flex flex-col gap-1">
                         <div className="flex gap-2 items-center">
-                            <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(q.difficulty)}`}>{q.difficulty}</span>
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(q.difficulty)} flex items-center gap-1`}>
+                                <Icon name="zap" size={12} />
+                                {q.difficulty}
+                            </span>
                             <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">{q.type === 'True/False' ? 'T/F' : 'MC'}</span>
 
                             {/* Creator / Reviewer Info - Moved to Top */}
@@ -190,31 +193,35 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onT
 
                         {/* Action Buttons (Large) */}
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => onUpdateStatus(q.id, 'accepted')}
-                                className={`p-2 rounded-lg transition-all ${q.status === 'accepted' ? 'bg-green-600 text-white shadow-lg shadow-green-900/50' : 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'}`}
-                                title="Accept"
-                                aria-label="Accept question"
-                            >
-                                <Icon name="check" size={18} />
-                            </button>
-                            <button
-                                onClick={() => onUpdateStatus(q.id, 'rejected')}
-                                className={`p-2 rounded-lg transition-all ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'bg-slate-800 text-slate-500 hover:bg-red-900/20 hover:text-red-500'}`}
-                                title="Reject"
-                                aria-label="Reject question"
-                            >
-                                <Icon name="x" size={18} />
-                            </button>
-                            {isRejected && (
-                                <button
-                                    onClick={() => onDelete(q.id)}
-                                    className="p-2 rounded-lg transition-all bg-slate-900 text-red-400 hover:bg-red-900/30 hover:text-red-300 border border-red-900/50"
-                                    title="Delete Permanently"
-                                    aria-label="Delete question permanently"
-                                >
-                                    <Icon name="trash-2" size={18} />
-                                </button>
+                            {appMode !== 'creation' && (
+                                <>
+                                    <button
+                                        onClick={() => onUpdateStatus(q.id, 'accepted')}
+                                        className={`p-2 rounded-lg transition-all ${q.status === 'accepted' ? 'bg-green-600 text-white shadow-lg shadow-green-900/50' : 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'}`}
+                                        title="Accept"
+                                        aria-label="Accept question"
+                                    >
+                                        <Icon name="check" size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => onUpdateStatus(q.id, 'rejected')}
+                                        className={`p-2 rounded-lg transition-all ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'bg-slate-800 text-slate-500 hover:bg-red-900/20 hover:text-red-500'}`}
+                                        title="Reject"
+                                        aria-label="Reject question"
+                                    >
+                                        <Icon name="x" size={18} />
+                                    </button>
+                                    {isRejected && (
+                                        <button
+                                            onClick={() => onDelete(q.id)}
+                                            className="p-2 rounded-lg transition-all bg-slate-900 text-red-400 hover:bg-red-900/30 hover:text-red-300 border border-red-900/50"
+                                            title="Delete Permanently"
+                                            aria-label="Delete question permanently"
+                                        >
+                                            <Icon name="trash-2" size={18} />
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>

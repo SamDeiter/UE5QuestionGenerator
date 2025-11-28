@@ -17,13 +17,49 @@ export const formatUrl = (url) => {
     return cleanUrl;
 };
 
-export const sanitizeText = (text) => {
-    if (typeof text !== 'string') return String(text);
-    let output = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*\*/g, '');
-    const temp = document.createElement('div');
-    temp.innerHTML = output;
-    return temp.innerHTML;
+export const renderMarkdown = (t) => {
+    if (!t) return "";
+
+    // Preserve HTML tags we want to keep (<b>, <i>, <code>)
+    const htmlTagPlaceholders = [];
+    let safe = String(t)
+        .replace(/(<b>|<\/b>|<i>|<\/i>|<code>|<\/code>)/g, (match) => {
+            const placeholder = `__HTML_TAG_${htmlTagPlaceholders.length}__`;
+            htmlTagPlaceholders.push(match);
+            return placeholder;
+        });
+
+    // Now escape other HTML
+    safe = safe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    // formatting replacements
+    safe = safe
+        // Headers - Restored some spacing
+        .replace(/^### (.*$)/gim, '<h3 class="text-orange-400 font-bold text-xs mt-3 mb-1 uppercase tracking-wide">$1</h3>')
+        .replace(/^#### (.*$)/gim, '<h4 class="text-slate-200 font-bold text-[10px] mt-2 mb-1 uppercase">$1</h4>')
+        // Bold
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-orange-300 font-bold">$1</strong>')
+        // Lists - Better indentation
+        .replace(/^\s*\* (.*$)/gim, '<div class="ml-3 flex items-start gap-2"><span class="text-orange-500 mt-1 text-[10px] flex-shrink-0">•</span><span>$1</span></div>')
+        // Italics - Restricted to single line
+        .replace(/\*([^\n*]+)\*/g, '<em class="text-slate-300 italic">$1</em>')
+        // Collapse multiple newlines into a larger spacing div
+        .replace(/\n\s*\n/g, '<div class="h-2"></div>')
+        // Single newlines to breaks
+        .replace(/\n/g, '<br />');
+
+    // Restore preserved HTML tags
+    htmlTagPlaceholders.forEach((tag, index) => {
+        safe = safe.replace(`__HTML_TAG_${index}__`, tag);
+    });
+
+    return safe;
 };
+
+export const sanitizeText = (text) => renderMarkdown(text);
 
 export const stripHtmlTags = (text) => {
     if (typeof text !== 'string') return text;
@@ -113,6 +149,11 @@ export const parseQuestions = (text) => {
         const correctLetter = cols[10];
         const sourceUrl = cols[11];
         const sourceExcerpt = cols[12];
+        let qualityScore = null;
+        if (cols[13]) {
+            const match = cols[13].match(/\d+/);
+            if (match) qualityScore = parseInt(match[0]);
+        }
 
         if (!question || !correctLetter || question.includes('---')) return;
 
@@ -138,8 +179,10 @@ export const parseQuestions = (text) => {
             correct: correctLetter || "",
             sourceUrl: sourceUrl || "",
             sourceExcerpt: sourceExcerpt || "",
+            initialQuality: qualityScore,
             status: 'pending',
-            critique: null
+            critique: null,
+            critiqueScore: null
         });
     });
 

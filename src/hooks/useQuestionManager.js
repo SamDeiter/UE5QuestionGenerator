@@ -1,0 +1,189 @@
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { filterDuplicateQuestions } from '../utils/helpers';
+import { CATEGORY_KEYS, TARGET_PER_CATEGORY, TARGET_TOTAL } from '../utils/constants';
+
+export const useQuestionManager = (config, showMessage) => {
+    // Current session questions
+    const [questions, setQuestions] = useState(() => {
+        const saved = localStorage.getItem('ue5_gen_questions');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    // Historical questions
+    const [historicalQuestions, setHistoricalQuestions] = useState([]);
+
+    // Database view questions
+    const [databaseQuestions, setDatabaseQuestions] = useState([]);
+
+    // Central question storage map
+    const [allQuestionsMap, setAllQuestionsMap] = useState(new Map());
+
+    // Delete confirmation state
+    const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+    const [showClearModal, setShowClearModal] = useState(false);
+
+    // Persist session questions
+    useEffect(() => localStorage.setItem('ue5_gen_questions', JSON.stringify(questions)), [questions]);
+
+    // Recompute allQuestionsMap
+    useEffect(() => {
+        const combined = [...questions, ...historicalQuestions];
+        const newMap = new Map();
+        combined.forEach(q => {
+            const id = q.uniqueId;
+            if (!newMap.has(id)) newMap.set(id, []);
+            newMap.get(id).push(q);
+        });
+        setAllQuestionsMap(newMap);
+    }, [questions, historicalQuestions]);
+
+    // Translation Map
+    const translationMap = useMemo(() => {
+        const map = new Map();
+        Array.from(allQuestionsMap.keys()).forEach(uniqueId => {
+            const variants = allQuestionsMap.get(uniqueId);
+            const langSet = new Set(variants.map(v => v.language || 'English'));
+            map.set(uniqueId, langSet);
+        });
+        return map;
+    }, [allQuestionsMap]);
+
+    // Helper to add questions
+    const addQuestionsToState = useCallback((newItems, isHistory = false) => {
+        const targetSet = isHistory ? setHistoricalQuestions : setQuestions;
+        targetSet(prev => {
+            const otherList = isHistory ? questions : historicalQuestions;
+            const uniqueNew = filterDuplicateQuestions(newItems, prev, otherList);
+            return [...prev, ...uniqueNew];
+        });
+    }, [questions, historicalQuestions]);
+
+    // Helper to update question
+    const updateQuestionInState = useCallback((id, updateFn) => {
+        let foundInQuestions = false;
+        setQuestions(prev => {
+            const idx = prev.findIndex(q => q.id === id);
+            if (idx === -1) return prev;
+            foundInQuestions = true;
+            const newArr = [...prev];
+            newArr[idx] = updateFn(newArr[idx]);
+            return newArr;
+        });
+
+        if (!foundInQuestions) {
+            setHistoricalQuestions(prev => {
+                const idx = prev.findIndex(q => q.id === id);
+                if (idx === -1) return prev;
+                const newArr = [...prev];
+                newArr[idx] = updateFn(newArr[idx]);
+                return newArr;
+            });
+        }
+    }, []);
+
+    // Status update handler
+    const handleUpdateStatus = useCallback((id, newStatus) => {
+        updateQuestionInState(id, (q) => ({
+            ...q,
+            status: newStatus,
+            critique: newStatus === 'accepted' ? null : q.critique
+        }));
+    }, [updateQuestionInState]);
+
+    // Statistics
+    const approvedCounts = useMemo(() => {
+        const counts = CATEGORY_KEYS.reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
+        const countedIds = new Set();
+
+        Array.from(allQuestionsMap.values()).forEach(variants => {
+            const baseQ = variants.find(v => (v.language || 'English') === 'English') || variants[0];
+
+            if (baseQ && baseQ.status === 'accepted' && !countedIds.has(baseQ.uniqueId) && baseQ.discipline === config.discipline) {
+                const typeAbbrev = baseQ.type === 'True/False' ? 'T/F' : 'MC';
+                const key = `${baseQ.difficulty} ${typeAbbrev}`;
+                if (counts.hasOwnProperty(key)) {
+                    counts[key]++;
+                    countedIds.add(baseQ.uniqueId);
+                }
+            }
+        });
+        return counts;
+    }, [allQuestionsMap, config.discipline]);
+
+    const approvedCount = questions.filter(q => q.status !== 'rejected').length;
+    const rejectedCount = questions.filter(q => q.status === 'rejected').length;
+    const pendingCount = questions.length - approvedCount - rejectedCount;
+
+    const totalApproved = useMemo(() => {
+        return CATEGORY_KEYS.reduce((sum, key) => sum + approvedCounts[key], 0);
+    }, [approvedCounts]);
+
+    const overallPercentage = useMemo(() => {
+        return Math.min(100, (totalApproved / TARGET_TOTAL) * 100);
+    }, [totalApproved]);
+
+    const isTargetMet = useMemo(() => {
+        if (config.difficulty === 'Balanced All') return false;
+        const currentCount = approvedCounts[config.difficulty];
+        return currentCount >= TARGET_PER_CATEGORY;
+    }, [config.difficulty, approvedCounts]);
+
+    const maxBatchSize = useMemo(() => {
+        if (config.difficulty === 'Balanced All') {
+            const maxRemaining = Math.max(...CATEGORY_KEYS.map(key => TARGET_PER_CATEGORY - approvedCounts[key]));
+            if (maxRemaining <= 0) return 0;
+            return Math.min(30, Math.floor(TARGET_TOTAL / 6) * 6);
+        } else {
+            const remaining = TARGET_PER_CATEGORY - approvedCounts[config.difficulty];
+            return Math.min(33, Math.max(0, remaining));
+        }
+    }, [config.difficulty, approvedCounts]);
+
+    // Delete Handlers
+    const handleDelete = (id) => setDeleteConfirmId(id);
+
+    const confirmDelete = () => {
+        if (deleteConfirmId) {
+            setQuestions(prev => prev.filter(q => q.id !== deleteConfirmId));
+            setHistoricalQuestions(prev => prev.filter(q => q.id !== deleteConfirmId));
+            if (showMessage) showMessage('Question deleted permanently.', 2000);
+            setDeleteConfirmId(null);
+        }
+    };
+
+    const handleDeleteAllQuestions = () => {
+        setShowClearModal(false);
+        setQuestions([]);
+        setHistoricalQuestions([]);
+        if (showMessage) showMessage("Local session cleared.", 3000);
+    };
+
+    const checkAndStoreQuestions = async (newQuestions) => {
+        return newQuestions;
+    };
+
+    return {
+        questions, setQuestions,
+        historicalQuestions, setHistoricalQuestions,
+        databaseQuestions, setDatabaseQuestions,
+        allQuestionsMap,
+        translationMap,
+        addQuestionsToState,
+        updateQuestionInState,
+        handleUpdateStatus,
+        approvedCounts,
+        approvedCount,
+        rejectedCount,
+        pendingCount,
+        totalApproved,
+        overallPercentage,
+        isTargetMet,
+        maxBatchSize,
+        deleteConfirmId, setDeleteConfirmId,
+        showClearModal, setShowClearModal,
+        handleDelete,
+        confirmDelete,
+        handleDeleteAllQuestions,
+        checkAndStoreQuestions
+    };
+};

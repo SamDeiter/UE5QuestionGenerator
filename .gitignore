@@ -1,3 +1,7 @@
 node_modules
 
 dist
+
+key.env
+.env
+*.env

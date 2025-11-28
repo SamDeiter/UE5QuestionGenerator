@@ -59,6 +59,8 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
             "sourceExcerpt": stripHtmlTags(row.sourceExcerpt), // This field is not used in the new GAS, but kept for consistency
             "creator": row.creatorName, // This field is not used in the new GAS, but kept for consistency
             "reviewer": row.reviewerName, // This field is not used in the new GAS, but kept for consistency
+            "QualityScore": row.critiqueScore || row.initialQuality || "",
+            "AICritique": stripHtmlTags(row.critique || "")
         };
     });
 

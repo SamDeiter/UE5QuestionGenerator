@@ -47,6 +47,15 @@ export const constructSystemPrompt = (config, fileContext) => {
         ? `Generate approximately ${easyCount} Easy, ${mediumCount} Medium, and ${hardCount} Hard questions. Aim for ${mcCount} Multiple Choice questions and ${tfCount} True/False questions for a balanced batch.`
         : `Generate exactly ${batchNum} questions of difficulty: ${difficulty}.`;
 
+    // --- NEW: Temperature-based Mode Logic ---
+    const temp = parseFloat(config.temperature) || 0.7;
+    let modeInstruction = "Standard technical accuracy.";
+    if (temp < 0.3) {
+        modeInstruction = "STRICT MODE: Focus ONLY on fundamental, widely-used features. Use simple, direct language. Avoid complex scenarios. Questions must be straightforward and brief (1 sentence preferred).";
+    } else if (temp > 0.7) {
+        modeInstruction = "WILD MODE: Focus on obscure features or edge cases, but KEEP IT CONCISE. Test deep knowledge without writing a novel.";
+    }
+
     return `
 ## Universal UE5 Scenario-Based Question Generator — Gemini Version
 Role: You are a senior Unreal Engine 5 technical writer. Create short, clear, scenario-driven questions in Simplified Technical English (STE).
@@ -55,19 +64,27 @@ Discipline: ${config.discipline}
 Target Language: ${config.language}
 Question Type: ${targetType}
 **LANGUAGE STRICTNESS:** Output ONLY in ${config.language}. Do NOT provide bilingual text.
+**GENERATION MODE:** ${modeInstruction}
+**CUSTOM RULES:** ${config.customRules || "None"}
+
 Question Format:
-| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |
+| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | QualityScore |
 - ID starts at 1.
 - Difficulty levels: Easy / Medium / Hard.
 - For True/False questions: OptionA=TRUE, OptionB=FALSE. CorrectLetter=A/B.
 - **CRITICAL RULE:** True/False questions must be a SINGLE assertion.
 - **TYPE RULE:** If Question Type is 'Multiple Choice ONLY', do NOT generate True/False questions. If Question Type is 'True/False ONLY', do NOT generate Multiple Choice questions.
+- **QualityScore:** Estimate 0-100 how well this question matches the Mode. IF TEMP IS EXTREME (${temp}), LOWER YOUR SCORE ESTIMATE by 10-15 points.
+
 Sourcing:
 1. Official Epic Games Documentation (dev.epicgames.com/documentation)
 2. Attached Local Files
 **FORBIDDEN SOURCES:** Do NOT use forums, Reddit, community wikis, or external video platforms like YouTube.
+
 Output:
 - **OUTPUT INSTRUCTION:** ${difficultyPrompt}
+- **CONCISENESS IS KING.** Max 2 sentences per question. Avoid "A Technical Artist is..." setups if possible. Just ask the question.
+
 ${fileContext}
 `;
 };
