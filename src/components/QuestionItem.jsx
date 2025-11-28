@@ -199,8 +199,20 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
                                     <Icon name="trash-2" size={18} />
                                 </button>
                             ) : (
-                                // REVIEW/DATABASE MODE: Show Accept/Reject/Delete
+                                // REVIEW/DATABASE MODE: Show AI Critique/Accept/Reject/Delete
                                 <>
+                                    {/* AI Critique Button - First option in Review mode */}
+                                    {appMode === 'review' && (
+                                        <button
+                                            onClick={() => onCritique(q)}
+                                            disabled={isProcessing}
+                                            className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400 disabled:opacity-50"
+                                            title="AI Critique"
+                                            aria-label="Get AI critique for this question"
+                                        >
+                                            <Icon name="zap" size={18} />
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => onUpdateStatus(q.id, 'accepted')}
                                         className={`p-2 rounded-lg transition-all ${q.status === 'accepted' ? 'bg-green-600 text-white shadow-lg shadow-green-900/50' : 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'}`}
@@ -217,18 +229,6 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
                                     >
                                         <Icon name="x" size={18} />
                                     </button>
-                                    {/* AI Critique Button - Always visible in Review mode */}
-                                    {appMode === 'review' && (
-                                        <button
-                                            onClick={() => onCritique(q)}
-                                            disabled={isProcessing}
-                                            className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400 disabled:opacity-50"
-                                            title="AI Critique"
-                                            aria-label="Get AI critique for this question"
-                                        >
-                                            <Icon name="zap" size={18} />
-                                        </button>
-                                    )}
                                     {isRejected && (
                                         <button
                                             onClick={() => onDelete(q.id)}

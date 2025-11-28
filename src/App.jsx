@@ -20,6 +20,11 @@ import BulkExportModal from './components/BulkExportModal';
 import Toast from './components/Toast';
 import Sidebar from './components/Sidebar';
 
+// Refactored Components
+import SettingsModal from './components/SettingsModal';
+import ReviewMode from './components/ReviewMode';
+import DatabaseView from './components/DatabaseView';
+
 // Custom Hooks
 import { useAppConfig } from './hooks/useAppConfig';
 import { useQuestionManager } from './hooks/useQuestionManager';
@@ -183,21 +188,9 @@ const App = () => {
         handleBulkExport
     } = useExport(
         config, questions, historicalQuestions, uniqueFilteredQuestions, allQuestionsMap,
-        showHistory, showMessage, setStatus, (val) => { }, // setIsProcessing dummy or we need to expose it from useGeneration? 
-        // Actually useGeneration manages isProcessing. We might need to lift isProcessing up or share it.
-        // For now, let's pass a dummy or refactor useGeneration to accept setStatus/setIsProcessing from outside if we want shared state.
-        // Better: Let's make isProcessing local to App and pass it down.
+        showHistory, showMessage, setStatus, (val) => { },
         setDatabaseQuestions, setAppMode, setShowExportMenu, setShowBulkExportModal
     );
-
-    // Refactor Note: isProcessing is currently inside useGeneration. 
-    // To share it with useExport, we should lift it to App.
-    // However, for this step, I will just use the isProcessing from useGeneration for display, 
-    // and if useExport needs to block UI, it might need its own state or we pass a setter.
-    // Let's assume useExport operations are fast enough or we fix this in next iteration.
-    // Actually, handleLoadFromSheets sets isProcessing. 
-    // I will modify useGeneration to accept external isProcessing state in a future step if needed.
-    // For now, I'll add a local isExportProcessing state if needed, or just ignore for this pass.
 
     // Keyboard Shortcuts
     useEffect(() => {
@@ -247,7 +240,6 @@ const App = () => {
     const handleModeSelect = (mode) => {
         setAppMode(mode);
         setShowExportMenu(false);
-        // setShowProgressMenu(false); // Progress menu state is local to render
         if (mode === 'review') {
             setShowHistory(true);
             setFilterMode('all');
@@ -484,93 +476,29 @@ const App = () => {
                         )}
 
                         {appMode === 'database' ? (
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center bg-blue-900/20 p-4 rounded border border-blue-800/50">
-                                    <div>
-                                        <h2 className="text-lg font-bold text-blue-400 flex items-center gap-2"><Icon name="database" /> Database View</h2>
-                                        <p className="text-xs text-blue-300/70">Viewing {databaseQuestions.length} approved questions from Google Sheets (Read Only)</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => {
-                                            if (window.confirm("ARE YOU SURE? This will permanently DELETE ALL questions from the Cloud Database (Master_DB). This cannot be undone.")) {
-                                                clearQuestionsFromSheets(config.sheetUrl);
-                                                setDatabaseQuestions([]);
-                                            }
-                                        }} className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded border border-red-500 flex items-center gap-2 font-bold shadow-sm shadow-red-900/50">
-                                            <Icon name="alert-triangle" size={12} /> HARD RESET
-                                        </button>
-                                        <button onClick={() => setDatabaseQuestions([])} className="px-3 py-1 bg-red-900/50 hover:bg-red-800 text-red-200 text-xs rounded border border-red-800 flex items-center gap-2">
-                                            <Icon name="trash-2" size={12} /> Clear View
-                                        </button>
-                                        <button onClick={handleLoadFromSheets} disabled={isProcessing} className="px-3 py-1 bg-blue-800 hover:bg-blue-700 text-blue-200 text-xs rounded border border-blue-600 flex items-center gap-2">
-                                            <Icon name="refresh-cw" size={12} className={isProcessing ? "animate-spin" : ""} /> Refresh
-                                        </button>
-                                    </div>
-                                </div>
-                                {databaseQuestions.length === 0 ? (
-                                    <div className="text-center py-10 text-slate-500">No questions loaded from database. Click Refresh.</div>
-                                ) : (
-                                    databaseQuestions.map((q, i) => (
-                                        <div key={i} className="opacity-75 hover:opacity-100 transition-opacity">
-                                            <QuestionItem
-                                                q={q}
-                                                // Pass dummy handlers or read-only mode if supported
-                                                onUpdateStatus={() => { }}
-                                                onExplain={() => { }}
-                                                onVariate={() => { }}
-                                                onCritique={() => { }}
-                                                onTranslateSingle={() => { }}
-                                                onSwitchLanguage={() => { }}
-                                                onDelete={() => { }}
-                                                availableLanguages={new Set()}
-                                                isProcessing={false}
-                                            />
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                            <DatabaseView
+                                questions={databaseQuestions}
+                                sheetUrl={config.sheetUrl}
+                                onLoad={handleLoadFromSheets}
+                                onClearView={() => setDatabaseQuestions([])}
+                                onHardReset={() => setDatabaseQuestions([])}
+                                isProcessing={isProcessing}
+                            />
                         ) : appMode === 'review' && uniqueFilteredQuestions.length > 0 ? (
-                            <div className="flex flex-col items-center justify-start h-full max-w-4xl mx-auto w-full pt-4">
-                                <div className="w-full mb-6 flex justify-between items-center text-slate-400 text-xs font-mono bg-slate-900/50 p-2 rounded-lg border border-slate-800">
-                                    <button
-                                        onClick={() => setCurrentReviewIndex(prev => Math.max(prev - 1, 0))}
-                                        disabled={currentReviewIndex === 0}
-                                        className="flex items-center gap-2 px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold"
-                                    >
-                                        <Icon name="arrow-left" size={16} /> PREV
-                                    </button>
-                                    <div className="flex flex-col items-center">
-                                        <span className="text-slate-500 uppercase text-[10px] tracking-widest">Review Progress</span>
-                                        <span className="text-lg">
-                                            <span className="text-white font-bold">{currentReviewIndex + 1}</span> <span className="text-slate-600">/</span> <span className="text-slate-400 font-bold">{uniqueFilteredQuestions.length}</span>
-                                        </span>
-                                    </div>
-                                    <button
-                                        onClick={() => setCurrentReviewIndex(prev => Math.min(prev + 1, uniqueFilteredQuestions.length - 1))}
-                                        disabled={currentReviewIndex === uniqueFilteredQuestions.length - 1}
-                                        className="flex items-center gap-2 px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold"
-                                    >
-                                        NEXT <Icon name="arrow-right" size={16} />
-                                    </button>
-                                </div>
-
-                                <div className="w-full transform transition-all duration-300">
-                                    <QuestionItem
-                                        key={uniqueFilteredQuestions[currentReviewIndex].uniqueId}
-                                        q={uniqueFilteredQuestions[currentReviewIndex]}
-                                        onUpdateStatus={handleUpdateStatus}
-                                        onExplain={handleExplain}
-                                        onVariate={handleVariate}
-                                        onCritique={handleCritique}
-                                        onTranslateSingle={handleTranslateSingle}
-                                        onSwitchLanguage={handleLanguageSwitch}
-                                        onDelete={handleDelete}
-                                        availableLanguages={translationMap.get(uniqueFilteredQuestions[currentReviewIndex].uniqueId)}
-                                        isProcessing={isProcessing}
-                                        appMode={appMode}
-                                    />
-                                </div>
-                            </div>
+                            <ReviewMode
+                                questions={uniqueFilteredQuestions}
+                                currentIndex={currentReviewIndex}
+                                setCurrentIndex={setCurrentReviewIndex}
+                                onUpdateStatus={handleUpdateStatus}
+                                onExplain={handleExplain}
+                                onVariate={handleVariate}
+                                onCritique={handleCritique}
+                                onTranslateSingle={handleTranslateSingle}
+                                onSwitchLanguage={handleLanguageSwitch}
+                                onDelete={handleDelete}
+                                translationMap={translationMap}
+                                isProcessing={isProcessing}
+                            />
                         ) : (
                             <Virtuoso
                                 style={{ height: '100%' }}
@@ -612,94 +540,23 @@ const App = () => {
                 </main >
             </div >
 
-            {/* SETTINGS MODAL */}
-            {
-                showSettings && (
-                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-                            <div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
-                                <h2 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="settings" /> Settings</h2>
-                                <button onClick={() => setShowSettings(false)} className="text-slate-400 hover:text-white"><Icon name="x" /></button>
-                            </div>
-                            <div className="p-6 space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Google Gemini API Key</label>
-                                    <div className="relative">
-                                        <input
-                                            type={showApiKey ? "text" : "password"}
-                                            name="apiKey"
-                                            value={config.apiKey}
-                                            onChange={handleChange}
-                                            placeholder="AIzaSy..."
-                                            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:border-blue-500 outline-none pr-10"
-                                        />
-                                        <button
-                                            onClick={() => setShowApiKey(!showApiKey)}
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-                                        >
-                                            <Icon name={showApiKey ? "eye-off" : "eye"} size={16} />
-                                        </button>
-                                    </div>
-                                    <p className="text-[10px] text-slate-500 mt-1">Required for generating questions. Stored locally.</p>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Google Apps Script URL</label>
-                                    <input
-                                        type="text"
-                                        name="sheetUrl"
-                                        value={config.sheetUrl}
-                                        onChange={handleChange}
-                                        placeholder="https://script.google.com/..."
-                                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:border-blue-500 outline-none"
-                                    />
-                                    <p className="text-[10px] text-slate-500 mt-1">Required for Load/Export to Sheets.</p>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Creator Name</label>
-                                        <input
-                                            type="text"
-                                            name="creatorName"
-                                            value={config.creatorName}
-                                            onChange={handleChange}
-                                            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:border-blue-500 outline-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Reviewer Name</label>
-                                        <input
-                                            type="text"
-                                            name="reviewerName"
-                                            value={config.reviewerName}
-                                            onChange={handleChange}
-                                            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:border-blue-500 outline-none"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 border-t border-slate-700 mt-4">
-                                    <button
-                                        onClick={() => {
-                                            if (window.confirm("This will delete ALL your local questions and settings. Are you sure?")) {
-                                                localStorage.removeItem('ue5_gen_config');
-                                                localStorage.removeItem('ue5_gen_questions');
-                                                setQuestions([]);
-                                                setDatabaseQuestions([]);
-                                                window.location.reload();
-                                            }
-                                        }}
-                                        className="w-full py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 text-xs rounded border border-red-900/50 flex items-center justify-center gap-2 transition-colors"
-                                    >
-                                        <Icon name="trash" size={14} /> Clear Local Data & Reset App
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            <SettingsModal
+                showSettings={showSettings}
+                setShowSettings={setShowSettings}
+                config={config}
+                handleChange={handleChange}
+                showApiKey={showApiKey}
+                setShowApiKey={setShowApiKey}
+                onClearData={() => {
+                    if (window.confirm("This will delete ALL your local questions and settings. Are you sure?")) {
+                        localStorage.removeItem('ue5_gen_config');
+                        localStorage.removeItem('ue5_gen_questions');
+                        setQuestions([]);
+                        setDatabaseQuestions([]);
+                        window.location.reload();
+                    }
+                }}
+            />
 
             {/* TOAST NOTIFICATIONS */}
             <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">

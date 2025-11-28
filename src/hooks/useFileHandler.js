@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { processUploadedFile } from '../utils/fileProcessor';
 import { generateContent } from '../services/gemini';
+import { optimizeContext, processMultipleFiles, analyzeOptimization } from '../utils/contextOptimizer';
 
 export const useFileHandler = (config, setConfig, addQuestionsToState, showMessage, setStatus, isApiReady, effectiveApiKey) => {
     const [files, setFiles] = useState([]);
@@ -10,20 +11,23 @@ export const useFileHandler = (config, setConfig, addQuestionsToState, showMessa
     const removeFile = (index) => { setFiles(prev => prev.filter((_, i) => i !== index)); };
 
     const getFileContext = () => {
-        const MAX_FILE_CONTENT_LENGTH = 10000;
-        let fileContext = "";
-        if (files.length > 0) {
-            fileContext = "\n\n### ATTACHED LOCAL SOURCE FILES:\n";
-            files.forEach(f => {
-                const content = f.content.substring(0, MAX_FILE_CONTENT_LENGTH);
-                const isTruncated = f.content.length > MAX_FILE_CONTENT_LENGTH;
-                fileContext += `\n--- START FILE: ${f.name} (Size: ${f.size} bytes) ---\n`;
-                fileContext += content;
-                if (isTruncated) fileContext += `\n[... File content truncated to ${MAX_FILE_CONTENT_LENGTH} characters for prompt size safety]`;
-                fileContext += "\n--- END FILE ---\n";
-            });
+        if (files.length === 0) return "";
+
+        // Use context optimizer for smart file processing
+        const optimizedContext = processMultipleFiles(
+            files.map(f => ({ name: f.name, content: f.content })),
+            config.discipline
+        );
+
+        // Log optimization results
+        const originalContext = files.map(f => `## ${f.name}\n${f.content}`).join('\n\n');
+        const analysis = analyzeOptimization(originalContext, optimizedContext);
+
+        if (analysis.reduction.percentage > 0) {
+            console.log(`📉 Context optimized: ${analysis.reduction.percentage}% reduction (${analysis.reduction.tokens} tokens saved)`);
         }
-        return fileContext;
+
+        return "\n\n### ATTACHED LOCAL SOURCE FILES:\n" + optimizedContext;
     };
 
     const handleFileChange = async (e, showHistory) => {

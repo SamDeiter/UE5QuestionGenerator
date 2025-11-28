@@ -1,247 +1,49 @@
-# UE5 Question Generator - Next Steps Plan
+# Project Roadmap: Remaining Tasks
 
-## ✅ Completed: Code Cleanup & Bug Fixes (Session 1)
+## 🟢 Phase 1: Final Validation & Polish (Current Priority)
+**Goal:** Ensure the application is polished, accessible, and bug-free for release.
 
-### What Was Done
-1. **Fixed Critical Bugs**
-   - Added missing state variables: `showExportMenu`, `showSettings`, `showApiKey`
-   - Fixed `ReferenceError` exceptions preventing app startup
-   - Added missing imports: `parseCSVLine`, `filterDuplicateQuestions`, `LANGUAGE_FLAGS`, `LANGUAGE_CODES`
+### 1.1 Manual Validation
+- [ ] **End-to-End Walkthrough:** Manually test the full flow: Generate -> Review -> Edit -> Export.
+- [ ] **Edge Cases:** Test with network offline, invalid API keys, and malformed CSV imports.
+- [ ] **Cross-Browser Check:** Verify layout on Chrome, Firefox, and Edge.
 
-2. **Comprehensive Documentation**
-   - Added 100+ lines of JSDoc comments
-   - Documented all major handler functions with parameter types
-   - Added section headers for code organization
-   - Explained complex logic (CSV parsing, language detection, AI prompts)
-
-3. **Code Quality**
-   - Total changes: 420 insertions, 99 deletions
-   - Committed to Git with detailed commit message
+### 1.2 Accessibility (WCAG 2.1 AA)
+- [ ] **Focus Indicators:** Ensure all interactive elements have visible focus states for keyboard users.
+- [ ] **Screen Reader Testing:** Verify compatibility with NVDA or Narrator.
+- [ ] **Reduced Motion:** Respect user's system preference for reduced motion.
 
 ---
 
-## 🎯 Recommended Next Steps
+## 🟡 Phase 2: Scaling & Infrastructure (Next Up)
+**Goal:** Prepare the application for heavier usage and higher quality generation.
 
-### Priority 1: Testing & Validation (Immediate)
-**Goal:** Ensure the application works correctly after bug fixes
+### 2.1 Vertex AI Integration
+- [ ] **Dataset Preparation:** Curate a dataset of 100+ "Gold Standard" questions.
+- [ ] **Fine-tuning:** Train a custom Gemini model on Vertex AI for consistent formatting and tone.
+- [ ] **Integration:** Update `gemini.js` to use the fine-tuned model endpoint.
 
-#### Tasks:
-1. **Manual Testing**
-   - [ ] Test all three start options from landing page
-   - [ ] Verify question generation works
-   - [ ] Test CSV import with language detection
-   - [ ] Test translation features (single & bulk)
-   - [ ] Verify export functions (CSV, Sheets, segmented)
-   - [ ] Test review mode navigation
-
-2. **Error Handling Review**
-   - [ ] Check console for any remaining errors
-   - [ ] Verify all API calls have proper error handling
-   - [ ] Test offline/network failure scenarios
-
-**Estimated Time:** 30-45 minutes  
-**Risk if Skipped:** Medium - May have introduced regressions
-
-### Completed Fixes (Session 2 & 3)
-- [x] Fixed `ReferenceError: handleBulkExport` by reordering `useEffect`.
-- [x] Hardcoded Google Sheets URL to load on first launch.
-- [x] **Refactoring:** Extracted `handleFileChange` to `src/utils/fileProcessor.js`.
-- [x] **Refactoring:** Extracted `constructSystemPrompt` to `src/services/promptBuilder.js`.
-- [x] **Refactoring:** Extracted export logic to `src/utils/exportUtils.js`.
-- [x] **Security:** Implemented file upload validation (size, type, content).
-- [x] **UX:** Added `Ctrl+Enter` keyboard shortcut for generation.
-- [x] **UX:** Persisted user preferences (filters, view mode) to `localStorage`.
-- [x] **Deployment:** Fixed `vite.svg` 404 and `main.jsx` MIME type errors.
-- [x] **Testing:** Added unit tests for `googleSheets.js`.
+### 2.2 Robust Rate Limiting
+- [ ] **Queue System:** Implement a request queue to manage API limits (RPM/TPM).
+- [ ] **User Feedback:** Show precise "Cooling down..." timers to the user when limits are hit.
 
 ---
 
-### Priority 2: Code Quality Improvements (Short-term)
+## 🔵 Phase 3: Future Enhancements (Backlog)
+**Goal:** Add value-add features based on user feedback.
 
-#### 2.1 Remove Unused Code (Completed)
-- [x] Audit all imported components for actual usage
-- [x] Remove unused state variables
-- [x] Check for dead code paths
+### 3.1 Advanced Analytics
+- [ ] **Dashboard:** Visual graphs of question difficulty distribution.
+- [ ] **Export History:** Track previously exported batches to prevent duplicates.
 
-#### 2.2 Extract Large Functions (Completed)
-- [x] `handleFileChange` → `utils/fileProcessor.js`
-- [x] `constructSystemPrompt` → `services/promptBuilder.js`
-- [x] `handleBulkExport` / `getCSVContent` → `utils/exportUtils.js`
-
----
-
-### Priority 3: Feature Enhancements (Medium-term)
-
-#### 3.1 Enhanced Error Reporting (Completed ✅)
-**Goal:** Better user feedback for failures and crash prevention
-
-**Tasks:**
-- [x] Add **Error Boundary** component to prevent white screen crashes
-- [x] Implement toast notification system
-- [x] Add detailed error logging (console errors)
-- [ ] Create error recovery flows
-
-**Completed:** Error boundary and toast notifications implemented
-
-#### 3.2 Performance Optimization (Completed ✅)
-**Goal:** Faster rendering and smoother UX
-
-**Tasks:**
-- [x] Implement **Virtual Scrolling** for large question lists using `react-virtuoso`
-- [x] Add debouncing to search input
-- [x] Memoize expensive computations
-- [ ] Lazy load components
-
-**Completed:** Virtual scrolling implemented for question lists
-
-**Estimated Time:** 3-4 hours
-**Impact:** Better performance with large datasets
-
-#### 3.3 Accessibility Improvements
-**Goal:** WCAG 2.1 AA compliance
-
-**Tasks:**
-- [x] Add ARIA labels to interactive elements
-- [x] Ensure keyboard navigation works everywhere
-- [ ] Add focus indicators
-- [ ] Test with screen reader
-- [x] Improve color contrast ratios
-
-**Estimated Time:** 2-3 hours  
-**Impact:** Wider user accessibility
+### 3.2 Content Expansion
+- [ ] **New Disciplines:** Add support for C++, Animation, and Audio specific question types.
+- [ ] **Image Generation:** (Experimental) Generate diagrams for questions.
 
 ---
 
-### Priority 4: Testing Infrastructure (Long-term)
-
-#### 4.1 Unit Tests
-**Goal:** Prevent regressions
-
-**Tasks:**
-- [x] Set up Jest + React Testing Library (Using Vitest + RTL)
-- [x] Write tests for utility functions (`helpers.test.js`, `questionFilters.test.js`)
-- [x] Test question filtering logic
-- [x] Test CSV parsing (`fileProcessor.test.js`)
-- [x] Test export functions (`exportUtils.test.js`)
-
-**Estimated Time:** 4-6 hours  
-**Impact:** Confidence in code changes
-
-#### 4.2 Integration Tests
-**Goal:** Test critical user flows
-
-**Tasks:**
-- [ ] Test question generation flow
-- [ ] Test import/export flows
-- [ ] Test translation workflows
-- [ ] Test Google Sheets integration
-
-**Estimated Time:** 3-4 hours  
-**Impact:** Catch integration issues early
-
----
-
-### Priority 5: Documentation (Ongoing)
-
-#### 5.1 User Documentation
-**Tasks:**
-- [x] Create user guide with screenshots (See `USER_GUIDE.md`)
-- [x] Document all features
-- [x] Add troubleshooting section
-- [ ] Create video tutorials
-
-**Estimated Time:** 4-6 hours  
-**Impact:** Easier onboarding
-
-#### 5.2 Developer Documentation
-**Tasks:**
-- [x] Document architecture decisions (See `DEVELOPER_GUIDE.md`)
-- [x] Create component diagram
-- [x] Document data flow
-- [x] Add contribution guidelines
-
-**Estimated Time:** 2-3 hours  
-**Impact:** Easier collaboration
-
----
-
-### Priority 6: Scaling & Optimization (Future)
-
-#### 6.1 Vertex AI Fine-tuning
-**Goal:** Improve question quality and reduce prompt size by training a custom model.
-**Why:**
-- **Consistency:** Fine-tuned models follow strict formatting rules better than prompted models.
-- **Quality:** Learns the specific "tone" and difficulty from a dataset of approved questions.
-- **Efficiency:** Reduces token usage by removing large system instructions.
-
-**Prerequisites:**
-- A dataset of 100-500 manually approved, high-quality questions.
-- Google Cloud Platform (GCP) project with billing enabled.
-
-#### 6.2 Handling Rate Limits
-**Issue:** The free tier of Gemini API (AI Studio) has strict rate limits (RPM/TPM).
-**Solutions:**
-- **Implement Backoff:** Add exponential backoff to API calls (already partially handled).
-- **Batch Processing:** Reduce concurrency or increase delays between batch items.
-- **Upgrade to Paid Tier:** Move to Vertex AI or paid AI Studio tier for higher quotas.
-
----
-
-## 🚀 Quick Wins (Can Do Now)
-
-These are small improvements with high impact:
-
-1. **Add Loading States** (Done)
-   - Show spinners during API calls
-   - Disable buttons during processing
-
-2. **Improve Error Messages** (Done)
-   - Make error messages more specific
-   - Add actionable suggestions
-
-3. **Add Keyboard Shortcuts** (Done)
-   - `Ctrl+S` to save/export
-   - `Ctrl+E` to open export menu
-   - Arrow keys in review mode (already done)
-
-4. **Add Confirmation Dialogs** (Done)
-   - Confirm before deleting questions
-   - Confirm before clearing all data
-
----
-
-## 📊 Metrics to Track
-
-### Code Quality
-- Lines of code
-- Test coverage percentage
-- Number of linting errors
-- Complexity scores
-
-### User Experience
-- Time to first question generated
-- Error rate
-- User satisfaction (if collecting feedback)
-
-### Performance
-- Initial load time
-- Question generation time
-- Export time for large datasets
-
----
-
-## 🎓 Applying the AI Quality Gate Framework
-
-Based on the document you shared, here's how we can apply those principles:
-
----
-
-## 💡 Recommended Immediate Action
-
-**Start with Priority 1 (Testing)** to ensure stability, then move to Quick Wins for immediate user value.
-
-Would you like me to:
-1. **Run the manual tests** and create a test report?
-2. **Start on Quick Wins** (loading states, better errors)?
-3. **Create a detailed implementation plan** for a specific priority?
-4. **Something else?**
+## ✅ Completed Milestones
+- **Core Functionality:** Question Generation, Translation, Import/Export.
+- **Testing:** Unit Tests (Utilities), Integration Tests (Generation, Translation, Import/Export).
+- **UX/UI:** Virtual Scrolling, Dark Mode, Responsive Design.
+- **Documentation:** User Guide, Developer Guide.

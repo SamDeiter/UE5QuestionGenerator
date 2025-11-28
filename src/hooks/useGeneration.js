@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { generateContent } from '../services/gemini';
 import { constructSystemPrompt } from '../services/promptBuilder';
 import { parseQuestions } from '../utils/helpers';
+import { analyzeRequest, estimateTokens } from '../utils/tokenCounter';
+import { logGeneration, logQuestion } from '../utils/analyticsStore';
 
 export const useGeneration = (
     config,
@@ -40,19 +42,87 @@ export const useGeneration = (
         if (config.difficulty !== 'Balanced All' && isTargetMet) { showMessage(`Quota met for ${config.difficulty}! Change difficulty/type or discipline to continue.`, 5000); return; }
 
         setIsGenerating(true); setShowHistory(false); setStatus('Drafting Scenarios...');
+        const startTime = Date.now();
         const systemPrompt = constructSystemPrompt(config, getFileContext());
         const userPrompt = `Generate ${config.batchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}. Ensure links work for UE 5.7 or latest available.`;
+
+        // Analyze token usage before API call
+        const tokenAnalysis = analyzeRequest(systemPrompt, userPrompt, 2000, config.model || 'gemini-1.5-flash');
+        console.log('📊 Token Analysis:', tokenAnalysis);
+        console.log(`💰 Estimated cost: ${tokenAnalysis.cost.formatted}`);
+
         try {
             const text = await generateContent(effectiveApiKey, systemPrompt, userPrompt, setStatus, config.temperature, config.model);
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+
             let newQuestions = parseQuestions(text);
             if (newQuestions.length === 0) throw new Error("Failed to parse generated questions.");
             const taggedQuestions = newQuestions.map(q => ({ ...q, language: config.language }));
             const uniqueNewQuestions = await checkAndStoreQuestions(taggedQuestions);
 
+            // Calculate actual output tokens and average quality
+            const outputTokens = estimateTokens(text);
+            const avgQuality = uniqueNewQuestions.reduce((sum, q) => sum + (q.qualityScore || 0), 0) / uniqueNewQuestions.length;
+
+            // Log generation to analytics
+            const generationId = logGeneration({
+                discipline: config.discipline,
+                difficulty: config.difficulty,
+                batchSize: config.batchSize,
+                tokensUsed: { input: tokenAnalysis.input.total, output: outputTokens },
+                duration,
+                questionsGenerated: uniqueNewQuestions.length,
+                averageQuality: Math.round(avgQuality),
+                success: true,
+                model: config.model || 'gemini-1.5-flash',
+                estimatedCost: tokenAnalysis.cost.estimated
+            });
+
+            // Log each question
+            uniqueNewQuestions.forEach(q => {
+                logQuestion({
+                    id: q.id,
+                    generationId,
+                    created: q.dateAdded,
+                    status: 'pending',
+                    qualityScore: q.qualityScore,
+                    discipline: q.discipline,
+                    difficulty: q.difficulty,
+                    type: q.type,
+                    questionText: q.question
+                });
+            });
+
             addQuestionsToState(uniqueNewQuestions, false);
 
+            console.log(`✅ Generated ${uniqueNewQuestions.length} questions in ${(duration / 1000).toFixed(1)}s`);
             setStatus('');
-        } catch (err) { console.error(err); setStatus('Error'); showMessage(`Generation Error: ${err.message}. Please try again.`, 10000); } finally { setIsGenerating(false); }
+        } catch (err) {
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+
+            // Log failed generation
+            logGeneration({
+                discipline: config.discipline,
+                difficulty: config.difficulty,
+                batchSize: config.batchSize,
+                tokensUsed: tokenAnalysis ? { input: tokenAnalysis.input.total, output: 0 } : { input: 0, output: 0 },
+                duration,
+                questionsGenerated: 0,
+                averageQuality: 0,
+                success: false,
+                errorMessage: err.message,
+                model: config.model || 'gemini-1.5-flash',
+                estimatedCost: tokenAnalysis ? tokenAnalysis.cost.estimated : 0
+            });
+
+            console.error(err);
+            setStatus('Error');
+            showMessage(`Generation Error: ${err.message}. Please try again.`, 10000);
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const handleTranslateSingle = async (q, targetLang) => {
