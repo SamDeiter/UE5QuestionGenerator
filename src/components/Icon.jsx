@@ -1,7 +1,7 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
 
-const Icon = ({ name, size = 16, className = "" }) => {
+const Icon = ({ name, size = 16, className = "", ariaLabel, role }) => {
     // Convert kebab-case to PascalCase for Lucide component name
     const pascalName = name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
 
@@ -14,7 +14,15 @@ const Icon = ({ name, size = 16, className = "" }) => {
         return <span style={{ width: size, height: size, display: 'inline-block' }} />;
     }
 
-    return <LucideIcon size={size} className={className} />;
+    return (
+        <LucideIcon
+            size={size}
+            className={className}
+            aria-label={ariaLabel}
+            aria-hidden={!ariaLabel}
+            role={role || (ariaLabel ? 'img' : 'presentation')}
+        />
+    );
 };
 
 export default Icon;
