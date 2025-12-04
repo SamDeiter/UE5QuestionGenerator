@@ -23,6 +23,14 @@ const QuestionMetadata = ({ q, showMessage }) => {
 
     return (
         <>
+            {/* Answer Mismatch Warning - Most Critical */}
+            {q.answerMismatch && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded bg-red-900/50 border border-red-500 text-red-300 mb-2 animate-pulse" title="The marked correct answer doesn't appear in the source excerpt - this question may be WRONG!">
+                    <Icon name="alert-octagon" size={16} />
+                    <span className="text-xs font-bold">⚠️ ANSWER MAY BE WRONG - Check Source!</span>
+                </div>
+            )}
+
             {/* Source Verification Badge */}
             {q.sourceVerified !== undefined && (
                 <div className={`flex items-center gap-2 px-2 py-1 rounded text-[10px] font-bold uppercase ${verification.bg} ${verification.color} mb-2`} title={verification.title}>

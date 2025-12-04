@@ -111,6 +111,21 @@ ${examplesText}
   - **If FALSE:** The assertion must be a **common misconception** or a specific limitation (e.g., "Nanite supports skeletal meshes in UE 5.0" -> False). Do not generate random falsehoods (e.g., "Nanite is a sound engine").
   - **Validation:** The \`SourceExcerpt\` must explicitly prove why the statement is True or False.
 
+### 2.5 ANSWER VALIDATION (CRITICAL - READ CAREFULLY)
+**BEFORE generating any question, you MUST:**
+1. **Find the answer in the documentation FIRST**
+2. **Put that EXACT answer as one of your options (A, B, C, or D)**
+3. **Set CorrectLetter to match that option**
+
+**FAILURE MODE TO AVOID:** Do NOT generate a question where the correct answer from the source is NOT included in the options!        
+**EXAMPLE OF FAILURE:** Source says "Material Editor" but you list options: Level Editor, Blueprint Editor, Cascade Editor, Static Mesh Editor - THIS IS WRONG because "Material Editor" is not an option!
+
+**CORRECT APPROACH:**
+1. Source says: "use the Material Editor to modify materials"
+2. CorrectAnswer = "Material Editor" 
+3. Options MUST include "Material Editor" as one of A/B/C/D
+4. CorrectLetter MUST point to the option containing "Material Editor"
+
 ### 3. Sourcing & URL Integrity (CRITICAL)
 - **Base URL:** \`https://dev.epicgames.com/documentation/en-us/unreal-engine/\`
 - **Valid URL Pattern:** Base URL + lowercase-slug-with-hyphens (e.g., \`nanite-overview\`, \`lumen-global-illumination\`, \`animation-blueprint-in-unreal-engine\`)

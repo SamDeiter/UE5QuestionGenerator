@@ -225,6 +225,33 @@ export const useGeneration = (
             const missingCount = newQuestions.filter(q => q.sourceVerified === 'missing').length;
             console.log(`📊 Source verification: ${verifiedCount} verified, ${unverifiedCount} unverified, ${missingCount} missing`);
 
+            // ANSWER VALIDATION: Check if correct answer appears in source excerpt
+            newQuestions = newQuestions.map(q => {
+                if (q.type === 'Multiple Choice' && q.sourceExcerpt && q.options && q.correct) {
+                    const correctAnswer = q.options[q.correct] || '';
+                    const excerpt = (q.sourceExcerpt || '').toLowerCase();
+                    const answerWords = correctAnswer.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+
+                    // Check if key words from the answer appear in the source
+                    const matchingWords = answerWords.filter(word => excerpt.includes(word));
+                    const matchRatio = answerWords.length > 0 ? matchingWords.length / answerWords.length : 0;
+
+                    if (matchRatio < 0.3) {
+                        // Answer doesn't seem to match source excerpt
+                        console.warn(`⚠️ ANSWER MISMATCH: "${correctAnswer}" not found in source excerpt for question: "${q.question.substring(0, 50)}..."`);
+                        return { ...q, answerMismatch: true };
+                    }
+                }
+                return q;
+            });
+
+            // Count mismatches
+            const mismatchCount = newQuestions.filter(q => q.answerMismatch).length;
+            if (mismatchCount > 0) {
+                console.warn(`🚨 ${mismatchCount} questions have answer/source mismatches - review carefully!`);
+                showMessage(`⚠️ ${mismatchCount} questions may have wrong answers - check source excerpts!`, 8000);
+            }
+
             // Enrich questions with metadata
             const enrichedQuestions = newQuestions.map(q => ({
                 ...q,
