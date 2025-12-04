@@ -97,7 +97,9 @@ export const generateContent = async (effectiveKey, systemPrompt, userPrompt, se
     const payload = {
         contents: [{ parts: [{ text: userPrompt }] }],
         systemInstruction: { parts: [{ text: systemPrompt }] },
-        // tools: [{ google_search: {} }], // Disabled to prevent grounding redirects and YouTube results
+        tools: [{
+            googleSearch: {} // Enable grounding to get real documentation sources
+        }],
         generationConfig: {
             temperature: temperature,
             maxOutputTokens: 8192
@@ -114,8 +116,37 @@ export const generateContent = async (effectiveKey, systemPrompt, userPrompt, se
     const textResponse = candidate?.content?.parts?.[0]?.text;
     const finishReason = candidate?.finishReason;
 
+    // Extract grounding metadata for source URLs
+    const groundingMetadata = candidate?.groundingMetadata;
+    const groundingSources = [];
+
+    if (groundingMetadata?.groundingChunks) {
+        groundingMetadata.groundingChunks.forEach(chunk => {
+            if (chunk.web?.uri && chunk.web?.title) {
+                // Filter to only Epic Games documentation
+                if (chunk.web.uri.includes('epicgames.com') || chunk.web.uri.includes('dev.epicgames.com')) {
+                    groundingSources.push({
+                        url: chunk.web.uri,
+                        title: chunk.web.title
+                    });
+                }
+            }
+        });
+    }
+
+    // Also check searchEntryPoint for additional sources
+    if (groundingMetadata?.webSearchQueries) {
+        console.log('Grounding searches performed:', groundingMetadata.webSearchQueries);
+    }
+
     if (!textResponse && finishReason !== 'STOP') {
         throw new Error(finishReason || 'No content generated');
+    }
+
+    // Store grounding sources globally for this request (will be used by generation hook)
+    if (groundingSources.length > 0) {
+        console.log('📚 Grounding sources found:', groundingSources);
+        window.__lastGroundingSources = groundingSources;
     }
 
     return textResponse || "";

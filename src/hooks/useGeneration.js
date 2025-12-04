@@ -142,6 +142,11 @@ export const useGeneration = (
             const endTime = Date.now();
             const duration = endTime - startTime;
 
+            // Get grounding sources from the last API call
+            const groundingSources = window.__lastGroundingSources || [];
+            const groundedUrls = new Set(groundingSources.map(s => s.url.toLowerCase()));
+            console.log('🔍 Verifiable sources from search:', groundingSources.length);
+
             let newQuestions = parseQuestions(text);
             if (newQuestions.length === 0) {
                 console.error("Failed to parse. Raw text received:", text);
@@ -150,7 +155,7 @@ export const useGeneration = (
             }
 
             // FILTER: Strictly remove forbidden domains (YouTube, Vimeo)
-            const forbiddenDomains = ['youtube.com', 'youtu.be', 'vimeo.com'];
+            const forbiddenDomains = ['youtube.com', 'youtu.be', 'vimeo.com', 'vertexaisearch'];
             const initialCount = newQuestions.length;
             newQuestions = newQuestions.filter(q => {
                 const url = (q.sourceUrl || '').toLowerCase();
@@ -158,56 +163,67 @@ export const useGeneration = (
             });
 
             if (newQuestions.length < initialCount) {
-                console.warn(`Filtered out ${initialCount - newQuestions.length} questions with forbidden video sources.`);
-                showMessage(`Removed ${initialCount - newQuestions.length} questions citing YouTube/Video sources.`);
+                console.warn(`Filtered out ${initialCount - newQuestions.length} questions with forbidden sources.`);
+                showMessage(`Removed ${initialCount - newQuestions.length} questions with invalid sources.`);
             }
 
             // Parse the requested difficulty and type from config
             const [requestedDifficulty, requestedType] = config.difficulty.split(' ');
             const expectedType = requestedType === 'T/F' ? 'True/False' : 'Multiple Choice';
 
-            // Apply difficulty and convert question types as needed
-            if (requestedDifficulty !== 'Balanced') {
-                newQuestions = newQuestions.map(q => {
-                    let updatedQ = { ...q };
+            // SOURCE VERIFICATION: Check if URLs match grounding sources
+            newQuestions = newQuestions.map(q => {
+                let updatedQ = { ...q };
+                const url = (updatedQ.sourceUrl || '').toLowerCase();
 
-                    // URL Validation
-                    const url = updatedQ.sourceUrl || '';
-                    const isEpic = url.includes('epicgames.com');
-                    const isGoogleRedirect = url.includes('google.com') && (url.includes('grounding') || url.includes('vertex'));
+                // Check if URL is verified from grounding
+                if (url && groundedUrls.size > 0) {
+                    // Try to match URL against grounded sources
+                    const isVerified = Array.from(groundedUrls).some(groundedUrl =>
+                        url.includes(groundedUrl) || groundedUrl.includes(url.split('/').slice(-1)[0])
+                    );
+                    updatedQ.sourceVerified = isVerified;
 
-                    if (url && (url.includes('...') || (!isEpic && !isGoogleRedirect))) {
-                        updatedQ.invalidUrl = true;
+                    // If we have grounding sources but URL doesn't match, it might be hallucinated
+                    if (!isVerified && url.includes('epicgames.com')) {
+                        updatedQ.sourceVerified = 'unverified'; // Could be valid but not from this search
+                        console.warn(`⚠️ URL not in grounding sources: ${url}`);
                     }
+                } else if (!url) {
+                    updatedQ.sourceVerified = 'missing';
+                } else if (url.includes('epicgames.com')) {
+                    updatedQ.sourceVerified = 'assumed'; // Looks valid but no grounding to verify
+                } else {
+                    updatedQ.sourceVerified = false;
+                    updatedQ.invalidUrl = true;
+                }
 
-                    // If we need T/F but got MC, intelligently convert
+                // Apply difficulty and type conversion
+                if (requestedDifficulty !== 'Balanced') {
                     if (expectedType === 'True/False' && q.type === 'Multiple Choice') {
                         updatedQ = convertMCtoTF(updatedQ, requestedDifficulty);
+                        updatedQ.sourceVerified = q.sourceVerified; // Preserve verification status
                     } else {
-                        // If we need MC but got T/F, keep as-is (T/F is fine as a subset)
-                        // Just apply the correct difficulty
                         updatedQ.difficulty = requestedDifficulty;
                     }
-                    return updatedQ;
-                });
-            } else {
-                // Even for Balanced, we should validate URLs
-                newQuestions = newQuestions.map(q => {
-                    const url = q.sourceUrl || '';
-                    const isEpic = url.includes('epicgames.com');
-                    const isGoogleRedirect = url.includes('google.com') && (url.includes('grounding') || url.includes('vertex'));
+                }
 
-                    if (url && (url.includes('...') || (!isEpic && !isGoogleRedirect))) {
-                        return { ...q, invalidUrl: true };
-                    }
-                    return q;
-                });
-            }
+                return updatedQ;
+            });
+
+            // Clear grounding sources for next request
+            window.__lastGroundingSources = [];
 
             // Calculate metrics
             const outputTokens = estimateTokens(text);
             const totalCost = tokenAnalysis.cost.estimated;
             const costPerQuestion = newQuestions.length > 0 ? (totalCost / newQuestions.length) : 0;
+
+            // Count verification stats
+            const verifiedCount = newQuestions.filter(q => q.sourceVerified === true).length;
+            const unverifiedCount = newQuestions.filter(q => q.sourceVerified === 'unverified' || q.sourceVerified === 'assumed').length;
+            const missingCount = newQuestions.filter(q => q.sourceVerified === 'missing').length;
+            console.log(`📊 Source verification: ${verifiedCount} verified, ${unverifiedCount} unverified, ${missingCount} missing`);
 
             // Enrich questions with metadata
             const enrichedQuestions = newQuestions.map(q => ({
@@ -215,7 +231,8 @@ export const useGeneration = (
                 language: config.language,
                 estimatedCost: costPerQuestion,
                 generationTime: duration,
-                model: config.model || 'gemini-2.0-flash'
+                model: config.model || 'gemini-2.0-flash',
+                groundingSources: groundingSources.length > 0 ? groundingSources.slice(0, 3) : null // Store top 3 sources
             }));
 
             // Save to storage and get unique ones
