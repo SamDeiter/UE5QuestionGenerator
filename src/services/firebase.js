@@ -84,4 +84,33 @@ export const getQuestionsFromFirestore = async () => {
     }
 };
 
+/**
+ * Deletes all questions from Firestore.
+ * WARNING: This is a destructive operation that cannot be undone.
+ * @returns {Promise<number>} Number of documents deleted.
+ */
+export const clearAllQuestionsFromFirestore = async () => {
+    try {
+        const querySnapshot = await getDocs(collection(db, "questions"));
+        let deletedCount = 0;
+
+        // Import deleteDoc dynamically to keep the main import clean
+        const { deleteDoc } = await import("firebase/firestore");
+
+        // Delete each document
+        const deletePromises = [];
+        querySnapshot.forEach((docSnapshot) => {
+            deletePromises.push(deleteDoc(docSnapshot.ref));
+            deletedCount++;
+        });
+
+        await Promise.all(deletePromises);
+        console.log(`Deleted ${deletedCount} questions from Firestore.`);
+        return deletedCount;
+    } catch (error) {
+        console.error("Error clearing questions from Firestore:", error);
+        throw error;
+    }
+};
+
 export { app, analytics, db };

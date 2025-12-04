@@ -1,13 +1,60 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Icon from './Icon';
 import TokenUsageDisplay from './TokenUsageDisplay';
 import { getTokenUsage, downloadTrainingData } from '../utils/analyticsStore';
 import { UI_LABELS } from '../utils/constants';
+import { clearQuestionsFromSheets } from '../services/googleSheets';
+import { clearAllQuestionsFromFirestore } from '../services/firebase';
 
 const SettingsModal = ({ showSettings, setShowSettings, config, handleChange, showApiKey, setShowApiKey, onClearData }) => {
+    const [isResetting, setIsResetting] = useState(false);
+
     if (!showSettings) return null;
 
     const tokenUsage = getTokenUsage();
+
+    const handleFactoryReset = async () => {
+        const firstConfirm = window.confirm(
+            "⚠️ FACTORY RESET ⚠️\n\n" +
+            "This will PERMANENTLY DELETE ALL data from:\n" +
+            "• Google Spreadsheet (all Master_ sheets)\n" +
+            "• Firestore Database (cloud)\n" +
+            "• Local storage (questions, settings, analytics)\n\n" +
+            "This action CANNOT be undone. Continue?"
+        );
+
+        if (!firstConfirm) return;
+
+        const typed = window.prompt("Type DELETE to confirm permanent deletion of ALL data:");
+        if (typed !== "DELETE") {
+            alert("Factory reset cancelled. You did not type 'DELETE'.");
+            return;
+        }
+
+        setIsResetting(true);
+
+        try {
+            // 1. Clear Google Spreadsheet
+            if (config.sheetUrl) {
+                clearQuestionsFromSheets(config.sheetUrl);
+            }
+
+            // 2. Clear Firestore
+            const deletedCount = await clearAllQuestionsFromFirestore();
+            console.log(`Deleted ${deletedCount} questions from Firestore`);
+
+            // 3. Clear localStorage
+            localStorage.clear();
+
+            // 4. Reload the page
+            alert(`Factory Reset Complete!\n\n• Firestore: ${deletedCount} questions deleted\n• Spreadsheet: Clearing in new tab\n• Local Storage: Cleared\n\nPage will reload.`);
+            window.location.reload();
+        } catch (error) {
+            console.error("Factory reset error:", error);
+            alert("Error during factory reset: " + error.message);
+            setIsResetting(false);
+        }
+    };
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -139,17 +186,19 @@ const SettingsModal = ({ showSettings, setShowSettings, config, handleChange, sh
                         </button>
 
                         <button
-                            onClick={() => {
-                                if (window.confirm("FACTORY RESET: This will wipe ALL local data, including API keys, analytics, and settings. Are you sure?")) {
-                                    localStorage.clear();
-                                    window.location.reload();
-                                }
-                            }}
-                            className="w-full mt-3 px-4 py-2 bg-red-950 hover:bg-red-900 text-red-500 text-sm font-bold rounded border border-red-900/50 transition-colors flex items-center justify-center gap-2"
+                            onClick={handleFactoryReset}
+                            disabled={isResetting}
+                            className="w-full mt-3 px-4 py-2 bg-red-950 hover:bg-red-900 text-red-500 text-sm font-bold rounded border border-red-900/50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Icon name="bomb" size={16} />
-                            Factory Reset (Nuke Everything)
+                            {isResetting ? (
+                                <><Icon name="loader" size={16} className="animate-spin" /> Resetting...</>
+                            ) : (
+                                <><Icon name="bomb" size={16} /> Factory Reset (Nuke Everything)</>
+                            )}
                         </button>
+                        <p className="text-[10px] text-red-400/70 mt-2 text-center">
+                            Deletes ALL data: Spreadsheet + Firestore + Local Storage
+                        </p>
                     </div>
                 </div>
             </div>

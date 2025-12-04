@@ -92,6 +92,11 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
 };
 
 export const clearQuestionsFromSheets = async (sheetUrl) => {
+    if (!sheetUrl) {
+        alert('Error: No Google Sheet URL configured. Please add your Sheet URL in Settings.');
+        return;
+    }
+
     const form = document.createElement('form');
     form.method = 'POST';
     // Append action as URL parameter so Google Apps Script can read it via e.parameter
