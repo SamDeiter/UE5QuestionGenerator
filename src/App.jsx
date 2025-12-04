@@ -49,6 +49,20 @@ const App = () => {
     // STATE - Toast Notifications (Local to App for now)
     // ========================================================================
     const [toasts, setToasts] = useState([]);
+    const [selectedIds, setSelectedIds] = useState(new Set());
+
+    const toggleSelection = useCallback((id) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) newSet.delete(id);
+            else newSet.add(id);
+            return newSet;
+        });
+    }, []);
+
+    const clearSelection = useCallback(() => {
+        setSelectedIds(new Set());
+    }, []);
 
     const addToast = useCallback((message, type = 'info', duration = 3000) => {
         const id = Date.now() + Math.random();
@@ -188,6 +202,17 @@ const App = () => {
         filteredQuestions,
         config.language
     ), [filteredQuestions, config.language]);
+
+    // Bulk selection callbacks (must be after uniqueFilteredQuestions is defined)
+    const selectAll = useCallback(() => {
+        setSelectedIds(new Set(uniqueFilteredQuestions.map(q => q.id)));
+    }, [uniqueFilteredQuestions]);
+
+    const bulkUpdateStatus = useCallback((status, rejectionReason = null) => {
+        selectedIds.forEach(id => handleUpdateStatus(id, status, rejectionReason));
+        clearSelection();
+        showMessage(`${status === 'accepted' ? 'Accepted' : 'Rejected'} ${selectedIds.size} questions`);
+    }, [selectedIds, handleUpdateStatus, clearSelection, showMessage]);
 
     const {
         handleExportByGroup,
@@ -552,44 +577,62 @@ const App = () => {
                                     showMessage={showMessage}
                                 />
                             ) : (
-                                <Virtuoso
-                                    style={{ height: '100%' }}
-                                    data={uniqueFilteredQuestions}
-                                    itemContent={(index, q) => (
-                                        <div className="mb-4">
-                                            <QuestionItem
-                                                key={q.uniqueId}
-                                                q={q}
-                                                onUpdateStatus={handleUpdateStatus}
-                                                onExplain={handleExplain}
-                                                onVariate={handleVariate}
-                                                onCritique={handleCritique}
-                                                onTranslateSingle={handleTranslateSingle}
-                                                onSwitchLanguage={handleLanguageSwitch}
-                                                onDelete={handleDelete}
-                                                availableLanguages={translationMap.get(q.uniqueId)}
-                                                isProcessing={isProcessing}
-                                                appMode={appMode}
-                                                showMessage={showMessage}
-                                            />
+                                <>
+                                    {selectedIds.size > 0 && (
+                                        <div className="mb-3 p-3 bg-indigo-900/30 border border-indigo-700/50 rounded-lg flex items-center justify-between animate-in slide-in-from-top duration-200">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-sm font-bold text-indigo-300">{selectedIds.size} selected</span>
+                                                <button onClick={selectAll} className="text-xs text-indigo-400 hover:text-indigo-300 underline">Select All</button>
+                                                <button onClick={clearSelection} className="text-xs text-slate-400 hover:text-slate-300 underline">Clear</button>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => bulkUpdateStatus('accepted')} className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg flex items-center gap-1"><Icon name="check" size={14} /> Accept All</button>
+                                                <button onClick={() => bulkUpdateStatus('rejected', 'other')} className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg flex items-center gap-1"><Icon name="x" size={14} /> Reject All</button>
+                                            </div>
                                         </div>
                                     )}
-                                />
+                                    <Virtuoso
+                                        style={{ height: '100%' }}
+                                        data={uniqueFilteredQuestions}
+                                        itemContent={(index, q) => (
+                                            <div className="mb-4">
+                                                <QuestionItem
+                                                    key={q.uniqueId}
+                                                    q={q}
+                                                    onUpdateStatus={handleUpdateStatus}
+                                                    onExplain={handleExplain}
+                                                    onVariate={handleVariate}
+                                                    onCritique={handleCritique}
+                                                    onTranslateSingle={handleTranslateSingle}
+                                                    onSwitchLanguage={handleLanguageSwitch}
+                                                    onDelete={handleDelete}
+                                                    availableLanguages={translationMap.get(q.uniqueId)}
+                                                    isProcessing={isProcessing}
+                                                    appMode={appMode}
+                                                    showMessage={showMessage}
+                                                    isSelected={selectedIds.has(q.id)}
+                                                    onToggleSelect={() => toggleSelection(q.id)}
+                                                    showCheckbox={selectedIds.size > 0 || appMode === 'create'}
+                                                />
+                                            </div>
+                                        )}
+                                    />
+                                </>
+                            )}
+
+                            {uniqueFilteredQuestions.length === 0 && filteredQuestions.length > 0 && (
+                                <div className="flex flex-col items-center justify-center h-full text-slate-600 pt-10">
+                                    <Icon name="filter" size={32} className="mb-3 text-slate-800" />
+                                    <p className="font-medium text-slate-500">No questions match current filters.</p>
+                                    {filterByCreator && (
+                                        <p className="text-xs text-slate-600 mt-2">
+                                            Filtering by Creator: <span className="text-blue-500 font-bold">{config.creatorName}</span>.
+                                            <button onClick={() => setFilterByCreator(false)} className="ml-2 underline hover:text-blue-400">Show All Creators?</button>
+                                        </p>
+                                    )}
+                                </div>
                             )}
                         </Suspense>
-
-                        {uniqueFilteredQuestions.length === 0 && filteredQuestions.length > 0 && (
-                            <div className="flex flex-col items-center justify-center h-full text-slate-600 pt-10">
-                                <Icon name="filter" size={32} className="mb-3 text-slate-800" />
-                                <p className="font-medium text-slate-500">No questions match current filters.</p>
-                                {filterByCreator && (
-                                    <p className="text-xs text-slate-600 mt-2">
-                                        Filtering by Creator: <span className="text-blue-500 font-bold">{config.creatorName}</span>.
-                                        <button onClick={() => setFilterByCreator(false)} className="ml-2 underline hover:text-blue-400">Show All Creators?</button>
-                                    </p>
-                                )}
-                            </div>
-                        )}
                     </div>
                 </main >
             </div >

@@ -17,7 +17,7 @@ const REJECTION_REASONS = [
     { id: 'other', label: 'Other', icon: 'more-horizontal' },
 ];
 
-const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onRewrite, onTranslateSingle, onSwitchLanguage, onDelete, onUpdateQuestion, onKickBack, availableLanguages, isProcessing, appMode, showMessage }) => {
+const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onRewrite, onTranslateSingle, onSwitchLanguage, onDelete, onUpdateQuestion, onKickBack, availableLanguages, isProcessing, appMode, showMessage, isSelected, onToggleSelect, showCheckbox }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [rejectMenuOpen, setRejectMenuOpen] = useState(false);
     const menuRef = useRef(null);
