@@ -10,7 +10,7 @@ import { FIELD_DELIMITER } from './constants';
  * @returns {string} CSV-formatted string
  */
 export const getCSVContent = (validQuestions, creatorName, reviewerName, includeHeaders = true) => {
-    const headers = ["ID", "Question ID", "Discipline", "Type", "Difficulty", "Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer", "Generation Date", "Source URL", "Source Excerpt", "Creator", "Reviewer", "Language", "Quality Score", "AI Critique", "Token Cost"];
+    const headers = ["ID", "Question ID", "Discipline", "Type", "Difficulty", "Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer", "Generation Date", "Source URL", "Source Excerpt", "Creator", "Reviewer", "Language", "Quality Score", "AI Critique", "Token Cost", "Status", "Rejection Reason", "Rejected At"];
     let csvContent = includeHeaders ? headers.map(safe).join(FIELD_DELIMITER) + '\n' : '';
     const generationDate = formatDate(new Date());
 
@@ -37,7 +37,10 @@ export const getCSVContent = (validQuestions, creatorName, reviewerName, include
             row.language || "English",
             row.critiqueScore || row.initialQuality || "",
             row.critique || "",
-            row.tokenCost || ""
+            row.tokenCost || "",
+            row.status || "pending",
+            row.rejectionReason || "",
+            row.rejectedAt || ""
         ];
         csvContent += rowData.map(safe).join(FIELD_DELIMITER) + '\n';
     });
