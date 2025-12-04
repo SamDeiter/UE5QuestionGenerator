@@ -304,9 +304,21 @@ const App = () => {
         await handleLoadFromFirestore();
     };
 
-    const handleUpdateDatabaseQuestion = (updatedQ) => {
-        setDatabaseQuestions(prev => prev.map(q => q.id === updatedQ.id ? updatedQ : q));
+    const handleUpdateDatabaseQuestion = (id, update) => {
+        setDatabaseQuestions(prev => prev.map(q => {
+            if (q.id !== id) return q;
+            const newData = typeof update === 'function' ? update(q) : update;
+            return { ...q, ...newData };
+        }));
         showMessage("Question updated locally. Click 'Sync to Firestore' to save changes.", 3000);
+    };
+
+    // Wrapper to adapt (id, update) from QuestionItem to (id, fn) for useQuestionManager
+    const handleManualUpdate = (id, update) => {
+        updateQuestionInState(id, (prevQ) => {
+            const newData = typeof update === 'function' ? update(prevQ) : update;
+            return { ...prevQ, ...newData };
+        });
     };
 
     const handleKickBackToReview = (question) => {
@@ -458,19 +470,19 @@ const App = () => {
                             </button>
 
                             <button
-                                onClick={() => setShowAnalytics(true)}
-                                className="px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white"
-                                title="Open Analytics Dashboard"
-                            >
-                                <Icon name="bar-chart-2" size={14} /> Analytics
-                            </button>
-
-                            <button
                                 onClick={handleViewDatabase}
                                 className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'database' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
                                 title="Switch to Database View"
                             >
                                 <Icon name="database" size={14} /> DB View
+                            </button>
+
+                            <button
+                                onClick={() => setShowAnalytics(true)}
+                                className="px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white"
+                                title="Open Analytics Dashboard"
+                            >
+                                <Icon name="bar-chart-2" size={14} /> Analytics
                             </button>
 
                             <div className="w-px h-4 bg-slate-700 mx-1"></div>
@@ -533,6 +545,7 @@ const App = () => {
                                     onKickBack={handleKickBackToReview}
                                     isProcessing={isProcessing}
                                     showMessage={showMessage}
+                                    filterMode={filterMode}
                                 />
                             ) : appMode === 'review' && uniqueFilteredQuestions.length > 0 ? (
                                 <ReviewMode
@@ -546,6 +559,7 @@ const App = () => {
                                     onTranslateSingle={handleTranslateSingle}
                                     onSwitchLanguage={handleLanguageSwitch}
                                     onDelete={handleDelete}
+                                    onUpdateQuestion={handleManualUpdate}
                                     translationMap={translationMap}
                                     isProcessing={isProcessing}
                                     showMessage={showMessage}
@@ -580,6 +594,7 @@ const App = () => {
                                                     onTranslateSingle={handleTranslateSingle}
                                                     onSwitchLanguage={handleLanguageSwitch}
                                                     onDelete={handleDelete}
+                                                    onUpdateQuestion={handleManualUpdate}
                                                     availableLanguages={translationMap.get(q.uniqueId)}
                                                     isProcessing={isProcessing}
                                                     appMode={appMode}
@@ -620,11 +635,20 @@ const App = () => {
                     showApiKey={showApiKey}
                     setShowApiKey={setShowApiKey}
                     onClearData={() => {
-                        if (window.confirm("This will delete ALL your local questions and settings. Are you sure?")) {
+                        if (window.confirm("This will delete ALL your local questions and settings (except API Key and Sheet URL). Are you sure?")) {
+                            // Preserve API key and sheet URL
+                            const savedApiKey = config.apiKey;
+                            const savedSheetUrl = config.sheetUrl;
+
                             localStorage.removeItem('ue5_gen_config');
                             localStorage.removeItem('ue5_gen_questions');
                             setQuestions([]);
                             setDatabaseQuestions([]);
+
+                            // Restore preserved values
+                            const preservedConfig = { apiKey: savedApiKey, sheetUrl: savedSheetUrl };
+                            localStorage.setItem('ue5_gen_config', JSON.stringify(preservedConfig));
+
                             window.location.reload();
                         }
                     }}

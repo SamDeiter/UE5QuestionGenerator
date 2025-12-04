@@ -145,13 +145,23 @@ export const generateCritique = async (apiKey, q) => {
     }
 
     // 2. The Prompt
-    const systemPrompt = "UE5 Expert Critic.";
+    const systemPrompt = "UE5 Expert Critic. Output valid JSON only.";
     const userPrompt = `Critique this UE5 question as a HARSH, PEDANTIC Senior Technical Editor.
     ${strictnessInstruction}
     
-    Your goal is to find flaws. Do not give high scores easily. Default to 70-80 if it's "just okay".
+    Your goal is to find flaws and IMPROVE the question.
     
-    MANDATORY OUTPUT FORMAT: Start with "SCORE: <0-100>" on the first line. Then provide the critique.
+    MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this structure:
+    {
+        "score": number, // 0-100
+        "critique": "string", // Detailed critique text
+        "rewrite": {
+            "question": "string", // Improved question text
+            "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
+            "correct": "string" // Correct letter (A, B, C, or D)
+        },
+        "changes": "string" // Brief explanation of what was changed and why (e.g., 'Removed ambiguity in option B, tightened question text')
+    }
 
     Scoring Criteria:
     - 90-100: FLAWLESS. Concise. No hints in stem. Perfect accuracy.
@@ -160,6 +170,7 @@ export const generateCritique = async (apiKey, q) => {
     - 0-49: FAIL. Factual errors, outdated terms (UE4), or wrong answer key.
 
     Be extremely critical of:
+    - **TOO EASY:** If the question is trivial or "Documentation 101" (e.g., "What is Unreal Engine?"), DEDUCT 20 POINTS.
     - **WORDINESS:** Paragraphs = Score 60 Max.
     - **HINTS:** Hints in stem = -15 points.
     - **MULTIPLE WORKFLOWS:** Ambiguous "How to" = FAIL.
@@ -177,18 +188,31 @@ export const generateCritique = async (apiKey, q) => {
         body: JSON.stringify({
             contents: [{ parts: [{ text: userPrompt }] }],
             systemInstruction: { parts: [{ text: systemPrompt }] },
-            generationConfig: { temperature: 0.1, maxOutputTokens: 8192 } // Low temp for consistent strictness
+            generationConfig: { temperature: 0.2, maxOutputTokens: 8192, responseMimeType: "application/json" }
         })
     });
 
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    // 4. Parse Score and Text
-    const scoreMatch = rawText.match(/^SCORE:\s*(\d+)/i);
-    const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
-    const text = scoreMatch ? rawText.replace(/^SCORE:\s*\d+[\s\n]*/i, '').trim() : rawText.trim();
+    // 4. Parse JSON
+    try {
+        // Clean up markdown code blocks if present (just in case)
+        const cleanJson = rawText.replace(/```json\n?|\n?```/g, '').trim();
+        const result = JSON.parse(cleanJson);
 
-    return { score, text };
+        return {
+            score: result.score,
+            text: result.critique,
+            rewrite: result.rewrite,
+            changes: result.changes
+        };
+    } catch (e) {
+        console.error("Failed to parse critique JSON:", e, rawText);
+        // Fallback to simple text parsing if JSON fails
+        const scoreMatch = rawText.match(/SCORE:\s*(\d+)/i);
+        const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
+        return { score, text: rawText, rewrite: null, changes: null };
+    }
 };
 
 /**

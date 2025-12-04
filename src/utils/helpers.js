@@ -306,7 +306,7 @@ export const parseQuestions = (text) => {
             correct: correctLetter || "",
             sourceUrl: sourceUrl || "",
             sourceExcerpt: sourceExcerpt || "",
-            initialQuality: qualityScore,
+            qualityScore: qualityScore,
             status: 'pending',
             critique: null,
             critiqueScore: null

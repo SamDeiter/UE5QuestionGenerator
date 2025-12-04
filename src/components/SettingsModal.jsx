@@ -137,10 +137,23 @@ const SettingsModal = ({ showSettings, setShowSettings, config, handleChange, sh
                             <Icon name="trash-2" size={16} />
                             {UI_LABELS.CLEAR_DATA_BTN}
                         </button>
+
+                        <button
+                            onClick={() => {
+                                if (window.confirm("FACTORY RESET: This will wipe ALL local data, including API keys, analytics, and settings. Are you sure?")) {
+                                    localStorage.clear();
+                                    window.location.reload();
+                                }
+                            }}
+                            className="w-full mt-3 px-4 py-2 bg-red-950 hover:bg-red-900 text-red-500 text-sm font-bold rounded border border-red-900/50 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <Icon name="bomb" size={16} />
+                            Factory Reset (Nuke Everything)
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

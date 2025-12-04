@@ -216,9 +216,15 @@ export const useGeneration = (
         setIsProcessing(true); setStatus('Critiquing...');
 
         try {
-            const { score, text } = await generateCritique(effectiveApiKey, q);
-            updateQuestionInState(q.id, (item) => ({ ...item, critique: text, critiqueScore: score }));
-            showMessage('Critique Ready', 3000);
+            const { score, text, rewrite, changes } = await generateCritique(effectiveApiKey, q);
+            updateQuestionInState(q.id, (item) => ({
+                ...item,
+                critique: text,
+                critiqueScore: score,
+                suggestedRewrite: rewrite,
+                rewriteChanges: changes
+            }));
+            showMessage('Critique & Rewrite Ready', 3000);
         } catch (e) {
             console.error("Critique failed:", e);
             setStatus('Fail');

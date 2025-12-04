@@ -17,13 +17,13 @@ const parseMarkdown = (text) => {
     return html;
 };
 
-const CritiqueDisplay = ({ critique, onRewrite, isProcessing }) => {
+const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, rewriteChanges, onApplyRewrite }) => {
     if (!critique) return null;
 
     // Handle both old (string) and new (object with score) formats
     const isNewFormat = typeof critique === 'object' && critique.score !== undefined;
     const score = isNewFormat ? critique.score : null;
-    const text = isNewFormat ? critique.text : critique;
+    const text = (isNewFormat ? critique.text : critique) || '';
 
     // Color coding based on score
     const getScoreColor = (score) => {
@@ -104,13 +104,22 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing }) => {
                     <Icon name="zap" size={12} />
                     AI Critique
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     {isNewFormat && (
-                        <div className="px-2 py-1 rounded bg-black/30 border border-current">
-                            <span className="text-xs font-bold">Score: {score}/100</span>
+                        <div className={`px-3 py-1.5 rounded-md border ${score >= 90 ? 'bg-green-500/20 border-green-500 text-green-400' :
+                                score >= 70 ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400' :
+                                    score >= 50 ? 'bg-orange-500/20 border-orange-500 text-orange-400' :
+                                        'bg-red-500/20 border-red-500 text-red-400'
+                            }`}>
+                            <span className="text-sm font-bold">SCORE: {score}</span>
                         </div>
                     )}
-                    {onRewrite && (
+                    {/* Only show manual Rewrite button if no suggestion is present, or keep it as a 'Retry' option? 
+                        The user asked for the critique to *also* rewrite. So maybe we hide the old button if we have a suggestion?
+                        Or keep it to force a re-generation. Let's keep it but maybe rename or style differently if needed.
+                        For now, leaving as is.
+                    */}
+                    {onRewrite && !suggestedRewrite && (
                         <button
                             onClick={onRewrite}
                             disabled={isProcessing}
@@ -126,6 +135,40 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing }) => {
             <div className="text-xs text-slate-300 leading-relaxed space-y-1.5">
                 {renderContent()}
             </div>
+
+            {/* Suggested Rewrite Section */}
+            {suggestedRewrite && (
+                <div className="mt-3 pt-3 border-t border-white/10">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold uppercase text-indigo-300 flex items-center gap-1">
+                            <Icon name="sparkles" size={12} /> Suggested Improvement
+                        </span>
+                        <button
+                            onClick={onApplyRewrite}
+                            className="px-2 py-1 rounded bg-green-600 hover:bg-green-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
+                            title="Apply these changes to the question"
+                        >
+                            <Icon name="check" size={12} /> Apply Changes
+                        </button>
+                    </div>
+
+                    {rewriteChanges && (
+                        <div className="mb-2 text-xs text-indigo-200 bg-indigo-900/20 p-2 rounded border border-indigo-500/30">
+                            <span className="font-bold text-indigo-100">Why:</span> {rewriteChanges}
+                        </div>
+                    )}
+
+                    <div className="text-xs space-y-2 bg-black/20 p-2 rounded border border-white/5">
+                        <div className="font-medium text-white">{suggestedRewrite.question}</div>
+                        <div className="grid grid-cols-1 gap-1 opacity-90 pl-2 border-l-2 border-indigo-500/30">
+                            <div className={suggestedRewrite.correct === 'A' ? 'text-green-400 font-bold' : ''}>A) {suggestedRewrite.options.A}</div>
+                            <div className={suggestedRewrite.correct === 'B' ? 'text-green-400 font-bold' : ''}>B) {suggestedRewrite.options.B}</div>
+                            {suggestedRewrite.options.C && <div className={suggestedRewrite.correct === 'C' ? 'text-green-400 font-bold' : ''}>C) {suggestedRewrite.options.C}</div>}
+                            {suggestedRewrite.options.D && <div className={suggestedRewrite.correct === 'D' ? 'text-green-400 font-bold' : ''}>D) {suggestedRewrite.options.D}</div>}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

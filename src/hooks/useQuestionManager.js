@@ -121,9 +121,11 @@ export const useQuestionManager = (config, showMessage) => {
         return counts;
     }, [allQuestionsMap, config.discipline]);
 
-    const approvedCount = questions.filter(q => q.status !== 'rejected').length;
-    const rejectedCount = questions.filter(q => q.status === 'rejected').length;
-    const pendingCount = questions.length - approvedCount - rejectedCount;
+    const allItems = useMemo(() => [...questions, ...historicalQuestions], [questions, historicalQuestions]);
+
+    const approvedCount = useMemo(() => allItems.filter(q => q.status === 'accepted').length, [allItems]);
+    const rejectedCount = useMemo(() => allItems.filter(q => q.status === 'rejected').length, [allItems]);
+    const pendingCount = useMemo(() => allItems.filter(q => !q.status || q.status === 'pending').length, [allItems]);
 
     const totalApproved = useMemo(() => {
         return CATEGORY_KEYS.reduce((sum, key) => sum + approvedCounts[key], 0);

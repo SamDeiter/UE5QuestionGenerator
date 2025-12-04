@@ -305,7 +305,7 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
                                                                 key={lang}
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    onUpdateQuestion({ ...q, language: lang });
+                                                                    onUpdateQuestion(q.id, { language: lang });
                                                                     setMenuOpen(false);
                                                                 }}
                                                                 className={`w-full text-left px-4 py-1.5 text-xs hover:bg-slate-700 flex items-center gap-2 ${q.language === lang ? 'text-green-400 font-bold' : 'text-slate-300'}`}
@@ -475,7 +475,30 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
                 </div>
             )}
 
-            {q.critique && <CritiqueDisplay critique={q.critique} onRewrite={onRewrite ? () => onRewrite(q) : undefined} isProcessing={isProcessing} />}
+            {(q.critique || q.critiqueScore) && (
+                <CritiqueDisplay
+                    critique={q.critiqueScore ? { score: q.critiqueScore, text: q.critique } : q.critique}
+                    onRewrite={onRewrite ? () => onRewrite(q) : undefined}
+                    isProcessing={isProcessing}
+                    suggestedRewrite={q.suggestedRewrite}
+                    rewriteChanges={q.rewriteChanges}
+                    onApplyRewrite={() => {
+                        if (!q.suggestedRewrite) return;
+                        const updatedQ = {
+                            ...q,
+                            question: q.suggestedRewrite.question,
+                            options: q.suggestedRewrite.options,
+                            correct: q.suggestedRewrite.correct,
+                            suggestedRewrite: null,
+                            rewriteChanges: null,
+                            critique: null,
+                            critiqueScore: null
+                        };
+                        onUpdateQuestion(q.id, updatedQ);
+                        if (showMessage) showMessage("Rewrite applied successfully!", 3000);
+                    }}
+                />
+            )}
 
             {q.explanation && (
                 <div className="mb-3 p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-lg animate-in fade-in slide-in-from-top-2">
@@ -505,7 +528,7 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
                     {/* Source Excerpt - Cleaned */}
                     <div className="flex items-start gap-1.5 text-sm text-slate-400 italic bg-slate-950 p-2 rounded border border-slate-800">
                         <Icon name="message-square" size={14} className="mt-0.5 flex-shrink-0" />
-                        <span>"{stripHtmlTags(q.sourceExcerpt)}"</span>
+                        <span>{stripHtmlTags(q.sourceExcerpt)}</span>
                     </div>
                 </div>
             )}

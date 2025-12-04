@@ -15,7 +15,8 @@ const DatabaseView = ({
     onUpdateQuestion,
     onKickBack,
     isProcessing,
-    showMessage
+    showMessage,
+    filterMode = 'all' // Default to 'all' if not provided
 }) => {
     const [isSyncing, setIsSyncing] = useState(false);
     const [syncProgress, setSyncProgress] = useState(0);
@@ -41,7 +42,19 @@ const DatabaseView = ({
 
     const sortedQuestions = useMemo(() => {
         if (!questions) return [];
-        const sorted = [...questions];
+
+        // 1. Filter first
+        let filtered = questions;
+        if (filterMode === 'accepted') {
+            filtered = filtered.filter(q => q.status === 'accepted');
+        } else if (filterMode === 'rejected') {
+            filtered = filtered.filter(q => q.status === 'rejected');
+        } else if (filterMode === 'pending') {
+            filtered = filtered.filter(q => !q.status || q.status === 'pending');
+        }
+
+        // 2. Then Sort
+        const sorted = [...filtered];
         switch (sortBy) {
             case 'newest':
                 return sorted.sort((a, b) => {
@@ -66,7 +79,7 @@ const DatabaseView = ({
             default:
                 return sorted; // Keep original sheet order
         }
-    }, [questions, sortBy]);
+    }, [questions, sortBy, filterMode]);
 
     // Calculate available languages for each uniqueId
     const translationMap = useMemo(() => {
@@ -124,9 +137,32 @@ const DatabaseView = ({
     };
 
     const handleHardReset = () => {
-        if (window.confirm("ARE YOU SURE? This will permanently DELETE ALL questions from the Cloud Database (Master_DB). This cannot be undone.")) {
-            clearQuestionsFromSheets(sheetUrl);
-            onHardReset();
+        const firstConfirm = window.confirm(
+            "⚠️ WARNING: HARD RESET ⚠️\n\n" +
+            "This will PERMANENTLY DELETE ALL questions from:\n" +
+            "• Your Google Spreadsheet (Master_DB)\n" +
+            "• Firestore Database (Cloud)\n" +
+            "• Your local view\n\n" +
+            "PRESERVED: API Key, Sheet URL, Analytics (usage/cost)\n\n" +
+            "This action CANNOT be undone. Continue?"
+        );
+
+        if (firstConfirm) {
+            const secondConfirm = window.confirm(
+                "🔴 FINAL CONFIRMATION 🔴\n\n" +
+                "Type 'DELETE' in the next prompt to confirm.\n\n" +
+                "Click OK to proceed to final confirmation."
+            );
+
+            if (secondConfirm) {
+                const typed = window.prompt("Type DELETE to confirm permanent deletion:");
+                if (typed === "DELETE") {
+                    clearQuestionsFromSheets(sheetUrl);
+                    onHardReset();
+                } else {
+                    alert("Hard reset cancelled. You did not type 'DELETE'.");
+                }
+            }
         }
     };
 
@@ -175,7 +211,7 @@ const DatabaseView = ({
                 <div className="flex items-center gap-4">
                     <div>
                         <h2 className="text-lg font-bold text-blue-400 flex items-center gap-2"><Icon name="database" /> Database View</h2>
-                        <p className="text-xs text-blue-300/70">Viewing {questions.length} approved questions from Google Sheets (Read Only)</p>
+                        <p className="text-xs text-blue-300/70">Viewing {sortedQuestions.length} of {questions.length} questions from Google Sheets (Read Only)</p>
                     </div>
 
                     {/* Sort Control */}

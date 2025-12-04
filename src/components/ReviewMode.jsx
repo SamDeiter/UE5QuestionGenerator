@@ -13,6 +13,7 @@ const ReviewMode = ({
     onTranslateSingle,
     onSwitchLanguage,
     onDelete,
+    onUpdateQuestion,
     translationMap,
     isProcessing,
     showMessage
@@ -70,6 +71,7 @@ const ReviewMode = ({
                     onTranslateSingle={onTranslateSingle}
                     onSwitchLanguage={onSwitchLanguage}
                     onDelete={onDelete}
+                    onUpdateQuestion={onUpdateQuestion}
                     availableLanguages={translationMap.get(currentQuestion.uniqueId)}
                     isProcessing={isProcessing}
                     appMode="review"

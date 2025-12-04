@@ -83,25 +83,25 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <MetricCard
                             title="Total Questions"
-                            value={analyticsData.totalQuestions}
+                            value={analyticsData.summary?.totalQuestions || 0}
                             icon={<Activity size={18} />}
                             color="blue"
                         />
                         <MetricCard
                             title="Success Rate"
-                            value={`${Math.round((analyticsData.successfulGenerations / analyticsData.totalGenerations) * 100 || 0)}%`}
+                            value={`${Math.round((analyticsData.generations.filter(g => g.success).length / (analyticsData.summary?.totalGenerations || 1)) * 100)}%`}
                             icon={<TrendingUp size={18} />}
                             color="green"
                         />
                         <MetricCard
                             title="Est. Cost"
-                            value={`$${(analyticsData.totalCost || 0).toFixed(4)}`}
+                            value={`$${(analyticsData.summary?.estimatedCost || 0).toFixed(4)}`}
                             icon={<PieChart size={18} />}
                             color="orange"
                         />
                         <MetricCard
                             title="Avg Quality"
-                            value={`${analyticsData.averageQuality}/100`}
+                            value={`${analyticsData.summary?.averageQuality || 0}/100`}
                             icon={<BarChart2 size={18} />}
                             color="purple"
                         />
