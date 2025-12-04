@@ -261,9 +261,9 @@ const App = () => {
     };
 
     const handleViewDatabase = async () => {
-        if (!config.sheetUrl) { showMessage("Please configure Google Sheets URL in settings first.", 5000); return; }
         setAppMode('database');
-        await handleLoadFromSheets();
+        // Load from Firestore (primary database)
+        await handleLoadFromFirestore();
     };
 
     const handleUpdateDatabaseQuestion = (updatedQ) => {
