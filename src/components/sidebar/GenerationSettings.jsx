@@ -41,10 +41,21 @@ const GenerationSettings = ({ config, handleChange, isOpen, onToggle }) => {
                     <div className="space-y-1">
                         <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">AI Model</label></div>
                         <select name="model" value={config.model || 'gemini-2.0-flash'} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
-                            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended)</option>
-                            <option value="gemini-2.0-flash-lite-preview-02-05">Gemini 2.0 Flash Lite</option>
-                            <option value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro Exp</option>
-                            <option value="gemini-3-pro-preview">Gemini 3.0 Pro Preview (New)</option>
+                            <optgroup label="Gemini 2.0 (Recommended)">
+                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Best for Speed)</option>
+                                <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Experimental</option>
+                                <option value="gemini-2.0-flash-lite-preview-02-05">Gemini 2.0 Flash Lite</option>
+                                <option value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro Experimental</option>
+                            </optgroup>
+                            <optgroup label="Gemini 1.5 (Stable)">
+                                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                                <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B (Fastest)</option>
+                                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Best Quality)</option>
+                            </optgroup>
+                            <optgroup label="Gemini Experimental">
+                                <option value="gemini-exp-1206">Gemini Experimental 1206</option>
+                                <option value="learnlm-1.5-pro-experimental">LearnLM 1.5 Pro (Education)</option>
+                            </optgroup>
                         </select>
                         <button
                             onClick={async () => {
