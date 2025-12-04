@@ -113,17 +113,23 @@ ${examplesText}
 
 ### 3. Sourcing & URL Integrity (CRITICAL)
 - **Domain:** Use ONLY \`dev.epicgames.com/documentation/\`.
-- **Verification:** Do not hallucinate URLs. If you are unsure of the specific link, leave it empty.
-- **Format:** MUST be a valid URL starting with \`https://\`. Do NOT put the page title, description, or search snippet here.
+- **COMPLETE URLs ONLY:** The SourceURL MUST be a fully valid, clickable URL. Examples:
+  - ✅ CORRECT: \`https://dev.epicgames.com/documentation/en-us/unreal-engine/networking-overview\`
+  - ❌ WRONG: \`docs.unrealengine.com/documentation...networking-overview\` (truncated)
+  - ❌ WRONG: \`...networking-overview\` (partial path)
+  - ❌ WRONG: Page titles or descriptions
+- **If Unsure:** Leave SourceURL empty rather than guessing or truncating.
 - **SourceExcerpt:** Copy the **exact sentence(s)** from the documentation that validates the correct answer.
-- **Forbidden:** YouTube, Vimeo, Forums, Reddit, Wikis, Search Result Snippets.
+- **Forbidden:** YouTube, Vimeo, Forums, Reddit, Wikis, Search Result Snippets, Google redirects.
 
 ### 4. Database Output Format
 **DO NOT OUTPUT JSON.** Output **ONLY** the Markdown table below. No intro/outro text.
 
+**COLUMN INTEGRITY:** Each row MUST have exactly 14 pipe-separated columns. Do NOT put answer letters in option columns.
+
 | ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | QualityScore |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | ${config.discipline} | [MC/TF] | [Diff] | [Question Text] | [Exact Answer Text] | [Option A] | [Option B] | [Option C] | [Option D] | [A/B/C/D] | [https://dev.epicgames.com/...] | [Quote from Doc] | [0-100] |
+| 1 | ${config.discipline} | Multiple Choice | Easy | What is \`\u003cb\u003eNanite\u003c/b\u003e\`? | Virtualized geometry system | Virtualized geometry system | Physics engine | Audio system | Particle system | A | https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine | \"Nanite is UE5's virtualized geometry system...\" | 85 |
 
 **Task:** Generate ${difficultyPrompt} based on the Input Variables above.
 

@@ -62,8 +62,8 @@ const App = () => {
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
 
-    // Tutorial State
-    const [tutorialActive, setTutorialActive] = useState(() => !localStorage.getItem('ue5_tutorial_completed'));
+    // Tutorial State (disabled by default for now - enable with Tutorial button)
+    const [tutorialActive, setTutorialActive] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
 
     const handleTutorialNext = () => {
