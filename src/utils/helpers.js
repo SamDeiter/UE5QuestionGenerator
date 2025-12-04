@@ -365,6 +365,15 @@ export const parseQuestions = (text) => {
             options = { A: 'TRUE', B: 'FALSE' };
         } else {
             options = { A: optA || '', B: optB || '', C: optC || '', D: optD || '' };
+
+            // VALIDATION: Reject questions where any option is just a single letter (likely malformed)
+            const isMalformed = Object.values(options).some(opt =>
+                opt && opt.trim().length === 1 && /^[A-D]$/i.test(opt.trim())
+            );
+            if (isMalformed) {
+                console.warn(`[Parser] Rejected malformed MC question with single-letter option: "${question.substring(0, 50)}..."`);
+                return; // Skip this question
+            }
         }
 
         const uniqueId = crypto.randomUUID();
