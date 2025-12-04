@@ -101,7 +101,7 @@ export const useQuestionManager = (config, showMessage) => {
         });
     }, [updateQuestionInState]);
 
-    // Statistics
+    // Statistics - count both pending and accepted questions for generation target
     const approvedCounts = useMemo(() => {
         const counts = CATEGORY_KEYS.reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
         const countedIds = new Set();
@@ -109,7 +109,14 @@ export const useQuestionManager = (config, showMessage) => {
         Array.from(allQuestionsMap.values()).forEach(variants => {
             const baseQ = variants.find(v => (v.language || 'English') === 'English') || variants[0];
 
-            if (baseQ && baseQ.status === 'accepted' && !countedIds.has(baseQ.uniqueId) && baseQ.discipline === config.discipline) {
+            // Count both pending and accepted questions for generation targets
+            // This ensures newly generated questions update the counter immediately
+            const isCountable = baseQ &&
+                (baseQ.status === 'accepted' || baseQ.status === 'pending' || !baseQ.status) &&
+                !countedIds.has(baseQ.uniqueId) &&
+                baseQ.discipline === config.discipline;
+
+            if (isCountable) {
                 const typeAbbrev = baseQ.type === 'True/False' ? 'T/F' : 'MC';
                 const key = `${baseQ.difficulty} ${typeAbbrev}`;
                 if (counts.hasOwnProperty(key)) {

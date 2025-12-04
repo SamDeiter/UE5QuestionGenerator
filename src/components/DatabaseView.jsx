@@ -2,8 +2,6 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Icon from './Icon';
 import QuestionItem from './QuestionItem';
 import MetricsDashboard from './MetricsDashboard';
-import { clearQuestionsFromSheets } from '../services/googleSheets';
-import { saveQuestionToFirestore } from '../services/firebase';
 
 const DatabaseView = ({
     questions,
@@ -21,17 +19,12 @@ const DatabaseView = ({
     const [isSyncing, setIsSyncing] = useState(false);
     const [syncProgress, setSyncProgress] = useState(0);
     const [sortBy, setSortBy] = useState('default'); // default, language, discipline, difficulty
-    const [optionsOpen, setOptionsOpen] = useState(false);
     const [loadMenuOpen, setLoadMenuOpen] = useState(false);
-    const optionsRef = useRef(null);
     const loadMenuRef = useRef(null);
 
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (optionsRef.current && !optionsRef.current.contains(event.target)) {
-                setOptionsOpen(false);
-            }
             if (loadMenuRef.current && !loadMenuRef.current.contains(event.target)) {
                 setLoadMenuOpen(false);
             }
@@ -136,75 +129,6 @@ const DatabaseView = ({
         }
     };
 
-    const handleHardReset = () => {
-        const firstConfirm = window.confirm(
-            "⚠️ WARNING: HARD RESET ⚠️\n\n" +
-            "This will PERMANENTLY DELETE ALL questions from:\n" +
-            "• Your Google Spreadsheet (Master_DB)\n" +
-            "• Firestore Database (Cloud)\n" +
-            "• Your local view\n\n" +
-            "PRESERVED: API Key, Sheet URL, Analytics (usage/cost)\n\n" +
-            "This action CANNOT be undone. Continue?"
-        );
-
-        if (firstConfirm) {
-            const secondConfirm = window.confirm(
-                "🔴 FINAL CONFIRMATION 🔴\n\n" +
-                "Type 'DELETE' in the next prompt to confirm.\n\n" +
-                "Click OK to proceed to final confirmation."
-            );
-
-            if (secondConfirm) {
-                const typed = window.prompt("Type DELETE to confirm permanent deletion:");
-                if (typed === "DELETE") {
-                    clearQuestionsFromSheets(sheetUrl);
-                    onHardReset();
-                } else {
-                    alert("Hard reset cancelled. You did not type 'DELETE'.");
-                }
-            }
-        }
-    };
-
-    const handleSyncToFirestore = async () => {
-        console.log("Sync button clicked. Questions:", questions?.length);
-        if (!questions || questions.length === 0) {
-            console.warn("No questions to sync.");
-            alert("No questions loaded to sync.");
-            return;
-        }
-
-        if (!window.confirm(`Sync ${questions.length} questions to Firestore? This will overwrite existing documents with the same ID.`)) {
-            console.log("Sync cancelled by user.");
-            return;
-        }
-
-        console.log("Starting sync...");
-        setIsSyncing(true);
-        setSyncProgress(0);
-        let count = 0;
-
-        try {
-            // Process in chunks to avoid overwhelming the browser/network
-            const chunkSize = 10;
-            for (let i = 0; i < questions.length; i += chunkSize) {
-                const chunk = questions.slice(i, i + chunkSize);
-                console.log(`Syncing chunk ${i / chunkSize + 1}, size: ${chunk.length}`);
-                await Promise.all(chunk.map(q => saveQuestionToFirestore(q)));
-                count += chunk.length;
-                setSyncProgress(Math.round((count / questions.length) * 100));
-            }
-            console.log("Sync complete.");
-            alert(`Successfully synced ${count} questions to Firestore!`);
-        } catch (error) {
-            console.error("Sync failed:", error);
-            alert(`Sync failed: ${error.message}`);
-        } finally {
-            setIsSyncing(false);
-            setSyncProgress(0);
-        }
-    };
-
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center bg-blue-900/20 p-4 rounded border border-blue-800/50">
@@ -263,59 +187,6 @@ const DatabaseView = ({
                                     >
                                         <Icon name="refresh-cw" size={14} />
                                         From Google Sheets
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Options Dropdown - Contains dangerous actions (placed last) */}
-                    <div className="relative" ref={optionsRef}>
-                        <button
-                            onClick={() => setOptionsOpen(!optionsOpen)}
-                            className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded border border-slate-600 flex items-center gap-2"
-                        >
-                            <Icon name="settings" size={12} />
-                            Options
-                            <Icon name="chevron-down" size={10} className={`transition-transform ${optionsOpen ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {optionsOpen && (
-                            <div className="absolute right-0 top-full mt-1 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                                <div className="py-1">
-                                    {/* Sync to Firestore */}
-                                    <button
-                                        onClick={() => { handleSyncToFirestore(); setOptionsOpen(false); }}
-                                        disabled={isSyncing || questions.length === 0}
-                                        className="w-full text-left px-4 py-2 text-xs text-orange-300 hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50"
-                                    >
-                                        {isSyncing ? (
-                                            <>
-                                                <Icon name="loader" size={14} className="animate-spin" /> Syncing {syncProgress}%
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Icon name="upload-cloud" size={14} /> Sync to Firestore
-                                            </>
-                                        )}
-                                    </button>
-
-                                    <div className="border-t border-slate-700 my-1"></div>
-
-                                    {/* Clear View */}
-                                    <button
-                                        onClick={() => { onClearView(); setOptionsOpen(false); }}
-                                        className="w-full text-left px-4 py-2 text-xs text-red-300 hover:bg-slate-700 flex items-center gap-2"
-                                    >
-                                        <Icon name="trash-2" size={14} /> Clear View
-                                    </button>
-
-                                    {/* HARD RESET - Extra warning styling */}
-                                    <button
-                                        onClick={() => { handleHardReset(); setOptionsOpen(false); }}
-                                        className="w-full text-left px-4 py-2 text-xs text-red-400 hover:bg-red-900/30 flex items-center gap-2 font-bold"
-                                    >
-                                        <Icon name="alert-triangle" size={14} /> HARD RESET (Danger!)
                                     </button>
                                 </div>
                             </div>

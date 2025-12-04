@@ -103,50 +103,7 @@ const Sidebar = ({
                 <TokenUsageDisplay showDetailed={true} />
             </div>
 
-            {/* Training Data Export */}
-            <div className="mt-4 pt-4 border-t border-slate-800">
-                <div className="mb-2">
-                    <h3 className="text-xs font-bold uppercase text-slate-500 mb-1 flex items-center gap-2">
-                        <Icon name="database" size={12} />
-                        Training Data Export
-                    </h3>
-                    <p className="text-[10px] text-slate-600">
-                        Export questions for Vertex AI fine-tuning
-                    </p>
-                </div>
-                <div className="space-y-2">
-                    <button
-                        onClick={() => {
-                            const count = downloadTrainingData('bad');
-                            alert(`Exported ${count} bad questions for training`);
-                        }}
-                        className="w-full py-2 px-3 bg-red-900/20 hover:bg-red-900/30 text-red-400 rounded flex items-center justify-center gap-2 transition-colors text-xs font-medium border border-red-900/30"
-                    >
-                        <Icon name="download" size={12} />
-                        Export Bad Questions
-                    </button>
-                    <button
-                        onClick={() => {
-                            const count = downloadTrainingData('good');
-                            alert(`Exported ${count} good questions for training`);
-                        }}
-                        className="w-full py-2 px-3 bg-green-900/20 hover:bg-green-900/30 text-green-400 rounded flex items-center justify-center gap-2 transition-colors text-xs font-medium border border-green-900/30"
-                    >
-                        <Icon name="download" size={12} />
-                        Export Good Questions
-                    </button>
-                    <button
-                        onClick={() => {
-                            const count = downloadTrainingData('all');
-                            alert(`Exported ${count} total questions for training`);
-                        }}
-                        className="w-full py-2 px-3 bg-blue-900/20 hover:bg-blue-900/30 text-blue-400 rounded flex items-center justify-center gap-2 transition-colors text-xs font-medium border border-blue-900/30"
-                    >
-                        <Icon name="download" size={12} />
-                        Export All Training Data
-                    </button>
-                </div>
-            </div>
+
 
             <div className="mt-4 pt-4 border-slate-800">
                 <button

@@ -166,6 +166,17 @@ const SettingsModal = ({ showSettings, setShowSettings, config, handleChange, sh
                                 Download Bad Data
                             </button>
                         </div>
+                        <button
+                            onClick={() => {
+                                const count = downloadTrainingData('all');
+                                alert(`Exported ${count} total questions for training`);
+                            }}
+                            className="w-full mt-2 px-3 py-2 bg-blue-900/20 hover:bg-blue-900/30 text-blue-400 rounded flex items-center justify-center gap-2 transition-colors text-xs font-bold border border-blue-900/30"
+                            title="Download all questions"
+                        >
+                            <Icon name="download" size={14} />
+                            Export All Training Data
+                        </button>
                         <p className="text-[10px] text-slate-500 mt-2 text-center">
                             Exports JSONL format for Vertex AI fine-tuning.
                         </p>
