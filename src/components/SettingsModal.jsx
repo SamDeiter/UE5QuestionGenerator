@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
 import Icon from './Icon';
 import TokenUsageDisplay from './TokenUsageDisplay';
-import DeleteConfirmModal from './DeleteConfirmModal';
-import ConfirmDialog from './ConfirmDialog';
-import PromptDialog from './PromptDialog';
 import { getTokenUsage, downloadTrainingData } from '../utils/analyticsStore';
 import { UI_LABELS } from '../utils/constants';
-import { clearQuestionsFromSheets } from '../services/googleSheets';
-import { clearAllQuestionsFromFirestore } from '../services/firebase';
 
 const SettingsModal = ({
     showSettings, setShowSettings,
@@ -16,81 +11,9 @@ const SettingsModal = ({
     onClearData,
     files, handleDetectTopics, isDetecting, fileInputRef, handleFileChange, removeFile, isApiReady
 }) => {
-    const [isResetting, setIsResetting] = useState(false);
-    const [showFactoryResetConfirm, setShowFactoryResetConfirm] = useState(false);
-    const [showFactoryResetPrompt, setShowFactoryResetPrompt] = useState(false);
-
     if (!showSettings) return null;
 
     const tokenUsage = getTokenUsage();
-
-    const handleFactoryResetClick = () => {
-        console.log("Factory Reset button clicked");
-        setShowFactoryResetConfirm(true);
-    };
-
-    const handleFirstConfirm = () => {
-        console.log("First confirm passed, showing prompt dialog...");
-        setShowFactoryResetConfirm(false);
-        setShowFactoryResetPrompt(true);
-    };
-
-    const handlePromptConfirm = async (typedValue) => {
-        console.log("Prompt returned value:", typedValue);
-
-        if (typedValue !== "DELETE") {
-            console.log("User did not type DELETE correctly:", typedValue);
-            alert("Factory reset cancelled. You did not type 'DELETE'.");
-            setShowFactoryResetPrompt(false);
-            return;
-        }
-
-        console.log("User confirmed factory reset, starting...");
-        setShowFactoryResetPrompt(false);
-        setIsResetting(true);
-
-        try {
-            let deletedCount = 0;
-
-            // 1. Clear Firestore FIRST (this is the critical one)
-            console.log("Clearing Firestore...");
-            try {
-                deletedCount = await clearAllQuestionsFromFirestore();
-                console.log(`✅ Deleted ${deletedCount} questions from Firestore`);
-            } catch (firestoreError) {
-                console.error("❌ Firestore deletion failed:", firestoreError);
-                throw new Error(`Firestore deletion failed: ${firestoreError.message}`);
-            }
-
-            // 2. Clear Google Spreadsheet (opens in new tab, fire-and-forget)
-            if (config.sheetUrl) {
-                console.log("Clearing Google Spreadsheet...");
-                try {
-                    clearQuestionsFromSheets(config.sheetUrl);
-                    console.log("✅ Spreadsheet clear request sent (check new tab)");
-                } catch (sheetsError) {
-                    console.error("❌ Sheets clearing failed:", sheetsError);
-                    // Don't throw - sheets clearing is secondary
-                }
-            } else {
-                console.log("⚠️ No Sheet URL configured, skipping Sheets clear");
-            }
-
-            // 3. Clear localStorage
-            console.log("Clearing localStorage...");
-            localStorage.clear();
-            console.log("✅ Local storage cleared");
-
-            // 4. Reload the page
-            alert(`Factory Reset Complete!\n\n• Firestore: ${deletedCount} questions deleted\n• Spreadsheet: ${config.sheetUrl ? 'Clearing in new tab' : 'Skipped (no URL)'}\n• Local Storage: Cleared\n\nPage will reload.`);
-            console.log("Factory reset complete, reloading page...");
-            window.location.reload();
-        } catch (error) {
-            console.error("❌ Factory reset error:", error);
-            alert("Error during factory reset:\n\n" + error.message + "\n\nCheck console for details.");
-            setIsResetting(false);
-        }
-    };
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -303,68 +226,29 @@ const SettingsModal = ({
                         </p>
                     </div>
 
-                    {/* DANGER ZONE */}
+                    {/* DANGER ZONE - Link to separate modal */}
                     <div className="bg-red-900/10 p-4 rounded-lg border border-red-900/30">
                         <h3 className="text-sm font-bold text-red-400 mb-2 flex items-center gap-2">
                             <Icon name="alert-triangle" size={16} />
-                            Danger Zone
+                            Data Management
                         </h3>
+                        <p className="text-xs text-slate-400 mb-3">
+                            For destructive operations (clear data, factory reset), use the Danger Zone.
+                        </p>
                         <button
-                            onClick={onClearData}
+                            onClick={() => {
+                                setShowSettings(false);
+                                // Signal parent to open DangerZoneModal
+                                if (window.openDangerZone) window.openDangerZone();
+                            }}
                             className="w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 text-sm font-bold rounded border border-red-900/50 transition-colors flex items-center justify-center gap-2"
                         >
-                            <Icon name="trash-2" size={16} />
-                            {UI_LABELS.CLEAR_DATA_BTN}
+                            <Icon name="alert-triangle" size={16} />
+                            Open Danger Zone
                         </button>
-
-                        <button
-                            onClick={handleFactoryResetClick}
-                            disabled={isResetting}
-                            className="w-full mt-3 px-4 py-2 bg-red-950 hover:bg-red-900 text-red-500 text-sm font-bold rounded border border-red-900/50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isResetting ? (
-                                <><Icon name="loader" size={16} className="animate-spin" /> Resetting...</>
-                            ) : (
-                                <><Icon name="bomb" size={16} /> Factory Reset (Nuke Everything)</>
-                            )}
-                        </button>
-                        <p className="text-[10px] text-red-400/70 mt-2 text-center">
-                            Deletes ALL data: Spreadsheet + Firestore + Local Storage
-                        </p>
                     </div>
                 </div>
             </div>
-        
-            {/* Confirmation Dialogs */}
-            <ConfirmDialog
-                isOpen={showFactoryResetConfirm}
-                title="FACTORY RESET"
-                message={`This will PERMANENTLY DELETE ALL data from:
-
-• Google Spreadsheet (all Master_ sheets)
-• Firestore Database (cloud)  
-• Local storage (questions, settings, analytics)
-
-This action CANNOT be undone. Continue?`}
-                confirmText="Yes, Continue"
-                cancelText="Cancel"
-                onConfirm={handleFirstConfirm}
-                onCancel={() => setShowFactoryResetConfirm(false)}
-                isDanger={true}
-            />
-            
-            <PromptDialog
-                isOpen={showFactoryResetPrompt}
-                title="FINAL CONFIRMATION"
-                message="Type DELETE to confirm permanent deletion of ALL data:"
-                placeholder="Type DELETE here"
-                expectedValue="DELETE"
-                confirmText="Delete Everything"
-                cancelText="Cancel"
-                onConfirm={handlePromptConfirm}
-                onCancel={() => setShowFactoryResetPrompt(false)}
-                isDanger={true}
-            />
 
         </div >
     );

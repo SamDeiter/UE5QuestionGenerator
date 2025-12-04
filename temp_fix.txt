@@ -1,0 +1,3 @@
+- **True/False (T/F):**
+  - Create clear, verifiable statements.
+  - TRUE = documented facts. FALSE = misconceptions or incorrect assertions.

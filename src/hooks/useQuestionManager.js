@@ -50,8 +50,20 @@ export const useQuestionManager = (config, showMessage) => {
         return map;
     }, [allQuestionsMap]);
 
-    // Helper to add questions
-    const addQuestionsToState = useCallback((newItems, isHistory = false) => {
+    // Helper to add questions with automatic cloud backup
+    const addQuestionsToState = useCallback(async (newItems, isHistory = false) => {
+        // Auto-save to Firestore for crash protection
+        if (newItems && newItems.length > 0) {
+            console.log(`💾 Auto-saving ${newItems.length} questions to Firestore...`);
+            const savePromises = newItems.map(q =>
+                saveQuestionToFirestore(q).catch(err => {
+                    console.warn(`⚠️ Failed to auto-save question ${q.uniqueId}:`, err);
+                })
+            );
+            await Promise.all(savePromises);
+            console.log(`✓ Auto-saved ${newItems.length} questions to cloud`);
+        }
+
         const targetSet = isHistory ? setHistoricalQuestions : setQuestions;
         targetSet(prev => {
             const otherList = isHistory ? questions : historicalQuestions;

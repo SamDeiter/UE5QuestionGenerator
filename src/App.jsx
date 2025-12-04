@@ -29,6 +29,7 @@ const ReviewMode = React.lazy(() => import('./components/ReviewMode'));
 const DatabaseView = React.lazy(() => import('./components/DatabaseView'));
 const BulkExportModal = React.lazy(() => import('./components/BulkExportModal'));
 const AnalyticsDashboard = React.lazy(() => import('./components/AnalyticsDashboard'));
+const DangerZoneModal = React.lazy(() => import('./components/DangerZoneModal'));
 
 // Loading Fallback
 const LoadingSpinner = () => (
@@ -43,6 +44,8 @@ import { useQuestionManager } from './hooks/useQuestionManager';
 import { useFileHandler } from './hooks/useFileHandler';
 import { useGeneration } from './hooks/useGeneration';
 import { useExport } from './hooks/useExport';
+import { useCrashRecovery } from './hooks/useCrashRecovery';
+import CrashRecoveryPrompt from './components/CrashRecoveryPrompt';
 
 // Utilities
 import { CATEGORY_KEYS, TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
@@ -183,6 +186,15 @@ const App = () => {
         checkAndStoreQuestions
     } = useQuestionManager(config, showMessage);
 
+    // 2.5. Crash Recovery - detect and restore from cloud backup
+    const {
+        showRecoveryPrompt,
+        recoveryData,
+        isRecovering,
+        handleRecover,
+        dismissRecovery
+    } = useCrashRecovery(questions, addQuestionsToState, showMessage);
+
     // 3. Status State (Shared)
     const [status, setStatus] = useState('');
 
@@ -240,7 +252,14 @@ const App = () => {
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [dataMenuOpen, setDataMenuOpen] = useState(false);
     const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
+    const [showDangerZone, setShowDangerZone] = useState(false);
     const dataMenuRef = useRef(null);
+
+    // Set up global function for Settings modal to open DangerZone
+    useEffect(() => {
+        window.openDangerZone = () => setShowDangerZone(true);
+        return () => { delete window.openDangerZone; };
+    }, []);
 
     // Computed Filtered Questions
     const filteredQuestions = useMemo(() => createFilteredQuestions(
@@ -409,6 +428,14 @@ const App = () => {
 
     return (
         <div className="flex flex-col h-screen bg-slate-950 font-sans text-slate-200">
+            {/* Crash Recovery Prompt - highest priority */}
+            <CrashRecoveryPrompt
+                isOpen={showRecoveryPrompt}
+                recoveryData={recoveryData}
+                isRecovering={isRecovering}
+                onRecover={handleRecover}
+                onDismiss={dismissRecovery}
+            />
             <Header apiKeyStatus={apiKeyStatus} isCloudReady={isAuthReady} onHome={handleGoHome} creatorName={config.creatorName} appMode={appMode} tokenUsage={tokenUsage} onRestartTutorial={handleRestartTutorial} />
 
             {config.creatorName === '' && <NameEntryModal onSave={handleNameSave} />}
@@ -724,6 +751,27 @@ const App = () => {
 
             <Suspense fallback={null}>
                 <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
+            </Suspense>
+
+            <Suspense fallback={null}>
+                <DangerZoneModal
+                    isOpen={showDangerZone}
+                    onClose={() => setShowDangerZone(false)}
+                    config={config}
+                    onClearData={() => {
+                        if (window.confirm("This will delete ALL your local questions and settings (except API Key and Sheet URL). Are you sure?")) {
+                            const savedApiKey = config.apiKey;
+                            const savedSheetUrl = config.sheetUrl;
+                            localStorage.removeItem('ue5_gen_config');
+                            localStorage.removeItem('ue5_gen_questions');
+                            setQuestions([]);
+                            setDatabaseQuestions([]);
+                            const preservedConfig = { apiKey: savedApiKey, sheetUrl: savedSheetUrl };
+                            localStorage.setItem('ue5_gen_config', JSON.stringify(preservedConfig));
+                            window.location.reload();
+                        }
+                    }}
+                />
             </Suspense>
 
             {/* TOAST NOTIFICATIONS */}
