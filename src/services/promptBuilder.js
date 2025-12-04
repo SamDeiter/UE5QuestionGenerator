@@ -106,11 +106,7 @@ ${examplesText}
 ### 2. Question Type Rules
 - **Target Type:** ${targetType}
 - **Multiple Choice (MC):** 4 options total (1 Correct, 3 Distractors).
-- **True/False (T/F):**
-  - **If TRUE:** The assertion must be a documented fact, not a general truism.
-  - **If FALSE:** The assertion must be a **common misconception** or a specific limitation (e.g., "Nanite supports skeletal meshes in UE 5.0" -> False). Do not generate random falsehoods (e.g., "Nanite is a sound engine").
-  - **Validation:** The \`SourceExcerpt\` must explicitly prove why the statement is True or False.
-
+- **True/False (T/F):** Create clear statements that can be verified as TRUE or FALSE using documentation.
 ### 3. Sourcing & URL Integrity (CRITICAL)
 - **Domain:** Use ONLY \`dev.epicgames.com/documentation/\`.
 - **COMPLETE URLs ONLY:** The SourceURL MUST be a fully valid, clickable URL. Examples:
