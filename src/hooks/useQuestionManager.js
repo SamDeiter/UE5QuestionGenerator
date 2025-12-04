@@ -162,11 +162,12 @@ export const useQuestionManager = (config, showMessage) => {
     // Delete Handlers
     const handleDelete = (id) => setDeleteConfirmId(id);
 
-    const confirmDelete = () => {
+    const confirmDelete = (reason = 'Unknown') => {
         if (deleteConfirmId) {
+            console.log(`Deleting question ${deleteConfirmId}. Reason: ${reason}`);
             setQuestions(prev => prev.filter(q => q.id !== deleteConfirmId));
             setHistoricalQuestions(prev => prev.filter(q => q.id !== deleteConfirmId));
-            if (showMessage) showMessage('Question deleted permanently.', 2000);
+            if (showMessage) showMessage(`Question deleted: ${reason}`, 2000);
             setDeleteConfirmId(null);
         }
     };

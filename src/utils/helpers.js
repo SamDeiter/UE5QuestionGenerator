@@ -98,7 +98,9 @@ export const formatUrl = (url) => {
             const actualUrl = urlObj.searchParams.get('url') ||
                 urlObj.searchParams.get('q') ||
                 urlObj.searchParams.get('dest') ||
-                urlObj.searchParams.get('redirect');
+                urlObj.searchParams.get('redirect') ||
+                urlObj.searchParams.get('re'); // Added 're'
+
             if (actualUrl) {
                 cleanUrl = decodeURIComponent(actualUrl);
             }
@@ -119,14 +121,26 @@ export const formatUrl = (url) => {
 export const getDisplayUrl = (url) => {
     if (!url) return '';
     const formatted = formatUrl(url);
+
+    // If it's still a grounding link after formatting, mask it
+    if (formatted.includes('vertexaisearch.cloud.google.com') || formatted.includes('grounding-api-redirect')) {
+        return 'Google Vertex AI Source';
+    }
+
     try {
         const urlObj = new URL(formatted);
         // Return just the hostname + pathname (truncated if too long)
         let display = urlObj.hostname + urlObj.pathname;
         if (display.endsWith('/')) display = display.slice(0, -1);
+
+        // If it's very long, truncate the middle
+        if (display.length > 60) {
+            display = display.substring(0, 30) + '...' + display.substring(display.length - 20);
+        }
+
         return display;
     } catch (e) {
-        return formatted;
+        return formatted.substring(0, 50) + (formatted.length > 50 ? '...' : '');
     }
 };
 

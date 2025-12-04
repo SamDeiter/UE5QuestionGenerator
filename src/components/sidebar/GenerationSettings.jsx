@@ -3,7 +3,22 @@ import { generateContent, listModels } from '../../services/gemini';
 import Icon from '../Icon';
 import InfoTooltip from '../InfoTooltip';
 
+import { TAGS_BY_DISCIPLINE } from '../../utils/tagTaxonomy';
+
 const GenerationSettings = ({ config, handleChange, isOpen, onToggle }) => {
+    const availableTags = TAGS_BY_DISCIPLINE[config.discipline] || [];
+
+    const toggleTag = (tag) => {
+        const currentTags = config.tags || [];
+        let newTags;
+        if (currentTags.includes(tag)) {
+            newTags = currentTags.filter(t => t !== tag);
+        } else {
+            newTags = [...currentTags, tag];
+        }
+        handleChange({ target: { name: 'tags', value: newTags } });
+    };
+
     return (
         <div className="mb-2">
             {/* Header */}
@@ -31,6 +46,34 @@ const GenerationSettings = ({ config, handleChange, isOpen, onToggle }) => {
                                 <option value="Technical Art">Technical Art</option><option value="Animation & Rigging">Animation & Rigging</option><option value="Game Logic & Systems">Game Logic & Systems</option><option value="Look Development (Materials)">Look Development (Materials)</option><option value="Networking">Networking</option><option value="C++ Programming">C++ Programming</option><option value="VFX (Niagara)">VFX (Niagara)</option><option value="World Building & Level Design">World Building & Level Design</option><option value="Blueprints">Blueprints</option><option value="Lighting & Rendering">Lighting & Rendering</option>
                             </select>
                         </div>
+
+                        {/* Tags Selection */}
+                        {availableTags.length > 0 && (
+                            <div className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-bold uppercase text-slate-400">Focus Tags</label>
+                                    <span className="text-[10px] text-slate-500">{config.tags?.length || 0} selected</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
+                                    {availableTags.map(tag => {
+                                        const isSelected = (config.tags || []).includes(tag);
+                                        return (
+                                            <button
+                                                key={tag}
+                                                onClick={() => toggleTag(tag)}
+                                                className={`text-[10px] px-2 py-1 rounded border transition-all ${isSelected
+                                                    ? 'bg-orange-500/20 border-orange-500 text-orange-200 hover:bg-orange-500/30'
+                                                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-300'
+                                                    }`}
+                                            >
+                                                {tag}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="space-y-1">
                             <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Language</label></div>
                             <select name="language" value={config.language} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">

@@ -511,18 +511,19 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
                 <div className="pt-3 border-t border-slate-800 flex flex-col gap-2">
                     {/* Source URL - Prominent Display */}
                     {q.sourceUrl && (
-                        <div className="flex items-center gap-2 bg-blue-950/30 border border-blue-800/50 rounded px-3 py-1.5">
-                            <Icon name="link" size={14} className="text-blue-400 flex-shrink-0" />
-                            <span className="text-[10px] font-bold uppercase text-blue-400">Source:</span>
+                        <div className={`flex items-center gap-2 border rounded px-3 py-1.5 ${q.invalidUrl ? 'bg-red-950/30 border-red-800/50' : 'bg-blue-950/30 border-blue-800/50'}`}>
+                            <Icon name={q.invalidUrl ? "alert-triangle" : "link"} size={14} className={q.invalidUrl ? "text-red-400 flex-shrink-0" : "text-blue-400 flex-shrink-0"} />
+                            <span className={`text-[10px] font-bold uppercase ${q.invalidUrl ? 'text-red-400' : 'text-blue-400'}`}>Source:</span>
                             <a
                                 href={formatUrl(q.sourceUrl)}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-xs text-blue-300 hover:text-blue-200 hover:underline truncate flex-1"
+                                className={`text-xs hover:underline truncate flex-1 ${q.invalidUrl ? 'text-red-300 hover:text-red-200' : 'text-blue-300 hover:text-blue-200'}`}
+                                title={q.invalidUrl ? "Warning: Link may be broken or truncated" : q.sourceUrl}
                             >
-                                {q.sourceUrl}
+                                {getDisplayUrl(q.sourceUrl)}
                             </a>
-                            <Icon name="external-link" size={12} className="text-blue-500 flex-shrink-0" />
+                            <Icon name="external-link" size={12} className={q.invalidUrl ? "text-red-500 flex-shrink-0" : "text-blue-500 flex-shrink-0"} />
                         </div>
                     )}
                     {/* Source Excerpt - Cleaned */}
@@ -532,6 +533,24 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
                     </div>
                 </div>
             )}
+
+            {/* Generation Metrics Footer */}
+            <div className="mt-3 pt-2 border-t border-slate-800/50 flex items-center justify-between text-[10px] text-slate-600 font-mono">
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1" title="Estimated Cost">
+                        <Icon name="dollar-sign" size={10} />
+                        <span>${(q.estimatedCost || 0).toFixed(5)}</span>
+                    </div>
+                    <div className="flex items-center gap-1" title="Generation Time">
+                        <Icon name="clock" size={10} />
+                        <span>{q.generationTime ? (q.generationTime / 1000).toFixed(2) : '0.00'}s</span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-1" title="AI Model">
+                    <Icon name="cpu" size={10} />
+                    <span className="uppercase">{q.model || 'Gemini 2.0 Flash'}</span>
+                </div>
+            </div>
 
 
         </div>

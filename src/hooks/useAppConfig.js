@@ -22,7 +22,8 @@ export const useAppConfig = () => {
             reviewerName: '',
             apiKey: '',
             sheetUrl: 'https://script.google.com/a/macros/epicgames.com/s/AKfycbxssaKhw3pOWkC9sPJE_6oMZuG66JYCgeEQFEHh010Q90wlHqH64oiVhFjE1JQkSTV6/exec',
-            model: 'gemini-2.0-flash'
+            model: 'gemini-2.0-flash',
+            tags: [] // Selected sub-topic tags
         };
 
         const constInitialConfig = saved ? { ...defaults, ...JSON.parse(saved) } : defaults;

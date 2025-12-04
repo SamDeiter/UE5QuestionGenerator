@@ -64,6 +64,7 @@ export const constructSystemPrompt = (config, fileContext, rejectedExamples = []
 Role: Senior UE5 tech writer. Create short, clear, scenario-based questions in Simplified Technical English.
 **Bold key terms:** \`<b>Nanite</b>\`, \`<b>Lumen</b>\`
 Discipline: ${config.discipline}
+Focus Areas: ${config.tags && config.tags.length > 0 ? config.tags.join(', ') : 'None specified'}
 Language: ${config.language}
 Type: ${targetType}
 ${modeInstruction ? `Mode: ${modeInstruction}` : ''}`);
@@ -72,7 +73,7 @@ ${modeInstruction ? `Mode: ${modeInstruction}` : ''}`);
     sections.push(`Format:
 | ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | QualityScore |
 - ID starts at 1. Difficulty: Easy/Medium/Hard.
-- T/F: OptionA=TRUE, OptionB=FALSE. CorrectLetter=A/B. Single assertion only.
+- T/F Rule: OptionA=TRUE, OptionB=FALSE. CorrectLetter=A/B. **Assertion must be a single, non-obvious, factual statement.** Avoid self-evident truths. Test a specific limitation, behavior, or requirement.
 - Type rule: ${targetType === 'MC ONLY' ? 'No T/F questions' : targetType === 'T/F ONLY' ? 'No MC questions' : 'Mix MC and T/F'}.
 - QualityScore: 0-100. ${temp < 0.3 || temp > 0.7 ? 'Lower by 10-15 for extreme temps.' : ''}`);
 
@@ -82,7 +83,8 @@ ${modeInstruction ? `Mode: ${modeInstruction}` : ''}`);
 - If SourceExcerpt says "Control Rig", the correct option MUST be "Control Rig" (not Animation Editor, etc.)
 - ALWAYS include the exact term from the source as the correct answer option
 - DO NOT generate answer options that contradict or differ from the source
-- Double-check: Does CorrectLetter option contain the answer mentioned in SourceExcerpt? If not, FIX IT.`);
+- Double-check: Does CorrectLetter option contain the answer mentioned in SourceExcerpt? If not, FIX IT.
+- T/F SOURCING: If CorrectLetter=A (TRUE), the Question MUST be a direct, non-ambiguous truth supported by the SourceExcerpt. If CorrectLetter=B (FALSE), the Question MUST contain a factual ERROR directly contradicted by or missing from the SourceExcerpt. The SourceExcerpt should be used to prove the question is false (by showing the correct fact).`);
 
     // Output instruction
     sections.push(`Output: ${difficultyPrompt}
@@ -94,7 +96,8 @@ ${modeInstruction ? `Mode: ${modeInstruction}` : ''}`);
 - ONLY use official Epic docs: dev.epicgames.com/documentation/en-us/unreal-engine/
 - SourceURL MUST be the DIRECT documentation link (e.g., https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-overview)
 - **NEVER use** Google redirect URLs, vertexaisearch links, or any proxy URLs
-- NO forums, Reddit, wikis, YouTube`);
+- **STRICTLY FORBIDDEN:** YouTube, Vimeo, or any video platforms. Do not use video transcripts as sources.
+- NO forums, Reddit, wikis, or community blogs.`);
 
     // REJECTED EXAMPLES SECTION - Learn from mistakes
     if (rejectedExamples && rejectedExamples.length > 0) {

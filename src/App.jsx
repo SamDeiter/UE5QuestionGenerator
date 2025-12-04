@@ -43,6 +43,7 @@ import { useExport } from './hooks/useExport';
 // Utilities
 import { CATEGORY_KEYS, TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
 import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
+import { getTokenUsage } from './utils/analyticsStore';
 
 const App = () => {
     // ========================================================================
@@ -50,6 +51,13 @@ const App = () => {
     // ========================================================================
     const [toasts, setToasts] = useState([]);
     const [selectedIds, setSelectedIds] = useState(new Set());
+    const [tokenUsage, setTokenUsage] = useState(() => getTokenUsage());
+
+    // Refresh token usage periodically and after generations
+    useEffect(() => {
+        const interval = setInterval(() => setTokenUsage(getTokenUsage()), 5000);
+        return () => clearInterval(interval);
+    }, []);
 
     const toggleSelection = useCallback((id) => {
         setSelectedIds(prev => {
@@ -345,19 +353,38 @@ const App = () => {
 
     return (
         <div className="flex flex-col h-screen bg-slate-950 font-sans text-slate-200">
-            <Header apiKeyStatus={apiKeyStatus} isCloudReady={isAuthReady} onHome={handleGoHome} creatorName={config.creatorName} appMode={appMode} />
+            <Header apiKeyStatus={apiKeyStatus} isCloudReady={isAuthReady} onHome={handleGoHome} creatorName={config.creatorName} appMode={appMode} tokenUsage={tokenUsage} />
 
             {config.creatorName === '' && <NameEntryModal onSave={handleNameSave} />}
             {showClearModal && <ClearConfirmationModal onConfirm={handleDeleteAllQuestions} onCancel={() => setShowClearModal(false)} />}
 
             {deleteConfirmId && (
                 <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-300 space-y-4">
+                    <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-300 space-y-4">
                         <h3 className="text-xl font-bold text-red-500 flex items-center gap-2"><Icon name="trash-2" size={20} /> DELETE QUESTION?</h3>
-                        <p className="text-sm text-slate-300">This action will permanently delete this question. This cannot be undone.</p>
-                        <div className="flex justify-end gap-3">
-                            <button onClick={() => setDeleteConfirmId(null)} className="px-4 py-2 text-sm rounded bg-slate-700 hover:bg-slate-600 text-white transition-colors">Cancel</button>
-                            <button onClick={confirmDelete} className="px-4 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white font-bold transition-colors">Delete</button>
+                        <p className="text-sm text-slate-300">Why are you deleting this question? This helps improve future generation.</p>
+
+                        <div className="grid grid-cols-1 gap-2">
+                            {[
+                                { id: 'Duplicate', label: 'Duplicate Question' },
+                                { id: 'Poor Quality', label: 'Poor Quality / Hallucination' },
+                                { id: 'Incorrect', label: 'Incorrect Information' },
+                                { id: 'Bad Source', label: 'Bad Source / YouTube' },
+                                { id: 'Test', label: 'Just Testing / Cleanup' }
+                            ].map(reason => (
+                                <button
+                                    key={reason.id}
+                                    onClick={() => confirmDelete(reason.id)}
+                                    className="w-full text-left px-4 py-3 rounded bg-slate-800 hover:bg-red-900/20 border border-slate-700 hover:border-red-500/50 transition-all flex items-center justify-between group"
+                                >
+                                    <span className="text-sm font-medium text-slate-300 group-hover:text-red-200">{reason.label}</span>
+                                    <Icon name="chevron-right" size={14} className="text-slate-600 group-hover:text-red-400" />
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-800 flex justify-end">
+                            <button onClick={() => setDeleteConfirmId(null)} className="px-4 py-2 text-sm rounded bg-transparent hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">Cancel</button>
                         </div>
                     </div>
                 </div>

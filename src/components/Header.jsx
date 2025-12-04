@@ -3,12 +3,15 @@ import Icon from './Icon';
 
 const APP_VERSION = "v1.5";
 
-const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode }) => {
+const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, tokenUsage = { inputTokens: 0, outputTokens: 0, totalCost: 0 } }) => {
     const isReview = appMode === 'review';
     const borderColor = isReview ? 'border-indigo-600' : 'border-orange-600';
-    const iconBg = isReview ? 'bg-indigo-600 shadow-indigo-900/50' : 'bg-orange-600 shadow-orange-900/50';
     const titleColor = isReview ? 'text-indigo-50' : 'text-orange-50';
     const headerBg = isReview ? 'bg-slate-950 bg-gradient-to-r from-indigo-950/30 to-slate-950' : 'bg-slate-950';
+
+    const totalTokens = (tokenUsage.inputTokens || 0) + (tokenUsage.outputTokens || 0);
+    const formattedTokens = totalTokens >= 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : totalTokens;
+    const formattedCost = (tokenUsage.totalCost || 0).toFixed(4);
 
     return (
         <header className={`${headerBg} text-white p-6 shadow-xl border-b ${borderColor} relative z-20 transition-all duration-500`}>
@@ -39,6 +42,19 @@ const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode }) =>
                             <span>{creatorName}</span>
                         </div>
                     )}
+                    {/* Token & Cost Display */}
+                    <div className="flex items-center gap-2 px-3 py-1 rounded border border-slate-700 bg-slate-800/30" title={`Input: ${tokenUsage.inputTokens || 0} | Output: ${tokenUsage.outputTokens || 0}`}>
+                        <div className="flex items-center gap-1 text-purple-400">
+                            <Icon name="zap" size={12} />
+                            <span className="font-bold">{formattedTokens}</span>
+                            <span className="text-slate-500">tok</span>
+                        </div>
+                        <div className="w-px h-4 bg-slate-700"></div>
+                        <div className="flex items-center gap-1 text-emerald-400">
+                            <span className="text-slate-500">$</span>
+                            <span className="font-bold">{formattedCost}</span>
+                        </div>
+                    </div>
                     <div className="flex items-center gap-2 px-3 py-1 rounded border border-slate-700">
                         <span className={`font-bold ${apiKeyStatus.includes('Loaded') || apiKeyStatus.includes('Auto') ? 'text-green-400' : 'text-red-400'}`}>API Key: {apiKeyStatus}</span>
                         {isCloudReady ? (
@@ -57,3 +73,4 @@ const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode }) =>
 };
 
 export default Header;
+

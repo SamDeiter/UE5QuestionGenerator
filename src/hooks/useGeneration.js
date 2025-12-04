@@ -42,42 +42,43 @@ export const useGeneration = (
 
         // Randomly decide if this will be a TRUE or FALSE question (50/50)
         const makeItTrue = Math.random() > 0.5;
+        const targetAnswer = makeItTrue ? correctAnswer : wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)] || 'incorrect';
 
-        // Extract the core question (remove "What/Which/How" question words)
-        let questionStem = mcQuestion.question
-            .replace(/^(What|Which|How|Where|When|Why)\s+(is|are|does|do|can|should|would)\s+/i, '')
-            .replace(/\?$/, '')
-            .trim();
+        let statement = mcQuestion.question.trim().replace(/\?$/, '');
+        let newStatement = "";
 
-        let statement;
-        let isTrue;
-
-        if (makeItTrue) {
-            // Create a TRUE statement using the correct answer
-            statement = `${correctAnswer} ${questionStem}`.trim();
-            // Clean up if it looks weird, fall back to simpler format
-            if (statement.length < 20 || statement.length > 200) {
-                statement = `${questionStem} is ${correctAnswer}`.replace(/\s+/g, ' ').trim();
-            }
-            isTrue = true;
-        } else {
-            // Create a FALSE statement using a wrong answer
-            const wrongAnswer = wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)] || 'an incorrect method';
-            statement = `${questionStem} is ${wrongAnswer}`.replace(/\s+/g, ' ').trim();
-            isTrue = false;
+        // 1. Handle "Can you..." -> "You can [stem] [answer]"
+        if (/^Can you/i.test(statement)) {
+            // Remove "Can you" and any following auxiliary verbs if redundant
+            let stem = statement.replace(/^Can you\s+/i, '');
+            newStatement = `You can ${stem} ${targetAnswer}`;
+        }
+        // 2. Handle "Is..." -> "[Subject] is [Answer]"
+        else if (/^Is\s+/i.test(statement)) {
+            // "Is Nanite..." -> "Nanite..."
+            let stem = statement.replace(/^Is\s+/i, '');
+            newStatement = `${stem} is ${targetAnswer}`;
+        }
+        // 3. Handle "What/Which..." -> "[Stem] is [Answer]"
+        else {
+            let stem = statement
+                .replace(/^(What|Which|How|Where|When|Why)\s+(is|are|does|do|can|should|would)\s+/i, '')
+                .trim();
+            newStatement = `${stem} is ${targetAnswer}`;
         }
 
-        // Ensure statement ends with period and capitalize first letter
-        statement = statement.charAt(0).toUpperCase() + statement.slice(1);
-        if (!statement.endsWith('.')) statement += '.';
+        // Cleanup: Remove double spaces, capitalize, add period
+        newStatement = newStatement.replace(/\s+/g, ' ').trim();
+        newStatement = newStatement.charAt(0).toUpperCase() + newStatement.slice(1);
+        if (!newStatement.endsWith('.')) newStatement += '.';
 
         return {
             ...mcQuestion,
             type: 'True/False',
             difficulty: difficulty,
-            question: statement,
+            question: newStatement,
             options: { A: 'TRUE', B: 'FALSE', C: '', D: '' },
-            correct: isTrue ? 'A' : 'B',
+            correct: makeItTrue ? 'A' : 'B',
             originalMC: mcQuestion.question // Keep original for reference
         };
     };
@@ -122,6 +123,19 @@ export const useGeneration = (
                 throw new Error(`Failed to parse questions. Raw: "${truncatedText}"`);
             }
 
+            // FILTER: Strictly remove forbidden domains (YouTube, Vimeo)
+            const forbiddenDomains = ['youtube.com', 'youtu.be', 'vimeo.com'];
+            const initialCount = newQuestions.length;
+            newQuestions = newQuestions.filter(q => {
+                const url = (q.sourceUrl || '').toLowerCase();
+                return !forbiddenDomains.some(domain => url.includes(domain));
+            });
+
+            if (newQuestions.length < initialCount) {
+                console.warn(`Filtered out ${initialCount - newQuestions.length} questions with forbidden video sources.`);
+                showMessage(`Removed ${initialCount - newQuestions.length} questions citing YouTube/Video sources.`);
+            }
+
             // Parse the requested difficulty and type from config
             const [requestedDifficulty, requestedType] = config.difficulty.split(' ');
             const expectedType = requestedType === 'T/F' ? 'True/False' : 'Multiple Choice';
@@ -129,22 +143,51 @@ export const useGeneration = (
             // Apply difficulty and convert question types as needed
             if (requestedDifficulty !== 'Balanced') {
                 newQuestions = newQuestions.map(q => {
+                    let updatedQ = { ...q };
+
+                    // URL Validation
+                    if (updatedQ.sourceUrl && (updatedQ.sourceUrl.includes('...') || !updatedQ.sourceUrl.includes('epicgames.com'))) {
+                        updatedQ.invalidUrl = true;
+                    }
+
                     // If we need T/F but got MC, intelligently convert
                     if (expectedType === 'True/False' && q.type === 'Multiple Choice') {
-                        return convertMCtoTF(q, requestedDifficulty);
+                        updatedQ = convertMCtoTF(updatedQ, requestedDifficulty);
+                    } else {
+                        // If we need MC but got T/F, keep as-is (T/F is fine as a subset)
+                        // Just apply the correct difficulty
+                        updatedQ.difficulty = requestedDifficulty;
                     }
-                    // If we need MC but got T/F, keep as-is (T/F is fine as a subset)
-                    // Just apply the correct difficulty
-                    return { ...q, difficulty: requestedDifficulty };
+                    return updatedQ;
+                });
+            } else {
+                // Even for Balanced, we should validate URLs
+                newQuestions = newQuestions.map(q => {
+                    if (q.sourceUrl && (q.sourceUrl.includes('...') || !q.sourceUrl.includes('epicgames.com'))) {
+                        return { ...q, invalidUrl: true };
+                    }
+                    return q;
                 });
             }
 
-            const taggedQuestions = newQuestions.map(q => ({ ...q, language: config.language }));
-            const uniqueNewQuestions = await checkAndStoreQuestions(taggedQuestions);
-
-            // Calculate actual output tokens and average quality
+            // Calculate metrics
             const outputTokens = estimateTokens(text);
-            const avgQuality = uniqueNewQuestions.reduce((sum, q) => sum + (q.qualityScore || 0), 0) / uniqueNewQuestions.length;
+            const totalCost = tokenAnalysis.cost.estimated;
+            const costPerQuestion = newQuestions.length > 0 ? (totalCost / newQuestions.length) : 0;
+
+            // Enrich questions with metadata
+            const enrichedQuestions = newQuestions.map(q => ({
+                ...q,
+                language: config.language,
+                estimatedCost: costPerQuestion,
+                generationTime: duration,
+                model: config.model || 'gemini-2.0-flash'
+            }));
+
+            // Save to storage and get unique ones
+            const uniqueNewQuestions = await checkAndStoreQuestions(enrichedQuestions);
+
+            const avgQuality = uniqueNewQuestions.reduce((sum, q) => sum + (q.qualityScore || 0), 0) / (uniqueNewQuestions.length || 1);
 
             // Log generation to analytics
             const generationId = logGeneration({
@@ -157,7 +200,7 @@ export const useGeneration = (
                 averageQuality: Math.round(avgQuality),
                 success: true,
                 model: config.model || 'gemini-2.0-flash',
-                estimatedCost: tokenAnalysis.cost.estimated
+                estimatedCost: totalCost
             });
 
             // Log each question

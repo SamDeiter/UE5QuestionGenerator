@@ -175,6 +175,11 @@ export const generateCritique = async (apiKey, q) => {
     - **HINTS:** Hints in stem = -15 points.
     - **MULTIPLE WORKFLOWS:** Ambiguous "How to" = FAIL.
 
+    **CRITICAL RULE FOR TRUE/FALSE:** 
+    - If the original question is True/False, the rewrite MUST remain True/False. 
+    - DO NOT suggest converting T/F to Multiple Choice unless the premise is fundamentally flawed.
+    - For T/F, ensure the statement is a single, clear assertion.
+
     Question: ${q.question}
     Options: ${JSON.stringify(q.options)}
     Correct: ${q.correct}`;

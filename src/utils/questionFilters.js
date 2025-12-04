@@ -43,8 +43,12 @@ export const createFilteredQuestions = (
         // Filter by discipline
         if (discipline && q.discipline !== discipline) return false;
 
-        // Filter by difficulty and type (if not "Balanced All")
-        if (difficulty && difficulty !== 'Balanced All') {
+        // Filter by difficulty and type (if not "Balanced All" or "Balanced")
+        // SKIP this filter if we are in ANY status filter mode (pending, accepted, rejected, all)
+        // This ensures the Review Console shows all questions matching the status, regardless of current generation settings.
+        const isStatusFilterActive = ['pending', 'accepted', 'rejected', 'all'].includes(filterMode);
+
+        if (!isStatusFilterActive && difficulty && difficulty !== 'Balanced All' && difficulty !== 'Balanced') {
             const [targetDiff, targetTypeAbbrev] = difficulty.split(' ');
             const targetType = targetTypeAbbrev === 'MC' ? 'Multiple Choice' : 'True/False';
 
