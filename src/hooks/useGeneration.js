@@ -68,6 +68,30 @@ export const useGeneration = (
                 const truncatedText = text.length > 100 ? text.substring(0, 100) + "..." : text;
                 throw new Error(`Failed to parse generated questions. Raw output start: "${truncatedText}"`);
             }
+
+            // Parse the requested difficulty and type from config
+            const [requestedDifficulty, requestedType] = config.difficulty.split(' ');
+
+            // If not 'Balanced All', filter and force-apply the correct difficulty/type
+            if (requestedDifficulty !== 'Balanced') {
+                const expectedType = requestedType === 'T/F' ? 'True/False' : 'Multiple Choice';
+
+                // Filter questions to only keep those matching the requested type
+                // Also force-apply the correct difficulty to handle AI inconsistency
+                newQuestions = newQuestions
+                    .filter(q => q.type === expectedType)
+                    .map(q => ({
+                        ...q,
+                        difficulty: requestedDifficulty,  // Force correct difficulty
+                        type: expectedType  // Force correct type
+                    }));
+
+                if (newQuestions.length === 0) {
+                    console.warn(`AI generated no ${expectedType} questions. Check prompt compliance.`);
+                    throw new Error(`AI failed to generate ${requestedDifficulty} ${requestedType} questions. Please try again.`);
+                }
+            }
+
             const taggedQuestions = newQuestions.map(q => ({ ...q, language: config.language }));
             const uniqueNewQuestions = await checkAndStoreQuestions(taggedQuestions);
 
