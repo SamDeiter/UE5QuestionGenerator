@@ -416,12 +416,6 @@ const App = () => {
                         isProcessing={isProcessing}
                         showAdvancedConfig={showAdvancedConfig}
                         setShowAdvancedConfig={setShowAdvancedConfig}
-                        files={files}
-                        handleDetectTopics={handleDetectTopics}
-                        isDetecting={isDetecting}
-                        fileInputRef={fileInputRef}
-                        handleFileChange={handleFileChange}
-                        removeFile={removeFile}
                         apiKeyStatus={apiKeyStatus}
                         showApiError={showApiError}
                         handleLoadFromSheets={handleLoadFromSheets}
@@ -679,6 +673,13 @@ const App = () => {
                             window.location.reload();
                         }
                     }}
+                    files={files}
+                    handleDetectTopics={handleDetectTopics}
+                    isDetecting={isDetecting}
+                    fileInputRef={fileInputRef}
+                    handleFileChange={handleFileChange}
+                    removeFile={removeFile}
+                    isApiReady={isApiReady}
                 />
             </Suspense>
 

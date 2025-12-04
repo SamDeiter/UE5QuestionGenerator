@@ -35,9 +35,9 @@ export const useAppConfig = () => {
         constInitialConfig.sheetUrl = constInitialConfig.sheetUrl || defaults.sheetUrl;
 
         // Reset deprecated difficulty setting
-        if (constInitialConfig.difficulty === 'Balanced All') {
-            constInitialConfig.difficulty = 'Easy MC';
-        }
+        // if (constInitialConfig.difficulty === 'Balanced All') {
+        //     constInitialConfig.difficulty = 'Easy MC';
+        // }
 
         return constInitialConfig;
     });

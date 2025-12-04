@@ -45,11 +45,11 @@ const GranularProgress = ({ approvedCounts, target, isTargetMet, selectedDifficu
         <div className="space-y-2">
             <h3 className="text-sm font-bold uppercase text-slate-400 flex items-center gap-2 border-b border-slate-700/50 pb-1.5 mb-1"><Icon name="list-checks" size={14} /> Generation Target (Cap: 33)</h3>
             {categories}
-            {/* <button onClick={() => handleSelectCategory('Balanced All')} className={`w-full p-2 rounded transition-all cursor-pointer border mt-3 ${isBalancedSelected ? 'bg-orange-600 border-orange-400 shadow-lg' : 'bg-slate-800 border-slate-700 hover:bg-slate-700/50'}`}>
+            <button onClick={() => handleSelectCategory('Balanced All')} className={`w-full p-2 rounded transition-all cursor-pointer border mt-3 ${isBalancedSelected ? 'bg-orange-600 border-orange-400 shadow-lg' : 'bg-slate-800 border-slate-700 hover:bg-slate-700/50'}`}>
                 <div className="flex justify-center items-center text-sm font-bold gap-2">
                     <Icon name="archive" size={14} /> VIEW ALL/BULK EXPORT
                 </div>
-            </button> */}
+            </button>
         </div>
     );
 };

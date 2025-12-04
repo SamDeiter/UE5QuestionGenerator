@@ -29,42 +29,70 @@ export const useGeneration = (
     const [isGenerating, setIsGenerating] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [translationProgress, setTranslationProgress] = useState(0);
-
     /**
      * Intelligently converts a Multiple Choice question to True/False format
      * Creates a statement from the question + correct answer, randomly makes it TRUE or FALSE
      */
     const convertMCtoTF = (mcQuestion, difficulty) => {
-        const correctAnswer = mcQuestion.options[mcQuestion.correct];
+        const correctAnswerText = mcQuestion.options[mcQuestion.correct];
         const wrongAnswers = Object.entries(mcQuestion.options)
             .filter(([key, val]) => key !== mcQuestion.correct && val && val.trim())
             .map(([, val]) => val);
 
-        // Randomly decide if this will be a TRUE or FALSE question (50/50)
-        const makeItTrue = Math.random() > 0.5;
-        const targetAnswer = makeItTrue ? correctAnswer : wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)] || 'incorrect';
+        // Check if the original question is already effectively True/False
+        const lowerCorrect = correctAnswerText.trim().toLowerCase().replace(/[.,!]$/, '');
+        const isBooleanAnswer = ['true', 'false', 'yes', 'no'].includes(lowerCorrect);
 
-        let statement = mcQuestion.question.trim().replace(/\?$/, '');
-        let newStatement = "";
+        let newStatement = mcQuestion.question.trim().replace(/\?$/, '');
+        let makeItTrue = true; // Default
+        let targetAnswer = correctAnswerText;
 
-        // 1. Handle "Can you..." -> "You can [stem] [answer]"
-        if (/^Can you/i.test(statement)) {
-            // Remove "Can you" and any following auxiliary verbs if redundant
-            let stem = statement.replace(/^Can you\s+/i, '');
-            newStatement = `You can ${stem} ${targetAnswer}`;
-        }
-        // 2. Handle "Is..." -> "[Subject] is [Answer]"
-        else if (/^Is\s+/i.test(statement)) {
-            // "Is Nanite..." -> "Nanite..."
-            let stem = statement.replace(/^Is\s+/i, '');
-            newStatement = `${stem} is ${targetAnswer}`;
-        }
-        // 3. Handle "What/Which..." -> "[Stem] is [Answer]"
-        else {
-            let stem = statement
-                .replace(/^(What|Which|How|Where|When|Why)\s+(is|are|does|do|can|should|would)\s+/i, '')
-                .trim();
-            newStatement = `${stem} is ${targetAnswer}`;
+        if (isBooleanAnswer) {
+            // PRESERVE MODE: If original answer is True/False, we keep the statement as is.
+            // We cannot easily flip the truthiness of a statement without complex NLP (e.g. adding "not").
+            // So we force the new question to match the original truthiness.
+
+            // If original correct was "TRUE" or "YES" -> New Correct is A (TRUE)
+            if (['true', 'yes'].includes(lowerCorrect)) {
+                makeItTrue = true;
+            }
+            // If original correct was "FALSE" or "NO" -> New Correct is B (FALSE)
+            else {
+                makeItTrue = false;
+            }
+
+            // Statement is just the original question text (which is likely a statement)
+            newStatement = newStatement;
+        } else {
+            // STANDARD MODE: Randomly decide if this will be a TRUE or FALSE question (50/50)
+            makeItTrue = Math.random() > 0.5;
+            targetAnswer = makeItTrue ? correctAnswerText : wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)] || 'incorrect';
+
+            // 1. Handle "Can you..." -> "You can [stem] [answer]"
+            if (/^Can you/i.test(newStatement)) {
+                let stem = newStatement.replace(/^Can you\s+/i, '');
+                newStatement = `You can ${stem} ${targetAnswer}`;
+            }
+            // 2. Handle "Is..." -> "[Subject] is [Answer]"
+            else if (/^Is\s+/i.test(newStatement)) {
+                let stem = newStatement.replace(/^Is\s+/i, '');
+                newStatement = `${stem} is ${targetAnswer}`;
+            }
+            // 3. Handle "What/Which..." -> "[Stem] is [Answer]"
+            else {
+                // Check for WH- words
+                const isWhQuestion = /^(What|Which|How|Where|When|Why)\s+/i.test(newStatement);
+
+                if (isWhQuestion) {
+                    let stem = newStatement
+                        .replace(/^(What|Which|How|Where|When|Why)\s+(is|are|does|do|can|should|would)\s+/i, '')
+                        .trim();
+                    newStatement = `${stem} is ${targetAnswer}`;
+                } else {
+                    // Fallback for other structures: append answer
+                    newStatement = `${newStatement} is ${targetAnswer}`;
+                }
+            }
         }
 
         // Cleanup: Remove double spaces, capitalize, add period

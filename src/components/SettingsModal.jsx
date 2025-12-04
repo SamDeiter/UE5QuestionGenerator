@@ -6,7 +6,13 @@ import { UI_LABELS } from '../utils/constants';
 import { clearQuestionsFromSheets } from '../services/googleSheets';
 import { clearAllQuestionsFromFirestore } from '../services/firebase';
 
-const SettingsModal = ({ showSettings, setShowSettings, config, handleChange, showApiKey, setShowApiKey, onClearData }) => {
+const SettingsModal = ({
+    showSettings, setShowSettings,
+    config, handleChange,
+    showApiKey, setShowApiKey,
+    onClearData,
+    files, handleDetectTopics, isDetecting, fileInputRef, handleFileChange, removeFile, isApiReady
+}) => {
     const [isResetting, setIsResetting] = useState(false);
 
     if (!showSettings) return null;
@@ -140,6 +146,44 @@ const SettingsModal = ({ showSettings, setShowSettings, config, handleChange, sh
                                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:border-indigo-500 outline-none transition-all"
                             />
                         </div>
+                    </div>
+
+                    {/* Source Files */}
+                    <div className="space-y-3 pt-4 border-t border-slate-800">
+                        <div className="flex justify-between items-end">
+                            <label className="text-xs font-bold uppercase text-slate-500">Source Files (CSV)</label>
+                            {files && files.length > 0 && (
+                                <button
+                                    onClick={handleDetectTopics}
+                                    disabled={isDetecting || !isApiReady}
+                                    className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50 disabled:opacity-50"
+                                >
+                                    {isDetecting ? "..." : "Detect Topics"}
+                                </button>
+                            )}
+                        </div>
+                        <div
+                            onClick={() => fileInputRef.current?.click()}
+                            className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-800 cursor-pointer text-center bg-slate-800/50 transition-colors"
+                        >
+                            <Icon name="upload" className="mx-auto text-slate-600 mb-2" />
+                            <p className="text-xs text-slate-500">Click to upload .csv</p>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                multiple
+                                className="hidden"
+                            />
+                        </div>
+                        {files && files.map((f, i) => (
+                            <div key={i} className="flex justify-between bg-slate-800 p-2 rounded border border-slate-700 text-xs text-slate-400">
+                                <span className="truncate">{f.name}</span>
+                                <button onClick={() => removeFile(i)} className="text-red-500 hover:text-red-400">
+                                    <Icon name="x" size={14} />
+                                </button>
+                            </div>
+                        ))}
                     </div>
 
                     {/* Advanced: Vertex AI Data */}

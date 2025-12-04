@@ -7,7 +7,7 @@ import CustomRules from './sidebar/CustomRules';
 import ProgressStats from './sidebar/ProgressStats';
 import BatchSizeControl from './sidebar/BatchSizeControl';
 import ActionFooter from './sidebar/ActionFooter';
-import AdvancedConfig from './sidebar/AdvancedConfig';
+
 import TokenUsageDisplay from './TokenUsageDisplay';
 import { downloadTrainingData } from '../utils/analyticsStore';
 
@@ -19,7 +19,6 @@ const Sidebar = ({
     handleGenerate, isGenerating, isApiReady,
     handleBulkTranslateMissing, isProcessing,
     showAdvancedConfig, setShowAdvancedConfig,
-    files, handleDetectTopics, isDetecting, fileInputRef, handleFileChange, removeFile,
     apiKeyStatus, showApiError,
     handleLoadFromSheets, handleExportToSheets,
     setShowSettings,
@@ -79,24 +78,7 @@ const Sidebar = ({
                 allQuestionsMap={allQuestionsMap}
             />
 
-            <AdvancedConfig
-                isOpen={showAdvancedConfig}
-                onToggle={() => setShowAdvancedConfig(!showAdvancedConfig)}
-                files={files}
-                handleDetectTopics={handleDetectTopics}
-                isDetecting={isDetecting}
-                fileInputRef={fileInputRef}
-                handleFileChange={handleFileChange}
-                removeFile={removeFile}
-                config={config}
-                handleChange={handleChange}
-                apiKeyStatus={apiKeyStatus}
-                showApiError={showApiError}
-                isApiReady={isApiReady}
-                handleLoadFromSheets={handleLoadFromSheets}
-                handleExportToSheets={handleExportToSheets}
-                isProcessing={isProcessing}
-            />
+
 
             {/* Token Usage Display */}
             <div className="mt-4 pt-4 border-t border-slate-800">

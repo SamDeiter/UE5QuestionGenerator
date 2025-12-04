@@ -21,6 +21,7 @@ export const constructSystemPrompt = (config, fileContext, rejectedExamples = []
     let mcCount = 0, tfCount = 0;
 
     // Parse difficulty setting
+    // Parse difficulty setting
     const [difficulty, type] = config.difficulty.split(' ');
 
     if (difficulty === 'Balanced') {
@@ -51,55 +52,13 @@ export const constructSystemPrompt = (config, fileContext, rejectedExamples = []
     const temp = parseFloat(config.temperature) || 0.7;
     let modeInstruction = '';
     if (temp < 0.3) {
-        modeInstruction = 'STRICT: Fundamentals only. Simple, direct. 1 sentence preferred.';
+        modeInstruction = 'STRICT: Fundamentals only. Simple, direct.';
     } else if (temp > 0.7) {
-        modeInstruction = 'WILD: Obscure/edge cases. Deep knowledge. Stay concise.';
+        modeInstruction = 'WILD: Obscure/edge cases. Deep knowledge.';
     }
 
-    // Build dynamic sections
-    const sections = [];
-
-    // Core instruction (always included)
-    sections.push(`## UE5 Question Generator
-Role: Senior UE5 tech writer. Create short, clear, scenario-based questions in Simplified Technical English.
-**Bold key terms:** \`<b>Nanite</b>\`, \`<b>Lumen</b>\`
-Discipline: ${config.discipline}
-Focus Areas: ${config.tags && config.tags.length > 0 ? config.tags.join(', ') : 'None specified'}
-Language: ${config.language}
-Type: ${targetType}
-${modeInstruction ? `Mode: ${modeInstruction}` : ''}`);
-
-    // Format rules (consolidated)
-    sections.push(`Format:
-| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | QualityScore |
-- ID starts at 1. Difficulty: Easy/Medium/Hard.
-- T/F Rule: OptionA=TRUE, OptionB=FALSE. CorrectLetter=A/B. **Assertion must be a single, non-obvious, factual statement.** Avoid self-evident truths. Test a specific limitation, behavior, or requirement.
-- Type rule: ${targetType === 'MC ONLY' ? 'No T/F questions' : targetType === 'T/F ONLY' ? 'No MC questions' : 'Mix MC and T/F'}.
-- QualityScore: 0-100. ${temp < 0.3 || temp > 0.7 ? 'Lower by 10-15 for extreme temps.' : ''}`);
-
-    // CRITICAL: Answer-Source Consistency Rule
-    sections.push(`⚠️ CRITICAL ANSWER VALIDATION:
-- The CORRECT answer option MUST match what is stated in the SourceExcerpt
-- If SourceExcerpt says "Control Rig", the correct option MUST be "Control Rig" (not Animation Editor, etc.)
-- ALWAYS include the exact term from the source as the correct answer option
-- DO NOT generate answer options that contradict or differ from the source
-- Double-check: Does CorrectLetter option contain the answer mentioned in SourceExcerpt? If not, FIX IT.
-- T/F SOURCING: If CorrectLetter=A (TRUE), the Question MUST be a direct, non-ambiguous truth supported by the SourceExcerpt. If CorrectLetter=B (FALSE), the Question MUST contain a factual ERROR directly contradicted by or missing from the SourceExcerpt. The SourceExcerpt should be used to prove the question is false (by showing the correct fact).`);
-
-    // Output instruction
-    sections.push(`Output: ${difficultyPrompt}
-**MAX 2 SENTENCES.** No "A Technical Artist is..." setups. Just ask.
-**IMPORTANT:** Output ONLY the table. Do not include any introductory or concluding text.`);
-
-    // Sources (always included) - Emphasize direct URLs only
-    sections.push(`Sources & URLs:
-- ONLY use official Epic docs: dev.epicgames.com/documentation/en-us/unreal-engine/
-- SourceURL MUST be the DIRECT documentation link (e.g., https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-overview)
-- **NEVER use** Google redirect URLs, vertexaisearch links, or any proxy URLs
-- **STRICTLY FORBIDDEN:** YouTube, Vimeo, or any video platforms. Do not use video transcripts as sources.
-- NO forums, Reddit, wikis, or community blogs.`);
-
     // REJECTED EXAMPLES SECTION - Learn from mistakes
+    let rejectedSection = '';
     if (rejectedExamples && rejectedExamples.length > 0) {
         const rejectionReasonLabels = {
             'too_easy': 'Too Easy - lacks challenge',
@@ -117,29 +76,63 @@ ${modeInstruction ? `Mode: ${modeInstruction}` : ''}`);
             return `${i + 1}. "${q.question}" → REJECTED: ${reason}`;
         }).join('\n');
 
-        sections.push(`⚠️ LEARN FROM REJECTED QUESTIONS:
+        rejectedSection = `
+### 5. Learn from Rejected Questions
 The following questions were rejected by reviewers. AVOID making similar mistakes:
 ${examplesText}
-
-Key lessons: Ensure accuracy, appropriate difficulty, clear wording, and valid source URLs.`);
+`;
     }
 
-    // Custom rules (only if provided)
-    if (config.customRules && config.customRules.trim()) {
-        sections.push(`Custom: ${config.customRules}`);
-    }
+    return `## UE5 Question Generator Configuration
 
-    // Language instruction (only for non-English)
-    if (config.language !== 'English') {
-        sections.push(`**LANGUAGE:** Output ONLY in ${config.language}. No bilingual text.`);
-    }
+**Role:** Senior Unreal Engine 5 Technical Writer & Exam Creator.
+**Objective:** Create high-quality, scenario-based exam questions in Simplified Technical English (STE).
+**Input Variables:**
+- Discipline: ${config.discipline}
+- Focus Areas: ${config.tags && config.tags.length > 0 ? config.tags.join(', ') : 'None specified'}
+- Difficulty: ${difficulty}
+- Quantity: ${batchNum}
+- Language: ${config.language}
+- Mode: ${modeInstruction || 'Standard'}
 
-    // File context (only if provided)
-    if (fileContext && fileContext.trim()) {
-        sections.push(`\n${fileContext}`);
-    }
+---
 
-    return sections.join('\n\n');
+### 1. Style & Format Rules
+- **Simplified Technical English (STE):** Use active voice (Subject-Verb-Object). Keep sentences under 20 words. Avoid gerunds (-ing) where possible. Use consistent terminology.
+- **Key Terms:** Bold key technologies (e.g., \`<b>Nanite</b>\`, \`<b>Lumen</b>\`, \`<b>World Partition</b>\`).
+- **Question Structure:** Max 2 sentences. No setups like "You are a developer..." simply ask the question or state the scenario.
+- **Distractors (Wrong Answers):** Must be plausible. Do not use "All of the above," "None of the above," or obvious joke answers.
+
+### 2. Question Type Rules
+- **Target Type:** ${targetType}
+- **Multiple Choice (MC):** 4 options total (1 Correct, 3 Distractors).
+- **True/False (T/F):**
+  - **If TRUE:** The assertion must be a documented fact, not a general truism.
+  - **If FALSE:** The assertion must be a **common misconception** or a specific limitation (e.g., "Nanite supports skeletal meshes in UE 5.0" -> False). Do not generate random falsehoods (e.g., "Nanite is a sound engine").
+  - **Validation:** The \`SourceExcerpt\` must explicitly prove why the statement is True or False.
+
+### 3. Sourcing & URL Integrity (CRITICAL)
+- **Domain:** Use ONLY \`dev.epicgames.com/documentation/\`.
+- **Verification:** Do not hallucinate URLs. If you are unsure of the specific link, do not generate the question.
+- **Format:** Ensure the URL includes the correct slug (e.g., \`.../nanite-virtualized-geometry-in-unreal-engine\`).
+- **SourceExcerpt:** Copy the **exact sentence(s)** from the documentation that validates the correct answer.
+- **Forbidden:** YouTube, Vimeo, Forums, Reddit, Wikis.
+
+### 4. Database Output Format
+**DO NOT OUTPUT JSON.** Output **ONLY** the Markdown table below. No intro/outro text.
+
+| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | QualityScore |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | ${config.discipline} | [MC/TF] | [Diff] | [Question Text] | [Exact Answer Text] | [Option A] | [Option B] | [Option C] | [Option D] | [A/B/C/D] | [Valid URL] | [Quote from Doc] | [0-100] |
+
+**Task:** Generate ${difficultyPrompt} based on the Input Variables above.
+
+${rejectedSection}
+
+${config.customRules ? `### Custom Rules\n${config.customRules}` : ''}
+
+${fileContext ? `### File Context\n${fileContext}` : ''}
+`;
 };
 
 /**
