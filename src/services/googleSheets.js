@@ -94,14 +94,10 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
 export const clearQuestionsFromSheets = async (sheetUrl) => {
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = sheetUrl;
+    // Append action as URL parameter so Google Apps Script can read it via e.parameter
+    const separator = sheetUrl.includes('?') ? '&' : '?';
+    form.action = `${sheetUrl}${separator}action=clear`;
     form.target = '_blank';
-
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'action';
-    input.value = 'clear';
-    form.appendChild(input);
 
     document.body.appendChild(form);
     form.submit();
