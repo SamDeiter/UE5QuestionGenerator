@@ -20,6 +20,8 @@ const REJECTION_REASONS = [
 const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onRewrite, onTranslateSingle, onSwitchLanguage, onDelete, onUpdateQuestion, onKickBack, availableLanguages, isProcessing, appMode, showMessage, isSelected, onToggleSelect, showCheckbox }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [rejectMenuOpen, setRejectMenuOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedText, setEditedText] = useState(q.question);
     const menuRef = useRef(null);
     const rejectMenuRef = useRef(null);
 
@@ -418,14 +420,29 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
             </div>
 
             <div className="mb-4">
-                <h3 className={`text-base font-medium leading-relaxed ${q.status === 'rejected' ? 'text-slate-600 line-through decoration-slate-700' : 'text-slate-200'}`} dangerouslySetInnerHTML={{ __html: sanitizeText(q.question) }} />
-                <div className="flex items-center gap-3 mt-2">
-                    {q.sourceUrl && (
-                        <div className="flex items-center gap-1.5 text-xs text-blue-500 truncate max-w-[70%]">
-                            <Icon name="external-link" size={12} className="flex-shrink-0" />
-                            <a href={formatUrl(q.sourceUrl)} target="_blank" rel="noreferrer" className="hover:underline truncate text-blue-500 hover:text-blue-400">{getDisplayUrl(q.sourceUrl)}</a>
+                {isEditing ? (
+                    <div className="flex flex-col gap-2">
+                        <textarea
+                            value={editedText}
+                            onChange={(e) => setEditedText(e.target.value)}
+                            className="w-full bg-slate-800 border border-indigo-500 rounded-lg p-3 text-slate-200 text-base resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            rows={3}
+                            autoFocus
+                        />
+                        <div className="flex gap-2 justify-end">
+                            <button onClick={() => { setIsEditing(false); setEditedText(q.question); }} className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg">Cancel</button>
+                            <button onClick={() => { if (onUpdateQuestion) { onUpdateQuestion(q.id, { question: editedText }); } setIsEditing(false); if (showMessage) showMessage('Question updated'); }} className="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold">Save</button>
                         </div>
-                    )}
+                    </div>
+                ) : (
+                    <h3
+                        className={`text-base font-medium leading-relaxed cursor-pointer hover:bg-slate-800/50 rounded px-1 -mx-1 transition-colors ${q.status === 'rejected' ? 'text-slate-600 line-through decoration-slate-700' : 'text-slate-200'}`}
+                        dangerouslySetInnerHTML={{ __html: sanitizeText(q.question) }}
+                        onClick={() => appMode !== 'database' && setIsEditing(true)}
+                        title={appMode !== 'database' ? 'Click to edit' : ''}
+                    />
+                )}
+                <div className="flex items-center gap-3 mt-2">
                     {/* DEBUG ID: Helps verify linking */}
                     {q.uniqueId && (
                         <div className="text-[9px] text-slate-700 font-mono cursor-help" title={`Unique ID: ${q.uniqueId} (Use this to link translations)`}>
