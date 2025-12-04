@@ -80,9 +80,12 @@ ${modeInstruction ? `Mode: ${modeInstruction}` : ''}`);
 **MAX 2 SENTENCES.** No "A Technical Artist is..." setups. Just ask.
 **IMPORTANT:** Output ONLY the table. Do not include any introductory or concluding text.`);
 
-    // Sources (always included)
-    sections.push(`Sources: Epic Games docs (dev.epicgames.com/documentation), local files.
-NO forums, Reddit, wikis, YouTube.`);
+    // Sources (always included) - Emphasize direct URLs only
+    sections.push(`Sources & URLs:
+- ONLY use official Epic docs: dev.epicgames.com/documentation/en-us/unreal-engine/
+- SourceURL MUST be the DIRECT documentation link (e.g., https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-overview)
+- **NEVER use** Google redirect URLs, vertexaisearch links, or any proxy URLs
+- NO forums, Reddit, wikis, YouTube`);
 
     // Custom rules (only if provided)
     if (config.customRules && config.customRules.trim()) {
@@ -172,8 +175,9 @@ Question Format:
 - **QualityScore:** Estimate 0-100 how well this question matches the Mode. IF TEMP IS EXTREME (${temp}), LOWER YOUR SCORE ESTIMATE by 10-15 points.
 
 Sourcing:
-1. Official Epic Games Documentation (dev.epicgames.com/documentation)
+1. Official Epic Games Documentation (dev.epicgames.com/documentation/en-us/unreal-engine/)
 2. Attached Local Files
+**SourceURL RULE:** ONLY use direct Epic documentation links (e.g., https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-overview). NEVER use Google redirect URLs, vertexaisearch links, or proxy URLs.
 **FORBIDDEN SOURCES:** Do NOT use forums, Reddit, community wikis, or external video platforms like YouTube.
 
 Output:
