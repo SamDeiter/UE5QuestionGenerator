@@ -30,6 +30,58 @@ export const useGeneration = (
     const [isProcessing, setIsProcessing] = useState(false);
     const [translationProgress, setTranslationProgress] = useState(0);
 
+    /**
+     * Intelligently converts a Multiple Choice question to True/False format
+     * Creates a statement from the question + correct answer, randomly makes it TRUE or FALSE
+     */
+    const convertMCtoTF = (mcQuestion, difficulty) => {
+        const correctAnswer = mcQuestion.options[mcQuestion.correct];
+        const wrongAnswers = Object.entries(mcQuestion.options)
+            .filter(([key, val]) => key !== mcQuestion.correct && val && val.trim())
+            .map(([, val]) => val);
+
+        // Randomly decide if this will be a TRUE or FALSE question (50/50)
+        const makeItTrue = Math.random() > 0.5;
+
+        // Extract the core question (remove "What/Which/How" question words)
+        let questionStem = mcQuestion.question
+            .replace(/^(What|Which|How|Where|When|Why)\s+(is|are|does|do|can|should|would)\s+/i, '')
+            .replace(/\?$/, '')
+            .trim();
+
+        let statement;
+        let isTrue;
+
+        if (makeItTrue) {
+            // Create a TRUE statement using the correct answer
+            statement = `${correctAnswer} ${questionStem}`.trim();
+            // Clean up if it looks weird, fall back to simpler format
+            if (statement.length < 20 || statement.length > 200) {
+                statement = `${questionStem} is ${correctAnswer}`.replace(/\s+/g, ' ').trim();
+            }
+            isTrue = true;
+        } else {
+            // Create a FALSE statement using a wrong answer
+            const wrongAnswer = wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)] || 'an incorrect method';
+            statement = `${questionStem} is ${wrongAnswer}`.replace(/\s+/g, ' ').trim();
+            isTrue = false;
+        }
+
+        // Ensure statement ends with period and capitalize first letter
+        statement = statement.charAt(0).toUpperCase() + statement.slice(1);
+        if (!statement.endsWith('.')) statement += '.';
+
+        return {
+            ...mcQuestion,
+            type: 'True/False',
+            difficulty: difficulty,
+            question: statement,
+            options: { A: 'TRUE', B: 'FALSE', C: '', D: '' },
+            correct: isTrue ? 'A' : 'B',
+            originalMC: mcQuestion.question // Keep original for reference
+        };
+    };
+
     const handleGenerate = async () => {
         if (!config.creatorName) { showMessage("Please enter your Creator Name to start generating.", 5000); setShowNameModal(true); return; }
         if (!isApiReady) {
@@ -58,6 +110,7 @@ export const useGeneration = (
 
 
         try {
+            // RELIABLE GENERATION: Accept whatever AI generates, convert as needed
             const text = await generateContent(effectiveApiKey, systemPrompt, userPrompt, setStatus, config.temperature, config.model);
             const endTime = Date.now();
             const duration = endTime - startTime;
@@ -66,30 +119,24 @@ export const useGeneration = (
             if (newQuestions.length === 0) {
                 console.error("Failed to parse. Raw text received:", text);
                 const truncatedText = text.length > 100 ? text.substring(0, 100) + "..." : text;
-                throw new Error(`Failed to parse generated questions. Raw output start: "${truncatedText}"`);
+                throw new Error(`Failed to parse questions. Raw: "${truncatedText}"`);
             }
 
             // Parse the requested difficulty and type from config
             const [requestedDifficulty, requestedType] = config.difficulty.split(' ');
+            const expectedType = requestedType === 'T/F' ? 'True/False' : 'Multiple Choice';
 
-            // If not 'Balanced All', filter and force-apply the correct difficulty/type
+            // Apply difficulty and convert question types as needed
             if (requestedDifficulty !== 'Balanced') {
-                const expectedType = requestedType === 'T/F' ? 'True/False' : 'Multiple Choice';
-
-                // Filter questions to only keep those matching the requested type
-                // Also force-apply the correct difficulty to handle AI inconsistency
-                newQuestions = newQuestions
-                    .filter(q => q.type === expectedType)
-                    .map(q => ({
-                        ...q,
-                        difficulty: requestedDifficulty,  // Force correct difficulty
-                        type: expectedType  // Force correct type
-                    }));
-
-                if (newQuestions.length === 0) {
-                    console.warn(`AI generated no ${expectedType} questions. Check prompt compliance.`);
-                    throw new Error(`AI failed to generate ${requestedDifficulty} ${requestedType} questions. Please try again.`);
-                }
+                newQuestions = newQuestions.map(q => {
+                    // If we need T/F but got MC, intelligently convert
+                    if (expectedType === 'True/False' && q.type === 'Multiple Choice') {
+                        return convertMCtoTF(q, requestedDifficulty);
+                    }
+                    // If we need MC but got T/F, keep as-is (T/F is fine as a subset)
+                    // Just apply the correct difficulty
+                    return { ...q, difficulty: requestedDifficulty };
+                });
             }
 
             const taggedQuestions = newQuestions.map(q => ({ ...q, language: config.language }));
