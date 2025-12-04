@@ -3,7 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense, useRef } from 'react';
 import { Virtuoso } from 'react-virtuoso';
 
 // UI Components
@@ -183,6 +183,8 @@ const App = () => {
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [showBulkExportModal, setShowBulkExportModal] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
+    const [dataMenuOpen, setDataMenuOpen] = useState(false);
+    const dataMenuRef = useRef(null);
 
     // Computed Filtered Questions
     const filteredQuestions = useMemo(() => createFilteredQuestions(
@@ -257,6 +259,17 @@ const App = () => {
         window.addEventListener('keydown', handleGlobalKeyDown);
         return () => window.removeEventListener('keydown', handleGlobalKeyDown);
     }, [config.sheetUrl, config.language, handleExportToSheets, handleBulkExport]);
+
+    // Click-outside handler for Data dropdown
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dataMenuRef.current && !dataMenuRef.current.contains(event.target)) {
+                setDataMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // Review Mode Navigation
     useEffect(() => {
@@ -427,25 +440,44 @@ const App = () => {
                             )}
                         </div>
                         <div className="flex gap-2 items-center bg-slate-950 p-1 rounded-lg border border-slate-800 shadow-inner">
-                            <button
-                                onClick={handleLoadFromSheets}
-                                disabled={isProcessing || !config.sheetUrl}
-                                className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${!config.sheetUrl ? 'opacity-50 cursor-not-allowed' : ''} bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white`}
-                                title={config.sheetUrl ? "Load Approved Questions from Google Sheets" : "Configure Sheets URL in Settings first"}
-                            >
-                                <Icon name="table" size={14} /> Load
-                            </button>
-
-                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
-                            <div className="relative">
+                            {/* Data Dropdown - Contains Load and Export */}
+                            <div className="relative" ref={dataMenuRef}>
                                 <button
-                                    onClick={() => setShowBulkExportModal(true)}
-                                    className="px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white"
-                                    title="Open Export Options"
+                                    onClick={() => setDataMenuOpen(!dataMenuOpen)}
+                                    disabled={isProcessing}
+                                    className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${dataMenuOpen ? 'bg-slate-700 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'} disabled:opacity-50`}
+                                    title="Data Operations"
                                 >
-                                    <Icon name="download" size={14} /> Export
+                                    <Icon name="folder" size={14} />
+                                    Data
+                                    <Icon name="chevron-down" size={10} className={`transition-transform ${dataMenuOpen ? 'rotate-180' : ''}`} />
                                 </button>
+
+                                {dataMenuOpen && (
+                                    <div className="absolute left-0 top-full mt-1 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                        <div className="py-1">
+                                            <button
+                                                onClick={() => { handleLoadFromSheets(); setDataMenuOpen(false); }}
+                                                disabled={isProcessing || !config.sheetUrl}
+                                                className="w-full text-left px-4 py-2 text-xs text-blue-300 hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                title={config.sheetUrl ? "Load Approved Questions from Google Sheets" : "Configure Sheets URL in Settings first"}
+                                            >
+                                                <Icon name="table" size={14} />
+                                                Load from Sheets
+                                            </button>
+                                            <button
+                                                onClick={() => { setShowBulkExportModal(true); setDataMenuOpen(false); }}
+                                                className="w-full text-left px-4 py-2 text-xs text-green-300 hover:bg-slate-700 flex items-center gap-2"
+                                                title="Open Export Options"
+                                            >
+                                                <Icon name="download" size={14} />
+                                                Export Questions
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
+
                             <div className="w-px h-4 bg-slate-700 mx-1"></div>
 
                             <button
