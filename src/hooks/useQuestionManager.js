@@ -82,13 +82,16 @@ export const useQuestionManager = (config, showMessage) => {
         }
     }, []);
 
-    // Status update handler
-    const handleUpdateStatus = useCallback((id, newStatus) => {
+    // Status update handler - now accepts optional rejection reason
+    const handleUpdateStatus = useCallback((id, newStatus, rejectionReason = null) => {
         updateQuestionInState(id, (q) => {
             const updatedQ = {
                 ...q,
                 status: newStatus,
-                critique: newStatus === 'accepted' ? null : q.critique
+                critique: newStatus === 'accepted' ? null : q.critique,
+                // Store rejection reason if provided
+                rejectionReason: newStatus === 'rejected' ? rejectionReason : null,
+                rejectedAt: newStatus === 'rejected' ? new Date().toISOString() : null
             };
 
             // Sync to Firestore
