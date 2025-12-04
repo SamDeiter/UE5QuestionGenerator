@@ -115,8 +115,8 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                             <h3 className="text-sm font-bold text-slate-400 mb-4 flex items-center gap-2">
                                 <Activity size={16} /> Token Usage History
                             </h3>
-                            <div className="flex-1 min-h-0 w-full" style={{ width: '100%', height: '100%' }}>
-                                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                            <div className="flex-1 min-h-0 w-full" style={{ minHeight: 200 }}>
+                                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={200}>
                                     <AreaChart data={analyticsData.generations.slice(-20)}>
                                         <defs>
                                             <linearGradient id="colorTokens" x1="0" y1="0" x2="0" y2="1">
@@ -143,8 +143,8 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                             <h3 className="text-sm font-bold text-slate-400 mb-4 flex items-center gap-2">
                                 <BarChart2 size={16} /> Quality Score Distribution
                             </h3>
-                            <div className="flex-1 min-h-0 w-full" style={{ width: '100%', height: '100%' }}>
-                                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                            <div className="flex-1 min-h-0 w-full" style={{ minHeight: 200 }}>
+                                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={200}>
                                     <BarChart data={[
                                         { range: '90-100', count: analyticsData.questions.filter(q => q.qualityScore >= 90).length },
                                         { range: '70-89', count: analyticsData.questions.filter(q => q.qualityScore >= 70 && q.qualityScore < 90).length },
@@ -166,8 +166,8 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                             <h3 className="text-sm font-bold text-slate-400 mb-4 flex items-center gap-2">
                                 <PieChart size={16} /> Acceptance Rate by Discipline
                             </h3>
-                            <div className="flex-1 min-h-0 w-full" style={{ width: '100%', height: '100%' }}>
-                                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                            <div className="flex-1 min-h-0 w-full" style={{ minHeight: 200 }}>
+                                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={200}>
                                     <BarChart data={Object.entries(analyticsData.questions.reduce((acc, q) => {
                                         if (!acc[q.discipline]) acc[q.discipline] = { total: 0, accepted: 0 };
                                         acc[q.discipline].total++;
@@ -209,7 +209,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                                     }));
                                     const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#6366f1', '#a855f7', '#ec4899'];
                                     return rejectionData.length > 0 ? (
-                                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={200}>
                                             <RechartsPieChart>
                                                 <Pie data={rejectionData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`} outerRadius={80} fill="#8884d8" dataKey="value">
                                                     {rejectionData.map((_, index) => (<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />))}
