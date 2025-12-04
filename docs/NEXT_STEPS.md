@@ -46,7 +46,29 @@
 ## ✅ Completed Milestones
 - **Core Functionality:** Question Generation, Translation, Import/Export.
 - **Refactoring:** Modular Component Architecture, Constants Extraction.
-- **Performance:** Code Splitting (Lazy Loading), Memoization.
+- **Performance:** Code Splitting (Lazy Loading), Memoization, Component Extraction (QuestionItem sub-components).
 - **Metrics:** Token Usage Tracking, Question Quality Dashboard.
 - **Accessibility:** WCAG 2.1 AA Compliance (Focus, ARIA, Reduced Motion).
 - **Validation:** Error Boundaries, Unit & Integration Tests.
+- **User Onboarding:** Interactive Tutorial System with guided tour.
+- **Authentication:** Firebase Authentication with Google Sign-In.
+- **Security:** Firestore security rules enforcing user data ownership.
+
+## 📅 Recently Completed (Dec 4, 2025)
+
+### Phase 2: Performance Optimization ✅
+- **Component Refactoring:**
+  - Extracted `QuestionItem` into 6 sub-components: `QuestionHeader`, `QuestionContent`, `QuestionMetadata`, `LanguageControls`, `QuestionActions`, `QuestionMenu`
+  - Extracted `QuestionList` and `BulkActionBar` from `App.jsx`
+  - Applied `React.memo` for optimized re-rendering
+  - Reduced `QuestionItem.jsx` from 578 LOC to ~180 LOC
+
+### Phase 3: Interactive Tutorial ✅
+- **Tutorial System:**
+  - Created `TutorialOverlay` component with spotlight effect
+  - Defined 6-step guided tour for new users
+  - Implemented smart boundary checking to prevent tooltips going off-screen
+  - Added "Restart Tutorial" button in Header
+  - Integrated tutorial state management with localStorage
+  - Added `data-tour` attributes to key UI elements
+
