@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Icon from './Icon';
 import FlagIcon from './FlagIcon';
 import CritiqueDisplay from './CritiqueDisplay';
-import { sanitizeText, formatUrl, stripHtmlTags } from '../utils/helpers';
+import { sanitizeText, formatUrl, getDisplayUrl, stripHtmlTags } from '../utils/helpers';
 import { LANGUAGE_CODES, LANGUAGE_FLAGS } from '../utils/constants';
 
 const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onRewrite, onTranslateSingle, onSwitchLanguage, onDelete, onUpdateQuestion, onKickBack, availableLanguages, isProcessing, appMode, showMessage }) => {
@@ -377,7 +377,7 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
                     {q.sourceUrl && (
                         <div className="flex items-center gap-1.5 text-xs text-blue-500 truncate max-w-[70%]">
                             <Icon name="external-link" size={12} className="flex-shrink-0" />
-                            <a href={formatUrl(q.sourceUrl)} target="_blank" rel="noreferrer" className="hover:underline truncate text-blue-500 hover:text-blue-400">{q.sourceUrl}</a>
+                            <a href={formatUrl(q.sourceUrl)} target="_blank" rel="noreferrer" className="hover:underline truncate text-blue-500 hover:text-blue-400">{getDisplayUrl(q.sourceUrl)}</a>
                         </div>
                     )}
                     {/* DEBUG ID: Helps verify linking */}

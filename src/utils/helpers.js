@@ -9,12 +9,46 @@ export const chunkArray = (array, size) => {
 export const formatUrl = (url) => {
     if (!url) return '';
     let cleanUrl = url.trim();
+
+    // Extract actual URL from Google vertexaisearch/grounding redirect URLs
+    if (cleanUrl.includes('vertexaisearch.cloud.google.com') || cleanUrl.includes('grounding-api-redirect')) {
+        try {
+            // Try to extract the actual URL from the redirect
+            const urlObj = new URL(cleanUrl);
+            // Check for common redirect parameters
+            const actualUrl = urlObj.searchParams.get('url') ||
+                urlObj.searchParams.get('q') ||
+                urlObj.searchParams.get('dest') ||
+                urlObj.searchParams.get('redirect');
+            if (actualUrl) {
+                cleanUrl = decodeURIComponent(actualUrl);
+            }
+        } catch (e) {
+            // If URL parsing fails, keep original
+        }
+    }
+
     if (!/^[a-zA-Z]+:\/\//.test(cleanUrl) && (cleanUrl.includes('.') && !cleanUrl.includes(' '))) {
         if (!cleanUrl.toLowerCase().endsWith('.csv') && !cleanUrl.toLowerCase().endsWith('.txt')) {
             cleanUrl = 'https://' + cleanUrl;
         }
     }
     return cleanUrl;
+};
+
+// Extract a clean display URL (removes protocol and trailing slashes)
+export const getDisplayUrl = (url) => {
+    if (!url) return '';
+    const formatted = formatUrl(url);
+    try {
+        const urlObj = new URL(formatted);
+        // Return just the hostname + pathname (truncated if too long)
+        let display = urlObj.hostname + urlObj.pathname;
+        if (display.endsWith('/')) display = display.slice(0, -1);
+        return display;
+    } catch (e) {
+        return formatted;
+    }
 };
 
 export const renderMarkdown = (t) => {
