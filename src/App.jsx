@@ -398,10 +398,14 @@ const App = () => {
 
                             {appMode === 'review' && (
                                 <div className="flex gap-4 items-center ml-4">
-                                    <div className="px-3 py-1 bg-indigo-900/30 border border-indigo-700/50 rounded text-xs text-indigo-300 font-bold flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleModeSelect('create')}
+                                        className="px-3 py-1 bg-indigo-900/30 border border-indigo-700/50 rounded text-xs text-indigo-300 font-bold flex items-center gap-2 hover:bg-indigo-800/40 transition-colors cursor-pointer"
+                                        title="Click to switch to Creation Mode"
+                                    >
                                         <Icon name="list-checks" size={14} />
                                         REVIEW MODE: {uniqueFilteredQuestions.length} Items
-                                    </div>
+                                    </button>
 
                                     <div className="relative">
                                         <button

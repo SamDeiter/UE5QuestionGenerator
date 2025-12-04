@@ -475,7 +475,7 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
                 </div>
             )}
 
-            {q.critique && <CritiqueDisplay critique={q.critique} onRewrite={() => onRewrite(q)} isProcessing={isProcessing} />}
+            {q.critique && <CritiqueDisplay critique={q.critique} onRewrite={onRewrite ? () => onRewrite(q) : undefined} isProcessing={isProcessing} />}
 
             {q.explanation && (
                 <div className="mb-3 p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-lg animate-in fade-in slide-in-from-top-2">
