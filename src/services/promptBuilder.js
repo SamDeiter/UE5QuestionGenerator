@@ -125,11 +125,11 @@ ${examplesText}
 ### 4. Database Output Format
 **DO NOT OUTPUT JSON.** Output **ONLY** the Markdown table below. No intro/outro text.
 
-**COLUMN INTEGRITY:** Each row MUST have exactly 14 pipe-separated columns. Do NOT put answer letters in option columns.
+**COLUMN INTEGRITY:** Each row MUST have exactly 14 pipe-separated columns. Fill ALL columns, do NOT skip any.
 
 | ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | QualityScore |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | ${config.discipline} | Multiple Choice | Easy | What is \`\u003cb\u003eNanite\u003c/b\u003e\`? | Virtualized geometry system | Virtualized geometry system | Physics engine | Audio system | Particle system | A | https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine | \"Nanite is UE5's virtualized geometry system...\" | 85 |
+| 1 | ${config.discipline} | Multiple Choice | Easy | What does Nanite do? | Renders high-poly geometry | Renders high-poly geometry | Handles physics | Manages audio | Controls AI | A | https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine | Nanite virtualizes geometry | 85 |
 
 **Task:** Generate ${difficultyPrompt} based on the Input Variables above.
 
