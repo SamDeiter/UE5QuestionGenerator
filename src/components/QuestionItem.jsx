@@ -102,6 +102,7 @@ const QuestionItem = ({
                             onUpdateStatus={onUpdateStatus}
                             onCritique={onCritique}
                             onDelete={onDelete}
+                            onUpdateQuestion={onUpdateQuestion}
                             isProcessing={isProcessing}
                             appMode={appMode}
                             showMessage={showMessage}

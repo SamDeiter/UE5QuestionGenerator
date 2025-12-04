@@ -10,13 +10,29 @@ import { FIELD_DELIMITER } from './constants';
  * @returns {string} CSV-formatted string
  */
 export const getCSVContent = (validQuestions, creatorName, reviewerName, includeHeaders = true) => {
-    const headers = ["ID", "Question ID", "Discipline", "Type", "Difficulty", "Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer", "Generation Date", "Source URL", "Source Excerpt", "Creator", "Reviewer", "Language", "Quality Score", "AI Critique", "Token Cost", "Status", "Rejection Reason", "Rejected At"];
+    const headers = [
+        "ID", "Question ID", "Discipline", "Type", "Difficulty", "Question",
+        "Option A", "Option B", "Option C", "Option D", "Correct Answer",
+        "Generation Date", "Source URL", "Source Excerpt",
+        "Source Verified", "Human Verified", "Human Verified At", "Human Verified By",
+        "Creator", "Reviewer", "Language", "Quality Score", "AI Critique",
+        "Token Cost", "Status", "Rejection Reason", "Rejected At"
+    ];
     let csvContent = includeHeaders ? headers.map(safe).join(FIELD_DELIMITER) + '\n' : '';
     const generationDate = formatDate(new Date());
 
     validQuestions.forEach((row, i) => {
         const cleanedSourceUrl = row.sourceUrl && !row.sourceUrl.includes("grounding-api") ? row.sourceUrl : "";
         const o = row.options || {};
+
+        // Source verification status for export
+        let sourceVerifiedLabel = 'Unknown';
+        if (row.sourceVerified === true) sourceVerifiedLabel = 'Verified';
+        else if (row.sourceVerified === 'unverified') sourceVerifiedLabel = 'Unverified';
+        else if (row.sourceVerified === 'assumed') sourceVerifiedLabel = 'Assumed';
+        else if (row.sourceVerified === 'missing') sourceVerifiedLabel = 'Missing';
+        else if (row.sourceVerified === false) sourceVerifiedLabel = 'Invalid';
+
         const rowData = [
             (i + 1).toString(),
             row.uniqueId,
@@ -32,6 +48,10 @@ export const getCSVContent = (validQuestions, creatorName, reviewerName, include
             generationDate,
             cleanedSourceUrl,
             row.sourceExcerpt,
+            sourceVerifiedLabel,
+            row.humanVerified ? 'Yes' : 'No',
+            row.humanVerifiedAt || '',
+            row.humanVerifiedBy || '',
             creatorName,
             reviewerName,
             row.language || "English",

@@ -18,6 +18,7 @@ const QuestionActions = ({
     onUpdateStatus,
     onCritique,
     onDelete,
+    onUpdateQuestion,
     isProcessing,
     appMode,
     showMessage
@@ -35,6 +36,37 @@ const QuestionActions = ({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Handle human verification
+    const handleVerify = () => {
+        const reviewerName = localStorage.getItem('ue5_gen_config')
+            ? JSON.parse(localStorage.getItem('ue5_gen_config')).creatorName || 'Unknown'
+            : 'Unknown';
+
+        onUpdateQuestion(q.id, {
+            ...q,
+            humanVerified: true,
+            humanVerifiedAt: new Date().toISOString(),
+            humanVerifiedBy: reviewerName
+        });
+        if (showMessage) showMessage("✓ Question verified! You can now accept it.", 3000);
+    };
+
+    // Handle accept with verification check
+    const handleAccept = () => {
+        if (q.status === 'accepted') {
+            if (showMessage) showMessage("Question is already accepted.");
+            return;
+        }
+
+        // Require human verification before accepting
+        if (!q.humanVerified) {
+            if (showMessage) showMessage("⚠️ Please verify source & answer first (click the shield icon)", 4000);
+            return;
+        }
+
+        onUpdateStatus(q.id, 'accepted');
+    };
+
     if (appMode === 'database') return null;
 
     return (
@@ -50,9 +82,27 @@ const QuestionActions = ({
                     <Icon name="trash-2" size={18} />
                 </button>
             ) : (
-                // REVIEW MODE: Show AI Critique/Accept/Reject
+                // REVIEW MODE: Show Verify/AI Critique/Accept/Reject
                 <>
-                    {/* AI Critique Button - First option in Review mode */}
+                    {/* Human Verification Button - REQUIRED before accepting */}
+                    {appMode === 'review' && (
+                        <button
+                            onClick={handleVerify}
+                            disabled={q.humanVerified}
+                            className={`p-2 rounded-lg transition-all ${q.humanVerified
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50'
+                                    : 'bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400 border border-indigo-900/50 animate-pulse'
+                                }`}
+                            title={q.humanVerified
+                                ? `Verified by ${q.humanVerifiedBy} at ${new Date(q.humanVerifiedAt).toLocaleString()}`
+                                : "Click after verifying source & answer are correct"}
+                            aria-label="Mark as human-verified"
+                        >
+                            <Icon name={q.humanVerified ? "shield-check" : "shield"} size={18} />
+                        </button>
+                    )}
+
+                    {/* AI Critique Button */}
                     {appMode === 'review' && (
                         <button
                             onClick={() => onCritique(q)}
@@ -66,15 +116,14 @@ const QuestionActions = ({
                     )}
 
                     <button
-                        onClick={() => {
-                            if (q.status === 'accepted') {
-                                if (showMessage) showMessage("Question is already accepted.");
-                            } else {
-                                onUpdateStatus(q.id, 'accepted');
-                            }
-                        }}
-                        className={`p-2 rounded-lg transition-all ${q.status === 'accepted' ? 'bg-green-600 text-white shadow-lg shadow-green-900/50' : 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'}`}
-                        title="Accept"
+                        onClick={handleAccept}
+                        className={`p-2 rounded-lg transition-all ${q.status === 'accepted'
+                                ? 'bg-green-600 text-white shadow-lg shadow-green-900/50'
+                                : q.humanVerified
+                                    ? 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'
+                                    : 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
+                            }`}
+                        title={q.humanVerified ? "Accept" : "Verify first before accepting"}
                         aria-label="Accept question"
                     >
                         <Icon name="check" size={18} />
@@ -129,3 +178,4 @@ const QuestionActions = ({
 };
 
 export default QuestionActions;
+
