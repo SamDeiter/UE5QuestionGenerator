@@ -112,11 +112,16 @@ ${examplesText}
   - **Validation:** The \`SourceExcerpt\` must explicitly prove why the statement is True or False.
 
 ### 3. Sourcing & URL Integrity (CRITICAL)
-- **Domain:** Use ONLY \`dev.epicgames.com/documentation/\`.
-- **Verification:** Do not hallucinate URLs. If you are unsure of the specific link, leave it empty.
-- **Format:** MUST be a valid URL starting with \`https://\`. Do NOT put the page title, description, or search snippet here.
-- **SourceExcerpt:** Copy the **exact sentence(s)** from the documentation that validates the correct answer.
-- **Forbidden:** YouTube, Vimeo, Forums, Reddit, Wikis, Search Result Snippets.
+- **Base URL:** \`https://dev.epicgames.com/documentation/en-us/unreal-engine/\`
+- **Valid URL Pattern:** Base URL + lowercase-slug-with-hyphens (e.g., \`nanite-overview\`, \`lumen-global-illumination\`, \`animation-blueprint-in-unreal-engine\`)
+- **IMPORTANT:** Add \`-in-unreal-engine\` suffix to most page slugs (e.g., \`world-partition-in-unreal-engine\`, \`virtual-shadow-maps-in-unreal-engine\`)
+- **NEVER USE:** YouTube, Forums, Reddit, Wikis, vertexaisearch URLs, Google redirect URLs
+- **If Unsure:** Leave SourceURL empty rather than guessing. An empty URL is better than a broken one.
+- **SourceExcerpt:** Copy the **exact sentence(s)** from documentation that validates the answer. This is REQUIRED.
+- **Known Working Examples:**
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-global-illumination-and-reflections-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprints-visual-scripting-in-unreal-engine\`
 
 ### 4. Database Output Format
 **DO NOT OUTPUT JSON.** Output **ONLY** the Markdown table below. No intro/outro text.
