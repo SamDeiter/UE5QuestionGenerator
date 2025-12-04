@@ -62,56 +62,81 @@ const TutorialOverlay = ({ steps, currentStepIndex, onNext, onPrev, onSkip, onCo
         }
 
         let top = targetRect.top;
-        let left = targetRect.left + targetRect.width + padding;
+        let left = targetRect.left;
 
-        // Determine best position based on available space
+        // Calculate available space in each direction
         const spaceRight = viewportWidth - (targetRect.left + targetRect.width);
         const spaceLeft = targetRect.left;
         const spaceBottom = viewportHeight - (targetRect.top + targetRect.height);
         const spaceTop = targetRect.top;
 
-        if (step.position === 'right' && spaceRight >= tooltipWidth + padding) {
-            // Position to the right
-            left = targetRect.left + targetRect.width + padding;
-            top = targetRect.top;
-        } else if (step.position === 'left' && spaceLeft >= tooltipWidth + padding) {
-            // Position to the left
-            left = targetRect.left - tooltipWidth - padding;
-            top = targetRect.top;
-        } else if (step.position === 'bottom' && spaceBottom >= tooltipHeight + padding) {
-            // Position below
-            top = targetRect.top + targetRect.height + padding;
-            left = targetRect.left;
-        } else if (step.position === 'top' && spaceTop >= tooltipHeight + padding) {
-            // Position above
-            top = targetRect.top - tooltipHeight - padding;
-            left = targetRect.left;
-        } else {
-            // Auto-position in largest available space
-            if (spaceRight >= tooltipWidth + padding) {
-                left = targetRect.left + targetRect.width + padding;
-                top = targetRect.top;
-            } else if (spaceLeft >= tooltipWidth + padding) {
-                left = targetRect.left - tooltipWidth - padding;
-                top = targetRect.top;
+        // Choose position based on preferred direction and available space
+        let finalPosition = step.position;
+
+        // Override position if there's not enough space
+        if (step.position === 'right' && spaceRight < tooltipWidth + padding) {
+            if (spaceLeft >= tooltipWidth + padding) {
+                finalPosition = 'left';
             } else if (spaceBottom >= tooltipHeight + padding) {
-                top = targetRect.top + targetRect.height + padding;
-                left = Math.max(padding, Math.min(targetRect.left, viewportWidth - tooltipWidth - padding));
+                finalPosition = 'bottom';
+            } else if (spaceTop >= tooltipHeight + padding) {
+                finalPosition = 'top';
             } else {
-                // Center if nothing fits perfectly
-                left = (viewportWidth - tooltipWidth) / 2;
-                top = (viewportHeight - tooltipHeight) / 2;
+                finalPosition = 'center';
             }
+        } else if (step.position === 'left' && spaceLeft < tooltipWidth + padding) {
+            if (spaceRight >= tooltipWidth + padding) {
+                finalPosition = 'right';
+            } else {
+                finalPosition = 'center';
+            }
+        } else if (step.position === 'top' && spaceTop < tooltipHeight + padding) {
+            finalPosition = 'bottom';
+        } else if (step.position === 'bottom' && spaceBottom < tooltipHeight + padding) {
+            finalPosition = 'top';
         }
 
-        // Final boundary checks
-        left = Math.max(padding, Math.min(left, viewportWidth - tooltipWidth - padding));
-        top = Math.max(padding, Math.min(top, viewportHeight - tooltipHeight - padding));
+        // Apply positioning based on final decision
+        switch (finalPosition) {
+            case 'right':
+                left = targetRect.left + targetRect.width + padding;
+                top = targetRect.top;
+                break;
+            case 'left':
+                left = targetRect.left - tooltipWidth - padding;
+                top = targetRect.top;
+                break;
+            case 'bottom':
+                top = targetRect.top + targetRect.height + padding;
+                left = targetRect.left;
+                break;
+            case 'top':
+                top = targetRect.top - tooltipHeight - padding;
+                left = targetRect.left;
+                break;
+            case 'center':
+                left = (viewportWidth - tooltipWidth) / 2;
+                top = (viewportHeight - tooltipHeight) / 2;
+                break;
+        }
 
-        // Default to right
+        // Final boundary constraints - ensure tooltip stays on screen
+        if (left + tooltipWidth > viewportWidth - padding) {
+            left = viewportWidth - tooltipWidth - padding;
+        }
+        if (left < padding) {
+            left = padding;
+        }
+        if (top + tooltipHeight > viewportHeight - padding) {
+            top = viewportHeight - tooltipHeight - padding;
+        }
+        if (top < padding) {
+            top = padding;
+        }
+
         return {
-            top: targetRect.top,
-            left: targetRect.left + targetRect.width + 20
+            top,
+            left
         };
     };
 
