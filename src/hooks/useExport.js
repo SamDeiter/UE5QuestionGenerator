@@ -159,6 +159,7 @@ export const useExport = (
             showMessage(`Load Failed: ${e.message}. (Ensure Script Access is set to 'Anyone')`, 7000);
         } finally {
             setIsProcessing(false);
+            setStatus('');
         }
     };
 
@@ -186,6 +187,7 @@ export const useExport = (
             showMessage(`Firestore Load Failed: ${e.message}`, 7000);
         } finally {
             setIsProcessing(false);
+            setStatus('');
         }
     };
 

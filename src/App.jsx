@@ -395,53 +395,6 @@ const App = () => {
                     <div className="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900 shadow-md z-10">
                         <div className="flex gap-4 items-center">
                             {isAuthReady ? (<>{status && <span className="text-xs text-orange-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="loader" size={12} className="animate-spin" /> {status}</span>}{!status && <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Icon name="database" size={14} /> DB Ready</span>}</>) : (<span className="text-xs text-yellow-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="plug" size={12} className="animate-pulse" /> Connecting to DB...</span>)}
-
-                            {appMode === 'review' && (
-                                <div className="flex gap-4 items-center ml-4">
-                                    <button
-                                        onClick={() => handleModeSelect('create')}
-                                        className="px-3 py-1 bg-indigo-900/30 border border-indigo-700/50 rounded text-xs text-indigo-300 font-bold flex items-center gap-2 hover:bg-indigo-800/40 transition-colors cursor-pointer"
-                                        title="Click to switch to Creation Mode"
-                                    >
-                                        <Icon name="list-checks" size={14} />
-                                        REVIEW MODE: {uniqueFilteredQuestions.length} Items
-                                    </button>
-
-                                    <div className="relative">
-                                        <button
-                                            onClick={() => setShowProgressMenu(!showProgressMenu)}
-                                            className={`px-3 py-1 border rounded text-xs font-bold flex items-center gap-2 transition-colors ${showProgressMenu ? 'bg-slate-700 border-slate-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'}`}
-                                        >
-                                            <Icon name="bar-chart-2" size={14} />
-                                            Progress: {overallPercentage.toFixed(1)}%
-                                        </button>
-
-                                        {showProgressMenu && (
-                                            <>
-                                                <div className="fixed inset-0 z-40" onClick={() => setShowProgressMenu(false)}></div>
-                                                <div className="absolute left-0 top-full mt-2 w-80 bg-slate-950 border border-slate-700 rounded-lg shadow-2xl z-50 p-4 animate-in fade-in zoom-in-95 duration-200">
-                                                    <div className="space-y-4">
-                                                        <div className="text-center pb-2 border-b border-slate-800">
-                                                            <h3 className="text-lg font-extrabold text-white">{allQuestionsMap.size}</h3>
-                                                            <p className="text-[10px] font-semibold uppercase text-slate-500">UNIQUE QUESTIONS IN DB</p>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <div className="flex justify-between items-end">
-                                                                <h3 className="text-[10px] font-bold text-slate-400">APPROVED QUOTA ({totalApproved}/{TARGET_TOTAL})</h3>
-                                                                <span className="text-[10px] font-bold text-orange-400">{overallPercentage.toFixed(1)}%</span>
-                                                            </div>
-                                                            <div className="w-full h-1.5 rounded-full overflow-hidden bg-slate-800">
-                                                                <div className="h-full bg-orange-600 transition-all duration-500" style={{ width: `${overallPercentage}%` }}></div>
-                                                            </div>
-                                                        </div>
-                                                        <GranularProgress approvedCounts={approvedCounts} target={TARGET_PER_CATEGORY} isTargetMet={isTargetMet} selectedDifficulty={config.difficulty} handleSelectCategory={handleSelectCategory} />
-                                                    </div>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                         <div className="flex gap-2 items-center bg-slate-950 p-1 rounded-lg border border-slate-800 shadow-inner">
                             {/* Data Dropdown - Contains Load and Export */}
@@ -484,6 +437,15 @@ const App = () => {
 
                             <div className="w-px h-4 bg-slate-700 mx-1"></div>
 
+                            {/* Mode Navigation - Unified across all panels */}
+                            <button
+                                onClick={() => handleModeSelect('create')}
+                                className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'create' ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
+                                title="Switch to Creation Mode"
+                            >
+                                <Icon name="plus-circle" size={14} /> Create
+                            </button>
+
                             <button
                                 onClick={handleViewDatabase}
                                 className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'database' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
@@ -492,16 +454,17 @@ const App = () => {
                                 <Icon name="database" size={14} /> DB View
                             </button>
 
-                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
                             <button
                                 onClick={() => handleModeSelect('review')}
                                 className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'review' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
                                 title="Switch to Review & Audit Console"
                             >
                                 <Icon name="list-checks" size={14} /> Review
+                                {appMode !== 'review' && pendingCount > 0 && (
+                                    <span className="ml-1 px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full">{pendingCount}</span>
+                                )}
                             </button>
 
-                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
                             <button
                                 onClick={() => setShowAnalytics(true)}
                                 className="px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white"
@@ -510,15 +473,13 @@ const App = () => {
                                 <Icon name="bar-chart-2" size={14} /> Analytics
                             </button>
 
-                            {((!showHistory && questions.length > 0) || (showHistory && historicalQuestions.length > 0) || appMode === 'review') && (
-                                <>
-                                    <div className="w-px h-4 bg-slate-700 mx-1"></div>
-                                    {appMode !== 'review' && <FilterButton mode="pending" current={filterMode} setFilter={setFilterMode} label="Pending" count={pendingCount} />}
-                                    <FilterButton mode="all" current={filterMode} setFilter={setFilterMode} label="All" count={appMode === 'review' ? historicalQuestions.length : questions.length} />
-                                    {appMode !== 'review' && <FilterButton mode="accepted" current={filterMode} setFilter={setFilterMode} label="Accepted" count={approvedCount} />}
-                                    <FilterButton mode="rejected" current={filterMode} setFilter={setFilterMode} label="Rejected" count={rejectedCount} />
-                                </>
-                            )}
+                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
+
+                            {/* Filter Buttons - Shown when there are questions */}
+                            <FilterButton mode="pending" current={filterMode} setFilter={setFilterMode} label="Pending" count={pendingCount} />
+                            <FilterButton mode="all" current={filterMode} setFilter={setFilterMode} label="All" count={appMode === 'review' ? historicalQuestions.length : questions.length} />
+                            <FilterButton mode="accepted" current={filterMode} setFilter={setFilterMode} label="Accepted" count={approvedCount} />
+                            <FilterButton mode="rejected" current={filterMode} setFilter={setFilterMode} label="Rejected" count={rejectedCount} />
 
                             <div className="w-px h-4 bg-slate-700 mx-1"></div>
                             <button
@@ -530,31 +491,8 @@ const App = () => {
                             </button>
                             <div className="w-px h-4 bg-slate-700 mx-1"></div>
 
-                            <input type="text" placeholder="Search by ID, Question Text, Option, or Discipline..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-64 bg-slate-900 text-slate-300 placeholder-slate-600 border-none outline-none focus:ring-0 text-sm px-2 rounded" />
+                            <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-40 bg-slate-900 text-slate-300 placeholder-slate-600 border-none outline-none focus:ring-0 text-sm px-2 rounded" />
                             {searchTerm && (<button onClick={() => setSearchTerm('')} className="text-slate-500 hover:text-red-400 p-1 rounded"><Icon name="x" size={16} /></button>)}
-
-                            {appMode === 'review' && (
-                                <div className="flex items-center gap-2 ml-4 border-l border-slate-700 pl-4">
-                                    <div className="flex items-center gap-1">
-                                        <label className="text-xs font-bold uppercase text-slate-500 whitespace-nowrap">Lang:</label>
-                                        <select name="language" value={config.language} onChange={handleChange} className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs outline-none focus:border-indigo-500">
-                                            <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
-                                        </select>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <label className="text-xs font-bold uppercase text-slate-500 whitespace-nowrap">Disc:</label>
-                                        <select name="discipline" value={config.discipline} onChange={handleChange} className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs outline-none focus:border-indigo-500 max-w-[100px]">
-                                            <option value="Technical Art">Tech Art</option><option value="Animation & Rigging">Anim</option><option value="Game Logic & Systems">Logic</option><option value="Look Development (Materials)">LookDev</option><option value="Networking">Net</option><option value="C++ Programming">C++</option><option value="VFX (Niagara)">VFX</option><option value="World Building & Level Design">World</option><option value="Blueprints">BP</option><option value="Lighting & Rendering">Light</option>
-                                        </select>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <label className="text-xs font-bold uppercase text-slate-500 whitespace-nowrap">Diff:</label>
-                                        <select name="difficulty" value={config.difficulty} onChange={(e) => handleSelectCategory(e.target.value)} className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs outline-none focus:border-indigo-500">
-                                            {CATEGORY_KEYS.map(key => <option key={key} value={key}>{key}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div >
 
