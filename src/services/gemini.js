@@ -120,11 +120,22 @@ export const generateContent = async (effectiveKey, systemPrompt, userPrompt, se
     const groundingMetadata = candidate?.groundingMetadata;
     const groundingSources = [];
 
+    // Forbidden domains - even if from Epic's official channels
+    const forbiddenInGrounding = ['youtube.com', 'youtu.be', 'vimeo.com', 'twitter.com', 'x.com', 'reddit.com', 'forums.'];
+
     if (groundingMetadata?.groundingChunks) {
         groundingMetadata.groundingChunks.forEach(chunk => {
             if (chunk.web?.uri && chunk.web?.title) {
-                // Filter to only Epic Games documentation
-                if (chunk.web.uri.includes('epicgames.com') || chunk.web.uri.includes('dev.epicgames.com')) {
+                const url = chunk.web.uri.toLowerCase();
+
+                // Skip forbidden sources (including Epic's YouTube)
+                if (forbiddenInGrounding.some(domain => url.includes(domain))) {
+                    console.log('🚫 Filtered out grounding source:', chunk.web.uri);
+                    return;
+                }
+
+                // Only accept Epic Games documentation
+                if (url.includes('dev.epicgames.com/documentation')) {
                     groundingSources.push({
                         url: chunk.web.uri,
                         title: chunk.web.title
