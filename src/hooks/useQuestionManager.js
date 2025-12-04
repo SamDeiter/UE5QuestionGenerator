@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { filterDuplicateQuestions } from '../utils/helpers';
 import { CATEGORY_KEYS, TARGET_PER_CATEGORY, TARGET_TOTAL } from '../utils/constants';
 import { saveQuestionToFirestore } from '../services/firebase';
+import { logQuestion } from '../utils/analyticsStore';
 
 export const useQuestionManager = (config, showMessage) => {
     // Current session questions
@@ -164,6 +165,20 @@ export const useQuestionManager = (config, showMessage) => {
 
     const confirmDelete = (reason = 'Unknown') => {
         if (deleteConfirmId) {
+            // Find the question before deleting to log it
+            const questionToDelete = allQuestionsMap.get(deleteConfirmId)?.[0] ||
+                questions.find(q => q.id === deleteConfirmId) ||
+                historicalQuestions.find(q => q.id === deleteConfirmId);
+
+            if (questionToDelete) {
+                logQuestion({
+                    ...questionToDelete,
+                    status: 'deleted',
+                    deletionReason: reason,
+                    deletedAt: new Date().toISOString()
+                });
+            }
+
             console.log(`Deleting question ${deleteConfirmId}. Reason: ${reason}`);
             setQuestions(prev => prev.filter(q => q.id !== deleteConfirmId));
             setHistoricalQuestions(prev => prev.filter(q => q.id !== deleteConfirmId));

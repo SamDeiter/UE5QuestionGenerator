@@ -139,7 +139,9 @@ export const logQuestion = (questionData) => {
         critiqueScore: questionData.critiqueScore || null,
         critiqueText: questionData.critiqueText || null,
         questionText: questionData.questionText || '',
-        wasRewritten: questionData.wasRewritten || false
+        wasRewritten: questionData.wasRewritten || false,
+        deletionReason: questionData.deletionReason || null,
+        deletedAt: questionData.deletedAt || null
     };
 
     // Check if question already exists (update instead of add)
