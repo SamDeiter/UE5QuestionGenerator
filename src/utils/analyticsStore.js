@@ -14,7 +14,7 @@ const TRAINING_DATA_KEY = 'ue5_training_data';
  * Gets analytics data from localStorage
  * @returns {object} Analytics data
  */
-const getAnalytics = () => {
+export const getAnalytics = () => {
     try {
         const data = localStorage.getItem(STORAGE_KEY);
         return data ? JSON.parse(data) : initializeAnalytics();
@@ -109,7 +109,7 @@ export const logGeneration = (generationData) => {
         averageQuality: generationData.averageQuality || 0,
         success: generationData.success !== false,
         errorMessage: generationData.errorMessage || null,
-        model: generationData.model || 'gemini-1.5-flash',
+        model: generationData.model || 'gemini-2.0-flash',
         estimatedCost: generationData.estimatedCost || 0
     };
 

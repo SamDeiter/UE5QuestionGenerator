@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { filterDuplicateQuestions } from '../utils/helpers';
 import { CATEGORY_KEYS, TARGET_PER_CATEGORY, TARGET_TOTAL } from '../utils/constants';
+import { saveQuestionToFirestore } from '../services/firebase';
 
 export const useQuestionManager = (config, showMessage) => {
     // Current session questions
@@ -83,11 +84,18 @@ export const useQuestionManager = (config, showMessage) => {
 
     // Status update handler
     const handleUpdateStatus = useCallback((id, newStatus) => {
-        updateQuestionInState(id, (q) => ({
-            ...q,
-            status: newStatus,
-            critique: newStatus === 'accepted' ? null : q.critique
-        }));
+        updateQuestionInState(id, (q) => {
+            const updatedQ = {
+                ...q,
+                status: newStatus,
+                critique: newStatus === 'accepted' ? null : q.critique
+            };
+
+            // Sync to Firestore
+            saveQuestionToFirestore(updatedQ).catch(err => console.error("Firestore sync failed:", err));
+
+            return updatedQ;
+        });
     }, [updateQuestionInState]);
 
     // Statistics

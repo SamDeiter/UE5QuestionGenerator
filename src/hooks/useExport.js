@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getCSVContent, segmentQuestions } from '../utils/exportUtils';
 import { saveQuestionsToSheets, fetchQuestionsFromSheets, clearQuestionsFromSheets } from '../services/googleSheets';
+import { saveQuestionToFirestore, getQuestionsFromFirestore } from '../services/firebase';
 import { downloadFile, formatDate } from '../utils/helpers';
 
 export const useExport = (
@@ -16,7 +17,8 @@ export const useExport = (
     setDatabaseQuestions,
     setAppMode,
     setShowExportMenu,
-    setShowBulkExportModal
+    setShowBulkExportModal,
+    setHistoricalQuestions
 ) => {
 
     const handleExportByGroup = () => {
@@ -97,8 +99,13 @@ export const useExport = (
         if (setShowExportMenu) setShowExportMenu(false);
 
         try {
-            await saveQuestionsToSheets(config.sheetUrl, validQuestions);
-            showMessage(`Export launched in new tab! Check it for "Success" message.`, 7000);
+            // Dual Write: Save to Sheets AND Firestore
+            await Promise.all([
+                saveQuestionsToSheets(config.sheetUrl, validQuestions),
+                Promise.all(validQuestions.map(q => saveQuestionToFirestore(q)))
+            ]);
+
+            showMessage(`Export launched! Data synced to Sheets and Firestore.`, 7000);
         } catch (e) {
             console.error("Error pushing to Sheets endpoint:", e);
             showMessage(`Error connecting to endpoint. Check URL/Console: ${e.message}`, 10000);
@@ -140,11 +147,43 @@ export const useExport = (
             }));
 
             setDatabaseQuestions(loadedQuestions);
+            if (setHistoricalQuestions) setHistoricalQuestions(loadedQuestions);
+
+            // Only switch to database view if NOT in review mode
+            // Actually, user might want to see it in DB view first.
+            // Let's keep behavior but ensure data is available for review.
             setAppMode('database');
             showMessage(`Loaded ${loadedQuestions.length} questions from Database View!`, 3000);
         } catch (e) {
             console.error("Load Error:", e);
             showMessage(`Load Failed: ${e.message}. (Ensure Script Access is set to 'Anyone')`, 7000);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const handleLoadFromFirestore = async () => {
+        setIsProcessing(true);
+        setStatus("Loading from Firestore...");
+        if (setShowExportMenu) setShowExportMenu(false);
+
+        try {
+            const data = await getQuestionsFromFirestore();
+            // Firestore data is already in the correct format, but we ensure essential fields
+            const loadedQuestions = data.map((q, index) => ({
+                ...q,
+                id: q.id || Date.now() + index + Math.random(), // Ensure React key
+                status: 'accepted' // Assume DB questions are accepted
+            }));
+
+            setDatabaseQuestions(loadedQuestions);
+            if (setHistoricalQuestions) setHistoricalQuestions(loadedQuestions);
+
+            setAppMode('database');
+            showMessage(`Loaded ${loadedQuestions.length} questions from Firestore!`, 3000);
+        } catch (e) {
+            console.error("Firestore Load Error:", e);
+            showMessage(`Firestore Load Failed: ${e.message}`, 7000);
         } finally {
             setIsProcessing(false);
         }
@@ -237,6 +276,7 @@ export const useExport = (
         handleExportCurrentTarget,
         handleExportToSheets,
         handleLoadFromSheets,
+        handleLoadFromFirestore,
         handleBulkExport
     };
 };

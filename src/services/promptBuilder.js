@@ -77,7 +77,8 @@ ${modeInstruction ? `Mode: ${modeInstruction}` : ''}`);
 
     // Output instruction
     sections.push(`Output: ${difficultyPrompt}
-**MAX 2 SENTENCES.** No "A Technical Artist is..." setups. Just ask.`);
+**MAX 2 SENTENCES.** No "A Technical Artist is..." setups. Just ask.
+**IMPORTANT:** Output ONLY the table. Do not include any introductory or concluding text.`);
 
     // Sources (always included)
     sections.push(`Sources: Epic Games docs (dev.epicgames.com/documentation), local files.

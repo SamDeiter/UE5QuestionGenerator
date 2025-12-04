@@ -8,7 +8,7 @@
 
 // Pricing per 1M tokens (as of Nov 2024)
 const PRICING = {
-    'gemini-1.5-flash': {
+    'gemini-2.0-flash': {
         input: 0.075,   // $0.075 per 1M input tokens
         output: 0.30    // $0.30 per 1M output tokens
     },
@@ -24,7 +24,7 @@ const PRICING = {
 
 // Token limits per model
 const TOKEN_LIMITS = {
-    'gemini-1.5-flash': {
+    'gemini-2.0-flash': {
         input: 1000000,
         output: 8192
     },
@@ -57,8 +57,8 @@ export const estimateTokens = (text) => {
  * @param {string} model - Model name
  * @returns {number} Cost in USD
  */
-export const calculateCost = (inputTokens, outputTokens, model = 'gemini-1.5-flash') => {
-    const pricing = PRICING[model] || PRICING['gemini-1.5-flash'];
+export const calculateCost = (inputTokens, outputTokens, model = 'gemini-2.0-flash') => {
+    const pricing = PRICING[model] || PRICING['gemini-2.0-flash'];
 
     const inputCost = (inputTokens / 1000000) * pricing.input;
     const outputCost = (outputTokens / 1000000) * pricing.output;
@@ -85,8 +85,8 @@ export const formatCost = (cost) => {
  * @param {string} model - Model name
  * @returns {object} { withinLimit: boolean, limit: number, percentage: number }
  */
-export const checkTokenLimit = (tokens, type = 'input', model = 'gemini-1.5-flash') => {
-    const limits = TOKEN_LIMITS[model] || TOKEN_LIMITS['gemini-1.5-flash'];
+export const checkTokenLimit = (tokens, type = 'input', model = 'gemini-2.0-flash') => {
+    const limits = TOKEN_LIMITS[model] || TOKEN_LIMITS['gemini-2.0-flash'];
     const limit = limits[type];
     const percentage = (tokens / limit) * 100;
 
@@ -104,7 +104,7 @@ export const checkTokenLimit = (tokens, type = 'input', model = 'gemini-1.5-flas
  * @param {string} model - Model name
  * @returns {string} 'none' | 'warning' | 'danger'
  */
-export const getTokenWarningLevel = (tokens, type = 'input', model = 'gemini-1.5-flash') => {
+export const getTokenWarningLevel = (tokens, type = 'input', model = 'gemini-2.0-flash') => {
     const { percentage } = checkTokenLimit(tokens, type, model);
 
     if (percentage >= 90) return 'danger';
@@ -120,7 +120,7 @@ export const getTokenWarningLevel = (tokens, type = 'input', model = 'gemini-1.5
  * @param {string} model - Model name
  * @returns {object} Token analysis
  */
-export const analyzeRequest = (systemPrompt, userPrompt, expectedOutputTokens = 2000, model = 'gemini-1.5-flash') => {
+export const analyzeRequest = (systemPrompt, userPrompt, expectedOutputTokens = 2000, model = 'gemini-2.0-flash') => {
     const systemTokens = estimateTokens(systemPrompt);
     const userTokens = estimateTokens(userPrompt);
     const totalInputTokens = systemTokens + userTokens;

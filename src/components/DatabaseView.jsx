@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Icon from './Icon';
 import QuestionItem from './QuestionItem';
 import MetricsDashboard from './MetricsDashboard';
@@ -20,11 +20,36 @@ const DatabaseView = ({
     const [isSyncing, setIsSyncing] = useState(false);
     const [syncProgress, setSyncProgress] = useState(0);
     const [sortBy, setSortBy] = useState('default'); // default, language, discipline, difficulty
+    const [optionsOpen, setOptionsOpen] = useState(false);
+    const optionsRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (optionsRef.current && !optionsRef.current.contains(event.target)) {
+                setOptionsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const sortedQuestions = useMemo(() => {
         if (!questions) return [];
         const sorted = [...questions];
         switch (sortBy) {
+            case 'newest':
+                return sorted.sort((a, b) => {
+                    const dateA = a.createdAt || a.id || 0;
+                    const dateB = b.createdAt || b.id || 0;
+                    return dateB - dateA; // Descending (newest first)
+                });
+            case 'oldest':
+                return sorted.sort((a, b) => {
+                    const dateA = a.createdAt || a.id || 0;
+                    const dateB = b.createdAt || b.id || 0;
+                    return dateA - dateB; // Ascending (oldest first)
+                });
             case 'language':
                 return sorted.sort((a, b) => (a.language || 'English').localeCompare(b.language || 'English'));
             case 'discipline':
@@ -51,6 +76,47 @@ const DatabaseView = ({
         });
         return map;
     }, [questions]);
+
+    // Map uniqueId+language -> question for quick lookup
+    const questionsByIdAndLang = useMemo(() => {
+        if (!questions) return new Map();
+        const map = new Map();
+        questions.forEach(q => {
+            if (!q.uniqueId) return;
+            const key = `${q.uniqueId}::${q.language || 'English'}`;
+            map.set(key, q);
+        });
+        return map;
+    }, [questions]);
+
+    // Handle language switch - find and scroll to the matching translation
+    const handleSwitchLanguage = (currentQuestion, targetLang) => {
+        if (!currentQuestion.uniqueId) {
+            showMessage(`Cannot switch: Question has no unique ID for linking translations.`);
+            return;
+        }
+
+        const key = `${currentQuestion.uniqueId}::${targetLang}`;
+        const targetQuestion = questionsByIdAndLang.get(key);
+
+        if (targetQuestion) {
+            // Find the question in the DOM and scroll to it
+            const index = sortedQuestions.findIndex(q => q.id === targetQuestion.id);
+            if (index !== -1) {
+                // Scroll to the question
+                const element = document.querySelector(`[data-question-index="${index}"]`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    element.classList.add('ring-2', 'ring-green-500');
+                    setTimeout(() => element.classList.remove('ring-2', 'ring-green-500'), 2000);
+                }
+                showMessage(`Scrolled to ${targetLang} version.`);
+            }
+        } else {
+            // Translation exists in theory but not in current dataset
+            showMessage(`${targetLang} version not found in current view. Try using "Sort by Language" to find it.`);
+        }
+    };
 
     const handleHardReset = () => {
         if (window.confirm("ARE YOU SURE? This will permanently DELETE ALL questions from the Cloud Database (Master_DB). This cannot be undone.")) {
@@ -116,6 +182,8 @@ const DatabaseView = ({
                             className="bg-slate-800 text-slate-200 text-xs border border-slate-600 rounded px-2 py-1 outline-none focus:border-blue-500"
                         >
                             <option value="default">Default (Sheet Order)</option>
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
                             <option value="language">Language (A-Z)</option>
                             <option value="discipline">Discipline (A-Z)</option>
                             <option value="difficulty">Difficulty (Easy-Hard)</option>
@@ -124,33 +192,65 @@ const DatabaseView = ({
                 </div>
 
                 <div className="flex gap-2">
-                    <button
-                        onClick={handleSyncToFirestore}
-                        disabled={isSyncing || questions.length === 0}
-                        className="px-3 py-1 bg-orange-600 hover:bg-orange-500 text-white text-xs rounded border border-orange-500 flex items-center gap-2 font-bold shadow-sm"
-                    >
-                        {isSyncing ? (
-                            <>
-                                <Icon name="loader" size={12} className="animate-spin" /> {syncProgress}%
-                            </>
-                        ) : (
-                            <>
-                                <Icon name="upload-cloud" size={12} /> Sync to Firestore
-                            </>
-                        )}
-                    </button>
-                    <button onClick={handleHardReset} className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded border border-red-500 flex items-center gap-2 font-bold shadow-sm shadow-red-900/50">
-                        <Icon name="alert-triangle" size={12} /> HARD RESET
-                    </button>
-                    <button onClick={onClearView} className="px-3 py-1 bg-red-900/50 hover:bg-red-800 text-red-200 text-xs rounded border border-red-800 flex items-center gap-2">
-                        <Icon name="trash-2" size={12} /> Clear View
-                    </button>
                     <button onClick={onLoadFirestore} disabled={isProcessing} className="px-3 py-1 bg-indigo-800 hover:bg-indigo-700 text-indigo-200 text-xs rounded border border-indigo-600 flex items-center gap-2">
                         <Icon name="cloud-lightning" size={12} className={isProcessing ? "animate-pulse" : ""} /> Load Firestore
                     </button>
                     <button onClick={onLoad} disabled={isProcessing} className="px-3 py-1 bg-blue-800 hover:bg-blue-700 text-blue-200 text-xs rounded border border-blue-600 flex items-center gap-2">
                         <Icon name="refresh-cw" size={12} className={isProcessing ? "animate-spin" : ""} /> Load Sheets
                     </button>
+
+                    {/* Options Dropdown - Contains dangerous actions (placed last) */}
+                    <div className="relative" ref={optionsRef}>
+                        <button
+                            onClick={() => setOptionsOpen(!optionsOpen)}
+                            className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded border border-slate-600 flex items-center gap-2"
+                        >
+                            <Icon name="settings" size={12} />
+                            Options
+                            <Icon name="chevron-down" size={10} className={`transition-transform ${optionsOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {optionsOpen && (
+                            <div className="absolute right-0 top-full mt-1 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                <div className="py-1">
+                                    {/* Sync to Firestore */}
+                                    <button
+                                        onClick={() => { handleSyncToFirestore(); setOptionsOpen(false); }}
+                                        disabled={isSyncing || questions.length === 0}
+                                        className="w-full text-left px-4 py-2 text-xs text-orange-300 hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        {isSyncing ? (
+                                            <>
+                                                <Icon name="loader" size={14} className="animate-spin" /> Syncing {syncProgress}%
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Icon name="upload-cloud" size={14} /> Sync to Firestore
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <div className="border-t border-slate-700 my-1"></div>
+
+                                    {/* Clear View */}
+                                    <button
+                                        onClick={() => { onClearView(); setOptionsOpen(false); }}
+                                        className="w-full text-left px-4 py-2 text-xs text-red-300 hover:bg-slate-700 flex items-center gap-2"
+                                    >
+                                        <Icon name="trash-2" size={14} /> Clear View
+                                    </button>
+
+                                    {/* HARD RESET - Extra warning styling */}
+                                    <button
+                                        onClick={() => { handleHardReset(); setOptionsOpen(false); }}
+                                        className="w-full text-left px-4 py-2 text-xs text-red-400 hover:bg-red-900/30 flex items-center gap-2 font-bold"
+                                    >
+                                        <Icon name="alert-triangle" size={14} /> HARD RESET (Danger!)
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -160,7 +260,7 @@ const DatabaseView = ({
                 <div className="text-center py-10 text-slate-500">No questions loaded from database. Click Refresh.</div>
             ) : (
                 sortedQuestions.map((q, i) => (
-                    <div key={i} className="opacity-75 hover:opacity-100 transition-opacity">
+                    <div key={i} data-question-index={i} className="opacity-75 hover:opacity-100 transition-all">
                         <QuestionItem
                             q={q}
                             // Pass dummy handlers or read-only mode if supported
@@ -169,7 +269,7 @@ const DatabaseView = ({
                             onVariate={() => { }}
                             onCritique={() => { }}
                             onTranslateSingle={() => { }}
-                            onSwitchLanguage={() => { }}
+                            onSwitchLanguage={(targetLang) => handleSwitchLanguage(q, targetLang)}
                             onDelete={() => { }}
                             onUpdateQuestion={onUpdateQuestion}
                             onKickBack={onKickBack}

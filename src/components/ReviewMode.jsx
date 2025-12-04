@@ -14,13 +14,25 @@ const ReviewMode = ({
     onSwitchLanguage,
     onDelete,
     translationMap,
-    isProcessing
+    isProcessing,
+    showMessage
 }) => {
     if (!questions || questions.length === 0) return null;
 
     const currentQuestion = questions[currentIndex];
+
+    if (!currentQuestion) {
+        return <div className="text-center p-10 text-slate-500">No question selected.</div>;
+    }
     const canGoPrev = currentIndex > 0;
     const canGoNext = currentIndex < questions.length - 1;
+
+    // Auto-adjust index if out of bounds (e.g. after accepting an item and list shrinks)
+    React.useEffect(() => {
+        if (currentIndex >= questions.length && questions.length > 0) {
+            setCurrentIndex(questions.length - 1);
+        }
+    }, [questions.length, currentIndex, setCurrentIndex]);
 
     return (
         <div className="flex flex-col items-center justify-start h-full max-w-4xl mx-auto w-full pt-4">
@@ -61,6 +73,7 @@ const ReviewMode = ({
                     availableLanguages={translationMap.get(currentQuestion.uniqueId)}
                     isProcessing={isProcessing}
                     appMode="review"
+                    showMessage={showMessage}
                 />
             </div>
         </div>

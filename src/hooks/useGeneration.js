@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { generateContent } from '../services/gemini';
+import { generateContent, generateCritique } from '../services/gemini';
 import { constructSystemPrompt } from '../services/promptBuilder';
 import { parseQuestions } from '../utils/helpers';
 import { analyzeRequest, estimateTokens } from '../utils/tokenCounter';
@@ -47,7 +47,7 @@ export const useGeneration = (
         const userPrompt = `Generate ${config.batchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}. Ensure links work for UE 5.7 or latest available.`;
 
         // Analyze token usage before API call
-        const tokenAnalysis = analyzeRequest(systemPrompt, userPrompt, 2000, config.model || 'gemini-1.5-flash');
+        const tokenAnalysis = analyzeRequest(systemPrompt, userPrompt, 2000, config.model || 'gemini-2.0-flash');
 
 
         try {
@@ -56,7 +56,11 @@ export const useGeneration = (
             const duration = endTime - startTime;
 
             let newQuestions = parseQuestions(text);
-            if (newQuestions.length === 0) throw new Error("Failed to parse generated questions.");
+            if (newQuestions.length === 0) {
+                console.error("Failed to parse. Raw text received:", text);
+                const truncatedText = text.length > 100 ? text.substring(0, 100) + "..." : text;
+                throw new Error(`Failed to parse generated questions. Raw output start: "${truncatedText}"`);
+            }
             const taggedQuestions = newQuestions.map(q => ({ ...q, language: config.language }));
             const uniqueNewQuestions = await checkAndStoreQuestions(taggedQuestions);
 
@@ -74,7 +78,7 @@ export const useGeneration = (
                 questionsGenerated: uniqueNewQuestions.length,
                 averageQuality: Math.round(avgQuality),
                 success: true,
-                model: config.model || 'gemini-1.5-flash',
+                model: config.model || 'gemini-2.0-flash',
                 estimatedCost: tokenAnalysis.cost.estimated
             });
 
@@ -112,7 +116,7 @@ export const useGeneration = (
                 averageQuality: 0,
                 success: false,
                 errorMessage: err.message,
-                model: config.model || 'gemini-1.5-flash',
+                model: config.model || 'gemini-2.0-flash',
                 estimatedCost: tokenAnalysis ? tokenAnalysis.cost.estimated : 0
             });
 
@@ -203,13 +207,18 @@ export const useGeneration = (
         if (!isApiReady) { showMessage("API key is required for critique. Please enter it in the settings panel.", 5000); return; }
 
         setIsProcessing(true); setStatus('Critiquing...');
-        const questionDetails = `Question: ${q.question}\nDiscipline: ${q.discipline}\nDifficulty: ${q.difficulty}\nCorrect Answer: ${q.correct}: ${q.options[q.correct] || 'N/A'}`;
-        const systemPrompt = `You are a Technical Writing Editor specialized in Unreal Engine 5 content. Analyze this REJECTED quiz question and provide actionable, numbered suggestions for improvement. Focus on: Clarity and technical accuracy. Output ONLY a brief, numbered list of 3-5 concrete suggestions.`;
+
         try {
-            const critiqueText = await generateContent(effectiveApiKey, systemPrompt, `Critique and suggest fixes for the following rejected question:\n${questionDetails}`, setStatus);
-            updateQuestionInState(q.id, (item) => ({ ...item, critique: critiqueText }));
+            const { score, text } = await generateCritique(effectiveApiKey, q);
+            updateQuestionInState(q.id, (item) => ({ ...item, critique: text, critiqueScore: score }));
             showMessage('Critique Ready', 3000);
-        } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
+        } catch (e) {
+            console.error("Critique failed:", e);
+            setStatus('Fail');
+            showMessage(`Critique Failed: ${e.message}`, 5000);
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     const handleBulkTranslateMissing = async () => {

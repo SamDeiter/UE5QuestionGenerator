@@ -24,6 +24,7 @@ const SettingsModal = React.lazy(() => import('./components/SettingsModal'));
 const ReviewMode = React.lazy(() => import('./components/ReviewMode'));
 const DatabaseView = React.lazy(() => import('./components/DatabaseView'));
 const BulkExportModal = React.lazy(() => import('./components/BulkExportModal'));
+const AnalyticsDashboard = React.lazy(() => import('./components/AnalyticsDashboard'));
 
 // Loading Fallback
 const LoadingSpinner = () => (
@@ -167,6 +168,7 @@ const App = () => {
     // 7. Export Logic
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [showBulkExportModal, setShowBulkExportModal] = useState(false);
+    const [showAnalytics, setShowAnalytics] = useState(false);
 
     // Computed Filtered Questions
     const filteredQuestions = useMemo(() => createFilteredQuestions(
@@ -192,11 +194,13 @@ const App = () => {
         handleExportCurrentTarget,
         handleExportToSheets,
         handleLoadFromSheets,
+        handleLoadFromFirestore,
         handleBulkExport
     } = useExport(
         config, questions, historicalQuestions, uniqueFilteredQuestions, allQuestionsMap,
         showHistory, showMessage, setStatus, (val) => { },
-        setDatabaseQuestions, setAppMode, setShowExportMenu, setShowBulkExportModal
+        setDatabaseQuestions, setAppMode, setShowExportMenu, setShowBulkExportModal,
+        setHistoricalQuestions
     );
 
     // Keyboard Shortcuts
@@ -249,7 +253,7 @@ const App = () => {
         setShowExportMenu(false);
         if (mode === 'review') {
             setShowHistory(true);
-            setFilterMode('all');
+            setFilterMode('pending'); // Changed from 'all' to 'pending' to hide accepted items
         } else {
             setShowHistory(false);
             setFilterMode('pending');
@@ -260,6 +264,23 @@ const App = () => {
         if (!config.sheetUrl) { showMessage("Please configure Google Sheets URL in settings first.", 5000); return; }
         setAppMode('database');
         await handleLoadFromSheets();
+    };
+
+    const handleUpdateDatabaseQuestion = (updatedQ) => {
+        setDatabaseQuestions(prev => prev.map(q => q.id === updatedQ.id ? updatedQ : q));
+        showMessage("Question updated locally. Click 'Sync to Firestore' to save changes.", 3000);
+    };
+
+    const handleKickBackToReview = (question) => {
+        // Add to historical questions with 'pending' status so it appears in Review Mode
+        setHistoricalQuestions(prev => {
+            // Check if already exists to prevent duplicates
+            if (prev.some(q => q.uniqueId === question.uniqueId)) {
+                return prev.map(q => q.uniqueId === question.uniqueId ? { ...question, status: 'pending' } : q);
+            }
+            return [...prev, { ...question, status: 'pending' }];
+        });
+        showMessage("Question sent to Review Console (Pending).", 3000);
     };
 
     const handleGoHome = () => setAppMode('landing');
@@ -410,6 +431,24 @@ const App = () => {
                                 <Icon name="database" size={14} /> DB View
                             </button>
 
+                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
+                            <button
+                                onClick={() => handleModeSelect('review')}
+                                className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'review' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
+                                title="Switch to Review & Audit Console"
+                            >
+                                <Icon name="list-checks" size={14} /> Review
+                            </button>
+
+                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
+                            <button
+                                onClick={() => setShowAnalytics(true)}
+                                className="px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white"
+                                title="Open Analytics Dashboard"
+                            >
+                                <Icon name="bar-chart-2" size={14} /> Analytics
+                            </button>
+
                             {((!showHistory && questions.length > 0) || (showHistory && historicalQuestions.length > 0) || appMode === 'review') && (
                                 <>
                                     <div className="w-px h-4 bg-slate-700 mx-1"></div>
@@ -488,9 +527,13 @@ const App = () => {
                                     questions={databaseQuestions}
                                     sheetUrl={config.sheetUrl}
                                     onLoad={handleLoadFromSheets}
+                                    onLoadFirestore={handleLoadFromFirestore}
                                     onClearView={() => setDatabaseQuestions([])}
                                     onHardReset={() => setDatabaseQuestions([])}
+                                    onUpdateQuestion={handleUpdateDatabaseQuestion}
+                                    onKickBack={handleKickBackToReview}
                                     isProcessing={isProcessing}
+                                    showMessage={showMessage}
                                 />
                             ) : appMode === 'review' && uniqueFilteredQuestions.length > 0 ? (
                                 <ReviewMode
@@ -506,6 +549,7 @@ const App = () => {
                                     onDelete={handleDelete}
                                     translationMap={translationMap}
                                     isProcessing={isProcessing}
+                                    showMessage={showMessage}
                                 />
                             ) : (
                                 <Virtuoso
@@ -526,6 +570,7 @@ const App = () => {
                                                 availableLanguages={translationMap.get(q.uniqueId)}
                                                 isProcessing={isProcessing}
                                                 appMode={appMode}
+                                                showMessage={showMessage}
                                             />
                                         </div>
                                     )}
@@ -567,6 +612,10 @@ const App = () => {
                         }
                     }}
                 />
+            </Suspense>
+
+            <Suspense fallback={null}>
+                <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
             </Suspense>
 
             {/* TOAST NOTIFICATIONS */}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { generateContent, listModels } from '../../services/gemini';
 import Icon from '../Icon';
 import InfoTooltip from '../InfoTooltip';
 
@@ -39,11 +40,23 @@ const GenerationSettings = ({ config, handleChange, isOpen, onToggle }) => {
                     </div>
                     <div className="space-y-1">
                         <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">AI Model</label></div>
-                        <select name="model" value={config.model || 'gemini-1.5-flash'} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
-                            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast)</option>
-                            <option value="gemini-1.5-pro">Gemini 1.5 Pro (Smart)</option>
-                            <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
+                        <select name="model" value={config.model || 'gemini-2.0-flash'} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended)</option>
+                            <option value="gemini-2.0-flash-lite-preview-02-05">Gemini 2.0 Flash Lite</option>
+                            <option value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro Exp</option>
+                            <option value="gemini-3-pro-preview">Gemini 3.0 Pro Preview (New)</option>
                         </select>
+                        <button
+                            onClick={async () => {
+                                if (!config.apiKey) { alert('Please enter an API key first'); return; }
+                                const models = await listModels(config.apiKey);
+                                alert(`Available Models:\n${models.join('\n')}`);
+                                console.log('Available Models:', models);
+                            }}
+                            className="text-[10px] text-indigo-400 hover:text-indigo-300 underline mt-1"
+                        >
+                            Check Available Models
+                        </button>
                     </div>
                 </div>
             )}

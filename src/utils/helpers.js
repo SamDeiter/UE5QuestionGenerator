@@ -42,6 +42,8 @@ export const renderMarkdown = (t) => {
         .replace(/^#### (.*$)/gim, '<h4 class="text-slate-200 font-bold text-[10px] mt-2 mb-1 uppercase">$1</h4>')
         // Bold
         .replace(/\*\*(.*?)\*\*/g, '<strong class="text-orange-300 font-bold">$1</strong>')
+        // Inline code (backticks) - styled like UE5 Blueprint terms
+        .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-blue-950/50 text-blue-300 font-mono text-[0.9em] border border-blue-900/50">$1</code>')
         // Lists - Better indentation
         .replace(/^\s*\* (.*$)/gim, '<div class="ml-3 flex items-start gap-2"><span class="text-orange-500 mt-1 text-[10px] flex-shrink-0">•</span><span>$1</span></div>')
         // Italics - Restricted to single line
@@ -113,11 +115,23 @@ export const parseCSVLine = (text) => {
 
 export const parseQuestions = (text) => {
     const parsed = [];
-    const lines = text.split('\n');
+    if (!text) return parsed;
+
+    // Aggressively clean markdown code blocks
+    const cleanText = text.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '');
+    const lines = cleanText.split('\n');
 
     const dataLines = lines.filter(line => {
         const trimmed = line.trim();
-        return (trimmed.startsWith('|') || trimmed.startsWith('｜')) &&
+        if (!trimmed) return false;
+
+        // Check for pipe count to identify table rows reliably
+        // We expect at least ~10 columns, so at least 9 pipes. 
+        // Being lenient with 4 to catch partials or malformed rows.
+        const pipeCount = (trimmed.match(/\|/g) || []).length;
+
+        // It's a data line if it has pipes and isn't a header or separator
+        return pipeCount >= 4 &&
             !trimmed.includes('| ID |') &&
             !trimmed.includes('｜ ID ｜') &&
             !trimmed.includes('|---');

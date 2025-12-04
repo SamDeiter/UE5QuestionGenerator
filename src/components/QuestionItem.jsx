@@ -53,8 +53,14 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
     const handleFlagClick = async (e, lang) => {
         e.stopPropagation();
 
+        const currentLang = (q.language || 'English').trim();
+
         // Check if the translation ALREADY exists
-        if (availableLanguages && availableLanguages.has(lang)) {
+        // Special case: English always exists if we're viewing a non-English question
+        const langExists = (availableLanguages && availableLanguages.has(lang)) ||
+            (lang === 'English' && currentLang !== 'English');
+
+        if (langExists) {
             // It exists -> SWITCH VIEW
             onSwitchLanguage(lang);
         } else {
@@ -65,62 +71,115 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
         }
     };
 
+    const [translateMenuOpen, setTranslateMenuOpen] = useState(false);
+    const translateMenuRef = useRef(null);
+
+    // Close translate menu on click outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (translateMenuRef.current && !translateMenuRef.current.contains(event.target)) {
+                setTranslateMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     const renderLanguageFlags = () => {
-        // Get all available language names, excluding the current language of the displayed card.
-        const allLanguageNames = Object.keys(LANGUAGE_FLAGS).filter(lang => (q.language || 'English').trim() !== lang);
+        const currentLang = (q.language || 'English').trim();
+        const allLanguageNames = Object.keys(LANGUAGE_FLAGS).filter(lang => currentLang !== lang);
 
-        // Console log for debugging (remove later)
-        if (allLanguageNames.length === 0) {
-            console.log("Debug Flags:", {
-                lang: q.language,
-                flagsKeys: Object.keys(LANGUAGE_FLAGS),
-                filtered: allLanguageNames
-            });
-        }
+        // Separate into existing translations and missing translations
+        const existingTranslations = [];
+        const missingTranslations = [];
 
-        return allLanguageNames.map(lang => {
-            const hasLang = availableLanguages && availableLanguages.has(lang);
-            const langCode = LANGUAGE_CODES[lang] || lang.substring(0, 2).toUpperCase();
-            const isLoading = loadingLang === lang;
+        allLanguageNames.forEach(lang => {
+            let hasLang = availableLanguages && availableLanguages.has(lang);
 
-            // If Translation Exists -> Show SVG Flag (Switch button)
-            if (hasLang) {
-                return (
-                    <button
-                        key={lang}
-                        onClick={(e) => handleFlagClick(e, lang)}
-                        className="p-0.5 rounded border border-slate-700 hover:border-indigo-500 hover:scale-110 transition-all opacity-100"
-                        title={`Switch to ${lang} translation`}
-                        aria-label={`Switch to ${lang} translation`}
-                    >
-                        <FlagIcon code={langCode} size={18} />
-                    </button>
-                );
+            // SPECIAL CASE: If we're viewing a non-English question, English MUST exist
+            if (lang === 'English' && currentLang !== 'English') {
+                hasLang = true;
             }
 
-            // If Missing -> Show Faded SVG Flag with + (Generate button)
-            return (
-                <button
-                    key={lang}
-                    onClick={(e) => handleFlagClick(e, lang)}
-                    disabled={isProcessing}
-                    className={`p-0.5 rounded border transition-all relative ${isLoading ? 'border-orange-500 animate-pulse' : 'border-slate-800 opacity-50 hover:opacity-100 hover:scale-110'}`}
-                    title={`Generate ${lang} translation`}
-                    aria-label={`Generate ${lang} translation`}
-                >
-                    {isLoading ? <Icon name="loader" size={18} className="animate-spin text-orange-500" /> : (
-                        <div className="relative flex items-center justify-center">
-                            <div className="opacity-50 grayscale">
-                                <FlagIcon code={langCode} size={18} />
-                            </div>
-                            <span className="absolute inset-0 flex items-center justify-center">
-                                <span className="bg-slate-900/80 text-orange-500 rounded-full w-3 h-3 flex items-center justify-center text-[10px] font-bold shadow-sm border border-orange-500/50">+</span>
-                            </span>
-                        </div>
-                    )}
-                </button>
-            );
+            if (hasLang) {
+                existingTranslations.push(lang);
+            } else {
+                missingTranslations.push(lang);
+            }
         });
+
+        return (
+            <>
+                {/* Show current language indicator */}
+                <div className="flex items-center gap-1 px-2 py-0.5 bg-slate-800/50 rounded border border-slate-700 text-xs text-slate-400">
+                    <FlagIcon code={LANGUAGE_CODES[currentLang] || 'US'} size={14} />
+                    <span className="font-medium">{currentLang}</span>
+                </div>
+
+                {/* Existing translations - bright flags */}
+                {existingTranslations.map(lang => {
+                    const langCode = LANGUAGE_CODES[lang] || lang.substring(0, 2).toUpperCase();
+                    return (
+                        <button
+                            key={lang}
+                            onClick={(e) => handleFlagClick(e, lang)}
+                            className="p-0.5 rounded border-2 border-green-600 hover:border-green-400 hover:scale-110 transition-all shadow-sm shadow-green-900/50"
+                            title={`Switch to ${lang}`}
+                            aria-label={`Switch to ${lang} translation`}
+                        >
+                            <FlagIcon code={langCode} size={18} />
+                        </button>
+                    );
+                })}
+
+                {/* Add translation button with dropdown - only show if there are missing translations */}
+                {missingTranslations.length > 0 && appMode !== 'database' && (
+                    <div className="relative" ref={translateMenuRef}>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setTranslateMenuOpen(!translateMenuOpen); }}
+                            disabled={isProcessing}
+                            className="p-1 rounded border border-dashed border-slate-600 hover:border-orange-500 hover:bg-slate-800/50 transition-all text-slate-500 hover:text-orange-400 flex items-center gap-0.5"
+                            title="Add translation"
+                            aria-label="Add translation"
+                        >
+                            <Icon name="globe" size={14} />
+                            <Icon name="plus" size={10} />
+                        </button>
+
+                        {translateMenuOpen && (
+                            <div className="absolute left-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                <div className="py-1">
+                                    <div className="px-3 py-1 text-[10px] font-bold text-slate-500 uppercase border-b border-slate-700">Translate to:</div>
+                                    {missingTranslations.map(lang => {
+                                        const langCode = LANGUAGE_CODES[lang] || lang.substring(0, 2).toUpperCase();
+                                        const isLoading = loadingLang === lang;
+                                        return (
+                                            <button
+                                                key={lang}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleFlagClick(e, lang);
+                                                    setTranslateMenuOpen(false);
+                                                }}
+                                                disabled={isProcessing || isLoading}
+                                                className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50"
+                                            >
+                                                {isLoading ? (
+                                                    <Icon name="loader" size={14} className="animate-spin text-orange-500" />
+                                                ) : (
+                                                    <FlagIcon code={langCode} size={14} />
+                                                )}
+                                                {lang}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </>
+        );
     };
 
     return (
@@ -363,10 +422,27 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
             )}
 
             {q.sourceExcerpt && (
-                <div className="pt-3 border-t border-slate-800 flex flex-col gap-1">
+                <div className="pt-3 border-t border-slate-800 flex flex-col gap-2">
+                    {/* Source URL - Prominent Display */}
+                    {q.sourceUrl && (
+                        <div className="flex items-center gap-2 bg-blue-950/30 border border-blue-800/50 rounded px-3 py-1.5">
+                            <Icon name="link" size={14} className="text-blue-400 flex-shrink-0" />
+                            <span className="text-[10px] font-bold uppercase text-blue-400">Source:</span>
+                            <a
+                                href={formatUrl(q.sourceUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs text-blue-300 hover:text-blue-200 hover:underline truncate flex-1"
+                            >
+                                {q.sourceUrl}
+                            </a>
+                            <Icon name="external-link" size={12} className="text-blue-500 flex-shrink-0" />
+                        </div>
+                    )}
+                    {/* Source Excerpt - Cleaned */}
                     <div className="flex items-start gap-1.5 text-sm text-slate-400 italic bg-slate-950 p-2 rounded border border-slate-800">
                         <Icon name="message-square" size={14} className="mt-0.5 flex-shrink-0" />
-                        "{q.sourceExcerpt}"
+                        <span>"{stripHtmlTags(q.sourceExcerpt)}"</span>
                     </div>
                 </div>
             )}
