@@ -76,6 +76,14 @@ ${modeInstruction ? `Mode: ${modeInstruction}` : ''}`);
 - Type rule: ${targetType === 'MC ONLY' ? 'No T/F questions' : targetType === 'T/F ONLY' ? 'No MC questions' : 'Mix MC and T/F'}.
 - QualityScore: 0-100. ${temp < 0.3 || temp > 0.7 ? 'Lower by 10-15 for extreme temps.' : ''}`);
 
+    // CRITICAL: Answer-Source Consistency Rule
+    sections.push(`⚠️ CRITICAL ANSWER VALIDATION:
+- The CORRECT answer option MUST match what is stated in the SourceExcerpt
+- If SourceExcerpt says "Control Rig", the correct option MUST be "Control Rig" (not Animation Editor, etc.)
+- ALWAYS include the exact term from the source as the correct answer option
+- DO NOT generate answer options that contradict or differ from the source
+- Double-check: Does CorrectLetter option contain the answer mentioned in SourceExcerpt? If not, FIX IT.`);
+
     // Output instruction
     sections.push(`Output: ${difficultyPrompt}
 **MAX 2 SENTENCES.** No "A Technical Artist is..." setups. Just ask.

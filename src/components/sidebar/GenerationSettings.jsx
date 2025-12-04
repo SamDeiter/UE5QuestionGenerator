@@ -41,14 +41,8 @@ const GenerationSettings = ({ config, handleChange, isOpen, onToggle }) => {
                     <div className="space-y-1">
                         <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">AI Model</label></div>
                         <select name="model" value={config.model || 'gemini-2.0-flash'} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
-                            <optgroup label="Gemini 2.0 (Recommended)">
-                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Best for Speed)</option>
-                                <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Experimental</option>
-                            </optgroup>
-                            <optgroup label="Gemini 1.5 (Stable)">
-                                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Best Quality)</option>
-                            </optgroup>
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended)</option>
+                            <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Experimental</option>
                         </select>
                         <button
                             onClick={async () => {
