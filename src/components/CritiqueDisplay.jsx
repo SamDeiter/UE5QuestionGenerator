@@ -8,6 +8,9 @@ const parseMarkdown = (text) => {
     // Convert **bold** to <strong>
     let html = text.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-white">$1</strong>');
 
+    // Convert *italic* to <em> (must be done after bold to avoid conflicts)
+    html = html.replace(/\*([^*]+)\*/g, '<em class="italic text-slate-200">$1</em>');
+
     // Convert `code` to <code>
     html = html.replace(/`([^`]+)`/g, '<code class="bg-slate-800 px-1 rounded text-orange-300">$1</code>');
 
