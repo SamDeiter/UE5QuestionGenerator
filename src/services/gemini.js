@@ -97,7 +97,7 @@ export const generateContent = async (effectiveKey, systemPrompt, userPrompt, se
     const payload = {
         contents: [{ parts: [{ text: userPrompt }] }],
         systemInstruction: { parts: [{ text: systemPrompt }] },
-        tools: [{ google_search: {} }],
+        // tools: [{ google_search: {} }], // Disabled to prevent grounding redirects and YouTube results
         generationConfig: {
             temperature: temperature,
             maxOutputTokens: 8192

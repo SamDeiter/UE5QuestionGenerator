@@ -20,7 +20,6 @@ export const useGeneration = (
     showMessage,
     setStatus,
     setShowNameModal,
-    setShowAdvancedConfig,
     setShowApiError,
     setShowHistory,
     translationMap,
@@ -115,8 +114,7 @@ export const useGeneration = (
         if (!config.creatorName) { showMessage("Please enter your Creator Name to start generating.", 5000); setShowNameModal(true); return; }
         if (!isApiReady) {
             setShowApiError(true);
-            setShowAdvancedConfig(true);
-            showMessage("API key is required. Please enter it below.", 5000);
+            showMessage("API key is required. Please enter it in Settings.", 5000);
             return;
         }
 
@@ -174,7 +172,11 @@ export const useGeneration = (
                     let updatedQ = { ...q };
 
                     // URL Validation
-                    if (updatedQ.sourceUrl && (updatedQ.sourceUrl.includes('...') || !updatedQ.sourceUrl.includes('epicgames.com'))) {
+                    const url = updatedQ.sourceUrl || '';
+                    const isEpic = url.includes('epicgames.com');
+                    const isGoogleRedirect = url.includes('google.com') && (url.includes('grounding') || url.includes('vertex'));
+
+                    if (url && (url.includes('...') || (!isEpic && !isGoogleRedirect))) {
                         updatedQ.invalidUrl = true;
                     }
 
@@ -191,7 +193,11 @@ export const useGeneration = (
             } else {
                 // Even for Balanced, we should validate URLs
                 newQuestions = newQuestions.map(q => {
-                    if (q.sourceUrl && (q.sourceUrl.includes('...') || !q.sourceUrl.includes('epicgames.com'))) {
+                    const url = q.sourceUrl || '';
+                    const isEpic = url.includes('epicgames.com');
+                    const isGoogleRedirect = url.includes('google.com') && (url.includes('grounding') || url.includes('vertex'));
+
+                    if (url && (url.includes('...') || (!isEpic && !isGoogleRedirect))) {
                         return { ...q, invalidUrl: true };
                     }
                     return q;

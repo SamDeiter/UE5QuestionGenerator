@@ -1,7 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics, logEvent } from "firebase/analytics";
-import { getFirestore, collection, doc, setDoc, getDocs, query, where, Timestamp } from "firebase/firestore";
+import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, query, where, Timestamp } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -23,6 +24,27 @@ try {
     console.warn("Firebase Analytics failed to initialize (likely blocked by ad blocker):", e);
 }
 const db = getFirestore(app);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+
+export const signInWithGoogle = async () => {
+    try {
+        const result = await signInWithPopup(auth, googleProvider);
+        return result.user;
+    } catch (error) {
+        console.error("Error signing in with Google:", error);
+        throw error;
+    }
+};
+
+export const signOutUser = async () => {
+    try {
+        await signOut(auth);
+    } catch (error) {
+        console.error("Error signing out:", error);
+        throw error;
+    }
+};
 
 // --- Firestore Helpers ---
 
@@ -46,6 +68,12 @@ export const saveQuestionToFirestore = async (question) => {
             ...question,
             firestoreUpdatedAt: Timestamp.now()
         };
+
+        // Add creatorId if user is signed in
+        if (auth.currentUser) {
+            payload.creatorId = auth.currentUser.uid;
+            payload.creatorEmail = auth.currentUser.email;
+        }
 
         // Set the document (overwrite if exists, create if new)
         await setDoc(docRef, payload, { merge: true });
@@ -72,7 +100,15 @@ export const saveQuestionToFirestore = async (question) => {
  */
 export const getQuestionsFromFirestore = async () => {
     try {
-        const querySnapshot = await getDocs(collection(db, "questions"));
+        let q;
+        if (auth.currentUser) {
+            q = query(collection(db, "questions"), where("creatorId", "==", auth.currentUser.uid));
+        } else {
+            // Fallback for unauthenticated (shouldn't happen with new rules, but good for safety)
+            q = collection(db, "questions");
+        }
+
+        const querySnapshot = await getDocs(q);
         const questions = [];
         querySnapshot.forEach((doc) => {
             questions.push(doc.data());
@@ -91,11 +127,15 @@ export const getQuestionsFromFirestore = async () => {
  */
 export const clearAllQuestionsFromFirestore = async () => {
     try {
-        const querySnapshot = await getDocs(collection(db, "questions"));
+        let q;
+        if (auth.currentUser) {
+            q = query(collection(db, "questions"), where("creatorId", "==", auth.currentUser.uid));
+        } else {
+            q = collection(db, "questions");
+        }
+        
+        const querySnapshot = await getDocs(q);
         let deletedCount = 0;
-
-        // Import deleteDoc dynamically to keep the main import clean
-        const { deleteDoc } = await import("firebase/firestore");
 
         // Delete each document
         const deletePromises = [];
@@ -113,4 +153,4 @@ export const clearAllQuestionsFromFirestore = async () => {
     }
 };
 
-export { app, analytics, db };
+export { app, analytics, db, auth };

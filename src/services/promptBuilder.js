@@ -113,17 +113,17 @@ ${examplesText}
 
 ### 3. Sourcing & URL Integrity (CRITICAL)
 - **Domain:** Use ONLY \`dev.epicgames.com/documentation/\`.
-- **Verification:** Do not hallucinate URLs. If you are unsure of the specific link, do not generate the question.
-- **Format:** Ensure the URL includes the correct slug (e.g., \`.../nanite-virtualized-geometry-in-unreal-engine\`).
+- **Verification:** Do not hallucinate URLs. If you are unsure of the specific link, leave it empty.
+- **Format:** MUST be a valid URL starting with \`https://\`. Do NOT put the page title, description, or search snippet here.
 - **SourceExcerpt:** Copy the **exact sentence(s)** from the documentation that validates the correct answer.
-- **Forbidden:** YouTube, Vimeo, Forums, Reddit, Wikis.
+- **Forbidden:** YouTube, Vimeo, Forums, Reddit, Wikis, Search Result Snippets.
 
 ### 4. Database Output Format
 **DO NOT OUTPUT JSON.** Output **ONLY** the Markdown table below. No intro/outro text.
 
 | ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | QualityScore |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | ${config.discipline} | [MC/TF] | [Diff] | [Question Text] | [Exact Answer Text] | [Option A] | [Option B] | [Option C] | [Option D] | [A/B/C/D] | [Valid URL] | [Quote from Doc] | [0-100] |
+| 1 | ${config.discipline} | [MC/TF] | [Diff] | [Question Text] | [Exact Answer Text] | [Option A] | [Option B] | [Option C] | [Option D] | [A/B/C/D] | [https://dev.epicgames.com/...] | [Quote from Doc] | [0-100] |
 
 **Task:** Generate ${difficultyPrompt} based on the Input Variables above.
 

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import Icon from './Icon';
 import TokenUsageDisplay from './TokenUsageDisplay';
+import DeleteConfirmModal from './DeleteConfirmModal';
+import ConfirmDialog from './ConfirmDialog';
+import PromptDialog from './PromptDialog';
 import { getTokenUsage, downloadTrainingData } from '../utils/analyticsStore';
 import { UI_LABELS } from '../utils/constants';
 import { clearQuestionsFromSheets } from '../services/googleSheets';
@@ -14,50 +17,77 @@ const SettingsModal = ({
     files, handleDetectTopics, isDetecting, fileInputRef, handleFileChange, removeFile, isApiReady
 }) => {
     const [isResetting, setIsResetting] = useState(false);
+    const [showFactoryResetConfirm, setShowFactoryResetConfirm] = useState(false);
+    const [showFactoryResetPrompt, setShowFactoryResetPrompt] = useState(false);
 
     if (!showSettings) return null;
 
     const tokenUsage = getTokenUsage();
 
-    const handleFactoryReset = async () => {
-        const firstConfirm = window.confirm(
-            "⚠️ FACTORY RESET ⚠️\n\n" +
-            "This will PERMANENTLY DELETE ALL data from:\n" +
-            "• Google Spreadsheet (all Master_ sheets)\n" +
-            "• Firestore Database (cloud)\n" +
-            "• Local storage (questions, settings, analytics)\n\n" +
-            "This action CANNOT be undone. Continue?"
-        );
+    const handleFactoryResetClick = () => {
+        console.log("Factory Reset button clicked");
+        setShowFactoryResetConfirm(true);
+    };
 
-        if (!firstConfirm) return;
+    const handleFirstConfirm = () => {
+        console.log("First confirm passed, showing prompt dialog...");
+        setShowFactoryResetConfirm(false);
+        setShowFactoryResetPrompt(true);
+    };
 
-        const typed = window.prompt("Type DELETE to confirm permanent deletion of ALL data:");
-        if (typed !== "DELETE") {
+    const handlePromptConfirm = async (typedValue) => {
+        console.log("Prompt returned value:", typedValue);
+
+        if (typedValue !== "DELETE") {
+            console.log("User did not type DELETE correctly:", typedValue);
             alert("Factory reset cancelled. You did not type 'DELETE'.");
+            setShowFactoryResetPrompt(false);
             return;
         }
 
+        console.log("User confirmed factory reset, starting...");
+        setShowFactoryResetPrompt(false);
         setIsResetting(true);
 
         try {
-            // 1. Clear Google Spreadsheet
-            if (config.sheetUrl) {
-                clearQuestionsFromSheets(config.sheetUrl);
+            let deletedCount = 0;
+
+            // 1. Clear Firestore FIRST (this is the critical one)
+            console.log("Clearing Firestore...");
+            try {
+                deletedCount = await clearAllQuestionsFromFirestore();
+                console.log(`✅ Deleted ${deletedCount} questions from Firestore`);
+            } catch (firestoreError) {
+                console.error("❌ Firestore deletion failed:", firestoreError);
+                throw new Error(`Firestore deletion failed: ${firestoreError.message}`);
             }
 
-            // 2. Clear Firestore
-            const deletedCount = await clearAllQuestionsFromFirestore();
-            console.log(`Deleted ${deletedCount} questions from Firestore`);
+            // 2. Clear Google Spreadsheet (opens in new tab, fire-and-forget)
+            if (config.sheetUrl) {
+                console.log("Clearing Google Spreadsheet...");
+                try {
+                    clearQuestionsFromSheets(config.sheetUrl);
+                    console.log("✅ Spreadsheet clear request sent (check new tab)");
+                } catch (sheetsError) {
+                    console.error("❌ Sheets clearing failed:", sheetsError);
+                    // Don't throw - sheets clearing is secondary
+                }
+            } else {
+                console.log("⚠️ No Sheet URL configured, skipping Sheets clear");
+            }
 
             // 3. Clear localStorage
+            console.log("Clearing localStorage...");
             localStorage.clear();
+            console.log("✅ Local storage cleared");
 
             // 4. Reload the page
-            alert(`Factory Reset Complete!\n\n• Firestore: ${deletedCount} questions deleted\n• Spreadsheet: Clearing in new tab\n• Local Storage: Cleared\n\nPage will reload.`);
+            alert(`Factory Reset Complete!\n\n• Firestore: ${deletedCount} questions deleted\n• Spreadsheet: ${config.sheetUrl ? 'Clearing in new tab' : 'Skipped (no URL)'}\n• Local Storage: Cleared\n\nPage will reload.`);
+            console.log("Factory reset complete, reloading page...");
             window.location.reload();
         } catch (error) {
-            console.error("Factory reset error:", error);
-            alert("Error during factory reset: " + error.message);
+            console.error("❌ Factory reset error:", error);
+            alert("Error during factory reset:\n\n" + error.message + "\n\nCheck console for details.");
             setIsResetting(false);
         }
     };
@@ -81,6 +111,53 @@ const SettingsModal = ({
                 <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
                     {/* Token Usage Stats */}
                     <TokenUsageDisplay tokenUsage={tokenUsage} />
+
+                    {/* Source Material */}
+                    <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                        <h3 className="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
+                            <Icon name="file-text" size={16} className="text-blue-400" />
+                            Source Material
+                        </h3>
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-end">
+                                <label className="text-xs font-bold uppercase text-slate-400">Source Files</label>
+                                {files && files.length > 0 && (
+                                    <button
+                                        onClick={handleDetectTopics}
+                                        disabled={isDetecting || !isApiReady}
+                                        className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isDetecting ? "..." : "Detect"}
+                                    </button>
+                                )}
+                            </div>
+                            <div
+                                onClick={() => fileInputRef?.current?.click()}
+                                className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-900 cursor-pointer text-center bg-slate-900/50 transition-colors"
+                            >
+                                <Icon name="upload" className="mx-auto text-slate-600 mb-2" />
+                                <p className="text-xs text-slate-500">Upload .csv</p>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
+                                    multiple
+                                    className="hidden"
+                                />
+                            </div>
+                            {files && files.map((f, i) => (
+                                <div key={i} className="flex justify-between bg-slate-900 p-2 rounded border border-slate-800 text-xs text-slate-400">
+                                    <span className="truncate">{f.name}</span>
+                                    <button
+                                        onClick={() => removeFile(i)}
+                                        className="text-red-500 hover:text-red-400 transition-colors"
+                                    >
+                                        x
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
                     {/* API Configuration */}
                     <div className="space-y-4">
@@ -241,7 +318,7 @@ const SettingsModal = ({
                         </button>
 
                         <button
-                            onClick={handleFactoryReset}
+                            onClick={handleFactoryResetClick}
                             disabled={isResetting}
                             className="w-full mt-3 px-4 py-2 bg-red-950 hover:bg-red-900 text-red-500 text-sm font-bold rounded border border-red-900/50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -257,6 +334,38 @@ const SettingsModal = ({
                     </div>
                 </div>
             </div>
+        
+            {/* Confirmation Dialogs */}
+            <ConfirmDialog
+                isOpen={showFactoryResetConfirm}
+                title="FACTORY RESET"
+                message={`This will PERMANENTLY DELETE ALL data from:
+
+• Google Spreadsheet (all Master_ sheets)
+• Firestore Database (cloud)  
+• Local storage (questions, settings, analytics)
+
+This action CANNOT be undone. Continue?`}
+                confirmText="Yes, Continue"
+                cancelText="Cancel"
+                onConfirm={handleFirstConfirm}
+                onCancel={() => setShowFactoryResetConfirm(false)}
+                isDanger={true}
+            />
+            
+            <PromptDialog
+                isOpen={showFactoryResetPrompt}
+                title="FINAL CONFIRMATION"
+                message="Type DELETE to confirm permanent deletion of ALL data:"
+                placeholder="Type DELETE here"
+                expectedValue="DELETE"
+                confirmText="Delete Everything"
+                cancelText="Cancel"
+                onConfirm={handlePromptConfirm}
+                onCancel={() => setShowFactoryResetPrompt(false)}
+                isDanger={true}
+            />
+
         </div >
     );
 };

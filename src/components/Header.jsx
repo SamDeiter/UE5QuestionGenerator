@@ -3,7 +3,7 @@ import Icon from './Icon';
 
 const APP_VERSION = "v1.5";
 
-const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, tokenUsage = { inputTokens: 0, outputTokens: 0, totalCost: 0 } }) => {
+const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, tokenUsage = { inputTokens: 0, outputTokens: 0, totalCost: 0 }, onRestartTutorial }) => {
     const isReview = appMode === 'review';
     const borderColor = isReview ? 'border-indigo-600' : 'border-orange-600';
     const titleColor = isReview ? 'text-indigo-50' : 'text-orange-50';
@@ -55,6 +55,16 @@ const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, toke
                             <span className="font-bold">{formattedCost}</span>
                         </div>
                     </div>
+                    {onRestartTutorial && appMode === 'create' && (
+                        <button
+                            onClick={onRestartTutorial}
+                            className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-900/50"
+                            title="Restart Tutorial"
+                        >
+                            <Icon name="help-circle" size={14} />
+                            Tutorial
+                        </button>
+                    )}
                     <div className="flex items-center gap-2 px-3 py-1 rounded border border-slate-700">
                         <span className={`font-bold ${apiKeyStatus.includes('Loaded') || apiKeyStatus.includes('Auto') ? 'text-green-400' : 'text-red-400'}`}>API Key: {apiKeyStatus}</span>
                         {isCloudReady ? (

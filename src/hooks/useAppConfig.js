@@ -49,7 +49,6 @@ export const useAppConfig = () => {
 
     // UI States
     const [showNameModal, setShowNameModal] = useState(false);
-    const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
     const [showGenSettings, setShowGenSettings] = useState(true);
     const [showApiError, setShowApiError] = useState(false);
     const [batchSizeWarning, setBatchSizeWarning] = useState('');
@@ -106,7 +105,6 @@ export const useAppConfig = () => {
         effectiveApiKey,
         apiKeyStatus,
         showNameModal, setShowNameModal,
-        showAdvancedConfig, setShowAdvancedConfig,
         showGenSettings, setShowGenSettings,
         showApiError, setShowApiError,
         batchSizeWarning, setBatchSizeWarning,

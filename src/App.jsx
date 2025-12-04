@@ -18,6 +18,10 @@ import GranularProgress from './components/GranularProgress';
 import Icon from './components/Icon';
 import Toast from './components/Toast';
 import Sidebar from './components/Sidebar';
+import QuestionList from './components/QuestionList';
+import BulkActionBar from './components/BulkActionBar';
+import TutorialOverlay from './components/TutorialOverlay';
+import { TUTORIAL_STEPS } from './utils/tutorialSteps';
 
 // Lazy Loaded Components
 const SettingsModal = React.lazy(() => import('./components/SettingsModal'));
@@ -44,6 +48,9 @@ import { useExport } from './hooks/useExport';
 import { CATEGORY_KEYS, TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
 import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
 import { getTokenUsage } from './utils/analyticsStore';
+import SignIn from './components/SignIn';
+import { auth } from './services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const App = () => {
     // ========================================================================
@@ -52,6 +59,47 @@ const App = () => {
     const [toasts, setToasts] = useState([]);
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [tokenUsage, setTokenUsage] = useState(() => getTokenUsage());
+    const [user, setUser] = useState(null);
+    const [authLoading, setAuthLoading] = useState(true);
+
+    // Tutorial State
+    const [tutorialActive, setTutorialActive] = useState(() => !localStorage.getItem('ue5_tutorial_completed'));
+    const [currentStep, setCurrentStep] = useState(0);
+
+    const handleTutorialNext = () => {
+        setCurrentStep(prev => Math.min(prev + 1, TUTORIAL_STEPS.length - 1));
+    };
+
+    const handleTutorialPrev = () => {
+        setCurrentStep(prev => Math.max(prev - 1, 0));
+    };
+
+    const handleTutorialSkip = () => {
+        setTutorialActive(false);
+        localStorage.setItem('ue5_tutorial_completed', 'true');
+    };
+
+    const handleTutorialComplete = () => {
+        setTutorialActive(false);
+        localStorage.setItem('ue5_tutorial_completed', 'true');
+        showMessage("Tutorial completed! Happy generating!", 5000);
+    };
+
+    const handleRestartTutorial = () => {
+        localStorage.removeItem('ue5_tutorial_completed');
+        setCurrentStep(0);
+        setTutorialActive(true);
+        showMessage("Tutorial restarted!", 2000);
+    };
+
+    // Listen for auth state changes
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setAuthLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
 
     // Refresh token usage periodically and after generations
     useEffect(() => {
@@ -99,7 +147,6 @@ const App = () => {
         effectiveApiKey,
         apiKeyStatus,
         showNameModal, setShowNameModal,
-        showAdvancedConfig, setShowAdvancedConfig,
         showGenSettings, setShowGenSettings,
         showApiError, setShowApiError,
         batchSizeWarning, setBatchSizeWarning,
@@ -183,7 +230,7 @@ const App = () => {
     } = useGeneration(
         config, setConfig, effectiveApiKey, isApiReady, isTargetMet, maxBatchSize,
         getFileContext, checkAndStoreQuestions, addQuestionsToState, updateQuestionInState,
-        handleLanguageSwitch, showMessage, setStatus, setShowNameModal, setShowAdvancedConfig,
+        handleLanguageSwitch, showMessage, setStatus, setShowNameModal,
         setShowApiError, setShowHistory, translationMap, allQuestionsMap
     );
 
@@ -192,6 +239,7 @@ const App = () => {
     const [showBulkExportModal, setShowBulkExportModal] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [dataMenuOpen, setDataMenuOpen] = useState(false);
+    const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
     const dataMenuRef = useRef(null);
 
     // Computed Filtered Questions
@@ -347,13 +395,21 @@ const App = () => {
     const [showProgressMenu, setShowProgressMenu] = useState(false);
 
     // Render
+    if (authLoading) {
+        return <LoadingSpinner />;
+    }
+
+    if (!user) {
+        return <SignIn />;
+    }
+
     if (appMode === 'landing') {
         return <LandingPage onSelectMode={handleModeSelect} apiKeyStatus={apiKeyStatus} isCloudReady={isAuthReady} />;
     }
 
     return (
         <div className="flex flex-col h-screen bg-slate-950 font-sans text-slate-200">
-            <Header apiKeyStatus={apiKeyStatus} isCloudReady={isAuthReady} onHome={handleGoHome} creatorName={config.creatorName} appMode={appMode} tokenUsage={tokenUsage} />
+            <Header apiKeyStatus={apiKeyStatus} isCloudReady={isAuthReady} onHome={handleGoHome} creatorName={config.creatorName} appMode={appMode} tokenUsage={tokenUsage} onRestartTutorial={handleRestartTutorial} />
 
             {config.creatorName === '' && <NameEntryModal onSave={handleNameSave} />}
             {showClearModal && <ClearConfirmationModal onConfirm={handleDeleteAllQuestions} onCancel={() => setShowClearModal(false)} />}
@@ -414,12 +470,6 @@ const App = () => {
                         isApiReady={isApiReady}
                         handleBulkTranslateMissing={handleBulkTranslateMissing}
                         isProcessing={isProcessing}
-                        showAdvancedConfig={showAdvancedConfig}
-                        setShowAdvancedConfig={setShowAdvancedConfig}
-                        apiKeyStatus={apiKeyStatus}
-                        showApiError={showApiError}
-                        handleLoadFromSheets={handleLoadFromSheets}
-                        handleExportToSheets={handleExportToSheets}
                         setShowSettings={setShowSettings}
                         handleSelectCategory={handleSelectCategory}
                     />
@@ -529,7 +579,7 @@ const App = () => {
                         </div>
                     </div >
 
-                    <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4">
+                    <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4" data-tour="review-area">
                         {!showHistory && uniqueFilteredQuestions.length === 0 && questions.length === 0 && !status && appMode === 'create' && (<div className="flex flex-col items-center justify-center h-full text-slate-600"><Icon name="terminal" size={48} className="mb-4 text-slate-800" /><p className="font-medium text-slate-500">Ready. Click 'GENERATE QUESTIONS' to begin or upload a source file.</p></div>)}
 
                         {/* CREATE MODE: Call-to-Action Banner */}
@@ -587,45 +637,29 @@ const App = () => {
                                 />
                             ) : (
                                 <>
-                                    {selectedIds.size > 0 && (
-                                        <div className="mb-3 p-3 bg-indigo-900/30 border border-indigo-700/50 rounded-lg flex items-center justify-between animate-in slide-in-from-top duration-200">
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-sm font-bold text-indigo-300">{selectedIds.size} selected</span>
-                                                <button onClick={selectAll} className="text-xs text-indigo-400 hover:text-indigo-300 underline">Select All</button>
-                                                <button onClick={clearSelection} className="text-xs text-slate-400 hover:text-slate-300 underline">Clear</button>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <button onClick={() => bulkUpdateStatus('accepted')} className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg flex items-center gap-1"><Icon name="check" size={14} /> Accept All</button>
-                                                <button onClick={() => bulkUpdateStatus('rejected', 'other')} className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg flex items-center gap-1"><Icon name="x" size={14} /> Reject All</button>
-                                            </div>
-                                        </div>
-                                    )}
-                                    <Virtuoso
-                                        style={{ height: '100%' }}
-                                        data={uniqueFilteredQuestions}
-                                        itemContent={(index, q) => (
-                                            <div className="mb-4">
-                                                <QuestionItem
-                                                    key={q.uniqueId}
-                                                    q={q}
-                                                    onUpdateStatus={handleUpdateStatus}
-                                                    onExplain={handleExplain}
-                                                    onVariate={handleVariate}
-                                                    onCritique={handleCritique}
-                                                    onTranslateSingle={handleTranslateSingle}
-                                                    onSwitchLanguage={handleLanguageSwitch}
-                                                    onDelete={handleDelete}
-                                                    onUpdateQuestion={handleManualUpdate}
-                                                    availableLanguages={translationMap.get(q.uniqueId)}
-                                                    isProcessing={isProcessing}
-                                                    appMode={appMode}
-                                                    showMessage={showMessage}
-                                                    isSelected={selectedIds.has(q.id)}
-                                                    onToggleSelect={() => toggleSelection(q.id)}
-                                                    showCheckbox={selectedIds.size > 0 || appMode === 'create'}
-                                                />
-                                            </div>
-                                        )}
+                                    <BulkActionBar
+                                        selectedCount={selectedIds.size}
+                                        onSelectAll={selectAll}
+                                        onClearSelection={clearSelection}
+                                        onAcceptAll={() => bulkUpdateStatus('accepted')}
+                                        onRejectAll={() => bulkUpdateStatus('rejected', 'other')}
+                                    />
+                                    <QuestionList
+                                        questions={uniqueFilteredQuestions}
+                                        translationMap={translationMap}
+                                        selectedIds={selectedIds}
+                                        appMode={appMode}
+                                        isProcessing={isProcessing}
+                                        onUpdateStatus={handleUpdateStatus}
+                                        onExplain={handleExplain}
+                                        onVariate={handleVariate}
+                                        onCritique={handleCritique}
+                                        onTranslateSingle={handleTranslateSingle}
+                                        onSwitchLanguage={handleLanguageSwitch}
+                                        onDelete={handleDelete}
+                                        onUpdateQuestion={handleManualUpdate}
+                                        showMessage={showMessage}
+                                        toggleSelection={toggleSelection}
                                     />
                                 </>
                             )}
@@ -655,8 +689,17 @@ const App = () => {
                     handleChange={handleChange}
                     showApiKey={showApiKey}
                     setShowApiKey={setShowApiKey}
+                    files={files}
+                    handleDetectTopics={handleDetectTopics}
+                    isDetecting={isDetecting}
+                    fileInputRef={fileInputRef}
+                    handleFileChange={handleFileChange}
+                    removeFile={removeFile}
+                    isApiReady={isApiReady}
                     onClearData={() => {
+                        console.log("Clear Data button clicked");
                         if (window.confirm("This will delete ALL your local questions and settings (except API Key and Sheet URL). Are you sure?")) {
+                            console.log("User confirmed clear data");
                             // Preserve API key and sheet URL
                             const savedApiKey = config.apiKey;
                             const savedSheetUrl = config.sheetUrl;
@@ -670,16 +713,12 @@ const App = () => {
                             const preservedConfig = { apiKey: savedApiKey, sheetUrl: savedSheetUrl };
                             localStorage.setItem('ue5_gen_config', JSON.stringify(preservedConfig));
 
+                            console.log("Clear data complete, reloading...");
                             window.location.reload();
+                        } else {
+                            console.log("User cancelled clear data");
                         }
                     }}
-                    files={files}
-                    handleDetectTopics={handleDetectTopics}
-                    isDetecting={isDetecting}
-                    fileInputRef={fileInputRef}
-                    handleFileChange={handleFileChange}
-                    removeFile={removeFile}
-                    isApiReady={isApiReady}
                 />
             </Suspense>
 
@@ -695,6 +734,18 @@ const App = () => {
                     </div>
                 ))}
             </div>
+
+            {/* TUTORIAL OVERLAY */}
+            {tutorialActive && appMode === 'create' && (
+                <TutorialOverlay
+                    steps={TUTORIAL_STEPS}
+                    currentStepIndex={currentStep}
+                    onNext={handleTutorialNext}
+                    onPrev={handleTutorialPrev}
+                    onSkip={handleTutorialSkip}
+                    onComplete={handleTutorialComplete}
+                />
+            )}
         </div >
     );
 };

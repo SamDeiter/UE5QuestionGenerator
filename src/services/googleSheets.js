@@ -74,7 +74,10 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = sheetUrl;
-    form.target = '_blank'; // Open in new tab
+    form.target = 'SheetsSaving'; // Open in popup window
+    
+    // Open popup window
+    window.open('', 'SheetsSaving', 'width=600,height=500');
 
     const input = document.createElement('input');
     input.type = 'hidden';
@@ -97,12 +100,18 @@ export const clearQuestionsFromSheets = async (sheetUrl) => {
         return;
     }
 
+    // Open a popup window that can be closed programmatically
+    const popup = window.open('', 'SheetsClearing', 'width=600,height=400');
+    if (popup) {
+        popup.document.write('<html><body style="background:#111827;color:#9ca3af;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;"><div style="text-align:center;"><h2>Clearing Google Sheets...</h2><p>Please wait...</p></div></body></html>');
+    }
+
     const form = document.createElement('form');
     form.method = 'POST';
     // Append action as URL parameter so Google Apps Script can read it via e.parameter
     const separator = sheetUrl.includes('?') ? '&' : '?';
     form.action = `${sheetUrl}${separator}action=clear`;
-    form.target = '_blank';
+    form.target = 'SheetsClearing'; // Target the popup window
 
     document.body.appendChild(form);
     form.submit();

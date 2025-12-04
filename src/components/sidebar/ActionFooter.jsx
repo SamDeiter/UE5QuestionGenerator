@@ -10,6 +10,7 @@ const ActionFooter = ({
             <div className="space-y-3">
                 <button
                     onClick={handleGenerate}
+                    data-tour="generate-button"
                     disabled={isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady}
                     className={`w-full py-4 px-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isGenerating || isTargetMet || maxBatchSize === 0 || !isApiReady ? 'bg-slate-700 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 active:scale-[0.98]'}`}
                     title={

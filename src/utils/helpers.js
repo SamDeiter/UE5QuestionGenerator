@@ -90,16 +90,16 @@ export const formatUrl = (url) => {
     let cleanUrl = url.trim();
 
     // Extract actual URL from Google vertexaisearch/grounding redirect URLs
-    if (cleanUrl.includes('vertexaisearch.cloud.google.com') || cleanUrl.includes('grounding-api-redirect')) {
+    if (cleanUrl.includes('google.com') || cleanUrl.includes('grounding') || cleanUrl.includes('vertex')) {
         try {
-            // Try to extract the actual URL from the redirect
             const urlObj = new URL(cleanUrl);
             // Check for common redirect parameters
             const actualUrl = urlObj.searchParams.get('url') ||
                 urlObj.searchParams.get('q') ||
                 urlObj.searchParams.get('dest') ||
                 urlObj.searchParams.get('redirect') ||
-                urlObj.searchParams.get('re'); // Added 're'
+                urlObj.searchParams.get('re') ||
+                urlObj.searchParams.get('adurl'); // Added adurl
 
             if (actualUrl) {
                 cleanUrl = decodeURIComponent(actualUrl);
@@ -107,6 +107,17 @@ export const formatUrl = (url) => {
         } catch (e) {
             // If URL parsing fails, keep original
         }
+    }
+
+    // Clean up double encoding or nested http
+    if (cleanUrl.includes('http') && cleanUrl.indexOf('http') > 0) {
+        const lastHttp = cleanUrl.lastIndexOf('http');
+        cleanUrl = cleanUrl.substring(lastHttp);
+    }
+
+    // REJECT: If URL contains spaces (it's likely a sentence/title)
+    if (cleanUrl.includes(' ')) {
+        return '';
     }
 
     if (!/^[a-zA-Z]+:\/\//.test(cleanUrl) && (cleanUrl.includes('.') && !cleanUrl.includes(' '))) {
@@ -122,9 +133,12 @@ export const getDisplayUrl = (url) => {
     if (!url) return '';
     const formatted = formatUrl(url);
 
-    // If it's still a grounding link after formatting, mask it
-    if (formatted.includes('vertexaisearch.cloud.google.com') || formatted.includes('grounding-api-redirect')) {
-        return 'Google Vertex AI Source';
+    // If it's still a grounding link after formatting, try to show something useful or just the domain
+    if (formatted.includes('vertexaisearch') || formatted.includes('grounding')) {
+        // Fallback: try to find a domain inside the string
+        const match = formatted.match(/([a-zA-Z0-9-]+\.com\/[a-zA-Z0-9-\/]+)/);
+        if (match) return match[1];
+        return 'Source Link'; // Better than "Google Vertex AI Source"
     }
 
     try {
@@ -245,7 +259,55 @@ export const parseQuestions = (text) => {
     if (!text) return parsed;
 
     // Aggressively clean markdown code blocks
-    const cleanText = text.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '');
+    const cleanText = text.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
+
+    // 1. Try Parsing as JSON first (fallback if AI ignores Markdown instruction)
+    if (cleanText.startsWith('[') || cleanText.startsWith('{')) {
+        try {
+            const jsonData = JSON.parse(cleanText);
+            const dataArray = Array.isArray(jsonData) ? jsonData : [jsonData];
+
+            dataArray.forEach((item, index) => {
+                const uniqueId = crypto.randomUUID();
+                const type = (item.Type && item.Type.toLowerCase().includes('true')) ? 'True/False' : 'Multiple Choice';
+
+                let options = {};
+                if (type === 'True/False') {
+                    options = { A: 'TRUE', B: 'FALSE' };
+                } else {
+                    options = {
+                        A: item.OptionA || '',
+                        B: item.OptionB || '',
+                        C: item.OptionC || '',
+                        D: item.OptionD || ''
+                    };
+                }
+
+                parsed.push({
+                    id: Date.now() + index + Math.random(),
+                    uniqueId: uniqueId,
+                    discipline: item.Discipline || "General",
+                    type: type,
+                    difficulty: item.Difficulty || "Easy",
+                    question: item.Question || "",
+                    options,
+                    correct: item.CorrectLetter || "",
+                    sourceUrl: item.SourceURL || "",
+                    sourceExcerpt: item.SourceExcerpt || "",
+                    qualityScore: parseInt(item.QualityScore) || null,
+                    status: 'pending',
+                    critique: null,
+                    critiqueScore: null
+                });
+            });
+
+            if (parsed.length > 0) return removeDuplicateQuestions(parsed);
+        } catch (e) {
+            console.warn("JSON parse failed, falling back to Markdown table parsing.", e);
+        }
+    }
+
+    // 2. Parse as Markdown Table (Standard Path)
     const lines = cleanText.split('\n');
 
     const dataLines = lines.filter(line => {
@@ -253,8 +315,6 @@ export const parseQuestions = (text) => {
         if (!trimmed) return false;
 
         // Check for pipe count to identify table rows reliably
-        // We expect at least ~10 columns, so at least 9 pipes. 
-        // Being lenient with 4 to catch partials or malformed rows.
         const pipeCount = (trimmed.match(/\|/g) || []).length;
 
         // It's a data line if it has pipes and isn't a header or separator
@@ -271,18 +331,18 @@ export const parseQuestions = (text) => {
         if (cols[0] === '') cols.shift();
         if (cols[cols.length - 1] === '') cols.pop();
 
-        if (cols.length >= 10) {
-            const looksLikeAnswer = (val) => /^[A-D]$/.test(val);
-            const looksLikeUrl = (val) => val && val.startsWith('http');
-            if (cols[9] && looksLikeAnswer(cols[9]) && cols[10] && looksLikeUrl(cols[10])) {
-                cols.splice(5, 0, "");
-            }
-        }
+        // Fix for potential column shifting if Description/Answer contains pipes (unlikely but possible)
+        // We expect exactly 14 columns based on the prompt
+        // | ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | QualityScore |
+
+        // If we have fewer than expected, we might have a problem, but let's try to map what we have.
+        // The prompt defines 14 columns.
 
         const discipline = cols[1];
         const typeRaw = cols[2];
         const difficulty = cols[3];
         const question = cols[4];
+        // cols[5] is "Answer" (text), we ignore it for the object but it's in the table
         const optA = cols[6];
         const optB = cols[7];
         const optC = cols[8];
@@ -318,7 +378,8 @@ export const parseQuestions = (text) => {
             question: question || "",
             options,
             correct: correctLetter || "",
-            sourceUrl: sourceUrl || "",
+            correct: correctLetter || "",
+            sourceUrl: (sourceUrl && !sourceUrl.includes(' ')) ? sourceUrl : "", // Basic validation: URLs shouldn't have spaces
             sourceExcerpt: sourceExcerpt || "",
             qualityScore: qualityScore,
             status: 'pending',
