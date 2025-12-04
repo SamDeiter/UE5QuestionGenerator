@@ -106,26 +106,24 @@ ${examplesText}
 ### 2. Question Type Rules
 - **Target Type:** ${targetType}
 - **Multiple Choice (MC):** 4 options total (1 Correct, 3 Distractors).
-- **True/False (T/F):** Create clear statements that can be verified as TRUE or FALSE using documentation.
+- **True/False (T/F):**
+  - **If TRUE:** The assertion must be a documented fact, not a general truism.
+  - **If FALSE:** The assertion must be a **common misconception** or a specific limitation (e.g., "Nanite supports skeletal meshes in UE 5.0" -> False). Do not generate random falsehoods (e.g., "Nanite is a sound engine").
+  - **Validation:** The \`SourceExcerpt\` must explicitly prove why the statement is True or False.
+
 ### 3. Sourcing & URL Integrity (CRITICAL)
 - **Domain:** Use ONLY \`dev.epicgames.com/documentation/\`.
-- **COMPLETE URLs ONLY:** The SourceURL MUST be a fully valid, clickable URL. Examples:
-  - ✅ CORRECT: \`https://dev.epicgames.com/documentation/en-us/unreal-engine/networking-overview\`
-  - ❌ WRONG: \`docs.unrealengine.com/documentation...networking-overview\` (truncated)
-  - ❌ WRONG: \`...networking-overview\` (partial path)
-  - ❌ WRONG: Page titles or descriptions
-- **If Unsure:** Leave SourceURL empty rather than guessing or truncating.
+- **Verification:** Do not hallucinate URLs. If you are unsure of the specific link, leave it empty.
+- **Format:** MUST be a valid URL starting with \`https://\`. Do NOT put the page title, description, or search snippet here.
 - **SourceExcerpt:** Copy the **exact sentence(s)** from the documentation that validates the correct answer.
-- **Forbidden:** YouTube, Vimeo, Forums, Reddit, Wikis, Search Result Snippets, Google redirects.
+- **Forbidden:** YouTube, Vimeo, Forums, Reddit, Wikis, Search Result Snippets.
 
 ### 4. Database Output Format
 **DO NOT OUTPUT JSON.** Output **ONLY** the Markdown table below. No intro/outro text.
 
-**COLUMN INTEGRITY:** Each row MUST have exactly 14 pipe-separated columns. Fill ALL columns, do NOT skip any.
-
 | ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | QualityScore |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | ${config.discipline} | Multiple Choice | Easy | What does Nanite do? | Renders high-poly geometry | Renders high-poly geometry | Handles physics | Manages audio | Controls AI | A | https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine | Nanite virtualizes geometry | 85 |
+| 1 | ${config.discipline} | [MC/TF] | [Diff] | [Question Text] | [Exact Answer Text] | [Option A] | [Option B] | [Option C] | [Option D] | [A/B/C/D] | [https://dev.epicgames.com/...] | [Quote from Doc] | [0-100] |
 
 **Task:** Generate ${difficultyPrompt} based on the Input Variables above.
 
