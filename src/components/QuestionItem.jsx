@@ -360,20 +360,6 @@ const QuestionItem = ({ q, onUpdateStatus, onExplain, onVariate, onCritique, onR
                                             >
                                                 <Icon name="check" size={18} />
                                             </button>
-                                            <button
-                                                onClick={() => {
-                                                    if (q.status === 'accepted') {
-                                                        if (showMessage) showMessage("Question is already accepted.");
-                                                    } else {
-                                                        onUpdateStatus(q.id, 'accepted');
-                                                    }
-                                                }}
-                                                className={`p-2 rounded-lg transition-all ${q.status === 'accepted' ? 'bg-green-600 text-white shadow-lg shadow-green-900/50' : 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'}`}
-                                                title="Accept"
-                                                aria-label="Accept question"
-                                            >
-                                                <Icon name="check" size={18} />
-                                            </button>
 
                                             {/* Reject Button with Reason Dropdown */}
                                             <div className="relative" ref={rejectMenuRef}>
