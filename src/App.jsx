@@ -447,14 +447,6 @@ const App = () => {
                             </button>
 
                             <button
-                                onClick={handleViewDatabase}
-                                className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'database' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
-                                title="Switch to Database View"
-                            >
-                                <Icon name="database" size={14} /> DB View
-                            </button>
-
-                            <button
                                 onClick={() => handleModeSelect('review')}
                                 className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'review' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
                                 title="Switch to Review & Audit Console"
@@ -471,6 +463,14 @@ const App = () => {
                                 title="Open Analytics Dashboard"
                             >
                                 <Icon name="bar-chart-2" size={14} /> Analytics
+                            </button>
+
+                            <button
+                                onClick={handleViewDatabase}
+                                className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'database' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
+                                title="Switch to Database View"
+                            >
+                                <Icon name="database" size={14} /> DB View
                             </button>
 
                             <div className="w-px h-4 bg-slate-700 mx-1"></div>

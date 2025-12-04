@@ -43,7 +43,14 @@ export const useGeneration = (
 
         setIsGenerating(true); setShowHistory(false); setStatus('Drafting Scenarios...');
         const startTime = Date.now();
-        const systemPrompt = constructSystemPrompt(config, getFileContext());
+
+        // Collect recent rejected questions to learn from (up to 5, matching current discipline)
+        const rejectedExamples = Array.from(allQuestionsMap.values())
+            .flat()
+            .filter(q => q.status === 'rejected' && q.rejectionReason && q.discipline === config.discipline)
+            .slice(-5); // Take most recent 5
+
+        const systemPrompt = constructSystemPrompt(config, getFileContext(), rejectedExamples);
         const userPrompt = `Generate ${config.batchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}. Ensure links work for UE 5.7 or latest available.`;
 
         // Analyze token usage before API call

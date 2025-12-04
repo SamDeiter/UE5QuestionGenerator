@@ -11,9 +11,10 @@
  * Constructs an optimized system prompt for AI question generation
  * @param {Object} config - Application configuration
  * @param {string} fileContext - Context from uploaded files (pre-optimized)
+ * @param {Array} rejectedExamples - Optional array of rejected questions to learn from
  * @returns {string} Optimized system prompt
  */
-export const constructSystemPrompt = (config, fileContext) => {
+export const constructSystemPrompt = (config, fileContext, rejectedExamples = []) => {
     let batchNum = parseInt(config.batchSize) || 6;
     let easyCount = 0, mediumCount = 0, hardCount = 0;
     let targetType = 'MC and T/F';
@@ -86,6 +87,31 @@ ${modeInstruction ? `Mode: ${modeInstruction}` : ''}`);
 - SourceURL MUST be the DIRECT documentation link (e.g., https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-overview)
 - **NEVER use** Google redirect URLs, vertexaisearch links, or any proxy URLs
 - NO forums, Reddit, wikis, YouTube`);
+
+    // REJECTED EXAMPLES SECTION - Learn from mistakes
+    if (rejectedExamples && rejectedExamples.length > 0) {
+        const rejectionReasonLabels = {
+            'too_easy': 'Too Easy - lacks challenge',
+            'too_hard': 'Too Difficult - inaccessible',
+            'incorrect': 'Incorrect Answer - factually wrong',
+            'unclear': 'Unclear Question - confusing wording',
+            'duplicate': 'Duplicate - already exists',
+            'poor_quality': 'Poor Quality - low value',
+            'bad_source': 'Bad/Missing Source - invalid URL',
+            'other': 'Other issue'
+        };
+
+        const examplesText = rejectedExamples.slice(0, 5).map((q, i) => {
+            const reason = rejectionReasonLabels[q.rejectionReason] || q.rejectionReason || 'Rejected';
+            return `${i + 1}. "${q.question}" → REJECTED: ${reason}`;
+        }).join('\n');
+
+        sections.push(`⚠️ LEARN FROM REJECTED QUESTIONS:
+The following questions were rejected by reviewers. AVOID making similar mistakes:
+${examplesText}
+
+Key lessons: Ensure accuracy, appropriate difficulty, clear wording, and valid source URLs.`);
+    }
 
     // Custom rules (only if provided)
     if (config.customRules && config.customRules.trim()) {
