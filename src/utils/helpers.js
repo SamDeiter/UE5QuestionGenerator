@@ -6,6 +6,85 @@ export const chunkArray = (array, size) => {
     return result;
 };
 
+/**
+ * Calculate text similarity using Levenshtein distance (0-1 score)
+ * @param {string} str1 - First string to compare
+ * @param {string} str2 - Second string to compare
+ * @returns {number} Similarity score between 0 (different) and 1 (identical)
+ */
+export const textSimilarity = (str1, str2) => {
+    if (!str1 || !str2) return 0;
+
+    // Normalize: lowercase, remove extra whitespace, remove HTML tags
+    const normalize = (s) => s.toLowerCase().replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    const a = normalize(str1);
+    const b = normalize(str2);
+
+    if (a === b) return 1;
+    if (a.length === 0 || b.length === 0) return 0;
+
+    // For very long strings, use a simpler word-based comparison for performance
+    if (a.length > 500 || b.length > 500) {
+        const wordsA = new Set(a.split(' '));
+        const wordsB = new Set(b.split(' '));
+        const intersection = [...wordsA].filter(w => wordsB.has(w)).length;
+        const union = new Set([...wordsA, ...wordsB]).size;
+        return union > 0 ? intersection / union : 0;
+    }
+
+    // Levenshtein distance calculation
+    const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+
+    for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
+
+    for (let j = 1; j <= b.length; j++) {
+        for (let i = 1; i <= a.length; i++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            matrix[j][i] = Math.min(
+                matrix[j][i - 1] + 1,      // deletion
+                matrix[j - 1][i] + 1,      // insertion
+                matrix[j - 1][i - 1] + cost // substitution
+            );
+        }
+    }
+
+    const maxLen = Math.max(a.length, b.length);
+    return 1 - (matrix[b.length][a.length] / maxLen);
+};
+
+/**
+ * Remove near-duplicate questions from an array (intra-batch deduplication)
+ * @param {Array} questions - Array of question objects
+ * @param {number} threshold - Similarity threshold (0-1), default 0.85
+ * @returns {Array} Deduplicated array (keeps first occurrence)
+ */
+export const removeDuplicateQuestions = (questions, threshold = 0.85) => {
+    if (!questions || questions.length <= 1) return questions;
+
+    const unique = [];
+    const duplicatesRemoved = [];
+
+    for (const q of questions) {
+        const isDuplicate = unique.some(existing => {
+            const similarity = textSimilarity(existing.question, q.question);
+            return similarity >= threshold;
+        });
+
+        if (!isDuplicate) {
+            unique.push(q);
+        } else {
+            duplicatesRemoved.push(q.question?.substring(0, 50) + '...');
+        }
+    }
+
+    if (duplicatesRemoved.length > 0) {
+        console.log(`[Dedup] Removed ${duplicatesRemoved.length} duplicate(s):`, duplicatesRemoved);
+    }
+
+    return unique;
+};
+
 export const formatUrl = (url) => {
     if (!url) return '';
     let cleanUrl = url.trim();
@@ -234,7 +313,8 @@ export const parseQuestions = (text) => {
         });
     });
 
-    return parsed;
+    // Remove duplicates within this batch (fuzzy matching at 85% threshold)
+    return removeDuplicateQuestions(parsed);
 };
 
 export const downloadFile = (data, filename) => {
@@ -251,31 +331,31 @@ export const downloadFile = (data, filename) => {
     URL.revokeObjectURL(url);
 };
 
-export const filterDuplicateQuestions = (newItems, currentList, otherList = []) => {
+export const filterDuplicateQuestions = (newItems, currentList, otherList = [], threshold = 0.85) => {
     // Create a Set of existing IDs from the current state
     const existingIds = new Set(currentList.map(p => p.id));
-
-    // Create a Set of normalized question text from the current state to prevent semantic duplicates
-    const existingTexts = new Set(currentList.map(p => p.question.trim().toLowerCase()));
-
-    // Also check against the OTHER list to ensure global uniqueness across session and history
     const otherIds = new Set(otherList.map(p => p.id));
-    const otherTexts = new Set(otherList.map(p => p.question.trim().toLowerCase()));
+
+    // Combine all existing questions for fuzzy matching
+    const allExisting = [...currentList, ...otherList];
 
     const uniqueNew = newItems.filter(item => {
-        const normalizedText = item.question.trim().toLowerCase();
-
         // Check ID uniqueness
         if (existingIds.has(item.id) || otherIds.has(item.id)) return false;
 
-        // Check Text uniqueness (prevent duplicates even if IDs differ)
-        if (existingTexts.has(normalizedText) || otherTexts.has(normalizedText)) return false;
+        // Check fuzzy text similarity against all existing questions
+        const isSimilar = allExisting.some(existing => {
+            const similarity = textSimilarity(existing.question, item.question);
+            return similarity >= threshold;
+        });
+        if (isSimilar) return false;
 
         return true;
     });
 
     if (uniqueNew.length < newItems.length) {
-
+        const removed = newItems.length - uniqueNew.length;
+        console.log(`[Filter] Removed ${removed} duplicate(s) that already exist in question database`);
     }
 
     return uniqueNew;
