@@ -37,15 +37,9 @@ const DatabaseView = ({
     const sortedQuestions = useMemo(() => {
         if (!questions) return [];
 
-        // 1. Filter first
-        let filtered = questions;
-        if (filterMode === 'accepted') {
-            filtered = filtered.filter(q => q.status === 'accepted');
-        } else if (filterMode === 'rejected') {
-            filtered = filtered.filter(q => q.status === 'rejected');
-        } else if (filterMode === 'pending') {
-            filtered = filtered.filter(q => !q.status || q.status === 'pending');
-        }
+        // Database mode shows ALL questions - no status filtering
+        // (status filtering is for Review mode only)
+        const filtered = questions;
 
         // 2. Then Sort
         const sorted = [...filtered];
