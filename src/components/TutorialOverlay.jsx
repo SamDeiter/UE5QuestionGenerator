@@ -15,12 +15,14 @@ const TutorialOverlay = ({ steps, currentStepIndex, onNext, onPrev, onSkip, onCo
             const element = document.querySelector(step.target);
             if (element) {
                 const rect = element.getBoundingClientRect();
-                // Add some padding
+                // Add some padding and account for scroll position
                 setTargetRect({
-                    top: rect.top - 10,
-                    left: rect.left - 10,
+                    top: rect.top + window.scrollY - 10,
+                    left: rect.left + window.scrollX - 10,
                     width: rect.width + 20,
-                    height: rect.height + 20
+                    height: rect.height + 20,
+                    viewportTop: rect.top - 10,
+                    viewportLeft: rect.left - 10
                 });
 
                 // Scroll into view if needed
@@ -61,14 +63,17 @@ const TutorialOverlay = ({ steps, currentStepIndex, onNext, onPrev, onSkip, onCo
             };
         }
 
-        let top = targetRect.top;
-        let left = targetRect.left;
+        // Use viewport coordinates for positioning
+        let top = targetRect.viewportTop || targetRect.top;
+        let left = targetRect.viewportLeft || targetRect.left;
 
-        // Calculate available space in each direction
-        const spaceRight = viewportWidth - (targetRect.left + targetRect.width);
-        const spaceLeft = targetRect.left;
-        const spaceBottom = viewportHeight - (targetRect.top + targetRect.height);
-        const spaceTop = targetRect.top;
+        // Calculate available space in each direction using viewport coordinates
+        const viewportLeft = targetRect.viewportLeft || targetRect.left;
+        const viewportTop = targetRect.viewportTop || targetRect.top;
+        const spaceRight = viewportWidth - (viewportLeft + targetRect.width);
+        const spaceLeft = viewportLeft;
+        const spaceBottom = viewportHeight - (viewportTop + targetRect.height);
+        const spaceTop = viewportTop;
 
         // Choose position based on preferred direction and available space
         let finalPosition = step.position;
@@ -96,23 +101,26 @@ const TutorialOverlay = ({ steps, currentStepIndex, onNext, onPrev, onSkip, onCo
             finalPosition = 'top';
         }
 
-        // Apply positioning based on final decision
+        // Apply positioning based on final decision (using viewport coordinates)
+        const vLeft = targetRect.viewportLeft || targetRect.left;
+        const vTop = targetRect.viewportTop || targetRect.top;
+
         switch (finalPosition) {
             case 'right':
-                left = targetRect.left + targetRect.width + padding;
-                top = targetRect.top;
+                left = vLeft + targetRect.width + padding;
+                top = vTop;
                 break;
             case 'left':
-                left = targetRect.left - tooltipWidth - padding;
-                top = targetRect.top;
+                left = vLeft - tooltipWidth - padding;
+                top = vTop;
                 break;
             case 'bottom':
-                top = targetRect.top + targetRect.height + padding;
-                left = targetRect.left;
+                top = vTop + targetRect.height + padding;
+                left = vLeft;
                 break;
             case 'top':
-                top = targetRect.top - tooltipHeight - padding;
-                left = targetRect.left;
+                top = vTop - tooltipHeight - padding;
+                left = vLeft;
                 break;
             case 'center':
                 left = (viewportWidth - tooltipWidth) / 2;
@@ -151,11 +159,11 @@ const TutorialOverlay = ({ steps, currentStepIndex, onNext, onPrev, onSkip, onCo
                         100% 100%, 
                         100% 0%, 
                         0% 0%, 
-                        ${targetRect.left}px ${targetRect.top}px, 
-                        ${targetRect.left + targetRect.width}px ${targetRect.top}px, 
-                        ${targetRect.left + targetRect.width}px ${targetRect.top + targetRect.height}px, 
-                        ${targetRect.left}px ${targetRect.top + targetRect.height}px, 
-                        ${targetRect.left}px ${targetRect.top}px
+                        ${targetRect.viewportLeft || targetRect.left}px ${targetRect.viewportTop || targetRect.top}px, 
+                        ${(targetRect.viewportLeft || targetRect.left) + targetRect.width}px ${targetRect.viewportTop || targetRect.top}px, 
+                        ${(targetRect.viewportLeft || targetRect.left) + targetRect.width}px ${(targetRect.viewportTop || targetRect.top) + targetRect.height}px, 
+                        ${targetRect.viewportLeft || targetRect.left}px ${(targetRect.viewportTop || targetRect.top) + targetRect.height}px, 
+                        ${targetRect.viewportLeft || targetRect.left}px ${targetRect.viewportTop || targetRect.top}px
                     )`
                 }}></div>
             ) : (
@@ -167,8 +175,8 @@ const TutorialOverlay = ({ steps, currentStepIndex, onNext, onPrev, onSkip, onCo
                 <div
                     className="absolute border-2 border-indigo-500 rounded-lg shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all duration-300 ease-in-out pointer-events-none"
                     style={{
-                        top: targetRect.top,
-                        left: targetRect.left,
+                        top: targetRect.viewportTop || targetRect.top,
+                        left: targetRect.viewportLeft || targetRect.left,
                         width: targetRect.width,
                         height: targetRect.height
                     }}
