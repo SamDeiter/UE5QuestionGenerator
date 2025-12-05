@@ -31,7 +31,12 @@ const ActionFooter = ({
                     )}
                 </button>
 
-                <button onClick={handleBulkTranslateMissing} disabled={isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady} className={`w-full py-2 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all border ${isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-indigo-950/50 text-indigo-400 hover:bg-indigo-900/50 border-indigo-700'}`}>
+                <button
+                    onClick={handleBulkTranslateMissing}
+                    disabled={isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady}
+                    className={`w-full py-2 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all border ${isProcessing || isGenerating || Array.from(allQuestionsMap.keys()).length === 0 || !isApiReady ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-indigo-950/50 text-indigo-400 hover:bg-indigo-900/50 border-indigo-700'}`}
+                    title="Translate accepted English questions to Chinese, Japanese, and Korean"
+                >
                     <Icon name="languages" size={14} /> BULK TRANSLATE (CN/JP/KR)
                 </button>
             </div>

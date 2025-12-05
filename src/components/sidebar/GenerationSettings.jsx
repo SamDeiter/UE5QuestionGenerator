@@ -73,13 +73,6 @@ const GenerationSettings = ({ config, handleChange, customTags = {}, isOpen, onT
                                 </div>
                             </div>
                         )}
-
-                        <div className="space-y-1">
-                            <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">Language</label></div>
-                            <select name="language" value={config.language} onChange={handleChange} className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500">
-                                <option>English</option><option>Chinese (Simplified)</option><option>Japanese</option><option>Korean</option><option>Spanish</option><option>French</option>
-                            </select>
-                        </div>
                     </div>
                     <div className="space-y-1">
                         <div className="flex items-center"><label className="text-xs font-bold uppercase text-slate-400">AI Model</label></div>

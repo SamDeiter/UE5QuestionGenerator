@@ -54,7 +54,7 @@ import { CATEGORY_KEYS, TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/consta
 import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
 import { getTokenUsage } from './utils/analyticsStore';
 import SignIn from './components/SignIn';
-import { auth, getCustomTags, saveCustomTags } from './services/firebase';
+import { auth, getCustomTags, saveCustomTags, deleteQuestionFromFirestore } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const App = () => {
@@ -429,16 +429,28 @@ const App = () => {
         });
     };
 
-    const handleKickBackToReview = (question) => {
-        // Add to historical questions with 'pending' status so it appears in Review Mode
-        setHistoricalQuestions(prev => {
-            // Check if already exists to prevent duplicates
-            if (prev.some(q => q.uniqueId === question.uniqueId)) {
-                return prev.map(q => q.uniqueId === question.uniqueId ? { ...question, status: 'pending' } : q);
-            }
-            return [...prev, { ...question, status: 'pending' }];
-        });
-        showMessage("Question sent to Review Console (Pending).", 3000);
+    const handleKickBackToReview = async (question) => {
+        try {
+            // Delete from Firestore
+            await deleteQuestionFromFirestore(question.uniqueId);
+
+            // Remove from database view
+            setDatabaseQuestions(prev => prev.filter(q => q.uniqueId !== question.uniqueId));
+
+            // Add to historical questions with 'pending' status so it appears in Review Mode
+            setHistoricalQuestions(prev => {
+                // Check if already exists to prevent duplicates
+                if (prev.some(q => q.uniqueId === question.uniqueId)) {
+                    return prev.map(q => q.uniqueId === question.uniqueId ? { ...question, status: 'pending' } : q);
+                }
+                return [...prev, { ...question, status: 'pending' }];
+            });
+
+            showMessage("Question removed from database and sent to Review Mode.", 3000);
+        } catch (error) {
+            console.error("Error kicking back question:", error);
+            showMessage("Failed to kick back question. Please try again.", 3000);
+        }
     };
 
     const handleGoHome = () => setAppMode('landing');

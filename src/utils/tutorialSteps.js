@@ -58,7 +58,7 @@ export const TUTORIAL_STEPS = [
     {
         id: 'workflow',
         title: 'The Complete Workflow',
-        content: '1️⃣ Generate in Create Mode → 2️⃣ Review & Accept/Reject → 3️⃣ Questions auto-save to Database → 4️⃣ Translate accepted English questions → 5️⃣ Export to Google Sheets or CSV. Your questions are always backed up in Firestore!',
+        content: 'Here\'s the full process:\n\n1️⃣ Generate questions in Create Mode\n2️⃣ Review & Accept/Reject in Review Mode\n3️⃣ Accepted questions auto-save to Database\n4️⃣ Translate accepted English questions\n5️⃣ Export to Google Sheets or CSV\n\nYour questions are always backed up in Firestore!',
         target: null,
         position: 'center'
     }

@@ -265,7 +265,7 @@ export const useGeneration = (
             // Enrich questions with metadata
             const enrichedQuestions = newQuestions.map(q => ({
                 ...q,
-                language: config.language,
+                language: 'English', // All generated questions are in English
                 estimatedCost: costPerQuestion,
                 generationTime: duration,
                 model: config.model || 'gemini-2.0-flash',
@@ -454,7 +454,12 @@ export const useGeneration = (
             const existingLangs = translationMap.get(q.uniqueId) || new Set();
 
             targetLangs.forEach(targetLang => {
-                if (q.status === 'accepted' && !existingLangs.has(targetLang)) {
+                // Only translate accepted English questions with valid sources
+                if (q.status === 'accepted' &&
+                    (q.language || 'English') === 'English' &&
+                    q.sourceUrl &&
+                    !q.invalidUrl &&
+                    !existingLangs.has(targetLang)) {
                     translationQueue.push({ question: q, targetLang });
                 }
             });

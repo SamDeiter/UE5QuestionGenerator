@@ -154,6 +154,26 @@ export const clearAllQuestionsFromFirestore = async () => {
 };
 
 /**
+ * Deletes a single question from Firestore by uniqueId.
+ * @param {string} uniqueId - The uniqueId of the question to delete
+ * @returns {Promise<void>}
+ */
+export const deleteQuestionFromFirestore = async (uniqueId) => {
+    try {
+        if (!uniqueId) {
+            console.error("Cannot delete question: missing uniqueId");
+            return;
+        }
+        const docRef = doc(db, "questions", uniqueId);
+        await deleteDoc(docRef);
+        console.log(`Question ${uniqueId} deleted from Firestore.`);
+    } catch (error) {
+        console.error("Error deleting question from Firestore:", error);
+        throw error;
+    }
+};
+
+/**
  * Saves custom tags for the current user to Firestore.
  * @param {Object} customTags - Object mapping discipline names to arrays of custom tags
  * @returns {Promise<void>}

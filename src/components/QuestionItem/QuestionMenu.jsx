@@ -26,7 +26,8 @@ const QuestionMenu = ({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    if (appMode !== 'review' && appMode !== 'create') return null;
+    // Three-dot menu disabled - options moved to card
+    return null;
 
     return (
         <div className="relative" ref={menuRef}>

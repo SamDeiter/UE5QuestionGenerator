@@ -15,6 +15,12 @@ const LanguageControls = ({
     const [translateMenuOpen, setTranslateMenuOpen] = useState(false);
     const translateMenuRef = useRef(null);
 
+    // Only show translation controls for accepted English questions with valid sources
+    const canTranslate = q.status === 'accepted' &&
+        (q.language || 'English') === 'English' &&
+        q.sourceUrl &&
+        !q.invalidUrl;
+
     // Close translate menu on click outside
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -25,6 +31,11 @@ const LanguageControls = ({
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    // Don't show translation controls if requirements aren't met
+    if (!canTranslate) {
+        return null;
+    }
 
     const handleFlagClick = async (e, lang) => {
         e.stopPropagation();
