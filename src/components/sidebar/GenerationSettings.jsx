@@ -92,6 +92,7 @@ const GenerationSettings = ({ config, handleChange, customTags = {}, isOpen, onT
                             Check Available Models
                         </button>
                     </div>
+
                 </div>
             )}
         </div>

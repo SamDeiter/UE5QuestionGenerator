@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Icon from './Icon';
 import FilterButton from './FilterButton';
+import { getMergedTags } from '../utils/tagTaxonomy';
 
 const ContextToolbar = ({
     mode,
@@ -20,16 +21,24 @@ const ContextToolbar = ({
     onLoadSheets,
     onLoadFirestore,
     onBulkExport,
-    onClearPending
+    onClearPending,
+    filterTags = [],
+    setFilterTags,
+    customTags = {}
 }) => {
     const [dataMenuOpen, setDataMenuOpen] = useState(false);
     const dataMenuRef = useRef(null);
+    const [tagMenuOpen, setTagMenuOpen] = useState(false);
+    const tagMenuRef = useRef(null);
 
     // Click outside handler for Data menu
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dataMenuRef.current && !dataMenuRef.current.contains(event.target)) {
                 setDataMenuOpen(false);
+            }
+            if (tagMenuRef.current && !tagMenuRef.current.contains(event.target)) {
+                setTagMenuOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -145,6 +154,61 @@ const ContextToolbar = ({
                     <Icon name="user" size={14} />
                     {filterByCreator ? 'My Questions Only' : 'All Creators'}
                 </button>
+
+                <div className="h-4 w-px bg-slate-700"></div>
+
+                {/* Tag Filter */}
+                <div className="relative" ref={tagMenuRef}>
+                    <button
+                        onClick={() => setTagMenuOpen(!tagMenuOpen)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 border ${filterTags.length > 0 ? 'bg-orange-500/20 text-orange-300 border-orange-500/50' : 'bg-transparent text-slate-400 border-transparent hover:bg-slate-800'}`}
+                        title="Filter by Tags"
+                    >
+                        <Icon name="tag" size={14} />
+                        {filterTags.length > 0 ? `${filterTags.length} Active` : 'Filter Tags'}
+                    </button>
+
+                    {tagMenuOpen && (
+                        <div className="absolute right-0 top-full mt-1 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                            <div className="p-2 border-b border-slate-700 bg-slate-900/50">
+                                <span className="text-[10px] font-bold uppercase text-slate-500">Filter by Tags (OR)</span>
+                            </div>
+                            <div className="p-2 max-h-60 overflow-y-auto custom-scrollbar flex flex-wrap gap-1.5">
+                                {getMergedTags(config.discipline, customTags).map(tag => {
+                                    const isSelected = filterTags.includes(tag);
+                                    return (
+                                        <button
+                                            key={tag}
+                                            onClick={() => {
+                                                if (isSelected) setFilterTags(filterTags.filter(t => t !== tag));
+                                                else setFilterTags([...filterTags, tag]);
+                                            }}
+                                            className={`text-[10px] px-2 py-1 rounded border transition-all ${isSelected
+                                                ? 'bg-orange-500/20 border-orange-500 text-orange-200'
+                                                : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'
+                                                }`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    );
+                                })}
+                                {getMergedTags(config.discipline, customTags).length === 0 && (
+                                    <p className="text-xs text-slate-500 p-2">No tags available for this discipline.</p>
+                                )}
+                            </div>
+                            {filterTags.length > 0 && (
+                                <div className="p-2 border-t border-slate-700 bg-slate-900/50">
+                                    <button
+                                        onClick={() => setFilterTags([])}
+                                        className="w-full py-1 text-xs text-red-400 hover:bg-red-900/20 rounded"
+                                    >
+                                        Clear Tag Filters
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
 
                 <div className="h-4 w-px bg-slate-700"></div>
 

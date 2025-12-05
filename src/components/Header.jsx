@@ -1,7 +1,7 @@
 import React from 'react';
 import Icon from './Icon';
 
-const APP_VERSION = "v1.5";
+const APP_VERSION = "v1.7";
 
 const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, tokenUsage = { inputTokens: 0, outputTokens: 0, totalCost: 0 }, onRestartTutorial }) => {
     const isReview = appMode === 'review';

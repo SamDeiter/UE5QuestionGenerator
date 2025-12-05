@@ -141,8 +141,8 @@ To assess professional competence, use these question structures:
 
 ### 2.6 MANDATORY SELF-CHECK (DO THIS FOR EVERY QUESTION)
 **Before finalizing each question, you MUST verify:**
-1. **Fact Check:** Does the option selected by `CorrectLetter` contain the TRUE statement according to `SourceExcerpt`?
-2. **Logic Check:** If CorrectLetter is 'A', does `OptionA` actually contain the correct answer?
+1. **Fact Check:** Does the option selected by CorrectLetter contain the TRUE statement according to SourceExcerpt?
+2. **Logic Check:** If CorrectLetter is 'A', does OptionA actually contain the correct answer?
 3. **Distractor Check:** Are the other 3 options definitely FALSE or clearly inferior answers?
 
 **REAL FAILURE EXAMPLE #1:**
@@ -158,7 +158,7 @@ To assess professional competence, use these question structures:
 - ✅ CORRECT: One option MUST be "Static Mesh Editor" and CorrectLetter must point to it.
 
 **CRITICAL RULE: IF THE ANSWER FROM YOUR SOURCE IS NOT IN YOUR OPTIONS, YOU HAVE FAILED. REGENERATE THE QUESTION.**
-**CRITICAL RULE: IF `CorrectLetter` POINTS TO A WRONG ANSWER, YOU HAVE FAILED. FIX IT.**
+**CRITICAL RULE: IF CorrectLetter POINTS TO A WRONG ANSWER, YOU HAVE FAILED. FIX IT.**
 
 ### 3. Sourcing & URL Integrity (CRITICAL)
 - **Base URL:** \`https://dev.epicgames.com/documentation/en-us/unreal-engine/\`

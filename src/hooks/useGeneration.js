@@ -269,7 +269,8 @@ export const useGeneration = (
                 estimatedCost: costPerQuestion,
                 generationTime: duration,
                 model: config.model || 'gemini-2.0-flash',
-                groundingSources: groundingSources.length > 0 ? groundingSources.slice(0, 3) : null // Store top 3 sources
+                groundingSources: groundingSources.length > 0 ? groundingSources.slice(0, 3) : null, // Store top 3 sources
+                tags: config.tags || [] // Attach active focus tags
             }));
 
             // Save to storage and get unique ones

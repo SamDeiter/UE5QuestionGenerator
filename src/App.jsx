@@ -227,6 +227,7 @@ const App = () => {
     const [filterMode, setFilterMode] = useState(() => localStorage.getItem('ue5_pref_filter') || 'pending');
     const [showHistory, setShowHistory] = useState(() => localStorage.getItem('ue5_pref_history') === 'true');
     const [filterByCreator, setFilterByCreator] = useState(false);
+    const [filterTags, setFilterTags] = useState([]); // NEW: Filter by tags
     const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
     const [sortBy, setSortBy] = useState('default');
 
@@ -287,8 +288,9 @@ const App = () => {
         config.creatorName,
         config.discipline,
         config.difficulty,
-        config.language
-    ), [questions, historicalQuestions, showHistory, appMode, filterByCreator, searchTerm, config]);
+        config.language,
+        filterTags // Pass filterTags to filtering logic
+    ), [questions, historicalQuestions, showHistory, appMode, filterByCreator, searchTerm, config, filterTags]);
 
     // 2. Calculate counts based on the context
     const contextCounts = useMemo(() => {
@@ -584,6 +586,9 @@ const App = () => {
                             setFilterMode={setFilterMode}
                             filterByCreator={filterByCreator}
                             setFilterByCreator={setFilterByCreator}
+                            filterTags={filterTags}
+                            setFilterTags={setFilterTags}
+                            customTags={customTags} // Pass customTags for the selector
                             searchTerm={searchTerm}
                             setSearchTerm={setSearchTerm}
                             sortBy={sortBy}

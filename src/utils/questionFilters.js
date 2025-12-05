@@ -26,7 +26,8 @@ export const createFilteredQuestions = (
     creatorName,
     discipline,
     difficulty,
-    language
+    language,
+    selectedTags = []
 ) => {
     // Determine source: either current session or all history
     const sourceQuestions = showHistory ? [...questions, ...historicalQuestions] : questions;
@@ -42,6 +43,13 @@ export const createFilteredQuestions = (
 
         // Filter by discipline
         if (discipline && q.discipline !== discipline) return false;
+
+        // Filter by tags (OR logic: match any selected tag)
+        if (selectedTags && selectedTags.length > 0) {
+            if (!q.tags || q.tags.length === 0) return false;
+            const hasAnyTag = selectedTags.some(tag => q.tags.includes(tag));
+            if (!hasAnyTag) return false;
+        }
 
         // Filter by difficulty and type (if not "Balanced All" or "Balanced")
         // We apply this filter if a specific difficulty is selected, even if a status filter is active.

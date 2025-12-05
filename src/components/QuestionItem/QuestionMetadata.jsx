@@ -39,11 +39,22 @@ const QuestionMetadata = ({ q, showMessage }) => {
                 </div>
             )}
 
+            {/* Tags Display */}
+            {q.tags && q.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-2">
+                    {q.tags.map(tag => (
+                        <span key={tag} className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700">
+                            {tag}
+                        </span>
+                    ))}
+                </div>
+            )}
+
             {/* Quality Score Badge */}
             {q.qualityScore !== undefined && q.qualityScore !== null && (
                 <div className={`flex items-center gap-2 px-2 py-1 rounded text-[10px] font-bold uppercase mb-2 ${q.qualityScore >= 90 ? 'bg-green-950/50 text-green-400' :
-                        q.qualityScore >= 70 ? 'bg-yellow-950/50 text-yellow-400' :
-                            'bg-red-950/50 text-red-400'
+                    q.qualityScore >= 70 ? 'bg-yellow-950/50 text-yellow-400' :
+                        'bg-red-950/50 text-red-400'
                     }`} title="AI-generated Quality Score">
                     <Icon name="bar-chart-2" size={12} />
                     <span>Score: {q.qualityScore}/100</span>
