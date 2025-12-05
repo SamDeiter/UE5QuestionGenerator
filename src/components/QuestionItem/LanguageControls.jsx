@@ -104,8 +104,8 @@ const LanguageControls = ({
                 );
             })}
 
-            {/* Add translation button with dropdown - only show if there are missing translations */}
-            {missingTranslations.length > 0 && appMode !== 'database' && (
+            {/* Add translation button with dropdown - only show for accepted questions with missing translations */}
+            {canTranslate && missingTranslations.length > 0 && appMode !== 'database' && (
                 <div className="relative" ref={translateMenuRef}>
                     <button
                         onClick={(e) => { e.stopPropagation(); setTranslateMenuOpen(!translateMenuOpen); }}
