@@ -2,7 +2,7 @@ import React from 'react';
 import Icon from './Icon';
 import GranularProgress from './GranularProgress';
 import GenerationSettings from './sidebar/GenerationSettings';
-import CreativitySettings from './sidebar/CreativitySettings';
+
 import CustomRules from './sidebar/CustomRules';
 import ProgressStats from './sidebar/ProgressStats';
 import BatchSizeControl from './sidebar/BatchSizeControl';
@@ -18,7 +18,8 @@ const Sidebar = ({
     handleGenerate, isGenerating, isApiReady,
     handleBulkTranslateMissing, isProcessing,
     setShowSettings,
-    handleSelectCategory
+    handleSelectCategory,
+    customTags = {}
 }) => {
 
     return (
@@ -28,15 +29,13 @@ const Sidebar = ({
                 <GenerationSettings
                     config={config}
                     handleChange={handleChange}
+                    customTags={customTags}
                     isOpen={showGenSettings}
                     onToggle={() => setShowGenSettings(!showGenSettings)}
                 />
             </div>
 
-            <CreativitySettings
-                config={config}
-                handleChange={handleChange}
-            />
+
 
             <CustomRules
                 config={config}

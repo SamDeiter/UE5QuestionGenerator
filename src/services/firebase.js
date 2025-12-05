@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics, logEvent } from "firebase/analytics";
-import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, query, where, Timestamp } from "firebase/firestore";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where, Timestamp } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 
 // Your web app's Firebase configuration
@@ -133,7 +133,7 @@ export const clearAllQuestionsFromFirestore = async () => {
         } else {
             q = collection(db, "questions");
         }
-        
+
         const querySnapshot = await getDocs(q);
         let deletedCount = 0;
 
@@ -150,6 +150,60 @@ export const clearAllQuestionsFromFirestore = async () => {
     } catch (error) {
         console.error("Error clearing questions from Firestore:", error);
         throw error;
+    }
+};
+
+/**
+ * Saves custom tags for the current user to Firestore.
+ * @param {Object} customTags - Object mapping discipline names to arrays of custom tags
+ * @returns {Promise<void>}
+ */
+export const saveCustomTags = async (customTags) => {
+    try {
+        if (!auth.currentUser) {
+            console.warn("No user signed in, cannot save custom tags");
+            return;
+        }
+
+        const docRef = doc(db, "userSettings", auth.currentUser.uid);
+        await setDoc(docRef, {
+            customTags,
+            updatedAt: Timestamp.now()
+        }, { merge: true });
+
+        console.log("Custom tags saved to Firestore");
+    } catch (error) {
+        console.error("Error saving custom tags:", error);
+        throw error;
+    }
+};
+
+/**
+ * Retrieves custom tags for the current user from Firestore.
+ * @returns {Promise<Object>} Object mapping discipline names to arrays of custom tags
+ */
+export const getCustomTags = async () => {
+    try {
+        if (!auth.currentUser) {
+            console.warn("No user signed in, returning empty custom tags");
+            return {};
+        }
+
+        const docRef = doc(db, "userSettings", auth.currentUser.uid);
+        const docSnap = await getDocs(collection(db, "userSettings"));
+
+        // Get the specific user's document
+        const userDocRef = doc(db, "userSettings", auth.currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+            return userDocSnap.data().customTags || {};
+        }
+
+        return {};
+    } catch (error) {
+        console.error("Error getting custom tags:", error);
+        return {};
     }
 };
 

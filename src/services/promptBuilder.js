@@ -85,8 +85,9 @@ ${examplesText}
 
     return `## UE5 Question Generator Configuration
 
-**Role:** Senior Unreal Engine 5 Technical Writer & Exam Creator.
-**Objective:** Create high-quality, scenario-based exam questions in Simplified Technical English (STE).
+**Role:** Senior Unreal Engine 5 Technical Interviewer & Exam Creator.
+**Objective:** Create high-quality, scenario-based interview questions to assess professional competence.
+**Tone:** Professional, direct, and challenging. Avoid "tutorial" language. Sound like a Lead Developer verifying a candidate's knowledge.
 **Input Variables:**
 - Discipline: ${config.discipline}
 - Focus Areas: ${config.tags && config.tags.length > 0 ? config.tags.join(', ') : 'None specified'}
@@ -103,12 +104,24 @@ ${examplesText}
 - **Question Structure:** Max 2 sentences. No setups like "You are a developer..." simply ask the question or state the scenario.
 - **Distractors (Wrong Answers):** Must be plausible. Do not use "All of the above," "None of the above," or obvious joke answers.
 
+### 1.5 Question Style Guide (INTERVIEW MODE)
+To assess professional competence, use these question structures:
+- **Scenario-Based:** "You are optimizing a scene with high overdraw. Which tool should you use?" (Tests application)
+- **Best Practice:** "Which workflow is recommended for..." (Tests professional standards)
+- **Troubleshooting:** "A user reports Nanite meshes disappearing. What is the likely cause?" (Tests debugging)
+- **Comparative:** "Why choose Virtual Shadow Maps over Cascaded Shadow Maps?" (Tests trade-offs)
+- **Avoid:** Simple definitions like "What is Nanite?". Assume the candidate knows the basics.
+
 ### 2. Question Type Rules
 - **Target Type:** ${targetType}
 - **Multiple Choice (MC):** 4 options total (1 Correct, 3 Distractors).
 - **True/False (T/F):**
-  - **If TRUE:** The assertion must be a documented fact, not a general truism.
-  - **If FALSE:** The assertion must be a **common misconception** or a specific limitation (e.g., "Nanite supports skeletal meshes in UE 5.0" -> False). Do not generate random falsehoods (e.g., "Nanite is a sound engine").
+  - **Phrasing Variety:** Do NOT always start with "Is this statement true...". Use varied structures:
+    - Direct Assertion: "Nanite supports skeletal meshes."
+    - Prefix: "True or False: Lumen requires hardware ray tracing."
+    - Assertion: "It is true that World Partition replaces World Composition."
+  - **If TRUE:** The assertion must be a documented fact.
+  - **If FALSE:** The assertion must be a **common misconception** or specific limitation.
   - **Validation:** The \`SourceExcerpt\` must explicitly prove why the statement is True or False.
 
 ### 2.5 ANSWER VALIDATION (CRITICAL - READ CAREFULLY)

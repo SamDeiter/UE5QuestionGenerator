@@ -3,10 +3,10 @@ import { generateContent, listModels } from '../../services/gemini';
 import Icon from '../Icon';
 import InfoTooltip from '../InfoTooltip';
 
-import { TAGS_BY_DISCIPLINE } from '../../utils/tagTaxonomy';
+import { getMergedTags } from '../../utils/tagTaxonomy';
 
-const GenerationSettings = ({ config, handleChange, isOpen, onToggle }) => {
-    const availableTags = TAGS_BY_DISCIPLINE[config.discipline] || [];
+const GenerationSettings = ({ config, handleChange, customTags = {}, isOpen, onToggle }) => {
+    const availableTags = getMergedTags(config.discipline, customTags);
 
     const toggleTag = (tag) => {
         const currentTags = config.tags || [];

@@ -19,7 +19,8 @@ const ContextToolbar = ({
     config,
     onLoadSheets,
     onLoadFirestore,
-    onBulkExport
+    onBulkExport,
+    onClearPending
 }) => {
     const [dataMenuOpen, setDataMenuOpen] = useState(false);
     const dataMenuRef = useRef(null);
@@ -122,6 +123,20 @@ const ContextToolbar = ({
             </div>
 
             <div className="flex items-center gap-3">
+                {/* Clear Pending Button */}
+                {counts.pending > 0 && (
+                    <button
+                        onClick={onClearPending}
+                        className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-red-900/20 text-red-400 border border-red-900/50 hover:bg-red-900/40 hover:text-red-300"
+                        title="Delete all pending questions"
+                    >
+                        <Icon name="trash-2" size={14} />
+                        Clear Pending
+                    </button>
+                )}
+
+                <div className="h-4 w-px bg-slate-700"></div>
+
                 <button
                     onClick={() => setFilterByCreator(!filterByCreator)}
                     className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 border ${filterByCreator ? 'bg-blue-600/20 text-blue-300 border-blue-500/50' : 'bg-transparent text-slate-400 border-transparent hover:bg-slate-800'}`}

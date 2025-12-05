@@ -52,7 +52,10 @@ export function validateAnswer(question) {
             isValid: false,
             confidence: 0,
             warning: 'Missing CorrectLetter or SourceExcerpt',
-            details: { correctLetter, hasExcerpt: !!sourceExcerpt }
+            details: {
+                correctLetter: correctLetter || null,
+                hasExcerpt: !!sourceExcerpt
+            }
         };
     }
 
@@ -77,7 +80,6 @@ export function validateAnswer(question) {
 
     // Extract key terms from both
     const answerTerms = extractKeyTerms(correctAnswer);
-    const excerptTerms = extractKeyTerms(sourceExcerpt);
     const excerptText = sourceExcerpt.toLowerCase();
 
     // Count how many answer terms appear in excerpt

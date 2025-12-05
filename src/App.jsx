@@ -54,7 +54,7 @@ import { CATEGORY_KEYS, TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/consta
 import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
 import { getTokenUsage } from './utils/analyticsStore';
 import SignIn from './components/SignIn';
-import { auth } from './services/firebase';
+import { auth, getCustomTags, saveCustomTags } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const App = () => {
@@ -66,6 +66,7 @@ const App = () => {
     const [tokenUsage, setTokenUsage] = useState(() => getTokenUsage());
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
+    const [customTags, setCustomTags] = useState({});
 
     // Tutorial State (disabled by default for now - enable with Tutorial button)
     const [tutorialActive, setTutorialActive] = useState(false);
@@ -97,10 +98,19 @@ const App = () => {
         showMessage("Tutorial restarted!", 2000);
     };
 
-    // Listen for auth state changes
+    // Listen for auth state changes and load custom tags
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
+            if (currentUser) {
+                // Load custom tags from Firestore
+                try {
+                    const tags = await getCustomTags();
+                    setCustomTags(tags);
+                } catch (error) {
+                    console.error("Failed to load custom tags:", error);
+                }
+            }
             setAuthLoading(false);
         });
         return () => unsubscribe();
@@ -436,6 +446,25 @@ const App = () => {
 
     const [showProgressMenu, setShowProgressMenu] = useState(false);
 
+    const handleClearPending = () => {
+        if (window.confirm("Are you sure you want to delete ALL pending questions? This cannot be undone.")) {
+            // Filter out pending questions from the main state
+            setQuestions(prev => prev.filter(q => q.status === 'accepted' || q.status === 'rejected'));
+            showMessage("All pending questions cleared.", 3000);
+        }
+    };
+
+    const handleSaveCustomTags = async (newCustomTags) => {
+        try {
+            await saveCustomTags(newCustomTags);
+            setCustomTags(newCustomTags);
+            showMessage("Custom tags saved successfully!", 2000);
+        } catch (error) {
+            console.error("Failed to save custom tags:", error);
+            showMessage("Failed to save custom tags. Please try again.", 3000);
+        }
+    };
+
     // Render
     if (authLoading) {
         return <LoadingSpinner />;
@@ -522,6 +551,7 @@ const App = () => {
                         isProcessing={isProcessing}
                         setShowSettings={setShowSettings}
                         handleSelectCategory={handleSelectCategory}
+                        customTags={customTags}
                     />
                 )}
                 <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
@@ -553,6 +583,7 @@ const App = () => {
                             onLoadSheets={handleLoadFromSheets}
                             onLoadFirestore={handleLoadFromFirestore}
                             onBulkExport={() => setShowBulkExportModal(true)}
+                            onClearPending={handleClearPending}
                         />
                     </div>
 
@@ -656,8 +687,8 @@ const App = () => {
                             )}
                         </Suspense>
                     </div>
-                </main >
-            </div >
+                </main>
+            </div>
 
             <Suspense fallback={null}>
                 <SettingsModal
@@ -674,6 +705,8 @@ const App = () => {
                     handleFileChange={handleFileChange}
                     removeFile={removeFile}
                     isApiReady={isApiReady}
+                    customTags={customTags}
+                    onSaveCustomTags={handleSaveCustomTags}
                     onClearData={() => {
                         console.log("Clear Data button clicked");
                         if (window.confirm("This will delete ALL your local questions and settings (except API Key and Sheet URL). Are you sure?")) {
@@ -745,7 +778,7 @@ const App = () => {
                     onComplete={handleTutorialComplete}
                 />
             )}
-        </div >
+        </div>
     );
 };
 

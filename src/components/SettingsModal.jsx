@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Icon from './Icon';
 import TokenUsageDisplay from './TokenUsageDisplay';
+import TagManager from './TagManager';
 import { getTokenUsage, downloadTrainingData } from '../utils/analyticsStore';
 import { UI_LABELS } from '../utils/constants';
 
@@ -9,7 +10,8 @@ const SettingsModal = ({
     config, handleChange,
     showApiKey, setShowApiKey,
     onClearData,
-    files, handleDetectTopics, isDetecting, fileInputRef, handleFileChange, removeFile, isApiReady
+    files, handleDetectTopics, isDetecting, fileInputRef, handleFileChange, removeFile, isApiReady,
+    customTags, onSaveCustomTags
 }) => {
     if (!showSettings) return null;
 
@@ -184,6 +186,22 @@ const SettingsModal = ({
                                 </button>
                             </div>
                         ))}
+                    </div>
+
+                    {/* Custom Tags Management */}
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-bold text-slate-300 flex items-center gap-2">
+                            <Icon name="tag" size={16} className="text-orange-400" />
+                            Custom Tags
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                            Create custom tags to focus question generation on specific topics within each discipline.
+                        </p>
+                        <TagManager
+                            discipline={config.discipline}
+                            customTags={customTags || {}}
+                            onSaveCustomTags={onSaveCustomTags}
+                        />
                     </div>
 
                     {/* Advanced: Vertex AI Data */}

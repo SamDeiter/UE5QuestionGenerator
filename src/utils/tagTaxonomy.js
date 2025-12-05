@@ -32,3 +32,18 @@ export const TAGS_BY_DISCIPLINE = {
         "#Replication", "#ServerAuthoritative", "#RPCs", "#NetworkCompaction", "#Relevancy", "#BandwidthOptimization", "#DedicatedServer"
     ]
 };
+
+/**
+ * Merges predefined tags with user's custom tags for a specific discipline
+ * @param {string} discipline - The discipline name
+ * @param {Object} customTags - Object mapping discipline names to arrays of custom tags
+ * @returns {Array} Combined array of predefined and custom tags
+ */
+export const getMergedTags = (discipline, customTags = {}) => {
+    const predefined = TAGS_BY_DISCIPLINE[discipline] || [];
+    const custom = customTags[discipline] || [];
+
+    // Combine and remove duplicates
+    return [...new Set([...predefined, ...custom])];
+};
+
