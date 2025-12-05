@@ -35,6 +35,7 @@ const AppNavigation = ({ activeMode, onNavigate, counts = {} }) => {
                         key={item.id}
                         onClick={() => onNavigate(item.id)}
                         className={classes}
+                        data-tour={`${item.id}-mode`}
                     >
                         <Icon name={item.icon} size={16} />
                         {item.label}

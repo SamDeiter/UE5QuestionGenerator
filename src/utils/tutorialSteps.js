@@ -45,15 +45,15 @@ export const TUTORIAL_STEPS = [
         id: 'review-mode',
         title: 'Review Mode - Quality Control',
         content: 'Switch to Review Mode to carefully evaluate each question. Accept good questions, reject bad ones, or use AI Critique to get improvement suggestions. Only accepted questions can be translated to other languages.',
-        target: null,
-        position: 'center'
+        target: '[data-tour="review-mode"]',
+        position: 'bottom'
     },
     {
         id: 'database-view',
         title: 'Database View - Your Question Bank',
         content: 'The Database View shows all your accepted questions stored in Firestore. This is your permanent question bank that syncs across devices. You can export, translate, or "kick back" questions to Review Mode for further refinement.',
-        target: null,
-        position: 'center'
+        target: '[data-tour="database-mode"]',
+        position: 'bottom'
     },
     {
         id: 'workflow',
