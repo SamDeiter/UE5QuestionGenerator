@@ -187,11 +187,11 @@ export const generateCritique = async (apiKey, q) => {
     }
 
     // 2. The Prompt
-    const systemPrompt = "UE5 Expert Critic. Output valid JSON only.";
-    const userPrompt = `Critique this UE5 question as a HARSH, PEDANTIC Senior Technical Editor.
+    const systemPrompt = "UE5 Expert Critic. Output valid JSON only. YOU MUST BE EXTREMELY HARSH AND CRITICAL.";
+    const userPrompt = `Critique this UE5 question as an EXTREMELY HARSH, PEDANTIC Senior Technical Editor.
     ${strictnessInstruction}
     
-    Your goal is to find flaws and IMPROVE the question.
+    **CRITICAL MINDSET:** You are a perfectionist who RARELY gives scores above 80. Most questions have flaws.
     
     MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this structure:
     {
@@ -202,25 +202,31 @@ export const generateCritique = async (apiKey, q) => {
             "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
             "correct": "string" // Correct letter (A, B, C, or D)
         },
-        "changes": "string" // Brief explanation of what was changed and why (e.g., 'Removed ambiguity in option B, tightened question text')
+        "changes": "string" // Brief explanation of what was changed and why
     }
 
-    Scoring Criteria:
-    - 90-100: FLAWLESS. Concise. No hints in stem. Perfect accuracy.
-    - 70-89: GOOD, BUT FLAWED. Wordy? Gives away answer? Weak distractors?
-    - 50-69: MEDIOCRE. Ambiguous, confusing, or poorly structured.
-    - 0-49: FAIL. Factual errors, outdated terms (UE4), or wrong answer key.
+    **STRICT Scoring Criteria (APPLY RUTHLESSLY):**
+    - 95-100: PRACTICALLY IMPOSSIBLE. Near-perfect question. Concise (single sentence), zero ambiguity, expert-level difficulty, perfect distractors. Reserve for truly exceptional questions only.
+    - 85-94: EXCELLENT. Very good but has minor improvements possible (slight wordiness, one weak distractor).
+    - 70-84: GOOD WITH FLAWS. Competent but has clear issues (wordy, hints in stem, mediocre distractors, too basic).
+    - 50-69: MEDIOCRE. Multiple problems (ambiguous, confusing structure, weak options, trivial topic).
+    - 30-49: POOR. Serious issues (factual concerns, very weak question, bad distractors).
+    - 0-29: FAIL. Fundamentally broken (wrong answer key, outdated info, nonsensical).
 
-    Be extremely critical of:
-    - **TOO EASY:** If the question is trivial or "Documentation 101" (e.g., "What is Unreal Engine?"), DEDUCT 20 POINTS.
-    - **WORDINESS:** Paragraphs = Score 60 Max.
-    - **HINTS:** Hints in stem = -15 points.
-    - **MULTIPLE WORKFLOWS:** Ambiguous "How to" = FAIL.
+    **DEDUCT POINTS FOR (cumulative):**
+    - **TOO EASY/TRIVIAL**: Basic "What is X?" questions START at 60 max. Deduct 20 points.
+    - **WORDINESS**: More than 20 words in question = -10 points. More than 30 words = -20 points.
+    - **HINTS IN STEM**: Any hint toward answer = -15 points per hint.
+    - **WEAK DISTRACTORS**: Obviously wrong options = -10 points per weak distractor.
+    - **AMBIGUITY**: Multiple valid interpretations = -25 points.
+    - **LACK OF SOURCE**: No clear source or genericdocumentation = -15 points.
+    - **POOR GRAMMAR**: Any grammar/spelling issues = -10 points.
+
+    **DEFAULT ASSUMPTION: Start at 75 and deduct points. Only award 90+ if truly exceptional.**
 
     **CRITICAL RULE FOR TRUE/FALSE:** 
-    - If the original question is True/False, the rewrite MUST remain True/False. 
-    - DO NOT suggest converting T/F to Multiple Choice unless the premise is fundamentally flawed.
-    - For T/F, ensure the statement is a single, clear assertion.
+    - If original is T/F, rewrite MUST remain T/F. 
+    - T/F should be single, unambiguous assertion.
 
     Question: ${q.question}
     Options: ${JSON.stringify(q.options)}
