@@ -21,6 +21,8 @@ import Sidebar from './components/Sidebar';
 import QuestionList from './components/QuestionList';
 import BulkActionBar from './components/BulkActionBar';
 import TutorialOverlay from './components/TutorialOverlay';
+import AppNavigation from './components/AppNavigation';
+import ContextToolbar from './components/ContextToolbar';
 import { TUTORIAL_STEPS } from './utils/tutorialSteps';
 
 // Lazy Loaded Components
@@ -216,6 +218,7 @@ const App = () => {
     const [showHistory, setShowHistory] = useState(() => localStorage.getItem('ue5_pref_history') === 'true');
     const [filterByCreator, setFilterByCreator] = useState(false);
     const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+    const [sortBy, setSortBy] = useState('default');
 
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 3000);
@@ -262,18 +265,38 @@ const App = () => {
     }, []);
 
     // Computed Filtered Questions
-    const filteredQuestions = useMemo(() => createFilteredQuestions(
+    // Computed Filtered Questions
+    // 1. First, get questions that match all filters EXCEPT status (for counts)
+    const contextFilteredQuestions = useMemo(() => createFilteredQuestions(
         questions,
         historicalQuestions,
-        showHistory,
-        filterMode,
+        showHistory || appMode === 'review', // Force history on in review mode
+        'all', // Ignore status for this intermediate list
         filterByCreator,
         searchTerm,
         config.creatorName,
         config.discipline,
         config.difficulty,
         config.language
-    ), [questions, historicalQuestions, showHistory, filterMode, filterByCreator, searchTerm, config.creatorName, config.discipline, config.difficulty, config.language]);
+    ), [questions, historicalQuestions, showHistory, appMode, filterByCreator, searchTerm, config]);
+
+    // 2. Calculate counts based on the context
+    const contextCounts = useMemo(() => {
+        const pending = contextFilteredQuestions.filter(q => !q.status || q.status === 'pending').length;
+        const accepted = contextFilteredQuestions.filter(q => q.status === 'accepted').length;
+        const rejected = contextFilteredQuestions.filter(q => q.status === 'rejected').length;
+        const all = contextFilteredQuestions.length;
+        return { pending, accepted, rejected, all };
+    }, [contextFilteredQuestions]);
+
+    // 3. Now apply the status filter for the actual view
+    const filteredQuestions = useMemo(() => {
+        if (filterMode === 'all') return contextFilteredQuestions;
+        return contextFilteredQuestions.filter(q => {
+            if (filterMode === 'pending') return !q.status || q.status === 'pending';
+            return q.status === filterMode;
+        });
+    }, [contextFilteredQuestions, filterMode]);
 
     const uniqueFilteredQuestions = useMemo(() => createUniqueFilteredQuestions(
         filteredQuestions,
@@ -502,109 +525,36 @@ const App = () => {
                     />
                 )}
                 <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
-                    <div className="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900 shadow-md z-10">
-                        <div className="flex gap-4 items-center">
-                            {isAuthReady ? (<>{status && <span className="text-xs text-orange-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="loader" size={12} className="animate-spin" /> {status}</span>}{!status && <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Icon name="database" size={14} /> DB Ready</span>}</>) : (<span className="text-xs text-yellow-500 font-medium flex items-center gap-1 animate-pulse"><Icon name="plug" size={12} className="animate-pulse" /> Connecting to DB...</span>)}
-                        </div>
-                        <div className="flex gap-2 items-center bg-slate-950 p-1 rounded-lg border border-slate-800 shadow-inner">
-                            {/* Data Dropdown - Contains Load and Export */}
-                            <div className="relative" ref={dataMenuRef}>
-                                <button
-                                    onClick={() => setDataMenuOpen(!dataMenuOpen)}
-                                    disabled={isProcessing}
-                                    className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${dataMenuOpen ? 'bg-slate-700 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'} disabled:opacity-50`}
-                                    title="Data Operations"
-                                >
-                                    <Icon name="folder" size={14} />
-                                    Data
-                                    <Icon name="chevron-down" size={10} className={`transition-transform ${dataMenuOpen ? 'rotate-180' : ''}`} />
-                                </button>
-
-                                {dataMenuOpen && (
-                                    <div className="absolute left-0 top-full mt-1 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                                        <div className="py-1">
-                                            <button
-                                                onClick={() => { handleLoadFromSheets(); setDataMenuOpen(false); }}
-                                                disabled={isProcessing || !config.sheetUrl}
-                                                className="w-full text-left px-4 py-2 text-xs text-blue-300 hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                title={config.sheetUrl ? "Load Approved Questions from Google Sheets" : "Configure Sheets URL in Settings first"}
-                                            >
-                                                <Icon name="table" size={14} />
-                                                Load from Sheets
-                                            </button>
-                                            <button
-                                                onClick={() => { setShowBulkExportModal(true); setDataMenuOpen(false); }}
-                                                className="w-full text-left px-4 py-2 text-xs text-green-300 hover:bg-slate-700 flex items-center gap-2"
-                                                title="Open Export Options"
-                                            >
-                                                <Icon name="download" size={14} />
-                                                Export Questions
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
-
-                            {/* Mode Navigation - Unified across all panels */}
-                            <button
-                                onClick={() => handleModeSelect('create')}
-                                className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'create' ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
-                                title="Switch to Creation Mode"
-                            >
-                                <Icon name="plus-circle" size={14} /> Create
-                            </button>
-
-                            <button
-                                onClick={() => handleModeSelect('review')}
-                                className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'review' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
-                                title="Switch to Review & Audit Console"
-                            >
-                                <Icon name="list-checks" size={14} /> Review
-                                {appMode !== 'review' && pendingCount > 0 && (
-                                    <span className="ml-1 px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full">{pendingCount}</span>
-                                )}
-                            </button>
-
-                            <button
-                                onClick={handleViewDatabase}
-                                className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${appMode === 'database' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white'}`}
-                                title="Switch to Database View"
-                            >
-                                <Icon name="database" size={14} /> DB View
-                            </button>
-
-                            <button
-                                onClick={() => setShowAnalytics(true)}
-                                className="px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 bg-slate-800 text-slate-400 hover:bg-slate-700/50 hover:text-white"
-                                title="Open Analytics Dashboard"
-                            >
-                                <Icon name="bar-chart-2" size={14} /> Analytics
-                            </button>
-
-                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
-
-                            {/* Filter Buttons - Shown when there are questions */}
-                            <FilterButton mode="pending" current={filterMode} setFilter={setFilterMode} label="Pending" count={pendingCount} />
-                            <FilterButton mode="all" current={filterMode} setFilter={setFilterMode} label="All" count={appMode === 'review' ? historicalQuestions.length : questions.length} />
-                            <FilterButton mode="accepted" current={filterMode} setFilter={setFilterMode} label="Accepted" count={approvedCount} />
-                            <FilterButton mode="rejected" current={filterMode} setFilter={setFilterMode} label="Rejected" count={rejectedCount} />
-
-                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
-                            <button
-                                onClick={() => setFilterByCreator(!filterByCreator)}
-                                className={`px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1 ${filterByCreator ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50'}`}
-                                title="Filter by My Creator Name"
-                            >
-                                <Icon name="user" size={12} /> My Questions
-                            </button>
-                            <div className="w-px h-4 bg-slate-700 mx-1"></div>
-
-                            <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-40 bg-slate-900 text-slate-300 placeholder-slate-600 border-none outline-none focus:ring-0 text-sm px-2 rounded" />
-                            {searchTerm && (<button onClick={() => setSearchTerm('')} className="text-slate-500 hover:text-red-400 p-1 rounded"><Icon name="x" size={16} /></button>)}
-                        </div>
-                    </div >
+                    <div className="flex flex-col border-b border-slate-800 bg-slate-900 z-10">
+                        <AppNavigation
+                            activeMode={appMode}
+                            onNavigate={(mode) => {
+                                if (mode === 'analytics') setShowAnalytics(true);
+                                else if (mode === 'database') handleViewDatabase();
+                                else handleModeSelect(mode);
+                            }}
+                            counts={{ pending: pendingCount }}
+                        />
+                        <ContextToolbar
+                            mode={appMode}
+                            counts={contextCounts}
+                            filterMode={filterMode}
+                            setFilterMode={setFilterMode}
+                            filterByCreator={filterByCreator}
+                            setFilterByCreator={setFilterByCreator}
+                            searchTerm={searchTerm}
+                            setSearchTerm={setSearchTerm}
+                            sortBy={sortBy}
+                            setSortBy={setSortBy}
+                            isProcessing={isProcessing}
+                            status={status}
+                            isAuthReady={isAuthReady}
+                            config={config}
+                            onLoadSheets={handleLoadFromSheets}
+                            onLoadFirestore={handleLoadFromFirestore}
+                            onBulkExport={() => setShowBulkExportModal(true)}
+                        />
+                    </div>
 
                     <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4" data-tour="review-area">
                         {!showHistory && uniqueFilteredQuestions.length === 0 && questions.length === 0 && !status && appMode === 'create' && (<div className="flex flex-col items-center justify-center h-full text-slate-600"><Icon name="terminal" size={48} className="mb-4 text-slate-800" /><p className="font-medium text-slate-500">Ready. Click 'GENERATE QUESTIONS' to begin or upload a source file.</p></div>)}
@@ -644,6 +594,7 @@ const App = () => {
                                     isProcessing={isProcessing}
                                     showMessage={showMessage}
                                     filterMode={filterMode}
+                                    sortBy={sortBy}
                                 />
                             ) : appMode === 'review' && uniqueFilteredQuestions.length > 0 ? (
                                 <ReviewMode

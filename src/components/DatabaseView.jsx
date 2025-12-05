@@ -14,11 +14,12 @@ const DatabaseView = ({
     onKickBack,
     isProcessing,
     showMessage,
-    filterMode = 'all' // Default to 'all' if not provided
+    filterMode = 'all', // Default to 'all' if not provided
+    sortBy = 'default' // Default to 'default' if not provided
 }) => {
     const [isSyncing, setIsSyncing] = useState(false);
     const [syncProgress, setSyncProgress] = useState(0);
-    const [sortBy, setSortBy] = useState('default'); // default, language, discipline, difficulty
+    // sortBy is now a prop
     const [loadMenuOpen, setLoadMenuOpen] = useState(false);
     const loadMenuRef = useRef(null);
 
@@ -135,62 +136,7 @@ const DatabaseView = ({
                 <div className="flex items-center gap-4">
                     <div>
                         <h2 className="text-lg font-bold text-blue-400 flex items-center gap-2"><Icon name="database" /> Database View</h2>
-                        <p className="text-xs text-blue-300/70">Viewing {sortedQuestions.length} of {questions.length} questions from Google Sheets (Read Only)</p>
-                    </div>
-
-                    {/* Sort Control */}
-                    <div className="flex items-center gap-2 ml-4 bg-slate-900/50 p-1.5 rounded border border-slate-700">
-                        <span className="text-xs font-bold text-slate-400 uppercase">Sort By:</span>
-                        <select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                            className="bg-slate-800 text-slate-200 text-xs border border-slate-600 rounded px-2 py-1 outline-none focus:border-blue-500"
-                        >
-                            <option value="default">Default (Sheet Order)</option>
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="language">Language (A-Z)</option>
-                            <option value="discipline">Discipline (A-Z)</option>
-                            <option value="difficulty">Difficulty (Easy-Hard)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div className="flex gap-2">
-                    {/* Load Data Dropdown */}
-                    <div className="relative" ref={loadMenuRef}>
-                        <button
-                            onClick={() => setLoadMenuOpen(!loadMenuOpen)}
-                            disabled={isProcessing}
-                            className="px-3 py-1 bg-blue-800 hover:bg-blue-700 text-blue-200 text-xs rounded border border-blue-600 flex items-center gap-2 disabled:opacity-50"
-                        >
-                            <Icon name="download" size={12} className={isProcessing ? "animate-pulse" : ""} />
-                            Load Data
-                            <Icon name="chevron-down" size={10} className={`transition-transform ${loadMenuOpen ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {loadMenuOpen && (
-                            <div className="absolute left-0 top-full mt-1 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                                <div className="py-1">
-                                    <button
-                                        onClick={() => { onLoadFirestore(); setLoadMenuOpen(false); }}
-                                        disabled={isProcessing}
-                                        className="w-full text-left px-4 py-2 text-xs text-indigo-300 hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50"
-                                    >
-                                        <Icon name="cloud-lightning" size={14} />
-                                        From Firestore
-                                    </button>
-                                    <button
-                                        onClick={() => { onLoad(); setLoadMenuOpen(false); }}
-                                        disabled={isProcessing}
-                                        className="w-full text-left px-4 py-2 text-xs text-blue-300 hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50"
-                                    >
-                                        <Icon name="refresh-cw" size={14} />
-                                        From Google Sheets
-                                    </button>
-                                </div>
-                            </div>
-                        )}
+                        <p className="text-xs text-blue-300/70">Viewing {sortedQuestions.length} of {questions.length} loaded records</p>
                     </div>
                 </div>
             </div>
