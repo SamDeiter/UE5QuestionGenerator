@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { generateContent, generateCritique } from '../services/gemini';
 import { constructSystemPrompt } from '../services/promptBuilder';
 import { parseQuestions } from '../utils/helpers';
+import { validateQuestion } from '../utils/questionValidator';
 import { analyzeRequest, estimateTokens } from '../utils/tokenCounter';
 import { logGeneration, logQuestion } from '../utils/analyticsStore';
 
@@ -225,31 +226,40 @@ export const useGeneration = (
             const missingCount = newQuestions.filter(q => q.sourceVerified === 'missing').length;
             console.log(`📊 Source verification: ${verifiedCount} verified, ${unverifiedCount} unverified, ${missingCount} missing`);
 
-            // ANSWER VALIDATION: Check if correct answer appears in source excerpt
-            newQuestions = newQuestions.map(q => {
-                if (q.type === 'Multiple Choice' && q.sourceExcerpt && q.options && q.correct) {
-                    const correctAnswer = q.options[q.correct] || '';
-                    const excerpt = (q.sourceExcerpt || '').toLowerCase();
-                    const answerWords = correctAnswer.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+            // VALIDATION: Run unified validator (URL, Excerpt, Answer Match)
+            const validatedQuestions = [];
+            let autoRejectedCount = 0;
 
-                    // Check if key words from the answer appear in the source
-                    const matchingWords = answerWords.filter(word => excerpt.includes(word));
-                    const matchRatio = answerWords.length > 0 ? matchingWords.length / answerWords.length : 0;
+            newQuestions.forEach(q => {
+                const validation = validateQuestion(q);
 
-                    if (matchRatio < 0.3) {
-                        // Answer doesn't seem to match source excerpt
-                        console.warn(`⚠️ ANSWER MISMATCH: "${correctAnswer}" not found in source excerpt for question: "${q.question.substring(0, 50)}..."`);
-                        return { ...q, answerMismatch: true };
-                    }
+                if (validation.isCriticalFailure) {
+                    autoRejectedCount++;
+                    console.warn(`🚫 Auto-rejected question: ${validation.warnings.join(', ')}`, q);
+                } else {
+                    // Attach validation metadata to the question
+                    validatedQuestions.push({
+                        ...q,
+                        _validation: validation,
+                        // Keep legacy fields for backward compatibility if needed, but _validation is the source of truth
+                        answerMismatch: !validation.isValid && validation.warnings.some(w => w.includes('Answer')),
+                        invalidUrl: !validation.isValid && validation.warnings.some(w => w.includes('URL'))
+                    });
                 }
-                return q;
             });
 
-            // Count mismatches
-            const mismatchCount = newQuestions.filter(q => q.answerMismatch).length;
-            if (mismatchCount > 0) {
-                console.warn(`🚨 ${mismatchCount} questions have answer/source mismatches - review carefully!`);
-                showMessage(`⚠️ ${mismatchCount} questions may have wrong answers - check source excerpts!`, 8000);
+            if (autoRejectedCount > 0) {
+                console.warn(`🗑️ Auto-rejected ${autoRejectedCount} questions due to critical quality issues.`);
+                showMessage(`Auto-rejected ${autoRejectedCount} questions with missing sources or invalid URLs.`, 6000);
+            }
+
+            newQuestions = validatedQuestions;
+
+            // Count warnings
+            const warningCount = newQuestions.filter(q => !q._validation.isValid).length;
+            if (warningCount > 0) {
+                console.warn(`⚠️ ${warningCount} questions have quality warnings - review carefully!`);
+                showMessage(`⚠️ ${warningCount} questions flagged for review (check warnings).`, 8000);
             }
 
             // Enrich questions with metadata
