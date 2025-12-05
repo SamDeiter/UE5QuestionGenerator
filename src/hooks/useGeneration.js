@@ -343,13 +343,44 @@ export const useGeneration = (
         setIsProcessing(true);
         setStatus(`Translating question to ${targetLang}...`);
 
-        const rawTable = `| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| 1 | ${q.discipline} | ${q.type} | ${q.difficulty} | ${q.question} | | ${q.options.A} | ${q.options.B} | ${q.options.C || ''} | ${q.options.D || ''} | ${q.correct} | ${q.sourceUrl} | ${q.sourceExcerpt} |`;
+        // JSON Prompt for reliability
+        const systemPrompt = `You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided JSON object from ${q.language || 'English'} to ${targetLang}. 
+        CRITICAL RULES:
+        1. Return ONLY valid JSON. No markdown formatting, no explanations.
+        2. Translate ONLY: "Question", "OptionA", "OptionB", "OptionC", "OptionD", and "SourceExcerpt".
+        3. DO NOT translate: "ID", "Discipline", "Type", "Difficulty", "Answer", "CorrectLetter", and "SourceURL".
+        4. Maintain exact JSON structure.`;
 
-        const prompt = `Translate this single row from ${q.language || 'English'} to ${targetLang}. Keep format EXACT. \n${rawTable}`;
+        const userPrompt = `Translate this object:\n${JSON.stringify({
+            Discipline: q.discipline,
+            Type: q.type,
+            Difficulty: q.difficulty,
+            Question: q.question,
+            OptionA: q.options.A,
+            OptionB: q.options.B,
+            OptionC: q.options.C || '',
+            OptionD: q.options.D || '',
+            CorrectLetter: q.correct,
+            SourceURL: q.sourceUrl,
+            SourceExcerpt: q.sourceExcerpt
+        }, null, 2)}`;
 
         try {
-            const text = await generateContent(effectiveApiKey, "Translator", prompt, setStatus);
-            const translatedQs = parseQuestions(text);
+            const text = await generateContent(effectiveApiKey, systemPrompt, userPrompt, setStatus);
+
+            // Attempt to parse JSON response
+            let translatedData = null;
+            try {
+                // Strip code fence if present
+                const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+                translatedData = JSON.parse(cleanText);
+            } catch (e) {
+                console.warn("JSON parse failed, trying parseQuestions fallback", e);
+            }
+
+            // Fallback to helper parser or use parsed JSON
+            const translatedQs = translatedData ? parseQuestions(JSON.stringify(translatedData)) : parseQuestions(text);
+
             if (translatedQs.length > 0) {
                 const tq = translatedQs[0];
                 const newQuestion = {
@@ -365,18 +396,17 @@ export const useGeneration = (
                 };
 
                 await checkAndStoreQuestions([newQuestion]);
-                addQuestionsToState([newQuestion], false); // showHistory is handled by caller usually, but here we assume false or pass it in? 
-                // Actually, handleTranslateSingle in App.jsx used showHistory state. 
-                // We might need to pass showHistory or just default to false/true.
-                // For now, let's assume we add to the active view.
-
+                addQuestionsToState([newQuestion], false);
                 handleLanguageSwitch(targetLang);
 
                 showMessage(`Translated to ${targetLang} and saved.`, 3000);
+            } else {
+                throw new Error("Parser returned no questions from translation.");
             }
         } catch (e) {
-            console.error(e);
+            console.error("Translation error:", e);
             setStatus('Translation Failed');
+            showMessage(`Translation Failed: ${e.message}`, 5000);
         } finally {
             setIsProcessing(false);
         }
@@ -477,14 +507,40 @@ export const useGeneration = (
         const totalQueueSize = translationQueue.length;
 
         for (const { question: q, targetLang } of translationQueue) {
-            const rawTable = `| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| 1 | ${q.discipline} | ${q.type} | ${q.difficulty} | ${q.question} | | ${q.options.A} | ${q.options.B} | ${q.options.C || ''} | ${q.options.D || ''} | ${q.correct} | ${q.sourceUrl} | ${q.sourceExcerpt} |`;
-            const prompt = `Translate this single row from ${q.language || 'English'} to ${targetLang}. Keep format EXACT. \n${rawTable}`;
-            const systemPrompt = `You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided Markdown table from ${q.language || 'English'} to ${targetLang}. CRITICAL INSTRUCTIONS: 1. Preserve the exact Markdown table structure. 2. Translate ONLY: Question, OptionA, OptionB, OptionC, OptionD, and SourceExcerpt. 3. DO NOT translate: ID, Discipline, Type, Difficulty, Answer, CorrectLetter, and SourceURL.`;
+            const systemPrompt = `You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided JSON object from ${q.language || 'English'} to ${targetLang}. 
+            CRITICAL RULES:
+            1. Return ONLY valid JSON. No markdown formatting.
+            2. Translate ONLY: "Question", "OptionA", "OptionB", "OptionC", "OptionD", and "SourceExcerpt".
+            3. DO NOT translate: "ID", "Discipline", "Type", "Difficulty", "Answer", "CorrectLetter", and "SourceURL".
+            4. Maintain exact JSON structure.`;
+
+            const userPrompt = `Translate this object:\n${JSON.stringify({
+                Discipline: q.discipline,
+                Type: q.type,
+                Difficulty: q.difficulty,
+                Question: q.question,
+                OptionA: q.options.A,
+                OptionB: q.options.B,
+                OptionC: q.options.C || '',
+                OptionD: q.options.D || '',
+                CorrectLetter: q.correct,
+                SourceURL: q.sourceUrl,
+                SourceExcerpt: q.sourceExcerpt
+            }, null, 2)}`;
 
             try {
                 setStatus(`Translating: ${q.uniqueId.substring(0, 4)} -> ${targetLang}...`);
-                const text = await generateContent(effectiveApiKey, systemPrompt, prompt, setStatus);
-                const translatedQs = parseQuestions(text);
+                const text = await generateContent(effectiveApiKey, systemPrompt, userPrompt, setStatus);
+
+                let translatedData = null;
+                try {
+                    const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+                    translatedData = JSON.parse(cleanText);
+                } catch (e) {
+                    // ignore JSON parse error, let parseQuestions handle it
+                }
+
+                const translatedQs = translatedData ? parseQuestions(JSON.stringify(translatedData)) : parseQuestions(text);
 
                 if (translatedQs.length > 0) {
                     const tq = translatedQs[0];
