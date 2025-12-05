@@ -33,7 +33,15 @@ const NameEntryModal = ({ onSave }) => {
                     <button type="submit" disabled={!name.trim()} className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all shadow-lg active:scale-[0.98]">
                         Set Identity & Start
                     </button>
-                </form>
+                    <div className="text-center">
+                        <button
+                            type="button"
+                            onClick={() => onSave("N/A")}
+                            className="text-xs text-slate-500 hover:text-slate-300 underline transition-colors"
+                        >
+                            Skip / Use "N/A"
+                        </button>
+                    </div>                </form>
             </div>
         </div>
     );

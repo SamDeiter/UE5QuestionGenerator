@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Icon from './Icon';
 import CritiqueDisplay from './CritiqueDisplay';
+import { renderMarkdown } from '../utils/helpers';
 import QuestionHeader from './QuestionItem/QuestionHeader';
 import QuestionContent from './QuestionItem/QuestionContent';
 import QuestionMetadata from './QuestionItem/QuestionMetadata';
@@ -86,21 +87,15 @@ const QuestionItem = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <QuestionMenu
-                            q={q}
-                            onExplain={onExplain}
-                            onVariate={onVariate}
-                            onKickBack={onKickBack}
-                            onDelete={onDelete}
-                            onUpdateQuestion={onUpdateQuestion}
-                            appMode={appMode}
-                            isRejected={isRejected}
-                        />
+                        {/* QuestionMenu Removed - Actions moved to QuestionActions */}
+                        {/* <QuestionMenu ... /> */}
 
                         <QuestionActions
                             q={q}
                             onUpdateStatus={onUpdateStatus}
                             onCritique={onCritique}
+                            onExplain={onExplain}
+                            onVariate={onVariate}
                             onDelete={onDelete}
                             onUpdateQuestion={onUpdateQuestion}
                             isProcessing={isProcessing}
@@ -182,7 +177,7 @@ const QuestionItem = ({
                 {q.explanation && (
                     <div className="mb-3 p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-lg animate-in fade-in slide-in-from-top-2">
                         <div className="flex items-center gap-2 mb-1 text-indigo-300 text-sm font-bold uppercase"><Icon name="lightbulb" size={14} /> Explanation</div>
-                        <p className="text-sm text-slate-300 leading-relaxed">{q.explanation}</p>
+                        <div className="text-sm text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: renderMarkdown(q.explanation) }} />
                     </div>
                 )}
 

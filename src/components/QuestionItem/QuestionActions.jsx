@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Icon from '../Icon';
+import { stripHtmlTags } from '../../utils/helpers';
 
 // Rejection reason options
 const REJECTION_REASONS = [
@@ -17,6 +18,8 @@ const QuestionActions = ({
     q,
     onUpdateStatus,
     onCritique,
+    onExplain,
+    onVariate,
     onDelete,
     onUpdateQuestion,
     isProcessing,
@@ -90,8 +93,8 @@ const QuestionActions = ({
                             onClick={handleVerify}
                             disabled={q.humanVerified}
                             className={`p-2 rounded-lg transition-all ${q.humanVerified
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50'
-                                    : 'bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400 border border-indigo-900/50 animate-pulse'
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50'
+                                : 'bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400 border border-indigo-900/50 animate-pulse'
                                 }`}
                             title={q.humanVerified
                                 ? `Verified by ${q.humanVerifiedBy} at ${new Date(q.humanVerifiedAt).toLocaleString()}`
@@ -103,25 +106,68 @@ const QuestionActions = ({
                     )}
 
                     {/* AI Critique Button */}
+                    {/* Review Mode Actions: Explain, Variate, Copy (Moved from Menu) */}
                     {appMode === 'review' && (
-                        <button
-                            onClick={() => onCritique(q)}
-                            disabled={isProcessing}
-                            className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400 disabled:opacity-50"
-                            title="AI Critique"
-                            aria-label="Get AI critique for this question"
-                        >
-                            <Icon name="zap" size={18} />
-                        </button>
+                        <>
+                            <button
+                                onClick={() => onCritique(q)}
+                                disabled={isProcessing}
+                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400 disabled:opacity-50"
+                                title="AI Critique"
+                            >
+                                <Icon name="zap" size={18} />
+                            </button>
+
+                            {/* Explain Answer */}
+                            <button
+                                onClick={() => onExplain && onExplain(q)}
+                                disabled={isProcessing}
+                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400 disabled:opacity-50"
+                                title="Explain Answer"
+                            >
+                                <Icon name="lightbulb" size={18} />
+                            </button>
+
+                            {/* Create Variations */}
+                            <button
+                                onClick={() => onVariate && onVariate(q)}
+                                disabled={isProcessing}
+                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-purple-900/20 hover:text-purple-400 disabled:opacity-50"
+                                title="Create Variations"
+                            >
+                                <Icon name="copy" size={18} />
+                            </button>
+
+                            {/* Copy Question Text */}
+                            <button
+                                onClick={() => {
+                                    const textArea = document.createElement("textarea");
+                                    textArea.value = stripHtmlTags(q.question);
+                                    document.body.appendChild(textArea);
+                                    textArea.select();
+                                    try {
+                                        document.execCommand('copy');
+                                        if (showMessage) showMessage("Question copied to clipboard", 2000);
+                                    } catch (err) {
+                                        console.error('Failed to copy', err);
+                                    }
+                                    document.body.removeChild(textArea);
+                                }}
+                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-white"
+                                title="Copy Question Text"
+                            >
+                                <Icon name="clipboard" size={18} />
+                            </button>
+                        </>
                     )}
 
                     <button
                         onClick={handleAccept}
                         className={`p-2 rounded-lg transition-all ${q.status === 'accepted'
-                                ? 'bg-green-600 text-white shadow-lg shadow-green-900/50'
-                                : q.humanVerified
-                                    ? 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'
-                                    : 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
+                            ? 'bg-green-600 text-white shadow-lg shadow-green-900/50'
+                            : q.humanVerified
+                                ? 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'
+                                : 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
                             }`}
                         title={q.humanVerified ? "Accept" : "Verify first before accepting"}
                         aria-label="Accept question"

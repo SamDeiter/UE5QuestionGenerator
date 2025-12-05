@@ -126,9 +126,9 @@ To assess professional competence, use these question structures:
 
 ### 2.5 ANSWER VALIDATION (CRITICAL - READ CAREFULLY)
 **BEFORE generating any question, you MUST:**
-1. **Find the answer in the documentation FIRST**
-2. **Put that EXACT answer as one of your options (A, B, C, or D)**
-3. **Set CorrectLetter to match that option**
+1. **Find the answer in the documentation FIRST.**
+2. **Put that EXACT answer as one of your options (A, B, C, or D).**
+3. **Set CorrectLetter to match that option.**
 
 **FAILURE MODE TO AVOID:** Do NOT generate a question where the correct answer from the source is NOT included in the options!        
 **EXAMPLE OF FAILURE:** Source says "Material Editor" but you list options: Level Editor, Blueprint Editor, Cascade Editor, Static Mesh Editor - THIS IS WRONG because "Material Editor" is not an option!
@@ -140,11 +140,10 @@ To assess professional competence, use these question structures:
 4. CorrectLetter MUST point to the option containing "Material Editor"
 
 ### 2.6 MANDATORY SELF-CHECK (DO THIS FOR EVERY QUESTION)
-Before finalizing each question, perform this self-check:
-1. Read your SourceExcerpt aloud
-2. Identify the KEY TERM or CONCEPT it mentions as the answer
-3. Verify that KEY TERM appears EXACTLY in one of OptionA/B/C/D
-4. Verify CorrectLetter points to THAT option
+**Before finalizing each question, you MUST verify:**
+1. **Fact Check:** Does the option selected by `CorrectLetter` contain the TRUE statement according to `SourceExcerpt`?
+2. **Logic Check:** If CorrectLetter is 'A', does `OptionA` actually contain the correct answer?
+3. **Distractor Check:** Are the other 3 options definitely FALSE or clearly inferior answers?
 
 **REAL FAILURE EXAMPLE #1:**
 - Question: "Which light type is best for simulating sunlight?"
@@ -159,6 +158,7 @@ Before finalizing each question, perform this self-check:
 - ✅ CORRECT: One option MUST be "Static Mesh Editor" and CorrectLetter must point to it.
 
 **CRITICAL RULE: IF THE ANSWER FROM YOUR SOURCE IS NOT IN YOUR OPTIONS, YOU HAVE FAILED. REGENERATE THE QUESTION.**
+**CRITICAL RULE: IF `CorrectLetter` POINTS TO A WRONG ANSWER, YOU HAVE FAILED. FIX IT.**
 
 ### 3. Sourcing & URL Integrity (CRITICAL)
 - **Base URL:** \`https://dev.epicgames.com/documentation/en-us/unreal-engine/\`
