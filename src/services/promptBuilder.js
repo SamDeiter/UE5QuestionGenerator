@@ -126,6 +126,21 @@ ${examplesText}
 3. Options MUST include "Material Editor" as one of A/B/C/D
 4. CorrectLetter MUST point to the option containing "Material Editor"
 
+### 2.6 MANDATORY SELF-CHECK (DO THIS FOR EVERY QUESTION)
+Before finalizing each question, perform this self-check:
+1. Read your SourceExcerpt aloud
+2. Identify the KEY TERM or CONCEPT it mentions as the answer
+3. Verify that KEY TERM appears EXACTLY in one of OptionA/B/C/D
+4. Verify CorrectLetter points to THAT option
+
+**REAL FAILURE EXAMPLE:**
+- Question: "Which light type is best for simulating sunlight?"
+- SourceExcerpt: "Directional Lights are used to simulate light sources that are infinitely far away, such as the sun."
+- ❌ WRONG: CorrectLetter=A pointing to "Point Light" 
+- ✅ CORRECT: CorrectLetter=D pointing to "Directional Light"
+
+**THE SOURCE EXCERPT MUST MATCH THE CORRECT ANSWER. IF THEY DON'T MATCH, DISCARD THE QUESTION.**
+
 ### 3. Sourcing & URL Integrity (CRITICAL)
 - **Base URL:** \`https://dev.epicgames.com/documentation/en-us/unreal-engine/\`
 - **Valid URL Pattern:** Base URL + lowercase-slug-with-hyphens (e.g., \`nanite-overview\`, \`lumen-global-illumination\`, \`animation-blueprint-in-unreal-engine\`)

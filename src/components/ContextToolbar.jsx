@@ -182,6 +182,27 @@ const ContextToolbar = ({
             </div>
 
             <div className="flex items-center gap-3">
+                {/* Load Data Buttons */}
+                <button
+                    onClick={onLoadFirestore}
+                    disabled={isProcessing}
+                    className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50"
+                >
+                    <Icon name="cloud-lightning" size={14} />
+                    Load from Firestore
+                </button>
+                <button
+                    onClick={onLoadSheets}
+                    disabled={isProcessing || !config.sheetUrl}
+                    className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+                    title={!config.sheetUrl ? "Configure Sheet URL in Settings first" : "Load from Google Sheets"}
+                >
+                    <Icon name="table" size={14} />
+                    Load from Sheets
+                </button>
+
+                <div className="h-4 w-px bg-slate-700"></div>
+
                 {/* Reuse Search for DB View */}
                 <div className="relative">
                     <Icon name="search" size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
