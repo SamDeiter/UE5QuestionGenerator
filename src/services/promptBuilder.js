@@ -133,13 +133,19 @@ Before finalizing each question, perform this self-check:
 3. Verify that KEY TERM appears EXACTLY in one of OptionA/B/C/D
 4. Verify CorrectLetter points to THAT option
 
-**REAL FAILURE EXAMPLE:**
+**REAL FAILURE EXAMPLE #1:**
 - Question: "Which light type is best for simulating sunlight?"
 - SourceExcerpt: "Directional Lights are used to simulate light sources that are infinitely far away, such as the sun."
 - ❌ WRONG: CorrectLetter=A pointing to "Point Light" 
-- ✅ CORRECT: CorrectLetter=D pointing to "Directional Light"
+- ✅ CORRECT: CorrectLetter must point to "Directional Light"
 
-**THE SOURCE EXCERPT MUST MATCH THE CORRECT ANSWER. IF THEY DON'T MATCH, DISCARD THE QUESTION.**
+**REAL FAILURE EXAMPLE #2:**
+- Question: "Which tool helps optimize the number of polygons in a mesh?"
+- SourceExcerpt: "The Static Mesh Editor has a built-in tool for reducing the complexity of your meshes."
+- ❌ WRONG: Options are Material Editor, Blueprint Editor, Landscape Editor, Reduction Tool — but "Static Mesh Editor" is NOT listed!
+- ✅ CORRECT: One option MUST be "Static Mesh Editor" and CorrectLetter must point to it.
+
+**CRITICAL RULE: IF THE ANSWER FROM YOUR SOURCE IS NOT IN YOUR OPTIONS, YOU HAVE FAILED. REGENERATE THE QUESTION.**
 
 ### 3. Sourcing & URL Integrity (CRITICAL)
 - **Base URL:** \`https://dev.epicgames.com/documentation/en-us/unreal-engine/\`
