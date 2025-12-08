@@ -16,14 +16,25 @@ const QuestionHeader = ({ q, getDiffBadgeColor, onKickBack, appMode }) => {
                     {q.critiqueScore !== undefined && q.critiqueScore !== null && (
                         <span
                             className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 ${q.critiqueScore >= 80 ? 'bg-green-900/50 text-green-400 border border-green-700/50' :
-                                    q.critiqueScore >= 60 ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700/50' :
-                                        q.critiqueScore >= 40 ? 'bg-orange-900/50 text-orange-400 border border-orange-700/50' :
-                                            'bg-red-900/50 text-red-400 border border-red-700/50'
+                                q.critiqueScore >= 60 ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700/50' :
+                                    q.critiqueScore >= 40 ? 'bg-orange-900/50 text-orange-400 border border-orange-700/50' :
+                                        'bg-red-900/50 text-red-400 border border-red-700/50'
                                 }`}
                             title={`AI Critique Score: ${q.critiqueScore}/100`}
                         >
                             <Icon name="brain" size={12} />
                             {q.critiqueScore}
+                        </span>
+                    )}
+
+                    {/* Human Verified Badge */}
+                    {q.humanVerified && (
+                        <span
+                            className="px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 bg-emerald-900/50 text-emerald-400 border border-emerald-700/50"
+                            title={`Human Verified by ${q.humanVerifiedBy || 'Unknown'}${q.humanVerifiedAt ? ` on ${new Date(q.humanVerifiedAt).toLocaleDateString()}` : ''}`}
+                        >
+                            <Icon name="eye" size={12} />
+                            VERIFIED
                         </span>
                     )}
 
