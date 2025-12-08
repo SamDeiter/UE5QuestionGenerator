@@ -1,6 +1,52 @@
 import React from 'react';
 import Icon from './Icon';
-import { renderMarkdown, sanitizeText } from '../utils/helpers';
+import { renderMarkdown, sanitizeText, computeWordDiff } from '../utils/helpers';
+
+/**
+ * Renders inline word-level diff with highlighting
+ * @param {string} oldText - Original text
+ * @param {string} newText - New text
+ */
+const DiffText = ({ oldText, newText }) => {
+    const diff = computeWordDiff(oldText || '', newText || '');
+
+    if (diff.length === 0) return null;
+
+    // Check if there are any actual changes
+    const hasChanges = diff.some(seg => seg.type !== 'unchanged');
+
+    if (!hasChanges) {
+        return <span className="text-slate-300">{oldText}</span>;
+    }
+
+    return (
+        <span className="leading-relaxed">
+            {diff.map((segment, idx) => {
+                if (segment.type === 'removed') {
+                    return (
+                        <span
+                            key={idx}
+                            className="bg-red-900/50 text-red-300 line-through decoration-red-400 px-0.5 rounded"
+                        >
+                            {segment.text}
+                        </span>
+                    );
+                }
+                if (segment.type === 'added') {
+                    return (
+                        <span
+                            key={idx}
+                            className="bg-green-900/50 text-green-300 font-semibold px-0.5 rounded"
+                        >
+                            {segment.text}
+                        </span>
+                    );
+                }
+                return <span key={idx} className="text-slate-300">{segment.text}</span>;
+            })}
+        </span>
+    );
+};
 
 const CritiqueModal = ({ isOpen, onClose, q, text, score, loading, onFix, isFixing, onAccept, rewrite, changes, onApplySuggestions }) => {
     if (!isOpen || !q) return null;
@@ -25,6 +71,16 @@ const CritiqueModal = ({ isOpen, onClose, q, text, score, loading, onFix, isFixi
     const styles = getSeverityStyles(score);
     const isFailing = score !== null && score <= 50;
 
+    // Check if question was changed
+    const questionChanged = rewrite?.question && rewrite.question !== q.question;
+
+    // Check which options changed
+    const optionChanges = ['A', 'B', 'C', 'D'].filter(letter => {
+        const oldVal = q.options?.[letter];
+        const newVal = rewrite?.options?.[letter];
+        return newVal && oldVal !== newVal;
+    });
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
             <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[90vh]">
@@ -37,11 +93,13 @@ const CritiqueModal = ({ isOpen, onClose, q, text, score, loading, onFix, isFixi
                 </div>
 
                 <div className="p-6 overflow-y-auto space-y-6 flex-1">
+                    {/* Original Question */}
                     <div className="space-y-2">
                         <div className="text-[10px] font-bold uppercase text-slate-500">Original Question</div>
                         <div className="p-4 bg-slate-950 border border-slate-800 rounded text-sm text-slate-300" dangerouslySetInnerHTML={{ __html: sanitizeText(q.question) }} />
                     </div>
 
+                    {/* Feedback */}
                     <div className="space-y-2">
                         <div className="text-[10px] font-bold uppercase text-slate-500">Feedback</div>
                         {loading ? (
@@ -53,57 +111,77 @@ const CritiqueModal = ({ isOpen, onClose, q, text, score, loading, onFix, isFixi
                         )}
                     </div>
 
+                    {/* Suggested Changes with Word-Level Diff */}
                     {rewrite && (
-                        <div className="space-y-2">
-                            <div className="text-[10px] font-bold uppercase text-slate-500">Suggested Changes</div>
-                            <div className="p-4 bg-blue-950/20 border border-blue-700/50 rounded space-y-3">
-                                {changes && (
-                                    <div className="text-xs text-blue-200 mb-2 italic">"{changes}"</div>
-                                )}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <div className="text-[10px] font-bold uppercase text-slate-500">AI Improvements</div>
+                                <div className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-900/30 text-blue-300 border border-blue-700/50">
+                                    <Icon name="git-compare" size={10} />
+                                    <span>Word-Level Diff</span>
+                                </div>
+                            </div>
 
+                            {/* Change Summary */}
+                            {changes && (
+                                <div className="p-3 bg-indigo-950/30 border border-indigo-700/50 rounded text-xs text-indigo-200 italic flex items-start gap-2">
+                                    <Icon name="info" size={14} className="flex-shrink-0 mt-0.5" />
+                                    <span>{changes}</span>
+                                </div>
+                            )}
+
+                            <div className="p-4 bg-slate-950/50 border border-slate-700 rounded space-y-4">
                                 {/* Question Diff */}
-                                {rewrite.question !== q.question && (
-                                    <div className="space-y-1">
-                                        <div className="text-[10px] font-bold text-slate-400">QUESTION:</div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="p-2 bg-red-950/30 border border-red-700/30 rounded text-xs text-red-200 line-through opacity-60">
-                                                {q.question}
-                                            </div>
-                                            <div className="p-2 bg-green-950/30 border border-green-700/50 rounded text-xs text-green-200 font-semibold">
-                                                {rewrite.question}
-                                            </div>
+                                {questionChanged && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                                            <Icon name="message-square" size={12} />
+                                            Question Text
+                                        </div>
+                                        <div className="p-3 bg-slate-900 border border-slate-800 rounded text-sm">
+                                            <DiffText oldText={q.question} newText={rewrite.question} />
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Options Diff */}
-                                {Object.keys(rewrite.options || {}).some(key => rewrite.options[key] !== q.options?.[key]) && (
+                                {optionChanges.length > 0 && (
                                     <div className="space-y-2">
-                                        <div className="text-[10px] font-bold text-slate-400">OPTIONS:</div>
-                                        {['A', 'B', 'C', 'D'].map(letter => {
-                                            const oldValue = q.options?.[letter];
-                                            const newValue = rewrite.options?.[letter];
-                                            if (!newValue || oldValue === newValue) return null;
-                                            return (
-                                                <div key={letter} className="grid grid-cols-[auto,1fr,1fr] gap-2 items-start">
-                                                    <div className="text-[10px] text-slate-500 font-bold pt-2">{letter}:</div>
-                                                    <div className="p-2 bg-red-950/30 border border-red-700/30 rounded text-xs text-red-200 line-through opacity-60">
-                                                        {oldValue}
-                                                    </div>
-                                                    <div className="p-2 bg-green-950/30 border border-green-700/50 rounded text-xs text-green-200 font-semibold">
-                                                        {newValue}
+                                        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                                            <Icon name="list" size={12} />
+                                            Answer Options
+                                        </div>
+                                        <div className="space-y-2">
+                                            {optionChanges.map(letter => (
+                                                <div key={letter} className="flex items-start gap-3 p-3 bg-slate-900 border border-slate-800 rounded">
+                                                    <div className="text-[10px] font-bold text-slate-500 bg-slate-800 px-2 py-1 rounded">{letter}</div>
+                                                    <div className="flex-1 text-sm">
+                                                        <DiffText oldText={q.options?.[letter]} newText={rewrite.options?.[letter]} />
                                                     </div>
                                                 </div>
-                                            );
-                                        })}
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
 
                                 {/* Correct Answer Change */}
                                 {rewrite.correct && rewrite.correct !== q.correct && (
-                                    <div className="text-xs text-yellow-200 bg-yellow-950/30 border border-yellow-700/50 rounded p-2">
-                                        <Icon name="alert-triangle" size={12} className="inline mr-1" />
-                                        Correct answer changed: <span className="line-through">{q.correct}</span> → <span className="font-bold">{rewrite.correct}</span>
+                                    <div className="flex items-center gap-2 text-xs text-yellow-200 bg-yellow-950/30 border border-yellow-700/50 rounded p-3">
+                                        <Icon name="alert-triangle" size={14} />
+                                        <span>
+                                            Correct answer changed:
+                                            <span className="ml-1 bg-red-900/50 text-red-300 line-through px-1.5 py-0.5 rounded">{q.correct}</span>
+                                            <span className="mx-1">→</span>
+                                            <span className="bg-green-900/50 text-green-300 font-bold px-1.5 py-0.5 rounded">{rewrite.correct}</span>
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* No Changes Detected */}
+                                {!questionChanged && optionChanges.length === 0 && rewrite.correct === q.correct && (
+                                    <div className="text-xs text-slate-400 text-center py-2">
+                                        <Icon name="check-circle" size={14} className="inline mr-1" />
+                                        No structural changes suggested - question is already well-formed
                                     </div>
                                 )}
                             </div>
@@ -154,3 +232,4 @@ const CritiqueModal = ({ isOpen, onClose, q, text, score, loading, onFix, isFixi
 };
 
 export default CritiqueModal;
+

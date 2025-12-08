@@ -54,6 +54,70 @@ export const textSimilarity = (str1, str2) => {
 };
 
 /**
+ * Compute word-level diff between two strings for inline highlighting
+ * Uses Longest Common Subsequence (LCS) algorithm for accurate diff
+ * @param {string} oldText - Original text
+ * @param {string} newText - New/modified text
+ * @returns {Array<{type: 'unchanged'|'removed'|'added', text: string}>} Array of diff segments
+ */
+export const computeWordDiff = (oldText, newText) => {
+    if (!oldText && !newText) return [];
+    if (!oldText) return [{ type: 'added', text: newText }];
+    if (!newText) return [{ type: 'removed', text: oldText }];
+    if (oldText === newText) return [{ type: 'unchanged', text: oldText }];
+
+    // Tokenize into words (preserving punctuation attached to words)
+    const tokenize = (text) => text.split(/(\s+)/).filter(t => t.length > 0);
+
+    const oldTokens = tokenize(oldText);
+    const newTokens = tokenize(newText);
+
+    // Build LCS table
+    const m = oldTokens.length;
+    const n = newTokens.length;
+    const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (oldTokens[i - 1] === newTokens[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+    }
+
+    // Backtrack to find the diff
+    let i = m, j = n;
+
+    const tempDiff = [];
+    while (i > 0 || j > 0) {
+        if (i > 0 && j > 0 && oldTokens[i - 1] === newTokens[j - 1]) {
+            tempDiff.unshift({ type: 'unchanged', text: oldTokens[i - 1] });
+            i--; j--;
+        } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+            tempDiff.unshift({ type: 'added', text: newTokens[j - 1] });
+            j--;
+        } else {
+            tempDiff.unshift({ type: 'removed', text: oldTokens[i - 1] });
+            i--;
+        }
+    }
+
+    // Merge consecutive segments of the same type for cleaner output
+    const merged = [];
+    for (const segment of tempDiff) {
+        if (merged.length > 0 && merged[merged.length - 1].type === segment.type) {
+            merged[merged.length - 1].text += segment.text;
+        } else {
+            merged.push({ ...segment });
+        }
+    }
+
+    return merged;
+};
+
+/**
  * Remove near-duplicate questions from an array (intra-batch deduplication)
  * @param {Array} questions - Array of question objects
  * @param {number} threshold - Similarity threshold (0-1), default 0.85
