@@ -142,16 +142,16 @@ const QuestionActions = ({
             ) : (
                 // REVIEW MODE: Show AI Critique -> Verify -> Other Actions -> Accept/Reject
                 <>
-                    {/* AI Critique Button - PRIMARY ACTION (must run first) */}
+                    {/* AI Critique Button - Step 1: Run critique first */}
                     {appMode === 'review' && (
                         <button
                             onClick={() => onCritique(q)}
                             disabled={isProcessing}
                             className={`p-2 rounded-lg transition-all flex items-center gap-1 ${q.critiqueScore !== undefined && q.critiqueScore !== null
-                                ? 'bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400'
-                                : 'bg-orange-600 text-white hover:bg-orange-500 animate-pulse shadow-lg shadow-orange-900/50'
+                                    ? 'bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400'
+                                    : 'bg-orange-600 text-white hover:bg-orange-500 animate-pulse shadow-lg shadow-orange-900/50'
                                 } disabled:opacity-50`}
-                            title={q.critiqueScore !== undefined ? `Re-run AI Critique (Current: ${q.critiqueScore}/100)` : "⚡ Run AI Critique First!"}
+                            title={q.critiqueScore !== undefined ? `Re-run AI Critique (Current: ${q.critiqueScore}/100)` : "⚡ Step 1: Run AI Critique!"}
                         >
                             <Icon name="zap" size={18} />
                             {!(q.critiqueScore !== undefined && q.critiqueScore !== null) && (
@@ -160,18 +160,24 @@ const QuestionActions = ({
                         </button>
                     )}
 
-                    {/* Human Verification Button - clearer icon and label */}
+                    {/* Human Verification Button - Step 2: Verify after critique */}
                     {appMode === 'review' && (
                         <button
                             onClick={handleVerify}
-                            disabled={q.humanVerified}
+                            disabled={q.humanVerified || !(q.critiqueScore !== undefined && q.critiqueScore !== null)}
                             className={`p-2 rounded-lg transition-all flex items-center gap-1 ${q.humanVerified
-                                ? 'bg-green-600 text-white shadow-lg shadow-green-900/50'
-                                : 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-400 border border-green-900/50'
+                                    ? 'bg-green-600 text-white shadow-lg shadow-green-900/50'
+                                    : (q.critiqueScore !== undefined && q.critiqueScore !== null && !q.humanVerified)
+                                        ? 'bg-green-600 text-white hover:bg-green-500 animate-pulse shadow-lg shadow-green-900/50'
+                                        : 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
                                 }`}
-                            title={q.humanVerified
-                                ? `✓ Verified by ${q.humanVerifiedBy}`
-                                : "I verified the source & answer are correct"}
+                            title={
+                                q.humanVerified
+                                    ? `✓ Verified by ${q.humanVerifiedBy}`
+                                    : (q.critiqueScore !== undefined && q.critiqueScore !== null)
+                                        ? "Step 2: Click to verify source & answer are correct"
+                                        : "Run AI Critique first"
+                            }
                             aria-label="Mark as human-verified"
                         >
                             <Icon name={q.humanVerified ? "check-circle" : "eye"} size={18} />
