@@ -156,6 +156,7 @@ const QuestionItem = ({
                         isProcessing={isProcessing}
                         suggestedRewrite={q.suggestedRewrite}
                         rewriteChanges={q.rewriteChanges}
+                        originalQuestion={q}
                         onApplyRewrite={() => {
                             if (!q.suggestedRewrite) return;
                             const updatedQ = {

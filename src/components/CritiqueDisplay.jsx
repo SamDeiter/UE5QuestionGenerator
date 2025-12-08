@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from './Icon';
+import { computeWordDiff } from '../utils/helpers';
 
 // Simple markdown to HTML converter
 const parseMarkdown = (text) => {
@@ -17,7 +18,51 @@ const parseMarkdown = (text) => {
     return html;
 };
 
-const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, rewriteChanges, onApplyRewrite }) => {
+/**
+ * Renders inline word-level diff with highlighting
+ */
+const DiffText = ({ oldText, newText }) => {
+    const diff = computeWordDiff(oldText || '', newText || '');
+
+    if (diff.length === 0) return <span className="text-white">{newText}</span>;
+
+    // Check if there are any actual changes
+    const hasChanges = diff.some(seg => seg.type !== 'unchanged');
+
+    if (!hasChanges) {
+        return <span className="text-white">{oldText}</span>;
+    }
+
+    return (
+        <span className="leading-relaxed">
+            {diff.map((segment, idx) => {
+                if (segment.type === 'removed') {
+                    return (
+                        <span
+                            key={idx}
+                            className="bg-red-900/60 text-red-300 line-through decoration-red-400 px-0.5 rounded mx-0.5"
+                        >
+                            {segment.text}
+                        </span>
+                    );
+                }
+                if (segment.type === 'added') {
+                    return (
+                        <span
+                            key={idx}
+                            className="bg-green-900/60 text-green-300 font-semibold px-0.5 rounded mx-0.5"
+                        >
+                            {segment.text}
+                        </span>
+                    );
+                }
+                return <span key={idx} className="text-white">{segment.text}</span>;
+            })}
+        </span>
+    );
+};
+
+const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, rewriteChanges, onApplyRewrite, originalQuestion }) => {
     if (!critique) return null;
 
     // Handle both old (string) and new (object with score) formats
@@ -97,6 +142,9 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
         return elements;
     };
 
+    const questionChanged = suggestedRewrite && originalQuestion &&
+        suggestedRewrite.question !== originalQuestion.question;
+
     return (
         <div className={`mb-3 p-3 border rounded-lg animate-in fade-in slide-in-from-top-2 ${isNewFormat ? getScoreColor(score) : 'bg-red-950/30 border-red-500/30'}`}>
             <div className="flex items-center justify-between mb-2">
@@ -107,18 +155,13 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                 <div className="flex items-center gap-3">
                     {isNewFormat && (
                         <div className={`px-3 py-1.5 rounded-md border ${score >= 90 ? 'bg-green-500/20 border-green-500 text-green-400' :
-                                score >= 70 ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400' :
-                                    score >= 50 ? 'bg-orange-500/20 border-orange-500 text-orange-400' :
-                                        'bg-red-500/20 border-red-500 text-red-400'
+                            score >= 70 ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400' :
+                                score >= 50 ? 'bg-orange-500/20 border-orange-500 text-orange-400' :
+                                    'bg-red-500/20 border-red-500 text-red-400'
                             }`}>
-                            <span className="text-sm font-bold">SCORE: {score}</span>
+                            <span className="text-sm font-bold">SCORE: {score}/100</span>
                         </div>
                     )}
-                    {/* Only show manual Rewrite button if no suggestion is present, or keep it as a 'Retry' option? 
-                        The user asked for the critique to *also* rewrite. So maybe we hide the old button if we have a suggestion?
-                        Or keep it to force a re-generation. Let's keep it but maybe rename or style differently if needed.
-                        For now, leaving as is.
-                    */}
                     {onRewrite && !suggestedRewrite && (
                         <button
                             onClick={onRewrite}
@@ -136,13 +179,19 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                 {renderContent()}
             </div>
 
-            {/* Suggested Rewrite Section */}
+            {/* Suggested Rewrite Section with Word-Level Diff */}
             {suggestedRewrite && (
                 <div className="mt-3 pt-3 border-t border-white/10">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold uppercase text-indigo-300 flex items-center gap-1">
-                            <Icon name="sparkles" size={12} /> Suggested Improvement
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold uppercase text-indigo-300 flex items-center gap-1">
+                                <Icon name="sparkles" size={12} /> Suggested Improvement
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-900/30 text-blue-300 border border-blue-700/50 flex items-center gap-1">
+                                <Icon name="git-compare" size={10} />
+                                Word Diff
+                            </span>
+                        </div>
                         <button
                             onClick={onApplyRewrite}
                             className="px-2 py-1 rounded bg-green-600 hover:bg-green-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
@@ -153,19 +202,79 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                     </div>
 
                     {rewriteChanges && (
-                        <div className="mb-2 text-xs text-indigo-200 bg-indigo-900/20 p-2 rounded border border-indigo-500/30">
-                            <span className="font-bold text-indigo-100">Why:</span> {rewriteChanges}
+                        <div className="mb-2 text-xs text-indigo-200 bg-indigo-900/20 p-2 rounded border border-indigo-500/30 flex items-start gap-2">
+                            <Icon name="info" size={14} className="flex-shrink-0 mt-0.5" />
+                            <span><span className="font-bold text-indigo-100">Why:</span> {rewriteChanges}</span>
                         </div>
                     )}
 
-                    <div className="text-xs space-y-2 bg-black/20 p-2 rounded border border-white/5">
-                        <div className="font-medium text-white">{suggestedRewrite.question}</div>
-                        <div className="grid grid-cols-1 gap-1 opacity-90 pl-2 border-l-2 border-indigo-500/30">
-                            <div className={suggestedRewrite.correct === 'A' ? 'text-green-400 font-bold' : ''}>A) {suggestedRewrite.options.A}</div>
-                            <div className={suggestedRewrite.correct === 'B' ? 'text-green-400 font-bold' : ''}>B) {suggestedRewrite.options.B}</div>
-                            {suggestedRewrite.options.C && <div className={suggestedRewrite.correct === 'C' ? 'text-green-400 font-bold' : ''}>C) {suggestedRewrite.options.C}</div>}
-                            {suggestedRewrite.options.D && <div className={suggestedRewrite.correct === 'D' ? 'text-green-400 font-bold' : ''}>D) {suggestedRewrite.options.D}</div>}
+                    <div className="text-xs space-y-3 bg-black/20 p-3 rounded border border-white/5">
+                        {/* Question with word-level diff */}
+                        <div>
+                            <div className="text-[10px] font-bold uppercase text-slate-500 mb-1 flex items-center gap-1">
+                                <Icon name="message-square" size={10} />
+                                Question
+                            </div>
+                            <div className="text-sm">
+                                {questionChanged && originalQuestion ? (
+                                    <DiffText oldText={originalQuestion.question} newText={suggestedRewrite.question} />
+                                ) : (
+                                    <span className="text-white">{suggestedRewrite.question}</span>
+                                )}
+                            </div>
                         </div>
+
+                        {/* Options with word-level diff */}
+                        <div>
+                            <div className="text-[10px] font-bold uppercase text-slate-500 mb-1 flex items-center gap-1">
+                                <Icon name="list" size={10} />
+                                Options
+                            </div>
+                            <div className="grid grid-cols-1 gap-1.5 pl-2 border-l-2 border-indigo-500/30">
+                                {['A', 'B', 'C', 'D'].map(letter => {
+                                    const newVal = suggestedRewrite.options?.[letter];
+                                    if (!newVal) return null;
+
+                                    const oldVal = originalQuestion?.options?.[letter];
+                                    const isChanged = oldVal && oldVal !== newVal;
+                                    const isCorrect = suggestedRewrite.correct === letter;
+
+                                    return (
+                                        <div
+                                            key={letter}
+                                            className={`flex items-start gap-2 ${isCorrect ? 'text-green-400 font-bold' : ''}`}
+                                        >
+                                            <span className={`flex-shrink-0 w-5 h-5 rounded text-center text-[10px] leading-5 font-bold ${isChanged
+                                                ? 'bg-blue-900/50 text-blue-300 border border-blue-700/50'
+                                                : 'bg-slate-800 text-slate-400'
+                                                }`}>
+                                                {letter}
+                                            </span>
+                                            <span className="flex-1">
+                                                {isChanged ? (
+                                                    <DiffText oldText={oldVal} newText={newVal} />
+                                                ) : (
+                                                    <span className={isCorrect ? 'text-green-400' : 'text-slate-300'}>{newVal}</span>
+                                                )}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Correct answer change indicator */}
+                        {originalQuestion && suggestedRewrite.correct !== originalQuestion.correct && (
+                            <div className="flex items-center gap-2 text-xs text-yellow-200 bg-yellow-950/30 border border-yellow-700/50 rounded p-2">
+                                <Icon name="alert-triangle" size={14} />
+                                <span>
+                                    Correct answer changed:
+                                    <span className="ml-1 bg-red-900/50 text-red-300 line-through px-1.5 py-0.5 rounded">{originalQuestion.correct}</span>
+                                    <span className="mx-1">→</span>
+                                    <span className="bg-green-900/50 text-green-300 font-bold px-1.5 py-0.5 rounded">{suggestedRewrite.correct}</span>
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -174,3 +283,4 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
 };
 
 export default CritiqueDisplay;
+
