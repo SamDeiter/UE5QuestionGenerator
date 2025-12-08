@@ -122,16 +122,19 @@ To assess professional competence, use these question structures:
     - "To manually connect two disconnected NavMesh areas, which tool should be used?" (Options: NavMeshBoundsVolume, AI Waypoint Actor, NavLinkProxy, NavModifierVolume)
   - **Avoid:** "All of the above", "None of the above", or joke answers.
 - **True/False (T/F):**
-  - **Format:** Write as a DIRECT ASSERTION (statement of fact). Do NOT prefix with "True or False:".
-  - **Good Examples:**
-    - "A NavMesh Bounds Volume must be placed in a level to define navigation mesh areas."
-    - "Nanite supports skeletal meshes for character rendering."
-    - "Setting Global Time Dilation to 0.0 pauses all game simulation."
-  - **Bad Examples (AVOID):**
-    - "True or False: Lumen requires hardware ray tracing." ← Do NOT use this format
-    - "Is it true that World Partition replaces World Composition?" ← Do NOT use questions
-  - **If TRUE:** The assertion must be a documented fact.
-  - **If FALSE:** The assertion must be a **common misconception** or specific limitation.
+  - **Format:** Write as a DETAILED ASSERTION with context. Do NOT use "True or False:" prefix.
+  - **Length:** Should be 1-2 full sentences with specific technical details.
+  - **Good Examples (DETAILED - use this style):**
+    - "For creating a simple, reactive AI like an automatic door that can only be in an 'Opening', 'Open', 'Closing', or 'Closed' state, a Finite State Machine is often a more straightforward and efficient choice than a Behavior Tree."
+    - "If the 'bOrientRotationToMovement' property on a Character Movement Component is set to true, the Character's mesh will automatically rotate to face the direction of its current velocity."
+    - "In an EQS Test, a 'Filter' purpose will completely discard items that do not meet its criteria."
+    - "Smart Objects are essentially markers placed in a level that AI agents can interact with, allowing for complex behaviors without needing custom AI logic for every single interactive object."
+  - **Bad Examples (TOO SIMPLE - avoid these):**
+    - "Nanite supports skeletal meshes." ← Too short, no context
+    - "Virtual Shadow Maps are compatible with skeletal meshes." ← Too basic
+    - "The Material Editor allows you to create materials." ← Too obvious
+  - **If TRUE:** The assertion must be a documented fact with specific context.
+  - **If FALSE:** The assertion must be a **common misconception** or describe a specific limitation incorrectly.
   - **Validation:** The \`SourceExcerpt\` must explicitly prove why the statement is True or False.
 
 ### 2.5 ANSWER VALIDATION (CRITICAL - READ CAREFULLY)
