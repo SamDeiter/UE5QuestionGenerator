@@ -116,10 +116,14 @@ To assess professional competence, use these question structures:
 - **Target Type:** ${targetType}
 - **Multiple Choice (MC):** 4 options total (1 Correct, 3 Distractors).
 - **True/False (T/F):**
-  - **Phrasing Variety:** Do NOT always start with "Is this statement true...". Use varied structures:
-    - Direct Assertion: "Nanite supports skeletal meshes."
-    - Prefix: "True or False: Lumen requires hardware ray tracing."
-    - Assertion: "It is true that World Partition replaces World Composition."
+  - **Format:** Write as a DIRECT ASSERTION (statement of fact). Do NOT prefix with "True or False:".
+  - **Good Examples:**
+    - "A NavMesh Bounds Volume must be placed in a level to define navigation mesh areas."
+    - "Nanite supports skeletal meshes for character rendering."
+    - "Setting Global Time Dilation to 0.0 pauses all game simulation."
+  - **Bad Examples (AVOID):**
+    - "True or False: Lumen requires hardware ray tracing." ← Do NOT use this format
+    - "Is it true that World Partition replaces World Composition?" ← Do NOT use questions
   - **If TRUE:** The assertion must be a documented fact.
   - **If FALSE:** The assertion must be a **common misconception** or specific limitation.
   - **Validation:** The \`SourceExcerpt\` must explicitly prove why the statement is True or False.
