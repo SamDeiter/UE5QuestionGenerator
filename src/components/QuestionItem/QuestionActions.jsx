@@ -185,44 +185,15 @@ const QuestionActions = ({
                         </button>
                     )}
 
-                    {/* Divider */}
-                    <div className="w-px h-6 bg-slate-700"></div>
-
-                    {/* Explain & Variant - Only appear after AI Critique is done */}
-                    {appMode === 'review' && q.critiqueScore !== undefined && q.critiqueScore !== null && (
-                        <>
-                            <button
-                                onClick={() => onExplain && onExplain(q)}
-                                disabled={isProcessing}
-                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400 disabled:opacity-50 flex items-center gap-1"
-                                title="Explain Answer"
-                            >
-                                <Icon name="lightbulb" size={18} />
-                                <span className="text-xs font-bold">WHY</span>
-                            </button>
-
-                            <button
-                                onClick={() => onVariate && onVariate(q)}
-                                disabled={isProcessing}
-                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-purple-900/20 hover:text-purple-400 disabled:opacity-50 flex items-center gap-1"
-                                title="Create Variations"
-                            >
-                                <Icon name="git-branch" size={18} />
-                                <span className="text-xs font-bold">VARY</span>
-                            </button>
-
-                            {/* Divider before Accept/Reject */}
-                            <div className="w-px h-6 bg-slate-700"></div>
-                        </>
-                    )}
-
+                    {/* Accept Button with text */}
                     <button
                         onClick={handleAccept}
-                        className={`p-2 rounded-lg transition-all ${getAcceptButtonStyle()}`}
+                        className={`p-2 rounded-lg transition-all flex items-center gap-1 ${getAcceptButtonStyle()}`}
                         title={getAcceptTooltip()}
                         aria-label="Accept question"
                     >
                         <Icon name="check" size={18} />
+                        <span className="text-xs font-bold">ACCEPT</span>
                     </button>
 
                     {/* Reject Button with Reason Dropdown */}
@@ -235,11 +206,12 @@ const QuestionActions = ({
                                     setRejectMenuOpen(!rejectMenuOpen);
                                 }
                             }}
-                            className={`p-2 rounded-lg transition-all ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'bg-slate-800 text-slate-500 hover:bg-red-900/20 hover:text-red-500'}`}
+                            className={`p-2 rounded-lg transition-all flex items-center gap-1 ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'bg-slate-800 text-slate-500 hover:bg-red-900/20 hover:text-red-500'}`}
                             title={q.status === 'rejected' && q.rejectionReason ? `Rejected: ${REJECTION_REASONS.find(r => r.id === q.rejectionReason)?.label || q.rejectionReason}` : "Reject"}
                             aria-label="Reject question"
                         >
                             <Icon name="x" size={18} />
+                            <span className="text-xs font-bold">REJECT</span>
                         </button>
 
                         {rejectMenuOpen && (
@@ -268,8 +240,9 @@ const QuestionActions = ({
                         )}
                     </div>
                 </>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 
