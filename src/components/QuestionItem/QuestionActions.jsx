@@ -148,8 +148,8 @@ const QuestionActions = ({
                             onClick={() => onCritique(q)}
                             disabled={isProcessing}
                             className={`p-2 rounded-lg transition-all flex items-center gap-1 ${q.critiqueScore !== undefined && q.critiqueScore !== null
-                                    ? 'bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400'
-                                    : 'bg-orange-600 text-white hover:bg-orange-500 animate-pulse shadow-lg shadow-orange-900/50'
+                                ? 'bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400'
+                                : 'bg-orange-600 text-white hover:bg-orange-500 animate-pulse shadow-lg shadow-orange-900/50'
                                 } disabled:opacity-50`}
                             title={q.critiqueScore !== undefined ? `Re-run AI Critique (Current: ${q.critiqueScore}/100)` : "⚡ Step 1: Run AI Critique!"}
                         >
@@ -166,10 +166,10 @@ const QuestionActions = ({
                             onClick={handleVerify}
                             disabled={q.humanVerified || !(q.critiqueScore !== undefined && q.critiqueScore !== null)}
                             className={`p-2 rounded-lg transition-all flex items-center gap-1 ${q.humanVerified
-                                    ? 'bg-green-600 text-white shadow-lg shadow-green-900/50'
-                                    : (q.critiqueScore !== undefined && q.critiqueScore !== null && !q.humanVerified)
-                                        ? 'bg-green-600 text-white hover:bg-green-500 animate-pulse shadow-lg shadow-green-900/50'
-                                        : 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
+                                ? 'bg-green-600 text-white shadow-lg shadow-green-900/50'
+                                : (q.critiqueScore !== undefined && q.critiqueScore !== null && !q.humanVerified)
+                                    ? 'bg-green-600 text-white hover:bg-green-500 animate-pulse shadow-lg shadow-green-900/50'
+                                    : 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
                                 }`}
                             title={
                                 q.humanVerified
@@ -188,55 +188,29 @@ const QuestionActions = ({
                     {/* Divider */}
                     <div className="w-px h-6 bg-slate-700"></div>
 
-                    {/* Secondary Actions - require critique first */}
-                    {appMode === 'review' && (
+                    {/* Explain & Variant - Only appear after AI Critique is done */}
+                    {appMode === 'review' && q.critiqueScore !== undefined && q.critiqueScore !== null && (
                         <>
-                            {/* Explain Answer - requires critique first */}
                             <button
                                 onClick={() => onExplain && onExplain(q)}
-                                disabled={isProcessing || (q.critiqueScore === undefined || q.critiqueScore === null)}
-                                className={`p-2 rounded-lg transition-all ${q.critiqueScore === undefined || q.critiqueScore === null
-                                    ? 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
-                                    : 'bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400'
-                                    } disabled:opacity-50`}
-                                title={q.critiqueScore === undefined ? "Run AI Critique first" : "Explain Answer"}
+                                disabled={isProcessing}
+                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400 disabled:opacity-50"
+                                title="Explain Answer"
                             >
                                 <Icon name="lightbulb" size={18} />
                             </button>
 
-                            {/* Create Variations - requires critique first */}
                             <button
                                 onClick={() => onVariate && onVariate(q)}
-                                disabled={isProcessing || (q.critiqueScore === undefined || q.critiqueScore === null)}
-                                className={`p-2 rounded-lg transition-all ${q.critiqueScore === undefined || q.critiqueScore === null
-                                    ? 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
-                                    : 'bg-slate-800 text-slate-500 hover:bg-purple-900/20 hover:text-purple-400'
-                                    } disabled:opacity-50`}
-                                title={q.critiqueScore === undefined ? "Run AI Critique first" : "Create Variations"}
+                                disabled={isProcessing}
+                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-purple-900/20 hover:text-purple-400 disabled:opacity-50"
+                                title="Create Variations"
                             >
-                                <Icon name="copy" size={18} />
+                                <Icon name="git-branch" size={18} />
                             </button>
 
-                            {/* Copy Question Text - always available */}
-                            <button
-                                onClick={() => {
-                                    const textArea = document.createElement("textarea");
-                                    textArea.value = stripHtmlTags(q.question);
-                                    document.body.appendChild(textArea);
-                                    textArea.select();
-                                    try {
-                                        document.execCommand('copy');
-                                        if (showMessage) showMessage("Question copied to clipboard", 2000);
-                                    } catch (err) {
-                                        console.error('Failed to copy', err);
-                                    }
-                                    document.body.removeChild(textArea);
-                                }}
-                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-white"
-                                title="Copy Question Text"
-                            >
-                                <Icon name="clipboard" size={18} />
-                            </button>
+                            {/* Divider before Accept/Reject */}
+                            <div className="w-px h-6 bg-slate-700"></div>
                         </>
                     )}
 
