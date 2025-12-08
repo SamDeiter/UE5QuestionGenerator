@@ -27,6 +27,98 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
+// --- Offline Queue for Resilience ---
+let offlineQueue = [];
+let isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+let syncInProgress = false;
+
+// Load queued items from localStorage on startup
+try {
+    const savedQueue = localStorage.getItem('ue5_offline_queue');
+    if (savedQueue) {
+        offlineQueue = JSON.parse(savedQueue);
+        console.log(`📦 Loaded ${offlineQueue.length} queued items from storage`);
+    }
+} catch (e) {
+    console.warn('Failed to load offline queue:', e);
+}
+
+// Save queue to localStorage
+const persistQueue = () => {
+    try {
+        localStorage.setItem('ue5_offline_queue', JSON.stringify(offlineQueue));
+    } catch (e) {
+        console.warn('Failed to persist offline queue:', e);
+    }
+};
+
+// Connection status listeners
+if (typeof window !== 'undefined') {
+    window.addEventListener('online', () => {
+        console.log('🌐 Connection restored');
+        isOnline = true;
+        processOfflineQueue();
+    });
+
+    window.addEventListener('offline', () => {
+        console.log('📴 Connection lost');
+        isOnline = false;
+    });
+}
+
+// Process queued items when back online
+const processOfflineQueue = async () => {
+    if (syncInProgress || offlineQueue.length === 0) return;
+
+    syncInProgress = true;
+    console.log(`🔄 Processing ${offlineQueue.length} queued items...`);
+
+    const itemsToProcess = [...offlineQueue];
+    offlineQueue = [];
+
+    for (const item of itemsToProcess) {
+        try {
+            await saveQuestionToFirestoreInternal(item.question);
+            console.log(`✓ Synced queued item: ${item.question.uniqueId}`);
+        } catch (err) {
+            console.warn(`Failed to sync ${item.question.uniqueId}, re-queuing:`, err);
+            offlineQueue.push(item);
+        }
+    }
+
+    persistQueue();
+    syncInProgress = false;
+
+    if (offlineQueue.length > 0) {
+        console.log(`⚠️ ${offlineQueue.length} items still queued`);
+    }
+};
+
+// Get connection and sync status (for UI)
+export const getConnectionStatus = () => ({
+    isOnline,
+    queuedCount: offlineQueue.length,
+    syncInProgress
+});
+
+// Subscribe to connection status changes
+const connectionListeners = new Set();
+export const subscribeToConnectionStatus = (callback) => {
+    connectionListeners.add(callback);
+    return () => connectionListeners.delete(callback);
+};
+
+const notifyConnectionListeners = () => {
+    const status = getConnectionStatus();
+    connectionListeners.forEach(cb => cb(status));
+};
+
+// Update listeners when status changes
+if (typeof window !== 'undefined') {
+    window.addEventListener('online', notifyConnectionListeners);
+    window.addEventListener('offline', notifyConnectionListeners);
+}
+
 export const signInWithGoogle = async () => {
     try {
         const result = await signInWithPopup(auth, googleProvider);
@@ -49,48 +141,69 @@ export const signOutUser = async () => {
 // --- Firestore Helpers ---
 
 /**
- * Saves a single question to Firestore.
- * Uses the question's uniqueId as the document ID.
+ * Internal save function (used by queue processor)
+ */
+const saveQuestionToFirestoreInternal = async (question) => {
+    if (!question || !question.uniqueId) {
+        console.error("Invalid question object or missing uniqueId", question);
+        return;
+    }
+
+    // Create a reference to the document
+    const docRef = doc(db, "questions", question.uniqueId);
+
+    // Add a timestamp for when it was saved/updated in Firestore
+    const payload = {
+        ...question,
+        firestoreUpdatedAt: Timestamp.now()
+    };
+
+    // Add creatorId if user is signed in
+    if (auth.currentUser) {
+        payload.creatorId = auth.currentUser.uid;
+        payload.creatorEmail = auth.currentUser.email;
+    }
+
+    // Set the document (overwrite if exists, create if new)
+    await setDoc(docRef, payload, { merge: true });
+    console.log(`Question ${question.uniqueId} saved to Firestore.`);
+
+    // Log event to Analytics
+    if (analytics) {
+        logEvent(analytics, 'save_question', {
+            id: question.uniqueId,
+            status: question.status,
+            discipline: question.discipline
+        });
+    }
+};
+
+/**
+ * Saves a single question to Firestore with offline queue fallback.
+ * If offline or save fails, queues for retry when connection is restored.
  * @param {Object} question - The question object to save.
+ * @returns {Object} { success: boolean, queued: boolean }
  */
 export const saveQuestionToFirestore = async (question) => {
     try {
-        if (!question || !question.uniqueId) {
-            console.error("Invalid question object or missing uniqueId", question);
-            return;
+        // If offline, queue immediately
+        if (!isOnline) {
+            console.log(`📴 Offline - queuing ${question.uniqueId} for later sync`);
+            offlineQueue.push({ question, timestamp: Date.now() });
+            persistQueue();
+            notifyConnectionListeners();
+            return { success: false, queued: true };
         }
 
-        // Create a reference to the document
-        const docRef = doc(db, "questions", question.uniqueId);
-
-        // Add a timestamp for when it was saved/updated in Firestore
-        const payload = {
-            ...question,
-            firestoreUpdatedAt: Timestamp.now()
-        };
-
-        // Add creatorId if user is signed in
-        if (auth.currentUser) {
-            payload.creatorId = auth.currentUser.uid;
-            payload.creatorEmail = auth.currentUser.email;
-        }
-
-        // Set the document (overwrite if exists, create if new)
-        await setDoc(docRef, payload, { merge: true });
-        console.log(`Question ${question.uniqueId} saved to Firestore.`);
-
-        // Log event to Analytics
-        if (analytics) {
-            logEvent(analytics, 'save_question', {
-                id: question.uniqueId,
-                status: question.status,
-                discipline: question.discipline
-            });
-        }
+        await saveQuestionToFirestoreInternal(question);
+        return { success: true, queued: false };
 
     } catch (error) {
-        console.error("Error saving question to Firestore:", error);
-        throw error; // Propagate error so UI can handle it if needed
+        console.warn(`⚠️ Save failed for ${question.uniqueId}, queuing for retry:`, error.message);
+        offlineQueue.push({ question, timestamp: Date.now() });
+        persistQueue();
+        notifyConnectionListeners();
+        return { success: false, queued: true };
     }
 };
 

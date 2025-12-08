@@ -1,9 +1,11 @@
 import React from 'react';
 import Icon from './Icon';
+import useConnectionStatus from '../hooks/useConnectionStatus';
 
 const APP_VERSION = "v1.7";
 
 const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, tokenUsage = { inputTokens: 0, outputTokens: 0, totalCost: 0 }, onRestartTutorial }) => {
+    const connectionStatus = useConnectionStatus();
     const isReview = appMode === 'review';
     const borderColor = isReview ? 'border-indigo-600' : 'border-orange-600';
     const titleColor = isReview ? 'text-indigo-50' : 'text-orange-50';
@@ -66,6 +68,28 @@ const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, toke
                         </button>
                     )}
                     <div className="flex items-center gap-2 px-3 py-1 rounded border border-slate-700">
+                        {/* Connection Status */}
+                        {!connectionStatus.isOnline && (
+                            <div className="flex items-center gap-1.5 text-yellow-400 font-bold animate-pulse" title="You are offline. Changes will sync when connection is restored.">
+                                <Icon name="wifi-off" size={14} />
+                                <span>OFFLINE</span>
+                            </div>
+                        )}
+                        {connectionStatus.queuedCount > 0 && (
+                            <div className="flex items-center gap-1 text-orange-400 font-bold" title={`${connectionStatus.queuedCount} items queued for sync`}>
+                                <Icon name="upload-cloud" size={14} />
+                                <span>{connectionStatus.queuedCount}</span>
+                            </div>
+                        )}
+                        {connectionStatus.syncInProgress && (
+                            <div className="flex items-center gap-1 text-blue-400 font-bold animate-pulse" title="Syncing queued items...">
+                                <Icon name="refresh-cw" size={14} className="animate-spin" />
+                                <span>SYNCING</span>
+                            </div>
+                        )}
+                        {(!connectionStatus.isOnline || connectionStatus.queuedCount > 0 || connectionStatus.syncInProgress) && (
+                            <div className="w-px h-4 bg-slate-700"></div>
+                        )}
                         <span className={`font-bold ${apiKeyStatus.includes('Loaded') || apiKeyStatus.includes('Auto') ? 'text-green-400' : 'text-red-400'}`}>API Key: {apiKeyStatus}</span>
                         {isCloudReady ? (
                             <div className="flex items-center gap-1.5 text-blue-400 font-bold border-l border-slate-700 pl-2 ml-2">
