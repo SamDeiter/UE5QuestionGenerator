@@ -261,9 +261,34 @@ export const generateCritique = async (apiKey, q) => {
         };
     } catch (e) {
         console.error("Failed to parse critique JSON:", e, rawText);
-        // Fallback to simple text parsing if JSON fails
-        const scoreMatch = rawText.match(/SCORE:\s*(\d+)/i);
-        const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
+        // Fallback to multiple patterns for score extraction if JSON fails
+        let score = null;
+
+        // Try multiple patterns to extract score
+        const patterns = [
+            /SCORE:\s*(\d+)/i,                    // SCORE: 75
+            /"score"\s*:\s*(\d+)/i,               // "score": 75
+            /\bscore\s*[:\-=]\s*(\d+)/i,          // score: 75, score = 75
+            /(\d+)\s*\/\s*100/i,                  // 75/100
+            /^(\d{1,3})(?!\d)/m                   // Just a number at start of line (0-999)
+        ];
+
+        for (const pattern of patterns) {
+            const match = rawText.match(pattern);
+            if (match) {
+                const parsed = parseInt(match[1]);
+                if (parsed >= 0 && parsed <= 100) {
+                    score = parsed;
+                    console.log(`Extracted score ${score} using pattern: ${pattern}`);
+                    break;
+                }
+            }
+        }
+
+        if (score === null) {
+            console.warn("Could not extract score from critique response");
+        }
+
         return { score, text: rawText, rewrite: null, changes: null };
     }
 };

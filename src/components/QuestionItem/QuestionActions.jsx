@@ -147,15 +147,17 @@ const QuestionActions = ({
                         <button
                             onClick={() => onCritique(q)}
                             disabled={isProcessing}
-                            className={`p-2 rounded-lg transition-all flex items-center gap-1 ${q.critiqueScore !== undefined && q.critiqueScore !== null
-                                ? 'bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400'
-                                : 'bg-orange-600 text-white hover:bg-orange-500 animate-pulse shadow-lg shadow-orange-900/50'
-                                } disabled:opacity-50`}
+                            className={`p-2 rounded-lg transition-all flex items-center gap-1 ${
+                                // Has a score OR already accepted/rejected = don't flash
+                                (q.critiqueScore !== undefined && q.critiqueScore !== null) || q.status === 'accepted' || q.status === 'rejected'
+                                    ? 'bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400'
+                                    : 'bg-orange-600 text-white hover:bg-orange-500 animate-pulse shadow-lg shadow-orange-900/50'
+                            } disabled:opacity-50`}
                             title={q.critiqueScore !== undefined ? `Re-run AI Critique (Current: ${q.critiqueScore}/100)` : "⚡ Step 1: Run AI Critique!"}
                         >
                             <Icon name="zap" size={18} />
                             <span className="text-xs font-bold">
-                                {q.critiqueScore !== undefined && q.critiqueScore !== null ? 'REDO' : 'CRITIQUE'}
+                                {(q.critiqueScore !== undefined && q.critiqueScore !== null) || q.status === 'accepted' ? 'REDO' : 'CRITIQUE'}
                             </span>
                         </button>
                     )}
