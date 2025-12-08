@@ -160,40 +160,51 @@ const QuestionActions = ({
                         </button>
                     )}
 
-                    {/* AI Critique Button */}
-                    {/* Review Mode Actions: Explain, Variate, Copy (Moved from Menu) */}
+                    {/* AI Critique Button - PRIMARY ACTION (must run first) */}
                     {appMode === 'review' && (
                         <>
                             <button
                                 onClick={() => onCritique(q)}
                                 disabled={isProcessing}
-                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400 disabled:opacity-50"
-                                title="AI Critique"
+                                className={`p-2 rounded-lg transition-all ${q.critiqueScore !== undefined && q.critiqueScore !== null
+                                        ? 'bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400'
+                                        : 'bg-orange-600 text-white hover:bg-orange-500 animate-pulse shadow-lg shadow-orange-900/50'
+                                    } disabled:opacity-50`}
+                                title={q.critiqueScore !== undefined ? `Re-run AI Critique (Current: ${q.critiqueScore}/100)` : "⚡ Run AI Critique First!"}
                             >
                                 <Icon name="zap" size={18} />
                             </button>
 
-                            {/* Explain Answer */}
+                            {/* Divider after primary action */}
+                            <div className="w-px h-6 bg-slate-700"></div>
+
+                            {/* Explain Answer - requires critique first */}
                             <button
                                 onClick={() => onExplain && onExplain(q)}
-                                disabled={isProcessing}
-                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400 disabled:opacity-50"
-                                title="Explain Answer"
+                                disabled={isProcessing || (q.critiqueScore === undefined || q.critiqueScore === null)}
+                                className={`p-2 rounded-lg transition-all ${q.critiqueScore === undefined || q.critiqueScore === null
+                                        ? 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
+                                        : 'bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400'
+                                    } disabled:opacity-50`}
+                                title={q.critiqueScore === undefined ? "Run AI Critique first" : "Explain Answer"}
                             >
                                 <Icon name="lightbulb" size={18} />
                             </button>
 
-                            {/* Create Variations */}
+                            {/* Create Variations - requires critique first */}
                             <button
                                 onClick={() => onVariate && onVariate(q)}
-                                disabled={isProcessing}
-                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-purple-900/20 hover:text-purple-400 disabled:opacity-50"
-                                title="Create Variations"
+                                disabled={isProcessing || (q.critiqueScore === undefined || q.critiqueScore === null)}
+                                className={`p-2 rounded-lg transition-all ${q.critiqueScore === undefined || q.critiqueScore === null
+                                        ? 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
+                                        : 'bg-slate-800 text-slate-500 hover:bg-purple-900/20 hover:text-purple-400'
+                                    } disabled:opacity-50`}
+                                title={q.critiqueScore === undefined ? "Run AI Critique first" : "Create Variations"}
                             >
                                 <Icon name="copy" size={18} />
                             </button>
 
-                            {/* Copy Question Text */}
+                            {/* Copy Question Text - always available */}
                             <button
                                 onClick={() => {
                                     const textArea = document.createElement("textarea");

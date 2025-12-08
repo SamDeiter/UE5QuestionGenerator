@@ -50,6 +50,20 @@ const ReviewMode = ({
                     <span className="text-lg">
                         <span className="text-white font-bold">{currentIndex + 1}</span> <span className="text-slate-600">/</span> <span className="text-slate-400 font-bold">{questions.length}</span>
                     </span>
+                    {/* Score Badge */}
+                    {currentQuestion.critiqueScore !== undefined && currentQuestion.critiqueScore !== null && (
+                        <span
+                            className={`mt-1 px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 ${currentQuestion.critiqueScore >= 80 ? 'bg-green-900/50 text-green-400 border border-green-700/50' :
+                                    currentQuestion.critiqueScore >= 60 ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700/50' :
+                                        currentQuestion.critiqueScore >= 40 ? 'bg-orange-900/50 text-orange-400 border border-orange-700/50' :
+                                            'bg-red-900/50 text-red-400 border border-red-700/50'
+                                }`}
+                            title={`AI Critique Score: ${currentQuestion.critiqueScore}/100`}
+                        >
+                            <Icon name="brain" size={12} />
+                            Score: {currentQuestion.critiqueScore}/100
+                        </span>
+                    )}
                 </div>
                 <button
                     onClick={() => setCurrentIndex(prev => Math.min(prev + 1, questions.length - 1))}
