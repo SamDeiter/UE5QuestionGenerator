@@ -12,6 +12,21 @@ const QuestionHeader = ({ q, getDiffBadgeColor, onKickBack, appMode }) => {
                     </span>
                     <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">{q.type === 'True/False' ? 'T/F' : 'MC'}</span>
 
+                    {/* AI Critique Score Badge */}
+                    {q.critiqueScore !== undefined && q.critiqueScore !== null && (
+                        <span
+                            className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 ${q.critiqueScore >= 80 ? 'bg-green-900/50 text-green-400 border border-green-700/50' :
+                                    q.critiqueScore >= 60 ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700/50' :
+                                        q.critiqueScore >= 40 ? 'bg-orange-900/50 text-orange-400 border border-orange-700/50' :
+                                            'bg-red-900/50 text-red-400 border border-red-700/50'
+                                }`}
+                            title={`AI Critique Score: ${q.critiqueScore}/100`}
+                        >
+                            <Icon name="brain" size={12} />
+                            {q.critiqueScore}
+                        </span>
+                    )}
+
                     {/* Creator / Reviewer Info */}
                     <div className="flex items-center gap-2 ml-1 border-l border-slate-700/50 pl-2">
                         <div className="flex items-center gap-1 text-xs text-slate-500" title="Creator">

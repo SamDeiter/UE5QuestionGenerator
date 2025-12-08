@@ -62,7 +62,7 @@ const DiffText = ({ oldText, newText }) => {
     );
 };
 
-const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, rewriteChanges, onApplyRewrite, originalQuestion }) => {
+const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, rewriteChanges, onApplyRewrite, onApplyAndAccept, originalQuestion }) => {
     if (!critique) return null;
 
     // Handle both old (string) and new (object with score) formats
@@ -192,13 +192,24 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                                 Word Diff
                             </span>
                         </div>
-                        <button
-                            onClick={onApplyRewrite}
-                            className="px-2 py-1 rounded bg-green-600 hover:bg-green-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
-                            title="Apply these changes to the question"
-                        >
-                            <Icon name="check" size={12} /> Apply Changes
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={onApplyRewrite}
+                                className="px-2 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
+                                title="Apply changes only"
+                            >
+                                <Icon name="check" size={12} /> Apply
+                            </button>
+                            {onApplyAndAccept && (
+                                <button
+                                    onClick={onApplyAndAccept}
+                                    className="px-2 py-1 rounded bg-green-600 hover:bg-green-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
+                                    title="Apply changes AND accept question"
+                                >
+                                    <Icon name="check-check" size={12} /> Apply & Accept
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {rewriteChanges && (
@@ -277,8 +288,9 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                         )}
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 

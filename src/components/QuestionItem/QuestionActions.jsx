@@ -54,7 +54,7 @@ const QuestionActions = ({
         if (showMessage) showMessage("✓ Question verified! You can now accept it.", 3000);
     };
 
-    // Handle accept with verification check
+    // Handle accept with verification and score check
     const handleAccept = () => {
         if (q.status === 'accepted') {
             if (showMessage) showMessage("Question is already accepted.");
@@ -67,7 +67,62 @@ const QuestionActions = ({
             return;
         }
 
+        // Check critique score if available
+        const score = q.critiqueScore;
+        if (score !== undefined && score !== null && score < 50) {
+            if (showMessage) showMessage(`⛔ Score too low (${score}/100). Apply AI suggestions to improve.`, 4000);
+            return;
+        }
+
+        // Warn for borderline scores (50-69)
+        if (score !== undefined && score !== null && score < 70) {
+            if (showMessage) showMessage(`⚠️ Accepted with low score (${score}/100). Consider reviewing.`, 3000);
+        }
+
         onUpdateStatus(q.id, 'accepted');
+    };
+
+    // Get accept button styling based on score
+    const getAcceptButtonStyle = () => {
+        if (q.status === 'accepted') {
+            return 'bg-green-600 text-white shadow-lg shadow-green-900/50';
+        }
+
+        if (!q.humanVerified) {
+            return 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed';
+        }
+
+        const score = q.critiqueScore;
+
+        // Score-based styling
+        if (score !== undefined && score !== null) {
+            if (score < 50) {
+                return 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed border border-red-900/50';
+            }
+            if (score < 70) {
+                return 'bg-slate-800 text-yellow-500 hover:bg-yellow-900/20 hover:text-yellow-400 border border-yellow-700/50';
+            }
+            // High score - ready to accept
+            return 'bg-slate-800 text-green-500 hover:bg-green-900/20 hover:text-green-400 border border-green-700/50';
+        }
+
+        // No score yet - normal state
+        return 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500';
+    };
+
+    // Get accept button tooltip
+    const getAcceptTooltip = () => {
+        if (q.status === 'accepted') return 'Already accepted';
+        if (!q.humanVerified) return 'Verify first before accepting';
+
+        const score = q.critiqueScore;
+        if (score !== undefined && score !== null) {
+            if (score < 50) return `Score too low (${score}/100). Apply suggestions first.`;
+            if (score < 70) return `Low score (${score}/100). Accept with caution.`;
+            return `Good score (${score}/100). Ready to accept!`;
+        }
+
+        return 'Accept question';
     };
 
     if (appMode === 'database') return null;
@@ -163,13 +218,8 @@ const QuestionActions = ({
 
                     <button
                         onClick={handleAccept}
-                        className={`p-2 rounded-lg transition-all ${q.status === 'accepted'
-                            ? 'bg-green-600 text-white shadow-lg shadow-green-900/50'
-                            : q.humanVerified
-                                ? 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500'
-                                : 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
-                            }`}
-                        title={q.humanVerified ? "Accept" : "Verify first before accepting"}
+                        className={`p-2 rounded-lg transition-all ${getAcceptButtonStyle()}`}
+                        title={getAcceptTooltip()}
                         aria-label="Accept question"
                     >
                         <Icon name="check" size={18} />

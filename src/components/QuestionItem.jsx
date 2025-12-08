@@ -172,6 +172,32 @@ const QuestionItem = ({
                             onUpdateQuestion(q.id, updatedQ);
                             if (showMessage) showMessage("Rewrite applied successfully!", 3000);
                         }}
+                        onApplyAndAccept={() => {
+                            if (!q.suggestedRewrite) return;
+                            // Get reviewer name for verification
+                            const reviewerName = localStorage.getItem('ue5_gen_config')
+                                ? JSON.parse(localStorage.getItem('ue5_gen_config')).creatorName || 'Unknown'
+                                : 'Unknown';
+
+                            // Apply changes + mark verified + accept
+                            const updatedQ = {
+                                ...q,
+                                question: q.suggestedRewrite.question,
+                                options: q.suggestedRewrite.options,
+                                correct: q.suggestedRewrite.correct,
+                                suggestedRewrite: null,
+                                rewriteChanges: null,
+                                critique: null,
+                                critiqueScore: 100, // AI-improved score
+                                humanVerified: true,
+                                humanVerifiedAt: new Date().toISOString(),
+                                humanVerifiedBy: reviewerName,
+                                status: 'accepted'
+                            };
+                            onUpdateQuestion(q.id, updatedQ);
+                            onUpdateStatus(q.id, 'accepted');
+                            if (showMessage) showMessage("✓ Applied & Accepted!", 3000);
+                        }}
                     />
                 )}
 

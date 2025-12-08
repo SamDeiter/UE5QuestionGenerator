@@ -309,6 +309,56 @@ export const useGeneration = (
 
             addQuestionsToState(uniqueNewQuestions, false);
 
+            // AUTO-CRITIQUE: Run critique on each question in background
+            // Check if auto-critique is enabled (default: true)
+            const autoCritiqueEnabled = localStorage.getItem('ue5_auto_critique') !== 'false';
+
+            if (autoCritiqueEnabled && uniqueNewQuestions.length > 0) {
+                setStatus('Auto-critiquing...');
+                showMessage(`Running AI critique on ${uniqueNewQuestions.length} questions...`, 3000);
+
+                // Critique questions in parallel (max 3 at a time to avoid rate limits)
+                const critiqueQuestion = async (question) => {
+                    try {
+                        const { score, text, rewrite, changes } = await generateCritique(effectiveApiKey, question);
+                        updateQuestionInState(question.id, (item) => ({
+                            ...item,
+                            critique: text,
+                            critiqueScore: score,
+                            suggestedRewrite: rewrite,
+                            rewriteChanges: changes
+                        }));
+                        return score;
+                    } catch (e) {
+                        console.warn(`Failed to critique question ${question.id}:`, e);
+                        return null;
+                    }
+                };
+
+                // Process in batches of 3
+                const batchSize = 3;
+                const scores = [];
+                for (let i = 0; i < uniqueNewQuestions.length; i += batchSize) {
+                    const batch = uniqueNewQuestions.slice(i, i + batchSize);
+                    setStatus(`Critiquing ${i + 1}-${Math.min(i + batchSize, uniqueNewQuestions.length)} of ${uniqueNewQuestions.length}...`);
+                    const batchScores = await Promise.all(batch.map(critiqueQuestion));
+                    scores.push(...batchScores.filter(s => s !== null));
+                }
+
+                // Calculate average score
+                const avgScore = scores.length > 0
+                    ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+                    : 0;
+
+                const highScoreCount = scores.filter(s => s >= 70).length;
+                const lowScoreCount = scores.filter(s => s < 50).length;
+
+                if (lowScoreCount > 0) {
+                    showMessage(`Critique complete! Avg: ${avgScore}/100. ⚠️ ${lowScoreCount} need improvement.`, 6000);
+                } else {
+                    showMessage(`Critique complete! Avg: ${avgScore}/100. ${highScoreCount} ready to accept!`, 5000);
+                }
+            }
 
             setStatus('');
         } catch (err) {

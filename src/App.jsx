@@ -468,6 +468,42 @@ const App = () => {
         }
     };
 
+    // Bulk accept all questions with critique score >= 70
+    const handleBulkAcceptHighScores = () => {
+        const highScoreQuestions = uniqueFilteredQuestions.filter(
+            q => q.critiqueScore >= 70 && q.status !== 'accepted' && q.humanVerified
+        );
+
+        if (highScoreQuestions.length === 0) {
+            showMessage("No verified questions with score ≥ 70 to accept.", 3000);
+            return;
+        }
+
+        highScoreQuestions.forEach(q => handleUpdateStatus(q.id, 'accepted'));
+        showMessage(`✓ Accepted ${highScoreQuestions.length} high-scoring questions!`, 4000);
+    };
+
+    // Bulk critique all questions without scores
+    const handleBulkCritiqueAll = async () => {
+        const uncritiquedQuestions = uniqueFilteredQuestions.filter(
+            q => q.critiqueScore === undefined || q.critiqueScore === null
+        );
+
+        if (uncritiquedQuestions.length === 0) {
+            showMessage("All questions already have critique scores.", 3000);
+            return;
+        }
+
+        showMessage(`Running critique on ${uncritiquedQuestions.length} questions...`, 3000);
+
+        // Process sequentially to avoid rate limits
+        for (const q of uncritiquedQuestions) {
+            await handleCritique(q);
+        }
+
+        showMessage(`✓ Critique complete for ${uncritiquedQuestions.length} questions!`, 4000);
+    };
+
     const handleSaveCustomTags = async (newCustomTags) => {
         try {
             await saveCustomTags(newCustomTags);
@@ -601,6 +637,8 @@ const App = () => {
                             onLoadFirestore={handleLoadFromFirestore}
                             onBulkExport={() => setShowBulkExportModal(true)}
                             onClearPending={handleClearPending}
+                            onBulkAcceptHighScores={appMode === 'review' ? handleBulkAcceptHighScores : undefined}
+                            onBulkCritiqueAll={appMode === 'review' ? handleBulkCritiqueAll : undefined}
                         />
                     </div>
 

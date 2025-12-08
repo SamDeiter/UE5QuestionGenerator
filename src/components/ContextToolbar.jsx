@@ -22,6 +22,8 @@ const ContextToolbar = ({
     onLoadFirestore,
     onBulkExport,
     onClearPending,
+    onBulkAcceptHighScores,
+    onBulkCritiqueAll,
     filterTags = [],
     setFilterTags,
     customTags = {}
@@ -141,6 +143,30 @@ const ContextToolbar = ({
                     >
                         <Icon name="trash-2" size={14} />
                         Clear Pending
+                    </button>
+                )}
+
+                {/* Bulk Action Buttons */}
+                {onBulkAcceptHighScores && (
+                    <button
+                        onClick={onBulkAcceptHighScores}
+                        disabled={isProcessing}
+                        className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-green-900/20 text-green-400 border border-green-700/50 hover:bg-green-900/40 hover:text-green-300 disabled:opacity-50"
+                        title="Accept all questions with critique score ≥ 70"
+                    >
+                        <Icon name="check-check" size={14} />
+                        Accept ≥70
+                    </button>
+                )}
+                {onBulkCritiqueAll && (
+                    <button
+                        onClick={onBulkCritiqueAll}
+                        disabled={isProcessing}
+                        className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-orange-900/20 text-orange-400 border border-orange-700/50 hover:bg-orange-900/40 hover:text-orange-300 disabled:opacity-50"
+                        title="Run AI critique on all questions without scores"
+                    >
+                        <Icon name="zap" size={14} />
+                        Critique All
                     </button>
                 )}
 
