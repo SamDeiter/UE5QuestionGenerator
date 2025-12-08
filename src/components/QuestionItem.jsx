@@ -158,7 +158,7 @@ const QuestionItem = ({
                         suggestedRewrite={appMode === 'review' ? q.suggestedRewrite : null}
                         rewriteChanges={appMode === 'review' ? q.rewriteChanges : null}
                         originalQuestion={q}
-                        onApplyRewrite={() => {
+                        onApplyRewrite={async () => {
                             if (!q.suggestedRewrite) return;
                             const updatedQ = {
                                 ...q,
@@ -168,12 +168,19 @@ const QuestionItem = ({
                                 suggestedRewrite: null,
                                 rewriteChanges: null,
                                 critique: null,
-                                // Keep the score visible but reset verification since content changed
                                 critiqueScore: null,
                                 humanVerified: false
                             };
                             onUpdateQuestion(q.id, updatedQ);
-                            if (showMessage) showMessage("✓ Rewrite applied! Please re-run CRITIQUE to verify improvements.", 4000);
+                            if (showMessage) showMessage("✓ Rewrite applied! Running critique to verify improvements...", 3000);
+
+                            // Auto-run critique on the updated question to show new score
+                            if (onCritique) {
+                                // Small delay to let state update
+                                setTimeout(() => {
+                                    onCritique({ ...updatedQ, id: q.id });
+                                }, 500);
+                            }
                         }}
                         onApplyAndAccept={() => {
                             if (!q.suggestedRewrite) return;
