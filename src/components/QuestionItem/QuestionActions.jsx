@@ -154,9 +154,9 @@ const QuestionActions = ({
                             title={q.critiqueScore !== undefined ? `Re-run AI Critique (Current: ${q.critiqueScore}/100)` : "⚡ Step 1: Run AI Critique!"}
                         >
                             <Icon name="zap" size={18} />
-                            {!(q.critiqueScore !== undefined && q.critiqueScore !== null) && (
-                                <span className="text-xs font-bold">AI</span>
-                            )}
+                            <span className="text-xs font-bold">
+                                {q.critiqueScore !== undefined && q.critiqueScore !== null ? 'REDO' : 'CRITIQUE'}
+                            </span>
                         </button>
                     )}
 

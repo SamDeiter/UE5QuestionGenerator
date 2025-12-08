@@ -198,6 +198,8 @@ const QuestionItem = ({
                             onUpdateStatus(q.id, 'accepted');
                             if (showMessage) showMessage("✓ Applied & Accepted!", 3000);
                         }}
+                        onExplain={onExplain ? () => onExplain(q) : undefined}
+                        onVariate={onVariate ? () => onVariate(q) : undefined}
                     />
                 )}
 

@@ -62,7 +62,7 @@ const DiffText = ({ oldText, newText }) => {
     );
 };
 
-const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, rewriteChanges, onApplyRewrite, onApplyAndAccept, originalQuestion }) => {
+const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, rewriteChanges, onApplyRewrite, onApplyAndAccept, originalQuestion, onExplain, onVariate }) => {
     if (!critique) return null;
 
     // Handle both old (string) and new (object with score) formats
@@ -193,6 +193,30 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
+                            {/* WHY button */}
+                            {onExplain && (
+                                <button
+                                    onClick={onExplain}
+                                    disabled={isProcessing}
+                                    className="px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm disabled:opacity-50"
+                                    title="Explain the answer"
+                                >
+                                    <Icon name="lightbulb" size={12} /> WHY
+                                </button>
+                            )}
+                            {/* VARY button */}
+                            {onVariate && (
+                                <button
+                                    onClick={onVariate}
+                                    disabled={isProcessing}
+                                    className="px-2 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm disabled:opacity-50"
+                                    title="Create variations of this question"
+                                >
+                                    <Icon name="git-branch" size={12} /> VARY
+                                </button>
+                            )}
+                            {/* Divider */}
+                            <div className="w-px h-5 bg-slate-600"></div>
                             <button
                                 onClick={onApplyRewrite}
                                 className="px-2 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
