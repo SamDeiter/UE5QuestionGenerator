@@ -67,16 +67,11 @@ const QuestionActions = ({
             return;
         }
 
-        // Check critique score if available
+        // Check critique score if available - must be 70+ to accept
         const score = q.critiqueScore;
-        if (score !== undefined && score !== null && score < 50) {
-            if (showMessage) showMessage(`⛔ Score too low (${score}/100). Apply AI suggestions to improve.`, 4000);
-            return;
-        }
-
-        // Warn for borderline scores (50-69)
         if (score !== undefined && score !== null && score < 70) {
-            if (showMessage) showMessage(`⚠️ Accepted with low score (${score}/100). Consider reviewing.`, 3000);
+            if (showMessage) showMessage(`⛔ Score too low (${score}/100). Must be 70+ to accept. Apply AI suggestions to improve.`, 4000);
+            return;
         }
 
         onUpdateStatus(q.id, 'accepted');
@@ -96,11 +91,8 @@ const QuestionActions = ({
 
         // Score-based styling
         if (score !== undefined && score !== null) {
-            if (score < 50) {
-                return 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed border border-red-900/50';
-            }
             if (score < 70) {
-                return 'bg-slate-800 text-yellow-500 hover:bg-yellow-900/20 hover:text-yellow-400 border border-yellow-700/50';
+                return 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed border border-red-900/50';
             }
             // High score - ready to accept
             return 'bg-slate-800 text-green-500 hover:bg-green-900/20 hover:text-green-400 border border-green-700/50';
@@ -117,8 +109,7 @@ const QuestionActions = ({
 
         const score = q.critiqueScore;
         if (score !== undefined && score !== null) {
-            if (score < 50) return `Score too low (${score}/100). Apply suggestions first.`;
-            if (score < 70) return `Low score (${score}/100). Accept with caution.`;
+            if (score < 70) return `Score too low (${score}/100). Must be 70+ to accept.`;
             return `Good score (${score}/100). Ready to accept!`;
         }
 

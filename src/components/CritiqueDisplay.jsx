@@ -224,15 +224,7 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                             >
                                 <Icon name="check" size={12} /> Apply
                             </button>
-                            {onApplyAndAccept && (
-                                <button
-                                    onClick={onApplyAndAccept}
-                                    className="px-2 py-1 rounded bg-green-600 hover:bg-green-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
-                                    title="Apply changes AND accept question"
-                                >
-                                    <Icon name="check-check" size={12} /> Apply & Accept
-                                </button>
-                            )}
+
                         </div>
                     </div>
 

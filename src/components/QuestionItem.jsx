@@ -167,10 +167,12 @@ const QuestionItem = ({
                                 suggestedRewrite: null,
                                 rewriteChanges: null,
                                 critique: null,
-                                critiqueScore: null
+                                // Keep the score visible but reset verification since content changed
+                                critiqueScore: null,
+                                humanVerified: false
                             };
                             onUpdateQuestion(q.id, updatedQ);
-                            if (showMessage) showMessage("Rewrite applied successfully!", 3000);
+                            if (showMessage) showMessage("✓ Rewrite applied! Please re-run CRITIQUE to verify improvements.", 4000);
                         }}
                         onApplyAndAccept={() => {
                             if (!q.suggestedRewrite) return;
