@@ -501,14 +501,47 @@ export const useGeneration = (
 
         try {
             const { score, text, rewrite, changes } = await generateCritique(effectiveApiKey, q);
-            updateQuestionInState(q.id, (item) => ({
-                ...item,
-                critique: text,
-                critiqueScore: score,
-                suggestedRewrite: rewrite,
-                rewriteChanges: changes
-            }));
-            showMessage('Critique & Rewrite Ready', 3000);
+
+            // Track critique attempts
+            const previousAttempts = q.critiqueAttempts || 0;
+            const newAttemptCount = previousAttempts + 1;
+
+            // Check if this is the 3rd failed attempt (score < 70)
+            const MAX_ATTEMPTS = 3;
+            const PASSING_SCORE = 70;
+
+            if (score < PASSING_SCORE && newAttemptCount >= MAX_ATTEMPTS) {
+                // Auto-reject after 3 failed attempts
+                updateQuestionInState(q.id, (item) => ({
+                    ...item,
+                    critique: text,
+                    critiqueScore: score,
+                    suggestedRewrite: rewrite,
+                    rewriteChanges: changes,
+                    critiqueAttempts: newAttemptCount,
+                    status: 'rejected',
+                    rejectionReason: 'low_score_after_retries',
+                    rejectedAt: new Date().toISOString()
+                }));
+                showMessage(`⛔ Auto-rejected: Score ${score}/100 after ${newAttemptCount} attempts. Quality too low.`, 6000);
+            } else {
+                // Normal update
+                updateQuestionInState(q.id, (item) => ({
+                    ...item,
+                    critique: text,
+                    critiqueScore: score,
+                    suggestedRewrite: rewrite,
+                    rewriteChanges: changes,
+                    critiqueAttempts: newAttemptCount
+                }));
+
+                if (score < PASSING_SCORE) {
+                    const attemptsLeft = MAX_ATTEMPTS - newAttemptCount;
+                    showMessage(`Score: ${score}/100. ${attemptsLeft} attempt(s) left before auto-reject. Apply suggestions to improve!`, 5000);
+                } else {
+                    showMessage(`Critique Ready! Score: ${score}/100`, 3000);
+                }
+            }
         } catch (e) {
             console.error("Critique failed:", e);
             setStatus('Fail');
