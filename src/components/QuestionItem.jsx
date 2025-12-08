@@ -152,10 +152,10 @@ const QuestionItem = ({
                 {(q.critique || q.critiqueScore) && (
                     <CritiqueDisplay
                         critique={q.critiqueScore ? { score: q.critiqueScore, text: q.critique } : q.critique}
-                        onRewrite={onRewrite ? () => onRewrite(q) : undefined}
+                        onRewrite={appMode === 'review' && onRewrite ? () => onRewrite(q) : undefined}
                         isProcessing={isProcessing}
-                        suggestedRewrite={q.suggestedRewrite}
-                        rewriteChanges={q.rewriteChanges}
+                        suggestedRewrite={appMode === 'review' ? q.suggestedRewrite : null}
+                        rewriteChanges={appMode === 'review' ? q.rewriteChanges : null}
                         originalQuestion={q}
                         onApplyRewrite={() => {
                             if (!q.suggestedRewrite) return;
@@ -200,8 +200,8 @@ const QuestionItem = ({
                             onUpdateStatus(q.id, 'accepted');
                             if (showMessage) showMessage("✓ Applied & Accepted!", 3000);
                         }}
-                        onExplain={onExplain ? () => onExplain(q) : undefined}
-                        onVariate={onVariate ? () => onVariate(q) : undefined}
+                        onExplain={appMode === 'review' && onExplain ? () => onExplain(q) : undefined}
+                        onVariate={appMode === 'review' && onVariate ? () => onVariate(q) : undefined}
                     />
                 )}
 
