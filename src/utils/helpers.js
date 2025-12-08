@@ -225,27 +225,38 @@ export const getDisplayUrl = (url) => {
 export const renderMarkdown = (t) => {
     if (!t) return "";
 
-    // Preserve HTML tags we want to keep (<b>, <i>, <code>)
-    const htmlTagPlaceholders = [];
+    // First pass: Replace HTML tags with styled versions using Tailwind classes
     let safe = String(t)
-        .replace(/(<b>|<\/b>|<i>|<\/i>|<code>|<\/code>)/g, (match) => {
+        // Style <strong> and <b> tags with orange bold text
+        .replace(/<strong>/gi, '<strong class="text-orange-300 font-bold">')
+        .replace(/<b>/gi, '<b class="text-orange-300 font-bold">')
+        // Style <code> tags with blue code styling (UE5 Blueprint look)
+        .replace(/<code>/gi, '<code class="px-1.5 py-0.5 rounded bg-blue-950/50 text-blue-300 font-mono text-[0.9em] border border-blue-900/50">')
+        // Style <i> and <em> tags
+        .replace(/<i>/gi, '<i class="text-slate-300 italic">')
+        .replace(/<em>/gi, '<em class="text-slate-300 italic">');
+
+    // Preserve the styled HTML tags during escaping
+    const htmlTagPlaceholders = [];
+    safe = safe
+        .replace(/(<\/?(?:strong|b|code|i|em)[^>]*>)/gi, (match) => {
             const placeholder = `__HTML_TAG_${htmlTagPlaceholders.length}__`;
             htmlTagPlaceholders.push(match);
             return placeholder;
         });
 
-    // Now escape other HTML
+    // Now escape other HTML to prevent XSS
     safe = safe
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
 
-    // formatting replacements
+    // Markdown formatting replacements
     safe = safe
         // Headers - Restored some spacing
         .replace(/^### (.*$)/gim, '<h3 class="text-orange-400 font-bold text-xs mt-3 mb-1 uppercase tracking-wide">$1</h3>')
         .replace(/^#### (.*$)/gim, '<h4 class="text-slate-200 font-bold text-[10px] mt-2 mb-1 uppercase">$1</h4>')
-        // Bold
+        // Bold (markdown ** **)
         .replace(/\*\*(.*?)\*\*/g, '<strong class="text-orange-300 font-bold">$1</strong>')
         // Inline code (backticks) - styled like UE5 Blueprint terms
         .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-blue-950/50 text-blue-300 font-mono text-[0.9em] border border-blue-900/50">$1</code>')
