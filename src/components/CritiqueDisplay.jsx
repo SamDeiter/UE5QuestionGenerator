@@ -193,38 +193,39 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                             </span>
                         </div>
                         <div className="flex items-center gap-3">
-                            {/* WHY button - secondary */}
-                            {onExplain && (
-                                <button
-                                    onClick={onExplain}
-                                    disabled={isProcessing}
-                                    className="px-3 py-1.5 rounded border border-indigo-500 bg-indigo-950/50 hover:bg-indigo-900/50 text-indigo-300 text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                                    title="Explain the answer"
-                                >
-                                    <Icon name="lightbulb" size={14} /> WHY
-                                </button>
-                            )}
-                            {/* REMIX button - secondary */}
-                            {onVariate && (
-                                <button
-                                    onClick={onVariate}
-                                    disabled={isProcessing}
-                                    className="px-3 py-1.5 rounded border border-purple-500 bg-purple-950/50 hover:bg-purple-900/50 text-purple-300 text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                                    title="Generate similar questions"
-                                >
-                                    <Icon name="git-branch" size={14} /> REMIX
-                                </button>
-                            )}
-                            {/* Divider */}
-                            <div className="w-px h-8 bg-slate-600"></div>
-                            {/* APPLY button - PRIMARY ACTION */}
+                            {/* Single primary action - FIX IT */}
                             <button
                                 onClick={onApplyRewrite}
-                                className="px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-bold transition-all flex items-center gap-2 shadow-lg shadow-green-900/50 animate-pulse hover:animate-none"
-                                title="✓ Apply AI improvements to this question"
+                                disabled={isProcessing}
+                                className="px-6 py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white text-base font-bold transition-all flex items-center gap-2 shadow-lg shadow-green-900/50 animate-pulse hover:animate-none disabled:opacity-50"
+                                title="Apply AI improvements and re-critique"
                             >
-                                <Icon name="check-circle" size={18} /> APPLY
+                                <Icon name="zap" size={20} /> FIX IT
                             </button>
+
+                            {/* Secondary options */}
+                            <div className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity">
+                                {onExplain && (
+                                    <button
+                                        onClick={onExplain}
+                                        disabled={isProcessing}
+                                        className="px-2 py-1 rounded border border-slate-600 text-slate-400 text-xs hover:text-white hover:border-slate-400 transition-colors disabled:opacity-50"
+                                        title="Why is this the answer?"
+                                    >
+                                        WHY?
+                                    </button>
+                                )}
+                                {onVariate && (
+                                    <button
+                                        onClick={onVariate}
+                                        disabled={isProcessing}
+                                        className="px-2 py-1 rounded border border-slate-600 text-slate-400 text-xs hover:text-white hover:border-slate-400 transition-colors disabled:opacity-50"
+                                        title="Generate new variations"
+                                    >
+                                        MORE
+                                    </button>
+                                )}
+                            </div>
 
                         </div>
                     </div>
