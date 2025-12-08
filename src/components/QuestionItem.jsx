@@ -149,7 +149,8 @@ const QuestionItem = ({
                     appMode={appMode}
                 />
 
-                {(q.critique || q.critiqueScore) && (
+                {/* Critique Display - Only show in Review mode */}
+                {appMode === 'review' && (q.critique || q.critiqueScore) && (
                     <CritiqueDisplay
                         critique={q.critiqueScore ? { score: q.critiqueScore, text: q.critique } : q.critique}
                         onRewrite={appMode === 'review' && onRewrite ? () => onRewrite(q) : undefined}
