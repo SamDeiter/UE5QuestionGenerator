@@ -27,6 +27,24 @@ export const useQuestionManager = (config, showMessage) => {
     // Persist session questions
     useEffect(() => localStorage.setItem('ue5_gen_questions', JSON.stringify(questions)), [questions]);
 
+    // Sync questions across browser tabs via storage event
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === 'ue5_gen_questions' && e.newValue) {
+                try {
+                    const newQuestions = JSON.parse(e.newValue);
+                    console.log(`🔄 Syncing ${newQuestions.length} questions from another tab...`);
+                    setQuestions(newQuestions);
+                } catch (err) {
+                    console.error('Failed to sync questions from storage:', err);
+                }
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
     // Backfill creatorName on questions missing it
     useEffect(() => {
         if (!config.creatorName) return; // No name to backfill with
