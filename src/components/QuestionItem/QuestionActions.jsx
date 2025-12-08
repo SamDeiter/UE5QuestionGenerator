@@ -152,7 +152,7 @@ const QuestionActions = ({
                                 (q.critiqueScore !== undefined && q.critiqueScore !== null) || q.status === 'accepted' || q.status === 'rejected'
                                     ? 'bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400'
                                     : 'bg-orange-600 text-white hover:bg-orange-500 animate-pulse shadow-lg shadow-orange-900/50'
-                            } disabled:opacity-50`}
+                                } disabled:opacity-50`}
                             title={q.critiqueScore !== undefined ? `Re-run AI Critique (Current: ${q.critiqueScore}/100)` : "⚡ Step 1: Run AI Critique!"}
                         >
                             <Icon name="zap" size={18} />
@@ -166,19 +166,23 @@ const QuestionActions = ({
                     {appMode === 'review' && (
                         <button
                             onClick={handleVerify}
-                            disabled={q.humanVerified || !(q.critiqueScore !== undefined && q.critiqueScore !== null)}
+                            disabled={q.humanVerified || !(q.critiqueScore !== undefined && q.critiqueScore !== null) || q.critiqueScore < 70}
                             className={`p-2 rounded-lg transition-all flex items-center gap-1 ${q.humanVerified
                                 ? 'bg-green-600 text-white shadow-lg shadow-green-900/50'
-                                : (q.critiqueScore !== undefined && q.critiqueScore !== null && !q.humanVerified)
-                                    ? 'bg-green-600 text-white hover:bg-green-500 animate-pulse shadow-lg shadow-green-900/50'
-                                    : 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
+                                : (q.critiqueScore !== undefined && q.critiqueScore !== null && q.critiqueScore < 70)
+                                    ? 'bg-slate-800 text-red-500 opacity-50 cursor-not-allowed border border-red-900/50'
+                                    : (q.critiqueScore !== undefined && q.critiqueScore !== null && !q.humanVerified)
+                                        ? 'bg-green-600 text-white hover:bg-green-500 animate-pulse shadow-lg shadow-green-900/50'
+                                        : 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
                                 }`}
                             title={
                                 q.humanVerified
                                     ? `✓ Verified by ${q.humanVerifiedBy}`
-                                    : (q.critiqueScore !== undefined && q.critiqueScore !== null)
-                                        ? "Step 2: Click to verify source & answer are correct"
-                                        : "Run AI Critique first"
+                                    : (q.critiqueScore !== undefined && q.critiqueScore !== null && q.critiqueScore < 70)
+                                        ? `⛔ Score too low (${q.critiqueScore}/100). Must be 70+ to verify. Apply AI suggestions to improve.`
+                                        : (q.critiqueScore !== undefined && q.critiqueScore !== null)
+                                            ? "Step 2: Click to verify source & answer are correct"
+                                            : "Run AI Critique first"
                             }
                             aria-label="Mark as human-verified"
                         >
