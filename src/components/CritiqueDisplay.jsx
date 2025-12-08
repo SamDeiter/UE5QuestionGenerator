@@ -204,7 +204,7 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                                     <Icon name="lightbulb" size={12} /> WHY
                                 </button>
                             )}
-                            {/* VARY button */}
+                            {/* REMIX button */}
                             {onVariate && (
                                 <button
                                     onClick={onVariate}
@@ -212,7 +212,7 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                                     className="px-2 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm disabled:opacity-50"
                                     title="Create variations of this question"
                                 >
-                                    <Icon name="git-branch" size={12} /> VARY
+                                    <Icon name="git-branch" size={12} /> REMIX
                                 </button>
                             )}
                             {/* Divider */}
