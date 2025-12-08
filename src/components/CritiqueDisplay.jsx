@@ -40,7 +40,7 @@ const DiffText = ({ oldText, newText }) => {
                     return (
                         <span
                             key={idx}
-                            className="bg-red-900/60 text-red-300 line-through decoration-red-400 px-0.5 rounded mx-0.5"
+                            className="text-slate-500 line-through"
                         >
                             {segment.text}
                         </span>

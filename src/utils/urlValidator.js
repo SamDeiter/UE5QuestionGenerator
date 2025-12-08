@@ -34,6 +34,9 @@ const KNOWN_VALID_SLUGS = new Set([
     'unreal-engine-programming-and-scripting',
     'unreal-engine-for-beginners',
     'getting-started-with-unreal-engine',
+    'rendering-modes-in-unreal-engine',
+    'view-modes-in-unreal-engine',
+    'shader-complexity-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
