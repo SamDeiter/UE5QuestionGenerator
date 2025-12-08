@@ -140,51 +140,58 @@ const QuestionActions = ({
                     <Icon name="trash-2" size={18} />
                 </button>
             ) : (
-                // REVIEW MODE: Show Verify/AI Critique/Accept/Reject
+                // REVIEW MODE: Show AI Critique -> Verify -> Other Actions -> Accept/Reject
                 <>
-                    {/* Human Verification Button - REQUIRED before accepting */}
+                    {/* AI Critique Button - PRIMARY ACTION (must run first) */}
+                    {appMode === 'review' && (
+                        <button
+                            onClick={() => onCritique(q)}
+                            disabled={isProcessing}
+                            className={`p-2 rounded-lg transition-all flex items-center gap-1 ${q.critiqueScore !== undefined && q.critiqueScore !== null
+                                ? 'bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400'
+                                : 'bg-orange-600 text-white hover:bg-orange-500 animate-pulse shadow-lg shadow-orange-900/50'
+                                } disabled:opacity-50`}
+                            title={q.critiqueScore !== undefined ? `Re-run AI Critique (Current: ${q.critiqueScore}/100)` : "⚡ Run AI Critique First!"}
+                        >
+                            <Icon name="zap" size={18} />
+                            {!(q.critiqueScore !== undefined && q.critiqueScore !== null) && (
+                                <span className="text-xs font-bold">AI</span>
+                            )}
+                        </button>
+                    )}
+
+                    {/* Human Verification Button - clearer icon and label */}
                     {appMode === 'review' && (
                         <button
                             onClick={handleVerify}
                             disabled={q.humanVerified}
-                            className={`p-2 rounded-lg transition-all ${q.humanVerified
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50'
-                                : 'bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400 border border-indigo-900/50 animate-pulse'
+                            className={`p-2 rounded-lg transition-all flex items-center gap-1 ${q.humanVerified
+                                ? 'bg-green-600 text-white shadow-lg shadow-green-900/50'
+                                : 'bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-400 border border-green-900/50'
                                 }`}
                             title={q.humanVerified
-                                ? `Verified by ${q.humanVerifiedBy} at ${new Date(q.humanVerifiedAt).toLocaleString()}`
-                                : "Click after verifying source & answer are correct"}
+                                ? `✓ Verified by ${q.humanVerifiedBy}`
+                                : "I verified the source & answer are correct"}
                             aria-label="Mark as human-verified"
                         >
-                            <Icon name={q.humanVerified ? "shield-check" : "shield"} size={18} />
+                            <Icon name={q.humanVerified ? "check-circle" : "eye"} size={18} />
+                            <span className="text-xs font-bold">{q.humanVerified ? "OK" : "VERIFY"}</span>
                         </button>
                     )}
 
-                    {/* AI Critique Button - PRIMARY ACTION (must run first) */}
+                    {/* Divider */}
+                    <div className="w-px h-6 bg-slate-700"></div>
+
+                    {/* Secondary Actions - require critique first */}
                     {appMode === 'review' && (
                         <>
-                            <button
-                                onClick={() => onCritique(q)}
-                                disabled={isProcessing}
-                                className={`p-2 rounded-lg transition-all ${q.critiqueScore !== undefined && q.critiqueScore !== null
-                                        ? 'bg-slate-800 text-slate-500 hover:bg-orange-900/20 hover:text-orange-400'
-                                        : 'bg-orange-600 text-white hover:bg-orange-500 animate-pulse shadow-lg shadow-orange-900/50'
-                                    } disabled:opacity-50`}
-                                title={q.critiqueScore !== undefined ? `Re-run AI Critique (Current: ${q.critiqueScore}/100)` : "⚡ Run AI Critique First!"}
-                            >
-                                <Icon name="zap" size={18} />
-                            </button>
-
-                            {/* Divider after primary action */}
-                            <div className="w-px h-6 bg-slate-700"></div>
-
                             {/* Explain Answer - requires critique first */}
                             <button
                                 onClick={() => onExplain && onExplain(q)}
                                 disabled={isProcessing || (q.critiqueScore === undefined || q.critiqueScore === null)}
                                 className={`p-2 rounded-lg transition-all ${q.critiqueScore === undefined || q.critiqueScore === null
-                                        ? 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
-                                        : 'bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400'
+                                    ? 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
+                                    : 'bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400'
                                     } disabled:opacity-50`}
                                 title={q.critiqueScore === undefined ? "Run AI Critique first" : "Explain Answer"}
                             >
@@ -196,8 +203,8 @@ const QuestionActions = ({
                                 onClick={() => onVariate && onVariate(q)}
                                 disabled={isProcessing || (q.critiqueScore === undefined || q.critiqueScore === null)}
                                 className={`p-2 rounded-lg transition-all ${q.critiqueScore === undefined || q.critiqueScore === null
-                                        ? 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
-                                        : 'bg-slate-800 text-slate-500 hover:bg-purple-900/20 hover:text-purple-400'
+                                    ? 'bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
+                                    : 'bg-slate-800 text-slate-500 hover:bg-purple-900/20 hover:text-purple-400'
                                     } disabled:opacity-50`}
                                 title={q.critiqueScore === undefined ? "Run AI Critique first" : "Create Variations"}
                             >
