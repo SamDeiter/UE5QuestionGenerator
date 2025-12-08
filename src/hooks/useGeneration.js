@@ -266,6 +266,7 @@ export const useGeneration = (
             const enrichedQuestions = newQuestions.map(q => ({
                 ...q,
                 language: 'English', // All generated questions are in English
+                creatorName: config.creatorName || 'Unknown', // Set creator name from config
                 estimatedCost: costPerQuestion,
                 generationTime: duration,
                 model: config.model || 'gemini-2.0-flash',
