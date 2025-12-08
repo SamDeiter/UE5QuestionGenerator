@@ -189,9 +189,6 @@ const QuestionItem = ({
                         originalQuestion={q}
                         onApplyRewrite={async () => {
                             if (!q.suggestedRewrite) return;
-                            const reviewerName = localStorage.getItem('ue5_gen_config')
-                                ? JSON.parse(localStorage.getItem('ue5_gen_config')).creatorName || 'Unknown'
-                                : 'Unknown';
 
                             const updatedQ = {
                                 ...q,
@@ -202,43 +199,15 @@ const QuestionItem = ({
                                 rewriteChanges: null,
                                 critique: null,
                                 critiqueScore: null,
-                                humanVerified: false
+                                humanVerified: false // Reset - human must verify
                             };
                             onUpdateQuestion(q.id, updatedQ);
                             if (showMessage) showMessage("✓ Applied! Re-critiquing...", 2000);
 
-                            // Auto-run critique and auto-verify if score passes
+                            // Auto-run critique to show new score (human still verifies)
                             if (onCritique) {
-                                setTimeout(async () => {
-                                    // Run critique - the result will update the question
-                                    // After critique completes, check score and auto-verify if ≥70
+                                setTimeout(() => {
                                     onCritique({ ...updatedQ, id: q.id });
-
-                                    // Watch for score update and auto-verify
-                                    const checkAndVerify = setInterval(() => {
-                                        const saved = localStorage.getItem('ue5_gen_questions');
-                                        if (saved) {
-                                            const questions = JSON.parse(saved);
-                                            const updated = questions.find(qu => qu.id === q.id);
-                                            if (updated && updated.critiqueScore !== null && updated.critiqueScore !== undefined) {
-                                                clearInterval(checkAndVerify);
-                                                if (updated.critiqueScore >= 70 && !updated.humanVerified) {
-                                                    // Auto-verify since AI improvements passed
-                                                    onUpdateQuestion(q.id, {
-                                                        ...updated,
-                                                        humanVerified: true,
-                                                        humanVerifiedAt: new Date().toISOString(),
-                                                        humanVerifiedBy: reviewerName + ' (auto)'
-                                                    });
-                                                    if (showMessage) showMessage(`✓ Score: ${updated.critiqueScore}/100 - Auto-verified! Click Accept to finish.`, 4000);
-                                                } else if (updated.critiqueScore < 70) {
-                                                    if (showMessage) showMessage(`Score: ${updated.critiqueScore}/100 - Still needs improvement. Try Apply again or Reject.`, 5000);
-                                                }
-                                            }
-                                        }
-                                    }, 1000);
-                                    // Timeout after 30 seconds
-                                    setTimeout(() => clearInterval(checkAndVerify), 30000);
                                 }, 300);
                             }
                         }}
