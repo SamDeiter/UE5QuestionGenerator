@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Icon from './Icon';
 import CritiqueDisplay from './CritiqueDisplay';
+import ReviewProgressBar from './ReviewProgressBar';
 import { renderMarkdown } from '../utils/helpers';
 import QuestionHeader from './QuestionItem/QuestionHeader';
 import QuestionContent from './QuestionItem/QuestionContent';
@@ -104,6 +105,34 @@ const QuestionItem = ({
                         />
                     </div>
                 </div>
+
+                {/* Review Progress Bar - Only in Review Mode */}
+                {appMode === 'review' && (
+                    <ReviewProgressBar
+                        question={q}
+                        onCritique={() => onCritique?.(q)}
+                        onVerify={() => {
+                            const reviewerName = localStorage.getItem('ue5_gen_config')
+                                ? JSON.parse(localStorage.getItem('ue5_gen_config')).creatorName || 'Unknown'
+                                : 'Unknown';
+                            onUpdateQuestion(q.id, {
+                                ...q,
+                                humanVerified: true,
+                                humanVerifiedAt: new Date().toISOString(),
+                                humanVerifiedBy: reviewerName
+                            });
+                            if (showMessage) showMessage("✓ Question verified!", 2000);
+                        }}
+                        onAccept={() => {
+                            if (!q.humanVerified) {
+                                if (showMessage) showMessage("⚠️ Please verify first", 3000);
+                                return;
+                            }
+                            onUpdateStatus(q.id, 'accepted');
+                        }}
+                        isProcessing={isProcessing}
+                    />
+                )}
 
                 {/* Language Controls */}
                 <LanguageControls
