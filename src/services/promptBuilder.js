@@ -115,6 +115,12 @@ To assess professional competence, use these question structures:
 ### 2. Question Type Rules
 - **Target Type:** ${targetType}
 - **Multiple Choice (MC):** 4 options total (1 Correct, 3 Distractors).
+  - **Format:** Ask a direct question. All 4 options must be real UE5 terms/concepts.
+  - **Good Examples:**
+    - "Which Actor is essential for defining the navigable area for AI characters within a level?" (Options: BlockingVolume, TriggerVolume, NavMeshBoundsVolume, PostProcessVolume)
+    - "In which component would you typically find and enable the 'bUseRVOAvoidance' property?" (Options: AI Controller, Skeletal Mesh Component, Character Movement Component, Pawn Sensing Component)
+    - "To manually connect two disconnected NavMesh areas, which tool should be used?" (Options: NavMeshBoundsVolume, AI Waypoint Actor, NavLinkProxy, NavModifierVolume)
+  - **Avoid:** "All of the above", "None of the above", or joke answers.
 - **True/False (T/F):**
   - **Format:** Write as a DIRECT ASSERTION (statement of fact). Do NOT prefix with "True or False:".
   - **Good Examples:**
