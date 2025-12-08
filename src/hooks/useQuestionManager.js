@@ -27,6 +27,22 @@ export const useQuestionManager = (config, showMessage) => {
     // Persist session questions
     useEffect(() => localStorage.setItem('ue5_gen_questions', JSON.stringify(questions)), [questions]);
 
+    // Backfill creatorName on questions missing it
+    useEffect(() => {
+        if (!config.creatorName) return; // No name to backfill with
+
+        const questionsNeedingBackfill = questions.filter(q => !q.creatorName || q.creatorName === 'N/A' || q.creatorName === 'Unknown');
+        if (questionsNeedingBackfill.length > 0) {
+            console.log(`📝 Backfilling creatorName on ${questionsNeedingBackfill.length} questions...`);
+            setQuestions(prev => prev.map(q => {
+                if (!q.creatorName || q.creatorName === 'N/A' || q.creatorName === 'Unknown') {
+                    return { ...q, creatorName: config.creatorName };
+                }
+                return q;
+            }));
+        }
+    }, [config.creatorName]); // Only run when creatorName changes
+
     // Recompute allQuestionsMap
     useEffect(() => {
         const combined = [...questions, ...historicalQuestions];
