@@ -194,19 +194,21 @@ const QuestionActions = ({
                             <button
                                 onClick={() => onExplain && onExplain(q)}
                                 disabled={isProcessing}
-                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400 disabled:opacity-50"
+                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-indigo-900/20 hover:text-indigo-400 disabled:opacity-50 flex items-center gap-1"
                                 title="Explain Answer"
                             >
                                 <Icon name="lightbulb" size={18} />
+                                <span className="text-xs font-bold">WHY</span>
                             </button>
 
                             <button
                                 onClick={() => onVariate && onVariate(q)}
                                 disabled={isProcessing}
-                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-purple-900/20 hover:text-purple-400 disabled:opacity-50"
+                                className="p-2 rounded-lg transition-all bg-slate-800 text-slate-500 hover:bg-purple-900/20 hover:text-purple-400 disabled:opacity-50 flex items-center gap-1"
                                 title="Create Variations"
                             >
                                 <Icon name="git-branch" size={18} />
+                                <span className="text-xs font-bold">VARY</span>
                             </button>
 
                             {/* Divider before Accept/Reject */}
