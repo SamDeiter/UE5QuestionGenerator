@@ -16,16 +16,33 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
     const isRejected = q.status === 'rejected';
 
     if (isRejected) {
+        const reasons = {
+            'low_score_after_retries': 'Could not reach quality threshold after multiple attempts',
+            'factually_incorrect': 'Contains factual errors',
+            'unclear': 'Question or answers are unclear',
+            'duplicate': 'Duplicate of another question',
+            'off_topic': 'Not relevant to the topic',
+            'other': 'Rejected by reviewer'
+        };
+        const reasonText = reasons[q.rejectionReason] || q.rejectionReason?.replace(/_/g, ' ') || 'Rejected';
+
         return (
-            <div className="flex items-center justify-center gap-3 py-3 px-4 bg-red-950/30 border border-red-900/50 rounded-lg">
-                <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center">
-                    <Icon name="x" size={18} className="text-white" />
-                </div>
-                <div>
-                    <span className="text-sm font-bold text-red-400">REJECTED</span>
-                    <span className="text-xs text-red-400/70 ml-2">
-                        {q.rejectionReason ? `— ${q.rejectionReason.replace(/_/g, ' ')}` : ''}
-                    </span>
+            <div className="py-5 px-6 bg-red-950/50 border-2 border-red-600/50 rounded-lg">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0 animate-pulse">
+                        <Icon name="x" size={24} className="text-white" />
+                    </div>
+                    <div className="flex-1">
+                        <div className="text-lg font-bold text-red-400 mb-1">
+                            ❌ QUESTION REJECTED
+                        </div>
+                        <div className="text-sm text-red-300/80">
+                            {reasonText}
+                        </div>
+                        <div className="text-xs text-red-400/60 mt-2">
+                            This question will not be exported. You can delete it or move on to the next question.
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -118,14 +135,14 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
                             {/* Label */}
                             <div className="flex flex-col">
                                 <span className={`text-sm font-bold ${step.completed ? 'text-green-400' :
-                                        step.failed ? 'text-red-400' :
-                                            step.active ? 'text-orange-400' : 'text-slate-500'
+                                    step.failed ? 'text-red-400' :
+                                        step.active ? 'text-orange-400' : 'text-slate-500'
                                     }`}>
                                     {step.label}
                                 </span>
                                 <span className={`text-xs ${step.completed ? 'text-green-400/70' :
-                                        step.failed ? 'text-red-400/70' :
-                                            step.active ? 'text-orange-400/70' : 'text-slate-600'
+                                    step.failed ? 'text-red-400/70' :
+                                        step.active ? 'text-orange-400/70' : 'text-slate-600'
                                     }`}>
                                     {step.sublabel}
                                 </span>
@@ -135,8 +152,8 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
                         {/* Connecting Line */}
                         {index < steps.length - 1 && (
                             <div className={`flex-1 h-0.5 mx-4 rounded ${step.completed ? 'bg-green-600' :
-                                    step.failed ? 'bg-red-600/50' :
-                                        'bg-slate-700'
+                                step.failed ? 'bg-red-600/50' :
+                                    'bg-slate-700'
                                 }`} />
                         )}
                     </div>
