@@ -114,9 +114,8 @@ const QuestionItem = ({
                         question={q}
                         onCritique={() => onCritique?.(q)}
                         onVerify={() => {
-                            const reviewerName = localStorage.getItem('ue5_gen_config')
-                                ? JSON.parse(localStorage.getItem('ue5_gen_config')).creatorName || 'Unknown'
-                                : 'Unknown';
+                            const config = getSecureItem('ue5_gen_config');
+                            const reviewerName = config?.creatorName || 'Unknown';
 
                             // Auto-accept for high scores (≥70)
                             const autoAccept = q.critiqueScore >= 70;
