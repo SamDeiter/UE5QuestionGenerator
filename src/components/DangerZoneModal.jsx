@@ -96,7 +96,10 @@ const DangerZoneModal = ({ isOpen, onClose, config, onClearData }) => {
                 const creator = data.creatorName;
                 // Catch: null, undefined, empty string, 'N/A', or whitespace-only
                 if (!creator || creator.trim() === '' || creator === 'N/A' || creator === 'Unknown') {
-                    questionsToUpdate.push({ id: docSnap.id, ...data });
+                    questionsToUpdate.push({
+                        firestoreId: docSnap.id,  // Use Firestore document ID
+                        ...data
+                    });
                 }
             });
 
@@ -109,16 +112,16 @@ const DangerZoneModal = ({ isOpen, onClose, config, onClearData }) => {
             let successCount = 0;
             for (const question of questionsToUpdate) {
                 try {
-                    console.log('Updating question:', question.id, 'Creator:', question.creatorName);
-                    const questionRef = doc(db, 'questions', String(question.id));
+                    console.log('Updating question:', question.firestoreId, 'Creator:', question.creatorName);
+                    const questionRef = doc(db, 'questions', question.firestoreId);
                     await updateDoc(questionRef, {
                         creatorName: creatorName,
                         backfilledAt: new Date().toISOString()
                     });
                     successCount++;
-                    console.log('✓ Successfully updated:', question.id);
+                    console.log('✓ Successfully updated:', question.firestoreId);
                 } catch (err) {
-                    console.error(`Failed to update question ${question.id}:`, err.message, err);
+                    console.error(`Failed to update question ${question.firestoreId}:`, err.message, err);
                 }
             }
 
