@@ -851,7 +851,7 @@ const App = () => {
             <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
                 {toasts.map(toast => (
                     <div key={toast.id} className="pointer-events-auto">
-                        <Toast {...toast} onClose={removeToast} />
+                        <Toast {...toast} onClose={() => removeToast(toast.id)} />
                     </div>
                 ))}
             </div>

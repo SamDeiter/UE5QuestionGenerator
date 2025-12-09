@@ -225,13 +225,16 @@ export const saveQuestionToFirestore = async (question) => {
  */
 export const getQuestionsFromFirestore = async () => {
     try {
-        let q;
-        if (auth.currentUser) {
-            q = query(collection(db, "questions"), where("creatorId", "==", auth.currentUser.uid));
-        } else {
-            // Fallback for unauthenticated (shouldn't happen with new rules, but good for safety)
-            q = collection(db, "questions");
-        }
+        // TEMPORARILY DISABLED - Load ALL questions for debugging
+        // let q;
+        // if (auth.currentUser) {
+        //     q = query(collection(db, "questions"), where("creatorId", "==", auth.currentUser.uid));
+        // } else {
+        //     q = collection(db, "questions");
+        // }
+
+        // Load ALL questions (no filter)
+        const q = collection(db, "questions");
 
         const querySnapshot = await getDocs(q);
         const questions = [];
@@ -255,20 +258,20 @@ export const getQuestionsPaginated = async (userId, limitCount = 20, lastDoc = n
             orderBy('firestoreUpdatedAt', 'desc'),
             limit(limitCount)
         );
-        
+
         if (lastDoc) {
             q = query(q, startAfter(lastDoc));
         }
-        
+
         const querySnapshot = await getDocs(q);
         const questions = [];
         let lastVisible = null;
-        
+
         querySnapshot.forEach((doc) => {
             questions.push({ id: doc.id, ...doc.data() });
             lastVisible = doc;
         });
-        
+
         return {
             questions,
             lastDoc: lastVisible,
