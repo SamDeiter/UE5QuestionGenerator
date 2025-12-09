@@ -6,6 +6,7 @@ import {
 } from 'recharts';
 import { format, subDays, isAfter } from 'date-fns';
 import { getAnalytics } from '../utils/analyticsStore';
+import { TAGS_BY_DISCIPLINE } from '../utils/tagTaxonomy';
 
 const MetricCard = ({ title, value, icon, color }) => {
     const colors = {
@@ -314,6 +315,54 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                                     "A balanced dataset with both good and bad examples produces the best fine-tuned models."
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    {/* Topic Coverage Analysis */}
+                    <div className="bg-slate-950/50 border border-slate-800 rounded-xl p-4 min-w-0">
+                        <h3 className="text-sm font-bold text-slate-400 mb-4 flex items-center gap-2">
+                            <TrendingUp size={16} /> Topic Coverage Analysis
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {Object.entries(TAGS_BY_DISCIPLINE).map(([discipline, tags]) => {
+                                // Calculate coverage for this discipline
+                                const disciplineQuestions = analyticsData.questions.filter(q => q.discipline === discipline);
+                                const coverageStats = tags.map(tag => {
+                                    // Normalized match
+                                    const normalize = t => t.toLowerCase();
+                                    const count = disciplineQuestions.filter(q =>
+                                        (q.tags || []).some(qt => normalize(qt) === normalize(tag))
+                                    ).length;
+                                    return { tag, count };
+                                }).sort((a, b) => b.count - a.count); // Most covered first
+
+                                return (
+                                    <div key={discipline} className="bg-slate-900 rounded-lg p-3 border border-slate-800">
+                                        <h4 className="text-xs font-bold text-slate-300 uppercase mb-3 border-b border-slate-800 pb-2">
+                                            {discipline} <span className="text-slate-500">({disciplineQuestions.length})</span>
+                                        </h4>
+                                        <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                            {coverageStats.map(({ tag, count }) => {
+                                                const coveragePercent = Math.min((count / 5) * 100, 100); // Goal: 5 questions per tag
+                                                return (
+                                                    <div key={tag} className="flex flex-col gap-1">
+                                                        <div className="flex justify-between text-[10px]">
+                                                            <span className={count === 0 ? 'text-slate-500' : 'text-slate-300'}>{tag}</span>
+                                                            <span className={count === 0 ? 'text-red-400 font-bold' : 'text-emerald-400 font-mono'}>{count}</span>
+                                                        </div>
+                                                        <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={`h-full ${count === 0 ? 'bg-transparent' : (count < 3 ? 'bg-orange-500' : 'bg-emerald-500')}`}
+                                                                style={{ width: `${coveragePercent}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

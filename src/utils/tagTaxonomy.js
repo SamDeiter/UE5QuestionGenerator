@@ -1,36 +1,53 @@
 export const TAGS_BY_DISCIPLINE = {
     "Technical Art": [
         "#Nanite", "#VirtualizedGeometry", "#LODs", "#MeshOptimization", "#Polycount",
-        "#Pipeline", "#Workflow", "#Automation", "#Scripting", "#Python", "#CustomTools", "#DCCIntegration",
-        "#Optimization", "#Profiling", "#PerformanceTuning", "#DrawCalls", "#MemoryManagement", "#UnrealInsights", "#GPU", "#CPU"
+        "#Pipeline", "#Workflow", "#Automation", "#Scripting", "#Python",
+        "#CustomTools", "#DCCIntegration", "#Optimization", "#Profiling", "#PerformanceTuning",
+        "#DrawCalls", "#MemoryManagement", "#UnrealInsights", "#GPU", "#CPU"
     ],
     "Lighting & Rendering": [
-        "#Rendering", "#Shaders", "#Materials", "#MaterialEditor", "#Substrate", "#Lighting", "#Lumen", "#Reflections", "#RayTracing"
+        "#Rendering", "#Shaders", "#Materials", "#MaterialEditor", "#Substrate",
+        "#Lighting", "#Lumen", "#Reflections", "#RayTracing", "#VirtualShadowMaps",
+        "#PostProcess", "#GlobalIllumination", "#AntiAliasing", "#TSR"
     ],
     "Look Development (Materials)": [
-        "#Materials", "#MaterialEditor", "#Substrate", "#Shaders", "#Textures", "#UVs", "#Instances"
+        "#Materials", "#MaterialEditor", "#Substrate", "#Shaders", "#Textures",
+        "#UVs", "#Instances", "#MaterialGraphs", "#MaterialFunctions", "#Decals",
+        "#PBR"
     ],
     "Animation & Rigging": [
-        "#Rigging", "#Skinning", "#ControlRig", "#AnimationBlueprint", "#StateMachines", "#IK", "#Retargeting", "#Metahumans", "#Sequencer"
+        "#Rigging", "#Skinning", "#ControlRig", "#AnimationBlueprint", "#StateMachines",
+        "#IK", "#Retargeting", "#Metahumans", "#Sequencer", "#MotionMatching",
+        "#RootMotion", "#AnimationLayers"
     ],
     "VFX (Niagara)": [
-        "#VFX", "#Niagara", "#ParticleSystems", "#ChaosPhysics", "#Simulation", "#Groom", "#Cloth", "#Fluids"
+        "#VFX", "#Niagara", "#ParticleSystems", "#ChaosPhysics", "#Simulation",
+        "#Groom", "#Cloth", "#Fluids", "#NiagaraFluids", "#DataInterface"
     ],
     "World Building & Level Design": [
-        "#LevelDesign", "#WorldBuilding", "#PCG", "#ProceduralGeneration", "#WorldPartition", "#Terrain", "#Landscape", "#Foliage", "#Water"
+        "#LevelDesign", "#WorldBuilding", "#PCG", "#ProceduralGeneration", "#WorldPartition",
+        "#Terrain", "#Landscape", "#Foliage", "#Water", "#DataLayers",
+        "#LevelInstancing", "#OneFilePerActor"
     ],
     "Blueprints": [
-        "#Blueprint", "#VisualScripting", "#Macros", "#Functions", "#EventGraph", "#ConstructionScript", "#Variables", "#FlowControl"
+        "#Blueprint", "#VisualScripting", "#Macros", "#Functions", "#EventGraph",
+        "#ConstructionScript", "#Variables", "#FlowControl", "#EventDispatchers", "#Interfaces",
+        "#ActorCommunication", "#Debugging"
     ],
     "Game Logic & Systems": [
-        "#GameFramework", "#GameMode", "#GameState", "#PlayerController", "#Pawn", "#Character", "#Input", "#EnhancedInput", "#SaveSystem"
+        "#GameFramework", "#GameMode", "#GameState", "#PlayerController", "#Pawn",
+        "#Character", "#Input", "#EnhancedInput", "#SaveSystem", "#GameplayAbilities",
+        "#GAS", "#AIController", "#Navigation"
     ],
     "C++ Programming": [
-        "#Cpp", "#UObject", "#Actor", "#GarbageCollection", "#MemoryManagement", "#Performance", "#Modules", "#Plugins", "#Reflection"
+        "#Cpp", "#UObject", "#Actor", "#GarbageCollection", "#MemoryManagement",
+        "#Performance", "#Modules", "#Plugins", "#Reflection", "#Delegates",
+        "#Multithreading", "#Slate", "#EditorExtensions"
     ],
     "Networking": [
-        "#Replication", "#ServerAuthoritative", "#RPCs", "#NetworkCompaction", "#Relevancy", "#BandwidthOptimization", "#DedicatedServer"
-    ]
+        "#Replication", "#ServerAuthoritative", "#RPCs", "#NetworkCompaction", "#Relevancy",
+        "#BandwidthOptimization", "#DedicatedServer", "#ReplicationGraph", "#Ownership"
+    ],
 };
 
 /**
@@ -46,4 +63,3 @@ export const getMergedTags = (discipline, customTags = {}) => {
     // Combine and remove duplicates
     return [...new Set([...predefined, ...custom])];
 };
-

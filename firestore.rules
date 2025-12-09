@@ -2,14 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /questions/{questionId} {
-      // Allow read/write only if the user is authenticated
-      // AND the document belongs to them (checked via creatorId field)
-      
-      allow create: if request.auth != null 
-                    && request.resource.data.creatorId == request.auth.uid;
-                    
-      allow read, update, delete: if request.auth != null 
-                                  && resource.data.creatorId == request.auth.uid;
+      // PERMISSIVE MODE: Allow any authenticated user to Create, Read, Update, Delete.
+      // Necessary for global Review functionality.
+      allow create, read, update, delete: if request.auth != null;
     }
   }
 }

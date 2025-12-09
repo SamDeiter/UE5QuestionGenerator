@@ -10,33 +10,22 @@ import { Virtuoso } from 'react-virtuoso';
 import LandingPage from './components/LandingPage';
 import Header from './components/Header';
 import QuestionItem from './components/QuestionItem';
-import NameEntryModal from './components/NameEntryModal';
-import ClearConfirmationModal from './components/ClearConfirmationModal';
-import BlockingProcessModal from './components/BlockingProcessModal';
 import FilterButton from './components/FilterButton';
 import GranularProgress from './components/GranularProgress';
 import Icon from './components/Icon';
 import Toast from './components/Toast';
 import Sidebar from './components/Sidebar';
 import QuestionList from './components/QuestionList';
+import GlobalModals from './components/GlobalModals';
+import ViewRouter from './components/ViewRouter';
+
 import BulkActionBar from './components/BulkActionBar';
-import TutorialOverlay from './components/TutorialOverlay';
 import AppNavigation from './components/AppNavigation';
 import ContextToolbar from './components/ContextToolbar';
-import ApiKeyModal from './components/ApiKeyModal';
-import TermsOfUseModal from './components/TermsOfUseModal';
-import CookieConsentBanner from './components/CookieConsentBanner';
-import AgeGateModal from './components/AgeGateModal';
 import { migrateToSecure } from './utils/secureStorage';
 import { TUTORIAL_STEPS } from './utils/tutorialSteps';
 
 // Lazy Loaded Components
-const SettingsModal = React.lazy(() => import('./components/SettingsModal'));
-const ReviewMode = React.lazy(() => import('./components/ReviewMode'));
-const DatabaseView = React.lazy(() => import('./components/DatabaseView'));
-const BulkExportModal = React.lazy(() => import('./components/BulkExportModal'));
-const AnalyticsDashboard = React.lazy(() => import('./components/AnalyticsDashboard'));
-const DangerZoneModal = React.lazy(() => import('./components/DangerZoneModal'));
 
 // Loading Fallback
 const LoadingSpinner = () => (
@@ -569,12 +558,7 @@ const App = () => {
                     isCloudReady={isAuthReady}
                     onOpenSettings={() => { console.log('🚀 Configure Now clicked!'); setShowApiKeyModal(true); }}
                 />
-                <ApiKeyModal
-                    isOpen={showApiKeyModal}
-                    onClose={() => setShowApiKeyModal(false)}
-                    onSave={handleSaveApiKey}
-                    currentKey={config.apiKey}
-                />
+                
             </>
         );
     }
@@ -589,45 +573,35 @@ const App = () => {
                 onRecover={handleRecover}
                 onDismiss={dismissRecovery}
             />
+            <GlobalModals
+                visibility={{
+                    showNameModal, showClearModal, showBulkExportModal, 
+                    showSettings, showAnalytics, showDangerZone, 
+                    showApiKeyModal, showTerms, showAgeGate, 
+                    tutorialActive, deleteConfirmId, showAdvancedConfig
+                }}
+                state={{
+                    config, isProcessing, status, translationProgress, 
+                    allQuestionsMap, appMode, currentStep, tutorialSteps: TUTORIAL_STEPS,
+                    metrics: { totalApproved: approvedCount, totalQuestions: questions.length }
+                }}
+                handlers={{
+                    handleNameSave, handleDeleteAllQuestions, handleBulkExport, 
+                    confirmDelete, setDeleteConfirmId, 
+                    onCloseBulkExport: () => setShowBulkExportModal(false),
+                    onCloseSettings: () => setShowSettings(false),
+                    onCloseAnalytics: () => setShowAnalytics(false),
+                    onCloseDangerZone: () => setShowDangerZone(false),
+                    onCloseApiKey: () => setShowApiKeyModal(false),
+                    handleChange, handleSaveApiKey, setShowTerms, setTermsAccepted, setShowAgeGate, setShowClearModal,
+                    handleTutorialNext, handleTutorialPrev, handleTutorialSkip, handleTutorialComplete,
+                    onResetSettings: () => setConfig({ ...config, ...useAppConfig.defaultConfig }),
+                    onHardReset: () => { localStorage.clear(); window.location.reload(); },
+                    fileInputRef, handleFileChange, setShowAdvancedConfig,
+                    window: window
+                }}
+            />
             <Header apiKeyStatus={apiKeyStatus} isCloudReady={isAuthReady} onHome={handleGoHome} creatorName={config.creatorName} appMode={appMode} tokenUsage={tokenUsage} onRestartTutorial={handleRestartTutorial} />
-
-            {config.creatorName === '' && <NameEntryModal onSave={handleNameSave} />}
-            {showClearModal && <ClearConfirmationModal onConfirm={handleDeleteAllQuestions} onCancel={() => setShowClearModal(false)} />}
-
-            {deleteConfirmId && (
-                <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-300 space-y-4">
-                        <h3 className="text-xl font-bold text-red-500 flex items-center gap-2"><Icon name="trash-2" size={20} /> DELETE QUESTION?</h3>
-                        <p className="text-sm text-slate-300">Why are you deleting this question? This helps improve future generation.</p>
-
-                        <div className="grid grid-cols-1 gap-2">
-                            {[
-                                { id: 'Duplicate', label: 'Duplicate Question' },
-                                { id: 'Poor Quality', label: 'Poor Quality / Hallucination' },
-                                { id: 'Incorrect', label: 'Incorrect Information' },
-                                { id: 'Bad Source', label: 'Bad Source / YouTube' },
-                                { id: 'Test', label: 'Just Testing / Cleanup' }
-                            ].map(reason => (
-                                <button
-                                    key={reason.id}
-                                    onClick={() => confirmDelete(reason.id)}
-                                    className="w-full text-left px-4 py-3 rounded bg-slate-800 hover:bg-red-900/20 border border-slate-700 hover:border-red-500/50 transition-all flex items-center justify-between group"
-                                >
-                                    <span className="text-sm font-medium text-slate-300 group-hover:text-red-200">{reason.label}</span>
-                                    <Icon name="chevron-right" size={14} className="text-slate-600 group-hover:text-red-400" />
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="pt-2 border-t border-slate-800 flex justify-end">
-                            <button onClick={() => setDeleteConfirmId(null)} className="px-4 py-2 text-sm rounded bg-transparent hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">Cancel</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {isProcessing && <BlockingProcessModal isProcessing={isProcessing} status={status} translationProgress={translationProgress} />}
-            {showBulkExportModal && <BulkExportModal onClose={() => setShowBulkExportModal(false)} onExport={handleBulkExport} questionCount={allQuestionsMap.size} />}
 
             <div className="flex flex-1 overflow-hidden">
                 {appMode === 'create' && (
@@ -718,160 +692,30 @@ const App = () => {
                         )}
 
                         <Suspense fallback={<LoadingSpinner />}>
-                            {appMode === 'database' ? (
-                                <DatabaseView
-                                    questions={databaseQuestions}
-                                    sheetUrl={config.sheetUrl}
-                                    onLoad={handleLoadFromSheets}
-                                    onLoadFirestore={handleLoadFromFirestore}
-                                    onClearView={() => setDatabaseQuestions([])}
-                                    onHardReset={() => setDatabaseQuestions([])}
-                                    onUpdateQuestion={handleUpdateDatabaseQuestion}
-                                    onKickBack={handleKickBackToReview}
-                                    isProcessing={isProcessing}
-                                    showMessage={showMessage}
-                                    filterMode={filterMode}
-                                    sortBy={sortBy}
-                                />
-                            ) : appMode === 'review' && uniqueFilteredQuestions.length > 0 ? (
-                                <ReviewMode
-                                    questions={uniqueFilteredQuestions}
-                                    currentIndex={currentReviewIndex}
-                                    setCurrentIndex={setCurrentReviewIndex}
-                                    onUpdateStatus={handleUpdateStatus}
-                                    onExplain={handleExplain}
-                                    onVariate={handleVariate}
-                                    onCritique={handleCritique}
-                                    onTranslateSingle={handleTranslateSingle}
-                                    onSwitchLanguage={handleLanguageSwitch}
-                                    onDelete={handleDelete}
-                                    onUpdateQuestion={handleManualUpdate}
-                                    translationMap={translationMap}
-                                    isProcessing={isProcessing}
-                                    showMessage={showMessage}
-                                />
-                            ) : (
-                                <>
-                                    <BulkActionBar
-                                        selectedCount={selectedIds.size}
-                                        onSelectAll={selectAll}
-                                        onClearSelection={clearSelection}
-                                        onAcceptAll={() => bulkUpdateStatus('accepted')}
-                                        onRejectAll={() => bulkUpdateStatus('rejected', 'other')}
-                                    />
-                                    <QuestionList
-                                        questions={uniqueFilteredQuestions}
-                                        translationMap={translationMap}
-                                        selectedIds={selectedIds}
-                                        appMode={appMode}
-                                        isProcessing={isProcessing}
-                                        onUpdateStatus={handleUpdateStatus}
-                                        onExplain={handleExplain}
-                                        onVariate={handleVariate}
-                                        onCritique={handleCritique}
-                                        onTranslateSingle={handleTranslateSingle}
-                                        onSwitchLanguage={handleLanguageSwitch}
-                                        onDelete={handleDelete}
-                                        onUpdateQuestion={handleManualUpdate}
-                                        showMessage={showMessage}
-                                        toggleSelection={toggleSelection}
-                                    />
-                                </>
-                            )}
-
-                            {uniqueFilteredQuestions.length === 0 && filteredQuestions.length > 0 && (
-                                <div className="flex flex-col items-center justify-center h-full text-slate-600 pt-10">
-                                    <Icon name="filter" size={32} className="mb-3 text-slate-800" />
-                                    <p className="font-medium text-slate-500">No questions match current filters.</p>
-                                    {filterByCreator && (
-                                        <p className="text-xs text-slate-600 mt-2">
-                                            Filtering by Creator: <span className="text-blue-500 font-bold">{config.creatorName}</span>.
-                                            <button onClick={() => setFilterByCreator(false)} className="ml-2 underline hover:text-blue-400">Show All Creators?</button>
-                                        </p>
-                                    )}
-                                </div>
-                            )}
+                            <ViewRouter
+                                appMode={appMode}
+                                uniqueFilteredQuestions={uniqueFilteredQuestions}
+                                databaseQuestions={databaseQuestions}
+                                config={config}
+                                isProcessing={isProcessing}
+                                handlers={{
+                                    handleLoadFromSheets, handleLoadFromFirestore, handleUpdateDatabaseQuestion, handleKickBackToReview,
+                                    handleUpdateStatus, handleExplain, handleVariate, handleCritique, handleTranslateSingle, handleLanguageSwitch, handleDelete, handleManualUpdate,
+                                    selectAll, clearSelection, bulkUpdateStatus, toggleSelection
+                                }}
+                                state={{
+                                    currentReviewIndex, selectedIds, translationMap, filterByCreator, filteredQuestions, questions, status, filterMode, sortBy, showHistory
+                                }}
+                                setters={{
+                                    setDatabaseQuestions, setCurrentReviewIndex, setFilterByCreator, showMessage
+                                }}
+                            />
                         </Suspense>
                     </div>
                 </main>
             </div>
 
-            <Suspense fallback={null}>
-                <SettingsModal
-                    showSettings={showSettings}
-                    setShowSettings={setShowSettings}
-                    config={config}
-                    handleChange={handleChange}
-                    showApiKey={showApiKey}
-                    setShowApiKey={setShowApiKey}
-                    files={files}
-                    handleDetectTopics={handleDetectTopics}
-                    isDetecting={isDetecting}
-                    fileInputRef={fileInputRef}
-                    handleFileChange={handleFileChange}
-                    removeFile={removeFile}
-                    isApiReady={isApiReady}
-                    customTags={customTags}
-                    onSaveCustomTags={handleSaveCustomTags}
-                    onClearData={() => {
-                        console.log("Clear Data button clicked");
-                        if (window.confirm("This will delete ALL your local questions and settings (except API Key and Sheet URL). Are you sure?")) {
-                            console.log("User confirmed clear data");
-                            // Preserve API key and sheet URL
-                            const savedApiKey = config.apiKey;
-                            const savedSheetUrl = config.sheetUrl;
-
-                            localStorage.removeItem('ue5_gen_config');
-                            localStorage.removeItem('ue5_gen_questions');
-                            setQuestions([]);
-                            setDatabaseQuestions([]);
-
-                            // Restore preserved values
-                            const preservedConfig = { apiKey: savedApiKey, sheetUrl: savedSheetUrl };
-                            localStorage.setItem('ue5_gen_config', JSON.stringify(preservedConfig));
-
-                            console.log("Clear data complete, reloading...");
-                            window.location.reload();
-                        } else {
-                            console.log("User cancelled clear data");
-                        }
-                    }}
-                />
-            </Suspense>
-
-
             {/* API Key Modal - Simple popup for Configure Now button */}
-            <ApiKeyModal
-                isOpen={showApiKeyModal}
-                onClose={() => setShowApiKeyModal(false)}
-                onSave={handleSaveApiKey}
-                currentKey={config.apiKey}
-            />
-
-            <Suspense fallback={null}>
-                <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
-            </Suspense>
-
-            <Suspense fallback={null}>
-                <DangerZoneModal
-                    isOpen={showDangerZone}
-                    onClose={() => setShowDangerZone(false)}
-                    config={config}
-                    onClearData={() => {
-                        if (window.confirm("This will delete ALL your local questions and settings (except API Key and Sheet URL). Are you sure?")) {
-                            const savedApiKey = config.apiKey;
-                            const savedSheetUrl = config.sheetUrl;
-                            localStorage.removeItem('ue5_gen_config');
-                            localStorage.removeItem('ue5_gen_questions');
-                            setQuestions([]);
-                            setDatabaseQuestions([]);
-                            const preservedConfig = { apiKey: savedApiKey, sheetUrl: savedSheetUrl };
-                            localStorage.setItem('ue5_gen_config', JSON.stringify(preservedConfig));
-                            window.location.reload();
-                        }
-                    }}
-                />
-            </Suspense>
 
             {/* TOAST NOTIFICATIONS */}
             <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
@@ -883,42 +727,9 @@ const App = () => {
             </div>
 
             {/* TUTORIAL OVERLAY */}
-            {tutorialActive && appMode === 'create' && (
-                <TutorialOverlay
-                    steps={TUTORIAL_STEPS}
-                    currentStepIndex={currentStep}
-                    onNext={handleTutorialNext}
-                    onPrev={handleTutorialPrev}
-                    onSkip={handleTutorialSkip}
-                    onComplete={handleTutorialComplete}
-                />
-            )}
 
             {/* COMPLIANCE MODALS */}
-            <AgeGateModal
-                isOpen={showAgeGate}
-                onConfirm={() => {
-                    setShowAgeGate(false);
-                    setShowTerms(true);
-                }}
-                onExit={() => {
-                    window.location.href = 'about:blank';
-                }}
-            />
 
-            <TermsOfUseModal
-                isOpen={showTerms}
-                onAccept={() => {
-                    localStorage.setItem('ue5_terms_accepted', 'true');
-                    setShowTerms(false);
-                    setTermsAccepted(true);
-                }}
-                onDecline={() => {
-                    window.location.href = 'about:blank';
-                }}
-            />
-
-            <CookieConsentBanner />
         </div>
     );
 };

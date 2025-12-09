@@ -10,6 +10,8 @@ import ActionFooter from './sidebar/ActionFooter';
 import TokenUsageDisplay from './TokenUsageDisplay';
 import { downloadTrainingData } from '../utils/analyticsStore';
 
+import CoverageGapSuggester from './sidebar/CoverageGapSuggester';
+
 const Sidebar = ({
     showGenSettings, setShowGenSettings,
     config, handleChange,
@@ -32,10 +34,16 @@ const Sidebar = ({
                     customTags={customTags}
                     isOpen={showGenSettings}
                     onToggle={() => setShowGenSettings(!showGenSettings)}
+                    allQuestionsMap={allQuestionsMap}
                 />
             </div>
 
-
+            {/* Coverage Gap Alert */}
+            <CoverageGapSuggester
+                allQuestionsMap={allQuestionsMap}
+                config={config}
+                handleChange={handleChange}
+            />
 
             <CustomRules
                 config={config}

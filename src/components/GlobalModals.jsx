@@ -1,0 +1,160 @@
+import React, { Suspense } from 'react';
+
+// Standard Modals
+import NameEntryModal from './NameEntryModal';
+import ClearConfirmationModal from './ClearConfirmationModal';
+import BlockingProcessModal from './BlockingProcessModal';
+import ApiKeyModal from './ApiKeyModal';
+import TermsOfUseModal from './TermsOfUseModal';
+import CookieConsentBanner from './CookieConsentBanner';
+import AgeGateModal from './AgeGateModal';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
+import TutorialOverlay from './TutorialOverlay';
+
+// Lazy Modals
+const SettingsModal = React.lazy(() => import('./SettingsModal'));
+const BulkExportModal = React.lazy(() => import('./BulkExportModal'));
+const AnalyticsDashboard = React.lazy(() => import('./AnalyticsDashboard'));
+const DangerZoneModal = React.lazy(() => import('./DangerZoneModal'));
+
+const GlobalModals = ({
+    visibility,
+    state,
+    handlers
+}) => {
+    const {
+        showNameModal, showClearModal, showBulkExportModal,
+        showSettings, showAnalytics, showDangerZone,
+        showApiKeyModal, showTerms, showAgeGate,
+        tutorialActive, deleteConfirmId
+    } = visibility;
+
+    const {
+        config, isProcessing, status, translationProgress,
+        allQuestionsMap, appMode, currentStep, tutorialSteps,
+        metrics // passed for Analytics/DangerZone
+    } = state;
+
+    const {
+        handleNameSave, handleDeleteAllQuestions, handleBulkExport,
+        confirmDelete, setDeleteConfirmId, onCloseBulkExport,
+        onCloseSettings, onCloseAnalytics, onCloseDangerZone, onCloseApiKey,
+        handleChange, handleSaveApiKey, setShowTerms, setTermsAccepted, setShowAgeGate,
+        handleTutorialNext, handleTutorialPrev, handleTutorialSkip, handleTutorialComplete,
+        onResetSettings, onHardReset, window // needed for reloads/redirects?
+    } = handlers;
+
+    return (
+        <>
+            {/* Blocking Process - Highest Priority */}
+            {isProcessing && <BlockingProcessModal isProcessing={isProcessing} status={status} translationProgress={translationProgress} />}
+
+            {/* Critical Entry/Exit Modals */}
+            {config.creatorName === '' && showNameModal && <NameEntryModal onSave={handleNameSave} />}
+
+            {showClearModal && <ClearConfirmationModal onConfirm={handleDeleteAllQuestions} onCancel={() => handlers.setShowClearModal(false)} />}
+
+            <DeleteConfirmationModal
+                deleteConfirmId={deleteConfirmId}
+                onConfirm={confirmDelete}
+                onCancel={() => setDeleteConfirmId(null)}
+            />
+
+            <ApiKeyModal
+                isOpen={showApiKeyModal}
+                onClose={onCloseApiKey}
+                onSave={handleSaveApiKey}
+                currentKey={config.apiKey}
+            />
+
+            <AgeGateModal
+                isOpen={showAgeGate}
+                onConfirm={() => {
+                    setShowAgeGate(false);
+                    setShowTerms(true);
+                }}
+                onExit={() => {
+                    window.location.href = 'about:blank';
+                }}
+            />
+
+            <TermsOfUseModal
+                isOpen={showTerms}
+                onAccept={() => {
+                    localStorage.setItem('ue5_terms_accepted', 'true');
+                    setShowTerms(false);
+                    setTermsAccepted(true);
+                }}
+                onDecline={() => {
+                    window.location.href = 'about:blank';
+                }}
+            />
+
+            <CookieConsentBanner />
+
+            {/* Lazy Loaded Modals */}
+            <Suspense fallback={null}>
+                {showBulkExportModal && (
+                    <BulkExportModal
+                        onClose={onCloseBulkExport}
+                        onExport={handleBulkExport}
+                        questionCount={allQuestionsMap?.size || 0}
+                    />
+                )}
+
+                {showSettings && (
+                    <SettingsModal
+                        isOpen={showSettings}
+                        onClose={onCloseSettings}
+                        config={config}
+                        handleChange={handleChange}
+                        onReset={onResetSettings}
+                        onExport={() => {
+                            onCloseSettings();
+                            onCloseBulkExport(true); // Open bulk export
+                        }}
+                        fileInputRef={handlers.fileInputRef}
+                        onImportClick={() => handlers.fileInputRef.current.click()}
+                        onImportFile={handlers.handleFileChange}
+                        showAdvanced={visibility.showAdvancedConfig}
+                        setShowAdvanced={handlers.setShowAdvancedConfig}
+                        onOpenDangerZone={() => {
+                            onCloseSettings();
+                            if (handlers.setShowDangerZone) handlers.setShowDangerZone(true);
+                            else if (window.openDangerZone) window.openDangerZone();
+                        }}
+                    />
+                )}
+
+                <AnalyticsDashboard
+                    isOpen={showAnalytics}
+                    onClose={onCloseAnalytics}
+                />
+
+                {showDangerZone && (
+                    <DangerZoneModal
+                        isOpen={showDangerZone}
+                        onClose={onCloseDangerZone}
+                        onDeleteAll={handleDeleteAllQuestions}
+                        onHardReset={onHardReset}
+                        metrics={metrics}
+                    />
+                )}
+            </Suspense>
+
+            {/* Tutorial Overlay */}
+            {tutorialActive && appMode === 'create' && (
+                <TutorialOverlay
+                    steps={tutorialSteps}
+                    currentStepIndex={currentStep}
+                    onNext={handleTutorialNext}
+                    onPrev={handleTutorialPrev}
+                    onSkip={handleTutorialSkip}
+                    onComplete={handleTutorialComplete}
+                />
+            )}
+        </>
+    );
+};
+
+export default GlobalModals;
