@@ -5,39 +5,74 @@
 
 // Known valid URL slugs (curated from actual documentation)
 const KNOWN_VALID_SLUGS = new Set([
+    // Core Features
     'nanite-virtualized-geometry-in-unreal-engine',
     'lumen-global-illumination-and-reflections-in-unreal-engine',
     'blueprints-visual-scripting-in-unreal-engine',
     'world-partition-in-unreal-engine',
     'virtual-shadow-maps-in-unreal-engine',
+
+    // Animation & Skeletal
     'animation-blueprints-in-unreal-engine',
     'skeletal-mesh-animation-system-in-unreal-engine',
+
+    // Materials & Rendering
     'materials-in-unreal-engine',
     'material-editor-fundamentals',
     'static-mesh-editor-reference',
+    'rendering-modes-in-unreal-engine',
+    'mobile-feature-levels-and-rendering-modes-in-unreal-engine',
+    'view-modes-in-unreal-engine',
+    'shader-complexity-in-unreal-engine',
+
+    // Landscape & Environment
     'landscape-outdoor-terrain-in-unreal-engine',
+    'landscape-collision-guide-in-unreal-engine',
+    'grass-quick-start-in-unreal-engine',
+    'lighting-the-environment-in-unreal-engine',
+    'open-world-tools-in-unreal-engine',
+    'hierarchical-level-of-detail-in-unreal-engine',
+
+    // Effects & Physics
     'niagara-visual-effects-in-unreal-engine',
     'chaos-physics-in-unreal-engine',
     'audio-in-unreal-engine',
+
+    // Lighting
     'lights-and-shadows',
     'directional-lights-in-unreal-engine',
     'point-lights-in-unreal-engine',
     'spot-lights-in-unreal-engine',
     'rect-lights-in-unreal-engine',
     'sky-lights-in-unreal-engine',
+
+    // Editor & Tools
     'level-editor-in-unreal-engine',
     'content-browser-in-unreal-engine',
     'sequencer-cinematic-editor-in-unreal-engine',
     'umg-ui-designer-in-unreal-engine',
+
+    // Programming
     'gameplay-framework-in-unreal-engine',
     'actor-programming-in-unreal-engine',
     'unreal-engine-programming-and-scripting',
+
+    // Getting Started
     'unreal-engine-for-beginners',
     'getting-started-with-unreal-engine',
-    'rendering-modes-in-unreal-engine',
-    'mobile-feature-levels-and-rendering-modes-in-unreal-engine',
-    'view-modes-in-unreal-engine',
-    'shader-complexity-in-unreal-engine',
+    'understanding-the-basics-of-unreal-engine',
+    'working-with-content-in-unreal-engine',
+    'building-virtual-worlds-in-unreal-engine',
+
+    // PCG (Procedural Content Generation)
+    'procedural-content-generation-pcg-biome-core-and-sample-plugins-in-unreal-engine',
+    'pcg-editor-mode-in-unreal-engine',
+    'assembly-pcg',
+
+    // Documentation & References
+    'unreal-engine-5-7-documentation',
+    'whats-new',
+    'API',
 ]);
 
 // Patterns that indicate invalid/generic URLs

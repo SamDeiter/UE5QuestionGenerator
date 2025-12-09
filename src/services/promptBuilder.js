@@ -190,6 +190,18 @@ To assess professional competence, use these question structures:
   - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/materials-in-unreal-engine\`
   - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/niagara-visual-effects-in-unreal-engine\`
   - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/chaos-physics-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/landscape-outdoor-terrain-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/landscape-collision-guide-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/lighting-the-environment-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/open-world-tools-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/hierarchical-level-of-detail-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/grass-quick-start-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/procedural-content-generation-pcg-biome-core-and-sample-plugins-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/pcg-editor-mode-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/assembly-pcg\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/understanding-the-basics-of-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/working-with-content-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/building-virtual-worlds-in-unreal-engine\`
 
 **INVALID URL PATTERNS (NEVER USE):**
   ❌ \`https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite\` (too short, missing suffix)
