@@ -345,6 +345,46 @@ const KNOWN_VALID_SLUGS = new Set([
     // Advanced Deployment
     'pixel-streaming-in-unreal-engine',
     'low-latency-frame-syncing-in-unreal-engine',
+
+    // Audio System (Detailed)
+    'audio-in-unreal-engine',
+    'audio-debugging-in-unreal-engine',
+    'audio-memory-management-in-unreal-engine',
+    'audio-mixing-in-unreal-engine',
+    'audio-volume-actors-in-unreal-engine',
+    'audioinsights',
+    'audiolink',
+    'external-audio-control-in-unreal-engine',
+    'music-systems-in-unreal-engine',
+    'reverb-in-unreal-engine',
+    'sound-sources-in-unreal-engine',
+    'spatialization-and-sound-attenuation-in-unreal-engine',
+    'submixes-in-unreal-engine',
+    'subtitles-and-closed-captions-plugin',
+
+    // Media Framework & Video
+    'media-framework-in-unreal-engine',
+    'integrating-media-in-unreal-engine',
+    'capturing-media-in-unreal-engine',
+    'communicating-with-media-components-from-unreal-engine',
+    'the-media-plate-actor-in-unreal-engine',
+    'bink-video-for-unreal-engine',
+    'taking-screenshots-in-unreal-engine',
+    'panoramic-capture-tool-in-unreal-engine',
+
+    // Color Management
+    'managing-color-in-unreal-engine',
+    'color-management-with-opencolorio-in-unreal-engine',
+    'color-correct-regions-in-unreal-engine',
+    'working-color-space-in-unreal-engine',
+
+    // Virtual Production (Advanced)
+    'camera-lens-calibration-in-unreal-engine',
+    'in-camera-vfx-in-unreal-engine',
+    'rendering-to-multiple-displays-with-ndisplay-in-unreal-engine',
+    'professional-video-io-in-unreal-engine',
+    'timed-data-monitor-in-unreal-engine',
+    'dmx-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
