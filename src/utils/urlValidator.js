@@ -672,6 +672,17 @@ const KNOWN_VALID_SLUGS = new Set([
     'render-movie-settings-in-unreal-engine',
     'takes-recorder-in-unreal-engine',
     'sequencer-tracks-in-unreal-engine',
+
+    // C++ Programming Fundamentals
+    'programming-in-the-unreal-engine-architecture',
+    'epic-cplusplus-coding-standard-for-unreal-engine',
+    'setting-up-your-development-environment-for-cplusplus-in-unreal-engine',
+    'reflection-system-in-unreal-engine',
+    'object-pointers-in-unreal-engine',
+    'containers-in-unreal-engine',
+    'delegates-and-lambda-functions-in-unreal-engine',
+    'metadata-specifiers-in-unreal-engine',
+    'gameplay-classes-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
