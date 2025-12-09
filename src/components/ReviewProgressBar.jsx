@@ -78,18 +78,20 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
             label: 'Verify',
             sublabel: isVerified ? 'Source confirmed' : 'Check source & answer',
             completed: isVerified,
-            active: critiquePass && !isVerified,
-            locked: !critiquePass,
+            // For high scores (≥70), don't demand attention - it's optional
+            active: critiquePass && !isVerified && critiqueFail, // Only blink if critique failed
+            locked: !hasCritique, // Can verify once critique is done
             icon: 'eye',
             onClick: onVerify
         },
         {
             num: 3,
             label: 'Accept',
-            sublabel: 'Approve for export',
+            sublabel: critiquePass ? '✨ Ready to accept!' : 'Approve for export',
             completed: false,
-            active: isVerified,
-            locked: !isVerified,
+            // For high scores, encourage acceptance!
+            active: critiquePass && !isVerified, // Blink/highlight when score is good
+            locked: !hasCritique, // Can accept once critique is done (even without verify for high scores)
             icon: 'check-circle',
             onClick: onAccept
         }
@@ -165,6 +167,12 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
                 <div className="mt-3 text-center text-xs text-red-400/80 bg-red-950/30 py-2 rounded">
                     <Icon name="alert-triangle" size={12} className="inline mr-1" />
                     Score below 70. Click "Apply" in the AI Critique section to improve, then re-critique.
+                </div>
+            )}
+            {critiquePass && !isVerified && (
+                <div className="mt-3 text-center text-xs text-green-400/80 bg-green-950/30 py-2 rounded">
+                    <Icon name="check-circle" size={12} className="inline mr-1" />
+                    <strong>Great score!</strong> You can accept this question now, or verify the source first for extra confidence.
                 </div>
             )}
         </div>
