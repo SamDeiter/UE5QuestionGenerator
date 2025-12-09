@@ -10,6 +10,7 @@ import LanguageControls from './QuestionItem/LanguageControls';
 import QuestionActions from './QuestionItem/QuestionActions';
 import QuestionMenu from './QuestionItem/QuestionMenu';
 import { sanitizeMarkdown } from '../utils/sanitize';
+import { getSecureItem } from '../utils/secureStorage';
 
 const QuestionItem = ({
     q,
@@ -226,9 +227,8 @@ const QuestionItem = ({
                         onApplyAndAccept={() => {
                             if (!q.suggestedRewrite) return;
                             // Get reviewer name for verification
-                            const reviewerName = localStorage.getItem('ue5_gen_config')
-                                ? JSON.parse(localStorage.getItem('ue5_gen_config')).creatorName || 'Unknown'
-                                : 'Unknown';
+                            const config = getSecureItem('ue5_gen_config');
+                            const reviewerName = config?.creatorName || 'Unknown';
 
                             // Apply changes + mark verified + accept
                             const updatedQ = {
