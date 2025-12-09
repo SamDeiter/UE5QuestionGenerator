@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+
 export const chunkArray = (array, size) => {
     const result = [];
     for (let i = 0; i < array.length; i += size) {
@@ -244,7 +246,6 @@ export const renderMarkdown = (t) => {
         .replace(/\n/g, '<br />');
 
     // Step 2: Sanitize with DOMPurify to prevent XSS
-    const DOMPurify = require('dompurify');
     const sanitized = DOMPurify.sanitize(html, {
         ALLOWED_TAGS: [
             'b', 'i', 'em', 'strong', 'code', 'br', 'div', 'span',
