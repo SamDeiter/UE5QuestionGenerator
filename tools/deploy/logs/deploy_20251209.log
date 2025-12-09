@@ -1,0 +1,21 @@
+2025-12-09 11:37:11   [INFO] Running: git status --porcelain
+2025-12-09 11:37:11   [INFO] Output: ?? tools/deploy/
+2025-12-09 11:37:11 [WARNING] Working directory has uncommitted changes
+2025-12-09 11:37:11 [SUCCESS] .env.example exists
+2025-12-09 11:37:11 [SUCCESS] .env is properly gitignored
+2025-12-09 11:37:11 [WARNING]   - useAutoSave.js:25
+2025-12-09 11:37:11 [WARNING]   - useAutoSave.js:47
+2025-12-09 11:37:11 [WARNING]   - useCrashRecovery.js:32
+2025-12-09 11:37:11 [WARNING]   - useCrashRecovery.js:36
+2025-12-09 11:37:11 [WARNING]   - useGeneration.js:149
+2025-12-09 11:37:11 [WARNING]   ... and 42 more
+2025-12-09 11:37:11   [ERROR]   - useCrashRecovery.js: 'ue5_last_session_count'...
+2025-12-09 11:37:11   [ERROR]   - useCrashRecovery.js: 'ue5_last_session_count'...
+2025-12-09 11:37:11   [ERROR]   - useCrashRecovery.js: 'ue5_last_session_count'...
+2025-12-09 11:37:11 [SUCCESS] Dependencies check completed
+2025-12-09 11:37:11   [ERROR] Found 1 error(s):
+2025-12-09 11:37:11   [ERROR]   - Found potential hardcoded secrets
+2025-12-09 11:37:11 [WARNING] Found 2 warning(s):
+2025-12-09 11:37:11 [WARNING]   - Working directory has uncommitted changes
+2025-12-09 11:37:11 [WARNING]   - Found 47 console.log statements
+2025-12-09 11:37:11   [ERROR] Pre-deployment checks FAILED
