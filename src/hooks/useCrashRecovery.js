@@ -81,11 +81,28 @@ export const useCrashRecovery = (localQuestions, addQuestionsToState, showMessag
 
         setIsRecovering(true);
         try {
+            // Import logQuestion for analytics tracking
+            const { logQuestion } = await import('../utils/analyticsStore');
+
             // Merge Firestore questions into local state
             const existingIds = new Set(localQuestions.map(q => q.uniqueId));
             const newQuestions = recoveryData.questions.filter(q => !existingIds.has(q.uniqueId));
 
             if (newQuestions.length > 0) {
+                // Log each recovered question to analytics
+                newQuestions.forEach(q => {
+                    logQuestion({
+                        id: q.uniqueId,
+                        created: q.createdAt || new Date().toISOString(),
+                        status: q.status || 'pending',
+                        discipline: q.discipline,
+                        difficulty: q.difficulty,
+                        type: q.type,
+                        questionText: q.question,
+                        qualityScore: q.qualityScore || null
+                    });
+                });
+
                 addQuestionsToState(newQuestions, true);
                 showMessage(`✅ Recovered ${newQuestions.length} questions from cloud backup!`, 5000);
             }

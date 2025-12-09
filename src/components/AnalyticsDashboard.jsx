@@ -29,10 +29,45 @@ const MetricCard = ({ title, value, icon, color }) => {
 };
 
 const AnalyticsDashboard = ({ isOpen, onClose }) => {
-    const [timeRange, setTimeRange] = useState('7d'); // 7d, 30d, all
+    const [timeRange, setTimeRange] = useState('7d'); // 24h, 7d, 14d, 30d, all
 
     // Re-fetch analytics data whenever modal opens (removes useMemo dependency issue)
-    const analyticsData = isOpen ? getAnalytics() : { generations: [], questions: [], summary: {} };
+    const allAnalyticsData = isOpen ? getAnalytics() : { generations: [], questions: [], summary: {} };
+
+    // Filter data based on time range
+    const analyticsData = useMemo(() => {
+        if (!isOpen || timeRange === 'all') return allAnalyticsData;
+
+        const now = new Date();
+        let cutoffDate;
+
+        switch (timeRange) {
+            case '24h':
+                cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                break;
+            case '7d':
+                cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                break;
+            case '14d':
+                cutoffDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+                break;
+            case '30d':
+                cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                break;
+            default:
+                return allAnalyticsData;
+        }
+
+        return {
+            generations: allAnalyticsData.generations.filter(g =>
+                new Date(g.timestamp) >= cutoffDate
+            ),
+            questions: allAnalyticsData.questions.filter(q =>
+                new Date(q.created) >= cutoffDate
+            ),
+            summary: allAnalyticsData.summary // Keep overall summary
+        };
+    }, [isOpen, timeRange, allAnalyticsData]);
 
     if (!isOpen) return null;
 
@@ -58,7 +93,9 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                             onChange={(e) => setTimeRange(e.target.value)}
                             className="bg-slate-950 border border-slate-700 text-slate-300 text-sm rounded px-3 py-1.5 outline-none focus:border-indigo-500"
                         >
+                            <option value="24h">Last 24 Hours</option>
                             <option value="7d">Last 7 Days</option>
+                            <option value="14d">Last 14 Days</option>
                             <option value="30d">Last 30 Days</option>
                             <option value="all">All Time</option>
                         </select>
