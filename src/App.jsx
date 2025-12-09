@@ -24,6 +24,9 @@ import TutorialOverlay from './components/TutorialOverlay';
 import AppNavigation from './components/AppNavigation';
 import ContextToolbar from './components/ContextToolbar';
 import ApiKeyModal from './components/ApiKeyModal';
+import TermsOfUseModal from './components/TermsOfUseModal';
+import CookieConsentBanner from './components/CookieConsentBanner';
+import AgeGateModal from './components/AgeGateModal';
 import { migrateToSecure } from './utils/secureStorage';
 import { TUTORIAL_STEPS } from './utils/tutorialSteps';
 
@@ -69,6 +72,11 @@ const App = () => {
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
     const [customTags, setCustomTags] = useState({});
+
+    // Compliance modals
+    const [showTerms, setShowTerms] = useState(false);
+    const [showAgeGate, setShowAgeGate] = useState(false);
+    const [termsAccepted, setTermsAccepted] = useState(false);
 
     // Tutorial State (disabled by default for now - enable with Tutorial button)
     const [tutorialActive, setTutorialActive] = useState(false);
@@ -122,6 +130,20 @@ const App = () => {
     useEffect(() => {
         const interval = setInterval(() => setTokenUsage(getTokenUsage()), 5000);
         return () => clearInterval(interval);
+    }, []);
+
+    // Check compliance status on app load
+    useEffect(() => {
+        const ageVerified = localStorage.getItem('ue5_age_verified');
+        const termsAcceptedStorage = localStorage.getItem('ue5_terms_accepted');
+
+        if (!ageVerified) {
+            setShowAgeGate(true);
+        } else if (!termsAcceptedStorage) {
+            setShowTerms(true);
+        } else {
+            setTermsAccepted(true);
+        }
     }, []);
 
     const toggleSelection = useCallback((id) => {
@@ -871,6 +893,32 @@ const App = () => {
                     onComplete={handleTutorialComplete}
                 />
             )}
+
+            {/* COMPLIANCE MODALS */}
+            <AgeGateModal
+                isOpen={showAgeGate}
+                onConfirm={() => {
+                    setShowAgeGate(false);
+                    setShowTerms(true);
+                }}
+                onExit={() => {
+                    window.location.href = 'about:blank';
+                }}
+            />
+
+            <TermsOfUseModal
+                isOpen={showTerms}
+                onAccept={() => {
+                    localStorage.setItem('ue5_terms_accepted', 'true');
+                    setShowTerms(false);
+                    setTermsAccepted(true);
+                }}
+                onDecline={() => {
+                    window.location.href = 'about:blank';
+                }}
+            />
+
+            <CookieConsentBanner />
         </div>
     );
 };
