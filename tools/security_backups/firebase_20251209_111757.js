@@ -4,16 +4,6 @@ import { getAnalytics, logEvent } from "firebase/analytics";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where, Timestamp } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 
-
-// SECURITY NOTE: CSRF Protection
-// For production deployment with a backend API proxy, add CSRF tokens:
-// import { getCSRFToken } from '../utils/csrf';
-// Include in all write operations:
-// headers: { 'X-CSRF-Token': getCSRFToken() }
-// Firebase SDK handles some CSRF protection via SameSite cookies,
-// but explicit tokens provide defense-in-depth.
-
-
 // Your web app's Firebase configuration
 // SECURITY: Firebase config now uses environment variables
 // Create a .env file based on .env.example and add your actual keys

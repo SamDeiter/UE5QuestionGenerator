@@ -23,7 +23,6 @@ import BulkActionBar from './components/BulkActionBar';
 import TutorialOverlay from './components/TutorialOverlay';
 import AppNavigation from './components/AppNavigation';
 import ContextToolbar from './components/ContextToolbar';
-import ApiKeyModal from './components/ApiKeyModal';
 import { TUTORIAL_STEPS } from './utils/tutorialSteps';
 
 // Lazy Loaded Components
@@ -172,14 +171,6 @@ const App = () => {
         handleNameSave,
         handleLanguageSwitch
     } = useAppConfig();
-
-    // API Key Modal State (simpler than full settings)
-    const [showApiKeyModal, setShowApiKeyModal] = useState(false);
-
-    const handleSaveApiKey = (newApiKey) => {
-        handleChange({ target: { name: 'apiKey', value: newApiKey } });
-        setShowApiKeyModal(false);
-    };
 
     // 2. Question Data Management
     const {
@@ -534,22 +525,7 @@ const App = () => {
     }
 
     if (appMode === 'landing') {
-        return (
-            <>
-                <LandingPage
-                    onSelectMode={handleModeSelect}
-                    apiKeyStatus={apiKeyStatus}
-                    isCloudReady={isAuthReady}
-                    onOpenSettings={() => { console.log('🚀 Configure Now clicked!'); setShowApiKeyModal(true); }}
-                />
-                <ApiKeyModal
-                    isOpen={showApiKeyModal}
-                    onClose={() => setShowApiKeyModal(false)}
-                    onSave={handleSaveApiKey}
-                    currentKey={config.apiKey}
-                />
-            </>
-        );
+        return <LandingPage onSelectMode={handleModeSelect} apiKeyStatus={apiKeyStatus} isCloudReady={isAuthReady} />;
     }
 
     return (
@@ -811,15 +787,6 @@ const App = () => {
                     }}
                 />
             </Suspense>
-
-
-            {/* API Key Modal - Simple popup for Configure Now button */}
-            <ApiKeyModal
-                isOpen={showApiKeyModal}
-                onClose={() => setShowApiKeyModal(false)}
-                onSave={handleSaveApiKey}
-                currentKey={config.apiKey}
-            />
 
             <Suspense fallback={null}>
                 <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />

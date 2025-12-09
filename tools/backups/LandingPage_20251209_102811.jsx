@@ -10,8 +10,8 @@ const LandingPage = ({ onSelectMode, apiKeyStatus, isCloudReady, onOpenSettings 
                     <Icon name="alert-triangle" className="text-orange-300" size={20} />
                     <span className="text-white font-medium">API Key Not Configured - Question generation is disabled</span>
                 </div>
-                <button
-                    onClick={onOpenSettings}
+                <button 
+                    onClick={onOpenSettings} 
                     className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors duration-200 font-medium"
                     aria-label="Open settings to configure API key"
                 >
@@ -19,7 +19,6 @@ const LandingPage = ({ onSelectMode, apiKeyStatus, isCloudReady, onOpenSettings 
                 </button>
             </div>
         )}
-
 
         {/* Background Decoration */}
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">

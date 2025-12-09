@@ -10,13 +10,6 @@ export const useAppConfig = () => {
     // Authentication status - always ready for local/Sheets operations
     const isAuthReady = true;
 
-    
-    // SECURITY WARNING: Storing API keys in localStorage is insecure!
-    // This is a temporary solution. For production:
-    // 1. Move API calls to a backend proxy server
-    // 2. Never expose API keys in client-side code
-    // 3. Use server-side authentication with the Gemini API
-    
     // Main application configuration (persisted to localStorage)
     const [config, setConfig] = useState(() => {
         const saved = localStorage.getItem('ue5_gen_config');

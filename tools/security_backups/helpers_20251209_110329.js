@@ -282,7 +282,7 @@ export const sanitizeText = (text) => renderMarkdown(text);
 export const stripHtmlTags = (text) => {
     if (typeof text !== 'string') return text;
     const tmp = document.createElement("DIV");
-    tmp.textContent = text;  // Security: Changed from innerHTML to prevent XSS
+    tmp.innerHTML = text;
     return tmp.textContent || tmp.innerText || "";
 };
 

@@ -1,0 +1,1000 @@
+"""
+Fix #1: Add API Key Status Banner to LandingPage
+Adds a prominent banner when API key is missing with a "Configure Now" button.
+"""
+
+import sys
+from pathlib import Path
+
+# Add tools directory to path
+sys.path.insert(0, str(Path(__file__).parent))
+from jsx_editor import JSXEditor
+
+
+def add_api_banner_to_landing_page(editor, file_path):
+    """Add API key status banner to LandingPage.jsx"""
+    
+    def edit_function(content):
+        # 1. Add onOpenSettings to component props
+        props_pattern = 'const LandingPage = ({ onSelectMode, apiKeyStatus, isCloudReady }'
+        new_props = 'const LandingPage = ({ onSelectMode, apiKeyStatus, isCloudReady, onOpenSettings }'
+        content = content.replace(props_pattern, new_props)
+        
+        # 2. Add the banner JSX right after the opening div
+        banner_code = '''
+        {/* API Key Missing Banner */}
+        {(!apiKeyStatus.includes('Loaded') && !apiKeyStatus.includes('Auto')) && (
+            <div className="fixed top-0 left-0 right-0 z-50 bg-orange-900/90 border-b border-orange-700 p-3 flex items-center justify-between backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                    <Icon name="alert-triangle" className="text-orange-300" size={20} />
+                    <span className="text-white font-medium">API Key Not Configured - Question generation is disabled</span>
+                </div>
+                <button 
+                    onClick={onOpenSettings} 
+                    className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors duration-200 font-medium"
+                    aria-label="Open settings to configure API key"
+                >
+                    Configure Now
+                </button>
+            </div>
+        )}
+'''
+        
+        insert_point = '    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-white p-4 relative overflow-hidden">'
+        content = content.replace(insert_point, insert_point + banner_code)
+        
+        return content
+    
+    editor.safe_edit(file_path, edit_function)
+    print("✓ Added API key banner to LandingPage.jsx")
+
+
+def update_app_jsx(editor, file_path):
+    """Update App.jsx to pass onOpenSettings prop to LandingPage"""
+    
+    def edit_function(content):
+        # Find the LandingPage component usage and add the prop
+        pattern = '''<LandingPage
+                        onSelectMode={handleModeSelect}
+                        apiKeyStatus={apiKeyStatus}
+                        isCloudReady={isCloudReady}'''
+        
+        replacement = '''<LandingPage
+                        onSelectMode={handleModeSelect}
+                        apiKeyStatus={apiKeyStatus}
+                        isCloudReady={isCloudReady}
+                        onOpenSettings={() => setShowSettings(true)}'''
+        
+        if pattern in content:
+            content = content.replace(pattern, replacement)
+        else:
+            print("⚠ Warning: Could not find exact LandingPage pattern, trying alternative...")
+            # Try to find it with regex
+            import re
+            alt_pattern = r'(<LandingPage[^/>]*?apiKeyStatus=\{apiKeyStatus\}[^/>]*?isCloudReady=\{isCloudReady\})'
+            match = re.search(alt_pattern, content)
+            if match:
+                old_tag = match.group(1)
+                new_tag = old_tag + '\n                        onOpenSettings={() => setShowSettings(true)}'
+                content = content.replace(old_tag, new_tag)
+            
+        return content
+    
+    editor.safe_edit(file_path, edit_function)
+    print("✓ Updated App.jsx to pass onOpenSettings prop")
+
+
+if __name__ == '__main__':
+    project_root = Path(__file__).parent.parent
+    editor = JSXEditor(project_root)
+    
+    landing_page_path = project_root / 'src' / 'components' / 'LandingPage.jsx'
+    app_path = project_root / 'src' / 'App.jsx'
+    
+    print("=" * 60)
+    print("Fix #1: API Key Status Banner Implementation")
+    print("=" * 60)
+    
+    try:
+        add_api_banner_to_landing_page(editor, landing_page_path)
+        update_app_jsx(editor, app_path)
+        
+        print("\n✅ Fix #1 Complete!")
+        print(f"Backups saved to: {editor.backup_dir}")
+        
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+
+"""
+Fix #2: Create Modal Management System
+Creates a ModalProvider context to manage modal state centrally.
+"""
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from jsx_editor import JSXEditor
+
+
+MODAL_PROVIDER_CONTENT = """import React, { createContext, useContext, useState, useEffect } from 'react';
+
+const ModalContext = createContext();
+
+export const useModal = () => {
+    const context = useContext(ModalContext);
+    if (!context) {
+        throw new Error('useModal must be used within a ModalProvider');
+    }
+    return context;
+};
+
+export const ModalProvider = ({ children }) => {
+    const [activeModal, setActiveModal] = useState(null);
+    const [modalProps, setModalProps] = useState({});
+
+    const openModal = (modalName, props = {}) => {
+        setActiveModal(modalName);
+        setModalProps(props);
+    };
+
+    const closeModal = () => {
+        setActiveModal(null);
+        setModalProps({});
+    };
+
+    // ESC key support
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape' && activeModal) {
+                closeModal();
+            }
+        };
+
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [activeModal]);
+
+    const value = {
+        activeModal,
+        modalProps,
+        openModal,
+        closeModal,
+        isModalOpen: (modalName) => activeModal === modalName,
+    };
+
+    return (
+        <ModalContext.Provider value={value}>
+            {children}
+        </ModalContext.Provider>
+    );
+};
+
+export default ModalProvider;
+"""
+
+
+def create_modal_provider(editor, contexts_dir, file_path):
+    """Create the ModalProvider context component"""
+    
+    # Create contexts directory if it doesn't exist
+    contexts_dir.mkdir(exist_ok=True)
+    
+    # Write the ModalProvider component
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(MODAL_PROVIDER_CONTENT)
+    
+    print(f"✓ Created {file_path.name}")
+
+
+def update_main_jsx(editor, file_path):
+    """Wrap App with ModalProvider in main.jsx"""
+    
+    def edit_function(content):
+        # Add import for ModalProvider
+        import_line = "import ModalProvider from './contexts/ModalProvider';"
+        
+        # Find where to insert import (after other imports)
+        if 'import App from' in content:
+            content = content.replace(
+                "import App from './App.jsx';",
+                "import App from './App.jsx';\nimport ModalProvider from './contexts/ModalProvider';"
+            )
+        
+        # Wrap App with ModalProvider
+        old_root_render = '''root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);'''
+        
+        new_root_render = '''root.render(
+  <React.StrictMode>
+    <ModalProvider>
+      <App />
+    </ModalProvider>
+  </React.StrictMode>,
+);'''
+        
+        if old_root_render in content:
+            content = content.replace(old_root_render, new_root_render)
+        else:
+            # Try alternative format
+            content = content.replace(
+                '<App />',
+                '<ModalProvider>\n      <App />\n    </ModalProvider>'
+            )
+        
+        return content
+    
+    editor.safe_edit(file_path, edit_function)
+    print("✓ Updated main.jsx to include ModalProvider")
+
+
+def add_modal_wrapper_component(editor, project_root):
+    """Create a reusable ModalWrapper component"""
+    
+    modal_wrapper_content = """import React from 'react';
+import Icon from './Icon';
+
+const ModalWrapper = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl' }) => {
+    if (!isOpen) return null;
+
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    return (
+        <div 
+            className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={handleBackdropClick}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+        >
+            <div className={`relative bg-slate-900 rounded-xl ${maxWidth} w-full shadow-2xl border border-slate-800`}>
+                {/* Header with close button */}
+                <div className="flex items-center justify-between p-6 border-b border-slate-800">
+                    <h2 id="modal-title" className="text-xl font-bold text-white">
+                        {title}
+                    </h2>
+                    <button 
+                        onClick={onClose}
+                        className="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800"
+                        aria-label="Close modal"
+                    >
+                        <Icon name="x" size={24} />
+                    </button>
+                </div>
+                
+                {/* Content */}
+                <div className="p-6">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default ModalWrapper;
+"""
+    
+    modal_wrapper_path = project_root / 'src' / 'components' / 'ModalWrapper.jsx'
+    with open(modal_wrapper_path, 'w', encoding='utf-8') as f:
+        f.write(modal_wrapper_content)
+    
+    print(f"✓ Created ModalWrapper.jsx")
+
+
+if __name__ == '__main__':
+    project_root = Path(__file__).parent.parent
+    editor = JSXEditor(project_root)
+    
+    contexts_dir = project_root / 'src' / 'contexts'
+    modal_provider_path = contexts_dir / 'ModalProvider.jsx'
+    main_jsx_path = project_root / 'src' / 'main.jsx'
+    
+    print("=" * 60)
+    print("Fix #2: Modal Management System Implementation")
+    print("=" * 60)
+    
+    try:
+        create_modal_provider(editor, contexts_dir, modal_provider_path)
+        update_main_jsx(editor, main_jsx_path)
+        add_modal_wrapper_component(editor, project_root)
+        
+        print("\n✅ Fix #2 Complete!")
+        print("Note: Individual modal components should be updated to use ModalWrapper")
+        print(f"Backups saved to: {editor.backup_dir}")
+        
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+
+"""
+Fix #3: Safe Bulk Actions with Confirmation
+Enhances bulk actions in ReviewMode with pre-confirmation and undo support.
+"""
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from jsx_editor import JSXEditor
+
+
+def enhance_confirm_dialog(editor, file_path):
+    """Enhance ConfirmDialog to support custom buttons and better styling"""
+    
+    def edit_function(content):
+        # Check if it already has the enhanced structure
+        if 'confirmButtonText' in content and 'cancelButtonText' in content:
+            print("  ConfirmDialog already appears to be enhanced, skipping...")
+            return content
+        
+        # Add custom button text props
+        old_signature = 'const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel }'
+        new_signature = 'const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, confirmButtonText = "Confirm", cancelButtonText = "Cancel", confirmButtonColor = "bg-green-600 hover:bg-green-700", affectedCount = null }'
+        
+        if old_signature in content:
+            content = content.replace(old_signature, new_signature)
+        
+        # Update button text to use props
+        content = content.replace(
+            '>Confirm<',
+            '>{confirmButtonText}<'
+        )
+        content = content.replace(
+            '>Cancel<',
+            '>{cancelButtonText}<'
+        )
+        
+        # Add affected count display
+        if '<p className="text-slate-300 mb-6">{message}</p>' in content:
+            content = content.replace(
+                '<p className="text-slate-300 mb-6">{message}</p>',
+                '''<div className="mb-6">
+                    <p className="text-slate-300">{message}</p>
+                    {affectedCount !== null && (
+                        <p className="text-orange-400 font-semibold mt-2">
+                            This will affect {affectedCount} question{affectedCount !== 1 ? 's' : ''}.
+                        </p>
+                    )}
+                </div>'''
+            )
+        
+        return content
+    
+    editor.safe_edit(file_path, edit_function)
+    print("✓ Enhanced ConfirmDialog.jsx")
+
+
+def update_app_bulk_actions(editor, file_path):
+    """Update App.jsx bulk action handlers with confirmation and undo"""
+    
+    def edit_function(content):
+        # Find and update handleBulkAcceptHighScores
+        old_bulk_accept = '''// Bulk accept all questions with critique score >= 70
+    const handleBulkAcceptHighScores = async () => {'''
+        
+        new_bulk_accept = '''// Bulk accept all questions with critique score >= 70
+    const handleBulkAcceptHighScores = async () => {
+        const highScoreQuestions = questions.filter(q => q.critiqueScore >= 70);
+        const affectedCount = highScoreQuestions.length;
+        
+        if (affectedCount === 0) {
+            showToast('No high-scoring questions to approve', 'info');
+            return;
+        }
+        
+        // Show confirmation dialog
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Bulk Approve High-Scoring Questions',
+            message: 'This will approve all questions with critique scores ≥ 70%. This action can be undone for 10 seconds.',
+            affectedCount: affectedCount,
+            confirmButtonText: 'Approve All',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: 'bg-green-600 hover:bg-green-700',
+            onConfirm: async () => {'''
+        
+        if old_bulk_accept in content:
+            content = content.replace(old_bulk_accept, new_bulk_accept)
+            
+            # Find the end of the function and wrap it
+            # Add the closing for the onConfirm callback
+            # This is simplified - in reality you'd need more sophisticated parsing
+        
+        return content
+    
+    editor.safe_edit(file_path, edit_function)
+    print("✓ Updated App.jsx bulk actions")
+
+
+def create_toast_with_undo(editor, project_root):
+    """Create an enhanced Toast component with undo support"""
+    
+    toast_undo_content = """import React, { useEffect } from 'react';
+import Icon from './Icon';
+
+const Toast = ({ message, type = 'info', onClose, action = null, duration = 5000 }) => {
+    useEffect(() => {
+        if (!action && duration) {
+            const timer = setTimeout(onClose, duration);
+            return () => clearTimeout(timer);
+        }
+    }, [onClose, action, duration]);
+
+    const bgColors = {
+        success: 'bg-green-900/90 border-green-700',
+        error: 'bg-red-900/90 border-red-700',
+        warning: 'bg-orange-900/90 border-orange-700',
+        info: 'bg-blue-900/90 border-blue-700',
+    };
+
+    const iconNames = {
+        success: 'check-circle',
+        error: 'x-circle',
+        warning: 'alert-triangle',
+        info: 'info',
+    };
+
+    return (
+        <div 
+            className={`fixed bottom-4 right-4 z-50 ${bgColors[type]} border rounded-lg shadow-2xl p-4 max-w-md backdrop-blur-sm animate-in slide-in-from-bottom`}
+            role="alert"
+        >
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <Icon name={iconNames[type]} size={20} className="text-white" />
+                    <span className="text-white font-medium">{message}</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                    {action && (
+                        <button
+                            onClick={action.onClick}
+                            className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white rounded transition-colors text-sm font-medium"
+                        >
+                            {action.label}
+                        </button>
+                    )}
+                    <button
+                        onClick={onClose}
+                        className="text-white/70 hover:text-white transition-colors"
+                        aria-label="Close notification"
+                    >
+                        <Icon name="x" size={18} />
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Toast;
+"""
+    
+    toast_path = project_root / 'src' / 'components' / 'Toast.jsx'
+    
+    # Backup existing Toast.jsx
+    editor.backup_file(toast_path)
+    
+    with open(toast_path, 'w', encoding='utf-8') as f:
+        f.write(toast_undo_content)
+    
+    print("✓ Enhanced Toast.jsx with undo action support")
+
+
+if __name__ == '__main__':
+    project_root = Path(__file__).parent.parent
+    editor = JSXEditor(project_root)
+    
+    confirm_dialog_path = project_root / 'src' / 'components' / 'ConfirmDialog.jsx'
+    app_path = project_root / 'src' / 'App.jsx'
+    
+    print("=" * 60)
+    print("Fix #3: Safe Bulk Actions Implementation")
+    print("=" * 60)
+    
+    try:
+        enhance_confirm_dialog(editor, confirm_dialog_path)
+        create_toast_with_undo(editor, project_root)
+        # update_app_bulk_actions(editor, app_path)  # Commented out - requires careful App.jsx editing
+        
+        print("\n✅ Fix #3 Partial Complete!")
+        print("Note: App.jsx bulk action handlers need manual review for specific integration")
+        print(f"Backups saved to: {editor.backup_dir}")
+        
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+
+"""
+Fix #4: Granular Progress Tracking
+Enhances progress display with stage-based tracking and time estimates.
+"""
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from jsx_editor import JSXEditor
+
+
+def enhance_granular_progress(editor, file_path):
+    """Enhance GranularProgress component with stages and time estimates"""
+    
+    enhanced_progress = """import React from 'react';
+
+const GranularProgress = ({ 
+    currentStage = 1, 
+    totalStages = 1, 
+    percentage = 0, 
+    stageName = 'Processing', 
+    estimatedTimeLeft = null,
+    message = ''
+}) => {
+    return (
+        <div className="space-y-3">
+            {/* Stage and Time Info */}
+            <div className="flex justify-between items-center text-sm">
+                <span className="text-white font-medium">
+                    Step {currentStage} of {totalStages}: {stageName}
+                </span>
+                <span className="text-slate-400">
+                    {percentage}%
+                    {estimatedTimeLeft !== null && ` • ~${estimatedTimeLeft}s left`}
+                </span>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+                <div 
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 h-3 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
+                    role="progressbar"
+                    aria-valuenow={percentage}
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-label={`${stageName} progress`}
+                />
+            </div>
+
+            {/* Status Message */}
+            {message && (
+                <p className="text-xs text-slate-400 animate-pulse">
+                    {message}
+                </p>
+            )}
+
+            {/* Stage Indicators */}
+            {totalStages > 1 && (
+                <div className="flex justify-between gap-1 mt-2">
+                    {Array.from({ length: totalStages }, (_, i) => (
+                        <div 
+                            key={i}
+                            className={`h-1 flex-1 rounded-full transition-colors ${
+                                i + 1 < currentStage ? 'bg-green-500' :
+                                i + 1 === currentStage ? 'bg-orange-500' :
+                                'bg-slate-700'
+                            }`}
+                            aria-label={`Stage ${i + 1} ${i + 1 < currentStage ? 'complete' : i + 1 === currentStage ? 'in progress' : 'pending'}`}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default GranularProgress;
+"""
+    
+    editor.backup_file(file_path)
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(enhanced_progress)
+    
+    print("✓ Enhanced GranularProgress.jsx")
+
+
+def create_progress_tracker_hook(editor, project_root):
+    """Create a custom hook for tracking multi-stage progress"""
+    
+    hook_content = """import { useState, useCallback, useRef } from 'react';
+
+/**
+ * Hook for tracking multi-stage progress with time estimation
+ * @param {Array} stages - Array of stage objects with { name, weight }
+ */
+export const useProgressTracker = (stages) => {
+    const [progress, setProgress] = useState({
+        currentStage: 0,
+        percentage: 0,
+        stageName: stages[0]?.name || 'Processing',
+        estimatedTimeLeft: null,
+        message: ''
+    });
+
+    const startTime = useRef(null);
+    const stageStartTime = useRef(null);
+
+    const startTracking = useCallback(() => {
+        startTime.current = Date.now();
+        stageStartTime.current = Date.now();
+        setProgress({
+            currentStage: 1,
+            percentage: 0,
+            stageName: stages[0]?.name || 'Processing',
+            estimatedTimeLeft: null,
+            message: ''
+        });
+    }, [stages]);
+
+    const updateProgress = useCallback((stageIndex, stageProgress, message = '') => {
+        if (stageIndex >= stages.length) return;
+
+        // Calculate overall percentage
+        const completedWeight = stages.slice(0, stageIndex).reduce((sum, s) => sum + s.weight, 0);
+        const currentStageWeight = stages[stageIndex].weight * Math.min(1, Math.max(0, stageProgress));
+        const totalPercentage = Math.round((completedWeight + currentStageWeight) * 100);
+
+        // Estimate time remaining
+        let estimatedTimeLeft = null;
+        if (startTime.current && totalPercentage > 5) {
+            const elapsed = (Date.now() - startTime.current) / 1000;
+            const estimatedTotal = (elapsed / totalPercentage) * 100;
+            estimatedTimeLeft = Math.round(estimatedTotal - elapsed);
+        }
+
+        setProgress({
+            currentStage: stageIndex + 1,
+            totalStages: stages.length,
+            percentage: totalPercentage,
+            stageName: stages[stageIndex].name,
+            estimatedTimeLeft,
+            message
+        });
+    }, [stages]);
+
+    const completeStage = useCallback((stageIndex) => {
+        if (stageIndex + 1 < stages.length) {
+            stageStartTime.current = Date.now();
+            updateProgress(stageIndex + 1, 0);
+        } else {
+            // All stages complete
+            setProgress({
+                currentStage: stages.length,
+                totalStages: stages.length,
+                percentage: 100,
+                stageName: 'Complete',
+                estimatedTimeLeft: 0,
+                message: 'All stages completed!'
+            });
+        }
+    }, [stages, updateProgress]);
+
+    const reset = useCallback(() => {
+        startTime.current = null;
+        stageStartTime.current = null;
+        setProgress({
+            currentStage: 0,
+            percentage: 0,
+            stageName: stages[0]?.name || 'Processing',
+            estimatedTimeLeft: null,
+            message: ''
+        });
+    }, [stages]);
+
+    return {
+        progress,
+        startTracking,
+        updateProgress,
+        completeStage,
+        reset
+    };
+};
+
+export default useProgressTracker;
+"""
+    
+    hooks_dir = project_root / 'src' / 'hooks'
+    hook_path = hooks_dir / 'useProgressTracker.js'
+    
+    with open(hook_path, 'w', encoding='utf-8') as f:
+        f.write(hook_content)
+    
+    print("✓ Created useProgressTracker.js hook")
+
+
+if __name__ == '__main__':
+    project_root = Path(__file__).parent.parent
+    editor = JSXEditor(project_root)
+    
+    progress_path = project_root / 'src' / 'components' / 'GranularProgress.jsx'
+    
+    print("=" * 60)
+    print("Fix #4: Granular Progress Tracking Implementation")
+    print("=" * 60)
+    
+    try:
+        enhance_granular_progress(editor, progress_path)
+        create_progress_tracker_hook(editor, project_root)
+        
+        print("\n✅ Fix #4 Complete!")
+        print("Note: Update useGeneration.js to use useProgressTracker hook")
+        print(f"Backups saved to: {editor.backup_dir}")
+        
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+
+"""
+Fix #5: Auto-Save and Unsaved Work Detection
+Adds auto-save functionality and warns users about unsaved work.
+"""
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from jsx_editor import JSXEditor
+
+
+def create_autosave_hook(editor, project_root):
+    """Create a custom hook for auto-save functionality"""
+    
+    hook_content = """import { useEffect, useCallback, useRef } from 'react';
+
+/**
+ * Hook for auto-saving data to localStorage
+ * @param {string} key - localStorage key
+ * @param {any} data - Data to save
+ * @param {number} interval - Save interval in milliseconds (default: 10000)
+ * @param {boolean} enabled - Whether auto-save is enabled
+ */
+export const useAutoSave = (key, data, interval = 10000, enabled = true) => {
+    const intervalRef = useRef(null);
+    const lastSaveRef = useRef(null);
+
+    const saveData = useCallback(() => {
+        if (!enabled || !data) return;
+
+        try {
+            const savePayload = {
+                data,
+                timestamp: Date.now(),
+                version: '1.0'
+            };
+            localStorage.setItem(key, JSON.stringify(savePayload));
+            lastSaveRef.current = Date.now();
+            console.log(`Auto-saved: ${key}`);
+        } catch (error) {
+            console.error('Auto-save failed:', error);
+        }
+    }, [key, data, enabled]);
+
+    const loadData = useCallback(() => {
+        try {
+            const saved = localStorage.getItem(key);
+            if (saved) {
+                const { data: savedData, timestamp } = JSON.parse(saved);
+                return { data: savedData, timestamp };
+            }
+        } catch (error) {
+            console.error('Failed to load saved data:', error);
+        }
+        return null;
+    }, [key]);
+
+    const clearSaved = useCallback(() => {
+        localStorage.removeItem(key);
+        lastSaveRef.current = null;
+        console.log(`Cleared saved data: ${key}`);
+    }, [key]);
+
+    const hasSavedData = useCallback(() => {
+        return localStorage.getItem(key) !== null;
+    }, [key]);
+
+    // Auto-save effect
+    useEffect(() => {
+        if (enabled && data) {
+            // Initial save
+            saveData();
+
+            // Set up interval
+            intervalRef.current = setInterval(saveData, interval);
+
+            return () => {
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                }
+            };
+        }
+    }, [enabled, data, interval, saveData]);
+
+    return {
+        saveData,
+        loadData,
+        clearSaved,
+        hasSavedData,
+        lastSaveTime: lastSaveRef.current
+    };
+};
+
+export default useAutoSave;
+"""
+    
+    hooks_dir = project_root / 'src' / 'hooks'
+    hook_path = hooks_dir / 'useAutoSave.js'
+    
+    with open(hook_path, 'w', encoding='utf-8') as f:
+        f.write(hook_content)
+    
+    print("✓ Created useAutoSave.js hook")
+
+
+def create_unsaved_changes_component(editor, project_root):
+    """Create a component to warn about unsaved changes"""
+    
+    component_content = """import React from 'react';
+import Icon from './Icon';
+
+const UnsavedChangesDialog = ({ isOpen, onSaveDraft, onDiscard, onCancel, draftTimestamp }) => {
+    if (!isOpen) return null;
+
+    const formatTimestamp = (timestamp) => {
+        return new Date(timestamp).toLocaleString();
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-slate-900 rounded-xl max-w-md w-full border border-slate-800 shadow-2xl">
+                <div className="p-6 border-b border-slate-800">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-900/30 rounded-lg">
+                            <Icon name="alert-triangle" size={24} className="text-orange-500" />
+                        </div>
+                        <h2 className="text-xl font-bold text-white">Unsaved Work Detected</h2>
+                    </div>
+                </div>
+
+                <div className="p-6 space-y-4">
+                    <p className="text-slate-300">
+                        You have unsaved work in Creation Mode. What would you like to do?
+                    </p>
+                    {draftTimestamp && (
+                        <p className="text-sm text-slate-400">
+                            Last saved: {formatTimestamp(draftTimestamp)}
+                        </p>
+                    )}
+                </div>
+
+                <div className="p-6 border-t border-slate-800 flex gap-3">
+                    <button
+                        onClick={onSaveDraft}
+                        className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
+                    >
+                        <div className="flex items-center justify-center gap-2">
+                            <Icon name="save" size={18} />
+                            Keep Draft
+                        </div>
+                    </button>
+                    <button
+                        onClick={onDiscard}
+                        className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+                    >
+                        <div className="flex items-center justify-center gap-2">
+                            <Icon name="trash" size={18} />
+                            Discard
+                        </div>
+                    </button>
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-medium"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default UnsavedChangesDialog;
+"""
+    
+    components_dir = project_root / 'src' / 'components'
+    component_path = components_dir / 'UnsavedChangesDialog.jsx'
+    
+    with open(component_path, 'w', encoding='utf-8') as f:
+        f.write(component_content)
+    
+    print("✓ Created UnsavedChangesDialog.jsx")
+
+
+def create_draft_restoration_banner(editor, project_root):
+    """Create a banner component for draft restoration notifications"""
+    
+    banner_content = """import React from 'react';
+import Icon from './Icon';
+
+const DraftRestorationBanner = ({ timestamp, onClear }) => {
+    const formatTimestamp = (ts) => {
+        const date = new Date(ts);
+        const now = new Date();
+        const diffMinutes = Math.floor((now - date) / 60000);
+        
+        if (diffMinutes < 1) return 'just now';
+        if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+        
+        return date.toLocaleString();
+    };
+
+    return (
+        <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-4 animate-in slide-in-from-top">
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <Icon name="info" size={20} className="text-blue-400" />
+                    <div>
+                        <p className="text-white font-medium">
+                            Draft Restored
+                        </p>
+                        <p className="text-sm text-slate-400">
+                            Your work from {formatTimestamp(timestamp)} has been restored
+                        </p>
+                    </div>
+                </div>
+                <button
+                    onClick={onClear}
+                    className="px-3 py-1 text-sm bg-blue-700 hover:bg-blue-600 text-white rounded transition-colors"
+                >
+                    Clear Draft
+                </button>
+            </div>
+        </div>
+    );
+};
+
+export default DraftRestorationBanner;
+"""
+    
+    components_dir = project_root / 'src' / 'components'
+    banner_path = components_dir / 'DraftRestorationBanner.jsx'
+    
+    with open(banner_path, 'w', encoding='utf-8') as f:
+        f.write(banner_content)
+    
+    print("✓ Created DraftRestorationBanner.jsx")
+
+
+if __name__ == '__main__':
+    project_root = Path(__file__).parent.parent
+    editor = JSXEditor(project_root)
+    
+    print("=" * 60)
+    print("Fix #5: Auto-Save and Unsaved Work Detection Implementation")
+    print("=" * 60)
+    
+    try:
+        create_autosave_hook(editor, project_root)
+        create_unsaved_changes_component(editor, project_root)
+        create_draft_restoration_banner(editor, project_root)
+        
+        print("\n✅ Fix #5 Complete!")
+        print("Note: Integrate useAutoSave hook into App.jsx Creation Mode")
+        print(f"Backups saved to: {editor.backup_dir}")
+        
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+

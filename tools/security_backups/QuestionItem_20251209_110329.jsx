@@ -9,7 +9,6 @@ import QuestionMetadata from './QuestionItem/QuestionMetadata';
 import LanguageControls from './QuestionItem/LanguageControls';
 import QuestionActions from './QuestionItem/QuestionActions';
 import QuestionMenu from './QuestionItem/QuestionMenu';
-import { sanitizeMarkdown } from '../utils/sanitize';
 
 const QuestionItem = ({
     q,

@@ -1,4 +1,3 @@
-import { sanitizeText, sanitizeMarkdown } from '../utils/sanitize';
 import React from 'react';
 import Icon from './Icon';
 import { renderMarkdown, sanitizeText, computeWordDiff } from '../utils/helpers';

@@ -4,27 +4,15 @@ import { getAnalytics, logEvent } from "firebase/analytics";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where, Timestamp } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 
-
-// SECURITY NOTE: CSRF Protection
-// For production deployment with a backend API proxy, add CSRF tokens:
-// import { getCSRFToken } from '../utils/csrf';
-// Include in all write operations:
-// headers: { 'X-CSRF-Token': getCSRFToken() }
-// Firebase SDK handles some CSRF protection via SameSite cookies,
-// but explicit tokens provide defense-in-depth.
-
-
 // Your web app's Firebase configuration
-// SECURITY: Firebase config now uses environment variables
-// Create a .env file based on .env.example and add your actual keys
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyA1g9RCrRH8AxuFUOLRRPxwqmXda6ChWCI",
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "ue5questionssoure.firebaseapp.com",
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "ue5questionssoure",
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "ue5questionssoure.firebasestorage.app",
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "10200378954",
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:10200378954:web:5aaa8eb97cce0a4a6840b3",
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-31HMNEB7S5"
+    apiKey: "AIzaSyA1g9RCrRH8AxuFUOLRRPxwqmXda6ChWCI",
+    authDomain: "ue5questionssoure.firebaseapp.com",
+    projectId: "ue5questionssoure",
+    storageBucket: "ue5questionssoure.firebasestorage.app",
+    messagingSenderId: "10200378954",
+    appId: "1:10200378954:web:5aaa8eb97cce0a4a6840b3",
+    measurementId: "G-31HMNEB7S5"
 };
 
 // Initialize Firebase
