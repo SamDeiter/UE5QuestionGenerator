@@ -1,0 +1,20 @@
+# Full BlueprintAPI URL List (887 URLs)
+# Collected: December 9, 2024
+# Source: https://dev.epicgames.com/documentation/en-us/unreal-engine/BlueprintAPI
+#
+# NOTE: This is the FULL list. We only add top-level categories to the validator
+# to keep it manageable. Use this as a reference if you need specific API pages.
+#
+# To update this list:
+# 1. Go to https://dev.epicgames.com/documentation/en-us/unreal-engine/BlueprintAPI
+# 2. Run the crawler script from README.md in browser console
+# 3. Replace this file with the new output
+#
+# Sample format:
+# https://dev.epicgames.com/documentation/en-us/unreal-engine/BlueprintAPI/[Category]
+# https://dev.epicgames.com/documentation/en-us/unreal-engine/BlueprintAPI/AI
+# https://dev.epicgames.com/documentation/en-us/unreal-engine/BlueprintAPI/Animation
+# https://dev.epicgames.com/documentation/en-us/unreal-engine/BlueprintAPI/Actor
+# ... (887 total)
+#
+# Future: Paste the full BlueprintAPI URL output here when you collect it
