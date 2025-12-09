@@ -519,6 +519,74 @@ const KNOWN_VALID_SLUGS = new Set([
     'the-gl-transmission-format-gltf-in-unreal-engine',
     'using-speedtree-in-unreal-engine',
     'working-with-scene-variants-in-unreal-engine',
+
+    // Gameplay Framework (Common Features)
+    'actors-in-unreal-engine',
+    'components-in-unreal-engine',
+    'pawns-in-unreal-engine',
+    'characters-in-unreal-engine',
+    'player-controllers-in-unreal-engine',
+    'game-mode-and-game-state-in-unreal-engine',
+    'player-state-in-unreal-engine',
+    'input-in-unreal-engine',
+    'enhanced-input-in-unreal-engine',
+    'timers-in-unreal-engine',
+    'delegates-in-unreal-engine',
+
+    // Animation (Common Features)
+    'animation-sequences-in-unreal-engine',
+    'animation-retargeting-in-unreal-engine',
+    'animation-montages-in-unreal-engine',
+    'blend-spaces-in-unreal-engine',
+    'animation-state-machines-in-unreal-engine',
+    'inverse-kinematics-in-unreal-engine',
+    'animation-curves-in-unreal-engine',
+    'animation-notifies-in-unreal-engine',
+    'skeletal-mesh-sockets-in-unreal-engine',
+
+    // Materials (Common Features)
+    'material-functions-in-unreal-engine',
+    'material-parameter-collections-in-unreal-engine',
+    'material-layers-in-unreal-engine',
+    'material-attributes-in-unreal-engine',
+    'decals-in-unreal-engine',
+    'physically-based-rendering-in-unreal-engine',
+
+    // Lighting (Common Features)
+    'light-mobility-in-unreal-engine',
+    'light-functions-in-unreal-engine',
+    'ies-light-profiles-in-unreal-engine',
+    'volumetric-fog-in-unreal-engine',
+    'exponential-height-fog-in-unreal-engine',
+    'lightmass-in-unreal-engine',
+
+    // Collision & Physics
+    'collision-in-unreal-engine',
+    'collision-responses-in-unreal-engine',
+    'physics-bodies-in-unreal-engine',
+    'physics-constraints-in-unreal-engine',
+    'physics-materials-in-unreal-engine',
+    'destructible-actors-in-unreal-engine',
+
+    // Cameras & Cinematics
+    'cameras-in-unreal-engine',
+    'camera-components-in-unreal-engine',
+    'matinee-in-unreal-engine',
+    'level-sequences-in-unreal-engine',
+    'camera-animation-in-unreal-engine',
+
+    // Networking
+    'networking-overview-in-unreal-engine',
+    'replication-in-unreal-engine',
+    'rpcs-in-unreal-engine',
+    'network-relevancy-in-unreal-engine',
+    'dedicated-servers-in-unreal-engine',
+
+    // Editor Features
+    'editor-scripting-in-unreal-engine',
+    'python-scripting-in-unreal-engine',
+    'commandlets-in-unreal-engine',
+    'blueprints-nativization-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
