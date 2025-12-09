@@ -492,6 +492,162 @@ Commercial use of this tool or generated content should be reviewed against:
 
 ---
 
+## Data Privacy & GDPR Compliance
+
+### Data Collection & Processing
+
+**What Data We Collect:**
+This application collects and processes the following data:
+
+**Personal Information:**
+- **User Name** (creator/reviewer name) - stored in Firebase and localStorage
+- **Email Address** (via Google OAuth) - for authentication only
+- **User ID** (Firebase UID) - to associate questions with creators
+
+**Usage Data:**
+- **Generated Questions** - question text, answers, metadata
+- **Analytics Data** - token usage, generation metrics, timestamps
+- **Review Decisions** - accept/reject status, critique scores, edit history
+
+**Technical Data:**
+- **Browser localStorage** - encrypted question cache
+- **Firebase Authentication** - login session data
+- **IP Address** - via Google Firebase (standard web hosting)
+
+### Data Storage & Processing Locations
+
+**Third-Party Services:**
+1. **Google Firebase** (USA) - Authentication, Firestore database, Analytics
+2. **Google Gemini API** (USA) - AI question generation
+3. **Google Sheets API** (USA) - Question export functionality
+4. **Client-Side Storage** - Browser localStorage (AES encrypted)
+
+**Data Residency:**
+- Data is primarily stored in **Google Cloud Platform (USA)**
+- Subject to Google's data processing agreements
+- May be replicated across Google's global infrastructure
+
+### Legal Basis for Processing (GDPR)
+
+**For EU Users:**
+Under GDPR, we process personal data based on:
+
+1. **Legitimate Interest** (Art. 6(1)(f) GDPR)
+   - Supporting Epic Games' educational mission
+   - Improving question quality through analytics
+   - Maintaining educational content standards
+
+2. **Consent** (Art. 6(1)(a) GDPR)
+   - Users choose to provide name and use Google login
+   - Users consent to cookies/localStorage via browser
+
+3. **Contractual Necessity** (Art. 6(1)(b) GDPR)
+   - Processing necessary for tool functionality
+   - Required for Unreal Authorized Instructor Program participation
+
+### User Rights (GDPR Compliance)
+
+**Your Rights:**
+As a user, you have the right to:
+
+✅ **Access** - Request copy of your data (via Firebase export)  
+✅ **Rectification** - Correct inaccurate personal data (edit in settings)  
+✅ **Erasure** ("Right to be Forgotten") - Delete your data (clear localStorage, delete Firebase account)  
+✅ **Portability** - Export your questions in standard formats (CSV, JSON, Google Sheets)  
+✅ **Restriction** - Limit processing (log out, don't generate questions)  
+✅ **Object** - Object to processing (stop using the tool)  
+✅ **Withdraw Consent** - Log out and clear data anytime
+
+**How to Exercise Rights:**
+- **Access/Export:** Use "Export to Sheets" or "Load from Database" features
+- **Delete:** Clear browser data, or delete Firebase account via Google Account settings
+- **Questions:** Contact via GitHub repository issues
+
+### Data Retention
+
+**Retention Periods:**
+- **localStorage:** Until browser cache cleared
+- **Firebase Firestore:** Indefinitely (user-controlled, can delete anytime)
+- **Analytics:** Aggregated data retained indefinitely, individual data 90 days
+- **Authentication:** As long as user account exists
+
+**Automated Deletion:**
+- No automatic data deletion (user retains control)
+- Users can manually clear data via "Clear Local Data & Reset App" button
+
+### Data Security
+
+**Security Measures:**
+- ✅ **AES-256 Encryption** for localStorage
+- ✅ **HTTPS/TLS** for all network communications
+- ✅ **Firebase Security Rules** - User can only access own questions
+- ✅ **OAuth 2.0** - Secure Google authentication
+- ✅ **Input Sanitization** - XSS prevention (DOMPurify)
+- ✅ **CSRF Protection** - Token-based request validation
+- ✅ **Content Security Policy** - Prevents code injection
+
+**Third-Party Security:**
+Data processed by Google services is subject to:
+- [Google Cloud Security](https://cloud.google.com/security)
+- [Firebase Security](https://firebase.google.com/support/privacy)
+- ISO 27001, SOC 2, SOC 3 certifications
+
+### Data Sharing & Transfers
+
+**Who We Share Data With:**
+- **Google LLC** - Firebase, Gemini API, Sheets API (Data Processing Agreement applies)
+- **Epic Games** - As employer of tool creator (internal educational use)
+- **No third-party advertising or marketing**
+- **No data selling or commercial use**
+
+**International Transfers:**
+- Data may be transferred to USA (Google Cloud)
+- Covered by **EU-US Data Privacy Framework** (Google participates)
+- Standard Contractual Clauses (SCCs) apply via Google's DPA
+
+### Cookies & Tracking
+
+**What We Use:**
+- **Firebase Authentication Cookies** - Required for login
+- **localStorage** - Required for app functionality (AES encrypted)
+- **Google Analytics Cookies** - Optional usage tracking
+- **No third-party advertising cookies**
+
+**User Control:**
+- Disable analytics via browser extensions
+- Clear localStorage via app settings
+- Block cookies via browser settings (may break functionality)
+
+### Children's Privacy (COPPA/GDPR)
+
+**Age Restriction:**
+This tool is intended for **adult professional educators** (18+) participating in the Unreal Authorized Instructor Program.
+
+- **Not directed at children** under 13 (COPPA)
+- **Not directed at children** under 16 (GDPR)
+- If a child's data is collected inadvertently, contact us for deletion
+
+### Privacy Policy Updates
+
+**Notification of Changes:**
+- Material changes will be noted in GitHub releases
+- Users encouraged to review LICENSES.md periodically
+- Continued use constitutes acceptance of updated terms
+
+### Contact for Privacy Concerns
+
+**Data Protection Contact:**
+- **For Epic Games employees:** Internal Epic data protection officer
+- **For external users:** Submit issue on GitHub repository
+- **For GDPR requests:** Include "GDPR Request" in issue title
+
+**Supervisory Authority (EU):**
+EU users have the right to lodge complaints with their local data protection authority.
+
+---
+
+## Additional Legal Considerations
+
 ## Python Dependencies (Development Tools)
 
 The following Python libraries are used in development/deployment scripts:
