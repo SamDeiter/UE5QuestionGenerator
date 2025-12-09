@@ -587,6 +587,91 @@ const KNOWN_VALID_SLUGS = new Set([
     'python-scripting-in-unreal-engine',
     'commandlets-in-unreal-engine',
     'blueprints-nativization-in-unreal-engine',
+
+    // Landscape & Foliage
+    'foliage-tool-in-unreal-engine',
+    'grass-tool-in-unreal-engine',
+    'landscape-splines-in-unreal-engine',
+    'landscape-sculpting-in-unreal-engine',
+    'landscape-painting-in-unreal-engine',
+    'procedural-foliage-tool-in-unreal-engine',
+
+    // Plugins & Modules
+    'plugins-in-unreal-engine',
+    'creating-plugins-in-unreal-engine',
+    'plugin-system-in-unreal-engine',
+    'modules-in-unreal-engine',
+
+    // Build System
+    'unreal-build-tool-in-unreal-engine',
+    'unreal-header-tool-in-unreal-engine',
+    'build-configuration-in-unreal-engine',
+
+    // Version Control
+    'perforce-integration-in-unreal-engine',
+    'git-source-control-in-unreal-engine',
+    'plastic-scm-in-unreal-engine',
+
+    // Metahuman
+    'metahuman-creator-in-unreal-engine',
+    'metahuman-animator-in-unreal-engine',
+    'metahuman-identity-in-unreal-engine',
+
+    // Geometry Tools
+    'bsp-brushes-in-unreal-engine',
+    'geometry-editing-in-unreal-engine',
+    'procedural-mesh-component-in-unreal-engine',
+
+    // Sound & Audio Advanced
+    'sound-cues-in-unreal-engine',
+    'sound-classes-in-unreal-engine',
+    'attenuation-in-unreal-engine',
+    'sound-concurrency-in-unreal-engine',
+    'audio-modulation-in-unreal-engine',
+
+    // Quixel & Mega Assets
+    'quixel-bridge-in-unreal-engine',
+    'megascans-in-unreal-engine',
+
+    // Performance & Optimization
+    'gpu-profiling-in-unreal-engine',
+    'cpu-profiling-in-unreal-engine',
+    'memory-profiling-in-unreal-engine',
+    'draw-call-optimization-in-unreal-engine',
+    'level-of-detail-in-unreal-engine',
+    'occlusion-culling-in-unreal-engine',
+
+    // Gameplay Abilities
+    'gameplay-ability-system-in-unreal-engine',
+    'gameplay-tags-in-unreal-engine',
+    'gameplay-tasks-in-unreal-engine',
+    'gameplay-effects-in-unreal-engine',
+
+    // AI Advanced
+    'ai-perception-in-unreal-engine',
+    'ai-debugging-in-unreal-engine',
+    'behavior-tree-decorators-in-unreal-engine',
+    'behavior-tree-services-in-unreal-engine',
+    'behavior-tree-tasks-in-unreal-engine',
+
+    // VFX Advanced
+    'particle-systems-cascade-in-unreal-engine',
+    'gpu-particles-in-unreal-engine',
+    'beam-emitters-in-unreal-engine',
+
+    // Rendering Advanced
+    'screen-space-reflections-in-unreal-engine',
+    'ambient-occlusion-in-unreal-engine',
+    'bloom-in-unreal-engine',
+    'depth-of-field-in-unreal-engine',
+    'motion-blur-in-unreal-engine',
+    'tone-mapping-in-unreal-engine',
+
+    // Sequencer Advanced
+    'sequencer-scripting-in-unreal-engine',
+    'render-movie-settings-in-unreal-engine',
+    'takes-recorder-in-unreal-engine',
+    'sequencer-tracks-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
