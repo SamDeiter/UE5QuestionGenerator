@@ -744,6 +744,31 @@ const KNOWN_VALID_SLUGS = new Set([
     'bump-mapping-without-tangent-space-in-unreal-engine',
     'refraction-using-pixel-normal-offset-in-unreal-engine',
     'lit-translucency-in-unreal-engine',
+
+    // Sequencer & Cinematics (Comprehensive)
+    'sequencer-cinematic-editor-unreal-engine',
+    'cinematic-editor-and-project-settings-in-unreal-engine',
+    'cinematic-workflow-guides-and-examples-in-unreal-engine',
+    'cinematic-workflow-tips-for-sequencer-in-unreal-engine',
+    'how-to-make-movies-in-unreal-engine',
+    'cinematic-tags-and-groups-in-unreal-engine',
+    'sequencer-track-list-in-unreal-engine',
+    'sequencer-hotkeys-in-unreal-engine',
+    'sequencer-playlists-in-unreal-engine',
+    'sequencer-blueprint-component-in-unreal-engine',
+    'sequences-shots-and-takes-in-unreal-engine',
+    'creating-animation-keyframes-in-unreal-engine',
+    'animation-curve-editor-in-unreal-engine',
+    'dynamic-binding-in-sequencer',
+    'python-scripting-in-sequencer-in-unreal-engine',
+    'movie-and-cinematic-cameras-in-unreal-engine',
+    'movie-render-pipeline-in-unreal-engine',
+    'import-and-export-cinematic-fbx-animations-in-unreal-engine',
+    'spawn-temporary-actors-in-unreal-engine-cinematics',
+    'old-render-movie-in-unreal-engine',
+
+    // Level Editing
+    'placing-actors-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
