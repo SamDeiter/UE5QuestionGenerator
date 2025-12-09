@@ -120,7 +120,10 @@ export const useGeneration = (
             return;
         }
 
-        if (config.difficulty !== 'Balanced All' && isTargetMet) { showMessage(`Quota met for ${config.difficulty}
+        if (config.difficulty !== 'Balanced All' && isTargetMet) {
+            showMessage(`Quota met for ${config.difficulty}! Change difficulty/type or discipline to continue.`, 5000);
+            return;
+        }
 
         // QUOTA ENFORCEMENT: Check if category/total quota is met
         const allQuestions = Array.from(allQuestionsMap.values()).flat();
@@ -141,26 +144,6 @@ export const useGeneration = (
             config.batchSize = quotaCheck.maxAllowed;
             showMessage(`Batch size reduced to ${quotaCheck.maxAllowed} (quota limit). ${quotaCheck.reason}`, 7000);
         }
-
-        // QUOTA ENFORCEMENT: Check if category/total quota is met
-        const allQuestions = Array.from(allQuestionsMap.values()).flat();
-        const quotaCheck = validateGeneration(
-            config.discipline,
-            config.difficulty,
-            config.batchSize,
-            allQuestions
-        );
-
-        if (!quotaCheck.allowed) {
-            showMessage(quotaCheck.reason, 7000);
-            return;
-        }
-
-        // If batch size needs to be reduced, update it
-        if (quotaCheck.warning && quotaCheck.maxAllowed < config.batchSize) {
-            config.batchSize = quotaCheck.maxAllowed;
-            showMessage(`Batch size reduced to ${quotaCheck.maxAllowed} (quota limit). ${quotaCheck.reason}`, 7000);
-        }! Change difficulty/type or discipline to continue.`, 5000); return; }
 
         setIsGenerating(true); setShowHistory(false); setStatus('Drafting Scenarios...');
         const startTime = Date.now();
