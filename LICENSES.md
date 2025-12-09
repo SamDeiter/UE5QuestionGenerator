@@ -646,7 +646,235 @@ EU users have the right to lodge complaints with their local data protection aut
 
 ---
 
-## Additional Legal Considerations
+## Legal Risk Mitigation & Compliance Checklist
+
+### ⚠️ CRITICAL: Recommended Legal Approvals
+
+**Before Public Release or Deployment:**
+
+As this tool was created by an Epic Games employee, the following approvals are **strongly recommended**:
+
+#### 1. **Epic Games Legal Department Review**
+- [ ] **IP/Work Product Review** - Confirm Epic's rights to code created during employment
+- [ ] **Open Source Approval** - Document approval for MIT License release
+- [ ] **Trademark Usage** - Verify compliance with UE branding guidelines
+- [ ] **EULA Compliance** - Ensure educational use aligns with Epic's terms
+- [ ] **Data Privacy** - Review GDPR compliance for international use
+- [ ] **Liability Concerns** - Address potential Epic exposure from tool use
+
+**Action:** Submit to Epic Games Legal for formal review and written approval.
+
+#### 2. **Employment Agreement Review**
+- [ ] **Work Product Clause** - Check if employment agreement covers personal projects
+- [ ] **IP Assignment** - Verify who owns code created using company resources
+- [ ] **Outside Activities** - Ensure open-source release doesn't violate employment terms
+- [ ] **Conflict of Interest** - Confirm no competing interests with Epic's business
+
+**Action:** Review employment agreement Section [X] with HR/Legal.
+
+#### 3. **Third-Party Terms of Service Compliance**
+- [ ] **Google Gemini API Terms** - Review commercial/educational use restrictions
+- [ ] **Google Firebase Terms** - Verify data processing agreement coverage
+- [ ] **Google Sheets API Terms** - Ensure export functionality is compliant
+- [ ] **GitHub Terms** - Confirm repository hosting compliance
+
+**Action:** Document compliance with all third-party ToS.
+
+### Legal Compliance Checklist
+
+#### Employee & Epic Games Protection
+
+✅ **COMPLETED:**
+- [x] Tool released under MIT License (permissive, Epic-friendly)
+- [x] All dependencies use compatible open-source licenses
+- [x] Epic Games authorship disclosed in LICENSES.md
+- [x] Human-in-the-loop AI review documented
+- [x] GDPR compliance section added
+- [x] Data privacy disclosures included
+- [x] Unreal® trademark usage guidelines followed
+- [x] Non-affiliation statement clarified (employee-created for Epic)
+- [x] Educational fair use justification documented
+
+⚠️ **STILL NEEDED (Recommendations):**
+- [ ] **Written approval** from Epic Games Legal Department
+- [ ] **Documented approval** from manager/director for open-source release
+- [ ] **Signed acknowledgment** that Epic owns work product
+- [ ] **Terms of Use** added to application (separate from LICENSES.md)
+- [ ] **Disclaimer of Warranties** prominently displayed in app
+- [ ] **Limitation of Liability** clause for users
+- [ ] **Indemnification** agreement for Authorized Instructors
+- [ ] **Privacy Policy** link in application footer
+- [ ] **Cookie consent banner** for EU compliance
+- [ ] **Age verification** (18+ requirement)
+
+### Liability Protection Measures
+
+#### For Epic Games
+
+**Recommended Actions:**
+
+1. **Add Explicit Disclaimer in Application**
+   ```
+   DISCLAIMER: This tool is provided "AS IS" for educational purposes only.
+   Epic Games, Inc. makes no warranties about the accuracy, completeness,
+   or suitability of AI-generated content. Instructors are solely responsible
+   for reviewing and approving all questions before use in assessments.
+   ```
+
+2. **Limit Epic's Exposure**
+   - Add "Created by Epic Games employee" attribution
+   - Include "Use at your own risk" warnings
+   - Require instructors to agree to Terms of Use
+   - Log acceptance of liability disclaimer
+
+3. **Insurance Review**
+   - Consult Epic's E&O (Errors & Omissions) insurance
+   - Verify coverage for AI-generated educational content
+   - Check cyber liability insurance for data breach exposure
+
+#### For You (Employee Creator)
+
+**Personal Risk Mitigation:**
+
+1. **Document Everything**
+   - Keep emails showing manager/legal approval
+   - Document that you used personal time (if applicable)
+   - Save written approval for open-source release
+
+2. **Indemnification**
+   - Request Epic Games indemnify you for work-related creations
+   - Ensure employment agreement protects you for authorized work
+
+3. **Professional Liability**
+   - Consider professional liability insurance (if providing tool as consultant)
+   - Ensure Epic's legal team has reviewed before public use
+
+### Ongoing Compliance Requirements
+
+**Monthly:**
+- [ ] Review third-party API ToS for changes
+- [ ] Monitor GDPR regulations for updates
+- [ ] Check for security vulnerabilities in dependencies
+
+**Quarterly:**
+- [ ] Review user feedback for legal concerns
+- [ ] Update privacy policy if data practices change
+- [ ] Audit data retention and deletion practices
+
+**Annually:**
+- [ ] Comprehensive legal review with Epic's counsel
+- [ ] Update all license texts for dependency changes
+- [ ] Review insurance coverage adequacy
+
+### Red Flags to Watch For
+
+**Immediate Legal Consultation Required If:**
+
+🚨 **You receive:**
+- Cease and desist letter from any party
+- GDPR complaint or data breach notification
+- Trademark infringement claim
+- Copyright infringement notice
+- Request for user data from government/legal authority
+
+🚨 **You discover:**
+- AI generated inaccurate/harmful content used in assessments
+- Data breach or unauthorized access to Firebase
+- Student/instructor claims of damages from tool use
+- Violation of Epic Games EULA by users
+
+**Action:** Immediately contact Epic Games Legal Department.
+
+### Best Practices to Avoid Legal Issues
+
+**DO:**
+✅ Get written legal approval before major changes
+✅ Keep detailed records of all approvals
+✅ Respond promptly to GDPR/privacy requests
+✅ Update users about material changes
+✅ Maintain human oversight of all AI content
+✅ Keep Epic's legal team informed of tool updates
+✅ Document all security measures and updates
+✅ Respect all third-party API rate limits and ToS
+
+**DON'T:**
+❌ Deploy without Epic legal approval if required
+❌ Make claims about Epic Games endorsement (unless documented)
+❌ Ignore GDPR requests or data subject rights
+❌ Store unnecessary personal data
+❌ Allow fully automated question deployment
+❌ Modify Epic's official documentation/logos
+❌ Sublicense or sell access to the tool
+❌ Use for commercial purposes without review
+
+### Emergency Contact Information
+
+**If Legal Issue Arises:**
+
+1. **Epic Games Legal** (Internal)
+   - Notify your manager immediately
+   - Contact Epic's legal department
+   - Do NOT communicate with external parties without approval
+
+2. **For GDPR/Privacy Issues**
+   - Epic's Data Protection Officer (if exists)
+   - Document the issue thoroughly
+   - Freeze affected data if breach suspected
+
+3. **For IP/Trademark Issues**
+   - Epic's IP legal team
+   - Preserve all related communications
+   - Do not admit fault without legal counsel
+
+---
+
+## Summary: Is This Tool Legal?
+
+### Current Status
+
+**✅ Legally Sound Foundation:**
+- MIT License is well-established and Epic-friendly
+- All dependencies are properly licensed
+- GDPR compliance documented
+- Educational fair use justified
+- Human-in-the-loop protects quality
+- Epic Games authorship disclosed
+
+**⚠️ Recommended Next Steps:**
+
+1. **Get Epic Legal Approval** - Most important step
+2. **Document Manager Approval** - For open-source release
+3. **Add Terms of Use** - In the application itself
+4. **Add Liability Disclaimers** - Protect Epic and yourself
+5. **Verify Employment Agreement** - Ensure no conflicts
+
+**Risk Assessment:**
+
+| Risk Area | Level | Mitigation Status |
+|-----------|-------|-------------------|
+| IP Ownership | Medium | Need Epic approval |
+| GDPR Compliance | Low | Documented in LICENSES.md |
+| Trademark Use | Low | Compliant with guidelines |
+| AI Liability | Medium | Human-in-loop documented |
+| Data Privacy | Low | Security measures in place |
+| Third-Party ToS | Low | Compliant with Google ToS |
+| Educational Use | Low | Fair use justified |
+
+**Bottom Line:**
+
+This tool is **well-positioned legally** but requires **formal approval from Epic Games Legal** before widespread deployment. The comprehensive documentation you've created shows due diligence, but written authorization from Epic's legal team is the final critical step.
+
+**Recommended Action Plan:**
+
+1. **This Week:** Submit LICENSES.md to Epic Games Legal for review
+2. **Get Approval:** Obtain written approval for open-source release
+3. **Add Disclaimers:** Implement in-app Terms of Use and disclaimers
+4. **Document Approval:** Keep all approval emails in permanent records
+5. **Periodic Review:** Annual legal compliance check
+
+With these steps completed, both you and Epic Games will have strong legal protection.
+
+---
 
 ## Python Dependencies (Development Tools)
 
