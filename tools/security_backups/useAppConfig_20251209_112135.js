@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { getSecureItem, setSecureItem } from '../utils/secureStorage';
 
 export const useAppConfig = () => {
     // Application mode: 'landing' (home screen), 'create' (generation mode), 'review' (review mode), 'database' (view all)
@@ -20,7 +19,7 @@ export const useAppConfig = () => {
     
     // Main application configuration (persisted to localStorage)
     const [config, setConfig] = useState(() => {
-        const saved = getSecureItem('ue5_gen_config');
+        const saved = localStorage.getItem('ue5_gen_config');
         const defaults = {
             discipline: 'Technical Art',
             batchSize: '6',
@@ -65,7 +64,7 @@ export const useAppConfig = () => {
 
     // Effects
     useEffect(() => { if (!config.creatorName) setShowNameModal(true); }, []);
-    useEffect(() => { setSecureItem('ue5_gen_config', config); }, [config]);
+    useEffect(() => { localStorage.setItem('ue5_gen_config', JSON.stringify(config)); }, [config]);
 
     // Handlers
     const handleLanguageSwitch = (lang) => {

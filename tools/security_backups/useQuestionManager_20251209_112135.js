@@ -7,8 +7,8 @@ import { logQuestion } from '../utils/analyticsStore';
 export const useQuestionManager = (config, showMessage) => {
     // Current session questions
     const [questions, setQuestions] = useState(() => {
-        const saved = getSecureItem('ue5_gen_questions');
-        return saved || [];
+        const saved = localStorage.getItem('ue5_gen_questions');
+        return saved ? JSON.parse(saved) : [];
     });
 
     // Historical questions
@@ -25,7 +25,7 @@ export const useQuestionManager = (config, showMessage) => {
     const [showClearModal, setShowClearModal] = useState(false);
 
     // Persist session questions
-    useEffect(() => setSecureItem('ue5_gen_questions', questions), [questions]);
+    useEffect(() => localStorage.setItem('ue5_gen_questions', JSON.stringify(questions)), [questions]);
 
     // Sync questions across browser tabs via storage event
     useEffect(() => {

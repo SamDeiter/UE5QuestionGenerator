@@ -57,7 +57,6 @@ import { getTokenUsage } from './utils/analyticsStore';
 import SignIn from './components/SignIn';
 import { auth, getCustomTags, saveCustomTags, deleteQuestionFromFirestore } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { migrateToSecure } from './utils/secureStorage';
 
 const App = () => {
     // ========================================================================
