@@ -384,6 +384,47 @@ This tool directly supports Epic Games' objectives of:
 2. **AI Service:** Google Gemini API (generates actual question text)
 3. **Source Material:** Official Unreal Engine documentation (Epic Games, Inc.)
 4. **User Input:** Prompts from Unreal Authorized Instructors
+5. **Human Review:** Instructors review, edit, and approve all content (see Human-in-the-Loop below)
+
+### Human-in-the-Loop AI Review Process
+
+**Responsible AI Use:**
+This tool implements a **human-in-the-loop** workflow to ensure quality, accuracy, and educational value of AI-generated content:
+
+**Review Steps:**
+1. **AI Generation** - Google Gemini creates question drafts based on instructor parameters
+2. **Automated Validation** - Tool checks for source URLs, answer accuracy, and format compliance
+3. **AI Quality Critique** - Second AI pass evaluates content quality (scores questions 0-100)
+4. **Human Review** - Instructor examines each question for:
+   - Technical accuracy
+   - Pedagogical value
+   - Alignment with learning objectives
+   - Appropriate difficulty level
+   - Source validity
+5. **Human Decision** - Instructor accepts, rejects, or edits questions
+6. **Manual Editing** - Instructors can rewrite questions based on AI suggestions
+7. **Final Approval** - Only instructor-approved questions are used in assessments
+
+**Quality Control Features:**
+- ✅ **Review Mode** - Dedicated UI for question-by-question evaluation
+- ✅ **Rejection Tracking** - Bad questions are flagged and reasons recorded
+- ✅ **Edit History** - Tracks human modifications to AI content
+- ✅ **Critique Scores** - AI quality assessment helps prioritize review
+- ✅ **Source Verification** - Links to official UE documentation required
+- ✅ **Export Control** - Only approved questions can be exported
+
+**Human Oversight Guarantees:**
+- **No fully automated content deployment** - All questions require human approval
+- **Instructor expertise required** - Only certified UE instructors use this tool
+- **Educational accountability** - Instructors responsible for final content quality
+- **Continuous improvement** - Rejected questions train better future outputs
+
+**Why This Matters:**
+- Ensures AI output meets Epic Games' educational quality standards
+- Maintains academic integrity in certification assessments
+- Protects students from AI hallucinations or errors
+- Demonstrates responsible AI deployment in education
+- Complies with best practices for AI-assisted content creation
 
 **Content Ownership Analysis:**
 - **Questions are AI-generated** by Google Gemini based on instructor prompts
