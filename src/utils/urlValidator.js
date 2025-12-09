@@ -99,6 +99,30 @@ const KNOWN_VALID_SLUGS = new Set([
     'samples-and-tutorials-for-unreal-engine',
     'gameplay-tutorials-for-unreal-engine',
     'getting-started-with-mobile-development-in-unreal-engine',
+
+    // Fundamentals & Core Concepts
+    'actors-and-geometry-in-unreal-engine',
+    'assets-and-content-packs-in-unreal-engine',
+    'levels-in-unreal-engine',
+    'coordinate-system-and-spaces-in-unreal-engine',
+    'units-of-measurement-in-unreal-engine',
+    'unreal-engine-terminology',
+    'unreal-engine-directory-structure',
+
+    // Editor & Customization
+    'tools-and-editors-in-unreal-engine',
+    'unreal-editor-interface',
+    'unreal-editor-preferences',
+    'customizing-unreal-engine',
+    'customizing-keyboard-shortcuts-in-unreal-engine',
+    'color-picker-in-unreal-engine',
+
+    // Project & Workflow
+    'project-settings-in-unreal-engine',
+    'working-with-projects-and-templates-in-unreal-engine',
+    'working-with-plugins-in-unreal-engine',
+    'source-control-in-unreal-engine',
+    'playing-and-simulating-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
