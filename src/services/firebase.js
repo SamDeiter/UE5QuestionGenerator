@@ -225,23 +225,38 @@ export const saveQuestionToFirestore = async (question) => {
  */
 export const getQuestionsFromFirestore = async () => {
     try {
-        // TEMPORARILY DISABLED - Load ALL questions for debugging
-        // let q;
-        // if (auth.currentUser) {
-        //     q = query(collection(db, "questions"), where("creatorId", "==", auth.currentUser.uid));
-        // } else {
-        //     q = collection(db, "questions");
-        // }
+        // Try user-specific query first
+        if (auth.currentUser) {
+            const userQuery = query(
+                collection(db, "questions"),
+                where("creatorId", "==", auth.currentUser.uid)
+            );
+            const userSnapshot = await getDocs(userQuery);
 
-        // Load ALL questions (no filter)
-        const q = collection(db, "questions");
+            // If user has questions, return them
+            if (!userSnapshot.empty) {
+                const questions = [];
+                userSnapshot.forEach((doc) => {
+                    questions.push(doc.data());
+                });
+                console.log(`✅ Loaded ${questions.length} questions for user ${auth.currentUser.uid}`);
+                return questions;
+            }
 
-        const querySnapshot = await getDocs(q);
+            // If no user questions found, load all (for migration/debug)
+            console.log(`⚠️ No questions found for user ${auth.currentUser.uid}, loading all questions`);
+        }
+
+        // Fallback: Load all questions (unauthenticated or no user questions)
+        const allQuery = collection(db, "questions");
+        const querySnapshot = await getDocs(allQuery);
         const questions = [];
         querySnapshot.forEach((doc) => {
             questions.push(doc.data());
         });
+        console.log(`✅ Loaded ${questions.length} questions (all users)`);
         return questions;
+
     } catch (error) {
         console.error("Error getting questions from Firestore:", error);
         return [];
