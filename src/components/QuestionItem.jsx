@@ -116,13 +116,24 @@ const QuestionItem = ({
                             const reviewerName = localStorage.getItem('ue5_gen_config')
                                 ? JSON.parse(localStorage.getItem('ue5_gen_config')).creatorName || 'Unknown'
                                 : 'Unknown';
+
+                            // Auto-accept for high scores (≥70)
+                            const autoAccept = q.critiqueScore >= 70;
+
                             onUpdateQuestion(q.id, {
                                 ...q,
                                 humanVerified: true,
                                 humanVerifiedAt: new Date().toISOString(),
-                                humanVerifiedBy: reviewerName
+                                humanVerifiedBy: reviewerName,
+                                ...(autoAccept && { status: 'accepted' }) // Auto-accept if high score
                             });
-                            if (showMessage) showMessage("✓ Question verified!", 2000);
+
+                            if (autoAccept) {
+                                onUpdateStatus(q.id, 'accepted');
+                                if (showMessage) showMessage("✓ Verified & Accepted! (Score ≥ 70)", 3000);
+                            } else {
+                                if (showMessage) showMessage("✓ Question verified!", 2000);
+                            }
                         }}
                         onAccept={() => {
                             if (!q.humanVerified) {
