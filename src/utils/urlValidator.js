@@ -289,6 +289,62 @@ const KNOWN_VALID_SLUGS = new Set([
     'free-epic-games-content-for-unreal-engine',
     'sample-game-projects-for-unreal-engine',
     'paper-2d-overview-in-unreal-engine',
+
+    // Platform Development - Mobile
+    'developing-guides-for-android-in-unreal-engine',
+    'getting-started-and-setup-for-android-projects-in-unreal-engine',
+    'debugging-for-android-devices-in-unreal-engine',
+    'optimization-guides-for-android-in-unreal-engine',
+    'packaging-and-publishing-android-projects-in-unreal-engine',
+    'developing-on-ios-tvos-and-ipados-in-unreal-engine',
+    'getting-started-and-setup-guides-for-ios-and-tvos-in-unreal-engine',
+    'building-packaging-and-publishing-unreal-engine-projects-for-ios-tvos-and-ipados',
+    'working-on-ios-projects-using-a-windows-machine-in-unreal-engine',
+    'rendering-features-for-mobile-games-in-unreal-engine',
+    'debugging-and-optimization-for-mobile-in-unreal-engine',
+    'development-tools-for-mobile-applications',
+
+    // Platform Development - Desktop
+    'developing-macos-projects-in-unreal-engine',
+    'linux-game-development-in-unreal-engine',
+    'steam-deck-in-unreal-engine',
+
+    // Platform Development - Consoles
+    'consoles-development-in-unreal-engine',
+
+    // XR Development
+    'developing-for-xr-experiences-in-unreal-engine',
+    'getting-started-with-xr-development-in-unreal-engine',
+    'developing-for-head-mounted-experiences-with-openxr-in-unreal-engine',
+    'developing-for-handheld-augmented-reality-experiences-in-unreal-engine',
+    'making-interactive-xr-experiences-in-unreal-engine',
+    'sharing-xr-experiences-in-unreal-engine',
+    'design-user-interfaces-for-xr-experiences-in-unreal-engine',
+    'supported-xr-devices-in-unreal-engine',
+
+    // Build & Deployment
+    'build-operations-cooking-packaging-deploying-and-running-projects-in-unreal-engine',
+    'packaging-and-cooking-games-in-unreal-engine',
+    'cooking-content-in-unreal-engine',
+    'cooking-content-and-creating-chunks-in-unreal-engine',
+    'working-with-cooked-content-in-the-unreal-engine',
+    'launching-unreal-engine-projects-on-devices',
+    'connecting-to-and-managing-devices-in-unreal-engine',
+    'preparing-unreal-engine-projects-for-release',
+    'patching-content-delivery-and-dlc-in-unreal-engine',
+    'in-app-purchases-and-ads-in-unreal-engine-projects',
+
+    // Deployment Tools
+    'using-the-project-launcher-in-unreal-engine',
+    'using-the-unreal-frontend-tool',
+    'using-the-autosdk-system-in-unreal-engine',
+    'setting-up-device-profiles-in-unreal-engine',
+    'setting-up-tv-safe-zone-debugging-in-unreal-engine',
+    'tools-for-general-platform-support-in-unreal-engine',
+
+    // Advanced Deployment
+    'pixel-streaming-in-unreal-engine',
+    'low-latency-frame-syncing-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
