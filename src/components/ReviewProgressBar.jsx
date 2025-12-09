@@ -77,22 +77,24 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
         {
             num: 2,
             label: 'Verify',
-            sublabel: isVerified ? 'Source confirmed' : 'Optional - click to verify',
+            sublabel: isVerified ? 'Source confirmed' : 'Check source & answer',
             completed: isVerified,
-            active: false, // Never blink
-            ready: hasCritique && !isVerified, // Clickable and visible
-            locked: !hasCritique,
+            // For high scores, Verify is the next step (flash it)
+            active: critiquePass && !isVerified,
+            ready: false,
+            locked: !critiquePass, // Locked until score ≥ 70
             icon: 'eye',
             onClick: onVerify
         },
         {
             num: 3,
             label: 'Accept',
-            sublabel: critiquePass ? '✨ Ready to accept!' : 'Approve for export',
+            sublabel: 'Approve for export',
             completed: false,
-            active: critiquePass && !isVerified, // Blink when score is good
+            // Accept comes AFTER verification
+            active: isVerified && !isAccepted,
             ready: false,
-            locked: !hasCritique,
+            locked: !isVerified, // Locked until verified
             icon: 'check-circle',
             onClick: onAccept
         }
@@ -179,7 +181,7 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
             {critiquePass && !isVerified && (
                 <div className="mt-3 text-center text-xs text-green-400/80 bg-green-950/30 py-2 rounded">
                     <Icon name="check-circle" size={12} className="inline mr-1" />
-                    <strong>Great score!</strong> You can accept this question now, or verify the source first for extra confidence.
+                    <strong>Good score!</strong> Click <strong>Verify</strong> to check the source and answer before accepting.
                 </div>
             )}
         </div>

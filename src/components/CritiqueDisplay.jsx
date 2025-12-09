@@ -194,12 +194,15 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                             </span>
                         </div>
                         <div className="flex items-center gap-3">
-                            {/* Single primary action - FIX IT */}
+                            {/* Single primary action - FIX IT (only for low scores) */}
                             <button
                                 onClick={onApplyRewrite}
-                                disabled={isProcessing}
-                                className="px-6 py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white text-base font-bold transition-all flex items-center gap-2 shadow-lg shadow-green-900/50 animate-pulse hover:animate-none disabled:opacity-50"
-                                title="Apply AI improvements and re-critique"
+                                disabled={isProcessing || score >= 70}
+                                className={`px-6 py-3 rounded-lg text-white text-base font-bold transition-all flex items-center gap-2 shadow-lg ${score >= 70
+                                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed opacity-50'
+                                        : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 shadow-green-900/50 animate-pulse hover:animate-none'
+                                    }`}
+                                title={score >= 70 ? 'Score is good - no fix needed' : 'Apply AI improvements and re-critique'}
                             >
                                 <Icon name="zap" size={20} /> FIX IT
                             </button>
