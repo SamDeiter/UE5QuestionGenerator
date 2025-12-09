@@ -93,7 +93,9 @@ const DangerZoneModal = ({ isOpen, onClose, config, onClearData }) => {
             const questionsToUpdate = [];
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
-                if (!data.creatorName || data.creatorName === 'N/A') {
+                const creator = data.creatorName;
+                // Catch: null, undefined, empty string, 'N/A', or whitespace-only
+                if (!creator || creator.trim() === '' || creator === 'N/A' || creator === 'Unknown') {
                     questionsToUpdate.push({ id: docSnap.id, ...data });
                 }
             });
