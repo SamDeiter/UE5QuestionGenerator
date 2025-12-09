@@ -769,6 +769,19 @@ const KNOWN_VALID_SLUGS = new Set([
 
     // Level Editing
     'placing-actors-in-unreal-engine',
+
+    // Editor Fundamentals & Workflow
+    'foundational-knowledge-in--unreal-engine',
+    'unreal-editor-preferences',
+    'customizing-keyboard-shortcuts-in-unreal-engine',
+    'project-settings-in-unreal-engine',
+    'levels-in-unreal-engine',
+    'actors-and-geometry-in-unreal-engine',
+    'assets-and-content-packs-in-unreal-engine',
+    'working-with-projects-and-templates-in-unreal-engine',
+    'working-with-plugins-in-unreal-engine',
+    'source-control-in-unreal-engine',
+    'playing-and-simulating-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
