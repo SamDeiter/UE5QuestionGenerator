@@ -13,6 +13,8 @@ const DangerZoneModal = ({ isOpen, onClose, config, onClearData }) => {
     const [isResetting, setIsResetting] = useState(false);
     const [showFactoryResetConfirm, setShowFactoryResetConfirm] = useState(false);
     const [showFactoryResetPrompt, setShowFactoryResetPrompt] = useState(false);
+    const [isMigrating, setIsMigrating] = useState(false);
+    const [migrationResult, setMigrationResult] = useState(null);
 
     const handleFactoryResetClick = () => {
         setShowFactoryResetConfirm(true);
@@ -73,6 +75,63 @@ const DangerZoneModal = ({ isOpen, onClose, config, onClearData }) => {
         }
     };
 
+    const handleBackfillCreatorNames = async () => {
+        if (!confirm('This will add your creator name to all questions that currently show "N/A". Continue?')) {
+            return;
+        }
+
+        setIsMigrating(true);
+        setMigrationResult(null);
+
+        try {
+            const { getDocs, collection, doc, updateDoc } = await import('firebase/firestore');
+            const { db } = await import('../services/firebase');
+
+            const creatorName = config.creatorName || 'Unknown';
+            const querySnapshot = await getDocs(collection(db, 'questions'));
+
+            const questionsToUpdate = [];
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                if (!data.creatorName || data.creatorName === 'N/A') {
+                    questionsToUpdate.push({ id: docSnap.id, ...data });
+                }
+            });
+
+            if (questionsToUpdate.length === 0) {
+                setMigrationResult({ success: 0, total: 0, message: 'All questions already have creator names!' });
+                setIsMigrating(false);
+                return;
+            }
+
+            let successCount = 0;
+            for (const question of questionsToUpdate) {
+                try {
+                    const questionRef = doc(db, 'questions', question.id);
+                    await updateDoc(questionRef, {
+                        creatorName: creatorName,
+                        backfilledAt: new Date().toISOString()
+                    });
+                    successCount++;
+                } catch (err) {
+                    console.error(`Failed to update question ${question.id}:`, err);
+                }
+            }
+
+            setMigrationResult({
+                success: successCount,
+                total: questionsToUpdate.length,
+                message: `Successfully updated ${successCount} of ${questionsToUpdate.length} questions!`
+            });
+
+        } catch (error) {
+            console.error('Migration failed:', error);
+            alert('Migration failed: ' + error.message);
+        } finally {
+            setIsMigrating(false);
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -100,6 +159,31 @@ const DangerZoneModal = ({ isOpen, onClose, config, onClearData }) => {
                             </p>
 
                             <div className="space-y-3">
+                                {/* Migration Tools */}
+                                <div className="bg-blue-900/20 p-3 rounded border border-blue-900/50 mb-3">
+                                    <p className="text-xs text-blue-300 mb-2 font-semibold">🔧 Data Migration</p>
+                                    <button
+                                        onClick={handleBackfillCreatorNames}
+                                        disabled={isMigrating}
+                                        className="w-full px-4 py-2 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400 text-xs font-bold rounded border border-blue-900/50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {isMigrating ? (
+                                            <><Icon name="loader" size={14} className="animate-spin" /> Migrating...</>
+                                        ) : (
+                                            <><Icon name="user-check" size={14} /> Backfill Creator Names</>
+                                        )}
+                                    </button>
+                                    {migrationResult && (
+                                        <p className="text-xs text-green-400 mt-2 text-center">
+                                            ✓ {migrationResult.message}
+                                        </p>
+                                    )}
+                                    <p className="text-[9px] text-blue-400/60 mt-1">
+                                        Adds your name to questions showing "N/A"
+                                    </p>
+                                </div>
+
+                                {/* Destructive Operations */}
                                 <button
                                     onClick={onClearData}
                                     className="w-full px-4 py-3 bg-red-900/20 hover:bg-red-900/40 text-red-400 text-sm font-bold rounded border border-red-900/50 transition-colors flex items-center justify-center gap-2"
