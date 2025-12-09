@@ -139,7 +139,11 @@ const App = () => {
 
     const addToast = useCallback((message, type = 'info', duration = 3000) => {
         const id = Date.now() + Math.random();
-        setToasts(prev => [...prev, { id, message, type, duration }]);
+        setToasts(prev => {
+            const newToasts = [...prev, { id, message, type, duration }];
+            // Keep only the 3 most recent toasts
+            return newToasts.slice(-3);
+        });
     }, []);
 
     const removeToast = useCallback((id) => {
