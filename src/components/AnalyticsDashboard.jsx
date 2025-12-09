@@ -31,7 +31,8 @@ const MetricCard = ({ title, value, icon, color }) => {
 const AnalyticsDashboard = ({ isOpen, onClose }) => {
     const [timeRange, setTimeRange] = useState('7d'); // 7d, 30d, all
 
-    const analyticsData = useMemo(() => getAnalytics(), [isOpen]);
+    // Re-fetch analytics data whenever modal opens (removes useMemo dependency issue)
+    const analyticsData = isOpen ? getAnalytics() : { generations: [], questions: [], summary: {} };
 
     if (!isOpen) return null;
 
