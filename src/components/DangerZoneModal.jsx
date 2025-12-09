@@ -109,14 +109,16 @@ const DangerZoneModal = ({ isOpen, onClose, config, onClearData }) => {
             let successCount = 0;
             for (const question of questionsToUpdate) {
                 try {
+                    console.log('Updating question:', question.id, 'Creator:', question.creatorName);
                     const questionRef = doc(db, 'questions', String(question.id));
                     await updateDoc(questionRef, {
                         creatorName: creatorName,
                         backfilledAt: new Date().toISOString()
                     });
                     successCount++;
+                    console.log('✓ Successfully updated:', question.id);
                 } catch (err) {
-                    console.error(`Failed to update question ${question.id}:`, err);
+                    console.error(`Failed to update question ${question.id}:`, err.message, err);
                 }
             }
 
