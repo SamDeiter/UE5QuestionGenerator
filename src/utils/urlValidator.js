@@ -123,6 +123,43 @@ const KNOWN_VALID_SLUGS = new Set([
     'working-with-plugins-in-unreal-engine',
     'source-control-in-unreal-engine',
     'playing-and-simulating-in-unreal-engine',
+
+    // Blueprint System (Advanced)
+    'blueprint-variables-in-unreal-engine',
+    'event-graph-in-unreal-engine',
+    'introduction-to-blueprints-visual-scripting-in-unreal-engine',
+
+    // Material System (Advanced)
+    'unreal-engine-material-editor-user-guide',
+    'unreal-engine-materials',
+    'instanced-materials-in-unreal-engine',
+
+    // Animation & Rigging
+    'control-rig-in-animation-blueprints-in-unreal-engine',
+    'animating-with-control-rig-in-unreal-engine',
+    'unreal-engine-sequencer-movie-tool-overview',
+
+    // AI & Navigation Systems
+    'behavior-trees-in-unreal-engine',
+    'behavior-tree-in-unreal-engine---quick-start-guide',
+    'environment-query-system-in-unreal-engine',
+    'environment-query-system-overview-in-unreal-engine',
+    'navigation-system-in-unreal-engine',
+    'world-partitioned-navigation-mesh',
+
+    // Physics (Chaos Engine)
+    'physics-in-unreal-engine',
+
+    // Rendering & Post-Processing
+    'hardware-ray-tracing-in-unreal-engine',
+    'post-process-effects-in-unreal-engine',
+    'add-post-process-volumes',
+    'runtime-virtual-texturing-in-unreal-engine',
+    'virtual-texturing-in-unreal-engine',
+
+    // World Management
+    'world-partition---data-layers-in-unreal-engine',
+    'world-composition-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
