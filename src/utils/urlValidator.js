@@ -385,6 +385,28 @@ const KNOWN_VALID_SLUGS = new Set([
     'professional-video-io-in-unreal-engine',
     'timed-data-monitor-in-unreal-engine',
     'dmx-in-unreal-engine',
+
+    // Testing & Automation
+    'automation-test-framework-in-unreal-engine',
+    'low-level-tests-in-unreal-engine',
+
+    // Profiling & Performance
+    'introduction-to-performance-profiling-and-configuration-in-unreal-engine',
+    'common-memory-and-cpu-performance-considerations-in-unreal-engine',
+    'unreal-insights-in-unreal-engine',
+    'unreal-engine-stats-system-overview',
+    'stat-commands-in-unreal-engine',
+    'significance-manager-in-unreal-engine',
+    'optimizing-rendering-with-pso-caches-in-unreal-engine',
+    'using-oodle-in-unreal-engine',
+    'zen-loader-in-unreal-engine',
+
+    // Debugging Tools
+    'console-variables-editor',
+    'crash-reporting-in-unreal-engine',
+    'using-the-gameplay-debugger-in-unreal-engine',
+    'visual-logger-in-unreal-engine',
+    'using-clang-sanitizers-in-unreal-engine-projects',
 ]);
 
 // Patterns that indicate invalid/generic URLs
