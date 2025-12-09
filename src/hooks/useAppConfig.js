@@ -11,13 +11,13 @@ export const useAppConfig = () => {
     // Authentication status - always ready for local/Sheets operations
     const isAuthReady = true;
 
-    
+
     // SECURITY WARNING: Storing API keys in localStorage is insecure!
     // This is a temporary solution. For production:
     // 1. Move API calls to a backend proxy server
     // 2. Never expose API keys in client-side code
     // 3. Use server-side authentication with the Gemini API
-    
+
     // Main application configuration (persisted to localStorage)
     const [config, setConfig] = useState(() => {
         const saved = getSecureItem('ue5_gen_config');
@@ -34,20 +34,20 @@ export const useAppConfig = () => {
             tags: [] // Selected sub-topic tags
         };
 
-        const constInitialConfig = saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+        const initialConfig = saved ? { ...defaults, ...saved } : defaults;
 
         // Ensure all required fields have default values
-        constInitialConfig.creatorName = constInitialConfig.creatorName || '';
-        constInitialConfig.reviewerName = constInitialConfig.reviewerName || '';
-        constInitialConfig.apiKey = constInitialConfig.apiKey || '';
-        constInitialConfig.sheetUrl = constInitialConfig.sheetUrl || defaults.sheetUrl;
+        initialConfig.creatorName = initialConfig.creatorName || '';
+        initialConfig.reviewerName = initialConfig.reviewerName || '';
+        initialConfig.apiKey = initialConfig.apiKey || '';
+        initialConfig.sheetUrl = initialConfig.sheetUrl || defaults.sheetUrl;
 
         // Reset deprecated difficulty setting
-        // if (constInitialConfig.difficulty === 'Balanced All') {
-        //     constInitialConfig.difficulty = 'Easy MC';
+        // if (initialConfig.difficulty === 'Balanced All') {
+        //     initialConfig.difficulty = 'Easy MC';
         // }
 
-        return constInitialConfig;
+        return initialConfig;
     });
 
     // API key status computed values

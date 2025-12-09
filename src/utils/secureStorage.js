@@ -34,15 +34,27 @@ export const getSecureItem = (key) => {
     try {
         const encrypted = localStorage.getItem(key);
         if (!encrypted) return null;
-        
+
         // Try to decrypt (new format)
         try {
             const decrypted = CryptoJS.AES.decrypt(encrypted, getEncryptionKey());
             const jsonData = decrypted.toString(CryptoJS.enc.Utf8);
+
+            // Check if decryption actually worked (not empty string)
+            if (!jsonData || jsonData.trim() === '') {
+                throw new Error('Decryption returned empty string');
+            }
+
             return JSON.parse(jsonData);
         } catch {
             // If decryption fails, try plain JSON (old format - migration)
-            return JSON.parse(encrypted);
+            try {
+                return JSON.parse(encrypted);
+            } catch {
+                // If both fail, return null
+                console.warn(`Could not decrypt or parse ${key}, returning null`);
+                return null;
+            }
         }
     } catch (error) {
         console.error('Failed to retrieve and decrypt data:', error);
@@ -75,7 +87,7 @@ export const migrateToSecure = (key) => {
     try {
         const existing = localStorage.getItem(key);
         if (!existing) return;
-        
+
         // Try to parse as JSON (plain text)
         try {
             const data = JSON.parse(existing);

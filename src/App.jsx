@@ -24,6 +24,7 @@ import TutorialOverlay from './components/TutorialOverlay';
 import AppNavigation from './components/AppNavigation';
 import ContextToolbar from './components/ContextToolbar';
 import ApiKeyModal from './components/ApiKeyModal';
+import { migrateToSecure } from './utils/secureStorage';
 import { TUTORIAL_STEPS } from './utils/tutorialSteps';
 
 // Lazy Loaded Components
@@ -57,7 +58,6 @@ import { getTokenUsage } from './utils/analyticsStore';
 import SignIn from './components/SignIn';
 import { auth, getCustomTags, saveCustomTags, deleteQuestionFromFirestore } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { migrateToSecure } from './utils/secureStorage';
 
 const App = () => {
     // ========================================================================
