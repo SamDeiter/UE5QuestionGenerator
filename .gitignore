@@ -1,7 +1,39 @@
+# Dependencies
 node_modules
 
+# Build output
 dist
 
+# Environment variables
 key.env
 .env
 *.env
+.env.local
+.env.production
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
+tools/deploy/logs/
+
+# Temp development files (kept locally, not in git)
+temp_*.csv
+temp_*.txt
+temp_*.py
+test-output.txt
+
+# Backups (kept locally for safety)
+tools/security_backups/
+tools/backups/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
