@@ -683,6 +683,40 @@ const KNOWN_VALID_SLUGS = new Set([
     'delegates-and-lambda-functions-in-unreal-engine',
     'metadata-specifiers-in-unreal-engine',
     'gameplay-classes-in-unreal-engine',
+
+    // Gameplay Framework (Expanded)
+    'controllers-in-unreal-engine',
+    'data-driven-gameplay-elements-in-unreal-engine',
+    'gameplay-camera-system',
+    'gameplay-targeting-system-in-unreal-engine',
+    'gameplay-timers-in-unreal-engine',
+    'user-interfaces-and-huds-in-unreal-engine',
+    'class-creation-basics-in-unreal-engine',
+
+    // AI Systems (Expanded)
+    'artificial-intelligence-in-unreal-engine',
+    'smart-objects-in-unreal-engine',
+    'state-tree-in-unreal-engine',
+
+    // Physics (Expanded)
+    'physics-in-unreal-engine',
+    'chaos-destruction-in-unreal-engine',
+    'cloth-simulation-in-unreal-engine',
+    'hair-physics-in-unreal-engine',
+
+    // Collision & Traces
+    'traces-with-raycasts-in-unreal-engine',
+
+    // Networking (Expanded)
+    'networking-and-multiplayer-in-unreal-engine',
+    'online-subsystems-and-services-in-unreal-engine',
+
+    // Vehicles & Movement
+    'vehicles-in-unreal-engine',
+    'mover-in-unreal-engine',
+
+    // Game Features
+    'game-features-and-modular-gameplay-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
