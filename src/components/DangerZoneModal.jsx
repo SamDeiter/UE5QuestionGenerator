@@ -109,7 +109,7 @@ const DangerZoneModal = ({ isOpen, onClose, config, onClearData }) => {
             let successCount = 0;
             for (const question of questionsToUpdate) {
                 try {
-                    const questionRef = doc(db, 'questions', question.id);
+                    const questionRef = doc(db, 'questions', String(question.id));
                     await updateDoc(questionRef, {
                         creatorName: creatorName,
                         backfilledAt: new Date().toISOString()
