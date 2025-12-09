@@ -160,6 +160,135 @@ const KNOWN_VALID_SLUGS = new Set([
     // World Management
     'world-partition---data-layers-in-unreal-engine',
     'world-composition-in-unreal-engine',
+
+    // Advanced Audio
+    'audio-analysis-and-visualization-in-unreal-engine',
+    'audio-gameplay-volumes-in-unreal-engine',
+    'soundscape-in-unreal-engine',
+    'midi-in-unreal-engine',
+    'waveform-editor-quick-start-in-unreal-engine',
+
+    // Virtual Production & Cinematics
+    'controlling-inputs-to-virtual-camera-controls-in-unreal-engine',
+    'customizable-sequencer-track-in-unreal-engine',
+    'template-sequences-in-unreal-engine',
+    'using-multiple-virtual-cameras-in-unreal-engine',
+    'realtime-compositing-with-composure-in-unreal-engine',
+    'remote-control-for-unreal-engine',
+    'render-multiple-camera-angle-stills-in-unreal-engine',
+    'virtual-scouting-legacy-tools',
+    'mixed-reality-capture-in-unreal-engine',
+    'stage-monitor-with-unreal-engine',
+    'switchboard-in-unreal-engine',
+    'texture-share-in-unreal-engine',
+
+    // Modeling & Geometry
+    'modeling-tools-in-unreal-engine',
+    'getting-started-with-modeling-mode',
+    'deformer-graph-in-unreal-engine',
+    'how-to-create-a-custom-deformer-graph-in-unreal-engine',
+    'introduction-to-geometry-scripting-in-unreal-engine',
+    'scriptable-tools-system-in-unreal-engine',
+
+    // Landscape & World Building
+    'landscape-edit-layers-in-unreal-engine',
+    'large-world-coordinates-in-unreal-engine-5',
+    'gpu-lightmass-global-illumination-in-unreal-engine',
+
+    // Simulation & Physics
+    'fluid-simulation-in-unreal-engine',
+    'fluid-simulation-tutorials-in-unreal-engine',
+
+    // Editor Extensions & Automation
+    'editor-utility-widgets-in-unreal-engine',
+    'scripted-actions-in-unreal-engine',
+    'running-blueprints-at-unreal-editor-startup',
+
+    // Datasmith & Interop
+    'exporting-datasmith-content-from-revit-to-unreal-engine',
+    'using-datasmith-at-runtime-in-unreal-engine',
+    'using-datasmith-direct-link-in-unreal-engine',
+    'universal-scene-description-usd-in-unreal-engine',
+    'using-unreal-engine-with-autodesk-shotgrid',
+
+    // Mutable (Character Customization)
+    'mutable-development-guides-in-unreal-engine',
+    'mutable-optimizing-and-debugging-in-unreal-engine',
+    'mutable-skeletal-mesh-generation-in-unreal-engine',
+
+    // Online & Networking
+    'online-services-in-unreal-engine',
+    'online-services-interfaces-in-unreal-engine',
+    'use-the-online-services-plugins-in-unreal-engine',
+    'multi-user-editing-in-unreal-engine',
+
+    // Mobile & Platform
+    'local-notifications-for-android-and-ios-in-unreal-engine',
+    'using-mesh-auto-instancing-on-mobile-devices-in-unreal-engine',
+
+    // Machine Learning & Advanced
+    'neural-network-engine-in-unreal-engine',
+    'sparse-class-data-in-unreal-engine',
+
+    // Deployment & DevOps
+    'container-deployments-and-images-for-unreal-editor-and-unreal-engine',
+
+    // Documentation & Migration
+    'experimental-features',
+    'unreal-engine-5-7-release-notes',
+    'unreal-engine-5-migration-guide',
+
+    // Blueprint System (Deep Dive)
+    'anatomy-of-a-blueprint-in-unreal-engine',
+    'basic-scripting-with-blueprints-in-unreal-engine',
+    'blueprint-best-practices-in-unreal-engine',
+    'blueprint-communication-usage-in-unreal-engine',
+    'blueprint-debugger-in-unreal-engine',
+    'blueprint-editor-cheat-sheet-in-unreal-engine',
+    'blueprint-interface-in-unreal-engine',
+    'blueprint-namespaces-in-unreal-engine',
+    'blueprint-workflows-in-unreal-engine',
+    'blueprint-splines-in-unreal-engine',
+    'event-dispatchers-in-unreal-engine',
+    'overview-of-blueprints-visual-scripting-in-unreal-engine',
+    'quick-start-guide-for-blueprints-visual-scripting-in-unreal-engine',
+    'specialized-blueprint-visual-scripting-node-groups-in-unreal-engine',
+    'technical-guide-for-blueprints-visual-scripting-in-unreal-engine',
+    'user-interface-reference-for-the-blueprints-visual-scripting-editor-in-unreal-engine',
+
+    // Animation (Detailed)
+    'animation-blueprints-in-unreal-engine',
+    'control-rig-editor-in-unreal-engine',
+    'control-rig-in-unreal-engine',
+    'skeletal-mesh-assets-in-unreal-engine',
+
+    // Cinematics
+    'cinematics-and-movie-making-in-unreal-engine',
+
+    // Motion Design (Detailed)
+    'motion-design-cloners-and-effectors-in-unreal-engine',
+    'motion-design-quickstart-guide-in-unreal-engine',
+    'operator-stack-in-unreal-engine',
+    'scene-state-for-unreal-engine',
+    'setting-up-rundown-server-for-motion-design-in-unreal-engine',
+    'your-first-graphic-with-motion-design-in-unreal-engine',
+
+    // World Building (Advanced)
+    'actor-editor-context-in-unreal-engine',
+    'georeferencing-a-level-in-unreal-engine',
+    'level-designer-quick-start-in-unreal-engine',
+    'level-streaming-in-unreal-engine',
+    'one-file-per-actor-in-unreal-engine',
+    'procedural-content-generation-framework-in-unreal-engine',
+    'water-system-in-unreal-engine',
+    'virtual-scouting-in-unreal-engine',
+
+    // Sample Content & Learning
+    'content-examples-sample-project-for-unreal-engine',
+    'engine-feature-examples-for-unreal-engine',
+    'free-epic-games-content-for-unreal-engine',
+    'sample-game-projects-for-unreal-engine',
+    'paper-2d-overview-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
