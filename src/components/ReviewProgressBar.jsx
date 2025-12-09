@@ -91,10 +91,10 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
             label: 'Accept',
             sublabel: 'Approve for export',
             completed: false,
-            // Accept comes AFTER verification
+            // Accept becomes active AFTER verification
             active: isVerified && !isAccepted,
             ready: false,
-            locked: !isVerified, // Locked until verified
+            locked: !isVerified, // Must verify first
             icon: 'check-circle',
             onClick: onAccept
         }
@@ -182,6 +182,12 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
                 <div className="mt-3 text-center text-xs text-green-400/80 bg-green-950/30 py-2 rounded">
                     <Icon name="check-circle" size={12} className="inline mr-1" />
                     <strong>Good score!</strong> Click <strong>Verify</strong> to check the source and answer before accepting.
+                </div>
+            )}
+            {isVerified && !isAccepted && (
+                <div className="mt-3 text-center text-xs text-blue-400/80 bg-blue-950/30 py-2 rounded animate-pulse">
+                    <Icon name="check-circle" size={12} className="inline mr-1" />
+                    <strong>Verified!</strong> Click <strong>Accept</strong> to approve this question for export.
                 </div>
             )}
         </div>

@@ -117,23 +117,14 @@ const QuestionItem = ({
                             const config = getSecureItem('ue5_gen_config');
                             const reviewerName = config?.creatorName || 'Unknown';
 
-                            // Auto-accept for high scores (≥70)
-                            const autoAccept = q.critiqueScore >= 70;
-
                             onUpdateQuestion(q.id, {
                                 ...q,
                                 humanVerified: true,
                                 humanVerifiedAt: new Date().toISOString(),
-                                humanVerifiedBy: reviewerName,
-                                ...(autoAccept && { status: 'accepted' }) // Auto-accept if high score
+                                humanVerifiedBy: reviewerName
                             });
 
-                            if (autoAccept) {
-                                onUpdateStatus(q.id, 'accepted');
-                                if (showMessage) showMessage("✓ Verified & Accepted! (Score ≥ 70)", 3000);
-                            } else {
-                                if (showMessage) showMessage("✓ Question verified!", 2000);
-                            }
+                            if (showMessage) showMessage("✓ Source verified! Click Accept to approve.", 2000);
                         }}
                         onAccept={() => {
                             if (!q.humanVerified) {
