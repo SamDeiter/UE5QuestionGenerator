@@ -202,6 +202,13 @@ To assess professional competence, use these question structures:
   - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/understanding-the-basics-of-unreal-engine\`
   - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/working-with-content-in-unreal-engine\`
   - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/building-virtual-worlds-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/animating-characters-and-objects-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/designing-visuals-rendering-and-graphics-with-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/creating-visual-effects-in-niagara-for-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/working-with-audio-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprints-visual-scripting-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/programming-with-cplusplus-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-systems-in-unreal-engine\`
 
 **INVALID URL PATTERNS (NEVER USE):**
   ❌ \`https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite\` (too short, missing suffix)

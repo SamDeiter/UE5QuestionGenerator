@@ -73,6 +73,32 @@ const KNOWN_VALID_SLUGS = new Set([
     'unreal-engine-5-7-documentation',
     'whats-new',
     'API',
+    'BlueprintAPI',
+    'PythonAPI',
+    'WebAPI',
+    'node-reference',
+    'get-started',
+
+    // Main Category Pages
+    'understanding-the-basics-of-unreal-engine',
+    'working-with-content-in-unreal-engine',
+    'building-virtual-worlds-in-unreal-engine',
+    'animating-characters-and-objects-in-unreal-engine',
+    'designing-visuals-rendering-and-graphics-with-unreal-engine',
+    'creating-visual-effects-in-niagara-for-unreal-engine',
+    'working-with-audio-in-unreal-engine',
+    'creating-user-interfaces-with-umg-and-slate-in-unreal-engine',
+    'blueprints-visual-scripting-in-unreal-engine',
+    'programming-with-cplusplus-in-unreal-engine',
+    'gameplay-systems-in-unreal-engine',
+    'motion-design-in-unreal-engine',
+    'working-with-media-in-unreal-engine',
+    'setting-up-your-production-pipeline-in-unreal-engine',
+    'testing-and-optimizing-your-content',
+    'sharing-and-releasing-projects-for-unreal-engine',
+    'samples-and-tutorials-for-unreal-engine',
+    'gameplay-tutorials-for-unreal-engine',
+    'getting-started-with-mobile-development-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
