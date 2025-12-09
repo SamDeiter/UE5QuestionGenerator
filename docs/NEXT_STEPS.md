@@ -54,7 +54,33 @@
 - **Authentication:** Firebase Authentication with Google Sign-In.
 - **Security:** Firestore security rules enforcing user data ownership.
 
-## 📅 Recently Completed (Dec 4, 2025)
+## 📅 Recently Completed (Dec 9, 2025)
+
+### Phase 2: Architecture & Quality Loop ✅
+- **App.jsx Refactoring:**
+  - Extracted `GlobalModals.jsx` to centralize all modal logic (reduced `App.jsx` complexity).
+  - Created `ViewRouter.jsx` to handle main content switching.
+  - Cleaned up unused imports and `AnalyticsDashboard` crash.
+- **AI Feedback Loop:**
+  - Enhanced `promptBuilder.js` to feed Rejected Questions + Critiques back into the context.
+  - Added "CRITICAL: FAILURE AVOIDANCE" section to system prompt.
+- **Analytics:**
+  - Confirmed `AnalyticsDashboard` includes Topic Coverage and Quality metrics.
+
+## 🚀 Immediate Next Steps (Next Session)
+
+### 1. Enhanced Data Export (Priority)
+- **Goal:** Ensure the "Gold Standard" dataset allows looking back at *why* questions failed.
+- [ ] **Update `Code.gs`:** Add columns for `RejectionReason`, `HumanVerifiedBy`, and `RejectedAt`.
+- [ ] **Update `googleSheets.js`:** Map the new fields in the save payload.
+- [ ] **Verify:** Export a mixed batch of questions to validate the new columns.
+
+### 2. Testing
+- [ ] Run a full generation batch to test the new "Failure Avoidance" prompt.
+
+---
+
+## 📅 Previously Completed (Dec 4, 2025)
 
 ### Phase 2: Performance Optimization ✅
 - **Component Refactoring:**
