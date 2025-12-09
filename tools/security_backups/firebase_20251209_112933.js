@@ -245,42 +245,6 @@ export const getQuestionsFromFirestore = async () => {
     }
 };
 
-// PERFORMANCE: Paginated question loading
-export const getQuestionsPaginated = async (userId, limitCount = 20, lastDoc = null) => {
-    try {
-        const db = getFirestore();
-        let q = query(
-            collection(db, 'questions'),
-            where('creatorId', '==', userId),
-            orderBy('firestoreUpdatedAt', 'desc'),
-            limit(limitCount)
-        );
-        
-        if (lastDoc) {
-            q = query(q, startAfter(lastDoc));
-        }
-        
-        const querySnapshot = await getDocs(q);
-        const questions = [];
-        let lastVisible = null;
-        
-        querySnapshot.forEach((doc) => {
-            questions.push({ id: doc.id, ...doc.data() });
-            lastVisible = doc;
-        });
-        
-        return {
-            questions,
-            lastDoc: lastVisible,
-            hasMore: questions.length === limitCount
-        };
-    } catch (error) {
-        console.error('Error fetching paginated questions:', error);
-        return { questions: [], lastDoc: null, hasMore: false };
-    }
-};
-
-
 /**
  * Deletes all questions from Firestore.
  * WARNING: This is a destructive operation that cannot be undone.

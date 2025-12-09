@@ -18,12 +18,6 @@ export const useQuestionManager = (config, showMessage) => {
     // Database view questions
     const [databaseQuestions, setDatabaseQuestions] = useState([]);
 
-
-    // PERFORMANCE: Pagination state
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-    const [lastDoc, setLastDoc] = useState(null);
-
     // Central question storage map
     const [allQuestionsMap, setAllQuestionsMap] = useState(new Map());
 
@@ -250,26 +244,6 @@ export const useQuestionManager = (config, showMessage) => {
     const checkAndStoreQuestions = async (newQuestions) => {
         return newQuestions;
     };
-
-    // PERFORMANCE: Load more questions
-    const loadMoreQuestions = useCallback(async (userId) => {
-        if (!hasMore || isLoadingMore) return;
-        
-        setIsLoadingMore(true);
-        try {
-            const { questions: moreQuestions, lastDoc: newLastDoc, hasMore: moreAvailable } = 
-                await getQuestionsPaginated(userId, 20, lastDoc);
-            
-            setDatabaseQuestions(prev => [...prev, ...moreQuestions]);
-            setLastDoc(newLastDoc);
-            setHasMore(moreAvailable);
-        } catch (error) {
-            console.error('Failed to load more questions:', error);
-        } finally {
-            setIsLoadingMore(false);
-        }
-    }, [hasMore, isLoadingMore, lastDoc]);
-
 
     return {
         questions, setQuestions,
