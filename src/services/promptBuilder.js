@@ -184,91 +184,91 @@ To assess professional competence, use these question structures:
 **VERIFIED WORKING URLs (USE THESE AS EXAMPLES):**
 
 **Core Features:**
-  - `https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine`
-    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-global-illumination-and-reflections-in-unreal-engine`
-        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/world-partition-in-unreal-engine`
-        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/virtual-shadow-maps-in-unreal-engine`
+  - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine\\`
+    - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-global-illumination-and-reflections-in-unreal-engine\\`
+        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/world-partition-in-unreal-engine\\`
+            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/virtual-shadow-maps-in-unreal-engine\\`
 
-        ** Blueprints:**
-            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprints-visual-scripting-in-unreal-engine`
-            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprint-best-practices-in-unreal-engine`
-            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprint-interface-in-unreal-engine`
-            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/event-dispatchers-in-unreal-engine`
+                ** Blueprints:**
+                    - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprints-visual-scripting-in-unreal-engine\\`
+                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprint-best-practices-in-unreal-engine\\`
+                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprint-interface-in-unreal-engine\\`
+                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/event-dispatchers-in-unreal-engine\\`
 
-            ** Materials:**
-                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-material-editor-user-guide`
-                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-material-expressions-reference`
-                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/physically-based-materials-in-unreal-engine`
-                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/material-functions-in-unreal-engine`
-                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/substrate-materials-in-unreal-engine`
+                                    ** Materials:**
+                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-material-editor-user-guide\\`
+                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-material-expressions-reference\\`
+                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/physically-based-materials-in-unreal-engine\\`
+                                                    - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/material-functions-in-unreal-engine\\`
+                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/substrate-materials-in-unreal-engine\\`
 
-                ** Animation:**
-                    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-blueprints-in-unreal-engine`
-                    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/control-rig-in-unreal-engine`
-                    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/skeletal-mesh-animation-system-in-unreal-engine`
-                    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-retargeting-in-unreal-engine`
+                                                            ** Animation:**
+                                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-blueprints-in-unreal-engine\\`
+                                                                    - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/control-rig-in-unreal-engine\\`
+                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/skeletal-mesh-animation-system-in-unreal-engine\\`
+                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-retargeting-in-unreal-engine\\`
 
-                    ** Rendering:**
-                        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/post-process-effects-in-unreal-engine`
-                        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/ray-tracing-and-path-tracing-features-in-unreal-engine`
-                        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/temporal-super-resolution-in-unreal-engine`
-                        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/anti-aliasing-and-upscaling-in-unreal-engine`
+                                                                                ** Rendering:**
+                                                                                    - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/post-process-effects-in-unreal-engine\\`
+                                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/ray-tracing-and-path-tracing-features-in-unreal-engine\\`
+                                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/temporal-super-resolution-in-unreal-engine\\`
+                                                                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/anti-aliasing-and-upscaling-in-unreal-engine\\`
 
-                        ** VFX(Niagara):**
-                            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/creating-visual-effects-in-niagara-for-unreal-engine`
-                            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/getting-started-in-niagara-effects-for-unreal-engine`
-                            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/niagara-fluids-in-unreal-engine`
+                                                                                                    ** VFX(Niagara):**
+                                                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/creating-visual-effects-in-niagara-for-unreal-engine\\`
+                                                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/getting-started-in-niagara-effects-for-unreal-engine\\`
+                                                                                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/niagara-fluids-in-unreal-engine\\`
 
-                            ** Sequencer / Cinematics:**
-                                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/sequencer-cinematic-editor-unreal-engine`
-                                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/movie-render-pipeline-in-unreal-engine`
-                                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/cinematics-and-movie-making-in-unreal-engine`
-                                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/take-recorder-in-unreal-engine`
+                                                                                                                    ** Sequencer / Cinematics:**
+                                                                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/sequencer-cinematic-editor-unreal-engine\\`
+                                                                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/movie-render-pipeline-in-unreal-engine\\`
+                                                                                                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/cinematics-and-movie-making-in-unreal-engine\\`
+                                                                                                                                    - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/take-recorder-in-unreal-engine\\`
 
-                                ** Gameplay:**
-                                    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-framework-in-unreal-engine`
-                                    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-ability-system-for-unreal-engine`
-                                    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine`
-                                    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/game-mode-and-game-state-in-unreal-engine`
+                                                                                                                                        ** Gameplay:**
+                                                                                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-framework-in-unreal-engine\\`
+                                                                                                                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-ability-system-for-unreal-engine\\`
+                                                                                                                                                    - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine\\`
+                                                                                                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/game-mode-and-game-state-in-unreal-engine\\`
 
-                                    ** AI:**
-                                        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-trees-in-unreal-engine`
-                                        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/environment-query-system-in-unreal-engine`
-                                        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/ai-perception-in-unreal-engine`
-                                        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/smart-objects-in-unreal-engine`
+                                                                                                                                                            ** AI:**
+                                                                                                                                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-trees-in-unreal-engine\\`
+                                                                                                                                                                    - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/environment-query-system-in-unreal-engine\\`
+                                                                                                                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/ai-perception-in-unreal-engine\\`
+                                                                                                                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/smart-objects-in-unreal-engine\\`
 
-                                        ** Physics:**
-                                            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/chaos-physics-in-unreal-engine`
-                                            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/chaos-destruction-in-unreal-engine`
-                                            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/collision-in-unreal-engine`
-                                            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/physics-materials-in-unreal-engine`
+                                                                                                                                                                                ** Physics:**
+                                                                                                                                                                                    - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/chaos-physics-in-unreal-engine\\`
+                                                                                                                                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/chaos-destruction-in-unreal-engine\\`
+                                                                                                                                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/collision-in-unreal-engine\\`
+                                                                                                                                                                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/physics-materials-in-unreal-engine\\`
 
-                                            ** Networking:**
-                                                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/networking-and-multiplayer-in-unreal-engine`
-                                                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/replication-in-unreal-engine`
-                                                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/online-services-in-unreal-engine`
+                                                                                                                                                                                                    ** Networking:**
+                                                                                                                                                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/networking-and-multiplayer-in-unreal-engine\\`
+                                                                                                                                                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/replication-in-unreal-engine\\`
+                                                                                                                                                                                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/online-services-in-unreal-engine\\`
 
-                                                ** Landscape:**
-                                                    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/landscape-outdoor-terrain-in-unreal-engine`
-                                                    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/landscape-edit-layers-in-unreal-engine`
-                                                    - `https://dev.epicgames.com/documentation/en-us/unreal-engine/procedural-content-generation-framework-in-unreal-engine`
+                                                                                                                                                                                                                    ** Landscape:**
+                                                                                                                                                                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/landscape-outdoor-terrain-in-unreal-engine\\`
+                                                                                                                                                                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/landscape-edit-layers-in-unreal-engine\\`
+                                                                                                                                                                                                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/procedural-content-generation-framework-in-unreal-engine\\`
 
-                                                    ** C++ Programming:**
-                                                        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/programming-with-cplusplus-in-unreal-engine`
-                                                        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/epic-cplusplus-coding-standard-for-unreal-engine`
-                                                        - `https://dev.epicgames.com/documentation/en-us/unreal-engine/reflection-system-in-unreal-engine`
+                                                                                                                                                                                                                                    ** C++ Programming:**
+                                                                                                                                                                                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/programming-with-cplusplus-in-unreal-engine\\`
+                                                                                                                                                                                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/epic-cplusplus-coding-standard-for-unreal-engine\\`
+                                                                                                                                                                                                                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/reflection-system-in-unreal-engine\\`
 
-                                                        ** Editor:**
-                                                            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/level-editor-in-unreal-engine`
-                                                            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/content-browser-in-unreal-engine`
-                                                            - `https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-editor-preferences`
+                                                                                                                                                                                                                                                    ** Editor:**
+                                                                                                                                                                                                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/level-editor-in-unreal-engine\\`
+                                                                                                                                                                                                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/content-browser-in-unreal-engine\\`
+                                                                                                                                                                                                                                                                - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-editor-preferences\\`
 
-                                                            ** Getting Started:**
-                                                                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/understanding-the-basics-of-unreal-engine`
-                                                                - `https://dev.epicgames.com/documentation/en-us/unreal-engine/get-started`
+                                                                                                                                                                                                                                                                    ** Getting Started:**
+                                                                                                                                                                                                                                                                        - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/understanding-the-basics-of-unreal-engine\\`
+                                                                                                                                                                                                                                                                            - \\`https://dev.epicgames.com/documentation/en-us/unreal-engine/get-started\\`
 
 
-                                                                ** INVALID URL PATTERNS(NEVER USE):**
+                                                                                                                                                                                                                                                                                ** INVALID URL PATTERNS(NEVER USE):**
   ❌ \`https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite\` (too short, missing suffix)
   ❌ \`https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5\` (too generic)
   ❌ \`https://dev.epicgames.com/documentation/en-us/unreal-engine/overview\` (too vague)
