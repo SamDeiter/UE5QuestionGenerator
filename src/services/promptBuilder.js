@@ -173,17 +173,35 @@ To assess professional competence, use these question structures:
 **CRITICAL RULE: IF THE ANSWER FROM YOUR SOURCE IS NOT IN YOUR OPTIONS, YOU HAVE FAILED. REGENERATE THE QUESTION.**
 **CRITICAL RULE: IF CorrectLetter POINTS TO A WRONG ANSWER, YOU HAVE FAILED. FIX IT.**
 
-### 3. Sourcing & URL Integrity (CRITICAL)
+### 3. Sourcing & URL Integrity (CRITICAL - STRICT ENFORCEMENT)
+**RULE:** Only use URLs you are 100% CERTAIN exist in Epic documentation. A broken URL is WORSE than no URL.
+
+**Valid URL Requirements:**
 - **Base URL:** \`https://dev.epicgames.com/documentation/en-us/unreal-engine/\`
-- **Valid URL Pattern:** Base URL + lowercase-slug-with-hyphens (e.g., \`nanite-overview\`, \`lumen-global-illumination\`, \`animation-blueprint-in-unreal-engine\`)
-- **IMPORTANT:** Add \`-in-unreal-engine\` suffix to most page slugs (e.g., \`world-partition-in-unreal-engine\`, \`virtual-shadow-maps-in-unreal-engine\`)
-- **NEVER USE:** YouTube, Forums, Reddit, Wikis, vertexaisearch URLs, Google redirect URLs
-- **If Unsure:** Leave SourceURL empty rather than guessing. An empty URL is better than a broken one.
-- **SourceExcerpt:** Copy the **exact sentence(s)** from documentation that validates the answer. This is REQUIRED.
-- **Known Working Examples:**
+- **Slug Format:** Must be all lowercase, hyphen-separated (e.g., \`nanite-virtualized-geometry-in-unreal-engine\`)
+- **Common Suffix:** Most pages end with \`-in-unreal-engine\` (e.g., \`world-partition-in-unreal-engine\`)
+
+**VERIFIED WORKING URLs (USE THESE):**
   - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine\`
   - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-global-illumination-and-reflections-in-unreal-engine\`
   - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprints-visual-scripting-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/world-partition-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/virtual-shadow-maps-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/materials-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/niagara-visual-effects-in-unreal-engine\`
+  - \`https://dev.epicgames.com/documentation/en-us/unreal-engine/chaos-physics-in-unreal-engine\`
+
+**INVALID URL PATTERNS (NEVER USE):**
+  ❌ \`https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite\` (too short, missing suffix)
+  ❌ \`https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5\` (too generic)
+  ❌ \`https://dev.epicgames.com/documentation/en-us/unreal-engine/overview\` (too vague)
+  ❌ Any YouTube, Reddit, Forums, Wikis, vertexaisearch, or Google redirect URLs
+
+**IF YOU ARE NOT 100% CERTAIN THE URL EXISTS:**
+  → **Leave SourceURL EMPTY.** An empty URL is better than a broken one!
+  → **Still provide SourceExcerpt** with the factual information that validates your answer
+
+- **SourceExcerpt:** Copy the **exact sentence(s)** from documentation that validates the answer. This is REQUIRED even if URL is empty.
 
 ### 4. Database Output Format
 **DO NOT OUTPUT JSON.** Output **ONLY** the Markdown table below. No intro/outro text.
