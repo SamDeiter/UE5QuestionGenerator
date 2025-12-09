@@ -70,17 +70,18 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
             completed: hasCritique && critiquePass,
             failed: critiqueFail,
             active: !hasCritique,
+            ready: false,
             icon: 'zap',
             onClick: onCritique
         },
         {
             num: 2,
             label: 'Verify',
-            sublabel: isVerified ? 'Source confirmed' : 'Check source & answer',
+            sublabel: isVerified ? 'Source confirmed' : 'Optional - click to verify',
             completed: isVerified,
-            // For high scores (≥70), don't demand attention - it's optional
-            active: critiquePass && !isVerified && critiqueFail, // Only blink if critique failed
-            locked: !hasCritique, // Can verify once critique is done
+            active: false, // Never blink
+            ready: hasCritique && !isVerified, // Clickable and visible
+            locked: !hasCritique,
             icon: 'eye',
             onClick: onVerify
         },
@@ -89,9 +90,9 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
             label: 'Accept',
             sublabel: critiquePass ? '✨ Ready to accept!' : 'Approve for export',
             completed: false,
-            // For high scores, encourage acceptance!
-            active: critiquePass && !isVerified, // Blink/highlight when score is good
-            locked: !hasCritique, // Can accept once critique is done (even without verify for high scores)
+            active: critiquePass && !isVerified, // Blink when score is good
+            ready: false,
+            locked: !hasCritique,
             icon: 'check-circle',
             onClick: onAccept
         }
@@ -122,7 +123,9 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
                                         ? 'bg-red-600 text-white'
                                         : step.active
                                             ? 'bg-orange-500 text-white animate-pulse shadow-lg shadow-orange-500/50 group-hover:bg-orange-400'
-                                            : 'bg-slate-700 text-slate-400 border-2 border-slate-600'
+                                            : step.ready
+                                                ? 'bg-blue-600/70 text-white cursor-pointer hover:bg-blue-500'
+                                                : 'bg-slate-700 text-slate-400 border-2 border-slate-600'
                                 }
                             `}>
                                 {step.completed ? (
@@ -138,13 +141,17 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, isProcess
                             <div className="flex flex-col">
                                 <span className={`text-sm font-bold ${step.completed ? 'text-green-400' :
                                     step.failed ? 'text-red-400' :
-                                        step.active ? 'text-orange-400' : 'text-slate-500'
+                                        step.active ? 'text-orange-400' :
+                                            step.ready ? 'text-blue-400' :
+                                                'text-slate-500'
                                     }`}>
                                     {step.label}
                                 </span>
                                 <span className={`text-xs ${step.completed ? 'text-green-400/70' :
                                     step.failed ? 'text-red-400/70' :
-                                        step.active ? 'text-orange-400/70' : 'text-slate-600'
+                                        step.active ? 'text-orange-400/70' :
+                                            step.ready ? 'text-blue-400/70' :
+                                                'text-slate-600'
                                     }`}>
                                     {step.sublabel}
                                 </span>
