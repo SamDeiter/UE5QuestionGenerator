@@ -717,6 +717,33 @@ const KNOWN_VALID_SLUGS = new Set([
 
     // Game Features
     'game-features-and-modular-gameplay-in-unreal-engine',
+
+    // Materials (Comprehensive)
+    'essential-unreal-engine-material-concepts',
+    'unreal-engine-material-editor-ui',
+    'unreal-engine-material-editor-user-guide',
+    'unreal-engine-material-analyzer-tool',
+    'unreal-engine-material-expressions-reference',
+    'unreal-engine-material-functions-reference',
+    'unreal-engine-material-instance-editor-ui',
+    'unreal-engine-material-properties',
+    'unreal-engine-materials-tutorials',
+    'material-inputs-in-unreal-engine',
+    'material-data-types-in-unreal-engine',
+    'instanced-materials-in-unreal-engine',
+    'layering-materials-in-unreal-engine',
+    'substrate-materials-in-unreal-engine',
+    'storing-custom-data-in-unreal-engine-materials-per-primitive',
+
+    // Material Techniques
+    'animating-uv-coordinates-in-unreal-engine',
+    'customized-uvs-in-unreal-engine-materials',
+    'curve-atlases-in-unreal-engine-materials',
+    'using-texture-masks-in-unreal-engine',
+    'bent-normal-maps-in-unreal-engine',
+    'bump-mapping-without-tangent-space-in-unreal-engine',
+    'refraction-using-pixel-normal-offset-in-unreal-engine',
+    'lit-translucency-in-unreal-engine',
 ]);
 
 // Patterns that indicate invalid/generic URLs
