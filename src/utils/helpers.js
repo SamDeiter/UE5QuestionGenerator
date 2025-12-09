@@ -225,56 +225,36 @@ export const getDisplayUrl = (url) => {
 export const renderMarkdown = (t) => {
     if (!t) return "";
 
-    // First pass: Replace HTML tags with styled versions using Tailwind classes
-    let safe = String(t)
-        // Style <strong> and <b> tags with orange bold text
-        .replace(/<strong>/gi, '<strong class="text-orange-300 font-bold">')
-        .replace(/<b>/gi, '<b class="text-orange-300 font-bold">')
-        // Style <code> tags with blue code styling (UE5 Blueprint look)
-        .replace(/<code>/gi, '<code class="px-1.5 py-0.5 rounded bg-blue-950/50 text-blue-300 font-mono text-[0.9em] border border-blue-900/50">')
-        // Style <i> and <em> tags
-        .replace(/<i>/gi, '<i class="text-slate-300 italic">')
-        .replace(/<em>/gi, '<em class="text-slate-300 italic">');
-
-    // Preserve the styled HTML tags during escaping
-    const htmlTagPlaceholders = [];
-    safe = safe
-        .replace(/(<\/?(?:strong|b|code|i|em)[^>]*>)/gi, (match) => {
-            const placeholder = `__HTML_TAG_${htmlTagPlaceholders.length}__`;
-            htmlTagPlaceholders.push(match);
-            return placeholder;
-        });
-
-    // Now escape other HTML to prevent XSS
-    safe = safe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-
-    // Markdown formatting replacements
-    safe = safe
-        // Headers - Restored some spacing
+    // Step 1: Convert markdown-style formatting to HTML
+    let html = String(t)
+        // Headers
         .replace(/^### (.*$)/gim, '<h3 class="text-orange-400 font-bold text-xs mt-3 mb-1 uppercase tracking-wide">$1</h3>')
         .replace(/^#### (.*$)/gim, '<h4 class="text-slate-200 font-bold text-[10px] mt-2 mb-1 uppercase">$1</h4>')
-        // Bold (markdown ** **)
+        // Bold (**text**)
         .replace(/\*\*(.*?)\*\*/g, '<strong class="text-orange-300 font-bold">$1</strong>')
-        // Inline code (backticks) - styled like UE5 Blueprint terms
+        // Inline code (`code`)
         .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-blue-950/50 text-blue-300 font-mono text-[0.9em] border border-blue-900/50">$1</code>')
-        // Lists - Better indentation
+        // Lists
         .replace(/^\s*\* (.*$)/gim, '<div class="ml-3 flex items-start gap-2"><span class="text-orange-500 mt-1 text-[10px] flex-shrink-0">•</span><span>$1</span></div>')
-        // Italics - Restricted to single line
+        // Italics (*text*)
         .replace(/\*([^\n*]+)\*/g, '<em class="text-slate-300 italic">$1</em>')
-        // Collapse multiple newlines into a larger spacing div
+        // Double newlines
         .replace(/\n\s*\n/g, '<div class="h-2"></div>')
-        // Single newlines to breaks
+        // Single newlines
         .replace(/\n/g, '<br />');
 
-    // Restore preserved HTML tags
-    htmlTagPlaceholders.forEach((tag, index) => {
-        safe = safe.replace(`__HTML_TAG_${index}__`, tag);
+    // Step 2: Sanitize with DOMPurify to prevent XSS
+    const DOMPurify = require('dompurify');
+    const sanitized = DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: [
+            'b', 'i', 'em', 'strong', 'code', 'br', 'div', 'span',
+            'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'p'
+        ],
+        ALLOWED_ATTR: ['class'],
+        ALLOW_DATA_ATTR: false
     });
 
-    return safe;
+    return sanitized;
 };
 
 export const sanitizeText = (text) => renderMarkdown(text);
