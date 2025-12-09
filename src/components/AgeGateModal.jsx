@@ -53,13 +53,13 @@ const AgeGateModal = ({ isOpen, onConfirm, onExit }) => {
                             <input
                                 type="number"
                                 id="birthYear"
-                                value={birth Year}
-                            onChange={(e) => setBirthYear(e.target.value)}
-                            min="1900"
-                            max={new Date().getFullYear()}
-                            required
-                            className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white text-lg text-center focus:border-orange-500 focus:outline-none"
-                            placeholder="YYYY"
+                                value={birthYear}
+                                onChange={(e) => setBirthYear(e.target.value)}
+                                min="1900"
+                                max={new Date().getFullYear()}
+                                required
+                                className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white text-lg text-center focus:border-orange-500 focus:outline-none"
+                                placeholder="YYYY"
                             />
                         </div>
 
