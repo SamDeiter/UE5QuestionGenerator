@@ -108,25 +108,21 @@ const GlobalModals = ({
 
                 {showSettings && (
                     <SettingsModal
-                        isOpen={showSettings}
-                        onClose={onCloseSettings}
+                        showSettings={showSettings}
+                        setShowSettings={onCloseSettings}
                         config={config}
                         handleChange={handleChange}
-                        onReset={onResetSettings}
-                        onExport={() => {
-                            onCloseSettings();
-                            onCloseBulkExport(true); // Open bulk export
-                        }}
+                        showApiKey={visibility.showApiKey || false}
+                        setShowApiKey={handlers.setShowApiKey || (() => { })}
+                        files={handlers.files}
+                        handleDetectTopics={handlers.handleDetectTopics}
+                        isDetecting={handlers.isDetecting}
                         fileInputRef={handlers.fileInputRef}
-                        onImportClick={() => handlers.fileInputRef.current.click()}
-                        onImportFile={handlers.handleFileChange}
-                        showAdvanced={visibility.showAdvancedConfig}
-                        setShowAdvanced={handlers.setShowAdvancedConfig}
-                        onOpenDangerZone={() => {
-                            onCloseSettings();
-                            if (handlers.setShowDangerZone) handlers.setShowDangerZone(true);
-                            else if (window.openDangerZone) window.openDangerZone();
-                        }}
+                        handleFileChange={handlers.handleFileChange}
+                        removeFile={handlers.removeFile}
+                        isApiReady={state.isApiReady}
+                        customTags={state.customTags}
+                        onSaveCustomTags={handlers.onSaveCustomTags}
                     />
                 )}
 

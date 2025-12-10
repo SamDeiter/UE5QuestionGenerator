@@ -548,7 +548,7 @@ const App = () => {
                     isCloudReady={isAuthReady}
                     onOpenSettings={() => { console.log('🚀 Configure Now clicked!'); setShowApiKeyModal(true); }}
                 />
-                
+
             </>
         );
     }
@@ -565,19 +565,21 @@ const App = () => {
             />
             <GlobalModals
                 visibility={{
-                    showNameModal, showClearModal, showBulkExportModal, 
-                    showSettings, showAnalytics, showDangerZone, 
-                    showApiKeyModal, showTerms, showAgeGate, 
-                    tutorialActive, deleteConfirmId, showAdvancedConfig
+                    showNameModal, showClearModal, showBulkExportModal,
+                    showSettings, showAnalytics, showDangerZone,
+                    showApiKeyModal, showTerms, showAgeGate,
+                    tutorialActive, deleteConfirmId, showAdvancedConfig,
+                    showApiKey
                 }}
                 state={{
-                    config, isProcessing, status, translationProgress, 
+                    config, isProcessing, status, translationProgress,
                     allQuestionsMap, appMode, currentStep, tutorialSteps: TUTORIAL_STEPS,
-                    metrics: { totalApproved: approvedCount, totalQuestions: questions.length }
+                    metrics: { totalApproved: approvedCount, totalQuestions: questions.length },
+                    isApiReady, customTags
                 }}
                 handlers={{
-                    handleNameSave, handleDeleteAllQuestions, handleBulkExport, 
-                    confirmDelete, setDeleteConfirmId, 
+                    handleNameSave, handleDeleteAllQuestions, handleBulkExport,
+                    confirmDelete, setDeleteConfirmId,
                     onCloseBulkExport: () => setShowBulkExportModal(false),
                     onCloseSettings: () => setShowSettings(false),
                     onCloseAnalytics: () => setShowAnalytics(false),
@@ -588,6 +590,16 @@ const App = () => {
                     onResetSettings: () => setConfig({ ...config, ...useAppConfig.defaultConfig }),
                     onHardReset: () => { localStorage.clear(); window.location.reload(); },
                     fileInputRef, handleFileChange, setShowAdvancedConfig,
+                    setShowApiKey, handleDetectTopics,
+                    onSaveCustomTags: async (newTags) => {
+                        try {
+                            await saveCustomTags(newTags);
+                            setCustomTags(newTags);
+                            showMessage("Custom tags saved!", 2000);
+                        } catch (e) {
+                            showMessage("Failed to save tags", 3000);
+                        }
+                    },
                     window: window
                 }}
             />

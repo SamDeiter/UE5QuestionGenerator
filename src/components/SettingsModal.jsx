@@ -1,4 +1,6 @@
 import Icon from './Icon';
+import TokenUsageDisplay from './TokenUsageDisplay';
+import TagManager from './TagManager';
 import { getTokenUsage, downloadTrainingData } from '../utils/analyticsStore';
 import { UI_LABELS } from '../utils/constants';
 
