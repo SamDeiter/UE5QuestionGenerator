@@ -183,10 +183,41 @@ Output in Markdown Table format.`;
         }
     };
 
+    /**
+     * Applies the AI-suggested rewrite to a question and re-critiques it
+     * @param {Object} q - The question object with suggestedRewrite
+     */
+    const handleApplyRewrite = (q) => {
+        if (!q.suggestedRewrite) return;
+
+        const updatedQ = {
+            ...q,
+            question: q.suggestedRewrite.question,
+            options: q.suggestedRewrite.options,
+            correct: q.suggestedRewrite.correct,
+            suggestedRewrite: null,
+            rewriteChanges: null,
+            critique: null,
+            critiqueScore: null,
+            humanVerified: false // Reset - human must verify
+        };
+
+        // Update state
+        updateQuestionInState(q.id, () => updatedQ);
+
+        showMessage("✓ Applied! Re-critiquing...", 2000);
+
+        // Auto-run critique on the NEW version
+        setTimeout(() => {
+            handleCritique({ ...updatedQ, id: q.id });
+        }, 300);
+    };
+
     return {
         isProcessing,
         handleExplain,
         handleVariate,
-        handleCritique
+        handleCritique,
+        handleApplyRewrite
     };
 };
