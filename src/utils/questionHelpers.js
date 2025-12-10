@@ -199,11 +199,14 @@ export const parseQuestions = (text) => {
         // Check for pipe count to identify table rows reliably
         const pipeCount = (trimmed.match(/\|/g) || []).length;
 
+        // Skip separator rows (|---|, | --- |, |:---|, | : --- |, etc.)
+        const isSeparator = /^\|?\s*:?\s*-+/.test(trimmed) || trimmed.match(/\|\s*:?\s*-{2,}\s*:?\s*\|/);
+        
+        // Skip header rows (contains "| ID |" or starts with "| ID")
+        const isHeader = /\|\s*ID\s*\|/i.test(trimmed);
+
         // It's a data line if it has pipes and isn't a header or separator
-        return pipeCount >= 4 &&
-            !trimmed.includes('| ID |') &&
-            !trimmed.includes('｜ ID ｜') &&
-            !trimmed.includes('|---');
+        return pipeCount >= 4 && !isHeader && !isSeparator;
     });
 
     dataLines.forEach((line, index) => {
