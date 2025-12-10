@@ -3,7 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import { useState, useEffect, useMemo, useCallback, Suspense, useRef } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 // UI Components
 import Icon from './components/Icon';
 import LandingPage from './components/LandingPage';
@@ -38,19 +38,25 @@ import { useTutorial } from './hooks/useTutorial';
 import { useReviewActions } from './hooks/useReviewActions';
 import { useDatabaseActions } from './hooks/useDatabaseActions';
 import { useNavigation } from './hooks/useNavigation';
+import { useFiltering } from './hooks/useFiltering';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useToast } from './hooks/useToast';
+import { useBulkSelection } from './hooks/useBulkSelection';
 // Utilities
 import { TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
-import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
 import { getTokenUsage } from './utils/analyticsStore';
 import { auth, getCustomTags, saveCustomTags } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const App = () => {
     // ========================================================================
-    // STATE - Toast Notifications (Local to App for now)
+    // HOOKS - Toast Notifications
     // ========================================================================
-    const [toasts, setToasts] = useState([]);
-    const [selectedIds, setSelectedIds] = useState(new Set());
+    const { toasts, addToast: _addToast, removeToast, showMessage } = useToast();
+    
+    // ========================================================================
+    // STATE - Token Usage and Auth
+    // ========================================================================
     const [tokenUsage, setTokenUsage] = useState(() => getTokenUsage());
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
@@ -98,40 +104,6 @@ const App = () => {
             setTermsAccepted(true);
         }
     }, []);
-
-    const toggleSelection = useCallback((id) => {
-        setSelectedIds(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(id)) newSet.delete(id);
-            else newSet.add(id);
-            return newSet;
-        });
-    }, []);
-
-    const clearSelection = useCallback(() => {
-        setSelectedIds(new Set());
-    }, []);
-
-    const addToast = useCallback((message, type = 'info', duration = 3000) => {
-        const id = Date.now() + Math.random();
-        setToasts(prev => {
-            // Prevent duplicate messages
-            if (prev.some(t => t.message === message)) {
-                return prev;
-            }
-            const newToasts = [...prev, { id, message, type, duration }];
-            // Keep only the 3 most recent toasts
-            return newToasts.slice(-3);
-        });
-    }, []);
-
-    const removeToast = useCallback((id) => {
-        setToasts(prev => prev.filter(t => t.id !== id));
-    }, []);
-
-    const showMessage = useCallback((msg, duration = 3000) => {
-        addToast(msg, 'info', duration);
-    }, [addToast]);
 
     // 0. Tutorial System
     const {
@@ -225,28 +197,25 @@ const App = () => {
         handleDetectTopics
     } = useFileHandler(config, setConfig, addQuestionsToState, showMessage, setStatus, isApiReady, effectiveApiKey);
 
-    // 5. Filtering & Search
-    // 5. Filtering & Search
-    const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem('ue5_pref_search') || '');
-    // debouncedSearchTerm removed as it was unused
-    const [filterMode, setFilterMode] = useState(() => localStorage.getItem('ue5_pref_filter') || 'pending');
-    const [showHistory, setShowHistory] = useState(() => localStorage.getItem('ue5_pref_history') === 'true');
-    const [filterByCreator, setFilterByCreator] = useState(false);
-    const [filterTags, setFilterTags] = useState([]); // NEW: Filter by tags
-    const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
-    const [sortBy, setSortBy] = useState('default');
-
-    // useEffect(() => {
-    //     const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 3000);
-    //     return () => clearTimeout(timer);
-    // }, [searchTerm]);
-    // Removed unused SEARCH DEBOUNCE EFFECT as it resulted in unused state
-
-    useEffect(() => {
-        localStorage.setItem('ue5_pref_search', searchTerm);
-        localStorage.setItem('ue5_pref_filter', filterMode);
-        localStorage.setItem('ue5_pref_history', showHistory);
-    }, [searchTerm, filterMode, showHistory]);
+    // 5. Filtering & Search (extracted to useFiltering hook)
+    const {
+        searchTerm, setSearchTerm,
+        filterMode, setFilterMode,
+        showHistory, setShowHistory,
+        filterByCreator, setFilterByCreator,
+        filterTags, setFilterTags,
+        currentReviewIndex, setCurrentReviewIndex,
+        sortBy, setSortBy,
+        contextFilteredQuestions: _contextFilteredQuestions,
+        contextCounts,
+        filteredQuestions,
+        uniqueFilteredQuestions
+    } = useFiltering({
+        questions,
+        historicalQuestions,
+        config,
+        appMode
+    });
 
     // 6. Generation & Translation Logic
     const {
@@ -281,46 +250,6 @@ const App = () => {
         window.openDangerZone = () => setShowDangerZone(true);
         return () => { delete window.openDangerZone; };
     }, []);
-
-    // Computed Filtered Questions
-    // Computed Filtered Questions
-    // 1. First, get questions that match all filters EXCEPT status (for counts)
-    const contextFilteredQuestions = useMemo(() => createFilteredQuestions(
-        questions,
-        historicalQuestions,
-        showHistory || appMode === 'review', // Force history on in review mode
-        'all', // Ignore status for this intermediate list
-        filterByCreator,
-        searchTerm,
-        config.creatorName,
-        config.discipline,
-        config.difficulty,
-        config.language,
-        filterTags // Pass filterTags to filtering logic
-    ), [questions, historicalQuestions, showHistory, appMode, filterByCreator, searchTerm, config, filterTags]);
-
-    // 2. Calculate counts based on the context
-    const contextCounts = useMemo(() => {
-        const pending = contextFilteredQuestions.filter(q => !q.status || q.status === 'pending').length;
-        const accepted = contextFilteredQuestions.filter(q => q.status === 'accepted').length;
-        const rejected = contextFilteredQuestions.filter(q => q.status === 'rejected').length;
-        const all = contextFilteredQuestions.length;
-        return { pending, accepted, rejected, all };
-    }, [contextFilteredQuestions]);
-
-    // 3. Now apply the status filter for the actual view
-    const filteredQuestions = useMemo(() => {
-        if (filterMode === 'all') return contextFilteredQuestions;
-        return contextFilteredQuestions.filter(q => {
-            if (filterMode === 'pending') return !q.status || q.status === 'pending';
-            return q.status === filterMode;
-        });
-    }, [contextFilteredQuestions, filterMode]);
-
-    const uniqueFilteredQuestions = useMemo(() => createUniqueFilteredQuestions(
-        filteredQuestions,
-        config.language
-    ), [filteredQuestions, config.language]);
 
     // 8. Export Logic (must come before Navigation since Navigation depends on handleLoadFromFirestore)
     const {
@@ -371,46 +300,34 @@ const App = () => {
         handleLoadFromFirestore
     });
 
-    // Bulk selection callbacks (must be after uniqueFilteredQuestions is defined)
-    const selectAll = useCallback(() => {
-        setSelectedIds(new Set(uniqueFilteredQuestions.map(q => q.id)));
-    }, [uniqueFilteredQuestions]);
+    // Bulk selection (extracted to useBulkSelection hook)
+    const {
+        selectedIds,
+        toggleSelection,
+        clearSelection,
+        selectAll,
+        bulkUpdateStatus
+    } = useBulkSelection({
+        items: uniqueFilteredQuestions,
+        handleUpdateStatus,
+        showMessage
+    });
 
-    const bulkUpdateStatus = useCallback((status, rejectionReason = null) => {
-        selectedIds.forEach(id => handleUpdateStatus(id, status, rejectionReason));
-        clearSelection();
-        showMessage(`${status === 'accepted' ? 'Accepted' : 'Rejected'} ${selectedIds.size} questions`);
-    }, [selectedIds, handleUpdateStatus, clearSelection, showMessage]);
-
-    // Keyboard Shortcuts
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                if (appMode === 'create' && !isGenerating && !isTargetMet && isApiReady && maxBatchSize > 0) {
-                    e.preventDefault();
-                    handleGenerate();
-                }
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [appMode, isGenerating, isTargetMet, isApiReady, maxBatchSize, handleGenerate]);
-
-    useEffect(() => {
-        const handleGlobalKeyDown = (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                if (config.sheetUrl) handleExportToSheets();
-                else handleBulkExport({ format: 'csv', includeRejected: false, languages: [config.language], scope: 'all' });
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-                e.preventDefault();
-                setShowBulkExportModal(true);
-            }
-        };
-        window.addEventListener('keydown', handleGlobalKeyDown);
-        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-    }, [config.sheetUrl, config.language, handleExportToSheets, handleBulkExport]);
+    // Keyboard Shortcuts (extracted to useKeyboardShortcuts hook)
+    useKeyboardShortcuts({
+        appMode,
+        isGenerating,
+        isTargetMet,
+        isApiReady,
+        maxBatchSize,
+        handleGenerate,
+        config,
+        handleExportToSheets,
+        handleBulkExport,
+        setShowBulkExportModal,
+        uniqueFilteredQuestionsLength: uniqueFilteredQuestions.length,
+        setCurrentReviewIndex
+    });
 
     // Click-outside handler for Data dropdown
     useEffect(() => {
@@ -422,21 +339,6 @@ const App = () => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
-
-    // Review Mode Navigation
-    useEffect(() => {
-        setCurrentReviewIndex(0);
-    }, [appMode, config.discipline, config.difficulty, config.language, filterMode, searchTerm]);
-
-    useEffect(() => {
-        if (appMode !== 'review') return;
-        const handleKeyDown = (e) => {
-            if (e.key === 'ArrowRight') setCurrentReviewIndex(prev => Math.min(prev + 1, uniqueFilteredQuestions.length - 1));
-            else if (e.key === 'ArrowLeft') setCurrentReviewIndex(prev => Math.max(prev - 1, 0));
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [appMode, uniqueFilteredQuestions.length]);
 
     // Wrapper to adapt (id, update) from QuestionItem to (id, fn) for useQuestionManager
     const handleManualUpdate = (id, update) => {
