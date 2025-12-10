@@ -1,4 +1,4 @@
-import { sanitizeText, sanitizeMarkdown } from '../utils/sanitize';
+import { sanitizeText } from '../utils/sanitize';
 import Icon from './Icon';
 import { renderMarkdown, computeWordDiff } from '../utils/helpers';
 

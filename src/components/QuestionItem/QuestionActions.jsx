@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import Icon from '../Icon';
-import { stripHtmlTags } from '../../utils/helpers';
-
 // Rejection reason options
 const REJECTION_REASONS = [
     { id: 'too_easy', label: 'Too Easy', icon: 'arrow-down' },

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from './Icon';
 
 const TutorialOverlay = ({ steps, currentStepIndex, onNext, onPrev, onSkip, onComplete }) => {

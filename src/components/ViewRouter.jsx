@@ -1,9 +1,6 @@
 import React from 'react';
 import { Suspense } from 'react';
 import Icon from './Icon';
-import BulkActionBar from './BulkActionBar';
-import QuestionList from './QuestionList';
-
 // Lazy load heavy views
 const DatabaseView = React.lazy(() => import('./DatabaseView'));
 const ReviewMode = React.lazy(() => import('./ReviewMode'));

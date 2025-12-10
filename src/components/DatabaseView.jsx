@@ -1,8 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import Icon from './Icon';
-import QuestionItem from './QuestionItem';
-import MetricsDashboard from './MetricsDashboard';
-
 const DatabaseView = ({
     questions,
     sheetUrl,

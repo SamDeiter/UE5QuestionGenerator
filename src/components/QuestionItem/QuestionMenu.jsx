@@ -1,7 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { LANGUAGE_FLAGS } from '../../utils/constants';
-import { stripHtmlTags } from '../../utils/helpers';
-
 const QuestionMenu = ({
     q,
     onExplain,

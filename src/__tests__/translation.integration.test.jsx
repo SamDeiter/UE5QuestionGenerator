@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useGeneration } from '../hooks/useGeneration';
 import * as geminiMock from './mocks/gemini.mock';
-import { mockQuestions, areTranslations } from './testHelpers';
+import { mockQuestions } from './testHelpers';
 
 // Mock the gemini service
 vi.mock('../services/gemini', async () => {

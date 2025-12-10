@@ -1,4 +1,3 @@
-import { sanitizeMarkdown } from '../utils/sanitize';
 import Icon from './Icon';
 import { computeWordDiff } from '../utils/helpers';
 

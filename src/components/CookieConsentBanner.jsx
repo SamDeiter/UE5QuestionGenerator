@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Cookie, X } from 'lucide-react';
-
 /**
  * Cookie Consent Banner - GDPR Compliance
  * Shows for EU users, allows accept/decline of analytics cookies

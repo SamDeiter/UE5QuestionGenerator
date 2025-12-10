@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { Shield, AlertCircle } from 'lucide-react';
-
 /**
  * Age Gate - 18+ Verification
  * Required for COPPA/GDPR compliance

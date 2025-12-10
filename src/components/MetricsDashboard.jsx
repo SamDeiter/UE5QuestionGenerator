@@ -2,9 +2,6 @@ import { useMemo, useState, useEffect } from 'react';
 import { calculateMetrics } from '../utils/metricsUtils';
 import { getAnalytics } from '../utils/analyticsStore';
 import Icon from './Icon';
-import DistributionCharts from './analytics/DistributionCharts';
-import TrendCharts from './analytics/TrendCharts';
-
 const MetricsDashboard = ({ questions }) => {
     const [activeTab, setActiveTab] = useState('overview');
     const [analyticsData, setAnalyticsData] = useState({ generations: [] });

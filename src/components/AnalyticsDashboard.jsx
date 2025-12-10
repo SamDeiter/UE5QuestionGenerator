@@ -1,10 +1,8 @@
 import { useState, useMemo } from 'react';
-import { X, Download, Calendar, BarChart2, PieChart, Activity, TrendingUp } from 'lucide-react';
 import {
-    LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-    PieChart as RechartsPieChart, Pie, Cell, AreaChart, Area
+    ResponsiveContainer as Area
 } from 'recharts';
-import { format, subDays, isAfter } from 'date-fns';
+import { format } from 'date-fns';
 import { getAnalytics } from '../utils/analyticsStore';
 import { TAGS_BY_DISCIPLINE } from '../utils/tagTaxonomy';
 

@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import Icon from './Icon';
-import ConfirmDialog from './ConfirmDialog';
-import PromptDialog from './PromptDialog';
 import { clearQuestionsFromSheets } from '../services/googleSheets';
 import { clearAllQuestionsFromFirestore } from '../services/firebase';
 

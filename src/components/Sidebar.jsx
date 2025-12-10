@@ -1,16 +1,4 @@
 import Icon from './Icon';
-import GranularProgress from './GranularProgress';
-import GenerationSettings from './sidebar/GenerationSettings';
-
-import CustomRules from './sidebar/CustomRules';
-import ProgressStats from './sidebar/ProgressStats';
-import BatchSizeControl from './sidebar/BatchSizeControl';
-import ActionFooter from './sidebar/ActionFooter';
-import TokenUsageDisplay from './TokenUsageDisplay';
-import { downloadTrainingData } from '../utils/analyticsStore';
-
-import CoverageGapSuggester from './sidebar/CoverageGapSuggester';
-
 const Sidebar = ({
     showGenSettings, setShowGenSettings,
     config, handleChange,

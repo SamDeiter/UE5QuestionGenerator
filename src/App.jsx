@@ -3,35 +3,12 @@
 // ============================================================================
 
 // React core hooks
-import { useState, useEffect, useMemo, useCallback, Suspense, useRef } from 'react';
-import { Virtuoso } from 'react-virtuoso';
-
+import Icon from './components/Icon';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 // UI Components
-import LandingPage from './components/LandingPage';
-import Header from './components/Header';
-import QuestionItem from './components/QuestionItem';
-import FilterButton from './components/FilterButton';
-import GranularProgress from './components/GranularProgress';
-import Toast from './components/Toast';
-import Sidebar from './components/Sidebar';
-import QuestionList from './components/QuestionList';
-import GlobalModals from './components/GlobalModals';
-import ViewRouter from './components/ViewRouter';
-
-import BulkActionBar from './components/BulkActionBar';
-import AppNavigation from './components/AppNavigation';
-import ContextToolbar from './components/ContextToolbar';
-import { migrateToSecure } from './utils/secureStorage';
 import { TUTORIAL_STEPS } from './utils/tutorialSteps';
 
 // Lazy Loaded Components
-
-// Loading Fallback
-const LoadingSpinner = () => (
-    <div className="flex items-center justify-center p-10 text-slate-500">
-        <Icon name="loader" className="animate-spin mr-2" /> Loading...
-    </div>
-);
 
 // Custom Hooks
 import { useAppConfig } from './hooks/useAppConfig';
@@ -40,13 +17,10 @@ import { useFileHandler } from './hooks/useFileHandler';
 import { useGeneration } from './hooks/useGeneration';
 import { useExport } from './hooks/useExport';
 import { useCrashRecovery } from './hooks/useCrashRecovery';
-import CrashRecoveryPrompt from './components/CrashRecoveryPrompt';
-
 // Utilities
-import { CATEGORY_KEYS, TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
+import { TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
 import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
 import { getTokenUsage } from './utils/analyticsStore';
-import SignIn from './components/SignIn';
 import { auth, getCustomTags, saveCustomTags, deleteQuestionFromFirestore } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 

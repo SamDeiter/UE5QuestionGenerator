@@ -1,8 +1,6 @@
 import React from 'react';
-import { generateContent, listModels } from '../../services/gemini';
+import { listModels } from '../../services/gemini';
 import Icon from '../Icon';
-import InfoTooltip from '../InfoTooltip';
-
 import { getMergedTags } from '../../utils/tagTaxonomy';
 
 const GenerationSettings = ({ config, handleChange, customTags = {}, isOpen, onToggle, allQuestionsMap = {} }) => {

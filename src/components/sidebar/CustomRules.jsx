@@ -1,6 +1,4 @@
 import Icon from '../Icon';
-import InfoTooltip from '../InfoTooltip';
-
 const CustomRules = ({ config, handleChange }) => {
     return (
         <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner">
