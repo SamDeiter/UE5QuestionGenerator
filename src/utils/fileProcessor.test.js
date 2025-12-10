@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { detectLanguageFromFilename, parseCSVQuestions } from './fileProcessor';
 
 // Mock helper functions used by fileProcessor
-vi.mock('./helpers', () => ({
+vi.mock('./stringHelpers', () => ({
     parseCSVLine: (line) => line.split(','), // Simple mock splitter
     FIELD_DELIMITER: ','
 }));

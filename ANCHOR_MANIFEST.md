@@ -58,7 +58,9 @@ This file lists the key components and files ("anchors") of the project for quic
 - `tailwind.config.js` - Tailwind CSS config
 - `package.json` - Dependencies and scripts
 - `firebase.json` - Firebase config
-- `firestore.rules` - Firestore security rules (**needs update**)
+- `firestore.rules` - Firestore security rules (✅ secured)
+
+- `scripts/` - Maintenance and utility scripts (moved from root)
 
 ## Documentation
 
@@ -86,7 +88,7 @@ This file lists the key components and files ("anchors") of the project for quic
 - ✅ ~~`App.jsx` - Too large (701 lines), needs refactoring~~ → Refactored to ~432 lines
 - ✅ ~~`QuestionItem.jsx` - Too large (577 lines), needs refactoring~~ → Refactored to 186 lines with 10 sub-components
 - ✅ ~~`helpers.js` - Should be split into focused modules~~ → Split into string/date/question helpers
-- `firestore.rules` - Currently too permissive (allow all)
+- ✅ ~~`firestore.rules` - Currently too permissive (allow all)~~ → Secured with role-based access
 
 ## Planned Components (Not Yet Created)
 

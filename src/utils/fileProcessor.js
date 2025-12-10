@@ -1,5 +1,5 @@
 import { FIELD_DELIMITER, LANGUAGE_FLAGS, LANGUAGE_CODES } from './constants';
-import { parseCSVLine } from './helpers';
+import { parseCSVLine } from './stringHelpers';
 import { validateFile, validateCSVContent } from './security';
 
 /**
