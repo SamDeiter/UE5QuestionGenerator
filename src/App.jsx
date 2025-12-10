@@ -42,11 +42,10 @@ import { useFiltering } from './hooks/useFiltering';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useToast } from './hooks/useToast';
 import { useBulkSelection } from './hooks/useBulkSelection';
+import { useAuth } from './hooks/useAuth';
 // Utilities
 import { TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
-import { getTokenUsage } from './utils/analyticsStore';
-import { auth, getCustomTags, saveCustomTags } from './services/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { saveCustomTags } from './services/firebase';
 
 const App = () => {
     // ========================================================================
@@ -55,55 +54,22 @@ const App = () => {
     const { toasts, addToast: _addToast, removeToast, showMessage } = useToast();
     
     // ========================================================================
-    // STATE - Token Usage and Auth
+    // HOOKS - Auth, Custom Tags, and Compliance (extracted to useAuth)
     // ========================================================================
-    const [tokenUsage, setTokenUsage] = useState(() => getTokenUsage());
-    const [user, setUser] = useState(null);
-    const [authLoading, setAuthLoading] = useState(true);
-    const [customTags, setCustomTags] = useState({});
-
-    // Compliance modals
-    const [showTerms, setShowTerms] = useState(false);
-    const [showAgeGate, setShowAgeGate] = useState(false);
-    const [_termsAccepted, setTermsAccepted] = useState(false);
-
-    // Listen for auth state changes and load custom tags
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            setUser(currentUser);
-            if (currentUser) {
-                // Load custom tags from Firestore
-                try {
-                    const tags = await getCustomTags();
-                    setCustomTags(tags);
-                } catch (error) {
-                    console.error("Failed to load custom tags:", error);
-                }
-            }
-            setAuthLoading(false);
-        });
-        return () => unsubscribe();
-    }, []);
-
-    // Refresh token usage periodically and after generations
-    useEffect(() => {
-        const interval = setInterval(() => setTokenUsage(getTokenUsage()), 5000);
-        return () => clearInterval(interval);
-    }, []);
-
-    // Check compliance status on app load
-    useEffect(() => {
-        const ageVerified = localStorage.getItem('ue5_age_verified');
-        const termsAcceptedStorage = localStorage.getItem('ue5_terms_accepted');
-
-        if (!ageVerified) {
-            setShowAgeGate(true);
-        } else if (!termsAcceptedStorage) {
-            setShowTerms(true);
-        } else {
-            setTermsAccepted(true);
-        }
-    }, []);
+    const {
+        user,
+        authLoading,
+        customTags,
+        setCustomTags,
+        handleSaveCustomTags,
+        tokenUsage,
+        showTerms,
+        setShowTerms,
+        showAgeGate,
+        setShowAgeGate,
+        termsAccepted: _termsAccepted,
+        setTermsAccepted
+    } = useAuth(showMessage);
 
     // 0. Tutorial System
     const {
@@ -430,15 +396,7 @@ const App = () => {
                     onHardReset: () => { localStorage.clear(); window.location.reload(); },
                     fileInputRef, handleFileChange, setShowAdvancedConfig,
                     setShowApiKey, handleDetectTopics,
-                    onSaveCustomTags: async (newTags) => {
-                        try {
-                            await saveCustomTags(newTags);
-                            setCustomTags(newTags);
-                            showMessage("Custom tags saved!", 2000);
-                        } catch {
-                            showMessage("Failed to save tags", 3000);
-                        }
-                    },
+                    onSaveCustomTags: handleSaveCustomTags,
                     window: window
                 }}
             />
