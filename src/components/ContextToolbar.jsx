@@ -22,7 +22,7 @@ const ContextToolbar = ({
     onLoadFirestore,
     onBulkExport,
     onClearPending,
-    onBulkAcceptHighScores,
+    _onBulkAcceptHighScores,
     onBulkCritiqueAll,
     filterTags = [],
     setFilterTags,
