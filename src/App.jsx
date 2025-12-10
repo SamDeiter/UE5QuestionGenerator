@@ -141,6 +141,10 @@ const App = () => {
     const addToast = useCallback((message, type = 'info', duration = 3000) => {
         const id = Date.now() + Math.random();
         setToasts(prev => {
+            // Prevent duplicate messages
+            if (prev.some(t => t.message === message)) {
+                return prev;
+            }
             const newToasts = [...prev, { id, message, type, duration }];
             // Keep only the 3 most recent toasts
             return newToasts.slice(-3);
@@ -163,15 +167,14 @@ const App = () => {
     const {
         appMode, setAppMode,
         config, setConfig,
-        isInternalEnvironment,
         isAuthReady,
         isApiReady,
         effectiveApiKey,
         apiKeyStatus,
         showNameModal, setShowNameModal,
         showGenSettings, setShowGenSettings,
-        showApiError, setShowApiError,
-        batchSizeWarning, setBatchSizeWarning,
+        setShowApiError,
+        batchSizeWarning,
         showSettings, setShowSettings,
         showApiKey, setShowApiKey,
         handleChange,
@@ -199,7 +202,7 @@ const App = () => {
         handleUpdateStatus,
         approvedCounts,
         approvedCount,
-        rejectedCount,
+
         pendingCount,
         totalApproved,
         overallPercentage,
@@ -237,8 +240,9 @@ const App = () => {
     } = useFileHandler(config, setConfig, addQuestionsToState, showMessage, setStatus, isApiReady, effectiveApiKey);
 
     // 5. Filtering & Search
+    // 5. Filtering & Search
     const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem('ue5_pref_search') || '');
-    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+    // debouncedSearchTerm removed as it was unused
     const [filterMode, setFilterMode] = useState(() => localStorage.getItem('ue5_pref_filter') || 'pending');
     const [showHistory, setShowHistory] = useState(() => localStorage.getItem('ue5_pref_history') === 'true');
     const [filterByCreator, setFilterByCreator] = useState(false);
@@ -246,10 +250,11 @@ const App = () => {
     const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
     const [sortBy, setSortBy] = useState('default');
 
-    useEffect(() => {
-        const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 3000);
-        return () => clearTimeout(timer);
-    }, [searchTerm]);
+    // useEffect(() => {
+    //     const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 3000);
+    //     return () => clearTimeout(timer);
+    // }, [searchTerm]);
+    // Removed unused SEARCH DEBOUNCE EFFECT as it resulted in unused state
 
     useEffect(() => {
         localStorage.setItem('ue5_pref_search', searchTerm);
@@ -343,15 +348,13 @@ const App = () => {
     }, [selectedIds, handleUpdateStatus, clearSelection, showMessage]);
 
     const {
-        handleExportByGroup,
-        handleExportCurrentTarget,
         handleExportToSheets,
         handleLoadFromSheets,
         handleLoadFromFirestore,
         handleBulkExport
     } = useExport(
         config, questions, historicalQuestions, uniqueFilteredQuestions, allQuestionsMap,
-        showHistory, showMessage, setStatus, (val) => { },
+        showHistory, showMessage, setStatus, () => { },
         setDatabaseQuestions, setAppMode, setShowExportMenu, setShowBulkExportModal,
         setHistoricalQuestions
     );
@@ -597,7 +600,7 @@ const App = () => {
                             await saveCustomTags(newTags);
                             setCustomTags(newTags);
                             showMessage("Custom tags saved!", 2000);
-                        } catch (e) {
+                        } catch {
                             showMessage("Failed to save tags", 3000);
                         }
                     },

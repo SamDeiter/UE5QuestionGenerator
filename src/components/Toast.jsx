@@ -25,7 +25,7 @@ const Toast = ({ message, type = 'info', onClose, action = null, duration = 5000
 
     return (
         <div 
-            className={`fixed bottom-4 right-4 z-50 ${bgColors[type]} border rounded-lg shadow-2xl p-4 max-w-md backdrop-blur-sm animate-in slide-in-from-bottom`}
+            className={`${bgColors[type]} border rounded-lg shadow-2xl p-4 max-w-md backdrop-blur-sm animate-in slide-in-from-bottom`}
             role="alert"
         >
             <div className="flex items-center justify-between gap-4">
