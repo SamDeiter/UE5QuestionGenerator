@@ -36,11 +36,12 @@ import { useExport } from './hooks/useExport';
 import { useCrashRecovery } from './hooks/useCrashRecovery';
 import { useTutorial } from './hooks/useTutorial';
 import { useReviewActions } from './hooks/useReviewActions';
+import { useDatabaseActions } from './hooks/useDatabaseActions';
 // Utilities
 import { TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
 import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
 import { getTokenUsage } from './utils/analyticsStore';
-import { auth, getCustomTags, saveCustomTags, deleteQuestionFromFirestore } from './services/firebase';
+import { auth, getCustomTags, saveCustomTags } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const App = () => {
@@ -333,6 +334,16 @@ const App = () => {
         showMessage
     });
 
+    // 9. Database Actions
+    const {
+        handleUpdateDatabaseQuestion,
+        handleKickBackToReview
+    } = useDatabaseActions({
+        setDatabaseQuestions,
+        setHistoricalQuestions,
+        showMessage
+    });
+
     // Bulk selection callbacks (must be after uniqueFilteredQuestions is defined)
     const selectAll = useCallback(() => {
         setSelectedIds(new Set(uniqueFilteredQuestions.map(q => q.id)));
@@ -430,45 +441,12 @@ const App = () => {
         await handleLoadFromFirestore();
     };
 
-    const handleUpdateDatabaseQuestion = (id, update) => {
-        setDatabaseQuestions(prev => prev.map(q => {
-            if (q.id !== id) return q;
-            const newData = typeof update === 'function' ? update(q) : update;
-            return { ...q, ...newData };
-        }));
-        showMessage("Question updated locally. Click 'Sync to Firestore' to save changes.", 3000);
-    };
-
     // Wrapper to adapt (id, update) from QuestionItem to (id, fn) for useQuestionManager
     const handleManualUpdate = (id, update) => {
         updateQuestionInState(id, (prevQ) => {
             const newData = typeof update === 'function' ? update(prevQ) : update;
             return { ...prevQ, ...newData };
         });
-    };
-
-    const handleKickBackToReview = async (question) => {
-        try {
-            // Delete from Firestore
-            await deleteQuestionFromFirestore(question.uniqueId);
-
-            // Remove from database view
-            setDatabaseQuestions(prev => prev.filter(q => q.uniqueId !== question.uniqueId));
-
-            // Add to historical questions with 'pending' status so it appears in Review Mode
-            setHistoricalQuestions(prev => {
-                // Check if already exists to prevent duplicates
-                if (prev.some(q => q.uniqueId === question.uniqueId)) {
-                    return prev.map(q => q.uniqueId === question.uniqueId ? { ...question, status: 'pending' } : q);
-                }
-                return [...prev, { ...question, status: 'pending' }];
-            });
-
-            showMessage("Question removed from database and sent to Review Mode.", 3000);
-        } catch (error) {
-            console.error("Error kicking back question:", error);
-            showMessage("Failed to kick back question. Please try again.", 3000);
-        }
     };
 
     const handleGoHome = () => setAppMode('landing');
