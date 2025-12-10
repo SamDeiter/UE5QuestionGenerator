@@ -5,7 +5,15 @@
 // React core hooks
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 // UI Components
+import Icon from './components/Icon';
 import { TUTORIAL_STEPS } from './utils/tutorialSteps';
+
+// Loading Fallback
+const LoadingSpinner = () => (
+    <div className="flex items-center justify-center p-10 text-slate-500">
+        <Icon name="loader" className="animate-spin mr-2" /> Loading...
+    </div>
+);
 
 // Lazy Loaded Components
 
