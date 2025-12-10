@@ -3,12 +3,14 @@
 // ============================================================================
 
 // React core hooks
-import { useState, useEffect, Suspense, useRef } from 'react';
+import { useState, Suspense } from 'react';
 // UI Components
 import Icon from './components/Icon';
 import LandingPage from './components/LandingPage';
 import Header from './components/Header';
-import Toast from './components/Toast';
+import ToastContainer from './components/ToastContainer';
+import EmptyState from './components/EmptyState';
+import ReviewModeBanner from './components/ReviewModeBanner';
 import Sidebar from './components/Sidebar';
 import GlobalModals from './components/GlobalModals';
 import ViewRouter from './components/ViewRouter';
@@ -43,9 +45,10 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useToast } from './hooks/useToast';
 import { useBulkSelection } from './hooks/useBulkSelection';
 import { useAuth } from './hooks/useAuth';
+import { useModalState } from './hooks/useModalState';
+import { useAppHandlers } from './hooks/useAppHandlers';
 // Utilities
 import { TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
-import { saveCustomTags } from './services/firebase';
 
 const App = () => {
     // ========================================================================
@@ -60,7 +63,7 @@ const App = () => {
         user,
         authLoading,
         customTags,
-        setCustomTags,
+        setCustomTags: _setCustomTags,
         handleSaveCustomTags,
         tokenUsage,
         showTerms,
@@ -105,14 +108,6 @@ const App = () => {
         handleNameSave,
         handleLanguageSwitch
     } = useAppConfig();
-
-    // API Key Modal State (simpler than full settings)
-    const [showApiKeyModal, setShowApiKeyModal] = useState(false);
-
-    const handleSaveApiKey = (newApiKey) => {
-        handleChange({ target: { name: 'apiKey', value: newApiKey } });
-        setShowApiKeyModal(false);
-    };
 
     // 2. Question Data Management
     const {
@@ -202,20 +197,24 @@ const App = () => {
         setShowApiError, setShowHistory, translationMap, allQuestionsMap
     );
 
-    // 7. Export Logic
-    const [_showExportMenu, setShowExportMenu] = useState(false);
-    const [showBulkExportModal, setShowBulkExportModal] = useState(false);
-    const [showAnalytics, setShowAnalytics] = useState(false);
-    const [_dataMenuOpen, setDataMenuOpen] = useState(false);
-    const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
-    const [showDangerZone, setShowDangerZone] = useState(false);
-    const dataMenuRef = useRef(null);
-
-    // Set up global function for Settings modal to open DangerZone
-    useEffect(() => {
-        window.openDangerZone = () => setShowDangerZone(true);
-        return () => { delete window.openDangerZone; };
-    }, []);
+    // 7. Modal State (extracted to useModalState hook)
+    const {
+        showExportMenu: _showExportMenu,
+        setShowExportMenu,
+        showBulkExportModal,
+        setShowBulkExportModal,
+        showAnalytics,
+        setShowAnalytics,
+        dataMenuOpen: _dataMenuOpen,
+        setDataMenuOpen: _setDataMenuOpen,
+        dataMenuRef: _dataMenuRef,
+        showAdvancedConfig,
+        setShowAdvancedConfig,
+        showDangerZone,
+        setShowDangerZone,
+        showApiKeyModal,
+        setShowApiKeyModal
+    } = useModalState();
 
     // 8. Export Logic (must come before Navigation since Navigation depends on handleLoadFromFirestore)
     const {
@@ -295,39 +294,17 @@ const App = () => {
         setCurrentReviewIndex
     });
 
-    // Click-outside handler for Data dropdown
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dataMenuRef.current && !dataMenuRef.current.contains(event.target)) {
-                setDataMenuOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    // Wrapper to adapt (id, update) from QuestionItem to (id, fn) for useQuestionManager
-    const handleManualUpdate = (id, update) => {
-        updateQuestionInState(id, (prevQ) => {
-            const newData = typeof update === 'function' ? update(prevQ) : update;
-            return { ...prevQ, ...newData };
-        });
-    };
-
-    const handleSelectCategory = (key) => setConfig(prev => ({ ...prev, difficulty: key }));
-
-    const [_showProgressMenu, _setShowProgressMenu] = useState(false);
-
-    const _handleSaveCustomTags = async (newCustomTags) => {
-        try {
-            await saveCustomTags(newCustomTags);
-            setCustomTags(newCustomTags);
-            showMessage("Custom tags saved successfully!", 2000);
-        } catch (error) {
-            console.error("Failed to save custom tags:", error);
-            showMessage("Failed to save custom tags. Please try again.", 3000);
-        }
-    };
+    // App Handlers (extracted to useAppHandlers hook)
+    const {
+        handleManualUpdate,
+        handleSelectCategory,
+        handleSaveApiKey
+    } = useAppHandlers({
+        updateQuestionInState,
+        setConfig,
+        handleChange,
+        setShowApiKeyModal
+    });
 
     // Render
     if (authLoading) {
@@ -468,27 +445,11 @@ const App = () => {
                     </div>
 
                     <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4" data-tour="review-area">
-                        {!showHistory && uniqueFilteredQuestions.length === 0 && questions.length === 0 && !status && appMode === 'create' && (<div className="flex flex-col items-center justify-center h-full text-slate-600"><Icon name="terminal" size={48} className="mb-4 text-slate-800" /><p className="font-medium text-slate-500">Ready. Click 'GENERATE QUESTIONS' to begin or upload a source file.</p></div>)}
+                        {!showHistory && uniqueFilteredQuestions.length === 0 && questions.length === 0 && !status && appMode === 'create' && <EmptyState />}
 
                         {/* CREATE MODE: Call-to-Action Banner */}
                         {appMode === 'create' && questions.length > 0 && (
-                            <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 border border-indigo-700/50 rounded-lg p-4 mb-4 animate-in fade-in slide-in-from-top-2">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <Icon name="info" size={20} className="text-indigo-400" />
-                                        <div>
-                                            <h3 className="text-sm font-bold text-indigo-300">Questions Generated!</h3>
-                                            <p className="text-xs text-slate-400">Switch to Review Mode to accept or reject questions.</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => handleModeSelect('review')}
-                                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-indigo-900/50"
-                                    >
-                                        Go to Review <Icon name="arrow-right" size={16} />
-                                    </button>
-                                </div>
-                            </div>
+                            <ReviewModeBanner onNavigateToReview={() => handleModeSelect('review')} />
                         )}
 
                         <Suspense fallback={<LoadingSpinner />}>
@@ -520,13 +481,7 @@ const App = () => {
             {/* API Key Modal - Simple popup for Configure Now button */}
 
             {/* TOAST NOTIFICATIONS */}
-            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
-                {toasts.map(toast => (
-                    <div key={toast.id} className="pointer-events-auto">
-                        <Toast {...toast} onClose={() => removeToast(toast.id)} />
-                    </div>
-                ))}
-            </div>
+            <ToastContainer toasts={toasts} onRemove={removeToast} />
 
             {/* TUTORIAL OVERLAY */}
 
