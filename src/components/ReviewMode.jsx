@@ -10,6 +10,7 @@ const ReviewMode = ({
     onExplain,
     onVariate,
     onCritique,
+    onApplyRewrite,
     onTranslateSingle,
     onSwitchLanguage,
     onDelete,
@@ -69,6 +70,7 @@ const ReviewMode = ({
                     onExplain={onExplain}
                     onVariate={onVariate}
                     onCritique={onCritique}
+                    onApplyRewrite={onApplyRewrite}
                     onTranslateSingle={onTranslateSingle}
                     onSwitchLanguage={onSwitchLanguage}
                     onDelete={onDelete}

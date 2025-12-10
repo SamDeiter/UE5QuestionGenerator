@@ -267,6 +267,7 @@ const App = () => {
         handleExplain,
         handleVariate,
         handleCritique,
+        handleApplyRewrite,
         handleBulkTranslateMissing
     } = useGeneration(
         config, setConfig, effectiveApiKey, isApiReady, isTargetMet, maxBatchSize,
@@ -703,7 +704,7 @@ const App = () => {
                                 isProcessing={isProcessing}
                                 handlers={{
                                     handleLoadFromSheets, handleLoadFromFirestore, handleUpdateDatabaseQuestion, handleKickBackToReview,
-                                    handleUpdateStatus, handleExplain, handleVariate, handleCritique, handleTranslateSingle, handleLanguageSwitch, handleDelete, handleManualUpdate,
+                                    handleUpdateStatus, handleExplain, handleVariate, handleCritique, handleApplyRewrite, handleTranslateSingle, handleLanguageSwitch, handleDelete, handleManualUpdate,
                                     selectAll, clearSelection, bulkUpdateStatus, toggleSelection
                                 }}
                                 state={{

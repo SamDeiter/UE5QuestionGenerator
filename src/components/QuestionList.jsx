@@ -12,6 +12,7 @@ const QuestionList = ({
     onExplain,
     onVariate,
     onCritique,
+    onApplyRewrite,
     onTranslateSingle,
     onSwitchLanguage,
     onDelete,
@@ -32,6 +33,7 @@ const QuestionList = ({
                         onExplain={onExplain}
                         onVariate={onVariate}
                         onCritique={onCritique}
+                        onApplyRewrite={onApplyRewrite}
                         onTranslateSingle={onTranslateSingle}
                         onSwitchLanguage={onSwitchLanguage}
                         onDelete={onDelete}

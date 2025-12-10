@@ -686,6 +686,32 @@ export const useGeneration = (
         setIsProcessing(false);
     };
 
+    const handleApplyRewrite = (q) => {
+        if (!q.suggestedRewrite) return;
+
+        const updatedQ = {
+            ...q,
+            question: q.suggestedRewrite.question,
+            options: q.suggestedRewrite.options,
+            correct: q.suggestedRewrite.correct,
+            suggestedRewrite: null,
+            rewriteChanges: null,
+            critique: null,
+            critiqueScore: null,
+            humanVerified: false // Reset - human must verify
+        };
+
+        // Update state
+        updateQuestionInState(q.id, () => updatedQ);
+
+        showMessage("✓ Applied! Re-critiquing...", 2000);
+
+        // Auto-run critique on the NEW version
+        setTimeout(() => {
+            handleCritique({ ...updatedQ, id: q.id });
+        }, 300);
+    };
+
     return {
         isGenerating,
         isProcessing,
@@ -695,6 +721,7 @@ export const useGeneration = (
         handleExplain,
         handleVariate,
         handleCritique,
+        handleApplyRewrite,
         handleBulkTranslateMissing
     };
 };

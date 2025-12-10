@@ -19,6 +19,7 @@ const QuestionItem = ({
     onVariate,
     onCritique,
     onRewrite,
+    onApplyRewrite, // New handler from hook
     onTranslateSingle,
     onSwitchLanguage,
     onDelete,
@@ -113,6 +114,7 @@ const QuestionItem = ({
                     <ReviewProgressBar
                         question={q}
                         onCritique={() => onCritique?.(q)}
+                        onFix={() => onApplyRewrite && onApplyRewrite(q)}
                         onVerify={() => {
                             const config = getSecureItem('ue5_gen_config');
                             const reviewerName = config?.creatorName || 'Unknown';
@@ -190,30 +192,7 @@ const QuestionItem = ({
                         suggestedRewrite={appMode === 'review' ? q.suggestedRewrite : null}
                         rewriteChanges={appMode === 'review' ? q.rewriteChanges : null}
                         originalQuestion={q}
-                        onApplyRewrite={async () => {
-                            if (!q.suggestedRewrite) return;
-
-                            const updatedQ = {
-                                ...q,
-                                question: q.suggestedRewrite.question,
-                                options: q.suggestedRewrite.options,
-                                correct: q.suggestedRewrite.correct,
-                                suggestedRewrite: null,
-                                rewriteChanges: null,
-                                critique: null,
-                                critiqueScore: null,
-                                humanVerified: false // Reset - human must verify
-                            };
-                            onUpdateQuestion(q.id, updatedQ);
-                            if (showMessage) showMessage("✓ Applied! Re-critiquing...", 2000);
-
-                            // Auto-run critique to show new score (human still verifies)
-                            if (onCritique) {
-                                setTimeout(() => {
-                                    onCritique({ ...updatedQ, id: q.id });
-                                }, 300);
-                            }
-                        }}
+                        onApplyRewrite={() => onApplyRewrite && onApplyRewrite(q)}
                         onApplyAndAccept={() => {
                             if (!q.suggestedRewrite) return;
                             // Get reviewer name for verification

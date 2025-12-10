@@ -34,7 +34,7 @@ const EmptyReviewState = ({ onNavigateToCreate, hasQuestionsInOtherFilters = fal
             {hasQuestionsInOtherFilters ? 'No Pending Questions' : 'Ready to Review'}
         </h3>
         <p className="text-slate-400 text-center max-w-md mb-6">
-            {hasQuestionsInOtherFilters 
+            {hasQuestionsInOtherFilters
                 ? "All questions in this filter have been reviewed! Check other filters or generate more."
                 : "Generate your first batch of questions to start reviewing and approving them for your assessments."}
         </p>
@@ -69,7 +69,7 @@ const ViewRouter = ({
 
     const {
         handleLoadFromSheets, handleLoadFromFirestore, handleUpdateDatabaseQuestion, handleKickBackToReview,
-        handleUpdateStatus, handleExplain, handleVariate, handleCritique, handleTranslateSingle, handleLanguageSwitch, handleDelete, handleManualUpdate,
+        handleUpdateStatus, handleExplain, handleVariate, handleCritique, handleApplyRewrite, handleTranslateSingle, handleLanguageSwitch, handleDelete, handleManualUpdate,
         selectAll, clearSelection, bulkUpdateStatus, toggleSelection
     } = handlers;
 
@@ -102,6 +102,7 @@ const ViewRouter = ({
                     onExplain={handleExplain}
                     onVariate={handleVariate}
                     onCritique={handleCritique}
+                    onApplyRewrite={handleApplyRewrite}
                     onTranslateSingle={handleTranslateSingle}
                     onSwitchLanguage={handleLanguageSwitch}
                     onDelete={handleDelete}
@@ -112,7 +113,7 @@ const ViewRouter = ({
                 />
             ) : appMode === 'review' && uniqueFilteredQuestions.length === 0 ? (
                 /* NEW: Empty state for Review mode with CTA */
-                <EmptyReviewState 
+                <EmptyReviewState
                     onNavigateToCreate={onNavigateToCreate}
                     hasQuestionsInOtherFilters={filteredQuestions.length > 0 || questions.length > 0}
                 />
@@ -135,6 +136,7 @@ const ViewRouter = ({
                         onExplain={handleExplain}
                         onVariate={handleVariate}
                         onCritique={handleCritique}
+                        onApplyRewrite={handleApplyRewrite}
                         onTranslateSingle={handleTranslateSingle}
                         onSwitchLanguage={handleLanguageSwitch}
                         onDelete={handleDelete}
