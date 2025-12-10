@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { generateContentSecure as generateContent } from '../../services/geminiSecure';
-import { parseQuestions } from '../../utils/helpers';
+import { parseQuestions } from '../../utils/questionHelpers';
 
 /**
  * Custom hook for question translation operations.

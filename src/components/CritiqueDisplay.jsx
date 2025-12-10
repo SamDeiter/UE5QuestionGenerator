@@ -1,5 +1,5 @@
 import Icon from './Icon';
-import { computeWordDiff } from '../utils/helpers';
+import { computeWordDiff } from '../utils/stringHelpers';
 
 // Simple markdown to HTML converter
 const parseMarkdown = (text) => {

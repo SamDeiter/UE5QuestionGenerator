@@ -1,6 +1,6 @@
 import React from 'react';
 import Icon from '../Icon';
-import { renderMarkdown } from '../../utils/helpers';
+import { renderMarkdown } from '../../utils/stringHelpers';
 
 const ExplanationDisplay = ({ explanation }) => {
     if (!explanation) {

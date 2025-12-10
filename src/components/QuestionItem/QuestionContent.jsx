@@ -1,4 +1,4 @@
-import { sanitizeText } from '../../utils/helpers';
+import { sanitizeText } from '../../utils/stringHelpers';
 
 const QuestionContent = ({
     q,

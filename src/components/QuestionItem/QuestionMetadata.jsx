@@ -1,5 +1,5 @@
 import Icon from '../Icon';
-import { getDisplayUrl } from '../../utils/helpers';
+import { getDisplayUrl } from '../../utils/questionHelpers';
 
 const getVerificationBadge = (status) => {
     switch (status) {

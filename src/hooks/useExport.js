@@ -2,7 +2,8 @@
 import { getCSVContent, segmentQuestions } from '../utils/exportUtils';
 import { saveQuestionsToSheets, fetchQuestionsFromSheets } from '../services/googleSheets';
 import { saveQuestionToFirestore, getQuestionsFromFirestore } from '../services/firebase';
-import { downloadFile, formatDate } from '../utils/helpers';
+import { downloadFile } from '../utils/questionHelpers';
+import { formatDate } from '../utils/dateHelpers';
 
 export const useExport = (
     config,

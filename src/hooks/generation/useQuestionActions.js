@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { generateContentSecure as generateContent, generateCritiqueSecure as generateCritique } from '../../services/geminiSecure';
 import { constructSystemPrompt } from '../../services/promptBuilder';
-import { parseQuestions } from '../../utils/helpers';
+import { parseQuestions } from '../../utils/questionHelpers';
 
 /**
  * Custom hook for question-related actions (explain, variate, critique).

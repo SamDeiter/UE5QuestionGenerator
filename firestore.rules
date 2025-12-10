@@ -1,10 +1,48 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is the owner of the resource
+    function isOwner(resourceData) {
+      return resourceData.creatorId == request.auth.uid;
+    }
+
+    // Questions Collection
     match /questions/{questionId} {
-      // PERMISSIVE MODE: Allow any authenticated user to Create, Read, Update, Delete.
-      // Necessary for global Review functionality.
-      allow create, read, update, delete: if request.auth != null;
+      // READ: Allow any authenticated user to read questions
+      allow read: if isAuthenticated();
+      
+      // CREATE: Allow authenticated users to create if they mark themselves as creator
+      allow create: if isAuthenticated() && request.resource.data.creatorId == request.auth.uid;
+      
+      // UPDATE: Allow authenticated users to update (Collaborative review model)
+      // TODO: Consider restricting critical fields in the future
+      allow update: if isAuthenticated();
+      
+      // DELETE: Only the owner can delete their question
+      allow delete: if isAuthenticated() && isOwner(resource.data);
+    }
+
+    // User Settings (Custom Tags, etc.)
+    match /userSettings/{userId} {
+      // Users can only read/write their own settings
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // API Usage Logging
+    match /apiUsage/{docId} {
+      // Cloud Functions writer only (Client cannot write directly)
+      allow read, write: if false; 
+    }
+    
+    // Default: Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

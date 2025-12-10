@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { generateContentSecure as generateContent, generateCritiqueSecure as generateCritique } from '../services/geminiSecure';
 import { constructSystemPrompt } from '../services/promptBuilder';
-import { parseQuestions } from '../utils/helpers';
+import { parseQuestions } from '../utils/questionHelpers';
 import { validateQuestion } from '../utils/questionValidator';
 import { analyzeRequest, estimateTokens } from '../utils/tokenCounter';
 import { logGeneration, logQuestion } from '../utils/analyticsStore';

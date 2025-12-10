@@ -42,7 +42,10 @@ This file lists the key components and files ("anchors") of the project for quic
 
 ## Utilities
 
-- `src/utils/helpers.js` - General utilities (431 lines - **should split**)
+- `src/utils/stringHelpers.js` - String utilities (DOMPurify, Markdown, diffs)
+- `src/utils/dateHelpers.js` - Date formatting
+- `src/utils/questionHelpers.js` - Question parsing and deduplication
+- ✅ ~~`src/utils/helpers.js`~~ - Removed (Split into above modules)
 - `src/utils/analyticsStore.js` - Analytics tracking
 - `src/utils/tokenCounter.js` - Token usage calculation
 - `src/utils/contextOptimizer.js` - Context optimization
@@ -82,7 +85,7 @@ This file lists the key components and files ("anchors") of the project for quic
 
 - ✅ ~~`App.jsx` - Too large (701 lines), needs refactoring~~ → Refactored to ~432 lines
 - ✅ ~~`QuestionItem.jsx` - Too large (577 lines), needs refactoring~~ → Refactored to 186 lines with 10 sub-components
-- `helpers.js` - Should be split into focused modules
+- ✅ ~~`helpers.js` - Should be split into focused modules~~ → Split into string/date/question helpers
 - `firestore.rules` - Currently too permissive (allow all)
 
 ## Planned Components (Not Yet Created)

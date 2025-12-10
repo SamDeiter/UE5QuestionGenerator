@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getSecureItem, setSecureItem } from '../utils/secureStorage';
-import { filterDuplicateQuestions } from '../utils/helpers';
+import { filterDuplicateQuestions } from '../utils/questionHelpers';
 import { CATEGORY_KEYS, TARGET_PER_CATEGORY, TARGET_TOTAL } from '../utils/constants';
 import { saveQuestionToFirestore, getQuestionsPaginated } from '../services/firebase';
 import { logQuestion } from '../utils/analyticsStore';
