@@ -3,7 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, Suspense, useRef } from 'react';
 // UI Components
 import Icon from './components/Icon';
 import LandingPage from './components/LandingPage';
