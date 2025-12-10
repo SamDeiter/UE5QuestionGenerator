@@ -37,6 +37,7 @@ import { useCrashRecovery } from './hooks/useCrashRecovery';
 import { useTutorial } from './hooks/useTutorial';
 import { useReviewActions } from './hooks/useReviewActions';
 import { useDatabaseActions } from './hooks/useDatabaseActions';
+import { useNavigation } from './hooks/useNavigation';
 // Utilities
 import { TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
 import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
@@ -321,7 +322,20 @@ const App = () => {
         config.language
     ), [filteredQuestions, config.language]);
 
-    // 8. Review Actions (bulk operations)
+    // 8. Export Logic (must come before Navigation since Navigation depends on handleLoadFromFirestore)
+    const {
+        handleExportToSheets,
+        handleLoadFromSheets,
+        handleLoadFromFirestore,
+        handleBulkExport
+    } = useExport(
+        config, questions, historicalQuestions, uniqueFilteredQuestions, allQuestionsMap,
+        showHistory, showMessage, setStatus, () => { },
+        setDatabaseQuestions, setAppMode, setShowExportMenu, setShowBulkExportModal,
+        setHistoricalQuestions
+    );
+
+    // 9. Review Actions (bulk operations)
     const {
         handleClearPending,
         handleBulkAcceptHighScores,
@@ -334,7 +348,7 @@ const App = () => {
         showMessage
     });
 
-    // 9. Database Actions
+    // 10. Database Actions
     const {
         handleUpdateDatabaseQuestion,
         handleKickBackToReview
@@ -342,6 +356,19 @@ const App = () => {
         setDatabaseQuestions,
         setHistoricalQuestions,
         showMessage
+    });
+
+    // 11. Navigation (depends on handleLoadFromFirestore from useExport)
+    const {
+        handleModeSelect,
+        handleViewDatabase,
+        handleGoHome
+    } = useNavigation({
+        setAppMode,
+        setShowExportMenu,
+        setShowHistory,
+        setFilterMode,
+        handleLoadFromFirestore
     });
 
     // Bulk selection callbacks (must be after uniqueFilteredQuestions is defined)
@@ -354,18 +381,6 @@ const App = () => {
         clearSelection();
         showMessage(`${status === 'accepted' ? 'Accepted' : 'Rejected'} ${selectedIds.size} questions`);
     }, [selectedIds, handleUpdateStatus, clearSelection, showMessage]);
-
-    const {
-        handleExportToSheets,
-        handleLoadFromSheets,
-        handleLoadFromFirestore,
-        handleBulkExport
-    } = useExport(
-        config, questions, historicalQuestions, uniqueFilteredQuestions, allQuestionsMap,
-        showHistory, showMessage, setStatus, () => { },
-        setDatabaseQuestions, setAppMode, setShowExportMenu, setShowBulkExportModal,
-        setHistoricalQuestions
-    );
 
     // Keyboard Shortcuts
     useEffect(() => {
@@ -423,24 +438,6 @@ const App = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [appMode, uniqueFilteredQuestions.length]);
 
-    const handleModeSelect = (mode) => {
-        setAppMode(mode);
-        setShowExportMenu(false);
-        if (mode === 'review') {
-            setShowHistory(true);
-            setFilterMode('pending'); // Changed from 'all' to 'pending' to hide accepted items
-        } else {
-            setShowHistory(false);
-            setFilterMode('pending');
-        }
-    };
-
-    const handleViewDatabase = async () => {
-        setAppMode('database');
-        // Load from Firestore (primary database)
-        await handleLoadFromFirestore();
-    };
-
     // Wrapper to adapt (id, update) from QuestionItem to (id, fn) for useQuestionManager
     const handleManualUpdate = (id, update) => {
         updateQuestionInState(id, (prevQ) => {
@@ -449,7 +446,6 @@ const App = () => {
         });
     };
 
-    const handleGoHome = () => setAppMode('landing');
     const handleSelectCategory = (key) => setConfig(prev => ({ ...prev, difficulty: key }));
 
     const [_showProgressMenu, _setShowProgressMenu] = useState(false);
