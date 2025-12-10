@@ -7,7 +7,7 @@ import BatchSizeControl from './sidebar/BatchSizeControl';
 import ActionFooter from './sidebar/ActionFooter';
 import TokenUsageDisplay from './TokenUsageDisplay';
 import CoverageGapSuggester from './sidebar/CoverageGapSuggester';
-import { downloadTrainingData } from '../utils/exportUtils';
+
 
 const Sidebar = ({
     showGenSettings, setShowGenSettings,
