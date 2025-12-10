@@ -17,7 +17,6 @@ import ContextToolbar from './components/ContextToolbar';
 import CrashRecoveryPrompt from './components/CrashRecoveryPrompt';
 import SignIn from './components/SignIn';
 import ApiKeyModal from './components/ApiKeyModal';
-import { TUTORIAL_STEPS } from './utils/tutorialSteps';
 
 // Loading Fallback
 const LoadingSpinner = () => (
@@ -35,6 +34,7 @@ import { useFileHandler } from './hooks/useFileHandler';
 import { useGeneration } from './hooks/useGeneration';
 import { useExport } from './hooks/useExport';
 import { useCrashRecovery } from './hooks/useCrashRecovery';
+import { useTutorial } from './hooks/useTutorial';
 // Utilities
 import { TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
 import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
@@ -57,36 +57,6 @@ const App = () => {
     const [showTerms, setShowTerms] = useState(false);
     const [showAgeGate, setShowAgeGate] = useState(false);
     const [_termsAccepted, setTermsAccepted] = useState(false);
-
-    // Tutorial State (disabled by default for now - enable with Tutorial button)
-    const [tutorialActive, setTutorialActive] = useState(false);
-    const [currentStep, setCurrentStep] = useState(0);
-
-    const handleTutorialNext = () => {
-        setCurrentStep(prev => Math.min(prev + 1, TUTORIAL_STEPS.length - 1));
-    };
-
-    const handleTutorialPrev = () => {
-        setCurrentStep(prev => Math.max(prev - 1, 0));
-    };
-
-    const handleTutorialSkip = () => {
-        setTutorialActive(false);
-        localStorage.setItem('ue5_tutorial_completed', 'true');
-    };
-
-    const handleTutorialComplete = () => {
-        setTutorialActive(false);
-        localStorage.setItem('ue5_tutorial_completed', 'true');
-        showMessage("Tutorial completed! Happy generating!", 5000);
-    };
-
-    const handleRestartTutorial = () => {
-        localStorage.removeItem('ue5_tutorial_completed');
-        setCurrentStep(0);
-        setTutorialActive(true);
-        showMessage("Tutorial restarted!", 2000);
-    };
 
     // Listen for auth state changes and load custom tags
     useEffect(() => {
@@ -159,6 +129,18 @@ const App = () => {
     const showMessage = useCallback((msg, duration = 3000) => {
         addToast(msg, 'info', duration);
     }, [addToast]);
+
+    // 0. Tutorial System
+    const {
+        tutorialActive,
+        currentStep,
+        tutorialSteps,
+        handleTutorialNext,
+        handleTutorialPrev,
+        handleTutorialSkip,
+        handleTutorialComplete,
+        handleRestartTutorial
+    } = useTutorial(showMessage);
 
     // ========================================================================
     // HOOKS - State Management
@@ -584,7 +566,7 @@ const App = () => {
                 }}
                 state={{
                     config, isProcessing, status, translationProgress,
-                    allQuestionsMap, appMode, currentStep, tutorialSteps: TUTORIAL_STEPS,
+                    allQuestionsMap, appMode, currentStep, tutorialSteps,
                     metrics: { totalApproved: approvedCount, totalQuestions: questions.length },
                     isApiReady, customTags
                 }}
