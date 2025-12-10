@@ -193,6 +193,7 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                         </div>
                         <div className="flex items-center gap-3">
                             {/* Single primary action - FIX IT (only for low scores) */}
+                            {/* REMOVED: Redundant with ReviewProgressBar action
                             <button
                                 onClick={onApplyRewrite}
                                 disabled={isProcessing || score >= 70}
@@ -204,6 +205,7 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                             >
                                 <Icon name="zap" size={20} /> FIX IT
                             </button>
+                            */}
 
                             {/* Secondary options */}
                             <div className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity">

@@ -92,7 +92,7 @@ export const useQuestionManager = (config, showMessage) => {
     }, [allQuestionsMap]);
 
     // Helper to add questions with automatic cloud backup
-    const addQuestionsToState = useCallback(async (newItems, isHistory = false) => {
+    const addQuestionsToState = useCallback(async (newItems, isHistory = false, insertAfterId = null) => {
         // Auto-save to Firestore for crash protection
         if (newItems && newItems.length > 0) {
             console.log(`💾 Auto-saving ${newItems.length} questions to Firestore...`);
@@ -109,6 +109,17 @@ export const useQuestionManager = (config, showMessage) => {
         targetSet(prev => {
             const otherList = isHistory ? questions : historicalQuestions;
             const uniqueNew = filterDuplicateQuestions(newItems, prev, otherList);
+
+            if (insertAfterId && uniqueNew.length > 0) {
+                // Find index to insert after
+                const idx = prev.findIndex(q => q.id === insertAfterId || q.uniqueId === insertAfterId);
+                if (idx !== -1) {
+                    const newArr = [...prev];
+                    newArr.splice(idx + 1, 0, ...uniqueNew);
+                    return newArr;
+                }
+            }
+
             return [...prev, ...uniqueNew];
         });
     }, [questions, historicalQuestions]);
@@ -254,12 +265,12 @@ export const useQuestionManager = (config, showMessage) => {
     // PERFORMANCE: Load more questions
     const _loadMoreQuestions = useCallback(async (userId) => {
         if (!hasMore || isLoadingMore) return;
-        
+
         setIsLoadingMore(true);
         try {
-            const { questions: moreQuestions, lastDoc: newLastDoc, hasMore: moreAvailable } = 
+            const { questions: moreQuestions, lastDoc: newLastDoc, hasMore: moreAvailable } =
                 await getQuestionsPaginated(userId, 20, lastDoc);
-            
+
             setDatabaseQuestions(prev => [...prev, ...moreQuestions]);
             setLastDoc(newLastDoc);
             setHasMore(moreAvailable);

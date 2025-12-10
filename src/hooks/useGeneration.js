@@ -516,7 +516,8 @@ export const useGeneration = (
             const newQs = parseQuestions(text);
             if (newQs.length > 0) {
                 const uniqueNewQuestions = await checkAndStoreQuestions(newQs);
-                addQuestionsToState(uniqueNewQuestions, false); // Assuming showHistory is false or we don't care
+                // Insert variations immediately after the source question
+                addQuestionsToState(uniqueNewQuestions, false, q.id);
 
                 showMessage(`Added ${uniqueNewQuestions.length} new variations.`, 3000);
             }
