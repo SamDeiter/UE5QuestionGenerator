@@ -63,3 +63,4 @@ To ensure you have full context before starting any task, **ALWAYS** check these
 
 *   **`AGENTS.md`**: Contains specific instructions, persona definitions, and strict rules for each Agent role. You must follow the directives in this file.
 *   **`ANCHOR_MANIFEST.md`**: Serves as the "map" of the project. It lists key files, their purposes, and known issues. Consult this to understand where to find code and where to place new files.
+*   **`docs/CODE_QUALITY.md`**: DEFINES THE CODE SANITATION PLAN. Consult this for linting rules and sanitation workflows.

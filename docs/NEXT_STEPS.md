@@ -11,9 +11,14 @@
 - [ ] **Queue System:** Implement a request queue to manage API limits (RPM/TPM).
 - [ ] **User Feedback:** Show precise "Cooling down..." timers to the user when limits are hit.
 
-### 1.3 Enhanced Data Export
-- [ ] **Metadata Columns:** Add columns for AI Critique, Score, and Token Cost to Google Sheets export.
-- [ ] **Apps Script Update:** Modify `Code.gs` to handle dynamic columns and metadata.
+### 1.3 Enhanced Data Export ✅
+- [x] **Metadata Columns:** Add columns for AI Critique, Score, and Token Cost to Google Sheets export.
+- [x] **Apps Script Update:** Modify `Code.gs` to handle dynamic columns and metadata.
+
+### 1.4 Code Health & Sanitation (New)
+- [ ] **Lint Config:** Ignore tools/backups and refine rules in `eslint.config.js`.
+- [ ] **Cleanup:** Fix the 300+ remaining lint warnings (mostly unused vars and legacy code).
+- [ ] **Pre-commit:** Enforce linting before git commit.
 
 ---
 
