@@ -154,6 +154,11 @@ export const useGeneration = (
             .filter(q => q.status === 'rejected' && q.rejectionReason && q.discipline === config.discipline)
             .slice(-5); // Take most recent 5
 
+        // Log the first item in the map to see structure
+        if (allQuestionsMap.size > 0) {
+            const firstVal = Array.from(allQuestionsMap.values())[0];
+        }
+
         const systemPrompt = constructSystemPrompt(config, getFileContext(), rejectedExamples);
         const userPrompt = `Generate ${config.batchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}. Ensure links work for UE 5.7 or latest available.`;
 
