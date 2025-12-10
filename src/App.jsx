@@ -35,6 +35,7 @@ import { useGeneration } from './hooks/useGeneration';
 import { useExport } from './hooks/useExport';
 import { useCrashRecovery } from './hooks/useCrashRecovery';
 import { useTutorial } from './hooks/useTutorial';
+import { useReviewActions } from './hooks/useReviewActions';
 // Utilities
 import { TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
 import { createFilteredQuestions, createUniqueFilteredQuestions } from './utils/questionFilters';
@@ -319,6 +320,19 @@ const App = () => {
         config.language
     ), [filteredQuestions, config.language]);
 
+    // 8. Review Actions (bulk operations)
+    const {
+        handleClearPending,
+        handleBulkAcceptHighScores,
+        handleBulkCritiqueAll
+    } = useReviewActions({
+        uniqueFilteredQuestions,
+        setQuestions,
+        handleUpdateStatus,
+        handleCritique,
+        showMessage
+    });
+
     // Bulk selection callbacks (must be after uniqueFilteredQuestions is defined)
     const selectAll = useCallback(() => {
         setSelectedIds(new Set(uniqueFilteredQuestions.map(q => q.id)));
@@ -461,50 +475,6 @@ const App = () => {
     const handleSelectCategory = (key) => setConfig(prev => ({ ...prev, difficulty: key }));
 
     const [_showProgressMenu, _setShowProgressMenu] = useState(false);
-
-    const handleClearPending = () => {
-        if (window.confirm("Are you sure you want to delete ALL pending questions? This cannot be undone.")) {
-            // Filter out pending questions from the main state
-            setQuestions(prev => prev.filter(q => q.status === 'accepted' || q.status === 'rejected'));
-            showMessage("All pending questions cleared.", 3000);
-        }
-    };
-
-    // Bulk accept all questions with critique score >= 70
-    const handleBulkAcceptHighScores = () => {
-        const highScoreQuestions = uniqueFilteredQuestions.filter(
-            q => q.critiqueScore >= 70 && q.status !== 'accepted' && q.humanVerified
-        );
-
-        if (highScoreQuestions.length === 0) {
-            showMessage("No verified questions with score ≥ 70 to accept.", 3000);
-            return;
-        }
-
-        highScoreQuestions.forEach(q => handleUpdateStatus(q.id, 'accepted'));
-        showMessage(`✓ Accepted ${highScoreQuestions.length} high-scoring questions!`, 4000);
-    };
-
-    // Bulk critique all questions without scores
-    const handleBulkCritiqueAll = async () => {
-        const uncritiquedQuestions = uniqueFilteredQuestions.filter(
-            q => q.critiqueScore === undefined || q.critiqueScore === null
-        );
-
-        if (uncritiquedQuestions.length === 0) {
-            showMessage("All questions already have critique scores.", 3000);
-            return;
-        }
-
-        showMessage(`Running critique on ${uncritiquedQuestions.length} questions...`, 3000);
-
-        // Process sequentially to avoid rate limits
-        for (const q of uncritiquedQuestions) {
-            await handleCritique(q);
-        }
-
-        showMessage(`✓ Critique complete for ${uncritiquedQuestions.length} questions!`, 4000);
-    };
 
     const _handleSaveCustomTags = async (newCustomTags) => {
         try {
