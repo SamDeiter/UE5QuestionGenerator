@@ -19,6 +19,6 @@ We need to ensure that the rich metadata we are generating (Critiques, Rejection
 3.  **Verify**:
     - export a batch of questions (including some rejected ones if possible) and check the Sheet.
 
-## Reference
-- `src/services/googleSheets.js`
-- `Code.gs` (Google Apps Script)
+### 3. Code Cleanup (Sanitation)
+- [ ] Reduce lint warnings from 343 -> 0.
+- [ ] Extract large components identified in `CODE_QUALITY.md`.
