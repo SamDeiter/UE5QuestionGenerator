@@ -4,6 +4,7 @@ import Icon from './Icon';
 // Lazy load heavy views
 const DatabaseView = React.lazy(() => import('./DatabaseView'));
 const ReviewMode = React.lazy(() => import('./ReviewMode'));
+const AnalyticsView = React.lazy(() => import('./AnalyticsView'));
 import BulkActionBar from './BulkActionBar';
 import QuestionList from './QuestionList';
 
@@ -64,7 +65,8 @@ const ViewRouter = ({
     handlers,
     state,
     setters,
-    onNavigateToCreate // NEW: callback to switch to Create mode
+    onNavigateToCreate, // callback to switch to Create mode
+    onNavigateHome // callback to go back to landing page
 }) => {
 
     const {
@@ -78,7 +80,9 @@ const ViewRouter = ({
 
     return (
         <Suspense fallback={<LoadingSpinner />}>
-            {appMode === 'database' ? (
+            {appMode === 'analytics' ? (
+                <AnalyticsView onBack={onNavigateHome} />
+            ) : appMode === 'database' ? (
                 <DatabaseView
                     questions={databaseQuestions}
                     sheetUrl={config.sheetUrl}

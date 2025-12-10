@@ -5,7 +5,7 @@ const AppNavigation = ({ activeMode, onNavigate, counts = {} }) => {
         { id: 'create', label: 'Create', icon: 'plus-circle', color: 'green' },
         { id: 'review', label: 'Review', icon: 'list-checks', color: 'indigo', badge: counts.pending },
         { id: 'database', label: 'Database', icon: 'database', color: 'blue' },
-        { id: 'analytics', label: 'Analytics', icon: 'bar-chart-2', color: 'slate' } // Analytics was a modal trigger, but plan implies tab. I'll treat it as a mode or keep it as a button.
+        { id: 'analytics', label: 'Analytics', icon: 'bar-chart-2', color: 'emerald' }
     ];
 
     // Note: Analytics in App.jsx was a modal (setShowAnalytics). 

@@ -638,7 +638,7 @@ const App = () => {
                         <AppNavigation
                             activeMode={appMode}
                             onNavigate={(mode) => {
-                                if (mode === 'analytics') setShowAnalytics(true);
+                                if (mode === 'analytics') setAppMode('analytics');
                                 else if (mode === 'database') handleViewDatabase();
                                 else handleModeSelect(mode);
                             }}
@@ -714,6 +714,7 @@ const App = () => {
                                     setDatabaseQuestions, setCurrentReviewIndex, setFilterByCreator, showMessage
                                 }}
                                 onNavigateToCreate={() => handleModeSelect('create')}
+                                onNavigateHome={handleGoHome}
                             />
                         </Suspense>
                     </div>

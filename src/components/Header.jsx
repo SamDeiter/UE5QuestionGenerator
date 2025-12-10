@@ -6,13 +6,40 @@ const APP_VERSION = "v1.7";
 const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, tokenUsage = { inputTokens: 0, outputTokens: 0, totalCost: 0 }, onRestartTutorial }) => {
     const connectionStatus = useConnectionStatus();
     const isReview = appMode === 'review';
-    const borderColor = isReview ? 'border-indigo-600' : 'border-orange-600';
-    const titleColor = isReview ? 'text-indigo-50' : 'text-orange-50';
-    const headerBg = isReview ? 'bg-slate-950 bg-gradient-to-r from-indigo-950/30 to-slate-950' : 'bg-slate-950';
+    const isAnalytics = appMode === 'analytics';
+    const borderColor = isReview ? 'border-indigo-600' : isAnalytics ? 'border-emerald-600' : 'border-orange-600';
+    const titleColor = isReview ? 'text-indigo-50' : isAnalytics ? 'text-emerald-50' : 'text-orange-50';
+    const headerBg = isReview ? 'bg-slate-950 bg-gradient-to-r from-indigo-950/30 to-slate-950' : isAnalytics ? 'bg-slate-950 bg-gradient-to-r from-emerald-950/30 to-slate-950' : 'bg-slate-950';
 
     const totalTokens = (tokenUsage.inputTokens || 0) + (tokenUsage.outputTokens || 0);
     const formattedTokens = totalTokens >= 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : totalTokens;
     const formattedCost = (tokenUsage.totalCost || 0).toFixed(4);
+
+    const getTitle = () => {
+        if (isReview) return 'Review & Audit Console';
+        if (isAnalytics) return 'Analytics Dashboard';
+        return 'UE5 Question Generator';
+    };
+
+    const getSubtitle = () => {
+        if (isReview) return 'Quality Assurance • Translation • Verification';
+        if (isAnalytics) return 'Generation Metrics • Quality Trends • URL Validation';
+        return 'Universal Scenario-Based Generator • Official Docs Only';
+    };
+
+    const getBadgeStyle = () => {
+        if (isReview) return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50';
+        if (isAnalytics) return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50';
+        if (appMode === 'database') return 'bg-blue-500/20 text-blue-300 border-blue-500/50';
+        return 'bg-orange-500/20 text-orange-300 border-orange-500/50';
+    };
+
+    const getBadgeText = () => {
+        if (isReview) return 'REVIEW MODE';
+        if (isAnalytics) return 'ANALYTICS';
+        if (appMode === 'database') return 'DATABASE VIEW';
+        return 'CREATE MODE';
+    };
 
     return (
         <header className={`${headerBg} text-white p-6 shadow-xl border-b ${borderColor} relative z-20 transition-all duration-500`}>
@@ -24,15 +51,15 @@ const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, toke
                     <div>
                         <div className="flex items-center gap-3">
                             <h1 className={`text-xl font-bold tracking-tight uppercase ${titleColor} transition-colors duration-500`}>
-                                {isReview ? 'Review & Audit Console' : 'UE5 Question Generator'}
+                                {getTitle()}
                             </h1>
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${isReview ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50' : appMode === 'database' ? 'bg-blue-500/20 text-blue-300 border-blue-500/50' : 'bg-orange-500/20 text-orange-300 border-orange-500/50'}`}>
-                                {isReview ? 'REVIEW MODE' : appMode === 'database' ? 'DATABASE VIEW' : 'CREATE MODE'}
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${getBadgeStyle()}`}>
+                                {getBadgeText()}
                             </span>
                             <span className="text-xs text-slate-500 font-mono border border-slate-800 rounded px-1.5 py-0.5">{APP_VERSION}</span>
                         </div>
                         <p className="text-slate-400 text-xs mt-0.5">
-                            {isReview ? 'Quality Assurance • Translation • Verification' : 'Universal Scenario-Based Generator • Official Docs Only'}
+                            {getSubtitle()}
                         </p>
                     </div>
                 </div>

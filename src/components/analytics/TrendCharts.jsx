@@ -1,3 +1,16 @@
+import {
+    ResponsiveContainer,
+    LineChart,
+    AreaChart,
+    Line,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    Legend
+} from 'recharts';
+
 const TrendCharts = ({ generations }) => {
     // Process data for charts
     // Sort generations by timestamp

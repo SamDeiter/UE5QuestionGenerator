@@ -72,6 +72,17 @@ const LandingPage = ({ onSelectMode, apiKeyStatus, isCloudReady, onOpenSettings 
                     <h3 className="text-xl font-bold mb-2">Database View</h3>
                     <p className="text-xs text-slate-400 text-center">Read-only view of approved questions directly from Google Sheets.</p>
                 </button>
+
+                <button
+                    onClick={() => onSelectMode('analytics')}
+                    className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-emerald-900/20"
+                >
+                    <div className="p-3 bg-emerald-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
+                        <Icon name="bar-chart-2" size={32} className="text-emerald-500" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">Analytics</h3>
+                    <p className="text-xs text-slate-400 text-center">View generation metrics, quality trends, and URL validation stats.</p>
+                </button>
             </div>
 
             <div className="flex items-center justify-center gap-6 text-xs text-slate-500 font-mono pt-8">
