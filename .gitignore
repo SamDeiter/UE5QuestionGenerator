@@ -26,6 +26,10 @@ temp_*.txt
 temp_*.py
 test-output.txt
 
+# Lint fixing scripts (temporary utilities)
+fix_*.py
+lint_report.txt
+
 # Backups (kept locally for safety)
 tools/security_backups/
 tools/backups/
