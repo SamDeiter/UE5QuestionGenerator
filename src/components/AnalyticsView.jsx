@@ -1,9 +1,53 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Icon from './Icon';
-import MetricsDashboard from './MetricsDashboard';
-import TrendCharts from './analytics/TrendCharts';
-import DistributionCharts from './analytics/DistributionCharts';
-import { getAnalytics } from '../utils/analyticsStore';
+import {
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    BarChart,
+    Bar,
+    AreaChart,
+    Area,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+    Tooltip,
+    Legend,
+    RadialBarChart,
+    RadialBar
+} from 'recharts';
+import { getAnalytics, getTokenStats } from '../utils/analyticsStore';
+import { TAGS_BY_DISCIPLINE } from '../utils/tagTaxonomy';
+import { CATEGORY_KEYS } from '../utils/constants';
+
+// Define discipline list from tagTaxonomy
+const DISCIPLINES = Object.keys(TAGS_BY_DISCIPLINE);
+
+// Color palettes
+const DISCIPLINE_COLORS = {
+    "Technical Art": "#f97316",
+    "Lighting & Rendering": "#eab308",
+    "Look Development (Materials)": "#84cc16",
+    "Animation & Rigging": "#22c55e",
+    "VFX (Niagara)": "#06b6d4",
+    "World Building & Level Design": "#3b82f6",
+    "Blueprints": "#8b5cf6",
+    "Game Logic & Systems": "#ec4899",
+    "C++ Programming": "#f43f5e",
+    "Networking": "#6366f1"
+};
+
+const DIFFICULTY_COLORS = {
+    'Easy MC': '#22c55e',
+    'Easy T/F': '#4ade80',
+    'Medium MC': '#eab308',
+    'Medium T/F': '#facc15',
+    'Hard MC': '#ef4444',
+    'Hard T/F': '#f87171'
+};
+
+const STATUS_COLORS = ['#22c55e', '#f59e0b', '#ef4444']; // accepted, pending, rejected
 
 /**
  * AnalyticsView - Dedicated full-page analytics dashboard
@@ -12,12 +56,89 @@ import { getAnalytics } from '../utils/analyticsStore';
 const AnalyticsView = ({ onBack }) => {
     const [activeTab, setActiveTab] = useState('overview');
     const analytics = getAnalytics();
+    const tokenStats = getTokenStats();
 
     const tabs = [
         { id: 'overview', label: 'Overview', icon: 'layout-dashboard' },
-        { id: 'trends', label: 'Trends', icon: 'trending-up' },
-        { id: 'distribution', label: 'Distribution', icon: 'pie-chart' },
+        { id: 'disciplines', label: 'Disciplines', icon: 'layers' },
+        { id: 'quality', label: 'Quality', icon: 'target' },
     ];
+
+    // Process analytics data
+    const {
+        disciplineData,
+        difficultyData,
+        statusData,
+        qualityDistribution,
+        recentGenerations
+    } = useMemo(() => {
+        const questions = analytics.questions || [];
+        const generations = analytics.generations || [];
+
+        // Discipline breakdown
+        const disciplineCounts = DISCIPLINES.reduce((acc, disc) => {
+            acc[disc] = questions.filter(q => q.discipline === disc).length;
+            return acc;
+        }, {});
+
+        const disciplineData = Object.entries(disciplineCounts)
+            .map(([name, value]) => ({
+                name: name.replace(' & ', '\n'),
+                fullName: name,
+                value,
+                fill: DISCIPLINE_COLORS[name] || '#64748b'
+            }))
+            .filter(d => d.value > 0)
+            .sort((a, b) => b.value - a.value);
+
+        // Difficulty breakdown
+        const difficultyData = CATEGORY_KEYS.map(key => ({
+            name: key,
+            value: questions.filter(q => q.difficulty === key).length,
+            fill: DIFFICULTY_COLORS[key]
+        })).filter(d => d.value > 0);
+
+        // Status breakdown
+        const statusCounts = {
+            accepted: questions.filter(q => q.status === 'accepted').length,
+            pending: questions.filter(q => !q.status || q.status === 'pending').length,
+            rejected: questions.filter(q => q.status === 'rejected').length
+        };
+
+        const statusData = [
+            { name: 'Accepted', value: statusCounts.accepted, fill: '#22c55e' },
+            { name: 'Pending', value: statusCounts.pending, fill: '#f59e0b' },
+            { name: 'Rejected', value: statusCounts.rejected, fill: '#ef4444' }
+        ].filter(d => d.value > 0);
+
+        // Quality distribution (for questions with scores)
+        const qualityBuckets = [
+            { range: '90-100', min: 90, max: 100, fill: '#22c55e' },
+            { range: '70-89', min: 70, max: 89, fill: '#84cc16' },
+            { range: '50-69', min: 50, max: 69, fill: '#eab308' },
+            { range: '30-49', min: 30, max: 49, fill: '#f97316' },
+            { range: '0-29', min: 0, max: 29, fill: '#ef4444' }
+        ];
+
+        const qualityDistribution = qualityBuckets.map(bucket => ({
+            ...bucket,
+            count: questions.filter(q =>
+                q.critiqueScore >= bucket.min && q.critiqueScore <= bucket.max
+            ).length
+        })).filter(b => b.count > 0);
+
+        // Recent generations for trend
+        const recentGenerations = generations.slice(-10).map((gen, idx) => ({
+            name: `Gen ${idx + 1}`,
+            tokens: (gen.tokensUsed?.input || 0) + (gen.tokensUsed?.output || 0),
+            questions: gen.questionsGenerated || 0,
+            quality: gen.averageQuality || 0
+        }));
+
+        return { disciplineData, difficultyData, statusData, qualityDistribution, recentGenerations };
+    }, [analytics]);
+
+    const summary = analytics.summary || {};
 
     return (
         <div className="min-h-screen bg-slate-950 text-white">
@@ -39,7 +160,7 @@ const AnalyticsView = ({ onBack }) => {
                             </div>
                             <div>
                                 <h1 className="text-xl font-bold">Analytics Dashboard</h1>
-                                <p className="text-xs text-slate-400">Question generation metrics & insights</p>
+                                <p className="text-xs text-slate-400">Generation metrics • Quality trends • Discipline breakdown</p>
                             </div>
                         </div>
                     </div>
@@ -67,66 +188,291 @@ const AnalyticsView = ({ onBack }) => {
             <div className="max-w-7xl mx-auto p-6">
                 {activeTab === 'overview' && (
                     <div className="space-y-6">
-                        <MetricsDashboard />
+                        {/* Summary Stats Row */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <StatCard
+                                title="Total Questions"
+                                value={summary.totalQuestions || 0}
+                                icon="file-text"
+                                color="blue"
+                            />
+                            <StatCard
+                                title="Acceptance Rate"
+                                value={`${summary.acceptanceRate || 0}%`}
+                                icon="check-circle"
+                                color="emerald"
+                            />
+                            <StatCard
+                                title="Avg Quality"
+                                value={summary.averageQuality || 0}
+                                icon="star"
+                                color="amber"
+                            />
+                            <StatCard
+                                title="Total Cost"
+                                value={`$${(summary.estimatedCost || 0).toFixed(4)}`}
+                                icon="dollar-sign"
+                                color="purple"
+                            />
+                        </div>
 
-                        {/* Quick Stats Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="p-2 bg-blue-900/30 rounded-lg">
-                                        <Icon name="check-circle" size={20} className="text-blue-400" />
-                                    </div>
-                                    <span className="text-sm font-medium text-slate-300">URL Database</span>
+                        {/* Charts Row */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Status Pie Chart */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                                <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                                    <Icon name="pie-chart" size={16} className="text-emerald-400" />
+                                    Question Status
+                                </h3>
+                                <div className="h-64">
+                                    {statusData.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={statusData}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={60}
+                                                    outerRadius={90}
+                                                    dataKey="value"
+                                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                                >
+                                                    {statusData.map((entry, idx) => (
+                                                        <Cell key={idx} fill={entry.fill} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155' }}
+                                                />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <EmptyState message="No question data yet" />
+                                    )}
                                 </div>
-                                <p className="text-3xl font-bold text-white">536</p>
-                                <p className="text-xs text-slate-500 mt-1">Verified documentation URLs</p>
                             </div>
 
-                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                                <div className="flex items-center gap-3 mb-3">
+                            {/* Difficulty Distribution */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                                <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                                    <Icon name="sliders" size={16} className="text-amber-400" />
+                                    Difficulty Distribution
+                                </h3>
+                                <div className="h-64">
+                                    {difficultyData.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={difficultyData} margin={{ top: 10, right: 10, left: 0, bottom: 30 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                                <XAxis
+                                                    dataKey="name"
+                                                    stroke="#94a3b8"
+                                                    tick={{ fontSize: 10, angle: -45, textAnchor: 'end' }}
+                                                    height={60}
+                                                />
+                                                <YAxis stroke="#94a3b8" />
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155' }}
+                                                />
+                                                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                                                    {difficultyData.map((entry, idx) => (
+                                                        <Cell key={idx} fill={entry.fill} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <EmptyState message="No difficulty data yet" />
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Generation Trend */}
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                            <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                                <Icon name="trending-up" size={16} className="text-blue-400" />
+                                Recent Generation Activity
+                            </h3>
+                            <div className="h-64">
+                                {recentGenerations.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={recentGenerations} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="colorTokens" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                                </linearGradient>
+                                                <linearGradient id="colorQuestions" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
+                                                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                            <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 11 }} />
+                                            <YAxis stroke="#94a3b8" />
+                                            <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155' }} />
+                                            <Legend />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="tokens"
+                                                stroke="#3b82f6"
+                                                fillOpacity={1}
+                                                fill="url(#colorTokens)"
+                                                name="Tokens"
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="questions"
+                                                stroke="#22c55e"
+                                                fillOpacity={1}
+                                                fill="url(#colorQuestions)"
+                                                name="Questions"
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <EmptyState message="Generate some questions to see trends" />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'disciplines' && (
+                    <div className="space-y-6">
+                        {/* Large Discipline Bar Chart */}
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                            <h3 className="text-lg font-bold text-slate-300 mb-6 flex items-center gap-2">
+                                <Icon name="layers" size={20} className="text-purple-400" />
+                                Questions by Discipline
+                            </h3>
+                            <div className="h-96">
+                                {disciplineData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={disciplineData}
+                                            layout="vertical"
+                                            margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
+                                            <XAxis type="number" stroke="#94a3b8" />
+                                            <YAxis
+                                                type="category"
+                                                dataKey="fullName"
+                                                stroke="#94a3b8"
+                                                width={110}
+                                                tick={{ fontSize: 11 }}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155' }}
+                                                formatter={(value) => [value, 'Questions']}
+                                            />
+                                            <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                                                {disciplineData.map((entry, idx) => (
+                                                    <Cell key={idx} fill={entry.fill} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <EmptyState message="No discipline data yet. Generate some questions!" />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Discipline Cards Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            {DISCIPLINES.map(disc => {
+                                const count = (analytics.questions || []).filter(q => q.discipline === disc).length;
+                                const color = DISCIPLINE_COLORS[disc] || '#64748b';
+                                return (
+                                    <div
+                                        key={disc}
+                                        className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors"
+                                    >
+                                        <div
+                                            className="w-3 h-3 rounded-full mb-3"
+                                            style={{ backgroundColor: color }}
+                                        />
+                                        <p className="text-2xl font-bold text-white">{count}</p>
+                                        <p className="text-xs text-slate-400 mt-1 line-clamp-2">{disc}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'quality' && (
+                    <div className="space-y-6">
+                        {/* Quality Score Distribution */}
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                            <h3 className="text-lg font-bold text-slate-300 mb-6 flex items-center gap-2">
+                                <Icon name="target" size={20} className="text-emerald-400" />
+                                Quality Score Distribution
+                            </h3>
+                            <div className="h-64">
+                                {qualityDistribution.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={qualityDistribution} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                            <XAxis dataKey="range" stroke="#94a3b8" />
+                                            <YAxis stroke="#94a3b8" />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155' }}
+                                                formatter={(value) => [value, 'Questions']}
+                                            />
+                                            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                                                {qualityDistribution.map((entry, idx) => (
+                                                    <Cell key={idx} fill={entry.fill} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <EmptyState message="Run AI Critique on questions to see quality distribution" />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Token Usage Stats */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="p-2 bg-blue-900/30 rounded-lg">
+                                        <Icon name="zap" size={20} className="text-blue-400" />
+                                    </div>
+                                    <span className="text-sm font-medium text-slate-300">Total Tokens</span>
+                                </div>
+                                <p className="text-3xl font-bold text-white">
+                                    {(tokenStats.total / 1000).toFixed(1)}k
+                                </p>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Input: {(tokenStats.avgInput / 1000).toFixed(1)}k avg • Output: {(tokenStats.avgOutput / 1000).toFixed(1)}k avg
+                                </p>
+                            </div>
+
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                                <div className="flex items-center gap-3 mb-4">
                                     <div className="p-2 bg-emerald-900/30 rounded-lg">
-                                        <Icon name="target" size={20} className="text-emerald-400" />
+                                        <Icon name="check-circle" size={20} className="text-emerald-400" />
                                     </div>
                                     <span className="text-sm font-medium text-slate-300">URL Success Rate</span>
                                 </div>
                                 <p className="text-3xl font-bold text-emerald-400">100%</p>
-                                <p className="text-xs text-slate-500 mt-1">Last 10 questions validated</p>
+                                <p className="text-xs text-slate-500 mt-1">536 verified URLs in database</p>
                             </div>
 
-                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                                <div className="flex items-center gap-3 mb-3">
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                                <div className="flex items-center gap-3 mb-4">
                                     <div className="p-2 bg-purple-900/30 rounded-lg">
-                                        <Icon name="layers" size={20} className="text-purple-400" />
+                                        <Icon name="award" size={20} className="text-purple-400" />
                                     </div>
-                                    <span className="text-sm font-medium text-slate-300">Topic Coverage</span>
+                                    <span className="text-sm font-medium text-slate-300">Generations</span>
                                 </div>
-                                <p className="text-3xl font-bold text-white">30+</p>
-                                <p className="text-xs text-slate-500 mt-1">UE5 categories covered</p>
+                                <p className="text-3xl font-bold text-white">{summary.totalGenerations || 0}</p>
+                                <p className="text-xs text-slate-500 mt-1">Total generation batches run</p>
                             </div>
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === 'trends' && (
-                    <div className="space-y-6">
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                <Icon name="trending-up" size={20} className="text-emerald-400" />
-                                Generation Trends
-                            </h2>
-                            <TrendCharts generations={analytics.generations || []} />
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === 'distribution' && (
-                    <div className="space-y-6">
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                <Icon name="pie-chart" size={20} className="text-purple-400" />
-                                Question Distribution
-                            </h2>
-                            <DistributionCharts questions={analytics.questions || []} />
                         </div>
                     </div>
                 )}
@@ -134,5 +480,34 @@ const AnalyticsView = ({ onBack }) => {
         </div>
     );
 };
+
+// Helper Components
+const StatCard = ({ title, value, icon, color }) => {
+    const colorClasses = {
+        blue: 'bg-blue-900/30 text-blue-400',
+        emerald: 'bg-emerald-900/30 text-emerald-400',
+        amber: 'bg-amber-900/30 text-amber-400',
+        purple: 'bg-purple-900/30 text-purple-400'
+    };
+
+    return (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+                <div className={`p-1.5 rounded-lg ${colorClasses[color]}`}>
+                    <Icon name={icon} size={14} />
+                </div>
+                <span className="text-xs text-slate-400">{title}</span>
+            </div>
+            <p className="text-2xl font-bold text-white">{value}</p>
+        </div>
+    );
+};
+
+const EmptyState = ({ message }) => (
+    <div className="flex flex-col items-center justify-center h-full text-slate-500">
+        <Icon name="inbox" size={32} className="mb-2 opacity-50" />
+        <p className="text-sm">{message}</p>
+    </div>
+);
 
 export default AnalyticsView;
