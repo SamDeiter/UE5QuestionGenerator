@@ -6,6 +6,16 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 // UI Components
 import Icon from './components/Icon';
+import LandingPage from './components/LandingPage';
+import Header from './components/Header';
+import Toast from './components/Toast';
+import Sidebar from './components/Sidebar';
+import GlobalModals from './components/GlobalModals';
+import ViewRouter from './components/ViewRouter';
+import AppNavigation from './components/AppNavigation';
+import ContextToolbar from './components/ContextToolbar';
+import CrashRecoveryPrompt from './components/CrashRecoveryPrompt';
+import SignIn from './components/SignIn';
 import { TUTORIAL_STEPS } from './utils/tutorialSteps';
 
 // Loading Fallback
