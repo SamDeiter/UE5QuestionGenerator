@@ -1,4 +1,3 @@
-import React from 'react';
 import Icon from '../Icon';
 import { getDisplayUrl, stripHtmlTags } from '../../utils/helpers';
 

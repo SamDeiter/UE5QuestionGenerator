@@ -21,10 +21,10 @@ vi.mock('../utils/analyticsStore', () => ({
 
 describe('Feedback Loop Integration Tests', () => {
     let mockConfig;
-    let mockSetConfig = vi.fn();
-    let mockShowMessage = vi.fn();
-    let mockSetStatus = vi.fn();
-    let mockHandlers = {
+    const mockSetConfig = vi.fn();
+    const mockShowMessage = vi.fn();
+    const mockSetStatus = vi.fn();
+    const mockHandlers = {
         mockSetShowNameModal: vi.fn(),
         mockSetShowAdvancedConfig: vi.fn(), // Kept in handlers obj but not passed
         mockSetShowApiError: vi.fn(),
@@ -35,7 +35,7 @@ describe('Feedback Loop Integration Tests', () => {
         mockHandleLanguageSwitch: vi.fn(),
         mockGetFileContext: vi.fn(() => '')
     };
-    let translationMap = new Map();
+    const translationMap = new Map();
     let allQuestionsMap = new Map();
 
     beforeEach(() => {

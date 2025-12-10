@@ -210,7 +210,7 @@ export const createMockFileReader = (result) => {
  */
 export const renderWithSetup = (ui, options = {}) => {
     const mockLocalStorage = createMockLocalStorage();
-    global.localStorage = mockLocalStorage;
+    globalThis.localStorage = mockLocalStorage;
 
     return {
         ...render(ui, options),
@@ -234,7 +234,7 @@ export const waitForAsync = (ms = 0) => {
  */
 export const isValidQuestion = (question) => {
     const requiredFields = ['id', 'question', 'difficulty', 'type', 'correct', 'status'];
-    return requiredFields.every(field => question.hasOwnProperty(field));
+    return requiredFields.every(field => Object.prototype.hasOwnProperty.call(question, field));
 };
 
 /**

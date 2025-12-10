@@ -1,5 +1,3 @@
-import React from 'react';
-
 const GranularProgress = ({ 
     currentStage = 1, 
     totalStages = 1, 

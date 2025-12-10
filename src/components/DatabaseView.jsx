@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import Icon from './Icon';
 import QuestionItem from './QuestionItem';
 import MetricsDashboard from './MetricsDashboard';
@@ -60,9 +60,10 @@ const DatabaseView = ({
                 return sorted.sort((a, b) => (a.language || 'English').localeCompare(b.language || 'English'));
             case 'discipline':
                 return sorted.sort((a, b) => (a.discipline || '').localeCompare(b.discipline || ''));
-            case 'difficulty':
+            case 'difficulty': {
                 const diffOrder = { 'Easy': 1, 'Medium': 2, 'Hard': 3 };
                 return sorted.sort((a, b) => (diffOrder[a.difficulty] || 0) - (diffOrder[b.difficulty] || 0));
+            }
             case 'default':
             default:
                 return sorted; // Keep original sheet order

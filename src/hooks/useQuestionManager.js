@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getSecureItem, setSecureItem } from '../utils/secureStorage';
 import { filterDuplicateQuestions } from '../utils/helpers';
 import { CATEGORY_KEYS, TARGET_PER_CATEGORY, TARGET_TOTAL } from '../utils/constants';
-import { saveQuestionToFirestore } from '../services/firebase';
+import { saveQuestionToFirestore, getQuestionsPaginated } from '../services/firebase';
 import { logQuestion } from '../utils/analyticsStore';
 
 export const useQuestionManager = (config, showMessage) => {
@@ -173,7 +173,7 @@ export const useQuestionManager = (config, showMessage) => {
             if (isCountable) {
                 const typeAbbrev = baseQ.type === 'True/False' ? 'T/F' : 'MC';
                 const key = `${baseQ.difficulty} ${typeAbbrev}`;
-                if (counts.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(counts, key)) {
                     counts[key]++;
                     countedIds.add(baseQ.uniqueId);
                 }

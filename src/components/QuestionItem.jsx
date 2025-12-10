@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useState } from 'react';
 import Icon from './Icon';
 import CritiqueDisplay from './CritiqueDisplay';
 import ReviewProgressBar from './ReviewProgressBar';

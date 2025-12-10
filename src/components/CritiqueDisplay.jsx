@@ -1,5 +1,4 @@
 import { sanitizeMarkdown } from '../utils/sanitize';
-import React from 'react';
 import Icon from './Icon';
 import { computeWordDiff } from '../utils/helpers';
 
@@ -105,7 +104,7 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
             const trimmed = line.trim();
 
             // Check for bullet points (* item or - item)
-            const bulletMatch = trimmed.match(/^[\*\-]\s+(.+)$/);
+            const bulletMatch = trimmed.match(/^[*-]\s+(.+)$/);
             if (bulletMatch) {
                 if (listType !== 'bullet') flushList();
                 listType = 'bullet';

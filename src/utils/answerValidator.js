@@ -84,7 +84,7 @@ export function validateAnswer(question) {
 
     // Count how many answer terms appear in excerpt
     let matchedTerms = 0;
-    let matchedKeyTerms = [];
+    const matchedKeyTerms = [];
 
     for (const term of answerTerms) {
         if (excerptText.includes(term)) {

@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics, logEvent } from "firebase/analytics";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where, Timestamp } from "firebase/firestore";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where, Timestamp, orderBy, limit, startAfter } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 
 
@@ -388,8 +388,6 @@ export const getCustomTags = async () => {
             return {};
         }
 
-        const docRef = doc(db, "userSettings", auth.currentUser.uid);
-        const docSnap = await getDocs(collection(db, "userSettings"));
 
         // Get the specific user's document
         const userDocRef = doc(db, "userSettings", auth.currentUser.uid);

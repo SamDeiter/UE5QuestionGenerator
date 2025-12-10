@@ -1,7 +1,6 @@
 import { sanitizeText, sanitizeMarkdown } from '../utils/sanitize';
-import React from 'react';
 import Icon from './Icon';
-import { renderMarkdown, sanitizeText, computeWordDiff } from '../utils/helpers';
+import { renderMarkdown, computeWordDiff } from '../utils/helpers';
 
 /**
  * Renders inline word-level diff with highlighting

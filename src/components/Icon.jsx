@@ -1,4 +1,3 @@
-import React from 'react';
 import * as LucideIcons from 'lucide-react';
 
 const Icon = ({ name, size = 16, className = "", ariaLabel, role }) => {

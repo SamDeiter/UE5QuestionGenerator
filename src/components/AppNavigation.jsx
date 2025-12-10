@@ -1,4 +1,3 @@
-import React from 'react';
 import Icon from './Icon';
 
 const AppNavigation = ({ activeMode, onNavigate, counts = {} }) => {
@@ -22,7 +21,7 @@ const AppNavigation = ({ activeMode, onNavigate, counts = {} }) => {
             {navItems.map(item => {
                 const isActive = activeMode === item.id;
                 // Base classes
-                let classes = `
+                const classes = `
                     relative px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2
                     ${isActive
                         ? `bg-${item.color}-600 text-white shadow-lg shadow-${item.color}-900/20`

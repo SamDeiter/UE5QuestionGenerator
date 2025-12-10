@@ -1,4 +1,3 @@
-import React from 'react';
 import { AlertTriangle, Shield, Info } from 'lucide-react';
 
 /**

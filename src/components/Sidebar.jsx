@@ -1,4 +1,3 @@
-import React from 'react';
 import Icon from './Icon';
 import GranularProgress from './GranularProgress';
 import GenerationSettings from './sidebar/GenerationSettings';

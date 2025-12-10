@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { calculateMetrics } from '../utils/metricsUtils';
 import { getAnalytics } from '../utils/analyticsStore';
 import Icon from './Icon';

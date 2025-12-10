@@ -1,4 +1,3 @@
-import React from 'react';
 import Icon from './Icon';
 
 const ModalWrapper = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl' }) => {

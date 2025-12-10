@@ -1,4 +1,3 @@
-import React from 'react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const TrendCharts = ({ generations }) => {

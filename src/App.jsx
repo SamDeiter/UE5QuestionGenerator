@@ -3,7 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import React, { useState, useEffect, useMemo, useCallback, Suspense, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, Suspense, useRef } from 'react';
 import { Virtuoso } from 'react-virtuoso';
 
 // UI Components
@@ -12,7 +12,6 @@ import Header from './components/Header';
 import QuestionItem from './components/QuestionItem';
 import FilterButton from './components/FilterButton';
 import GranularProgress from './components/GranularProgress';
-import Icon from './components/Icon';
 import Toast from './components/Toast';
 import Sidebar from './components/Sidebar';
 import QuestionList from './components/QuestionList';

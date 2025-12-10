@@ -202,7 +202,7 @@ export const getDisplayUrl = (url) => {
     // If it's still a grounding link after formatting, try to show something useful or just the domain
     if (formatted.includes('vertexaisearch') || formatted.includes('grounding')) {
         // Fallback: try to find a domain inside the string
-        const match = formatted.match(/([a-zA-Z0-9-]+\.com\/[a-zA-Z0-9-\/]+)/);
+        const match = formatted.match(/([a-zA-Z0-9-]+\.com\/[a-zA-Z0-9-/]+)/);
         if (match) return match[1];
         return 'Source Link'; // Better than "Google Vertex AI Source"
     }
@@ -228,7 +228,7 @@ export const renderMarkdown = (t) => {
     if (!t) return "";
 
     // Step 1: Convert markdown-style formatting to HTML
-    let html = String(t)
+    const html = String(t)
         // Headers
         .replace(/^### (.*$)/gim, '<h3 class="text-orange-400 font-bold text-xs mt-3 mb-1 uppercase tracking-wide">$1</h3>')
         .replace(/^#### (.*$)/gim, '<h4 class="text-slate-200 font-bold text-[10px] mt-2 mb-1 uppercase">$1</h4>')
@@ -382,7 +382,7 @@ export const parseQuestions = (text) => {
 
     dataLines.forEach((line, index) => {
         const normalizedLine = line.replace(/｜/g, '|');
-        let cols = normalizedLine.split('|').map(c => c.trim());
+        const cols = normalizedLine.split('|').map(c => c.trim());
 
         if (cols[0] === '') cols.shift();
         if (cols[cols.length - 1] === '') cols.pop();
@@ -442,7 +442,6 @@ export const parseQuestions = (text) => {
             difficulty: difficulty || "Easy",
             question: question || "",
             options,
-            correct: correctLetter || "",
             correct: correctLetter || "",
             sourceUrl: (sourceUrl && !sourceUrl.includes(' ')) ? sourceUrl : "", // Basic validation: URLs shouldn't have spaces
             sourceExcerpt: sourceExcerpt || "",

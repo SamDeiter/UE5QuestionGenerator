@@ -24,7 +24,7 @@ export const useFileHandler = (config, setConfig, addQuestionsToState, showMessa
         const analysis = analyzeOptimization(originalContext, optimizedContext);
 
         if (analysis.reduction.percentage > 0) {
-
+            // Optimization info available
         }
 
         return "\n\n### ATTACHED LOCAL SOURCE FILES:\n" + optimizedContext;
@@ -36,7 +36,7 @@ export const useFileHandler = (config, setConfig, addQuestionsToState, showMessa
 
         let importedCount = 0;
         let referenceCount = 0;
-        let errors = [];
+        const errors = [];
 
         for (const file of newFiles) {
             const result = await processUploadedFile(file, config.creatorName);

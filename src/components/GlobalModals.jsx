@@ -1,4 +1,5 @@
-import React, { Suspense } from 'react';
+import React from 'react';
+import { Suspense } from 'react';
 
 // Standard Modals
 import NameEntryModal from './NameEntryModal';

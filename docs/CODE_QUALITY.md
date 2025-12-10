@@ -29,6 +29,20 @@ We use **ESLint** with a modern Flat Config (`eslint.config.js`).
 - **Integration Tests**: Critical paths (Generation -> Prompt -> Parsing) must be covered by integration tests in `src/__tests__/`.
 - **Unit Tests**: Utility functions (`helpers.js`, `promptBuilder.js`) should have unit tests.
 
-## 3. Immediate Actions (Dec 9, 2025)
-- [x] Integrate Feedback Loop test (`feedbackLoop.integration.test.jsx`).
-- [ ] Regular lint sweeps.
+## 3. Sanitation Status (Dec 9, 2025)
+
+### Completed ✅
+- [x] **Critical Errors Fixed** (17 → 0): Missing imports, syntax errors, dead code, duplicate keys
+- [x] **Unused Import Cleanup**: Removed unnecessary `React` imports (64 files), restored where `React.*` used (8 files)
+- [x] **ESLint Auto-fix Applied**: `prefer-const`, formatting issues
+- [x] **Integration Test Verified**: Feedback loop test passing
+
+### Current Status
+- **Errors**: 0
+- **Warnings**: 267 (down from 343 - 22% reduction)
+- **Primary Warning Types**: `no-unused-vars` (component props, state variables)
+
+### Remaining Work
+- [ ] Remove unused component imports in `App.jsx`, `Sidebar.jsx`, etc.
+- [ ] Address `react-hooks/exhaustive-deps` warnings (3 instances)
+- [ ] Set up pre-commit hooks for automated linting

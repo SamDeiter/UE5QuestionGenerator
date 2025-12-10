@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Icon from './Icon';
 import TokenUsageDisplay from './TokenUsageDisplay';
 import TagManager from './TagManager';

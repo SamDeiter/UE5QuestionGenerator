@@ -1,5 +1,5 @@
 // Global rate limit state
-let rateLimitState = {
+const rateLimitState = {
     isLimited: false,
     retryAfter: 0
 };
@@ -301,7 +301,7 @@ export const generateCritique = async (apiKey, q) => {
  * @returns {Promise<string>} - The raw text of the rewritten question table (needs parsing)
  */
 export const rewriteQuestion = async (apiKey, q, critiqueText) => {
-    const sys = `Role: Senior Epic Games Tech Writer. Task: Rewrite the question to fix errors found in the critique.
+    const systemPrompt = `Role: Senior Epic Games Tech Writer. Task: Rewrite the question to fix errors found in the critique.
     Format: Pipe-delimited table, NO headers. Cols: |ID|Discipline|Type|Difficulty|Question|OptionA|OptionB|OptionC|OptionD|CorrectLetter|SourceURL|Excerpt|QualityScore|
     Critique to Address: ${critiqueText}
     Original Context: Discipline: ${q.discipline}, Type: ${q.type}.

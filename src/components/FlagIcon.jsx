@@ -1,5 +1,3 @@
-import React from 'react';
-
 const FlagIcon = ({ code, size = 16, className = "" }) => {
     const getFlagContent = (code) => {
         switch (code) {

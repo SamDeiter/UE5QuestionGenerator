@@ -1,6 +1,3 @@
-import React from 'react';
-import Icon from './Icon';
-
 const TokenUsageDisplay = ({ tokenUsage }) => {
     if (!tokenUsage) return null;
 

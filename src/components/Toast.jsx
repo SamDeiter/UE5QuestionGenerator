@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import Icon from './Icon';
 
 const Toast = ({ message, type = 'info', onClose, action = null, duration = 5000 }) => {

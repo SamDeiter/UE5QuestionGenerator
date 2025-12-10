@@ -18,6 +18,13 @@ const ReviewMode = ({
     isProcessing,
     showMessage
 }) => {
+    // Auto-adjust index if out of bounds (e.g. after accepting an item and list shrinks)
+    React.useEffect(() => {
+        if (questions && questions > 0 && currentIndex >= questions) {
+            setCurrentIndex(questions - 1);
+        }
+    }, [questions, currentIndex, setCurrentIndex]);
+
     if (!questions || questions.length === 0) return null;
 
     const currentQuestion = questions[currentIndex];
@@ -28,12 +35,6 @@ const ReviewMode = ({
     const canGoPrev = currentIndex > 0;
     const canGoNext = currentIndex < questions.length - 1;
 
-    // Auto-adjust index if out of bounds (e.g. after accepting an item and list shrinks)
-    React.useEffect(() => {
-        if (currentIndex >= questions.length && questions.length > 0) {
-            setCurrentIndex(questions.length - 1);
-        }
-    }, [questions.length, currentIndex, setCurrentIndex]);
 
     return (
         <div className="flex flex-col items-center justify-start h-full max-w-4xl mx-auto w-full pt-4">

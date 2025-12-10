@@ -1,4 +1,5 @@
-import React, { Suspense } from 'react';
+import React from 'react';
+import { Suspense } from 'react';
 import Icon from './Icon';
 import BulkActionBar from './BulkActionBar';
 import QuestionList from './QuestionList';

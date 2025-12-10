@@ -1,4 +1,3 @@
-import React from 'react';
 import { TAGS_BY_DISCIPLINE } from '../../utils/tagTaxonomy';
 import Icon from '../Icon';
 

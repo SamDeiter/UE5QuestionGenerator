@@ -1,4 +1,3 @@
-import React from 'react';
 import { sanitizeText } from '../../utils/helpers';
 
 const QuestionContent = ({
