@@ -5,7 +5,7 @@ import { parseQuestions } from '../utils/helpers';
 import { validateQuestion } from '../utils/questionValidator';
 import { analyzeRequest, estimateTokens } from '../utils/tokenCounter';
 import { logGeneration, logQuestion } from '../utils/analyticsStore';
-import { validateGeneration, getQuotaStatus } from '../utils/quotaEnforcement';
+import { validateGeneration } from '../utils/quotaEnforcement';
 
 export const useGeneration = (
     config,
@@ -63,7 +63,7 @@ export const useGeneration = (
             }
 
             // Statement is just the original question text (which is likely a statement)
-            newStatement = newStatement;
+            // newStatement remains the same
         } else {
             // STANDARD MODE: Randomly decide if this will be a TRUE or FALSE question (50/50)
             makeItTrue = Math.random() > 0.5;
@@ -71,12 +71,12 @@ export const useGeneration = (
 
             // 1. Handle "Can you..." -> "You can [stem] [answer]"
             if (/^Can you/i.test(newStatement)) {
-                let stem = newStatement.replace(/^Can you\s+/i, '');
+                const stem = newStatement.replace(/^Can you\s+/i, '');
                 newStatement = `You can ${stem} ${targetAnswer}`;
             }
             // 2. Handle "Is..." -> "[Subject] is [Answer]"
             else if (/^Is\s+/i.test(newStatement)) {
-                let stem = newStatement.replace(/^Is\s+/i, '');
+                const stem = newStatement.replace(/^Is\s+/i, '');
                 newStatement = `${stem} is ${targetAnswer}`;
             }
             // 3. Handle "What/Which..." -> "[Stem] is [Answer]"
@@ -85,7 +85,7 @@ export const useGeneration = (
                 const isWhQuestion = /^(What|Which|How|Where|When|Why)\s+/i.test(newStatement);
 
                 if (isWhQuestion) {
-                    let stem = newStatement
+                    const stem = newStatement
                         .replace(/^(What|Which|How|Where|When|Why)\s+(is|are|does|do|can|should|would)\s+/i, '')
                         .trim();
                     newStatement = `${stem} is ${targetAnswer}`;

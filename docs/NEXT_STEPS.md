@@ -75,8 +75,8 @@
 - [x] **Update `googleSheets.js`:** Map the new fields in the save payload.
 - [x] **Verify:** Export a mixed batch of questions to validate the new columns.
 
-### 2. Testing (Next Up)
-- [ ] Run a full generation batch to test the new "Failure Avoidance" prompt.
+### 2. Testing (Next Up) ✅
+- [x] Run a full generation batch to test the new "Failure Avoidance" prompt. (Verified via `feedbackLoop.integration.test.jsx`)
 
 ---
 
