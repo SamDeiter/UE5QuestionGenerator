@@ -1,3 +1,4 @@
+import { AlertTriangle, Shield, Info } from 'lucide-react';
 /**
  * Terms of Use Modal - First-time user acceptance
  * Covers liability, disclaimers, and educational use

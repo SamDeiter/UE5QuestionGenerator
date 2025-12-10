@@ -18,7 +18,8 @@ const Sidebar = ({
     handleBulkTranslateMissing, isProcessing,
     setShowSettings,
     handleSelectCategory,
-    customTags = {}
+    customTags = {},
+    status = '' // Live generation status text
 }) => {
 
     return (
@@ -78,6 +79,7 @@ const Sidebar = ({
                 handleBulkTranslateMissing={handleBulkTranslateMissing}
                 isProcessing={isProcessing}
                 allQuestionsMap={allQuestionsMap}
+                status={status}
             />
 
 

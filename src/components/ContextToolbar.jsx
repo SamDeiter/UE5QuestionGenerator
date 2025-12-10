@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Icon from './Icon';
+import FilterButton from './FilterButton';
 import { getMergedTags } from '../utils/tagTaxonomy';
 
 const ContextToolbar = ({

@@ -20,7 +20,7 @@ const parseMarkdown = (text) => {
 /**
  * Renders inline word-level diff with highlighting
  */
-const _DiffText = ({ oldText, newText }) => {
+const DiffText = ({ oldText, newText }) => {
     const diff = computeWordDiff(oldText || '', newText || '');
 
     if (diff.length === 0) return <span className="text-white">{newText}</span>;

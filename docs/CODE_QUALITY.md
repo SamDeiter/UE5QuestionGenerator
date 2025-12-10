@@ -3,9 +3,11 @@
 This document outlines the standards and workflows for maintaining code quality in the `UE5QuestionGenerator` project.
 
 ## 1. Linting Strategy
+
 We use **ESLint** with a modern Flat Config (`eslint.config.js`).
 
 ### Core Rules
+
 - **Framework**: `eslint:recommended`, `plugin:react/recommended`, `plugin:react-hooks/recommended`.
 - **Formatting**: We rely on ESLint for basic stylistic issues, but primarily focus on logical correctness.
 - **Unused Variables**: `warn` (Use `_` prefix for intentionally unused args).

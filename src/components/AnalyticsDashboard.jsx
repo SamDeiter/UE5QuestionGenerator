@@ -1,12 +1,24 @@
 import { useState, useMemo } from 'react';
 import {
-    ResponsiveContainer as Area
+    ResponsiveContainer,
+    AreaChart,
+    Area,
+    BarChart,
+    Bar,
+    PieChart as RechartsPieChart,
+    Pie,
+    Cell,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+    Tooltip
 } from 'recharts';
 import { format } from 'date-fns';
+import { BarChart2, Download, X, Activity, TrendingUp, PieChart } from 'lucide-react';
 import { getAnalytics } from '../utils/analyticsStore';
 import { TAGS_BY_DISCIPLINE } from '../utils/tagTaxonomy';
 
-const _MetricCard = ({ title, value, icon, color }) => {
+const MetricCard = ({ title, value, icon, color }) => {
     const colors = {
         blue: "bg-blue-500/10 text-blue-400 border-blue-500/20",
         green: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",

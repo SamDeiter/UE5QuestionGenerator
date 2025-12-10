@@ -1,12 +1,43 @@
 import Icon from '../Icon';
 
+/**
+ * ActionFooter - Generate button with live progress indicator
+ * Shows animated progress bar and status text during generation
+ */
 const ActionFooter = ({
     handleGenerate, isGenerating, isTargetMet, maxBatchSize, isApiReady,
-    handleBulkTranslateMissing, isProcessing, allQuestionsMap
+    handleBulkTranslateMissing, isProcessing, allQuestionsMap,
+    status = '' // Live status text from useGeneration hook
 }) => {
     return (
         <div className="sticky bottom-0 bg-slate-950 pt-4 pb-2 border-t border-slate-800 z-20 -mx-6 px-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)]">
             <div className="space-y-3">
+                
+                {/* Progress Indicator - shown during generation */}
+                {isGenerating && (
+                    <div className="bg-slate-900 border border-orange-500/30 rounded-lg p-3 animate-in fade-in duration-200">
+                        {/* Animated Progress Bar */}
+                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden mb-2">
+                            <div 
+                                className="h-full bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500 rounded-full animate-pulse"
+                                style={{ 
+                                    width: status.includes('Critiquing') ? 
+                                        `${Math.min(100, parseInt(status.match(/\d+/)?.[0] || 0) / parseInt(status.match(/of (\d+)/)?.[1] || 1) * 100)}%` : 
+                                        '100%',
+                                    animation: status.includes('Critiquing') ? 'none' : 'shimmer 2s infinite'
+                                }}
+                            />
+                        </div>
+                        {/* Status Text */}
+                        <div className="flex items-center gap-2">
+                            <Icon name="loader" size={14} className="animate-spin text-orange-400" />
+                            <span className="text-xs text-orange-300 font-medium truncate">
+                                {status || 'Generating questions...'}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
                 <button
                     onClick={handleGenerate}
                     data-tour="generate-button"
@@ -39,8 +70,17 @@ const ActionFooter = ({
                     <Icon name="languages" size={14} /> BULK TRANSLATE (CN/JP/KR)
                 </button>
             </div>
+
+            {/* Shimmer animation for progress bar */}
+            <style>{`
+                @keyframes shimmer {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+            `}</style>
         </div>
     );
 };
 
 export default ActionFooter;
+

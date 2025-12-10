@@ -13,18 +13,60 @@ const LoadingSpinner = () => (
     </div>
 );
 
+/**
+ * EmptyReviewState - Illustrated empty state with CTA
+ * Guides users to generate questions when Review is empty
+ */
+const EmptyReviewState = ({ onNavigateToCreate, hasQuestionsInOtherFilters = false }) => (
+    <div className="flex flex-col items-center justify-center h-full py-16 px-8">
+        {/* Illustration */}
+        <div className="relative mb-8">
+            <div className="w-24 h-24 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full flex items-center justify-center">
+                <Icon name="clipboard-list" size={48} className="text-indigo-400" />
+            </div>
+            <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center animate-bounce">
+                <Icon name="sparkles" size={20} className="text-orange-400" />
+            </div>
+        </div>
+
+        {/* Message */}
+        <h3 className="text-xl font-bold text-white mb-2">
+            {hasQuestionsInOtherFilters ? 'No Pending Questions' : 'Ready to Review'}
+        </h3>
+        <p className="text-slate-400 text-center max-w-md mb-6">
+            {hasQuestionsInOtherFilters 
+                ? "All questions in this filter have been reviewed! Check other filters or generate more."
+                : "Generate your first batch of questions to start reviewing and approving them for your assessments."}
+        </p>
+
+        {/* CTA Button */}
+        <button
+            onClick={onNavigateToCreate}
+            className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 transition-all hover:scale-105 active:scale-95"
+        >
+            <Icon name="plus-circle" size={20} />
+            Generate Your First Batch
+        </button>
+
+        {/* Keyboard shortcut hint */}
+        <p className="text-xs text-slate-600 mt-4">
+            or press <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">Enter</kbd> in Create mode
+        </p>
+    </div>
+);
+
 const ViewRouter = ({
     appMode,
     uniqueFilteredQuestions,
     databaseQuestions,
     config,
     isProcessing,
-    handlers, // object containing all event handlers
-    state, // object containing necessary state (currentIndex, selectedIds, translationMap)
-    setters // object containing state setters (setDatabaseQuestions, setCurrentReviewIndex, etc)
+    handlers,
+    state,
+    setters,
+    onNavigateToCreate // NEW: callback to switch to Create mode
 }) => {
 
-    // Deconstruct for easier access
     const {
         handleLoadFromSheets, handleLoadFromFirestore, handleUpdateDatabaseQuestion, handleKickBackToReview,
         handleUpdateStatus, handleExplain, handleVariate, handleCritique, handleTranslateSingle, handleLanguageSwitch, handleDelete, handleManualUpdate,
@@ -68,6 +110,12 @@ const ViewRouter = ({
                     isProcessing={isProcessing}
                     showMessage={showMessage}
                 />
+            ) : appMode === 'review' && uniqueFilteredQuestions.length === 0 ? (
+                /* NEW: Empty state for Review mode with CTA */
+                <EmptyReviewState 
+                    onNavigateToCreate={onNavigateToCreate}
+                    hasQuestionsInOtherFilters={filteredQuestions.length > 0 || questions.length > 0}
+                />
             ) : (
                 <>
                     <BulkActionBar
@@ -97,7 +145,7 @@ const ViewRouter = ({
                 </>
             )}
 
-            {uniqueFilteredQuestions.length === 0 && filteredQuestions.length > 0 && (
+            {uniqueFilteredQuestions.length === 0 && filteredQuestions.length > 0 && appMode !== 'review' && (
                 <div className="flex flex-col items-center justify-center h-full text-slate-600 pt-10">
                     <Icon name="filter" size={32} className="mb-3 text-slate-800" />
                     <p className="font-medium text-slate-500">No questions match current filters.</p>
@@ -121,3 +169,4 @@ const ViewRouter = ({
 };
 
 export default ViewRouter;
+

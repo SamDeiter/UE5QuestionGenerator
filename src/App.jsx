@@ -617,6 +617,7 @@ const App = () => {
                         setShowSettings={setShowSettings}
                         handleSelectCategory={handleSelectCategory}
                         customTags={customTags}
+                        status={status}
                     />
                 )}
                 <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
@@ -699,6 +700,7 @@ const App = () => {
                                 setters={{
                                     setDatabaseQuestions, setCurrentReviewIndex, setFilterByCreator, showMessage
                                 }}
+                                onNavigateToCreate={() => handleModeSelect('create')}
                             />
                         </Suspense>
                     </div>
