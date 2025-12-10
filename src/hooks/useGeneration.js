@@ -508,20 +508,54 @@ export const useGeneration = (
     const handleVariate = async (q) => {
         if (!isApiReady) { showMessage("API key is required for creation. Please enter it in the settings panel.", 5000); return; }
 
-        setIsProcessing(true); setStatus('Creating variations...');
+        setIsProcessing(true); setStatus('Creating improved variations...');
+        
+        // Build context-aware prompt that leverages critique feedback
+        const hasCritique = q.critique && q.critiqueScore !== undefined;
+        const critiqueContext = hasCritique 
+            ? `\n\nCRITIQUE FEEDBACK (Score: ${q.critiqueScore}/100):\n${q.critique}\n\nYour task: Generate 2 IMPROVED variations that ADDRESS the critique feedback above.`
+            : `\n\nYour task: Generate 2 IMPROVED variations that are MORE CHALLENGING and PROFESSIONAL than the original.`;
+
         const sys = constructSystemPrompt(config, getFileContext());
-        const prompt = `Generate 2 NEW unique questions based on: "${q.question}". Output in Markdown Table.`;
+        const prompt = `ORIGINAL QUESTION TO IMPROVE:
+Discipline: ${q.discipline}
+Difficulty: ${q.difficulty}
+Type: ${q.type}
+Question: "${q.question}"
+Options:
+  A) ${q.options.A}
+  B) ${q.options.B}
+  ${q.options.C ? `C) ${q.options.C}` : ''}
+  ${q.options.D ? `D) ${q.options.D}` : ''}
+Correct Answer: ${q.correct}
+${critiqueContext}
+
+REQUIREMENTS FOR VARIATIONS:
+1. Address any weaknesses mentioned in the critique (if provided)
+2. Increase depth and professional relevance
+3. Use scenario-based or application-focused phrasing
+4. Avoid trivial or overly simple questions
+5. Maintain the same difficulty level: ${q.difficulty}
+6. Keep the same type: ${q.type}
+
+Output in Markdown Table format.`;
+
         try {
             const text = await generateContent(effectiveApiKey, sys, prompt, setStatus);
             const newQs = parseQuestions(text);
             if (newQs.length > 0) {
                 const uniqueNewQuestions = await checkAndStoreQuestions(newQs);
-                // Insert variations immediately after the source question
-                addQuestionsToState(uniqueNewQuestions, false, q.id);
+                addQuestionsToState(uniqueNewQuestions, false);
 
-                showMessage(`Added ${uniqueNewQuestions.length} new variations.`, 3000);
+                showMessage(`Added ${uniqueNewQuestions.length} improved variations.`, 3000);
             }
-        } catch { setStatus('Fail'); } finally { setIsProcessing(false); }
+        } catch (e) { 
+            console.error("Variation generation failed:", e);
+            setStatus('Fail'); 
+            showMessage(`Failed to generate variations: ${e.message}`, 5000);
+        } finally { 
+            setIsProcessing(false); 
+        }
     };
 
     const handleCritique = async (q) => {
