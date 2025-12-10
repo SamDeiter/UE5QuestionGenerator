@@ -3,31 +3,17 @@
 // ============================================================================
 
 // React core hooks
-import { useState, Suspense } from 'react';
+import { useState } from 'react';
 // UI Components
-import Icon from './components/Icon';
+
 import LandingPage from './components/LandingPage';
 import Header from './components/Header';
 import ToastContainer from './components/ToastContainer';
-import EmptyState from './components/EmptyState';
-import ReviewModeBanner from './components/ReviewModeBanner';
-import Sidebar from './components/Sidebar';
 import GlobalModals from './components/GlobalModals';
-import ViewRouter from './components/ViewRouter';
-import AppNavigation from './components/AppNavigation';
-import ContextToolbar from './components/ContextToolbar';
+import MainLayout from './components/MainLayout';
 import CrashRecoveryPrompt from './components/CrashRecoveryPrompt';
 import SignIn from './components/SignIn';
 import ApiKeyModal from './components/ApiKeyModal';
-
-// Loading Fallback
-const LoadingSpinner = () => (
-    <div className="flex items-center justify-center p-10 text-slate-500">
-        <Icon name="loader" className="animate-spin mr-2" /> Loading...
-    </div>
-);
-
-// Lazy Loaded Components
 
 // Custom Hooks
 import { useAppConfig } from './hooks/useAppConfig';
@@ -48,7 +34,7 @@ import { useAuth } from './hooks/useAuth';
 import { useModalState } from './hooks/useModalState';
 import { useAppHandlers } from './hooks/useAppHandlers';
 // Utilities
-import { TARGET_TOTAL, TARGET_PER_CATEGORY } from './utils/constants';
+
 
 const App = () => {
     // ========================================================================
@@ -379,104 +365,49 @@ const App = () => {
             />
             <Header apiKeyStatus={apiKeyStatus} isCloudReady={isAuthReady} onHome={handleGoHome} creatorName={config.creatorName} appMode={appMode} tokenUsage={tokenUsage} onRestartTutorial={handleRestartTutorial} />
 
-            <div className="flex flex-1 overflow-hidden">
-                {appMode === 'create' && (
-                    <Sidebar
-                        showGenSettings={showGenSettings}
-                        setShowGenSettings={setShowGenSettings}
-                        config={config}
-                        handleChange={handleChange}
-                        allQuestionsMap={allQuestionsMap}
-                        approvedCounts={approvedCounts}
-                        overallPercentage={overallPercentage}
-                        totalApproved={totalApproved}
-                        TARGET_TOTAL={TARGET_TOTAL}
-                        TARGET_PER_CATEGORY={TARGET_PER_CATEGORY}
-                        isTargetMet={isTargetMet}
-                        maxBatchSize={maxBatchSize}
-                        batchSizeWarning={batchSizeWarning}
-                        handleGenerate={handleGenerate}
-                        isGenerating={isGenerating}
-                        isApiReady={isApiReady}
-                        handleBulkTranslateMissing={handleBulkTranslateMissing}
-                        isProcessing={isProcessing}
-                        setShowSettings={setShowSettings}
-                        handleSelectCategory={handleSelectCategory}
-                        customTags={customTags}
-                        status={status}
-                    />
-                )}
-                <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
-                    <div className="flex flex-col border-b border-slate-800 bg-slate-900 z-10">
-                        <AppNavigation
-                            activeMode={appMode}
-                            onNavigate={(mode) => {
-                                if (mode === 'analytics') setAppMode('analytics');
-                                else if (mode === 'database') handleViewDatabase();
-                                else handleModeSelect(mode);
-                            }}
-                            counts={{ pending: pendingCount }}
-                        />
-                        <ContextToolbar
-                            mode={appMode}
-                            counts={contextCounts}
-                            filterMode={filterMode}
-                            setFilterMode={setFilterMode}
-                            filterByCreator={filterByCreator}
-                            setFilterByCreator={setFilterByCreator}
-                            filterTags={filterTags}
-                            setFilterTags={setFilterTags}
-                            customTags={customTags} // Pass customTags for the selector
-                            searchTerm={searchTerm}
-                            setSearchTerm={setSearchTerm}
-                            sortBy={sortBy}
-                            setSortBy={setSortBy}
-                            isProcessing={isProcessing}
-                            status={status}
-                            isAuthReady={isAuthReady}
-                            config={config}
-                            onLoadSheets={handleLoadFromSheets}
-                            onLoadFirestore={handleLoadFromFirestore}
-                            onBulkExport={() => setShowBulkExportModal(true)}
-                            onClearPending={handleClearPending}
-                            onBulkAcceptHighScores={appMode === 'review' ? handleBulkAcceptHighScores : undefined}
-                            onBulkCritiqueAll={appMode === 'review' ? handleBulkCritiqueAll : undefined}
-                        />
-                    </div>
-
-                    <div className="flex-1 overflow-auto p-6 bg-black/20 space-y-4" data-tour="review-area">
-                        {!showHistory && uniqueFilteredQuestions.length === 0 && questions.length === 0 && !status && appMode === 'create' && <EmptyState />}
-
-                        {/* CREATE MODE: Call-to-Action Banner */}
-                        {appMode === 'create' && questions.length > 0 && (
-                            <ReviewModeBanner onNavigateToReview={() => handleModeSelect('review')} />
-                        )}
-
-                        <Suspense fallback={<LoadingSpinner />}>
-                            <ViewRouter
-                                appMode={appMode}
-                                uniqueFilteredQuestions={uniqueFilteredQuestions}
-                                databaseQuestions={databaseQuestions}
-                                config={config}
-                                isProcessing={isProcessing}
-                                handlers={{
-                                    handleLoadFromSheets, handleLoadFromFirestore, handleUpdateDatabaseQuestion, handleKickBackToReview,
-                                    handleUpdateStatus, handleExplain, handleVariate, handleCritique, handleApplyRewrite, handleTranslateSingle, handleLanguageSwitch, handleDelete, handleManualUpdate,
-                                    selectAll, clearSelection, bulkUpdateStatus, toggleSelection
-                                }}
-                                state={{
-                                    currentReviewIndex, selectedIds, translationMap, filterByCreator, filteredQuestions, questions, status, filterMode, sortBy, showHistory
-                                }}
-                                setters={{
-                                    setDatabaseQuestions, setCurrentReviewIndex, setFilterByCreator, showMessage
-                                }}
-                                onNavigateToCreate={() => handleModeSelect('create')}
-                                onNavigateHome={handleGoHome}
-                            />
-                        </Suspense>
-                    </div>
-                </main>
-            </div>
+            <MainLayout
+                appMode={appMode}
+                setAppMode={setAppMode}
+                sidebarProps={{
+                    showGenSettings, setShowGenSettings, config, handleChange,
+                    allQuestionsMap, approvedCounts, overallPercentage, totalApproved,
+                    isTargetMet, maxBatchSize, batchSizeWarning, handleGenerate,
+                    isGenerating, isApiReady, handleBulkTranslateMissing, isProcessing,
+                    setShowSettings, handleSelectCategory, customTags, status
+                }}
+                handleModeSelect={handleModeSelect}
+                handleViewDatabase={handleViewDatabase}
+                pendingCount={pendingCount}
+                toolbarProps={{
+                    mode: appMode, counts: contextCounts, filterMode, setFilterMode,
+                    filterByCreator, setFilterByCreator, filterTags, setFilterTags,
+                    customTags, searchTerm, setSearchTerm, sortBy, setSortBy,
+                    isProcessing, status, isAuthReady, config,
+                    onLoadSheets: handleLoadFromSheets, onLoadFirestore: handleLoadFromFirestore,
+                    onBulkExport: () => setShowBulkExportModal(true), onClearPending: handleClearPending,
+                    onBulkAcceptHighScores: appMode === 'review' ? handleBulkAcceptHighScores : undefined,
+                    onBulkCritiqueAll: appMode === 'review' ? handleBulkCritiqueAll : undefined
+                }}
+                showHistory={showHistory}
+                uniqueFilteredQuestions={uniqueFilteredQuestions}
+                questions={questions}
+                status={status}
+                databaseQuestions={databaseQuestions}
+                config={config}
+                isProcessing={isProcessing}
+                viewRouterHandlers={{
+                    handleLoadFromSheets, handleLoadFromFirestore, handleUpdateDatabaseQuestion, handleKickBackToReview,
+                    handleUpdateStatus, handleExplain, handleVariate, handleCritique, handleApplyRewrite, handleTranslateSingle, handleLanguageSwitch, handleDelete, handleManualUpdate,
+                    selectAll, clearSelection, bulkUpdateStatus, toggleSelection
+                }}
+                viewRouterState={{
+                    currentReviewIndex, selectedIds, translationMap, filterByCreator, filteredQuestions, questions, status, filterMode, sortBy, showHistory
+                }}
+                viewRouterSetters={{
+                    setDatabaseQuestions, setCurrentReviewIndex, setFilterByCreator, showMessage
+                }}
+                handleGoHome={handleGoHome}
+            />
 
             {/* API Key Modal - Simple popup for Configure Now button */}
 
