@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { processUploadedFile } from '../utils/fileProcessor';
-import { generateContent } from '../services/gemini';
+import { generateContentSecure as generateContent } from '../services/geminiSecure';
 import { processMultipleFiles, analyzeOptimization } from '../utils/contextOptimizer';
 
 export const useFileHandler = (config, setConfig, addQuestionsToState, showMessage, setStatus, isApiReady, effectiveApiKey) => {

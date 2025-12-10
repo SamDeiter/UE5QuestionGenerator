@@ -5,7 +5,7 @@
  */
 
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { app } from './firebase';
+import { app, auth } from './firebase';
 
 // Initialize Cloud Functions
 const functions = getFunctions(app, 'us-central1');
@@ -24,7 +24,7 @@ export const generateContentViaCloudFunction = async (
     userPrompt,
     setStatus = () => {},
     temperature = 0.2,
-    model = 'gemini-2.0-flash'
+    model = 'gemini-2.0-flash-exp'
 ) => {
     try {
         setStatus('Calling secure Cloud Function...');
@@ -97,6 +97,5 @@ export const generateCritiqueViaCloudFunction = async (question) => {
  * @returns {boolean}
  */
 export const isUserAuthenticated = () => {
-    const { auth } = require('./firebase');
     return !!auth.currentUser;
 };

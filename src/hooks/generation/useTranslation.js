@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { generateContent } from '../../services/gemini';
+import { generateContentSecure as generateContent } from '../../services/geminiSecure';
 import { parseQuestions } from '../../utils/helpers';
 
 /**

@@ -147,17 +147,7 @@ const ContextToolbar = ({
                 )}
 
                 {/* Bulk Action Buttons */}
-                {onBulkAcceptHighScores && (
-                    <button
-                        onClick={onBulkAcceptHighScores}
-                        disabled={isProcessing}
-                        className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-green-900/20 text-green-400 border border-green-700/50 hover:bg-green-900/40 hover:text-green-300 disabled:opacity-50"
-                        title="Accept all questions with critique score ≥ 70"
-                    >
-                        <Icon name="check-check" size={14} />
-                        Accept ≥70
-                    </button>
-                )}
+
                 {onBulkCritiqueAll && (
                     <button
                         onClick={onBulkCritiqueAll}

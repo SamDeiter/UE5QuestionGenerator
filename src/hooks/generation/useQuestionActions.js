@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { generateContent, generateCritique } from '../../services/gemini';
+import { generateContentSecure as generateContent, generateCritiqueSecure as generateCritique } from '../../services/geminiSecure';
 import { constructSystemPrompt } from '../../services/promptBuilder';
 import { parseQuestions } from '../../utils/helpers';
 

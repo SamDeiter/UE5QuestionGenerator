@@ -5,6 +5,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/UE5QuestionGenerator/',
+  server: {
+    headers: {
+      // Allow Firebase Auth popups to communicate with the main window
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
