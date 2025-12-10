@@ -42,6 +42,8 @@ export default [
             'react/react-in-jsx-scope': 'off', // Not needed in React 17+
             'react/prop-types': 'off', // We're not using PropTypes
             'react/jsx-no-target-blank': 'warn',
+            'react/jsx-uses-vars': 'error', // Mark JSX components as used
+            'react/jsx-uses-react': 'error', // Mark React as used (for class components)
 
             // React Hooks (important for correctness)
             ...reactHooks.configs.recommended.rules,
