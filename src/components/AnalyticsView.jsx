@@ -19,6 +19,11 @@ import { getAnalytics, getTokenStats } from '../utils/analyticsStore';
 import { TAGS_BY_DISCIPLINE } from '../utils/tagTaxonomy';
 import { CATEGORY_KEYS } from '../utils/constants';
 
+// Import extracted components
+import StatCard from './Analytics/StatCard';
+import EmptyState from './Analytics/EmptyState';
+import DisciplineDetailPanel from './Analytics/DisciplineDetailPanel';
+
 // Define discipline list from tagTaxonomy
 const DISCIPLINES = Object.keys(TAGS_BY_DISCIPLINE);
 
@@ -502,144 +507,5 @@ const AnalyticsView = ({ onBack }) => {
         </div>
     );
 };
-
-// Helper Components
-
-// Discipline Detail Panel - shows when a discipline card is clicked
-const DisciplineDetailPanel = ({ discipline, questions, color, onClose }) => {
-    const disciplineQuestions = questions.filter(q => q.discipline === discipline);
-    
-    // Difficulty breakdown for this discipline
-    const difficultyBreakdown = CATEGORY_KEYS.map(key => ({
-        name: key.replace(' MC', '\nMC').replace(' T/F', '\nT/F'),
-        shortName: key,
-        value: disciplineQuestions.filter(q => q.difficulty === key).length,
-        fill: DIFFICULTY_COLORS[key]
-    })).filter(d => d.value > 0);
-    
-    // Status breakdown
-    const accepted = disciplineQuestions.filter(q => q.status === 'accepted').length;
-    const pending = disciplineQuestions.filter(q => !q.status || q.status === 'pending').length;
-    const rejected = disciplineQuestions.filter(q => q.status === 'rejected').length;
-    
-    // Average quality
-    const withScores = disciplineQuestions.filter(q => q.critiqueScore != null);
-    const avgQuality = withScores.length > 0 
-        ? Math.round(withScores.reduce((sum, q) => sum + q.critiqueScore, 0) / withScores.length)
-        : null;
-    
-    return (
-        <div 
-            className="bg-slate-900 border-2 rounded-xl p-6 animate-in slide-in-from-top-2 duration-200"
-            style={{ borderColor: color }}
-        >
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }} />
-                    <h3 className="text-lg font-bold text-white">{discipline}</h3>
-                    <span className="text-sm text-slate-400">({disciplineQuestions.length} questions)</span>
-                </div>
-                <button 
-                    onClick={onClose}
-                    className="p-1 hover:bg-slate-800 rounded transition-colors"
-                >
-                    <Icon name="x" size={18} className="text-slate-400" />
-                </button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Difficulty Breakdown */}
-                <div>
-                    <h4 className="text-sm font-medium text-slate-400 mb-3">Difficulty Breakdown</h4>
-                    {difficultyBreakdown.length > 0 ? (
-                        <div className="space-y-2">
-                            {difficultyBreakdown.map(d => (
-                                <div key={d.shortName} className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.fill }} />
-                                    <span className="text-xs text-slate-300 flex-1">{d.shortName}</span>
-                                    <span className="text-sm font-bold text-white">{d.value}</span>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-xs text-slate-500">No questions yet</p>
-                    )}
-                </div>
-                
-                {/* Status Distribution */}
-                <div>
-                    <h4 className="text-sm font-medium text-slate-400 mb-3">Status</h4>
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-green-500" />
-                            <span className="text-xs text-slate-300 flex-1">Accepted</span>
-                            <span className="text-sm font-bold text-green-400">{accepted}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-amber-500" />
-                            <span className="text-xs text-slate-300 flex-1">Pending</span>
-                            <span className="text-sm font-bold text-amber-400">{pending}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-red-500" />
-                            <span className="text-xs text-slate-300 flex-1">Rejected</span>
-                            <span className="text-sm font-bold text-red-400">{rejected}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                {/* Quality Stats */}
-                <div>
-                    <h4 className="text-sm font-medium text-slate-400 mb-3">Quality</h4>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold" style={{ color: avgQuality ? (avgQuality >= 70 ? '#22c55e' : avgQuality >= 50 ? '#eab308' : '#ef4444') : '#64748b' }}>
-                            {avgQuality ?? '—'}
-                        </span>
-                        <span className="text-xs text-slate-500">avg score</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-2">
-                        {withScores.length} of {disciplineQuestions.length} critiqued
-                    </p>
-                    {disciplineQuestions.length > 0 && (
-                        <div className="mt-3 h-2 bg-slate-800 rounded-full overflow-hidden">
-                            <div 
-                                className="h-full bg-green-500 transition-all"
-                                style={{ width: `${(accepted / disciplineQuestions.length) * 100}%` }}
-                            />
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const StatCard = ({ title, value, icon, color }) => {
-    const colorClasses = {
-        blue: 'bg-blue-900/30 text-blue-400',
-        emerald: 'bg-emerald-900/30 text-emerald-400',
-        amber: 'bg-amber-900/30 text-amber-400',
-        purple: 'bg-purple-900/30 text-purple-400'
-    };
-
-    return (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-                <div className={`p-1.5 rounded-lg ${colorClasses[color]}`}>
-                    <Icon name={icon} size={14} />
-                </div>
-                <span className="text-xs text-slate-400">{title}</span>
-            </div>
-            <p className="text-2xl font-bold text-white">{value}</p>
-        </div>
-    );
-};
-
-const EmptyState = ({ message }) => (
-    <div className="flex flex-col items-center justify-center h-full text-slate-500">
-        <Icon name="inbox" size={32} className="mb-2 opacity-50" />
-        <p className="text-sm">{message}</p>
-    </div>
-);
 
 export default AnalyticsView;
