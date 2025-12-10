@@ -53,7 +53,7 @@ const QuestionItem = ({
         }
     };
 
-    const isRejected = q.status === 'rejected';
+    const _isRejected = q.status === 'rejected';
 
     return (
         <div className={`group rounded-lg border shadow-sm transition-all p-4 relative ${getGradient(q.difficulty)} ${getStatusStyle(q.status)}`}>

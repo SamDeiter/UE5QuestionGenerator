@@ -3,7 +3,6 @@
 // ============================================================================
 
 // React core hooks
-import Icon from './components/Icon';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 // UI Components
 import { TUTORIAL_STEPS } from './utils/tutorialSteps';
@@ -38,7 +37,7 @@ const App = () => {
     // Compliance modals
     const [showTerms, setShowTerms] = useState(false);
     const [showAgeGate, setShowAgeGate] = useState(false);
-    const [termsAccepted, setTermsAccepted] = useState(false);
+    const [_termsAccepted, setTermsAccepted] = useState(false);
 
     // Tutorial State (disabled by default for now - enable with Tutorial button)
     const [tutorialActive, setTutorialActive] = useState(false);
@@ -210,11 +209,11 @@ const App = () => {
 
     // 4. File Handling
     const {
-        files, setFiles,
+        _files, _setFiles,
         fileInputRef,
-        isDetecting,
+        _isDetecting,
         handleFileChange,
-        removeFile,
+        _removeFile,
         getFileContext,
         handleDetectTopics
     } = useFileHandler(config, setConfig, addQuestionsToState, showMessage, setStatus, isApiReady, effectiveApiKey);
@@ -259,10 +258,10 @@ const App = () => {
     );
 
     // 7. Export Logic
-    const [showExportMenu, setShowExportMenu] = useState(false);
+    const [_showExportMenu, setShowExportMenu] = useState(false);
     const [showBulkExportModal, setShowBulkExportModal] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
-    const [dataMenuOpen, setDataMenuOpen] = useState(false);
+    const [_dataMenuOpen, setDataMenuOpen] = useState(false);
     const [showAdvancedConfig, setShowAdvancedConfig] = useState(false);
     const [showDangerZone, setShowDangerZone] = useState(false);
     const dataMenuRef = useRef(null);
@@ -456,7 +455,7 @@ const App = () => {
     const handleGoHome = () => setAppMode('landing');
     const handleSelectCategory = (key) => setConfig(prev => ({ ...prev, difficulty: key }));
 
-    const [showProgressMenu, setShowProgressMenu] = useState(false);
+    const [_showProgressMenu, _setShowProgressMenu] = useState(false);
 
     const handleClearPending = () => {
         if (window.confirm("Are you sure you want to delete ALL pending questions? This cannot be undone.")) {
@@ -502,7 +501,7 @@ const App = () => {
         showMessage(`✓ Critique complete for ${uncritiquedQuestions.length} questions!`, 4000);
     };
 
-    const handleSaveCustomTags = async (newCustomTags) => {
+    const _handleSaveCustomTags = async (newCustomTags) => {
         try {
             await saveCustomTags(newCustomTags);
             setCustomTags(newCustomTags);

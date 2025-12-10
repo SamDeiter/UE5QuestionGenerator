@@ -6,7 +6,7 @@ const SettingsModal = ({
     showSettings, setShowSettings,
     config, handleChange,
     showApiKey, setShowApiKey,
-    onClearData,
+    _onClearData,
     files, handleDetectTopics, isDetecting, fileInputRef, handleFileChange, removeFile, isApiReady,
     customTags, onSaveCustomTags
 }) => {

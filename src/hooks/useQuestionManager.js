@@ -252,7 +252,7 @@ export const useQuestionManager = (config, showMessage) => {
     };
 
     // PERFORMANCE: Load more questions
-    const loadMoreQuestions = useCallback(async (userId) => {
+    const _loadMoreQuestions = useCallback(async (userId) => {
         if (!hasMore || isLoadingMore) return;
         
         setIsLoadingMore(true);

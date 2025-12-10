@@ -7,7 +7,7 @@ import { renderMarkdown, computeWordDiff } from '../utils/helpers';
  * @param {string} oldText - Original text
  * @param {string} newText - New text
  */
-const DiffText = ({ oldText, newText }) => {
+const _DiffText = ({ oldText, newText }) => {
     const diff = computeWordDiff(oldText || '', newText || '');
 
     if (diff.length === 0) return null;

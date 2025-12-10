@@ -2,22 +2,22 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import Icon from './Icon';
 const DatabaseView = ({
     questions,
-    sheetUrl,
-    onLoad,
-    onLoadFirestore,
-    onClearView,
-    onHardReset,
+    _sheetUrl,
+    _onLoad,
+    _onLoadFirestore,
+    _onClearView,
+    _onHardReset,
     onUpdateQuestion,
     onKickBack,
-    isProcessing,
+    _isProcessing,
     showMessage,
     filterMode = 'all', // Default to 'all' if not provided
     sortBy = 'default' // Default to 'default' if not provided
 }) => {
-    const [isSyncing, setIsSyncing] = useState(false);
-    const [syncProgress, setSyncProgress] = useState(0);
+    const [_isSyncing, _setIsSyncing] = useState(false);
+    const [_syncProgress, _setSyncProgress] = useState(0);
     // sortBy is now a prop
-    const [loadMenuOpen, setLoadMenuOpen] = useState(false);
+    const [_loadMenuOpen, setLoadMenuOpen] = useState(false);
     const loadMenuRef = useRef(null);
 
     // Close dropdown when clicking outside

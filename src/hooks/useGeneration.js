@@ -156,7 +156,7 @@ export const useGeneration = (
 
         // Log the first item in the map to see structure
         if (allQuestionsMap.size > 0) {
-            const firstVal = Array.from(allQuestionsMap.values())[0];
+            const _firstVal = Array.from(allQuestionsMap.values())[0];
         }
 
         const systemPrompt = constructSystemPrompt(config, getFileContext(), rejectedExamples);

@@ -11,7 +11,7 @@ const LanguageControls = ({
     appMode
 }) => {
     const [loadingLang, setLoadingLang] = useState(null);
-    const [translateMenuOpen, setTranslateMenuOpen] = useState(false);
+    const [_translateMenuOpen, setTranslateMenuOpen] = useState(false);
     const translateMenuRef = useRef(null);
 
     // Only show translation controls for accepted English questions with valid sources

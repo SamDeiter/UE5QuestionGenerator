@@ -1,21 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
 const QuestionMenu = ({
-    q,
-    onExplain,
-    onVariate,
-    onKickBack,
-    onDelete,
-    onUpdateQuestion,
-    appMode,
-    isRejected
+    _q,
+    _onExplain,
+    _onVariate,
+    _onKickBack,
+    _onDelete,
+    _onUpdateQuestion,
+    _appMode,
+    _isRejected
 }) => {
-    const [menuOpen, setMenuOpen] = useState(false);
+    const [_menuOpen, _setMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setMenuOpen(false);
+                _setMenuOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);

@@ -15,12 +15,12 @@ const REJECTION_REASONS = [
 const QuestionActions = ({
     q,
     onUpdateStatus,
-    onCritique,
-    onExplain,
-    onVariate,
+    _onCritique,
+    _onExplain,
+    _onVariate,
     onDelete,
     onUpdateQuestion,
-    isProcessing,
+    _isProcessing,
     appMode,
     showMessage
 }) => {
@@ -38,7 +38,7 @@ const QuestionActions = ({
     }, []);
 
     // Handle human verification
-    const handleVerify = () => {
+    const _handleVerify = () => {
         const reviewerName = localStorage.getItem('ue5_gen_config')
             ? JSON.parse(localStorage.getItem('ue5_gen_config')).creatorName || 'Unknown'
             : 'Unknown';
@@ -53,7 +53,7 @@ const QuestionActions = ({
     };
 
     // Handle accept with verification and score check
-    const handleAccept = () => {
+    const _handleAccept = () => {
         if (q.status === 'accepted') {
             if (showMessage) showMessage("Question is already accepted.");
             return;
@@ -76,7 +76,7 @@ const QuestionActions = ({
     };
 
     // Get accept button styling based on score
-    const getAcceptButtonStyle = () => {
+    const _getAcceptButtonStyle = () => {
         if (q.status === 'accepted') {
             return 'bg-green-600 text-white shadow-lg shadow-green-900/50';
         }
@@ -101,7 +101,7 @@ const QuestionActions = ({
     };
 
     // Get accept button tooltip
-    const getAcceptTooltip = () => {
+    const _getAcceptTooltip = () => {
         if (q.status === 'accepted') return 'Already accepted';
         if (!q.humanVerified) return 'Verify first before accepting';
 

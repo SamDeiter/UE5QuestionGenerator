@@ -39,8 +39,8 @@ We use **ESLint** with a modern Flat Config (`eslint.config.js`).
 
 ### Current Status
 - **Errors**: 0
-- **Warnings**: 267 (down from 343 - 22% reduction)
-- **Primary Warning Types**: `no-unused-vars` (component props, state variables)
+- **Warnings**: 141 (down from 343 - **59% reduction**)
+- **Primary Warning Types**: `no-unused-vars` (component props/state for future features)
 
 ### Remaining Work
 - [ ] Remove unused component imports in `App.jsx`, `Sidebar.jsx`, etc.

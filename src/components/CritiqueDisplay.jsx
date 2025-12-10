@@ -20,7 +20,7 @@ const parseMarkdown = (text) => {
 /**
  * Renders inline word-level diff with highlighting
  */
-const DiffText = ({ oldText, newText }) => {
+const _DiffText = ({ oldText, newText }) => {
     const diff = computeWordDiff(oldText || '', newText || '');
 
     if (diff.length === 0) return <span className="text-white">{newText}</span>;
@@ -61,7 +61,7 @@ const DiffText = ({ oldText, newText }) => {
     );
 };
 
-const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, rewriteChanges, onApplyRewrite, onApplyAndAccept, originalQuestion, onExplain, onVariate }) => {
+const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, rewriteChanges, onApplyRewrite, _onApplyAndAccept, originalQuestion, onExplain, onVariate }) => {
     if (!critique) return null;
 
     // Handle both old (string) and new (object with score) formats
@@ -86,7 +86,7 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
 
         const flushList = () => {
             if (currentList.length > 0) {
-                const ListTag = listType === 'number' ? 'ol' : 'ul';
+                const _ListTag = listType === 'number' ? 'ol' : 'ul';
                 elements.push(
                     <ListTag key={`list-${elements.length}`} className={`${listType === 'number' ? 'list-decimal' : 'list-disc'} ml-4 space-y-1`}>
                         {currentList.map((item, i) => (
