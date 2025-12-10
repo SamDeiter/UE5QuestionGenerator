@@ -1,7 +1,7 @@
 import React from 'react';
 import Icon from '../Icon';
 
-const SourceContextCard = ({ sourceUrl, sourceExcerpt, question }) => {
+const SourceContextCard = ({ sourceUrl, sourceExcerpt }) => {
     if (!sourceExcerpt && !sourceUrl) {
         return null;
     }

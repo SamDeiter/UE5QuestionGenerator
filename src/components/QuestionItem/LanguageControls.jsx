@@ -8,8 +8,7 @@ const LanguageControls = ({
     availableLanguages,
     onSwitchLanguage,
     onTranslateSingle,
-    isProcessing,
-    appMode
+    isProcessing
 }) => {
     const [loadingLang, setLoadingLang] = useState(null);
     const [_translateMenuOpen, setTranslateMenuOpen] = useState(false);

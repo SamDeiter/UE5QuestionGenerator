@@ -43,6 +43,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
     const [timeRange, setTimeRange] = useState('7d'); // 24h, 7d, 14d, 30d, all
 
     // Re-fetch analytics data whenever modal opens (removes useMemo dependency issue)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const allAnalyticsData = isOpen ? getAnalytics() : { generations: [], questions: [], summary: {} };
 
     // Filter data based on time range

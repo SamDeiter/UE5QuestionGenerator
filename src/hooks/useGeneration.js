@@ -502,7 +502,7 @@ export const useGeneration = (
             const exp = await generateContent(effectiveApiKey, "Technical Assistant", prompt, setStatus);
             updateQuestionInState(q.id, (item) => ({ ...item, explanation: exp }));
             setStatus('');
-        } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
+        } catch { setStatus('Fail'); } finally { setIsProcessing(false); }
     };
 
     const handleVariate = async (q) => {
@@ -521,7 +521,7 @@ export const useGeneration = (
 
                 showMessage(`Added ${uniqueNewQuestions.length} new variations.`, 3000);
             }
-        } catch (e) { setStatus('Fail'); } finally { setIsProcessing(false); }
+        } catch { setStatus('Fail'); } finally { setIsProcessing(false); }
     };
 
     const handleCritique = async (q) => {
@@ -651,7 +651,7 @@ export const useGeneration = (
                 try {
                     const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
                     translatedData = JSON.parse(cleanText);
-                } catch (e) {
+                } catch {
                     // ignore JSON parse error, let parseQuestions handle it
                 }
 

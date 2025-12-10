@@ -61,7 +61,7 @@ const DiffText = ({ oldText, newText }) => {
     );
 };
 
-const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, rewriteChanges, onApplyRewrite, _onApplyAndAccept, originalQuestion, onExplain, onVariate }) => {
+const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, rewriteChanges, onApplyRewrite: _onApplyRewrite, _onApplyAndAccept, originalQuestion, onExplain, onVariate }) => {
     if (!critique) return null;
 
     // Handle both old (string) and new (object with score) formats

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState, memo } from 'react';
+import { useState} from 'react';
 import ReviewProgressBar from './ReviewProgressBar';
 import QuestionHeader from './QuestionItem/QuestionHeader';
 import QuestionContent from './QuestionItem/QuestionContent';
@@ -18,7 +18,6 @@ const QuestionItem = ({
     onExplain,
     onVariate,
     onCritique,
-    onRewrite,
     onApplyRewrite,
     onTranslateSingle,
     onSwitchLanguage,
@@ -177,7 +176,7 @@ const QuestionItem = ({
 
                 <ExplanationDisplay explanation={q.explanation} />
 
-                <QuestionMetadata q={q} showMessage={showMessage} />
+                <QuestionMetadata q={q} />
             </div>
         </div>
     );

@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { waitFor } from '@testing-library/react';
+// waitFor removed - unused
 import * as sheetsMock from './mocks/googleSheets.mock';
 import { mockCSVData } from './testHelpers';
 

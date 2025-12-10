@@ -67,6 +67,7 @@ const DatabaseView = ({
             default:
                 return sorted; // Keep original sheet order
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [questions, sortBy, filterMode]);
 
     // Calculate available languages for each uniqueId

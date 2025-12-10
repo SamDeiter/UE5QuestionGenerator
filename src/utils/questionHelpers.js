@@ -82,7 +82,7 @@ export const formatUrl = (url) => {
             if (actualUrl) {
                 cleanUrl = decodeURIComponent(actualUrl);
             }
-        } catch (e) {
+        } catch {
             // If URL parsing fails, keep original
         }
     }
@@ -131,7 +131,7 @@ export const getDisplayUrl = (url) => {
         }
 
         return display;
-    } catch (e) {
+    } catch {
         return formatted.substring(0, 50) + (formatted.length > 50 ? '...' : '');
     }
 };
@@ -184,8 +184,8 @@ export const parseQuestions = (text) => {
             });
 
             if (parsed.length > 0) return removeDuplicateQuestions(parsed);
-        } catch (e) {
-            console.warn("JSON parse failed, falling back to Markdown table parsing.", e);
+        } catch (_e) {
+            console.warn("JSON parse failed, falling back to Markdown table parsing.", _e);
         }
     }
 

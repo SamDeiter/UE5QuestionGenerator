@@ -45,7 +45,7 @@ const GlobalModals = ({
         onCloseSettings, onCloseAnalytics, onCloseDangerZone, onCloseApiKey,
         handleChange, handleSaveApiKey, setShowTerms, setTermsAccepted, setShowAgeGate,
         handleTutorialNext, handleTutorialPrev, handleTutorialSkip, handleTutorialComplete,
-        onResetSettings, onHardReset, window // needed for reloads/redirects?
+        onHardReset, window // needed for reloads/redirects?
     } = handlers;
 
     return (

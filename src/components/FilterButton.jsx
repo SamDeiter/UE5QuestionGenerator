@@ -1,6 +1,6 @@
 import Icon from './Icon';
 
-const FilterButton = ({ mode, current, setFilter, label, count, color }) => {
+const FilterButton = ({ mode, current, setFilter, label, count }) => {
     const isActive = mode === current;
     const baseClasses = "px-3 py-1 text-xs font-medium rounded transition-all flex items-center gap-1";
     const activeClasses = "bg-orange-600 text-white shadow-md shadow-orange-900/50";

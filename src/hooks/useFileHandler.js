@@ -76,7 +76,7 @@ export const useFileHandler = (config, setConfig, addQuestionsToState, showMessa
             const detected = await generateContent(effectiveApiKey, "Technical Analyst", prompt, setStatus);
             setConfig(prev => ({ ...prev, discipline: detected.split(',')[0].trim() }));
             setStatus('Detected'); setTimeout(() => setStatus(''), 2000);
-        } catch (err) { setStatus('Failed'); } finally { setIsDetecting(false); }
+        } catch { setStatus('Failed'); } finally { setIsDetecting(false); }
     };
 
     return {

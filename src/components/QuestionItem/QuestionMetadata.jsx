@@ -1,5 +1,5 @@
 import Icon from '../Icon';
-import { getDisplayUrl, stripHtmlTags } from '../../utils/helpers';
+import { getDisplayUrl } from '../../utils/helpers';
 
 const getVerificationBadge = (status) => {
     switch (status) {
@@ -17,7 +17,7 @@ const getVerificationBadge = (status) => {
     }
 };
 
-const QuestionMetadata = ({ q, showMessage }) => {
+const QuestionMetadata = ({ q }) => {
     const verification = getVerificationBadge(q.sourceVerified);
 
     return (

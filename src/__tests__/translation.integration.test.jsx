@@ -22,7 +22,6 @@ vi.mock('../utils/analyticsStore', () => ({
 
 describe('Translation Integration Tests', () => {
     let mockConfig;
-    let mockSetConfig;
     let mockShowMessage;
     let mockSetStatus;
     let mockCheckAndStoreQuestions;

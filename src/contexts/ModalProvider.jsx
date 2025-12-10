@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const ModalContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useModal = () => {
     const context = useContext(ModalContext);
     if (!context) {

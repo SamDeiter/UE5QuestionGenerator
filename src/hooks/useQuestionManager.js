@@ -66,6 +66,7 @@ export const useQuestionManager = (config, showMessage) => {
                 return q;
             }));
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [config.creatorName]); // Only run when creatorName changes
 
     // Recompute allQuestionsMap
