@@ -16,6 +16,7 @@ import AppNavigation from './components/AppNavigation';
 import ContextToolbar from './components/ContextToolbar';
 import CrashRecoveryPrompt from './components/CrashRecoveryPrompt';
 import SignIn from './components/SignIn';
+import ApiKeyModal from './components/ApiKeyModal';
 import { TUTORIAL_STEPS } from './utils/tutorialSteps';
 
 // Loading Fallback
@@ -552,7 +553,13 @@ const App = () => {
                     isCloudReady={isAuthReady}
                     onOpenSettings={() => { console.log('🚀 Configure Now clicked!'); setShowApiKeyModal(true); }}
                 />
-
+                {/* API Key Modal for Configure Now button */}
+                <ApiKeyModal
+                    isOpen={showApiKeyModal}
+                    onClose={() => setShowApiKeyModal(false)}
+                    onSave={handleSaveApiKey}
+                    currentKey={config.apiKey}
+                />
             </>
         );
     }
