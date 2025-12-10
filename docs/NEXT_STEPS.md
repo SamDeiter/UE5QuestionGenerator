@@ -69,13 +69,13 @@
 
 ## 🚀 Immediate Next Steps (Next Session)
 
-### 1. Enhanced Data Export (Priority)
+### 1. Enhanced Data Export (Priority) ✅
 - **Goal:** Ensure the "Gold Standard" dataset allows looking back at *why* questions failed.
-- [ ] **Update `Code.gs`:** Add columns for `RejectionReason`, `HumanVerifiedBy`, and `RejectedAt`.
-- [ ] **Update `googleSheets.js`:** Map the new fields in the save payload.
-- [ ] **Verify:** Export a mixed batch of questions to validate the new columns.
+- [x] **Update `Code.gs`:** Add columns for `RejectionReason`, `HumanVerifiedBy`, and `RejectedAt`.
+- [x] **Update `googleSheets.js`:** Map the new fields in the save payload.
+- [x] **Verify:** Export a mixed batch of questions to validate the new columns.
 
-### 2. Testing
+### 2. Testing (Next Up)
 - [ ] Run a full generation batch to test the new "Failure Avoidance" prompt.
 
 ---
