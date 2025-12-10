@@ -1,12 +1,25 @@
 import React from 'react';
+import NameEntryModal from './NameEntryModal';
+import ClearConfirmationModal from './ClearConfirmationModal';
+import BlockingProcessModal from './BlockingProcessModal';
+import ApiKeyModal from './ApiKeyModal';
+import TermsOfUseModal from './TermsOfUseModal';
+import CookieConsentBanner from './CookieConsentBanner';
+import AgeGateModal from './AgeGateModal';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
+import TutorialOverlay from './TutorialOverlay';
+import SettingsModal from './SettingsModal';
+import BulkExportModal from './BulkExportModal';
+import AnalyticsDashboard from './AnalyticsDashboard';
+import DangerZoneModal from './DangerZoneModal';
 import { Suspense } from 'react';
+
+
 
 // Standard Modals
 // Lazy Modals
-const SettingsModal = React.lazy(() => import('./SettingsModal'));
-const BulkExportModal = React.lazy(() => import('./BulkExportModal'));
-const AnalyticsDashboard = React.lazy(() => import('./AnalyticsDashboard'));
-const DangerZoneModal = React.lazy(() => import('./DangerZoneModal'));
+// Standard Modals
+// Lazy Modals
 
 const GlobalModals = ({
     visibility,

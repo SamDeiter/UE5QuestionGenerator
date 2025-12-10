@@ -1,7 +1,15 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import Icon from './Icon';
-import { renderMarkdown } from '../utils/helpers';
+import CritiqueDisplay from './CritiqueDisplay';
+import ReviewProgressBar from './ReviewProgressBar';
+import QuestionHeader from './QuestionItem/QuestionHeader';
+import QuestionContent from './QuestionItem/QuestionContent';
+import QuestionMetadata from './QuestionItem/QuestionMetadata';
+import LanguageControls from './QuestionItem/LanguageControls';
+import QuestionActions from './QuestionItem/QuestionActions';
+import QuestionMenu from './QuestionItem/QuestionMenu';
+import { sanitizeMarkdown, renderMarkdown } from '../utils/helpers';
 import { getSecureItem } from '../utils/secureStorage';
 
 const QuestionItem = ({

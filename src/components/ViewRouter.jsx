@@ -4,6 +4,8 @@ import Icon from './Icon';
 // Lazy load heavy views
 const DatabaseView = React.lazy(() => import('./DatabaseView'));
 const ReviewMode = React.lazy(() => import('./ReviewMode'));
+import BulkActionBar from './BulkActionBar';
+import QuestionList from './QuestionList';
 
 const LoadingSpinner = () => (
     <div className="flex items-center justify-center p-10 text-slate-500">
