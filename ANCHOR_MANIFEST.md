@@ -4,13 +4,13 @@ This file lists the key components and files ("anchors") of the project for quic
 
 ## Core Application
 
-- `src/App.jsx` - Main application orchestrator (701 lines - **needs refactoring**)
+- `src/App.jsx` - Main application orchestrator (~432 lines ✅ refactored)
 - `src/main.jsx` - React entry point
 - `index.html` - HTML template
 
 ## Major Components
 
-- `src/components/QuestionItem.jsx` - Individual question display (577 lines - **needs refactoring**)
+- `src/components/QuestionItem.jsx` - Individual question display (186 lines ✅ refactored into 10 sub-components)
 - `src/components/ReviewMode.jsx` - Review interface
 - `src/components/DatabaseView.jsx` - Database view
 - `src/components/AnalyticsDashboard.jsx` - Metrics dashboard (lazy loaded)
@@ -80,8 +80,8 @@ This file lists the key components and files ("anchors") of the project for quic
 
 ## Known Issues
 
-- `App.jsx` - Too large (701 lines), needs refactoring
-- `QuestionItem.jsx` - Too large (577 lines), needs refactoring
+- ✅ ~~`App.jsx` - Too large (701 lines), needs refactoring~~ → Refactored to ~432 lines
+- ✅ ~~`QuestionItem.jsx` - Too large (577 lines), needs refactoring~~ → Refactored to 186 lines with 10 sub-components
 - `helpers.js` - Should be split into focused modules
 - `firestore.rules` - Currently too permissive (allow all)
 
