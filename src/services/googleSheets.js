@@ -44,6 +44,7 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
         return {
             "ID": (i + 1).toString(), // Changed from "id" to "ID"
             "uniqueId": row.uniqueId, // This field is not used in the new GAS, but kept for consistency
+            "Status": row.status || 'accepted', // Added Status
             "Discipline": row.discipline, // Changed from "discipline" to "Discipline"
             "Type": row.type, // Changed from "type" to "Type"
             "Difficulty": row.difficulty, // Changed from "difficulty" to "Difficulty"
@@ -61,7 +62,10 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
             "reviewer": row.reviewerName, // This field is not used in the new GAS, but kept for consistency
             "QualityScore": row.critiqueScore || row.initialQuality || "",
             "AICritique": stripHtmlTags(row.critique || ""),
-            "TokenCost": row.tokenCost || "" // Added Token Cost
+            "TokenCost": row.tokenCost || "", // Added Token Cost
+            "RejectionReason": row.rejectionReason || "",
+            "HumanVerifiedBy": row.humanVerifiedBy || "",
+            "RejectedAt": row.rejectedAt || ""
         };
     });
 
@@ -75,7 +79,7 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
     form.method = 'POST';
     form.action = sheetUrl;
     form.target = 'SheetsSaving'; // Open in popup window
-    
+
     // Open popup window
     window.open('', 'SheetsSaving', 'width=600,height=500');
 

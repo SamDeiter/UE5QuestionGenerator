@@ -1,5 +1,5 @@
-// v1.9 - Multi-Language Master DB with Unique ID + New Fields + HARD RESET
-const HEADERS = ['ID', 'Unique ID', 'Status', 'Discipline', 'Difficulty', 'Question Type', 'Question', 'Option A', 'Option B', 'Option C', 'Option D', 'Answer', 'Explanation', 'Language', 'SourceFile', 'QualityScore', 'AICritique', 'TokenCost', 'LastUpdated'];
+// v2.0 - Multi-Language Master DB with Enhanced Metadata (Rejection Reasons)
+const HEADERS = ['ID', 'Unique ID', 'Status', 'Discipline', 'Difficulty', 'Question Type', 'Question', 'Option A', 'Option B', 'Option C', 'Option D', 'Answer', 'Explanation', 'Language', 'SourceFile', 'QualityScore', 'AICritique', 'TokenCost', 'RejectionReason', 'HumanVerifiedBy', 'RejectedAt', 'LastUpdated'];
 
 function doGet(e) {
   try {
@@ -96,10 +96,21 @@ function doPost(e) {
         masterSheet.setTabColor("4f46e5"); // Indigo tab color
       }
 
+      // Check if headers match v2.0 update, append if missing
+      const currentHeaders = masterSheet.getRange(1, 1, 1, masterSheet.getLastColumn()).getValues()[0];
+      if (currentHeaders.length < HEADERS.length) {
+         // Naive update: just warn user or append to end? 
+         // For now, let's assume new sheet or manual fix.
+         // Actually, if we just appendRow with more columns than header, it works but looks messy.
+         // Let's force update the header row if it's short.
+         masterSheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+      }
+
       const row = [
-        q.ID, q.uniqueId, 'Approved', q.Discipline, q.Difficulty, q.Type, q.Question, 
+        q.ID, q.uniqueId, q.Status || 'Approved', q.Discipline, q.Difficulty, q.Type, q.Question, 
         q.OptionA, q.OptionB, q.OptionC, q.OptionD, q.Answer, q.Explanation, 
-        q.Language, q.SourceFile || '', q.QualityScore || '', q.AICritique || '', q.TokenCost || '', timestamp
+        q.Language, q.SourceFile || '', q.QualityScore || '', q.AICritique || '', q.TokenCost || '',
+        q.RejectionReason || '', q.HumanVerifiedBy || '', q.RejectedAt || '', timestamp
       ];
       masterSheet.appendRow(row);
     });
@@ -137,9 +148,10 @@ function doPost(e) {
       
       granularGroups[groupName].forEach(q => {
         const row = [
-          q.ID, q.uniqueId, 'Approved', q.Discipline, q.Difficulty, q.Type, q.Question, 
+          q.ID, q.uniqueId, q.Status || 'Approved', q.Discipline, q.Difficulty, q.Type, q.Question, 
           q.OptionA, q.OptionB, q.OptionC, q.OptionD, q.Answer, q.Explanation, 
-          q.Language, q.SourceFile || '', q.QualityScore || '', q.AICritique || '', q.TokenCost || '', timestamp
+          q.Language, q.SourceFile || '', q.QualityScore || '', q.AICritique || '', q.TokenCost || '',
+          q.RejectionReason || '', q.HumanVerifiedBy || '', q.RejectedAt || '', timestamp
         ];
         sheet.appendRow(row);
       });
