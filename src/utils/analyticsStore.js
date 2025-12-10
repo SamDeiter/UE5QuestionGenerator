@@ -31,6 +31,7 @@ export const getAnalytics = () => {
 const initializeAnalytics = () => ({
     generations: [],
     questions: [],
+    critiqueActions: [], // Track when users apply/reject AI suggestions
     summary: {
         totalGenerations: 0,
         totalQuestions: 0,
@@ -38,6 +39,7 @@ const initializeAnalytics = () => ({
         estimatedCost: 0,
         averageQuality: 0,
         acceptanceRate: 0,
+        critiqueAcceptanceRate: 0, // NEW: Track how often AI suggestions are applied
         lastUpdated: new Date().toISOString()
     }
 });
@@ -393,3 +395,40 @@ export const getTokenUsage = () => {
         totalCost: data.summary.estimatedCost
     };
 };
+
+/**
+ * Logs a critique action (apply or reject)
+ * @param {Object} actionData - Action data
+ * @param {string} actionData.questionId - Question ID
+ * @param {string} actionData.action - 'applied' | 'rejected'
+ * @param {number} actionData.critiqueScore - Original critique score
+ * @param {string} actionData.discipline - Question discipline
+ */
+export const logCritiqueAction = (actionData) => {
+    const data = getAnalytics();
+
+    const action = {
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        questionId: actionData.questionId,
+        action: actionData.action, // 'applied' or 'rejected'
+        critiqueScore: actionData.critiqueScore,
+        discipline: actionData.discipline || 'Unknown'
+    };
+
+    if (!data.critiqueActions) {
+        data.critiqueActions = [];
+    }
+
+    data.critiqueActions.push(action);
+
+    // Update critique acceptance rate
+    const totalActions = data.critiqueActions.length;
+    const appliedActions = data.critiqueActions.filter(a => a.action === 'applied').length;
+    data.summary.critiqueAcceptanceRate = totalActions > 0
+        ? Math.round((appliedActions / totalActions) * 100)
+        : 0;
+
+    saveAnalytics(data);
+};
+
