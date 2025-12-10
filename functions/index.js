@@ -46,12 +46,12 @@ exports.generateQuestions = functions.https.onCall(async (data, context) => {
     }
 
     try {
-        // 4. Get API key from environment variable
-        const apiKey = process.env.GEMINI_API_KEY;
+        // 4. Get API key from Firebase config
+        const apiKey = functions.config().gemini?.api_key;
         if (!apiKey) {
             throw new functions.https.HttpsError(
                 'failed-precondition',
-                'Gemini API key not configured. Set GEMINI_API_KEY environment variable.'
+                'Gemini API key not configured. Run: firebase functions:config:set gemini.api_key="YOUR_KEY"'
             );
         }
 
@@ -144,7 +144,7 @@ exports.generateCritique = functions.https.onCall(async (data, context) => {
     }
 
     try {
-        const apiKey = process.env.GEMINI_API_KEY;
+        const apiKey = functions.config().gemini?.api_key;
         if (!apiKey) {
             throw new functions.https.HttpsError(
                 'failed-precondition',
