@@ -69,4 +69,21 @@ export default [
             },
         },
     },
+
+    // Firebase Cloud Functions (Node.js CommonJS)
+    {
+        files: ['functions/**/*.js'],
+        languageOptions: {
+            ecmaVersion: 2022,
+            sourceType: 'commonjs',
+            globals: {
+                ...globals.node,
+            },
+        },
+        rules: {
+            // Disable React-specific rules for Node.js files
+            'react-refresh/only-export-components': 'off',
+            'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+        },
+    },
 ];

@@ -218,7 +218,7 @@ exports.generateCritique = functions.https.onCall(async (data, context) => {
         try {
             const cleanJson = rawText.replace(/```json\n?|\n?```/g, '').trim();
             result = JSON.parse(cleanJson);
-        } catch (e) {
+        } catch {
             // Fallback: extract score if JSON parsing fails
             const scoreMatch = rawText.match(/SCORE:\s*(\d+)/i) || rawText.match(/"score"\s*:\s*(\d+)/i);
             result = {
