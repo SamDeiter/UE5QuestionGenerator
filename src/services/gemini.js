@@ -186,24 +186,33 @@ export const generateCritique = async (apiKey, q) => {
     - Must be challenging and specific.`;
     }
 
-    // 2. The Prompt
-    const systemPrompt = "UE5 Expert Critic. Output valid JSON only. YOU MUST BE EXTREMELY HARSH AND CRITICAL.";
+    // 2. The Prompt - Balanced and constructive evaluation
+    const systemPrompt = "Expert UE5 Technical Reviewer. Output valid JSON only. Evaluate objectively and provide constructive feedback.";
     
     // Construct options string for prompt
     const optionsStr = JSON.stringify(q.options);
     
-    const userPrompt = `Critique this UE5 question as an EXTREMELY HARSH, PEDANTIC Senior Technical Editor.
+    const userPrompt = `Evaluate this UE5 question as a Senior Technical Reviewer for a professional certification exam.
     ${strictnessInstruction}
     
-    **CRITICAL MINDSET:** You are a perfectionist who RARELY gives scores above 80. Most questions have flaws.
-    - If the question is simple/basic: Score must be < 75.
-    - If the question is wordy: Score must be < 70.
-    - If the distractors are obvious: Score must be < 60.
+    **SCORING GUIDELINES:** Score based on ACTUAL quality. Use the FULL 0-100 range appropriately:
+    - 90-100: Excellent - Clear, accurate, well-written, strong distractors, verifiable source
+    - 80-89: Good - Minor issues but professionally acceptable
+    - 70-79: Acceptable - Needs polish but fundamentally sound
+    - 60-69: Needs Work - Multiple issues requiring revision
+    - Below 60: Poor - Major problems with accuracy, clarity, or structure
+    
+    **EVALUATION CRITERIA:**
+    1. Technical Accuracy: Is the answer factually correct for UE5?
+    2. Clarity: Is the question clear and unambiguous?
+    3. Distractors: Are wrong answers plausible but definitively incorrect?
+    4. Professional Tone: Is it suitable for certification/interview use?
+    5. Source Quality: Can the answer be verified from official documentation?
     
     MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this structure:
     {
-        "score": number, // 0-100 (Integer only)
-        "critique": "string", // Detailed critique text
+        "score": number, // 0-100 (Integer only) - Use the FULL range appropriately
+        "critique": "string", // Detailed feedback with specific suggestions
         "rewrite": {
             "question": "string", // Improved question text
             "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
@@ -215,6 +224,7 @@ export const generateCritique = async (apiKey, q) => {
     Question: ${q.question}
     Options: ${optionsStr}
     Correct: ${q.correct}`;
+
 
     // 3. API Call
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
@@ -235,18 +245,25 @@ export const generateCritique = async (apiKey, q) => {
 
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
+    // DEBUG: Log raw AI response for score investigation
+    console.log('[Critique DEBUG] Raw AI response:', rawText.substring(0, 500));
+
     // 4. Parse JSON
     try {
         // Clean up markdown code blocks if present (just in case)
         const cleanJson = rawText.replace(/```json\n?|\n?```/g, '').trim();
         const result = JSON.parse(cleanJson);
 
+        const finalScore = typeof result.score === 'number' ? result.score : parseInt(result.score || 0);
+        console.log('[Critique DEBUG] JSON parsed successfully. Score:', finalScore);
+
         return {
-            score: typeof result.score === 'number' ? result.score : parseInt(result.score || 0),
+            score: finalScore,
             text: result.critique || result.text, // Handle potential schema drift
             rewrite: result.rewrite,
             changes: result.changes
         };
+
     } catch (e) {
         console.error("Failed to parse critique JSON:", e, rawText);
         // Fallback to multiple patterns for score extraction if JSON fails

@@ -79,6 +79,9 @@ export const generateCritiqueViaCloudFunction = async (question) => {
             throw new Error(result.data.error || 'Critique failed');
         }
 
+        console.log('[CloudFunction DEBUG] Raw result.data:', JSON.stringify(result.data).substring(0, 200));
+        console.log('[CloudFunction DEBUG] Extracted score:', result.data.score);
+
         return {
             score: result.data.score,
             text: result.data.text,
