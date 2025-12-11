@@ -20,9 +20,11 @@ service cloud.firestore {
       // CREATE: Allow authenticated users to create if they mark themselves as creator
       allow create: if isAuthenticated() && request.resource.data.creatorId == request.auth.uid;
       
-      // UPDATE: Allow authenticated users to update (Collaborative review model)
-      // TODO: Consider restricting critical fields in the future
-      allow update: if isAuthenticated();
+      // UPDATE: Allow authenticated users to update, but protect ownership fields
+      // Critical fields (creatorId, uniqueId) cannot be changed after creation
+      allow update: if isAuthenticated()
+        && request.resource.data.creatorId == resource.data.creatorId
+        && request.resource.data.uniqueId == resource.data.uniqueId;
       
       // DELETE: Only the owner can delete their question
       allow delete: if isAuthenticated() && isOwner(resource.data);
