@@ -526,28 +526,7 @@ export const useGeneration = (
             : `\n\nYour task: Generate 2 IMPROVED variations that are MORE CHALLENGING and PROFESSIONAL than the original.`;
 
         const sys = constructSystemPrompt(config, getFileContext());
-        const prompt = `ORIGINAL QUESTION TO IMPROVE:
-Discipline: ${q.discipline}
-Difficulty: ${q.difficulty}
-Type: ${q.type}
-Question: "${q.question}"
-Options:
-  A) ${q.options.A}
-  B) ${q.options.B}
-  ${q.options.C ? `C) ${q.options.C}` : ''}
-  ${q.options.D ? `D) ${q.options.D}` : ''}
-Correct Answer: ${q.correct}
-${critiqueContext}
-
-REQUIREMENTS FOR VARIATIONS:
-1. Address any weaknesses mentioned in the critique (if provided)
-2. Increase depth and professional relevance
-3. Use scenario-based or application-focused phrasing
-4. Avoid trivial or overly simple questions
-5. Maintain the same difficulty level: ${q.difficulty}
-6. Keep the same type: ${q.type}
-
-Output in Markdown Table format.`;
+        const prompt = `ORIGINAL QUESTION TO IMPROVE:\rDiscipline: ${q.discipline}\rDifficulty: ${q.difficulty}\rType: ${q.type}\rQuestion: \"${q.question}\"\rOptions:\r  A) ${q.options.A}\r  B) ${q.options.B}\r  ${q.options.C ? `C) ${q.options.C}` : ''}\r  ${q.options.D ? `D) ${q.options.D}` : ''}\rCorrect Answer: ${q.correct}\r${critiqueContext}\r\rREQUIREMENTS FOR VARIATIONS:\r1. Address any weaknesses mentioned in the critique (if provided)\r2. Increase depth and professional relevance\r3. Use scenario-based or application-focused phrasing\r4. Avoid trivial or overly simple questions\r5. Maintain the same difficulty level: ${q.difficulty}\r6. Keep the same type: ${q.type}\r\rOutput in Markdown Table format.`;
 
         try {
             const text = await generateContent(effectiveApiKey, sys, prompt, setStatus);
@@ -556,7 +535,9 @@ Output in Markdown Table format.`;
                 const uniqueNewQuestions = await checkAndStoreQuestions(newQs);
                 addQuestionsToState(uniqueNewQuestions, false);
 
-                showMessage(`Added ${uniqueNewQuestions.length} improved variations.`, 3000);
+                showMessage(`🔄 Generated ${uniqueNewQuestions.length} improved variations! Check the question list below.`, 4000);
+            } else {
+                showMessage("⚠️ No variations generated. Try again.", 3000);
             }
         } catch (e) { 
             console.error("Variation generation failed:", e);
@@ -733,6 +714,9 @@ Output in Markdown Table format.`;
     const handleApplyRewrite = (q) => {
         if (!q.suggestedRewrite) return;
 
+        // Store old score for comparison
+        const oldScore = q.critiqueScore;
+
         const updatedQ = {
             ...q,
             question: q.suggestedRewrite.question,
@@ -742,7 +726,8 @@ Output in Markdown Table format.`;
             rewriteChanges: null,
             critique: null,
             critiqueScore: null,
-            humanVerified: false // Reset - human must verify
+            humanVerified: false, // Reset - human must verify
+            _previousScore: oldScore // Temporary field to track improvement
         };
 
         // Update state
@@ -752,7 +737,23 @@ Output in Markdown Table format.`;
 
         // Auto-run critique on the NEW version
         setTimeout(() => {
-            handleCritique({ ...updatedQ, id: q.id });
+            handleCritique({ ...updatedQ, id: q.id }).then(() => {
+                // After critique completes, show score improvement if available
+                setTimeout(() => {
+                    // Re-fetch the updated question to get new score
+                    const currentQ = questions.find(question => question.id === q.id) || 
+                                    historicalQuestions.find(question => question.id === q.id);
+                    
+                    if (currentQ && currentQ.critiqueScore !== undefined && oldScore !== undefined) {
+                        const improvement = currentQ.critiqueScore - oldScore;
+                        if (improvement > 0) {
+                            showMessage(`🎉 Score improved: ${oldScore} → ${currentQ.critiqueScore} (+${improvement})`, 4000);
+                        } else if (improvement < 0) {
+                            showMessage(`Score changed: ${oldScore} → ${currentQ.critiqueScore} (${improvement})`, 4000);
+                        }
+                    }
+                }, 1000);
+            });
         }, 300);
     };
 

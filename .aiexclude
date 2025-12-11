@@ -1,0 +1,44 @@
+# Dependencies & Locks
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build Outputs (Vite/React)
+dist/
+build/
+coverage/
+
+# Firebase & Local Emulators
+.firebase/
+firebase-debug.log
+
+# Python (If you use local scripts)
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# IDE & Git System Files
+.git/
+.vscode/
+.idea/
+.DS_Store
+
+# Large Assets (AI rarely needs to read these)
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.ico
+*.gif
+public/
+
+# Antigravity/Gemini Brain (CRITICAL)
+# Prevents the agent from reading its own history/artifacts as code
+.gemini/
+.antigravity/
+artifacts/
+
+# Documentation (Optional: Un-comment if you want the agent to ignore old docs)
+# docs/
