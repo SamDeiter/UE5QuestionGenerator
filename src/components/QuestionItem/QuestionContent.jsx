@@ -8,7 +8,8 @@ const QuestionContent = ({
     setIsEditing,
     onUpdateQuestion,
     showMessage,
-    appMode
+    appMode,
+    isAdmin = false
 }) => {
     return (
         <>
@@ -29,10 +30,10 @@ const QuestionContent = ({
                     </div>
                 ) : (
                     <h3
-                        className={`text-base font-medium leading-relaxed cursor-pointer hover:bg-slate-800/50 rounded px-1 -mx-1 transition-colors ${q.status === 'rejected' ? 'text-slate-600 line-through decoration-slate-700' : 'text-slate-200'}`}
+                        className={`text-base font-medium leading-relaxed ${isAdmin && appMode !== 'database' ? 'cursor-pointer hover:bg-slate-800/50' : 'cursor-default'} rounded px-1 -mx-1 transition-colors ${q.status === 'rejected' ? 'text-slate-600 line-through decoration-slate-700' : 'text-slate-200'}`}
                         dangerouslySetInnerHTML={{ __html: sanitizeText(q.question) }}
-                        onClick={() => appMode !== 'database' && setIsEditing(true)}
-                        title={appMode !== 'database' ? 'Click to edit' : ''}
+                        onClick={() => isAdmin && appMode !== 'database' && setIsEditing(true)}
+                        title={isAdmin && appMode !== 'database' ? 'Click to edit (Admin only)' : ''}
                     />
                 )}
                 <div className="flex items-center gap-3 mt-2">

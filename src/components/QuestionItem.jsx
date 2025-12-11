@@ -30,7 +30,8 @@ const QuestionItem = ({
     showMessage,
     isSelected,
     onToggleSelect,
-    showCheckbox
+    showCheckbox,
+    isAdmin = false
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editedText, setEditedText] = useState(q.question);
@@ -154,6 +155,7 @@ const QuestionItem = ({
                     onUpdateQuestion={onUpdateQuestion}
                     showMessage={showMessage}
                     appMode={appMode}
+                    isAdmin={isAdmin}
                 />
 
                 <SourceContextCard
