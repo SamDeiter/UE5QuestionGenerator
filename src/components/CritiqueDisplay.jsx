@@ -218,15 +218,15 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                                     >
                                         WHY?
                                     </button>
-                                )}
+                                ))}
                                 {onVariate && (
                                     <button
                                         onClick={onVariate}
                                         disabled={isProcessing}
                                         className="px-2 py-1 rounded border border-slate-600 text-slate-400 text-xs hover:text-white hover:border-slate-400 transition-colors disabled:opacity-50"
-                                        title="Generate new variations"
+                                        title="Generate alternative question variations"
                                     >
-                                        MORE
+                                        ALTERNATIVES
                                     </button>
                                 )}
                             </div>
