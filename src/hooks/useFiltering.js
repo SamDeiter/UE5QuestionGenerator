@@ -63,11 +63,12 @@ export function useFiltering({ questions, historicalQuestions, config, appMode }
     // COMPUTED VALUES - Filtered Questions
     // ========================================================================
 
+
     // 1. First, get questions that match all filters EXCEPT status (for counts)
     const contextFilteredQuestions = useMemo(() => createFilteredQuestions(
         questions,
         historicalQuestions,
-        showHistory || appMode === 'review', // Force history on in review mode
+        showHistory || appMode === 'review' || appMode === 'create', // Show history in Create & Review modes
         'all', // Ignore status for this intermediate list
         filterByCreator,
         searchTerm,
