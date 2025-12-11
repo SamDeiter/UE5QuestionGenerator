@@ -714,9 +714,6 @@ export const useGeneration = (
     const handleApplyRewrite = (q) => {
         if (!q.suggestedRewrite) return;
 
-        // Store old score for comparison
-        const oldScore = q.critiqueScore;
-
         const updatedQ = {
             ...q,
             question: q.suggestedRewrite.question,
@@ -726,34 +723,17 @@ export const useGeneration = (
             rewriteChanges: null,
             critique: null,
             critiqueScore: null,
-            humanVerified: false, // Reset - human must verify
-            _previousScore: oldScore // Temporary field to track improvement
+            humanVerified: false // Reset - human must verify
         };
 
         // Update state
         updateQuestionInState(q.id, () => updatedQ);
 
-        showMessage("✓ Applied! Re-critiquing...", 2000);
+        showMessage("✓ Applied! Re-critiquing to get new score...", 2000);
 
         // Auto-run critique on the NEW version
         setTimeout(() => {
-            handleCritique({ ...updatedQ, id: q.id }).then(() => {
-                // After critique completes, show score improvement if available
-                setTimeout(() => {
-                    // Re-fetch the updated question to get new score
-                    const currentQ = questions.find(question => question.id === q.id) || 
-                                    historicalQuestions.find(question => question.id === q.id);
-                    
-                    if (currentQ && currentQ.critiqueScore !== undefined && oldScore !== undefined) {
-                        const improvement = currentQ.critiqueScore - oldScore;
-                        if (improvement > 0) {
-                            showMessage(`🎉 Score improved: ${oldScore} → ${currentQ.critiqueScore} (+${improvement})`, 4000);
-                        } else if (improvement < 0) {
-                            showMessage(`Score changed: ${oldScore} → ${currentQ.critiqueScore} (${improvement})`, 4000);
-                        }
-                    }
-                }, 1000);
-            });
+            handleCritique({ ...updatedQ, id: q.id });
         }, 300);
     };
 
