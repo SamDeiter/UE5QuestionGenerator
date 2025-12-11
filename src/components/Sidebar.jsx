@@ -19,7 +19,8 @@ const Sidebar = ({
     setShowSettings,
     handleSelectCategory,
     customTags = {},
-    status = '' // Live generation status text
+    status = '', // Live generation status text
+    showMessage
 }) => {
 
     return (
@@ -41,6 +42,8 @@ const Sidebar = ({
                 allQuestionsMap={allQuestionsMap}
                 config={config}
                 handleChange={handleChange}
+                showMessage={showMessage}
+                setShowGenSettings={setShowGenSettings}
             />
 
             <CustomRules

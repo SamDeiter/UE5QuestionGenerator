@@ -48,13 +48,17 @@ export function useToast() {
     }, []);
 
     /**
-     * Convenience function to show an info toast.
-     * 
      * @param {string} msg - Message to display
+     * @param {string|number} type - Toast type ('info', 'success', 'warning', 'error') OR duration (backward compat)
      * @param {number} duration - Duration in ms
      */
-    const showMessage = useCallback((msg, duration = 3000) => {
-        addToast(msg, 'info', duration);
+    const showMessage = useCallback((msg, type = 'info', duration = 3000) => {
+        // Backward compatibility: if type is number, treat as duration
+        if (typeof type === 'number') {
+            duration = type;
+            type = 'info';
+        }
+        addToast(msg, type, duration);
     }, [addToast]);
 
     return {

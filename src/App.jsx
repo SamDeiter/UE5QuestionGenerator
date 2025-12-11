@@ -379,7 +379,8 @@ const App = () => {
                     allQuestionsMap, approvedCounts, overallPercentage, totalApproved,
                     isTargetMet, maxBatchSize, batchSizeWarning, handleGenerate,
                     isGenerating, isApiReady, handleBulkTranslateMissing, isProcessing,
-                    setShowSettings, handleSelectCategory, customTags, status
+                    setShowSettings, handleSelectCategory, customTags, status,
+                    showMessage
                 }}
                 handleModeSelect={handleModeSelect}
                 handleViewDatabase={handleViewDatabase}

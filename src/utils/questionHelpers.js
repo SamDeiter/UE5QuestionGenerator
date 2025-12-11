@@ -235,13 +235,20 @@ export const parseQuestions = (text) => {
         const correctLetter = cols[10];
         const sourceUrl = cols[11];
         const sourceExcerpt = cols[12];
+        const tagsRaw = cols[13]; // New Tags Column
         let qualityScore = null;
-        if (cols[13]) {
-            const match = cols[13].match(/\d+/);
+        if (cols[14]) { // Quality Score shifted to 14
+            const match = cols[14].match(/\d+/);
             if (match) qualityScore = parseInt(match[0]);
         }
 
         if (!question || !correctLetter || question.includes('---')) return;
+
+        // Parse Tags
+        let tags = [];
+        if (tagsRaw && tagsRaw !== '-' && tagsRaw !== '') {
+            tags = tagsRaw.split(',').map(t => t.trim().replace(/^[#]/, '')).filter(t => t);
+        }
 
         const type = typeRaw && typeRaw.toLowerCase().includes('true') ? 'True/False' : 'Multiple Choice';
 
@@ -274,6 +281,7 @@ export const parseQuestions = (text) => {
             correct: correctLetter || "",
             sourceUrl: (sourceUrl && !sourceUrl.includes(' ')) ? sourceUrl : "", // Basic validation: URLs shouldn't have spaces
             sourceExcerpt: sourceExcerpt || "",
+            tags: tags,
             qualityScore: qualityScore,
             status: 'pending',
             critique: null,

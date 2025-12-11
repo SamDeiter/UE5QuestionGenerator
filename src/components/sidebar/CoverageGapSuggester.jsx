@@ -1,7 +1,7 @@
 import { TAGS_BY_DISCIPLINE } from '../../utils/tagTaxonomy';
 import Icon from '../Icon';
 
-const CoverageGapSuggester = ({ allQuestionsMap, config, handleChange }) => {
+const CoverageGapSuggester = ({ allQuestionsMap, config, handleChange, showMessage, setShowGenSettings }) => {
     // 1. Get stats for the current selected discipline
     const currentDiscipline = config.discipline || 'Technical Art';
     const availableTags = TAGS_BY_DISCIPLINE[currentDiscipline] || [];
@@ -34,6 +34,10 @@ const CoverageGapSuggester = ({ allQuestionsMap, config, handleChange }) => {
     const handleAutoFill = () => {
         // Set the tags in config
         handleChange({ target: { name: 'tags', value: targetTags } });
+        
+        // Provide feedback and open settings so user sees the change
+        if (showMessage) showMessage(`Targeting missing topics: ${targetTags.join(', ')}`, 'success');
+        if (setShowGenSettings) setShowGenSettings(true);
     };
 
     return (

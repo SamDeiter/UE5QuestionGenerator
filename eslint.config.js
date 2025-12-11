@@ -6,7 +6,7 @@ import react from 'eslint-plugin-react';
 
 export default [
     // Ignore patterns
-    { ignores: ['dist/**', 'node_modules/**', 'build/**', '*.config.js', 'tools/**', 'archive/**'] },
+    { ignores: ['dist/**', 'node_modules/**', 'build/**', '*.config.js', 'tools/**', 'archive/**', 'scripts/**'] },
 
     // Main configuration for JS/JSX files
     {

@@ -10,10 +10,10 @@ const Toast = ({ message, type = 'info', onClose, action = null, duration = 5000
     }, [onClose, action, duration]);
 
     const bgColors = {
-        success: 'bg-green-900/90 border-green-700',
-        error: 'bg-red-900/90 border-red-700',
-        warning: 'bg-orange-900/90 border-orange-700',
-        info: 'bg-blue-900/90 border-blue-700',
+        success: 'bg-emerald-900/95 border-emerald-500/50 shadow-emerald-900/20',
+        error: 'bg-red-950/95 border-red-500/50 shadow-red-900/20',
+        warning: 'bg-amber-900/95 border-amber-500/50 shadow-amber-900/20',
+        info: 'bg-slate-900/95 border-slate-600/50 shadow-slate-900/20',
     };
 
     const iconNames = {

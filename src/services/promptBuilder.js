@@ -287,9 +287,9 @@ To assess professional competence, use these question structures:
 ### 4. Database Output Format
     ** DO NOT OUTPUT JSON.** Output ** ONLY ** the Markdown table below.No intro / outro text.
 
-| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | QualityScore |
-| : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- |
-| 1 | ${config.discipline} | [MC / TF] | [Diff] | [Question Text] | [Exact Answer Text] | [Option A] | [Option B] | [Option C] | [Option D] | [A / B / C / D] | [https://dev.epicgames.com/...] | [Quote from Doc] | [0-100] |
+| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | Tags | QualityScore |
+| : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- |
+| 1 | ${config.discipline} | [MC / TF] | [Diff] | [Question Text] | [Exact Answer Text] | [Option A] | [Option B] | [Option C] | [Option D] | [A / B / C / D] | [https://dev.epicgames.com/...] | [Quote from Doc] | [Tag1, Tag2] | [0-100] |
 
 ** Task:** Generate ${difficultyPrompt} based on the Input Variables above.
 
