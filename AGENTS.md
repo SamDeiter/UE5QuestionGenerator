@@ -11,6 +11,18 @@ This project uses the **Google Antigravity** platform to drive agentic developme
 4. **Security**: Always consider security implications of changes.
 5. **Performance**: Monitor and optimize bundle size and render performance.
 
+> [!CAUTION]
+>
+> ### 🛑 HUMAN-IN-THE-LOOP REQUIREMENT
+>
+> **Questions must NEVER be automatically vetted or submitted by AI.** A human must always:
+>
+> - Review each question before acceptance
+> - Manually verify the AI critique score
+> - Explicitly approve or reject each question
+>
+> This is a non-negotiable design principle. Do NOT implement any feature that bypasses human review.
+
 ## Agent Workflow & Mode Selection
 
 Antigravity agents operate in different modes that should be selected based on the complexity of the task.
