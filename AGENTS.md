@@ -71,7 +71,7 @@ npm run deploy   # Deploy to GitHub Pages
 When making changes, remember to update:
 
 - `AGENTS.md` - This file
-- `ANCHOR_MANIFEST.md` - Key component list
+- `docs/project-context/ANCHOR_MANIFEST.md` - Key component list
 - `docs/` - User and developer documentation
 - `README.md` - Project overview
 
@@ -89,3 +89,18 @@ See `master_plan.md` in artifacts for detailed roadmap.
 - Use `task_boundary` to track progress on complex tasks
 - Use `notify_user` for requesting review or asking questions
 - Keep user informed of progress and blockers
+
+---
+
+## Additional Project Context
+
+Additional project context, architecture diagrams, and task logs are located in the `docs/project-context/` directory.
+
+**Key files moved there include:**
+
+- `ANCHOR_MANIFEST.md` - Project structure reference
+- `ARCHITECTURE.mermaid` - System architecture diagram
+- `TECH_STACK.md` - Technology stack documentation
+- `LICENSES.md` - Detailed licensing information
+- `GEMINI.md` - AI model configuration guide
+- Task tracking files: `CURRENT_TASKS.md`, `TaskQueue.md`, `NEXT_SESSION.md`
