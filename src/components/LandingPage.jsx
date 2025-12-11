@@ -1,6 +1,6 @@
 import Icon from './Icon';
 
-const LandingPage = ({ onSelectMode, apiKeyStatus, isCloudReady, onOpenSettings }) => (
+const LandingPage = ({ onSelectMode, apiKeyStatus, isCloudReady, onOpenSettings, isAdmin, onStartTutorial }) => (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-white p-4 relative overflow-hidden">
         {/* API Key Missing Banner */}
         {(!apiKeyStatus.includes('Loaded') && !apiKeyStatus.includes('Auto')) && (
@@ -37,18 +37,41 @@ const LandingPage = ({ onSelectMode, apiKeyStatus, isCloudReady, onOpenSettings 
                 <p className="text-lg text-slate-400 max-w-lg mx-auto">
                     Create, review, and manage scenario-based technical questions for Unreal Engine 5 documentation.
                 </p>
+                
+                {onStartTutorial && (
+                    <button 
+                        onClick={onStartTutorial}
+                        className="inline-flex items-center gap-2 text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors"
+                    >
+                        <Icon name="help-circle" size={16} />
+                        Take a quick tour
+                    </button>
+                )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center w-full">
                 <button
-                    onClick={() => onSelectMode('create')}
-                    className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-orange-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-orange-900/20"
+                    onClick={() => isAdmin && onSelectMode('create')}
+                    disabled={!isAdmin}
+                    className={`group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 rounded-xl transition-all duration-300 w-full sm:w-64 shadow-lg 
+                        ${isAdmin 
+                            ? 'hover:border-orange-500/50 hover:bg-slate-800/80 hover:shadow-orange-900/20 cursor-pointer' 
+                            : 'opacity-50 cursor-not-allowed border-slate-800/50'
+                        }`}
                 >
-                    <div className="p-3 bg-orange-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
-                        <Icon name="plus-circle" size={32} className="text-orange-500" />
+                    <div className={`p-3 rounded-full mb-4 transition-transform ${isAdmin ? 'bg-orange-900/20 group-hover:scale-110' : 'bg-slate-800'}`}>
+                        <Icon name={isAdmin ? "plus-circle" : "lock"} size={32} className={isAdmin ? "text-orange-500" : "text-slate-500"} />
                     </div>
-                    <h3 className="text-xl font-bold mb-2">Creation Mode</h3>
-                    <p className="text-xs text-slate-400 text-center">Generate new questions, upload CSVs, and translate content.</p>
+                    <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                        Creation Mode
+                        {!isAdmin && <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">ADMIN</span>}
+                    </h3>
+                    <p className="text-xs text-slate-400 text-center">
+                        {isAdmin 
+                            ? "Generate new questions, upload CSVs, and translate content." 
+                            : "Restricted to administrators. Contact support for access."
+                        }
+                    </p>
                 </button>
 
                 <button

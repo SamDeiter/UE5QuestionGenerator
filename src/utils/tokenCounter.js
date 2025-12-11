@@ -17,8 +17,8 @@ const PRICING = {
         output: 5.00    // $5.00 per 1M output tokens
     },
     'gemini-2.0-flash-exp': {
-        input: 0.00,    // Free during preview
-        output: 0.00
+        input: 0.075,   // Using Flash pricing for value estimation
+        output: 0.30
     }
 };
 

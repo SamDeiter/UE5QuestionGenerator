@@ -3,7 +3,9 @@ import useConnectionStatus from '../hooks/useConnectionStatus';
 
 const APP_VERSION = "v1.7";
 
-const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, tokenUsage = { inputTokens: 0, outputTokens: 0, totalCost: 0 }, onRestartTutorial }) => {
+
+const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, tokenUsage = { inputTokens: 0, outputTokens: 0, totalCost: 0 }, _onRestartTutorial, onStartTutorial, isAdmin }) => {
+
     const connectionStatus = useConnectionStatus();
     const isReview = appMode === 'review';
     const isAnalytics = appMode === 'analytics';
@@ -66,8 +68,9 @@ const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, toke
                 <div className="hidden md:flex items-center gap-4 text-xs font-mono">
                     {creatorName && (
                         <div className="flex items-center gap-1.5 font-bold text-slate-300 px-3 py-1 bg-slate-800/50 rounded-lg">
-                            <Icon name="user-check" size={14} className="text-green-500" />
+                            <Icon name={isAdmin ? "shield-check" : "user"} size={14} className={isAdmin ? "text-orange-500" : "text-green-500"} />
                             <span>{creatorName}</span>
+                            {isAdmin && <span className="text-[10px] bg-orange-900/50 text-orange-400 px-1 py-0.5 rounded border border-orange-800 ml-1">ADMIN</span>}
                         </div>
                     )}
                     {/* Token & Cost Display */}
@@ -83,11 +86,11 @@ const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, toke
                             <span className="font-bold">{formattedCost}</span>
                         </div>
                     </div>
-                    {onRestartTutorial && appMode === 'create' && (
+                    {onStartTutorial && ['create', 'review', 'database'].includes(appMode) && (
                         <button
-                            onClick={onRestartTutorial}
+                            onClick={() => onStartTutorial(appMode)}
                             className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-900/50"
-                            title="Restart Tutorial"
+                            title={`Start ${appMode} tutorial`}
                         >
                             <Icon name="help-circle" size={14} />
                             Tutorial

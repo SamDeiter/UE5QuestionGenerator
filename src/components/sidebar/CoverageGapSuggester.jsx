@@ -25,18 +25,35 @@ const CoverageGapSuggester = ({ allQuestionsMap, config, handleChange, showMessa
     const zeroCoverageTags = availableTags.filter(t => tagCounts[t] === 0);
     const lowCoverageTags = availableTags.filter(t => tagCounts[t] > 0 && tagCounts[t] < 3);
 
-    // If everything is covered, don't show anything (or show a "Good Job" message)
-    if (zeroCoverageTags.length === 0 && lowCoverageTags.length === 0) return null;
+    // Only show if missing a significant number of topics (User Request: "only ... when you are missing a lot")
+    // Threshold set to 4 missing topics
+    if (zeroCoverageTags.length < 4) return null;
 
     const targetTags = zeroCoverageTags.length > 0 ? zeroCoverageTags.slice(0, 3) : lowCoverageTags.slice(0, 3);
     const gapType = zeroCoverageTags.length > 0 ? "Missing Topics" : "Low Coverage";
 
+    const handleTagClick = (tag) => {
+        const currentTags = config.tags || [];
+        let newTags;
+        if (currentTags.includes(tag)) {
+            newTags = currentTags.filter(t => t !== tag);
+        } else {
+            newTags = [...currentTags, tag];
+        }
+        handleChange({ target: { name: 'tags', value: newTags } });
+    };
+
     const handleAutoFill = () => {
-        // Set the tags in config
-        handleChange({ target: { name: 'tags', value: targetTags } });
+        // Merge tags instead of replacing
+        const currentTags = config.tags || [];
+        // Use all detected tags instead of just the top 3 visible ones
+        const tagsToAdd = zeroCoverageTags.length > 0 ? zeroCoverageTags : lowCoverageTags;
+        const newTags = [...new Set([...currentTags, ...tagsToAdd])];
+        
+        handleChange({ target: { name: 'tags', value: newTags } });
         
         // Provide feedback and open settings so user sees the change
-        if (showMessage) showMessage(`Targeting missing topics: ${targetTags.join(', ')}`, 'success');
+        if (showMessage) showMessage(`Added suggestions: ${targetTags.join(', ')}`, 'success');
         if (setShowGenSettings) setShowGenSettings(true);
     };
 
@@ -54,11 +71,22 @@ const CoverageGapSuggester = ({ allQuestionsMap, config, handleChange, showMessa
                         The following areas in <strong>{currentDiscipline}</strong> have {zeroCoverageTags.length > 0 ? 'no' : 'few'} questions:
                     </p>
                     <div className="flex flex-wrap gap-1 mb-3">
-                        {targetTags.map(tag => (
-                            <span key={tag} className="text-[9px] px-1.5 py-0.5 bg-orange-500/20 text-orange-300 rounded border border-orange-500/30">
-                                {tag}
-                            </span>
-                        ))}
+                        {targetTags.map(tag => {
+                            const isSelected = (config.tags || []).includes(tag);
+                            return (
+                                <button
+                                    key={tag}
+                                    onClick={() => handleTagClick(tag)}
+                                    className={`text-[9px] px-1.5 py-0.5 rounded border transition-colors ${
+                                        isSelected 
+                                            ? 'bg-orange-500 text-white border-orange-600' 
+                                            : 'bg-orange-500/20 text-orange-300 border-orange-500/30 hover:bg-orange-500/30'
+                                    }`}
+                                >
+                                    {tag}
+                                </button>
+                            );
+                        })}
                         {(zeroCoverageTags.length > 3 || lowCoverageTags.length > 3) && (
                             <span className="text-[9px] px-1.5 py-0.5 text-orange-400/70">
                                 +{(zeroCoverageTags.length || lowCoverageTags.length) - 3} more
@@ -68,9 +96,9 @@ const CoverageGapSuggester = ({ allQuestionsMap, config, handleChange, showMessa
 
                     <button
                         onClick={handleAutoFill}
-                        className="w-full py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold uppercase tracking-wider rounded transition-colors flex items-center justify-center gap-2"
+                        className="w-full py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold uppercase tracking-wider rounded transition-colors flex items-center justify-center gap-2 shadow-lg shadow-orange-900/20"
                     >
-                        Target These Topics <Icon name="arrow-right" size={10} />
+                        Focus on Suggestions <Icon name="arrow-right" size={10} />
                     </button>
                 </div>
             </div>

@@ -12,6 +12,13 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth, getCustomTags, saveCustomTags } from '../services/firebase';
 import { getTokenUsage } from '../utils/analyticsStore';
 
+// Hardcoded whitelist for Admin access (Create Mode, Settings)
+const ADMIN_EMAILS = [
+    'sam.deiter@epicgames.com',
+    'samdeiter@gmail.com',
+    // Add other admin emails here
+];
+
 /**
  * Custom hook for managing authentication and compliance state.
  * 
@@ -24,6 +31,7 @@ export function useAuth(showMessage) {
     // ========================================================================
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
     const [customTags, setCustomTags] = useState({});
     const [tokenUsage, setTokenUsage] = useState(() => getTokenUsage());
     
@@ -40,6 +48,15 @@ export function useAuth(showMessage) {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
+            
+            // Determine Admin Status
+            if (currentUser && currentUser.email) {
+                const isWhitelisted = ADMIN_EMAILS.includes(currentUser.email.toLowerCase());
+                setIsAdmin(isWhitelisted);
+            } else {
+                setIsAdmin(false);
+            }
+
             if (currentUser) {
                 // Load custom tags from Firestore
                 try {
@@ -101,6 +118,7 @@ export function useAuth(showMessage) {
         // Auth state
         user,
         authLoading,
+        isAdmin,
         
         // Custom tags
         customTags,

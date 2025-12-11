@@ -28,6 +28,13 @@ const GenerationSettings = ({ config, handleChange, customTags = {}, isOpen, onT
         return counts;
     }, [allQuestionsMap, availableTags]);
 
+    // Auto-expand Focus & Model if tags are selected or custom model is used
+    React.useEffect(() => {
+        if ((config.tags?.length > 0 || config.model !== 'gemini-2.0-flash') && !showAdvanced) {
+            setShowAdvanced(true);
+        }
+    }, [config.tags?.length, config.model, showAdvanced]);
+
     const toggleTag = (tag) => {
         const currentTags = config.tags || [];
         const newTags = currentTags.includes(tag) 
@@ -91,7 +98,7 @@ const GenerationSettings = ({ config, handleChange, customTags = {}, isOpen, onT
                     </div>
 
                     {/* ═══════════════════════════════════════════════════════════════
-                       ADVANCED SETTINGS - Collapsed by default
+                       FOCUS & MODEL SETTINGS - Collapsed by default
                        ═══════════════════════════════════════════════════════════════ */}
                     <div className="border border-slate-700 rounded-lg overflow-hidden">
                         <button
@@ -99,12 +106,12 @@ const GenerationSettings = ({ config, handleChange, customTags = {}, isOpen, onT
                             className="w-full flex items-center justify-between p-3 bg-slate-800/50 hover:bg-slate-800 transition-colors"
                         >
                             <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1">
-                                <Icon name="settings" size={12} /> Advanced Settings
+                                <Icon name="settings" size={12} /> Focus & Model
                                 {(config.tags?.length > 0 || config.model !== 'gemini-2.0-flash') && (
                                     <span className="ml-2 px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded text-[9px]">
-                                        {config.tags?.length > 0 ? `${config.tags.length} tags` : ''} 
+                                        {config.tags?.length > 0 ? `${config.tags.length} TAGS` : ''} 
                                         {config.tags?.length > 0 && config.model !== 'gemini-2.0-flash' ? ' + ' : ''}
-                                        {config.model !== 'gemini-2.0-flash' ? 'custom model' : ''}
+                                        {config.model !== 'gemini-2.0-flash' ? 'CUSTOM' : ''}
                                     </span>
                                 )}
                             </span>

@@ -187,11 +187,11 @@ export const generateCritique = async (apiKey, q) => {
     }
 
     // 2. The Prompt
-    const systemPrompt = "UE5 Expert Critic. Output valid JSON only. YOU MUST BE EXTREMELY HARSH AND CRITICAL.";
-    const userPrompt = `Critique this UE5 question as an EXTREMELY HARSH, PEDANTIC Senior Technical Editor.
+    const systemPrompt = "UE5 Expert Critic. Output valid JSON only. Be FAIR but STRICT regarding technical accuracy.";
+    const userPrompt = `Critique this UE5 question as a Senior Technical Editor.
     ${strictnessInstruction}
     
-    **CRITICAL MINDSET:** You are a perfectionist who RARELY gives scores above 80. Most questions have flaws.
+    **CRITICAL MINDSET:** You are a professional editor. Reward accuracy and clarity.
     
     MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this structure:
     {
@@ -205,24 +205,22 @@ export const generateCritique = async (apiKey, q) => {
         "changes": "string" // Brief explanation of what was changed and why
     }
 
-    **STRICT Scoring Criteria (APPLY RUTHLESSLY):**
-    - 95-100: PRACTICALLY IMPOSSIBLE. Near-perfect question. Concise (single sentence), zero ambiguity, expert-level difficulty, perfect distractors. Reserve for truly exceptional questions only.
-    - 85-94: EXCELLENT. Very good but has minor improvements possible (slight wordiness, one weak distractor).
-    - 70-84: GOOD WITH FLAWS. Competent but has clear issues (wordy, hints in stem, mediocre distractors, too basic).
+    **STRICT Scoring Criteria:**
+    - 90-100: PERFECT. concise (single sentence), zero ambiguity, expert-level difficulty, perfect distractors.
+    - 80-89: EXCELLENT. Very good but has minor improvements possible (slight wordiness, one weak distractor).
+    - 70-79: GOOD. Competent but has clear issues (wordy, hints in stem, mediocre distractors, too basic).
     - 50-69: MEDIOCRE. Multiple problems (ambiguous, confusing structure, weak options, trivial topic).
-    - 30-49: POOR. Serious issues (factual concerns, very weak question, bad distractors).
-    - 0-29: FAIL. Fundamentally broken (wrong answer key, outdated info, nonsensical).
+    - 0-49: POOR/FAIL. Serious issues (factual concerns, very weak question, bad distractors).
 
     **DEDUCT POINTS FOR (cumulative):**
-    - **TOO EASY/TRIVIAL**: Basic "What is X?" questions START at 60 max. Deduct 20 points.
-    - **WORDINESS**: More than 20 words in question = -10 points. More than 30 words = -20 points.
+    - **TOO EASY/TRIVIAL**: Basic "What is X?" questions START at 70 max. Deduct 10 points.
+    - **WORDINESS**: More than 20 words in question = -5 points.
     - **HINTS IN STEM**: Any hint toward answer = -15 points per hint.
-    - **WEAK DISTRACTORS**: Obviously wrong options = -10 points per weak distractor.
-    - **AMBIGUITY**: Multiple valid interpretations = -25 points.
-    - **LACK OF SOURCE**: No clear source or genericdocumentation = -15 points.
-    - **POOR GRAMMAR**: Any grammar/spelling issues = -10 points.
+    - **WEAK DISTRACTORS**: Obviously wrong options = -5 points per weak distractor.
+    - **AMBIGUITY**: Multiple valid interpretations = -20 points.
+    - **LACK OF SOURCE**: No clear source or generic documentation = -10 points.
 
-    **DEFAULT ASSUMPTION: Start at 75 and deduct points. Only award 90+ if truly exceptional.**
+    **DEFAULT ASSUMPTION: Start at 85 and deduct points based on flaws.**
 
     **CRITICAL RULE FOR TRUE/FALSE:** 
     - If original is T/F, rewrite MUST remain T/F. 
@@ -306,10 +304,10 @@ export const rewriteQuestion = async (apiKey, q, critiqueText) => {
     Critique to Address: ${critiqueText}
     Original Context: Discipline: ${q.discipline}, Type: ${q.type}.
     Rules: 
-    1. Fix the issues identified in the critique. 
+    1. Fix the SPECIFIC issues identified in the critique. 
     2. Keep UE5 accuracy. 
     3. Maintain strict formatting. 
-    4. QualityScore (0-100) should reflect the improved quality.
+    4. QualityScore MUST reflect the improvement (Target: 90+).
     5. CONCISENESS IS KING. Max 2 sentences. Remove fluff.`;
 
     const userPrompt = `Rewrite this question:\n${q.question}\nOptions: ${JSON.stringify(q.options)}\nCorrect: ${q.correct}`;

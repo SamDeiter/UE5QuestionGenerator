@@ -1,65 +1,90 @@
-export const TUTORIAL_STEPS = [
-    {
-        id: 'welcome',
-        title: 'Welcome to UE5 Question Generator',
-        content: 'This tool helps you generate high-quality Unreal Engine 5 assessment questions using AI. Let\'s take a quick tour!',
-        target: null, // Center screen
-        position: 'center'
-    },
-    {
-        id: 'discipline',
-        title: 'Select a Discipline',
-        content: 'Start by choosing the specific area of UE5 you want to generate questions for (e.g., Blueprints, C++, Lumen). You can also create custom tags in Settings for more focused generation.',
-        target: '[data-tour="discipline-selector"]',
-        position: 'right'
-    },
-    {
-        id: 'upload',
-        title: 'Upload Context (Optional)',
-        content: 'Click "Open Settings" to upload PDF or text files (like documentation) to generate questions based on specific source material.',
-        target: '[data-tour="open-settings"]',
-        position: 'top'
-    },
-    {
-        id: 'settings',
-        title: 'Generation Settings',
-        content: 'Adjust the difficulty, question type (Multiple Choice/True False), and the number of questions to generate. All questions are generated in English first.',
-        target: '[data-tour="generation-settings"]',
-        position: 'right'
-    },
-    {
-        id: 'generate',
-        title: 'Generate Questions',
-        content: 'Click this button to start the AI generation process. It usually takes a few seconds per question.',
-        target: '[data-tour="generate-button"]',
-        position: 'right'
-    },
-    {
-        id: 'create-mode',
-        title: 'Create Mode - Question List',
-        content: 'After generation, questions appear here in Create Mode. This is your workspace for newly generated questions that need review.',
-        target: '[data-tour="review-area"]',
-        position: 'left'
-    },
-    {
-        id: 'review-mode',
-        title: 'Review Mode - Quality Control',
-        content: 'Switch to Review Mode to carefully evaluate each question. Accept good questions, reject bad ones, or use AI Critique to get improvement suggestions. Only accepted questions can be translated to other languages.',
-        target: '[data-tour="review-mode"]',
-        position: 'bottom'
-    },
-    {
-        id: 'database-view',
-        title: 'Database View - Your Question Bank',
-        content: 'The Database View shows all your accepted questions stored in Firestore. This is your permanent question bank that syncs across devices. You can export, translate, or "kick back" questions to Review Mode for further refinement.',
-        target: '[data-tour="database-mode"]',
-        position: 'bottom'
-    },
-    {
-        id: 'workflow',
-        title: 'The Complete Workflow',
-        content: 'Here\'s the full process:\n\n1️⃣ Generate questions in Create Mode\n2️⃣ Review & Accept/Reject in Review Mode\n3️⃣ Accepted questions auto-save to Database\n4️⃣ Translate accepted English questions\n5️⃣ Export to Google Sheets or CSV\n\nYour questions are always backed up in Firestore!',
-        target: null,
-        position: 'center'
-    }
-];
+export const TUTORIAL_SCENARIOS = {
+    // 1. General Welcome Tour (Landing Page)
+    welcome: [
+        {
+            id: 'welcome',
+            title: 'Welcome to UE5 Question Generator',
+            content: 'This tool helps you generate high-quality Unreal Engine 5 assessment questions using AI. Let\'s take a quick tour!',
+            target: null, 
+            position: 'center'
+        },
+        {
+            id: 'modes',
+            title: 'Application Modes',
+            content: 'Choose a mode to start: "Creation" for AI generation, "Review" for quality control, or "Database" to view your saved question bank.',
+            target: null,
+            position: 'center'
+        }
+    ],
+
+    // 2. Creation Mode Tour
+    create: [
+        {
+            id: 'discipline',
+            title: 'Select a Discipline',
+            content: 'Start by choosing the specific area of UE5 you want to generate questions for (e.g., Blueprints, C++, Lumen).',
+            target: '[data-tour="discipline-selector"]',
+            position: 'right'
+        },
+        {
+            id: 'upload',
+            title: 'Context & Settings',
+            content: 'Upload PDFs for context or adjust generation settings (difficulty, count) in the sidebar.',
+            target: '[data-tour="generation-settings"]',
+            position: 'right'
+        },
+        {
+            id: 'generate',
+            title: 'Generate Questions',
+            content: 'Click "Generate Questions" to start the AI process. Questions will appear in the main list.',
+            target: '[data-tour="generate-button"]',
+            position: 'top'
+        }
+    ],
+
+    // 3. Review Mode Tour
+    review: [
+        {
+            id: 'review-list',
+            title: 'Review Queue',
+            content: 'This list shows generated questions that need your attention. Select a question to review its details.',
+            target: '[data-tour="review-list"]',
+            position: 'right'
+        },
+        {
+            id: 'critique',
+            title: 'AI Critique',
+            content: 'Use the "Critique" button to have AI analyze the question quality and suggest improvements.',
+            target: '[data-tour="critique-button"]',
+            position: 'bottom'
+        },
+        {
+            id: 'actions',
+            title: 'Accept or Reject',
+            content: 'Accept good questions to move them to the Database. Reject or Edit bad ones.',
+            target: '[data-tour="review-actions"]',
+            position: 'top'
+        }
+    ],
+
+    // 4. Database Mode Tour
+    database: [
+        {
+            id: 'db-grid',
+            title: 'Question Bank',
+            content: 'This list shows all your approved questions. You can sort, filter, and export them from here.',
+            target: '[data-tour="database-grid"]',
+            position: 'center'
+        },
+        {
+            id: 'export',
+            title: 'Export Options',
+            content: 'Click "Export" to download your questions as CSV or sync them to Google Sheets.',
+            target: '[data-tour="export-menu"]',
+            position: 'bottom'
+        }
+    ]
+};
+
+// Default export for backward compatibility
+export const TUTORIAL_STEPS = TUTORIAL_SCENARIOS.welcome;

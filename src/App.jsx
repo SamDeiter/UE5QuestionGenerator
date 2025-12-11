@@ -54,6 +54,7 @@ const App = () => {
     const {
         user,
         authLoading,
+        isAdmin, // Get admin status
         customTags,
         setCustomTags: _setCustomTags,
         handleSaveCustomTags,
@@ -66,6 +67,11 @@ const App = () => {
         setTermsAccepted
     } = useAuth(showMessage);
 
+    // ... (rest of the file)
+
+
+
+
     // 0. Tutorial System
     const {
         tutorialActive,
@@ -75,7 +81,8 @@ const App = () => {
         handleTutorialPrev,
         handleTutorialSkip,
         handleTutorialComplete,
-        handleRestartTutorial
+        handleRestartTutorial,
+        handleStartTutorial
     } = useTutorial(showMessage);
 
     // ========================================================================
@@ -315,6 +322,8 @@ const App = () => {
                     apiKeyStatus={apiKeyStatus}
                     isCloudReady={isAuthReady}
                     onOpenSettings={() => { console.log('🚀 Configure Now clicked!'); setShowApiKeyModal(true); }}
+                    isAdmin={isAdmin} // Pass admin status
+                    onStartTutorial={() => handleStartTutorial('welcome')} // Start welcome tour
                 />
                 {/* API Key Modal for Configure Now button */}
                 <ApiKeyModal
@@ -349,7 +358,7 @@ const App = () => {
                     config, isProcessing, status, translationProgress,
                     allQuestionsMap, appMode, currentStep, tutorialSteps,
                     metrics: { totalApproved: approvedCount, totalQuestions: questions.length },
-                    isApiReady, customTags
+                    isApiReady, customTags, isAdmin
                 }}
                 handlers={{
                     handleNameSave, handleDeleteAllQuestions, handleBulkExport,
@@ -369,7 +378,7 @@ const App = () => {
                     window: window
                 }}
             />
-            <Header apiKeyStatus={apiKeyStatus} isCloudReady={isAuthReady} onHome={handleGoHome} creatorName={config.creatorName} appMode={appMode} tokenUsage={tokenUsage} onRestartTutorial={handleRestartTutorial} />
+            <Header apiKeyStatus={apiKeyStatus} isCloudReady={isAuthReady} onHome={handleGoHome} creatorName={config.creatorName} appMode={appMode} tokenUsage={tokenUsage} onRestartTutorial={handleRestartTutorial} onStartTutorial={handleStartTutorial} isAdmin={isAdmin} />
 
             <MainLayout
                 appMode={appMode}
@@ -380,7 +389,7 @@ const App = () => {
                     isTargetMet, maxBatchSize, batchSizeWarning, handleGenerate,
                     isGenerating, isApiReady, handleBulkTranslateMissing, isProcessing,
                     setShowSettings, handleSelectCategory, customTags, status,
-                    showMessage
+                    showMessage, isAdmin
                 }}
                 handleModeSelect={handleModeSelect}
                 handleViewDatabase={handleViewDatabase}
@@ -430,3 +439,4 @@ const App = () => {
 };
 
 export default App;
+// Force rebuild

@@ -36,7 +36,8 @@ const GlobalModals = ({
     const {
         config, isProcessing, status, translationProgress,
         allQuestionsMap, appMode, currentStep, tutorialSteps,
-        metrics // passed for Analytics/DangerZone
+        metrics, // passed for Analytics/DangerZone
+        isAdmin // passed for SettingsModal
     } = state;
 
     const {
@@ -123,6 +124,7 @@ const GlobalModals = ({
                         isApiReady={state.isApiReady}
                         customTags={state.customTags}
                         onSaveCustomTags={handlers.onSaveCustomTags}
+                        isAdmin={isAdmin}
                     />
                 )}
 

@@ -10,7 +10,8 @@ const SettingsModal = ({
     showApiKey, setShowApiKey,
     _onClearData,
     files, handleDetectTopics, isDetecting, fileInputRef, handleFileChange, removeFile, isApiReady,
-    customTags, onSaveCustomTags
+    customTags, onSaveCustomTags,
+    isAdmin // Add isAdmin prop
 }) => {
     if (!showSettings) return null;
 
@@ -203,67 +204,71 @@ const SettingsModal = ({
                         />
                     </div>
 
-                    {/* Advanced: Vertex AI Data */}
-                    <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-                        <h3 className="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
-                            <Icon name="database" size={16} className="text-purple-400" />
-                            Vertex AI Training Data
-                        </h3>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => downloadTrainingData(true)}
-                                className="flex-1 px-3 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-200 text-xs font-bold rounded border border-purple-700/50 transition-colors flex items-center justify-center gap-2"
-                                title="Download questions with >75% score"
-                            >
-                                <Icon name="download" size={14} />
-                                Download Good Data
-                            </button>
-                            <button
-                                onClick={() => downloadTrainingData(false)}
-                                className="flex-1 px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 text-slate-400 text-xs font-bold rounded border border-slate-600/50 transition-colors flex items-center justify-center gap-2"
-                                title="Download questions with <75% score"
-                            >
-                                <Icon name="download" size={14} />
-                                Download Bad Data
-                            </button>
-                        </div>
-                        <button
-                            onClick={() => {
-                                const count = downloadTrainingData('all');
-                                alert(`Exported ${count} total questions for training`);
-                            }}
-                            className="w-full mt-2 px-3 py-2 bg-blue-900/20 hover:bg-blue-900/30 text-blue-400 rounded flex items-center justify-center gap-2 transition-colors text-xs font-bold border border-blue-900/30"
-                            title="Download all questions"
-                        >
-                            <Icon name="download" size={14} />
-                            Export All Training Data
-                        </button>
-                        <p className="text-[10px] text-slate-500 mt-2 text-center">
-                            Exports JSONL format for Vertex AI fine-tuning.
-                        </p>
-                    </div>
+                    {/* Advanced: Vertex AI Data & Danger Zone (Admin Only) */}
+                    {isAdmin && (
+                        <>
+                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                <h3 className="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
+                                    <Icon name="database" size={16} className="text-purple-400" />
+                                    Vertex AI Training Data
+                                </h3>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => downloadTrainingData(true)}
+                                        className="flex-1 px-3 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-200 text-xs font-bold rounded border border-purple-700/50 transition-colors flex items-center justify-center gap-2"
+                                        title="Download questions with >75% score"
+                                    >
+                                        <Icon name="download" size={14} />
+                                        Download Good Data
+                                    </button>
+                                    <button
+                                        onClick={() => downloadTrainingData(false)}
+                                        className="flex-1 px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 text-slate-400 text-xs font-bold rounded border border-slate-600/50 transition-colors flex items-center justify-center gap-2"
+                                        title="Download questions with <75% score"
+                                    >
+                                        <Icon name="download" size={14} />
+                                        Download Bad Data
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        const count = downloadTrainingData('all');
+                                        alert(`Exported ${count} total questions for training`);
+                                    }}
+                                    className="w-full mt-2 px-3 py-2 bg-blue-900/20 hover:bg-blue-900/30 text-blue-400 rounded flex items-center justify-center gap-2 transition-colors text-xs font-bold border border-blue-900/30"
+                                    title="Download all questions"
+                                >
+                                    <Icon name="download" size={14} />
+                                    Export All Training Data
+                                </button>
+                                <p className="text-[10px] text-slate-500 mt-2 text-center">
+                                    Exports JSONL format for Vertex AI fine-tuning.
+                                </p>
+                            </div>
 
-                    {/* DANGER ZONE - Link to separate modal */}
-                    <div className="bg-red-900/10 p-4 rounded-lg border border-red-900/30">
-                        <h3 className="text-sm font-bold text-red-400 mb-2 flex items-center gap-2">
-                            <Icon name="alert-triangle" size={16} />
-                            Data Management
-                        </h3>
-                        <p className="text-xs text-slate-400 mb-3">
-                            For destructive operations (clear data, factory reset), use the Danger Zone.
-                        </p>
-                        <button
-                            onClick={() => {
-                                setShowSettings(false);
-                                // Signal parent to open DangerZoneModal
-                                if (window.openDangerZone) window.openDangerZone();
-                            }}
-                            className="w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 text-sm font-bold rounded border border-red-900/50 transition-colors flex items-center justify-center gap-2"
-                        >
-                            <Icon name="alert-triangle" size={16} />
-                            Open Danger Zone
-                        </button>
-                    </div>
+                            {/* DANGER ZONE - Link to separate modal */}
+                            <div className="bg-red-900/10 p-4 rounded-lg border border-red-900/30">
+                                <h3 className="text-sm font-bold text-red-400 mb-2 flex items-center gap-2">
+                                    <Icon name="alert-triangle" size={16} />
+                                    Data Management
+                                </h3>
+                                <p className="text-xs text-slate-400 mb-3">
+                                    For destructive operations (clear data, factory reset), use the Danger Zone.
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        setShowSettings(false);
+                                        // Signal parent to open DangerZoneModal
+                                        if (window.openDangerZone) window.openDangerZone();
+                                    }}
+                                    className="w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 text-sm font-bold rounded border border-red-900/50 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Icon name="alert-triangle" size={16} />
+                                    Open Danger Zone
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 

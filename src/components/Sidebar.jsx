@@ -20,36 +20,48 @@ const Sidebar = ({
     handleSelectCategory,
     customTags = {},
     status = '', // Live generation status text
-    showMessage
+    showMessage,
+    isAdmin // Add isAdmin prop
 }) => {
 
     return (
         <aside className="w-80 flex-shrink-0 z-10 shadow-xl border-r border-slate-700 bg-slate-950 p-6 overflow-y-auto flex flex-col gap-6">
 
-            <div data-tour="generation-settings">
-                <GenerationSettings
-                    config={config}
-                    handleChange={handleChange}
-                    customTags={customTags}
-                    isOpen={showGenSettings}
-                    onToggle={() => setShowGenSettings(!showGenSettings)}
-                    allQuestionsMap={allQuestionsMap}
-                />
-            </div>
+            {isAdmin && (
+                <>
+                    <div data-tour="generation-settings">
+                        <GenerationSettings
+                            config={config}
+                            handleChange={handleChange}
+                            customTags={customTags}
+                            isOpen={showGenSettings}
+                            onToggle={() => setShowGenSettings(!showGenSettings)}
+                            allQuestionsMap={allQuestionsMap}
+                        />
+                    </div>
 
-            {/* Coverage Gap Alert */}
-            <CoverageGapSuggester
-                allQuestionsMap={allQuestionsMap}
-                config={config}
-                handleChange={handleChange}
-                showMessage={showMessage}
-                setShowGenSettings={setShowGenSettings}
-            />
+                    {/* Coverage Gap Alert */}
+                    <CoverageGapSuggester
+                        allQuestionsMap={allQuestionsMap}
+                        config={config}
+                        handleChange={handleChange}
+                        showMessage={showMessage}
+                        setShowGenSettings={setShowGenSettings}
+                    />
 
-            <CustomRules
-                config={config}
-                handleChange={handleChange}
-            />
+                    <CustomRules
+                        config={config}
+                        handleChange={handleChange}
+                    />
+                </>
+            )}
+
+            {!isAdmin && (
+                <div className="p-4 bg-slate-900 rounded-lg border border-slate-800 text-center">
+                    <Icon name="shield" className="mx-auto mb-2 text-slate-500" size={24} />
+                    <p className="text-sm text-slate-400">Generation features are restricted to administrators.</p>
+                </div>
+            )}
 
             <ProgressStats
                 allQuestionsMap={allQuestionsMap}

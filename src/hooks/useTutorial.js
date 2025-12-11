@@ -1,20 +1,22 @@
 import { useState } from 'react';
-import { TUTORIAL_STEPS } from '../utils/tutorialSteps';
+import { TUTORIAL_SCENARIOS } from '../utils/tutorialSteps';
 
 /**
- * Hook for managing the interactive tutorial system.
- * Handles tutorial state, navigation, persistence, and completion.
+ * Hook for managing the interactive tutorial system with multiple scenarios.
  * 
  * @param {Function} showMessage - Function to display toast messages
  * @returns {Object} Tutorial state and handlers
  */
 export const useTutorial = (showMessage) => {
-    // Tutorial is disabled by default - enabled via Tutorial button
     const [tutorialActive, setTutorialActive] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
+    const [activeScenario, setActiveScenario] = useState('welcome');
+
+    // Get current steps based on active scenario, fallback to welcome
+    const tutorialSteps = TUTORIAL_SCENARIOS[activeScenario] || TUTORIAL_SCENARIOS.welcome;
 
     const handleTutorialNext = () => {
-        setCurrentStep(prev => Math.min(prev + 1, TUTORIAL_STEPS.length - 1));
+        setCurrentStep(prev => Math.min(prev + 1, tutorialSteps.length - 1));
     };
 
     const handleTutorialPrev = () => {
@@ -23,23 +25,37 @@ export const useTutorial = (showMessage) => {
 
     const handleTutorialSkip = () => {
         setTutorialActive(false);
-        localStorage.setItem('ue5_tutorial_completed', 'true');
+        // We track completion per scenario if desired, or just global
+        localStorage.setItem(`ue5_tutorial_${activeScenario}_completed`, 'true');
     };
 
     const handleTutorialComplete = () => {
         setTutorialActive(false);
-        localStorage.setItem('ue5_tutorial_completed', 'true');
+        localStorage.setItem(`ue5_tutorial_${activeScenario}_completed`, 'true');
         if (showMessage) {
             showMessage("Tutorial completed! Happy generating!", 5000);
         }
     };
 
-    const handleRestartTutorial = () => {
-        localStorage.removeItem('ue5_tutorial_completed');
+    /**
+     * Starts a specific tutorial scenario
+     * @param {string} scenarioId - The key from TUTORIAL_SCENARIOS (e.g., 'create', 'review')
+     */
+    const handleStartTutorial = (scenarioId = 'welcome') => {
+        if (!TUTORIAL_SCENARIOS[scenarioId]) {
+            console.warn(`Tutorial scenario '${scenarioId}' not found.`);
+            return;
+        }
+        setActiveScenario(scenarioId);
         setCurrentStep(0);
         setTutorialActive(true);
+    };
+
+    const handleRestartTutorial = () => {
+        // Restart current scenario
+        handleStartTutorial(activeScenario);
         if (showMessage) {
-            showMessage("Tutorial restarted!", 2000);
+            showMessage(`Restarting ${activeScenario} tutorial!`, 2000);
         }
     };
 
@@ -47,13 +63,15 @@ export const useTutorial = (showMessage) => {
         // State
         tutorialActive,
         currentStep,
-        tutorialSteps: TUTORIAL_STEPS,
+        tutorialSteps,
+        activeScenario,
 
         // Handlers
         handleTutorialNext,
         handleTutorialPrev,
         handleTutorialSkip,
         handleTutorialComplete,
-        handleRestartTutorial
+        handleRestartTutorial,
+        handleStartTutorial // New handler for specific scenarios
     };
 };
