@@ -1,0 +1,147 @@
+graph TD
+    %% ============================================================================
+    %% UE5 Question Generator - System Architecture
+    %% ============================================================================
+
+    %% --- Entry Point ---
+    Main[main.jsx] --> App[App.jsx<br/>Central State Hub]
+
+    %% ============================================================================
+    %% UI LAYER - Components & Views
+    %% ============================================================================
+    subgraph UI_Layer [🎨 UI Components Layer]
+        direction TB
+        
+        %% Top-level layout components
+        App --> Header[Header.jsx]
+        App --> LandingPage[LandingPage.jsx]
+        App --> MainLayout[MainLayout.jsx<br/>Content Wrapper]
+        App --> Sidebar[Sidebar.jsx<br/>Generation Controls]
+        
+        %% View Router (Mode Controller)
+        MainLayout --> ViewRouter[ViewRouter.jsx<br/>Mode Router]
+        ViewRouter -->|appMode = 'create'| QuestionList[QuestionList.jsx]
+        ViewRouter -->|appMode = 'review'| ReviewMode[ReviewMode.jsx<br/>Single Question View]
+        ViewRouter -->|appMode = 'database'| DatabaseView[DatabaseView.jsx]
+        
+        %% Context Toolbar (Filtering)
+        ViewRouter --> ContextToolbar[ContextToolbar.jsx<br/>Filter Controls]
+        
+        %% Question Display Pipeline
+        QuestionList --> QuestionItem[QuestionItem.jsx]
+        ReviewMode --> QuestionItem
+        QuestionItem --> QuestionSubComponents[Sub-Components]
+        QuestionSubComponents --> QuestionHeader[QuestionHeader.jsx]
+        QuestionSubComponents --> QuestionContent[QuestionContent.jsx]
+        QuestionSubComponents --> QuestionActions[QuestionActions.jsx]
+        QuestionSubComponents --> CritiqueSection[CritiqueSection.jsx]
+        
+        %% Modals & Dialogs
+        App --> GlobalModals[Global Modals]
+        GlobalModals --> SettingsModal[SettingsModal.jsx]
+        GlobalModals --> AnalyticsDashboard[AnalyticsDashboard.jsx]
+        GlobalModals --> BulkExportModal[BulkExportModal.jsx]
+        GlobalModals --> ConfirmDialog[ConfirmDialog.jsx]
+    end
+
+    %% ============================================================================
+    %% LOGIC LAYER - Custom Hooks (State Management)
+    %% ============================================================================
+    subgraph Logic_Layer [🧠 Hooks & State Management]
+        direction TB
+        
+        %% Core Hooks in App.jsx
+        App -.->|config state| useAppConfig[useAppConfig.js<br/>App Configuration]
+        App -.->|auth state| useAuth[useAuth.js<br/>Firebase Auth]
+        App -.->|question CRUD| useQuestionManager[useQuestionManager.js<br/>Question State Manager]
+        App -.->|generation logic| useGeneration[useGeneration.js<br/>Question Generation]
+        App -.->|filter logic| useFiltering[useFiltering.js<br/>Filter & Search]
+        App -.->|navigation| useNavigation[useNavigation.js<br/>Mode Switching]
+        App -.->|modal state| useModalState[useModalState.js<br/>Modal Visibility]
+        App -.->|misc handlers| useAppHandlers[useAppHandlers.js<br/>Event Handlers]
+        
+        %% Feature-specific Hooks
+        DatabaseView -.-> useFileHandler[useFileHandler.js<br/>File Upload/Parse]
+        ViewRouter -.-> useExport[useExport.js<br/>Export Logic]
+        
+        %% Hook Dependencies
+        useGeneration -->|updates| useQuestionManager
+        useFiltering -->|reads from| useQuestionManager
+    end
+
+    %% ============================================================================
+    %% SERVICE LAYER - External Integrations
+    %% ============================================================================
+    subgraph Service_Layer [🔌 Services & APIs]
+        direction TB
+        
+        %% AI Services (Secure Cloud Functions)
+        useGeneration --> GeminiSecure[geminiSecure.js<br/>Cloud Function Wrapper]
+        GeminiSecure --> GeminiFunctions[Cloud Functions]
+        GeminiFunctions -.->|generateQuestions| CFGenerate[CF: generateQuestions]
+        GeminiFunctions -.->|generateCritique| CFCritique[CF: generateCritique]
+        
+        %% Prompt Engineering
+        useGeneration --> PromptBuilder[promptBuilder.js<br/>Prompt Templates]
+        
+        %% Firebase Services
+        useQuestionManager --> FirebaseService[firebase.js<br/>Firestore CRUD]
+        useAuth --> FirebaseAuth[Firebase Auth SDK]
+        
+        %% Google Sheets Integration
+        useFileHandler --> GoogleSheetsService[googleSheets.js<br/>Sheets API]
+        
+        %% Analytics Persistence
+        AnalyticsDashboard --> AnalyticsStore[analyticsStore.js<br/>Local Analytics]
+    end
+
+    %% ============================================================================
+    %% UTILITIES LAYER - Helper Functions
+    %% ============================================================================
+    subgraph Utils_Layer [🛠️ Utilities & Helpers]
+        direction TB
+        
+        %% String & Formatting
+        QuestionContent --> StringHelpers[stringHelpers.js<br/>Sanitization, Diff]
+        QuestionItem --> DateHelpers[dateHelpers.js<br/>Timestamps]
+        
+        %% Question Processing
+        useQuestionManager --> QuestionHelpers[questionHelpers.js<br/>Parsing, Validation]
+        QuestionItem --> QuestionValidator[questionValidator.js<br/>Schema Validation]
+        
+        %% Generation Optimizations
+        useGeneration --> TokenCounter[tokenCounter.js<br/>Token Estimation]
+        useGeneration --> ContextOptimizer[contextOptimizer.js<br/>Context Pruning]
+        useGeneration --> QuotaEnforcement[quotaEnforcement.js<br/>Rate Limiting]
+        
+        %% Filtering
+        useFiltering --> QuestionFilters[questionFilters.js<br/>Filter Logic]
+        
+        %% Security
+        useQuestionManager --> SecureStorage[secureStorage.js<br/>Encrypted localStorage]
+    end
+
+    %% ============================================================================
+    %% EXTERNAL WORLD - Third-Party APIs & DBs
+    %% ============================================================================
+    CFGenerate ==>|HTTPS| GeminiAPI[((🤖 Gemini API))]
+    CFCritique ==>|HTTPS| GeminiAPI
+    FirebaseService ==>|Firestore SDK| Firestore[((🔥 Firestore DB))]
+    FirebaseAuth ==>|Auth SDK| FirebaseAuthDB[((🔐 Firebase Auth))]
+    GoogleSheetsService ==>|Sheets API| GSheets[((📊 Google Sheets))]
+
+    %% ============================================================================
+    %% STYLING - Color-coded layers
+    %% ============================================================================
+    classDef primary fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000;
+    classDef logic fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000;
+    classDef service fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000;
+    classDef util fill:#fce4ec,stroke:#880e4f,stroke-width:2px,color:#000;
+    classDef external fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,stroke-dasharray: 5 5,color:#000;
+
+    %% Apply styles
+    class App,MainLayout,ViewRouter,Sidebar,ReviewMode,DatabaseView,QuestionList primary;
+    class useGeneration,useQuestionManager,useAppConfig,useFiltering,useAuth,useNavigation logic;
+    class GeminiSecure,FirebaseService,GoogleSheetsService,PromptBuilder service;
+    class StringHelpers,QuestionHelpers,TokenCounter,SecureStorage util;
+    class GeminiAPI,Firestore,FirebaseAuthDB,GSheets external;
