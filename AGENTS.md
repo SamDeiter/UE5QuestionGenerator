@@ -120,6 +120,8 @@ When making changes, remember to update:
 
 ---
 
+---
+
 ## Additional Project Context
 
 Additional project context, architecture diagrams, and task logs are located in the `docs/project-context/` directory.
@@ -132,3 +134,11 @@ Additional project context, architecture diagrams, and task logs are located in 
 - `LICENSES.md` - Detailed licensing information
 - `GEMINI.md` - AI model configuration guide
 - Task tracking: `CURRENT_TASKS.md`, `TaskQueue.md`, `NEXT_SESSION.md`
+
+---
+
+## Agent Personas
+
+Agent persona definitions are located in the `.agent/` directory:
+
+- `JavaSec-Guardian.md` - Java & Web Application Security Expert

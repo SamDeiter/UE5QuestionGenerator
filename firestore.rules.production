@@ -1,8 +1,48 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Questions collection - users can only access their own questions
+    match /questions/{questionId} {
+      allow read: if isSignedIn() 
+        && resource.data.creatorId == request.auth.uid;
+      
+      allow create: if isSignedIn()
+        && request.resource.data.creatorId == request.auth.uid
+        && request.resource.data.creatorEmail == request.auth.token.email;
+      
+      allow update: if isSignedIn()
+        && resource.data.creatorId == request.auth.uid
+        && request.resource.data.creatorId == request.auth.uid;
+      
+      allow delete: if isSignedIn()
+        && resource.data.creatorId == request.auth.uid;
+    }
+    
+    // User settings - users can only access their own settings
+    match /userSettings/{userId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+    
+    // API access tracking (if you implement rate limiting)
+    match /QuestionsAPIAccess/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() 
+        && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Deny all other access
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }

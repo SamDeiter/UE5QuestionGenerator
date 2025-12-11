@@ -2,47 +2,45 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check if user is authenticated
-    function isAuthenticated() {
+    // Helper functions
+    function isSignedIn() {
       return request.auth != null;
     }
-
-    // Helper function to check if user is the owner of the resource
-    function isOwner(resourceData) {
-      return resourceData.creatorId == request.auth.uid;
-    }
-
-    // Questions Collection
-    match /questions/{questionId} {
-      // READ: Allow any authenticated user to read questions
-      allow read: if isAuthenticated();
-      
-      // CREATE: Allow authenticated users to create if they mark themselves as creator
-      allow create: if isAuthenticated() && request.resource.data.creatorId == request.auth.uid;
-      
-      // UPDATE: Allow authenticated users to update, but protect ownership fields
-      // Critical fields (creatorId, uniqueId) cannot be changed after creation
-      allow update: if isAuthenticated()
-        && request.resource.data.creatorId == resource.data.creatorId
-        && request.resource.data.uniqueId == resource.data.uniqueId;
-      
-      // DELETE: Only the owner can delete their question
-      allow delete: if isAuthenticated() && isOwner(resource.data);
-    }
-
-    // User Settings (Custom Tags, etc.)
-    match /userSettings/{userId} {
-      // Users can only read/write their own settings
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
-    }
-
-    // API Usage Logging
-    match /apiUsage/{docId} {
-      // Cloud Functions writer only (Client cannot write directly)
-      allow read, write: if false; 
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
     
-    // Default: Deny all other access
+    // Questions collection - users can only access their own questions
+    match /questions/{questionId} {
+      allow read: if isSignedIn() 
+        && resource.data.creatorId == request.auth.uid;
+      
+      allow create: if isSignedIn()
+        && request.resource.data.creatorId == request.auth.uid
+        && request.resource.data.creatorEmail == request.auth.token.email;
+      
+      allow update: if isSignedIn()
+        && resource.data.creatorId == request.auth.uid
+        && request.resource.data.creatorId == request.auth.uid;
+      
+      allow delete: if isSignedIn()
+        && resource.data.creatorId == request.auth.uid;
+    }
+    
+    // User settings - users can only access their own settings
+    match /userSettings/{userId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+    
+    // API access tracking (if you implement rate limiting)
+    match /QuestionsAPIAccess/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() 
+        && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Deny all other access
     match /{document=**} {
       allow read, write: if false;
     }
