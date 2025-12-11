@@ -1,10 +1,11 @@
 # Third-Party Licenses
+
 ## UE5 Question Generator - Dependency Licenses
 
 This document provides a comprehensive list of all third-party software, libraries, and assets used in this project, along with their respective licenses.
 
-**Last Updated:** 2025-12-09  
-**Project Version:** 1.7.0
+**Last Updated:** 2025-12-11  
+**Project Version:** 1.8.0
 
 ---
 
@@ -21,6 +22,33 @@ This document provides a comprehensive list of all third-party software, librari
 
 **Note on Intellectual Property:**
 This tool was created by an Epic Games employee in support of Epic's educational mission. All open-source dependencies were intentionally chosen to ensure broad compatibility and legal clarity.
+
+### AI-Assisted Code Development
+
+**Disclosure:** Significant portions of this codebase were developed with AI assistance using **Google Antigravity** (powered by Google Gemini models), an AI-powered coding agent.
+
+**Development Tools Used:**
+
+- **Google Antigravity IDE** - AI-assisted coding environment
+- **Gemini 2.5 Pro / Gemini 2.5 Flash** - AI models for code generation
+- **Human Oversight** - All AI-generated code reviewed and approved by Sam Deiter
+
+**AI-Assisted Features (2025-12-11):**
+| Feature | Description | Files Modified |
+|---------|-------------|----------------|
+| Toast Notification System | Smart replacement, priority levels, progress bars | `useToast.js`, `Toast.jsx`, `ToastContainer.jsx` |
+| Critique Prompt Rebalancing | Fixed score always being 65/100 | `gemini.js`, `functions/index.js` |
+| Debug Logging | Score tracing for bug investigation | `geminiSecure.js`, `cloudFunctions.js` |
+
+**Code Ownership Clarification:**
+
+- AI-assisted code is owned by the developer (Sam Deiter/Epic Games) per Google Gemini Terms of Service
+- AI suggestions are reviewed, modified, and approved by human developer
+- All code commits represent human-approved final versions
+- AI assistance is a tool, not an author - human developer retains responsibility
+
+**Transparency Commitment:**
+This project maintains full transparency about AI involvement in development. All significant AI-assisted changes are documented in this section and in git commit messages.
 
 ---
 
@@ -41,12 +69,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ### Core Framework
 
 #### React (^18.3.1)
+
 - **License:** MIT
 - **Copyright:** Facebook, Inc. and its affiliates
 - **URL:** https://github.com/facebook/react
 - **Purpose:** UI framework
 
 #### React DOM (^18.3.1)
+
 - **License:** MIT
 - **Copyright:** Facebook, Inc. and its affiliates
 - **URL:** https://github.com/facebook/react
@@ -57,6 +87,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ### Firebase SDK
 
 #### Firebase (^12.6.0)
+
 - **License:** Apache-2.0
 - **Copyright:** Google LLC
 - **URL:** https://github.com/firebase/firebase-js-sdk
@@ -72,12 +103,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ### Security Libraries
 
 #### crypto-js (^4.2.0)
+
 - **License:** MIT
 - **Copyright:** Jeff Mott and contributors
 - **URL:** https://github.com/brix/crypto-js
 - **Purpose:** AES encryption for localStorage
 
 #### DOMPurify (^3.3.1)
+
 - **License:** Apache-2.0 OR MPL-2.0
 - **Copyright:** Cure53 and contributors
 - **URL:** https://github.com/cure53/DOMPurify
@@ -88,24 +121,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ### UI Components & Utilities
 
 #### Lucide React (^0.460.0)
+
 - **License:** ISC
 - **Copyright:** Lucide Contributors
 - **URL:** https://github.com/lucide-icons/lucide
 - **Purpose:** Icon library (replaces Feather Icons)
 
 #### Recharts (^3.5.1)
+
 - **License:** MIT
 - **Copyright:** Recharts Group
 - **URL:** https://github.com/recharts/recharts
 - **Purpose:** Analytics charts and data visualization
 
 #### React Virtuoso (^4.15.0)
+
 - **License:** MIT
 - **Copyright:** Petyo Ivanov
 - **URL:** https://github.com/petyosi/react-virtuoso
 - **Purpose:** Virtual scrolling for large question lists
 
 #### date-fns (^4.1.0)
+
 - **License:** MIT
 - **Copyright:** date-fns contributors
 - **URL:** https://github.com/date-fns/date-fns
@@ -118,12 +155,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ### Build Tools
 
 #### Vite (^7.2.4)
+
 - **License:** MIT
 - **Copyright:** Yuxi (Evan) You and Vite contributors
 - **URL:** https://github.com/vitejs/vite
 - **Purpose:** Build tool and dev server
 
 #### @vitejs/plugin-react (^4.3.3)
+
 - **License:** MIT
 - **Copyright:** Vite contributors
 - **URL:** https://github.com/vitejs/vite-plugin-react
@@ -134,18 +173,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ### CSS Framework
 
 #### Tailwind CSS (^3.4.15)
+
 - **License:** MIT
 - **Copyright:** Tailwind Labs, Inc.
 - **URL:** https://github.com/tailwindlabs/tailwindcss
 - **Purpose:** Utility-first CSS framework
 
 #### PostCSS (^8.4.49)
+
 - **License:** MIT
 - **Copyright:** Andrey Sitnik
 - **URL:** https://github.com/postcss/postcss
 - **Purpose:** CSS transformation
 
 #### Autoprefixer (^10.4.20)
+
 - **License:** MIT
 - **Copyright:** Andrey Sitnik
 - **URL:** https://github.com/postcss/autoprefixer
@@ -156,30 +198,35 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ### Testing
 
 #### Vitest (^4.0.14)
+
 - **License:** MIT
 - **Copyright:** Anthony Fu and contributors
 - **URL:** https://github.com/vitest-dev/vitest
 - **Purpose:** Unit testing framework
 
 #### @testing-library/react (^16.3.0)
+
 - **License:** MIT
 - **Copyright:** Kent C. Dodds
 - **URL:** https://github.com/testing-library/react-testing-library
 - **Purpose:** React component testing utilities
 
 #### @testing-library/jest-dom (^6.9.1)
+
 - **License:** MIT
 - **Copyright:** Kent C. Dodds
 - **URL:** https://github.com/testing-library/jest-dom
 - **Purpose:** Custom Jest matchers for DOM
 
 #### @testing-library/user-event (^14.6.1)
+
 - **License:** MIT
 - **Copyright:** Giorgio Polvara
 - **URL:** https://github.com/testing-library/user-event
 - **Purpose:** User interaction simulation
 
 #### jsdom (^27.2.0)
+
 - **License:** MIT
 - **Copyright:** jsdom contributors
 - **URL:** https://github.com/jsdom/jsdom
@@ -190,24 +237,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ### Code Quality
 
 #### ESLint (^9.15.0)
+
 - **License:** MIT
 - **Copyright:** Nicholas C. Zakas and contributors
 - **URL:** https://github.com/eslint/eslint
 - **Purpose:** JavaScript linting
 
 #### eslint-plugin-react (^7.37.2)
+
 - **License:** MIT
 - **Copyright:** Yannick Croissant
 - **URL:** https://github.com/jsx-eslint/eslint-plugin-react
 - **Purpose:** React-specific linting rules
 
 #### eslint-plugin-react-hooks (^5.0.0)
+
 - **License:** MIT
 - **Copyright:** Facebook, Inc.
 - **URL:** https://github.com/facebook/react
 - **Purpose:** React Hooks linting rules
 
 #### eslint-plugin-react-refresh (^0.4.14)
+
 - **License:** MIT
 - **Copyright:** Arnaud Barré
 - **URL:** https://github.com/ArnaudBarre/eslint-plugin-react-refresh
@@ -218,6 +269,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ### Deployment
 
 #### gh-pages (^6.3.0)
+
 - **License:** MIT
 - **Copyright:** Tim Schaub
 - **URL:** https://github.com/tschaub/gh-pages
@@ -228,15 +280,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ## Fonts & Typography
 
 ### System Fonts
+
 This project uses system font stack for optimal performance:
 
 ```css
-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 
-             'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 
-             'Droid Sans', 'Helvetica Neue', sans-serif;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+  "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 ```
 
 **Licenses:**
+
 - **Segoe UI:** Microsoft Corporation (Windows system font)
 - **Roboto:** Apache-2.0 (Google, included in Android/Chrome OS)
 - **San Francisco (-apple-system):** Apple Inc. (macOS/iOS system font)
@@ -252,6 +305,7 @@ All system fonts are used via their respective operating systems and are not red
 ## External Services & APIs
 
 ### Google Gemini AI
+
 - **Service:** Generative Language API
 - **Provider:** Google LLC
 - **Terms:** https://ai.google.dev/gemini-api/terms
@@ -260,6 +314,7 @@ All system fonts are used via their respective operating systems and are not red
 - **Note:** API keys required, not included in repository
 
 ### Google Firebase
+
 - **Service:** Firebase Platform (Auth, Firestore, Analytics)
 - **Provider:** Google LLC
 - **Terms:** https://firebase.google.com/terms
@@ -270,6 +325,7 @@ All system fonts are used via their respective operating systems and are not red
   - Google Analytics for Firebase
 
 ### Google Sheets API
+
 - **Service:** Google Sheets API v4
 - **Provider:** Google LLC
 - **Terms:** https://developers.google.com/sheets/api/terms
@@ -281,6 +337,7 @@ All system fonts are used via their respective operating systems and are not red
 ## Assets & Resources
 
 ### Unreal Engine Logo
+
 - **Asset:** UE-Icon-2023-Black.svg
 - **Copyright:** Epic Games, Inc.
 - **Usage:** Educational/reference purposes
@@ -296,6 +353,7 @@ All system fonts are used via their respective operating systems and are not red
 This tool is specifically designed for **Unreal Engine Authorized Instructors** participating in Epic Games' official training and certification programs.
 
 **Program Context:**
+
 - **Unreal Authorized Instructor Program:** https://www.unrealengine.com/en-US/educators
 - **Purpose:** Creating assessment materials for authentic Unreal Engine training
 - **Users:** Certified instructors teaching official Unreal Engine curriculum
@@ -303,6 +361,7 @@ This tool is specifically designed for **Unreal Engine Authorized Instructors** 
 
 **Educational Partnership:**
 As a tool supporting Epic Games' official education initiatives, this application:
+
 - Assists authorized instructors in creating compliant assessment content
 - Maintains quality standards for Unreal Engine certification materials
 - Promotes consistent learning outcomes across the authorized instructor network
@@ -314,6 +373,7 @@ As a tool supporting Epic Games' official education initiatives, this applicatio
 This application is an educational tool for Unreal Engine Authorized Instructors to create study materials and assessments for official Unreal Engine training programs. Unreal Engine® is a registered trademark of Epic Games, Inc. in the United States and/or other jurisdictions.
 
 **Compliance with Epic Games Branding Guidelines:**
+
 - ✅ Trademark symbol (®) used on first mention
 - ✅ Generic descriptor included ("educational tool")
 - ✅ No modification of Epic Games logos
@@ -329,13 +389,15 @@ This application is an educational tool for Unreal Engine Authorized Instructors
 This project was **created by an Epic Games employee** (Sam Deiter) to support Epic Games' Unreal Authorized Instructor Program.
 
 **Development Context:**
+
 - ✅ **Created by:** Epic Games employee
-- ✅ **Purpose:** Supporting Epic's official education initiatives  
+- ✅ **Purpose:** Supporting Epic's official education initiatives
 - ✅ **For:** Unreal Engine Authorized Instructors
 - ✅ **License:** Intentionally open-sourced under MIT for community benefit
 - ✅ **Compliance:** All dependencies use permissive open-source licenses
 
 **Relationship to Epic Games:**
+
 - This tool was developed with knowledge of Epic Games' educational needs and requirements
 - Created to support the official Unreal Authorized Instructor Program
 - Uses only publicly available Unreal Engine documentation
@@ -356,6 +418,7 @@ This application is created for **educational purposes only** under fair use pri
 4. **Effect:** Promotes learning, enhances training quality, and does not substitute for official documentation
 
 **Educational Context - Authorized Instructor Program:**
+
 - Used by **certified instructors** in Epic Games' official training network
 - Creates assessment materials for **Unreal Engine certification programs**
 - Facilitates standardized knowledge assessment across authorized training centers
@@ -365,6 +428,7 @@ This application is created for **educational purposes only** under fair use pri
 
 **Alignment with Epic Games Education Goals:**
 This tool directly supports Epic Games' objectives of:
+
 - Expanding access to high-quality Unreal Engine education
 - Maintaining consistent training standards across authorized instructors
 - Creating measurable learning outcomes for certification
@@ -373,6 +437,7 @@ This tool directly supports Epic Games' objectives of:
 ### Content Ownership
 
 **Tool Ownership:**
+
 - **Creator:** Sam Deiter, Epic Games, Inc.
 - **License:** MIT License (open source)
 - **Code Repository:** Owned by creator, freely available for community use
@@ -380,6 +445,7 @@ This tool directly supports Epic Games' objectives of:
 **AI-Generated Question Content:**
 
 **Generation Process:**
+
 1. **Tool:** This application (created by Epic Games employee)
 2. **AI Service:** Google Gemini API (generates actual question text)
 3. **Source Material:** Official Unreal Engine documentation (Epic Games, Inc.)
@@ -392,6 +458,7 @@ This tool directly supports Epic Games' objectives of:
 This tool implements a **human-in-the-loop** workflow to ensure quality, accuracy, and educational value of AI-generated content:
 
 **Review Steps:**
+
 1. **AI Generation** - Google Gemini creates question drafts based on instructor parameters
 2. **Automated Validation** - Tool checks for source URLs, answer accuracy, and format compliance
 3. **AI Quality Critique** - Second AI pass evaluates content quality (scores questions 0-100)
@@ -406,6 +473,7 @@ This tool implements a **human-in-the-loop** workflow to ensure quality, accurac
 7. **Final Approval** - Only instructor-approved questions are used in assessments
 
 **Quality Control Features:**
+
 - ✅ **Review Mode** - Dedicated UI for question-by-question evaluation
 - ✅ **Rejection Tracking** - Bad questions are flagged and reasons recorded
 - ✅ **Edit History** - Tracks human modifications to AI content
@@ -414,12 +482,14 @@ This tool implements a **human-in-the-loop** workflow to ensure quality, accurac
 - ✅ **Export Control** - Only approved questions can be exported
 
 **Human Oversight Guarantees:**
+
 - **No fully automated content deployment** - All questions require human approval
 - **Instructor expertise required** - Only certified UE instructors use this tool
 - **Educational accountability** - Instructors responsible for final content quality
 - **Continuous improvement** - Rejected questions train better future outputs
 
 **Why This Matters:**
+
 - Ensures AI output meets Epic Games' educational quality standards
 - Maintains academic integrity in certification assessments
 - Protects students from AI hallucinations or errors
@@ -427,6 +497,7 @@ This tool implements a **human-in-the-loop** workflow to ensure quality, accurac
 - Complies with best practices for AI-assisted content creation
 
 **Content Ownership Analysis:**
+
 - **Questions are AI-generated** by Google Gemini based on instructor prompts
 - **Source excerpts** are from Epic Games' official UE documentation
 - **Ownership of AI-generated content** is governed by:
@@ -435,12 +506,14 @@ This tool implements a **human-in-the-loop** workflow to ensure quality, accurac
   - Instructor's input and curation
 
 **Practical Ownership:**
+
 - Authorized instructors using this tool **own the AI-generated questions** they create (per Google Gemini ToS)
 - Questions reference and link to **Epic Games' official documentation** (attribution maintained)
 - Tool itself (code) is **MIT licensed** - freely usable by community
 - Generated content is for **educational assessment use** within Unreal Engine training programs
 
 **Important Notes:**
+
 - AI-generated questions are created by Google Gemini, not by Epic Games
 - Epic Games owns the source documentation being referenced
 - Instructors own the AI output they generate using the tool
@@ -452,6 +525,7 @@ This tool implements a **human-in-the-loop** workflow to ensure quality, accurac
 **For Unreal Authorized Instructors:**
 
 If you are an **Unreal Engine Authorized Instructor** using this tool:
+
 1. ✅ You are already part of Epic Games' official education program
 2. ✅ This tool supports your authorized instructor activities
 3. ✅ Generated content is for use in official Unreal Engine training
@@ -464,7 +538,8 @@ If you are an **Unreal Engine Authorized Instructor** using this tool:
 **For Educational Institutions Using This Tool:**
 
 We recommend consulting with your institution's legal counsel regarding:
-1. Fair use exceptions for educational assessment materials  
+
+1. Fair use exceptions for educational assessment materials
 2. Compliance with Epic Games EULA Section 4 (Educational Licenses)
 3. Proper attribution of Unreal Engine content in course materials
 4. Student use of generated materials in portfolios
@@ -473,6 +548,7 @@ We recommend consulting with your institution's legal counsel regarding:
 **For Commercial Training Providers:**
 
 Commercial use of this tool or generated content should be reviewed against:
+
 1. Epic Games EULA Section 1.d (Commercial Use)
 2. Unreal Engine Branding Guidelines
 3. Your organization's license agreement with Epic Games
@@ -481,11 +557,13 @@ Commercial use of this tool or generated content should be reviewed against:
 ### Contact Information for Legal Inquiries
 
 **Epic Games Legal:**
+
 - EULA: https://www.unrealengine.com/eula
 - Support: https://www.unrealengine.com/support
 - Legal Contact: Via Epic Games official channels
 
 **Project Creator:**
+
 - Repository: https://github.com/SamDeiter/UE5QuestionGenerator
 - Issues: https://github.com/SamDeiter/UE5QuestionGenerator/issues
 - Contact: [Via GitHub repository]
@@ -500,16 +578,19 @@ Commercial use of this tool or generated content should be reviewed against:
 This application collects and processes the following data:
 
 **Personal Information:**
+
 - **User Name** (creator/reviewer name) - stored in Firebase and localStorage
 - **Email Address** (via Google OAuth) - for authentication only
 - **User ID** (Firebase UID) - to associate questions with creators
 
 **Usage Data:**
+
 - **Generated Questions** - question text, answers, metadata
 - **Analytics Data** - token usage, generation metrics, timestamps
 - **Review Decisions** - accept/reject status, critique scores, edit history
 
 **Technical Data:**
+
 - **Browser localStorage** - encrypted question cache
 - **Firebase Authentication** - login session data
 - **IP Address** - via Google Firebase (standard web hosting)
@@ -517,12 +598,14 @@ This application collects and processes the following data:
 ### Data Storage & Processing Locations
 
 **Third-Party Services:**
+
 1. **Google Firebase** (USA) - Authentication, Firestore database, Analytics
 2. **Google Gemini API** (USA) - AI question generation
 3. **Google Sheets API** (USA) - Question export functionality
 4. **Client-Side Storage** - Browser localStorage (AES encrypted)
 
 **Data Residency:**
+
 - Data is primarily stored in **Google Cloud Platform (USA)**
 - Subject to Google's data processing agreements
 - May be replicated across Google's global infrastructure
@@ -533,11 +616,13 @@ This application collects and processes the following data:
 Under GDPR, we process personal data based on:
 
 1. **Legitimate Interest** (Art. 6(1)(f) GDPR)
+
    - Supporting Epic Games' educational mission
    - Improving question quality through analytics
    - Maintaining educational content standards
 
 2. **Consent** (Art. 6(1)(a) GDPR)
+
    - Users choose to provide name and use Google login
    - Users consent to cookies/localStorage via browser
 
@@ -559,6 +644,7 @@ As a user, you have the right to:
 ✅ **Withdraw Consent** - Log out and clear data anytime
 
 **How to Exercise Rights:**
+
 - **Access/Export:** Use "Export to Sheets" or "Load from Database" features
 - **Delete:** Clear browser data, or delete Firebase account via Google Account settings
 - **Questions:** Contact via GitHub repository issues
@@ -566,18 +652,21 @@ As a user, you have the right to:
 ### Data Retention
 
 **Retention Periods:**
+
 - **localStorage:** Until browser cache cleared
 - **Firebase Firestore:** Indefinitely (user-controlled, can delete anytime)
 - **Analytics:** Aggregated data retained indefinitely, individual data 90 days
 - **Authentication:** As long as user account exists
 
 **Automated Deletion:**
+
 - No automatic data deletion (user retains control)
 - Users can manually clear data via "Clear Local Data & Reset App" button
 
 ### Data Security
 
 **Security Measures:**
+
 - ✅ **AES-256 Encryption** for localStorage
 - ✅ **HTTPS/TLS** for all network communications
 - ✅ **Firebase Security Rules** - User can only access own questions
@@ -588,6 +677,7 @@ As a user, you have the right to:
 
 **Third-Party Security:**
 Data processed by Google services is subject to:
+
 - [Google Cloud Security](https://cloud.google.com/security)
 - [Firebase Security](https://firebase.google.com/support/privacy)
 - ISO 27001, SOC 2, SOC 3 certifications
@@ -595,12 +685,14 @@ Data processed by Google services is subject to:
 ### Data Sharing & Transfers
 
 **Who We Share Data With:**
+
 - **Google LLC** - Firebase, Gemini API, Sheets API (Data Processing Agreement applies)
 - **Epic Games** - As employer of tool creator (internal educational use)
 - **No third-party advertising or marketing**
 - **No data selling or commercial use**
 
 **International Transfers:**
+
 - Data may be transferred to USA (Google Cloud)
 - Covered by **EU-US Data Privacy Framework** (Google participates)
 - Standard Contractual Clauses (SCCs) apply via Google's DPA
@@ -608,12 +700,14 @@ Data processed by Google services is subject to:
 ### Cookies & Tracking
 
 **What We Use:**
+
 - **Firebase Authentication Cookies** - Required for login
 - **localStorage** - Required for app functionality (AES encrypted)
 - **Google Analytics Cookies** - Optional usage tracking
 - **No third-party advertising cookies**
 
 **User Control:**
+
 - Disable analytics via browser extensions
 - Clear localStorage via app settings
 - Block cookies via browser settings (may break functionality)
@@ -630,6 +724,7 @@ This tool is intended for **adult professional educators** (18+) participating i
 ### Privacy Policy Updates
 
 **Notification of Changes:**
+
 - Material changes will be noted in GitHub releases
 - Users encouraged to review LICENSES.md periodically
 - Continued use constitutes acceptance of updated terms
@@ -637,6 +732,7 @@ This tool is intended for **adult professional educators** (18+) participating i
 ### Contact for Privacy Concerns
 
 **Data Protection Contact:**
+
 - **For Epic Games employees:** Internal Epic data protection officer
 - **For external users:** Submit issue on GitHub repository
 - **For GDPR requests:** Include "GDPR Request" in issue title
@@ -655,6 +751,7 @@ EU users have the right to lodge complaints with their local data protection aut
 As this tool was created by an Epic Games employee, the following approvals are **strongly recommended**:
 
 #### 1. **Epic Games Legal Department Review**
+
 - [ ] **IP/Work Product Review** - Confirm Epic's rights to code created during employment
 - [ ] **Open Source Approval** - Document approval for MIT License release
 - [ ] **Trademark Usage** - Verify compliance with UE branding guidelines
@@ -665,6 +762,7 @@ As this tool was created by an Epic Games employee, the following approvals are 
 **Action:** Submit to Epic Games Legal for formal review and written approval.
 
 #### 2. **Employment Agreement Review**
+
 - [ ] **Work Product Clause** - Check if employment agreement covers personal projects
 - [ ] **IP Assignment** - Verify who owns code created using company resources
 - [ ] **Outside Activities** - Ensure open-source release doesn't violate employment terms
@@ -673,6 +771,7 @@ As this tool was created by an Epic Games employee, the following approvals are 
 **Action:** Review employment agreement Section [X] with HR/Legal.
 
 #### 3. **Third-Party Terms of Service Compliance**
+
 - [ ] **Google Gemini API Terms** - Review commercial/educational use restrictions
 - [ ] **Google Firebase Terms** - Verify data processing agreement coverage
 - [ ] **Google Sheets API Terms** - Ensure export functionality is compliant
@@ -685,6 +784,7 @@ As this tool was created by an Epic Games employee, the following approvals are 
 #### Employee & Epic Games Protection
 
 ✅ **COMPLETED:**
+
 - [x] Tool released under MIT License (permissive, Epic-friendly)
 - [x] All dependencies use compatible open-source licenses
 - [x] Epic Games authorship disclosed in LICENSES.md
@@ -696,6 +796,7 @@ As this tool was created by an Epic Games employee, the following approvals are 
 - [x] Educational fair use justification documented
 
 ⚠️ **STILL NEEDED (Recommendations):**
+
 - [ ] **Written approval** from Epic Games Legal Department
 - [ ] **Documented approval** from manager/director for open-source release
 - [ ] **Signed acknowledgment** that Epic owns work product
@@ -714,6 +815,7 @@ As this tool was created by an Epic Games employee, the following approvals are 
 **Recommended Actions:**
 
 1. **Add Explicit Disclaimer in Application**
+
    ```
    DISCLAIMER: This tool is provided "AS IS" for educational purposes only.
    Epic Games, Inc. makes no warranties about the accuracy, completeness,
@@ -722,6 +824,7 @@ As this tool was created by an Epic Games employee, the following approvals are 
    ```
 
 2. **Limit Epic's Exposure**
+
    - Add "Created by Epic Games employee" attribution
    - Include "Use at your own risk" warnings
    - Require instructors to agree to Terms of Use
@@ -737,11 +840,13 @@ As this tool was created by an Epic Games employee, the following approvals are 
 **Personal Risk Mitigation:**
 
 1. **Document Everything**
+
    - Keep emails showing manager/legal approval
    - Document that you used personal time (if applicable)
    - Save written approval for open-source release
 
 2. **Indemnification**
+
    - Request Epic Games indemnify you for work-related creations
    - Ensure employment agreement protects you for authorized work
 
@@ -752,16 +857,19 @@ As this tool was created by an Epic Games employee, the following approvals are 
 ### Ongoing Compliance Requirements
 
 **Monthly:**
+
 - [ ] Review third-party API ToS for changes
 - [ ] Monitor GDPR regulations for updates
 - [ ] Check for security vulnerabilities in dependencies
 
 **Quarterly:**
+
 - [ ] Review user feedback for legal concerns
 - [ ] Update privacy policy if data practices change
 - [ ] Audit data retention and deletion practices
 
 **Annually:**
+
 - [ ] Comprehensive legal review with Epic's counsel
 - [ ] Update all license texts for dependency changes
 - [ ] Review insurance coverage adequacy
@@ -771,6 +879,7 @@ As this tool was created by an Epic Games employee, the following approvals are 
 **Immediate Legal Consultation Required If:**
 
 🚨 **You receive:**
+
 - Cease and desist letter from any party
 - GDPR complaint or data breach notification
 - Trademark infringement claim
@@ -778,6 +887,7 @@ As this tool was created by an Epic Games employee, the following approvals are 
 - Request for user data from government/legal authority
 
 🚨 **You discover:**
+
 - AI generated inaccurate/harmful content used in assessments
 - Data breach or unauthorized access to Firebase
 - Student/instructor claims of damages from tool use
@@ -812,11 +922,13 @@ As this tool was created by an Epic Games employee, the following approvals are 
 **If Legal Issue Arises:**
 
 1. **Epic Games Legal** (Internal)
+
    - Notify your manager immediately
    - Contact Epic's legal department
    - Do NOT communicate with external parties without approval
 
 2. **For GDPR/Privacy Issues**
+
    - Epic's Data Protection Officer (if exists)
    - Document the issue thoroughly
    - Freeze affected data if breach suspected
@@ -833,6 +945,7 @@ As this tool was created by an Epic Games employee, the following approvals are 
 ### Current Status
 
 **✅ Legally Sound Foundation:**
+
 - MIT License is well-established and Epic-friendly
 - All dependencies are properly licensed
 - GDPR compliance documented
@@ -850,15 +963,15 @@ As this tool was created by an Epic Games employee, the following approvals are 
 
 **Risk Assessment:**
 
-| Risk Area | Level | Mitigation Status |
-|-----------|-------|-------------------|
-| IP Ownership | Medium | Need Epic approval |
-| GDPR Compliance | Low | Documented in LICENSES.md |
-| Trademark Use | Low | Compliant with guidelines |
-| AI Liability | Medium | Human-in-loop documented |
-| Data Privacy | Low | Security measures in place |
-| Third-Party ToS | Low | Compliant with Google ToS |
-| Educational Use | Low | Fair use justified |
+| Risk Area       | Level  | Mitigation Status          |
+| --------------- | ------ | -------------------------- |
+| IP Ownership    | Medium | Need Epic approval         |
+| GDPR Compliance | Low    | Documented in LICENSES.md  |
+| Trademark Use   | Low    | Compliant with guidelines  |
+| AI Liability    | Medium | Human-in-loop documented   |
+| Data Privacy    | Low    | Security measures in place |
+| Third-Party ToS | Low    | Compliant with Google ToS  |
+| Educational Use | Low    | Fair use justified         |
 
 **Bottom Line:**
 
@@ -881,28 +994,30 @@ With these steps completed, both you and Epic Games will have strong legal prote
 The following Python libraries are used in development/deployment scripts:
 
 ### Standard Library Modules
+
 - `os`, `sys`, `subprocess`, `json`, `shutil`, `pathlib`
 - **License:** Python Software Foundation License
 - **URL:** https://docs.python.org/3/license.html
 
 ### No Third-Party Python Packages Required
+
 All Python scripts use only standard library modules.
 
 ---
 
 ## License Compatibility Matrix
 
-| Library | License | Compatible with MIT? |
-|---------|---------|---------------------|
-| React | MIT | ✅ Yes |
-| Firebase SDK | Apache-2.0 | ✅ Yes |
-| crypto-js | MIT | ✅ Yes |
-| DOMPurify | Apache-2.0 / MPL-2.0 | ✅ Yes |
-| Lucide React | ISC | ✅ Yes |
-| Recharts | MIT | ✅ Yes |
-| Vite | MIT | ✅ Yes |
-| Tailwind CSS | MIT | ✅ Yes |
-| All dev dependencies | MIT / Apache-2.0 | ✅ Yes |
+| Library              | License              | Compatible with MIT? |
+| -------------------- | -------------------- | -------------------- |
+| React                | MIT                  | ✅ Yes               |
+| Firebase SDK         | Apache-2.0           | ✅ Yes               |
+| crypto-js            | MIT                  | ✅ Yes               |
+| DOMPurify            | Apache-2.0 / MPL-2.0 | ✅ Yes               |
+| Lucide React         | ISC                  | ✅ Yes               |
+| Recharts             | MIT                  | ✅ Yes               |
+| Vite                 | MIT                  | ✅ Yes               |
+| Tailwind CSS         | MIT                  | ✅ Yes               |
+| All dev dependencies | MIT / Apache-2.0     | ✅ Yes               |
 
 **All dependencies are compatible with MIT license.**
 
