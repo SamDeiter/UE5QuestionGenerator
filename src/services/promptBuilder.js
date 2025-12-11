@@ -14,127 +14,149 @@
  * @param {Array} rejectedExamples - Optional array of rejected questions to learn from
  * @returns {string} Optimized system prompt
  */
-export const constructSystemPrompt = (config, fileContext, rejectedExamples = []) => {
-    let batchNum = parseInt(config.batchSize) || 6;
-    let easyCount = 0, mediumCount = 0, hardCount = 0;
-    let targetType = 'MC and T/F';
-    let mcCount = 0, tfCount = 0;
+export const constructSystemPrompt = (
+  config,
+  fileContext,
+  rejectedExamples = []
+) => {
+  let batchNum = parseInt(config.batchSize) || 6;
+  let easyCount = 0,
+    mediumCount = 0,
+    hardCount = 0;
+  let targetType = "MC and T/F";
+  let mcCount = 0,
+    tfCount = 0;
 
-    // Parse difficulty setting
-    // Parse difficulty and type
-    let difficulty = config.difficulty;
-    let type = config.type;
+  // Parse difficulty setting
+  // Parse difficulty and type
+  let difficulty = config.difficulty;
+  let type = config.type;
 
-    // Legacy fallback: parse from difficulty string
-    if (!type && difficulty.includes(' ')) {
-        const parts = difficulty.split(' ');
-        difficulty = parts[0];
-        type = parts.slice(1).join(' ');
+  // Legacy fallback: parse from difficulty string
+  if (!type && difficulty.includes(" ")) {
+    const parts = difficulty.split(" ");
+    difficulty = parts[0];
+    type = parts.slice(1).join(" ");
+  }
+
+  if (difficulty === "Balanced" || difficulty === "Balanced All") {
+    // Force batch size to be multiple of 6 for equal distribution (1 of each Type/Diff combo)
+    if (batchNum % 6 !== 0) {
+      batchNum = Math.ceil(batchNum / 6) * 6;
     }
 
-    if (difficulty === 'Balanced' || difficulty === 'Balanced All') {
-        // Force batch size to be multiple of 6 for equal distribution (1 of each Type/Diff combo)
-        if (batchNum % 6 !== 0) {
-             batchNum = Math.ceil(batchNum / 6) * 6;
-        }
-        
-        const total = batchNum;
-        const perDiff = Math.floor(total / 3); // e.g. 2 per difficulty
-        
-        // Distribution targets
-        easyCount = perDiff;
-        mediumCount = perDiff;
-        hardCount = total - (easyCount + mediumCount); // Remainder to Hard
+    const total = batchNum;
+    const perDiff = Math.floor(total / 3); // e.g. 2 per difficulty
 
-        // Type targets
-        if (type === 'True/False') {
-             targetType = 'T/F ONLY';
-             tfCount = total;
-             mcCount = 0;
-        } else if (type === 'Multiple Choice') {
-             targetType = 'MC ONLY';
-             mcCount = total;
-             tfCount = 0;
-        } else {
-             targetType = 'Balanced (Equal MC & T/F)';
-             const half = Math.floor(total / 2);
-             mcCount = half;
-             tfCount = total - half;
-        }
+    // Distribution targets
+    easyCount = perDiff;
+    mediumCount = perDiff;
+    hardCount = total - (easyCount + mediumCount); // Remainder to Hard
+
+    // Type targets
+    if (type === "True/False") {
+      targetType = "T/F ONLY";
+      tfCount = total;
+      mcCount = 0;
+    } else if (type === "Multiple Choice") {
+      targetType = "MC ONLY";
+      mcCount = total;
+      tfCount = 0;
     } else {
-        if (difficulty === 'Easy') easyCount = batchNum;
-        else if (difficulty === 'Medium') mediumCount = batchNum;
-        else if (difficulty === 'Hard') hardCount = batchNum;
-
-        if (type === 'Multiple Choice' || type === 'MC') {
-            targetType = 'MC ONLY';
-            mcCount = batchNum;
-        } else if (type === 'True/False' || type === 'T/F') {
-            targetType = 'T/F ONLY';
-            tfCount = batchNum;
-        }
+      targetType = "Balanced (Equal MC & T/F)";
+      const half = Math.floor(total / 2);
+      mcCount = half;
+      tfCount = total - half;
     }
+  } else {
+    if (difficulty === "Easy") easyCount = batchNum;
+    else if (difficulty === "Medium") mediumCount = batchNum;
+    else if (difficulty === "Hard") hardCount = batchNum;
 
-    const difficultyPrompt = (difficulty === 'Balanced' || difficulty === 'Balanced All')
-        ? `STRICT DISTRIBUTION REQUIRED:\n` +
-          `- Easy: ${easyCount} (Mix of MC & T/F)\n` +
-          `- Medium: ${mediumCount} (Mix of MC & T/F)\n` +
-          `- Hard: ${hardCount} (Mix of MC & T/F)\n` +
-          `- Total Types: ${mcCount} Multiple Choice, ${tfCount} True/False.\n` +
-          `Ensure an even spread of types across difficulties (e.g. 1 Easy MC, 1 Easy TF, etc).`
-        : `Generate exactly ${batchNum} ${difficulty} questions.`;
-
-    // Temperature-based mode
-    const temp = parseFloat(config.temperature) || 0.7;
-    let modeInstruction = '';
-    if (temp < 0.3) {
-        modeInstruction = 'STRICT: Fundamentals only. Simple, direct.';
-    } else if (temp > 0.7) {
-        modeInstruction = 'WILD: Obscure/edge cases. Deep knowledge.';
+    if (type === "Multiple Choice" || type === "MC") {
+      targetType = "MC ONLY";
+      mcCount = batchNum;
+    } else if (type === "True/False" || type === "T/F") {
+      targetType = "T/F ONLY";
+      tfCount = batchNum;
     }
+  }
 
-    // REJECTED EXAMPLES SECTION - Learn from mistakes
-    let rejectedSection = '';
-    if (rejectedExamples && rejectedExamples.length > 0) {
-        const rejectionReasonLabels = {
-            'too_easy': 'Too Easy - lacks challenge',
-            'too_hard': 'Too Difficult - inaccessible',
-            'incorrect': 'Incorrect Answer - factually wrong',
-            'unclear': 'Unclear Question - confusing wording',
-            'duplicate': 'Duplicate - already exists',
-            'poor_quality': 'Poor Quality - low value',
-            'bad_source': 'Bad/Missing Source - invalid URL',
-            'hallucination': 'Hallucination - completely made up',
-            'other': 'Other issue'
-        };
+  const difficultyPrompt =
+    difficulty === "Balanced" || difficulty === "Balanced All"
+      ? `STRICT DISTRIBUTION REQUIRED:\n` +
+        `- Easy: ${easyCount} (Mix of MC & T/F)\n` +
+        `- Medium: ${mediumCount} (Mix of MC & T/F)\n` +
+        `- Hard: ${hardCount} (Mix of MC & T/F)\n` +
+        `- Total Types: ${mcCount} Multiple Choice, ${tfCount} True/False.\n` +
+        `Ensure an even spread of types across difficulties (e.g. 1 Easy MC, 1 Easy TF, etc).`
+      : `Generate exactly ${batchNum} ${difficulty} questions.`;
 
-        const examplesText = rejectedExamples.slice(0, 5).map((q, i) => {
-            const reason = rejectionReasonLabels[q.rejectionReason] || q.rejectionReason || 'Rejected';
-            // Include critique or explanation if available to give more context
-            const additionalContext = q.critique || q.explanation || '';
-            const contextStr = additionalContext ? `\n   CONTEXT: ${additionalContext.substring(0, 150)}...` : '';
-            return `${i + 1}. QUESTION: "${q.question}"\n   REASON: ${reason}${contextStr}`;
-        }).join('\n');
+  // Temperature-based mode
+  const temp = parseFloat(config.temperature) || 0.7;
+  let modeInstruction = "";
+  if (temp < 0.3) {
+    modeInstruction = "STRICT: Fundamentals only. Simple, direct.";
+  } else if (temp > 0.7) {
+    modeInstruction = "WILD: Obscure/edge cases. Deep knowledge.";
+  }
 
-        rejectedSection = `
+  // REJECTED EXAMPLES SECTION - Learn from mistakes
+  let rejectedSection = "";
+  if (rejectedExamples && rejectedExamples.length > 0) {
+    const rejectionReasonLabels = {
+      too_easy: "Too Easy - lacks challenge",
+      too_hard: "Too Difficult - inaccessible",
+      incorrect: "Incorrect Answer - factually wrong",
+      unclear: "Unclear Question - confusing wording",
+      duplicate: "Duplicate - already exists",
+      poor_quality: "Poor Quality - low value",
+      bad_source: "Bad/Missing Source - invalid URL",
+      hallucination: "Hallucination - completely made up",
+      other: "Other issue",
+    };
+
+    const examplesText = rejectedExamples
+      .slice(0, 5)
+      .map((q, i) => {
+        const reason =
+          rejectionReasonLabels[q.rejectionReason] ||
+          q.rejectionReason ||
+          "Rejected";
+        // Include critique or explanation if available to give more context
+        const additionalContext = q.critique || q.explanation || "";
+        const contextStr = additionalContext
+          ? `\n   CONTEXT: ${additionalContext.substring(0, 150)}...`
+          : "";
+        return `${i + 1}. QUESTION: "${
+          q.question
+        }"\n   REASON: ${reason}${contextStr}`;
+      })
+      .join("\n");
+
+    rejectedSection = `
 ### 5. CRITICAL: FAILURE AVOIDANCE
 The following questions were REJECTED by the Lead Developer. You must analyze WHY they failed and AVOID making similar mistakes:
 ${examplesText}
 `;
-    }
+  }
 
-    return `## UE5 Question Generator Configuration
+  return `## UE5 Question Generator Configuration
 
 **Role:** Senior Unreal Engine 5 Technical Interviewer & Exam Creator.
 **Objective:** Create high-quality, scenario-based interview questions to assess professional competence.
 **Tone:** Professional, direct, and challenging. Avoid "tutorial" language. Sound like a Lead Developer verifying a candidate's knowledge.
 **Input Variables:**
 - Discipline: ${config.discipline}
-- Focus Areas: ${config.tags && config.tags.length > 0 ? config.tags.join(', ') : 'None specified'}
+- Focus Areas: ${
+    config.tags && config.tags.length > 0
+      ? config.tags.join(", ")
+      : "None specified"
+  }
 - Difficulty: ${difficulty}
 - Quantity: ${batchNum}
 - Language: ${config.language}
-- Mode: ${modeInstruction || 'Standard'}
+- Mode: ${modeInstruction || "Standard"}
 
 ---
 
@@ -144,13 +166,30 @@ ${examplesText}
 - **Question Structure:** Max 2 sentences. No setups like "You are a developer..." simply ask the question or state the scenario.
 - **Distractors (Wrong Answers):** Must be plausible. Do not use "All of the above," "None of the above," or obvious joke answers.
 
-### 1.5 Question Style Guide (INTERVIEW MODE)
-To assess professional competence, use these question structures:
-- **Scenario-Based:** "You are optimizing a scene with high overdraw. Which tool should you use?" (Tests application)
-- **Best Practice:** "Which workflow is recommended for..." (Tests professional standards)
-- **Troubleshooting:** "A user reports Nanite meshes disappearing. What is the likely cause?" (Tests debugging)
-- **Comparative:** "Why choose Virtual Shadow Maps over Cascaded Shadow Maps?" (Tests trade-offs)
-- **Avoid:** Simple definitions like "What is Nanite?". Assume the candidate knows the basics.
+### 1.5 QUESTION STYLE: MAKE IT REAL (CRITICAL)
+
+**BANNED PHRASES — Never write questions like this:**
+❌ "Which method is the most efficient for..."
+❌ "You want to do X. Which Y should you use?"
+❌ "What is the best way to..."
+❌ "Which of the following is correct?"
+❌ "You are a developer who needs to..."
+
+**REQUIRED STYLE — Always write questions like this:**
+✅ "Your art director says distant mountains look flat. What's missing?"
+✅ "After enabling Nanite, modular kit pieces show seams at LOD transitions. Why?"
+✅ "A contractor sends a 500k poly hero prop. How do you prep it for Nanite?"
+✅ "QA reports flickering shadows on skeletal meshes. What's the likely cause?"
+✅ "Level loads are taking 45 seconds. What's the first thing you check?"
+
+**QUESTION PERSONAS — Use these framings:**
+1. **Bug Report:** Start with a symptom → "Players report X. What causes this?"
+2. **Art Director:** Visual problem → "The scene looks wrong because..."
+3. **Code Review:** Performance concern → "This Blueprint runs every tick. What's the risk?"
+4. **Production Crunch:** Time pressure → "You have 2 hours to fix this. What's first?"
+5. **New Hire:** Teaching moment → "A junior asks why use X over Y. What do you say?"
+
+**TONE:** Sound like a Lead Dev at a whiteboard, NOT a textbook.
 
 ### 2. Question Type Rules
 - **Target Type:** ${targetType}
@@ -221,104 +260,24 @@ To assess professional competence, use these question structures:
 - **Slug Format:** Must be all lowercase, hyphen-separated (e.g., nanite-virtualized-geometry-in-unreal-engine)
 - **Common Suffix:** Most pages end with -in-unreal-engine (e.g., world-partition-in-unreal-engine)
 
-**VERIFIED WORKING URLs (USE THESE AS EXAMPLES):**
+**VERIFIED URL EXAMPLES (copy these patterns):**
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-global-illumination-and-reflections-in-unreal-engine
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/world-partition-in-unreal-engine
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprints-visual-scripting-in-unreal-engine
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-trees-in-unreal-engine
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-ability-system-for-unreal-engine
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-blueprints-in-unreal-engine
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/creating-visual-effects-in-niagara-for-unreal-engine
 
-**Core Features:**
-  - https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine
-    - https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-global-illumination-and-reflections-in-unreal-engine
-        - https://dev.epicgames.com/documentation/en-us/unreal-engine/world-partition-in-unreal-engine
-        - https://dev.epicgames.com/documentation/en-us/unreal-engine/virtual-shadow-maps-in-unreal-engine
+**INVALID PATTERNS (never use):**
+❌ Short slugs: .../nanite (missing -in-unreal-engine suffix)
+❌ Generic pages: .../unreal-engine-5, .../overview
+❌ External: YouTube, Reddit, Forums, Wikis, vertexaisearch URLs
 
-        ** Blueprints:**
-            - https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprints-visual-scripting-in-unreal-engine
-            - https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprint-best-practices-in-unreal-engine
-            - https://dev.epicgames.com/documentation/en-us/unreal-engine/blueprint-interface-in-unreal-engine
-            - https://dev.epicgames.com/documentation/en-us/unreal-engine/event-dispatchers-in-unreal-engine
+**IF UNCERTAIN:** Leave SourceURL empty. A missing URL is better than broken.
+**SourceExcerpt:** REQUIRED — copy the exact sentence from docs that proves the answer.
 
-            ** Materials:**
-                - https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-material-editor-user-guide
-                - https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-material-expressions-reference
-                - https://dev.epicgames.com/documentation/en-us/unreal-engine/physically-based-materials-in-unreal-engine
-                - https://dev.epicgames.com/documentation/en-us/unreal-engine/material-functions-in-unreal-engine
-                - https://dev.epicgames.com/documentation/en-us/unreal-engine/substrate-materials-in-unreal-engine
-
-                ** Animation:**
-                    - https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-blueprints-in-unreal-engine
-                    - https://dev.epicgames.com/documentation/en-us/unreal-engine/control-rig-in-unreal-engine
-                    - https://dev.epicgames.com/documentation/en-us/unreal-engine/skeletal-mesh-animation-system-in-unreal-engine
-                    - https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-retargeting-in-unreal-engine
-
-                    ** Rendering:**
-                        - https://dev.epicgames.com/documentation/en-us/unreal-engine/post-process-effects-in-unreal-engine
-                        - https://dev.epicgames.com/documentation/en-us/unreal-engine/ray-tracing-and-path-tracing-features-in-unreal-engine
-                        - https://dev.epicgames.com/documentation/en-us/unreal-engine/temporal-super-resolution-in-unreal-engine
-                        - https://dev.epicgames.com/documentation/en-us/unreal-engine/anti-aliasing-and-upscaling-in-unreal-engine
-
-                        ** VFX(Niagara):**
-                            - https://dev.epicgames.com/documentation/en-us/unreal-engine/creating-visual-effects-in-niagara-for-unreal-engine
-                            - https://dev.epicgames.com/documentation/en-us/unreal-engine/getting-started-in-niagara-effects-for-unreal-engine
-                            - https://dev.epicgames.com/documentation/en-us/unreal-engine/niagara-fluids-in-unreal-engine
-
-                            ** Sequencer / Cinematics:**
-                                - https://dev.epicgames.com/documentation/en-us/unreal-engine/sequencer-cinematic-editor-unreal-engine
-                                - https://dev.epicgames.com/documentation/en-us/unreal-engine/movie-render-pipeline-in-unreal-engine
-                                - https://dev.epicgames.com/documentation/en-us/unreal-engine/cinematics-and-movie-making-in-unreal-engine
-                                - https://dev.epicgames.com/documentation/en-us/unreal-engine/take-recorder-in-unreal-engine
-
-                                ** Gameplay:**
-                                    - https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-framework-in-unreal-engine
-                                    - https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-ability-system-for-unreal-engine
-                                    - https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine
-                                    - https://dev.epicgames.com/documentation/en-us/unreal-engine/game-mode-and-game-state-in-unreal-engine
-
-                                    ** AI:**
-                                        - https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-trees-in-unreal-engine
-                                        - https://dev.epicgames.com/documentation/en-us/unreal-engine/environment-query-system-in-unreal-engine
-                                        - https://dev.epicgames.com/documentation/en-us/unreal-engine/ai-perception-in-unreal-engine
-                                        - https://dev.epicgames.com/documentation/en-us/unreal-engine/smart-objects-in-unreal-engine
-
-                                        ** Physics:**
-                                            - https://dev.epicgames.com/documentation/en-us/unreal-engine/chaos-physics-in-unreal-engine
-                                            - https://dev.epicgames.com/documentation/en-us/unreal-engine/chaos-destruction-in-unreal-engine
-                                            - https://dev.epicgames.com/documentation/en-us/unreal-engine/collision-in-unreal-engine
-                                            - https://dev.epicgames.com/documentation/en-us/unreal-engine/physics-materials-in-unreal-engine
-
-                                            ** Networking:**
-                                                - https://dev.epicgames.com/documentation/en-us/unreal-engine/networking-and-multiplayer-in-unreal-engine
-                                                - https://dev.epicgames.com/documentation/en-us/unreal-engine/replication-in-unreal-engine
-                                                - https://dev.epicgames.com/documentation/en-us/unreal-engine/online-services-in-unreal-engine
-
-                                                ** Landscape:**
-                                                    - https://dev.epicgames.com/documentation/en-us/unreal-engine/landscape-outdoor-terrain-in-unreal-engine
-                                                    - https://dev.epicgames.com/documentation/en-us/unreal-engine/landscape-edit-layers-in-unreal-engine
-                                                    - https://dev.epicgames.com/documentation/en-us/unreal-engine/procedural-content-generation-framework-in-unreal-engine
-
-                                                    ** C++ Programming:**
-                                                        - https://dev.epicgames.com/documentation/en-us/unreal-engine/programming-with-cplusplus-in-unreal-engine
-                                                        - https://dev.epicgames.com/documentation/en-us/unreal-engine/epic-cplusplus-coding-standard-for-unreal-engine
-                                                        - https://dev.epicgames.com/documentation/en-us/unreal-engine/reflection-system-in-unreal-engine
-
-                                                        ** Editor:**
-                                                            - https://dev.epicgames.com/documentation/en-us/unreal-engine/level-editor-in-unreal-engine
-                                                            - https://dev.epicgames.com/documentation/en-us/unreal-engine/content-browser-in-unreal-engine
-                                                            - https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-editor-preferences
-
-                                                            ** Getting Started:**
-                                                                - https://dev.epicgames.com/documentation/en-us/unreal-engine/understanding-the-basics-of-unreal-engine
-                                                                - https://dev.epicgames.com/documentation/en-us/unreal-engine/get-started
-
-
-                                                                ** INVALID URL PATTERNS(NEVER USE):**
-  ❌ https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite (too short, missing suffix)
-  ❌ https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5 (too generic)
-  ❌ https://dev.epicgames.com/documentation/en-us/unreal-engine/overview (too vague)
-  ❌ Any YouTube, Reddit, Forums, Wikis, vertexaisearch, or Google redirect URLs
-
-    ** IF YOU ARE NOT 100 % CERTAIN THE URL EXISTS:**
-  → ** Leave SourceURL EMPTY.** An empty URL is better than a broken one!
-  → ** Still provide SourceExcerpt ** with the factual information that validates your answer
-
-    - ** SourceExcerpt:** Copy the ** exact sentence(s) ** from documentation that validates the answer.This is REQUIRED even if URL is empty.
 
 ### 4. Database Output Format
     **CRITICAL:** Output **ONLY valid JSON**. No conversational text. No markdown tables.
@@ -348,91 +307,8 @@ To assess professional competence, use these question structures:
 
 ${rejectedSection}
 
-${config.customRules ? `### Custom Rules\n${config.customRules}` : ''}
+${config.customRules ? `### Custom Rules\n${config.customRules}` : ""}
 
-${fileContext ? `### File Context\n${fileContext}` : ''}
+${fileContext ? `### File Context\n${fileContext}` : ""}
     `;
-};
-
-/**
- * Gets the original (v1.5) prompt for comparison
- * @param {Object} config - Application configuration
- * @param {string} fileContext - Context from uploaded files
- * @returns {string} Original verbose prompt
- */
-export const constructSystemPromptV15 = (config, fileContext) => {
-    let batchNum = parseInt(config.batchSize) || 6;
-    let easyCount = 0; let mediumCount = 0; let hardCount = 0;
-    let targetType = 'Multiple Choice and True/False';
-    let mcCount = 0; let tfCount = 0;
-
-    const [difficulty, type] = config.difficulty.split(' ');
-
-    if (difficulty === 'Balanced') {
-        if (batchNum % 6 !== 0) batchNum = Math.ceil(batchNum / 6) * 6;
-        const countPerCategory = batchNum / 6;
-        easyCount = countPerCategory;
-        mediumCount = countPerCategory;
-        hardCount = countPerCategory;
-        targetType = 'Multiple Choice and True/False';
-        mcCount = countPerCategory * 3;
-        tfCount = countPerCategory * 3;
-    } else {
-        if (difficulty === 'Easy') easyCount = batchNum;
-        else if (difficulty === 'Medium') mediumCount = batchNum;
-        else if (difficulty === 'Hard') hardCount = batchNum;
-
-        if (type === 'MC') {
-            targetType = 'Multiple Choice ONLY';
-            mcCount = batchNum;
-        } else if (type === 'T/F') {
-            targetType = 'True/False ONLY';
-            tfCount = batchNum;
-        }
-    }
-
-    const difficultyPrompt = (difficulty === 'Balanced')
-        ? `Generate approximately ${easyCount} Easy, ${mediumCount} Medium, and ${hardCount} Hard questions.Aim for ${mcCount} Multiple Choice questions and ${tfCount} True / False questions for a balanced batch.`
-        : `Generate exactly ${batchNum} questions of difficulty: ${difficulty}.`;
-
-    const temp = parseFloat(config.temperature) || 0.7;
-    let modeInstruction = "Standard technical accuracy.";
-    if (temp < 0.3) {
-        modeInstruction = "STRICT MODE: Focus ONLY on fundamental, widely-used features. Use simple, direct language. Avoid complex scenarios. Questions must be straightforward and brief (1 sentence preferred).";
-    } else if (temp > 0.7) {
-        modeInstruction = "WILD MODE: Focus on obscure features or edge cases, but KEEP IT CONCISE. Test deep knowledge without writing a novel.";
-    }
-
-    return `
-## Universal UE5 Scenario - Based Question Generator — Gemini Version
-Role: You are a senior Unreal Engine 5 technical writer.Create short, clear, scenario - driven questions in Simplified Technical English(STE).
-** FORMATTING INSTRUCTION:** You MUST enclose key technical concepts(like Nanite, Lumen, Blueprints, Virtual Shadow Maps) in HTML bold tags(e.g., <b>Nanite</b>) in the Question and Answer columns.
-    Discipline: ${config.discipline}
-Target Language: ${config.language}
-Question Type: ${targetType}
-** LANGUAGE STRICTNESS:** Output ONLY in ${config.language}. Do NOT provide bilingual text.
-** GENERATION MODE:** ${modeInstruction}
-** CUSTOM RULES:** ${config.customRules || "None"}
-
-Question Format:
-| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | QualityScore |
-    - ID starts at 1.
-        - Difficulty levels: Easy / Medium / Hard.
-- For True / False questions: OptionA = TRUE, OptionB = FALSE.CorrectLetter = A / B.
-- ** CRITICAL RULE:** True / False questions must be a SINGLE assertion.
-- ** TYPE RULE:** If Question Type is 'Multiple Choice ONLY', do NOT generate True / False questions.If Question Type is 'True/False ONLY', do NOT generate Multiple Choice questions.
-- ** QualityScore:** Estimate 0 - 100 how well this question matches the Mode.IF TEMP IS EXTREME(${temp}), LOWER YOUR SCORE ESTIMATE by 10 - 15 points.
-
-    Sourcing:
-1. Official Epic Games Documentation(dev.epicgames.com / documentation / en - us / unreal - engine /)
-2. Attached Local Files
-    ** SourceURL RULE:** ONLY use direct Epic documentation links(e.g., https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-overview). NEVER use Google redirect URLs, vertexaisearch links, or proxy URLs.
-** FORBIDDEN SOURCES:** Do NOT use forums, Reddit, community wikis, or external video platforms like YouTube.
-
-        Output:
-- ** OUTPUT INSTRUCTION:** ${difficultyPrompt}
-    - ** CONCISENESS IS KING.** Max 2 sentences per question.Avoid "A Technical Artist is..." setups if possible.Just ask the question.
-
-        ${fileContext}
-`;
 };
