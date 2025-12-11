@@ -64,6 +64,7 @@ export function useFiltering({ questions, historicalQuestions, config, appMode }
     // ========================================================================
 
 
+
     // 1. First, get questions that match all filters EXCEPT status (for counts)
     const contextFilteredQuestions = useMemo(() => createFilteredQuestions(
         questions,
@@ -74,8 +75,8 @@ export function useFiltering({ questions, historicalQuestions, config, appMode }
         searchTerm,
         config.creatorName,
         config.discipline,
-        config.difficulty,
-        config.type,
+        appMode === 'review' ? null : config.difficulty, // Review mode: ignore difficulty filter
+        appMode === 'review' ? null : config.type, // Review mode: ignore type filter
         config.language,
         filterTags
     ), [questions, historicalQuestions, showHistory, appMode, filterByCreator, searchTerm, config, filterTags]);
