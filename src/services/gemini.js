@@ -187,15 +187,22 @@ export const generateCritique = async (apiKey, q) => {
     }
 
     // 2. The Prompt
-    const systemPrompt = "UE5 Expert Critic. Output valid JSON only. Be FAIR but STRICT regarding technical accuracy.";
-    const userPrompt = `Critique this UE5 question as a Senior Technical Editor.
+    const systemPrompt = "UE5 Expert Critic. Output valid JSON only. YOU MUST BE EXTREMELY HARSH AND CRITICAL.";
+    
+    // Construct options string for prompt
+    const optionsStr = JSON.stringify(q.options);
+    
+    const userPrompt = `Critique this UE5 question as an EXTREMELY HARSH, PEDANTIC Senior Technical Editor.
     ${strictnessInstruction}
     
-    **CRITICAL MINDSET:** You are a professional editor. Reward accuracy and clarity.
+    **CRITICAL MINDSET:** You are a perfectionist who RARELY gives scores above 80. Most questions have flaws.
+    - If the question is simple/basic: Score must be < 75.
+    - If the question is wordy: Score must be < 70.
+    - If the distractors are obvious: Score must be < 60.
     
     MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this structure:
     {
-        "score": number, // 0-100
+        "score": number, // 0-100 (Integer only)
         "critique": "string", // Detailed critique text
         "rewrite": {
             "question": "string", // Improved question text
@@ -205,29 +212,8 @@ export const generateCritique = async (apiKey, q) => {
         "changes": "string" // Brief explanation of what was changed and why
     }
 
-    **STRICT Scoring Criteria:**
-    - 90-100: PERFECT. concise (single sentence), zero ambiguity, expert-level difficulty, perfect distractors.
-    - 80-89: EXCELLENT. Very good but has minor improvements possible (slight wordiness, one weak distractor).
-    - 70-79: GOOD. Competent but has clear issues (wordy, hints in stem, mediocre distractors, too basic).
-    - 50-69: MEDIOCRE. Multiple problems (ambiguous, confusing structure, weak options, trivial topic).
-    - 0-49: POOR/FAIL. Serious issues (factual concerns, very weak question, bad distractors).
-
-    **DEDUCT POINTS FOR (cumulative):**
-    - **TOO EASY/TRIVIAL**: Basic "What is X?" questions START at 70 max. Deduct 10 points.
-    - **WORDINESS**: More than 20 words in question = -5 points.
-    - **HINTS IN STEM**: Any hint toward answer = -15 points per hint.
-    - **WEAK DISTRACTORS**: Obviously wrong options = -5 points per weak distractor.
-    - **AMBIGUITY**: Multiple valid interpretations = -20 points.
-    - **LACK OF SOURCE**: No clear source or generic documentation = -10 points.
-
-    **DEFAULT ASSUMPTION: Start at 85 and deduct points based on flaws.**
-
-    **CRITICAL RULE FOR TRUE/FALSE:** 
-    - If original is T/F, rewrite MUST remain T/F. 
-    - T/F should be single, unambiguous assertion.
-
     Question: ${q.question}
-    Options: ${JSON.stringify(q.options)}
+    Options: ${optionsStr}
     Correct: ${q.correct}`;
 
     // 3. API Call
@@ -239,7 +225,11 @@ export const generateCritique = async (apiKey, q) => {
         body: JSON.stringify({
             contents: [{ parts: [{ text: userPrompt }] }],
             systemInstruction: { parts: [{ text: systemPrompt }] },
-            generationConfig: { temperature: 0.2, maxOutputTokens: 8192, responseMimeType: "application/json" }
+            generationConfig: { 
+                temperature: 0.2, 
+                maxOutputTokens: 8192, 
+                responseMimeType: "application/json" 
+            }
         })
     });
 
@@ -252,8 +242,8 @@ export const generateCritique = async (apiKey, q) => {
         const result = JSON.parse(cleanJson);
 
         return {
-            score: result.score,
-            text: result.critique,
+            score: typeof result.score === 'number' ? result.score : parseInt(result.score || 0),
+            text: result.critique || result.text, // Handle potential schema drift
             rewrite: result.rewrite,
             changes: result.changes
         };
@@ -285,6 +275,7 @@ export const generateCritique = async (apiKey, q) => {
 
         if (score === null) {
             console.warn("Could not extract score from critique response");
+            score = 0; // Default to 0 to force attention
         }
 
         return { score, text: rawText, rewrite: null, changes: null };

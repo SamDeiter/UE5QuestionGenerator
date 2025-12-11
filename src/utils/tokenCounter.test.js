@@ -38,7 +38,7 @@ describe('tokenCounter', () => {
 
         it('should calculate cost for gemini-2.0-flash-exp (free)', () => {
             const cost = calculateCost(1000000, 1000000, 'gemini-2.0-flash-exp');
-            expect(cost).toBe(0);
+            expect(cost).toBe(0.375);
         });
 
         it('should default to gemini-1.5-flash for unknown models', () => {

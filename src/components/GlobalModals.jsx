@@ -35,7 +35,7 @@ const GlobalModals = ({
 
     const {
         config, isProcessing, status, translationProgress,
-        allQuestionsMap, appMode, currentStep, tutorialSteps,
+        allQuestionsMap, currentStep, tutorialSteps,
         metrics, // passed for Analytics/DangerZone
         isAdmin // passed for SettingsModal
     } = state;
@@ -145,7 +145,7 @@ const GlobalModals = ({
             </Suspense>
 
             {/* Tutorial Overlay */}
-            {tutorialActive && appMode === 'create' && (
+            {tutorialActive && (
                 <TutorialOverlay
                     steps={tutorialSteps}
                     currentStepIndex={currentStep}

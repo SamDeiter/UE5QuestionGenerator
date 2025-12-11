@@ -198,8 +198,11 @@ export const useGeneration = (
             }
 
             // Parse the requested difficulty and type from config
-            const [requestedDifficulty, requestedType] = config.difficulty.split(' ');
-            const expectedType = requestedType === 'T/F' ? 'True/False' : 'Multiple Choice';
+            const requestedDifficulty = config.difficulty;
+            const requestedType = config.type || 'Multiple Choice'; // Default if missing
+            
+            // Normalize expected type string
+            const expectedType = (requestedType === 'T/F' || requestedType === 'True/False') ? 'True/False' : 'Multiple Choice';
 
             // SOURCE VERIFICATION: Check if URLs match grounding sources
             newQuestions = newQuestions.map(q => {
@@ -229,11 +232,12 @@ export const useGeneration = (
                 }
 
                 // Apply difficulty and type conversion
-                if (requestedDifficulty !== 'Balanced') {
+                if (requestedDifficulty !== 'Balanced' && requestedDifficulty !== 'Balanced All') {
                     if (expectedType === 'True/False' && q.type === 'Multiple Choice') {
                         updatedQ = convertMCtoTF(updatedQ, requestedDifficulty);
                         updatedQ.sourceVerified = q.sourceVerified; // Preserve verification status
                     } else {
+                        // Use requested difficulty as-is (normalization handles variants)
                         updatedQ.difficulty = requestedDifficulty;
                     }
                 }
@@ -300,7 +304,12 @@ export const useGeneration = (
                 generationTime: duration,
                 model: config.model || 'gemini-2.0-flash',
                 groundingSources: groundingSources.length > 0 ? groundingSources.slice(0, 3) : null, // Store top 3 sources
-                tags: config.tags || [] // Attach active focus tags
+                tags: config.tags || [], // Attach active focus tags
+                
+                // Enforce config values to ensure they match filters
+                discipline: config.discipline,
+                type: expectedType, // Use the normalized type
+                difficulty: requestedDifficulty // Use the normalized difficulty
             }));
 
             // Save to storage and get unique ones
@@ -341,7 +350,7 @@ export const useGeneration = (
 
             // AUTO-CRITIQUE: Run critique on each question in background
             // Check if auto-critique is enabled (default: true)
-            const autoCritiqueEnabled = localStorage.getItem('ue5_auto_critique') !== 'false';
+            const autoCritiqueEnabled = localStorage.getItem('ue5_auto_critique') === 'true'; // Default: false
 
             if (autoCritiqueEnabled && uniqueNewQuestions.length > 0) {
                 setStatus('Auto-critiquing...');

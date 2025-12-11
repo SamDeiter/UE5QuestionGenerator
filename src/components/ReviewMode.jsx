@@ -1,28 +1,25 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import Icon from './Icon';
 import QuestionItem from './QuestionItem';
 
 const ReviewMode = ({
-    questions,
-    currentIndex,
-    setCurrentIndex,
-    onUpdateStatus,
-    onExplain,
-    onVariate,
-    onCritique,
-    onApplyRewrite,
-    onTranslateSingle,
-    onSwitchLanguage,
-    onDelete,
-    onUpdateQuestion,
-    translationMap,
-    isProcessing,
-    showMessage
+    questions, currentIndex, setCurrentIndex, onUpdateStatus, onExplain, onVariate, onCritique, onApplyRewrite, onTranslateSingle, onSwitchLanguage, onDelete, onUpdateQuestion, translationMap, isProcessing, showMessage, onStartTutorial
 }) => {
+    
+    // Auto-start tutorial if not completed
+    useEffect(() => {
+        const isCompleted = localStorage.getItem('ue5_tutorial_review_completed');
+        if (!isCompleted && onStartTutorial && questions.length > 0) {
+            // Small delay to ensure view is rendered
+            setTimeout(() => onStartTutorial('review'), 500);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     // Auto-adjust index if out of bounds (e.g. after accepting an item and list shrinks)
     React.useEffect(() => {
-        if (questions && questions > 0 && currentIndex >= questions) {
-            setCurrentIndex(questions - 1);
+        if (questions && questions.length > 0 && currentIndex >= questions.length) {
+            setCurrentIndex(questions.length - 1);
         }
     }, [questions, currentIndex, setCurrentIndex]);
 
@@ -62,7 +59,7 @@ const ReviewMode = ({
                 </button>
             </div>
 
-            <div className="w-full transform transition-all duration-300">
+            <div className="w-full transform transition-all duration-300" data-tour="review-card">
                 <QuestionItem
                     key={currentQuestion.uniqueId}
                     q={currentQuestion}

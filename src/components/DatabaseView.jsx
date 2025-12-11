@@ -14,13 +14,24 @@ const DatabaseView = ({
     _isProcessing,
     showMessage,
     filterMode = 'all', // Default to 'all' if not provided
-    sortBy = 'default' // Default to 'default' if not provided
+    sortBy = 'default', // Default to 'default' if not provided
+    onStartTutorial // Callback to trigger database tutorial
 }) => {
     const [_isSyncing, _setIsSyncing] = useState(false);
     const [_syncProgress, _setSyncProgress] = useState(0);
     // sortBy is now a prop
     const [_loadMenuOpen, setLoadMenuOpen] = useState(false);
     const loadMenuRef = useRef(null);
+
+    // Auto-start tutorial if not completed
+    useEffect(() => {
+        const isCompleted = localStorage.getItem('ue5_tutorial_database_completed');
+        if (!isCompleted && onStartTutorial) {
+            // Small delay to ensure view is rendered
+            setTimeout(() => onStartTutorial('database'), 500);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -138,31 +149,33 @@ const DatabaseView = ({
 
             <MetricsDashboard questions={questions} />
 
-            {sortedQuestions.length === 0 ? (
-                <div className="text-center py-10 text-slate-500">No questions loaded from database. Click Refresh.</div>
-            ) : (
-                sortedQuestions.map((q, i) => (
-                    <div key={i} data-question-index={i} className="opacity-75 hover:opacity-100 transition-all">
-                        <QuestionItem
-                            q={q}
-                            // Pass dummy handlers or read-only mode if supported
-                            onUpdateStatus={() => { }}
-                            onExplain={() => { }}
-                            onVariate={() => { }}
-                            onCritique={() => { }}
-                            onTranslateSingle={() => { }}
-                            onSwitchLanguage={(targetLang) => handleSwitchLanguage(q, targetLang)}
-                            onDelete={() => { }}
-                            onUpdateQuestion={onUpdateQuestion}
-                            onKickBack={onKickBack}
-                            availableLanguages={translationMap.get(q.uniqueId)}
-                            isProcessing={false}
-                            appMode="database"
-                            showMessage={showMessage}
-                        />
-                    </div>
-                ))
-            )}
+            <div data-tour="database-grid">
+                {sortedQuestions.length === 0 ? (
+                    <div className="text-center py-10 text-slate-500">No questions loaded from database. Click Refresh.</div>
+                ) : (
+                    sortedQuestions.map((q, i) => (
+                        <div key={i} data-question-index={i} className="opacity-75 hover:opacity-100 transition-all">
+                            <QuestionItem
+                                q={q}
+                                // Pass dummy handlers or read-only mode if supported
+                                onUpdateStatus={() => { }}
+                                onExplain={() => { }}
+                                onVariate={() => { }}
+                                onCritique={() => { }}
+                                onTranslateSingle={() => { }}
+                                onSwitchLanguage={(targetLang) => handleSwitchLanguage(q, targetLang)}
+                                onDelete={() => { }}
+                                onUpdateQuestion={onUpdateQuestion}
+                                onKickBack={onKickBack}
+                                availableLanguages={translationMap.get(q.uniqueId)}
+                                isProcessing={false}
+                                appMode="database"
+                                showMessage={showMessage}
+                            />
+                        </div>
+                    ))
+                )}
+            </div>
         </div>
     );
 };

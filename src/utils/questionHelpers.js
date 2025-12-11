@@ -143,49 +143,60 @@ export const parseQuestions = (text) => {
     // Aggressively clean markdown code blocks
     const cleanText = text.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
 
-    // 1. Try Parsing as JSON first (fallback if AI ignores Markdown instruction)
-    if (cleanText.startsWith('[') || cleanText.startsWith('{')) {
+    // 1. Try Parsing as JSON first (Robust Search)
+    // Look for the first '[' or '{' and the last ']' or '}'
+    const jsonStart = cleanText.search(/[[{]/);
+    const jsonEnd = cleanText.search(/[\]}][^\]}]*$/);
+
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        const potentialJson = cleanText.substring(jsonStart, jsonEnd + 1);
         try {
-            const jsonData = JSON.parse(cleanText);
+            const jsonData = JSON.parse(potentialJson);
             const dataArray = Array.isArray(jsonData) ? jsonData : [jsonData];
-
-            dataArray.forEach((item, index) => {
-                const uniqueId = crypto.randomUUID();
-                const type = (item.Type && item.Type.toLowerCase().includes('true')) ? 'True/False' : 'Multiple Choice';
-
-                let options = {};
-                if (type === 'True/False') {
-                    options = { A: 'TRUE', B: 'FALSE' };
-                } else {
-                    options = {
-                        A: item.OptionA || '',
-                        B: item.OptionB || '',
-                        C: item.OptionC || '',
-                        D: item.OptionD || ''
-                    };
-                }
-
-                parsed.push({
-                    id: Date.now() + index + Math.random(),
-                    uniqueId: uniqueId,
-                    discipline: item.Discipline || "General",
-                    type: type,
-                    difficulty: item.Difficulty || "Easy",
-                    question: item.Question || "",
-                    options,
-                    correct: item.CorrectLetter || "",
-                    sourceUrl: item.SourceURL || "",
-                    sourceExcerpt: item.SourceExcerpt || "",
-                    qualityScore: parseInt(item.QualityScore) || null,
-                    status: 'pending',
-                    critique: null,
-                    critiqueScore: null
+            
+            // Validate that it looks like our data (has Question or keys)
+            const isValidData = dataArray.some(item => item.Question || item.question || item.Discipline);
+            
+            if (isValidData) {
+                dataArray.forEach((item, index) => {
+                    const uniqueId = crypto.randomUUID();
+                    const type = (item.Type && item.Type.toLowerCase().includes('true')) ? 'True/False' : 'Multiple Choice';
+    
+                    let options = {};
+                    if (type === 'True/False') {
+                        options = { A: 'TRUE', B: 'FALSE' };
+                    } else {
+                        options = {
+                            A: item.OptionA || '',
+                            B: item.OptionB || '',
+                            C: item.OptionC || '',
+                            D: item.OptionD || ''
+                        };
+                    }
+    
+                    parsed.push({
+                        id: Date.now() + index + Math.random(),
+                        uniqueId: uniqueId,
+                        discipline: item.Discipline || "General",
+                        type: type,
+                        difficulty: item.Difficulty || "Easy",
+                        question: item.Question || "",
+                        options,
+                        correct: item.CorrectLetter || "",
+                        sourceUrl: item.SourceURL || "",
+                        sourceExcerpt: item.SourceExcerpt || "",
+                        qualityScore: parseInt(item.QualityScore) || null,
+                        status: 'pending',
+                        critique: null,
+                        critiqueScore: null,
+                        tags: item.Tags ? (Array.isArray(item.Tags) ? item.Tags : item.Tags.split(',').map(t=>t.trim())) : []
+                    });
                 });
-            });
-
-            if (parsed.length > 0) return removeDuplicateQuestions(parsed);
-        } catch (_e) {
-            console.warn("JSON parse failed, falling back to Markdown table parsing.", _e);
+    
+                if (parsed.length > 0) return removeDuplicateQuestions(parsed);
+            }
+        } catch {
+            // console.warn("JSON extract failed, falling back to Markdown table parsing.");
         }
     }
 

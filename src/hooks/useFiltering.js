@@ -74,6 +74,7 @@ export function useFiltering({ questions, historicalQuestions, config, appMode }
         config.creatorName,
         config.discipline,
         config.difficulty,
+        config.type,
         config.language,
         filterTags
     ), [questions, historicalQuestions, showHistory, appMode, filterByCreator, searchTerm, config, filterTags]);

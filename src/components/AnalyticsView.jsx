@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Icon from './Icon';
 import {
     ResponsiveContainer,
@@ -20,9 +20,9 @@ import { TAGS_BY_DISCIPLINE } from '../utils/tagTaxonomy';
 import { CATEGORY_KEYS } from '../utils/constants';
 
 // Import extracted components
-import StatCard from './Analytics/StatCard';
-import EmptyState from './Analytics/EmptyState';
-import DisciplineDetailPanel from './Analytics/DisciplineDetailPanel';
+import StatCard from './analytics/StatCard';
+import EmptyState from './analytics/EmptyState';
+import DisciplineDetailPanel from './analytics/DisciplineDetailPanel';
 
 // Define discipline list from tagTaxonomy
 const DISCIPLINES = Object.keys(TAGS_BY_DISCIPLINE);
@@ -56,15 +56,24 @@ const DIFFICULTY_COLORS = {
  * AnalyticsView - Dedicated full-page analytics dashboard
  * Replaces the modal-based analytics with a standalone view
  */
-const AnalyticsView = ({ onBack }) => {
+const AnalyticsView = ({ onBack, onStartTutorial }) => {
     const [activeTab, setActiveTab] = useState('overview');
     const [selectedDiscipline, setSelectedDiscipline] = useState(null);
     const analytics = getAnalytics();
     const tokenStats = getTokenStats();
 
+    // Auto-start tutorial if not completed
+    useEffect(() => {
+        const isCompleted = localStorage.getItem('ue5_tutorial_analytics_completed');
+        if (!isCompleted && onStartTutorial) {
+             // Small delay to ensure view is rendered
+             setTimeout(() => onStartTutorial('analytics'), 500);
+        }
+    }, [onStartTutorial]);
+
     const tabs = [
         { id: 'overview', label: 'Overview', icon: 'layout-dashboard' },
-        { id: 'disciplines', label: 'Disciplines', icon: 'layers' },
+        { id: 'disciplines', label: 'Disciplines', icon: 'layers', dataTour: 'disciplines-tab' },
         { id: 'quality', label: 'Quality', icon: 'target' },
     ];
 
@@ -175,6 +184,7 @@ const AnalyticsView = ({ onBack }) => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
+                                data-tour={tab.dataTour}
                                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === tab.id
                                     ? 'bg-emerald-600 text-white shadow-lg'
                                     : 'text-slate-400 hover:text-white hover:bg-slate-700'

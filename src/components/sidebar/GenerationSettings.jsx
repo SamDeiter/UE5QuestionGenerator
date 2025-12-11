@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { listModels } from '../../services/gemini';
 import Icon from '../Icon';
 import InfoTooltip from '../InfoTooltip';
@@ -16,7 +17,7 @@ const GenerationSettings = ({ config, handleChange, customTags = {}, isOpen, onT
     const tagCounts = React.useMemo(() => {
         const counts = {};
         availableTags.forEach(tag => counts[tag] = 0);
-        Object.values(allQuestionsMap).forEach(question => {
+        Array.from(allQuestionsMap.values()).flat().forEach(question => {
             if (question.tags && Array.isArray(question.tags)) {
                 question.tags.forEach(t => {
                     const normalizedTag = t.startsWith('#') ? t : `#${t}`;
@@ -28,12 +29,38 @@ const GenerationSettings = ({ config, handleChange, customTags = {}, isOpen, onT
         return counts;
     }, [allQuestionsMap, availableTags]);
 
+    // Compute inventory stats for Recharts
+    const chartData = React.useMemo(() => {
+        const stats = {
+            'Beginner': { name: 'Beginner', mc: 0, tf: 0 },
+            'Intermediate': { name: 'Intermediate', mc: 0, tf: 0 },
+            'Expert': { name: 'Expert', mc: 0, tf: 0 }
+        };
+
+        // Flatten the map values since values are arrays of variants
+        Array.from(allQuestionsMap.values()).flat().forEach(q => {
+            let diff = q.difficulty;
+            if (diff === 'Hard') diff = 'Expert';
+            if (diff === 'Medium') diff = 'Intermediate';
+            if (diff === 'Easy') diff = 'Beginner';
+
+            if (stats[diff]) {
+                const isTF = q.type === 'True/False' || q.type === 'T/F';
+                if (isTF) stats[diff].tf++;
+                else stats[diff].mc++;
+            }
+        });
+        return [stats['Beginner'], stats['Intermediate'], stats['Expert']];
+    }, [allQuestionsMap]);
+
     // Auto-expand Focus & Model if tags are selected or custom model is used
+    // Removed showAdvanced from dependency to allow manual collapse
     React.useEffect(() => {
         if ((config.tags?.length > 0 || config.model !== 'gemini-2.0-flash') && !showAdvanced) {
             setShowAdvanced(true);
         }
-    }, [config.tags?.length, config.model, showAdvanced]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [config.tags?.length, config.model]);
 
     const toggleTag = (tag) => {
         const currentTags = config.tags || [];
@@ -94,6 +121,70 @@ const GenerationSettings = ({ config, handleChange, customTags = {}, isOpen, onT
                                 <option value="Blueprints">Blueprints</option>
                                 <option value="Lighting & Rendering">Lighting & Rendering</option>
                             </select>
+                        </div>
+
+                        {/* Difficulty & Type Selectors */}
+                        <div className="space-y-2">
+                             <div className="space-y-1">
+                                <label className="text-xs font-bold uppercase text-slate-400">Difficulty</label>
+                                <select 
+                                    name="difficulty" 
+                                    value={config.difficulty} 
+                                    onChange={handleChange} 
+                                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500"
+                                >
+                                    <option value="Easy">Beginner</option>
+                                    <option value="Medium">Intermediate</option>
+                                    <option value="Hard">Expert</option>
+                                </select>
+                             </div>
+                             <div className="space-y-1">
+                                <label className="text-xs font-bold uppercase text-slate-400">Type</label>
+                                <select 
+                                    name="type" 
+                                    value={config.type || 'Multiple Choice'}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500"
+                                >
+                                    <option value="Multiple Choice">Multiple Choice</option>
+                                    <option value="True/False">True/False</option>
+                                </select>
+                             </div>
+                        </div>
+
+                         {/* 📊 Inventory Stats Chart */}
+                         <div className="mt-3 p-2 bg-slate-950/50 rounded border border-slate-800">
+                            <h4 className="text-[10px] font-bold uppercase text-slate-500 mb-1 flex items-center justify-between">
+                                <span>Inventory Distribution</span>
+                                <span className="text-[9px] text-slate-600">Total: {chartData.reduce((acc, curr) => acc + curr.mc + curr.tf, 0)}</span>
+                            </h4>
+                            <div className="h-20 w-full" style={{ minHeight: '80px' }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart 
+                                        data={chartData} 
+                                        layout="vertical" 
+                                        barSize={12}
+                                        margin={{ top: 0, right: 10, left: 0, bottom: 0 }}
+                                    >
+                                        <XAxis type="number" hide />
+                                        <YAxis 
+                                            dataKey="name" 
+                                            type="category" 
+                                            width={65} 
+                                            tick={{ fill: '#94a3b8', fontSize: 9 }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <Tooltip 
+                                            contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', fontSize: '10px' }}
+                                            itemStyle={{ padding: 0 }}
+                                            cursor={{ fill: 'transparent' }}
+                                        />
+                                        <Bar dataKey="mc" name="Multiple Choice" stackId="a" fill="#3b82f6" radius={[0, 2, 2, 0]} />
+                                        <Bar dataKey="tf" name="True/False" stackId="a" fill="#a855f7" radius={[0, 2, 2, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
                         </div>
                     </div>
 
@@ -191,4 +282,3 @@ const GenerationSettings = ({ config, handleChange, customTags = {}, isOpen, onT
 };
 
 export default GenerationSettings;
-

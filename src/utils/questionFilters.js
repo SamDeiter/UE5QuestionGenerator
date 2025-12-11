@@ -16,6 +16,26 @@
  * @param {string} language - Selected language (e.g., 'English', 'Chinese (Simplified)')
  * @returns {Array} Filtered questions
  */
+const normalizeDiff = (d) => {
+    if (!d) return '';
+    const lower = d.toString().trim().toLowerCase();
+    
+    // Map all variants to canonical lowercase values (case-insensitive)
+    if (lower === 'easy' || lower === 'beginner') return 'easy';
+    if (lower === 'medium' || lower === 'intermediate') return 'medium';
+    if (lower === 'hard' || lower === 'expert') return 'hard';
+    
+    return lower; // Return lowercase version for consistent comparison
+};
+
+const normalizeType = (t) => {
+    if (!t) return '';
+    const lower = t.toLowerCase();
+    if (lower === 't/f' || lower === 'true/false') return 'True/False';
+    if (lower === 'mc' || lower === 'multiple choice') return 'Multiple Choice';
+    return t; // Fallback
+};
+
 export const createFilteredQuestions = (
     questions,
     historicalQuestions,
@@ -26,6 +46,7 @@ export const createFilteredQuestions = (
     creatorName,
     discipline,
     difficulty,
+    type,
     language,
     selectedTags = []
 ) => {
@@ -33,48 +54,54 @@ export const createFilteredQuestions = (
     const sourceQuestions = showHistory ? [...questions, ...historicalQuestions] : questions;
 
     return sourceQuestions.filter(q => {
-        // Filter by status (pending, accepted, rejected)
+        // 1. Status Filter
         if (filterMode === 'pending' && q.status !== 'pending') return false;
         if (filterMode === 'accepted' && q.status !== 'accepted') return false;
         if (filterMode === 'rejected' && q.status !== 'rejected') return false;
 
-        // Filter by creator
+        // 2. Creator Filter
         if (filterByCreator && q.creatorName !== creatorName) return false;
 
-        // Filter by discipline
+        // 3. Discipline Filter
         if (discipline && q.discipline !== discipline) return false;
 
-        // Filter by tags (OR logic: match any selected tag)
+        // 4. Tags Filter
         if (selectedTags && selectedTags.length > 0) {
             if (!q.tags || q.tags.length === 0) return false;
-            const hasAnyTag = selectedTags.some(tag => q.tags.includes(tag));
-            if (!hasAnyTag) return false;
+            // OR Logic: must have at least one of the selected tags
+            if (!selectedTags.some(tag => q.tags.includes(tag))) return false;
         }
 
-        // Filter by difficulty and type (if not "Balanced All" or "Balanced")
-        // We apply this filter if a specific difficulty is selected, even if a status filter is active.
-        // This allows users to focus on specific categories (e.g., "Easy MC") in the list.
-        if (difficulty && difficulty !== 'Balanced All' && difficulty !== 'Balanced') {
-            const [targetDiff, targetTypeAbbrev] = difficulty.split(' ');
-            const targetType = targetTypeAbbrev === 'MC' ? 'Multiple Choice' : 'True/False';
+        // 5. Difficulty & Type Filter
+        // Explicitly check for "Balanced" logic to skip filtering
+        const isBalanced = difficulty === 'Balanced All' || difficulty === 'Balanced';
+        
+        if (!isBalanced && difficulty) {
+            // Check Difficulty (both normalized to lowercase for comparison)
+            if (normalizeDiff(q.difficulty) !== normalizeDiff(difficulty)) return false;
 
-            if (q.difficulty !== targetDiff || q.type !== targetType) return false;
+            // Check Type (only if specified)
+            if (type && normalizeType(q.type) !== normalizeType(type)) return false;
         }
 
-        // Filter by search term (searches across multiple fields)
+        // 6. Search Term Filter
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
-            const matchesId = q.uniqueId && q.uniqueId.toLowerCase().includes(term);
-            const matchesQuestion = q.question && q.question.toLowerCase().includes(term);
-            const matchesDiscipline = q.discipline && q.discipline.toLowerCase().includes(term);
-            const matchesDifficulty = q.difficulty && q.difficulty.toLowerCase().includes(term);
-            const matchesOptions = q.options && Object.values(q.options).some(opt =>
-                opt && opt.toLowerCase().includes(term)
+            const searchFields = [
+                q.uniqueId,
+                q.question,
+                q.discipline,
+                q.difficulty,
+                // Search within options
+                ...(q.options ? Object.values(q.options) : [])
+            ];
+            
+            // Check if any field contains the term
+            const matches = searchFields.some(field => 
+                field && field.toString().toLowerCase().includes(term)
             );
-
-            if (!matchesId && !matchesQuestion && !matchesDiscipline && !matchesDifficulty && !matchesOptions) {
-                return false;
-            }
+            
+            if (!matches) return false;
         }
 
         return true;

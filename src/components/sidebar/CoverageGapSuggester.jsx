@@ -10,7 +10,7 @@ const CoverageGapSuggester = ({ allQuestionsMap, config, handleChange, showMessa
     const tagCounts = {};
     availableTags.forEach(t => tagCounts[t] = 0);
 
-    Object.values(allQuestionsMap).forEach(q => {
+    Array.from(allQuestionsMap.values()).flat().forEach(q => {
         if (q.tags && Array.isArray(q.tags)) {
             q.tags.forEach(t => {
                 const norm = t.startsWith('#') ? t : `#${t}`;

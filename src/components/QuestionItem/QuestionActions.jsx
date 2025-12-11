@@ -145,6 +145,7 @@ const QuestionActions = ({
                             className={`p-2 rounded-lg transition-all flex items-center gap-1 ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'bg-slate-800 text-slate-500 hover:bg-red-900/20 hover:text-red-500'}`}
                             title={q.status === 'rejected' && q.rejectionReason ? `Rejected: ${REJECTION_REASONS.find(r => r.id === q.rejectionReason)?.label || q.rejectionReason}` : "Reject"}
                             aria-label="Reject question"
+                            data-tour="review-actions"
                         >
                             <Icon name="x" size={18} />
                             <span className="text-xs font-bold">REJECT</span>

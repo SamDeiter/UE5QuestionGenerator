@@ -173,10 +173,13 @@ exports.generateCritique = functions.https.onCall(async (data, context) => {
         ${strictnessInstruction}
         
         **CRITICAL MINDSET:** You are a perfectionist who RARELY gives scores above 80. Most questions have flaws.
+        - If the question is simple/basic: Score must be < 75.
+        - If the question is wordy: Score must be < 70.
+        - If the distractors are obvious: Score must be < 60.
         
         MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this structure:
         {
-            "score": number, // 0-100
+            "score": number, // 0-100 (Integer only)
             "critique": "string", // Detailed critique text
             "rewrite": {
                 "question": "string", // Improved question text
@@ -220,10 +223,30 @@ exports.generateCritique = functions.https.onCall(async (data, context) => {
             result = JSON.parse(cleanJson);
         } catch {
             // Fallback: extract score if JSON parsing fails
-            const scoreMatch = rawText.match(/SCORE:\s*(\d+)/i) || rawText.match(/"score"\s*:\s*(\d+)/i);
+            // Try multiple patterns to extract score (Robust Fallback)
+            let score = null;
+            const patterns = [
+                /SCORE:\s*(\d+)/i,                    // SCORE: 75
+                /"score"\s*:\s*(\d+)/i,               // "score": 75
+                /\bscore\s*[:\-=]\s*(\d+)/i,          // score: 75, score = 75
+                /(\d+)\s*\/\s*100/i,                  // 75/100
+                /^(\d{1,3})(?!\d)/m                   // Just a number at start of line (0-999)
+            ];
+
+            for (const pattern of patterns) {
+                const match = rawText.match(pattern);
+                if (match) {
+                    const parsed = parseInt(match[1]);
+                    if (parsed >= 0 && parsed <= 100) {
+                        score = parsed;
+                        break;
+                    }
+                }
+            }
+
             result = {
-                score: scoreMatch ? parseInt(scoreMatch[1]) : null,
-                text: rawText,
+                score: score !== null ? score : 0, // Default to 0 to signal failure/review needed
+                critique: rawText,
                 rewrite: null,
                 changes: null
             };

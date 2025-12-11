@@ -81,6 +81,7 @@ const ContextToolbar = ({
                         onClick={() => setDataMenuOpen(!dataMenuOpen)}
                         disabled={isProcessing}
                         className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${dataMenuOpen ? 'bg-slate-700 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'} disabled:opacity-50 border border-slate-700`}
+                        data-tour="export-menu"
                     >
                         <Icon name="folder" size={14} />
                         Data Operations

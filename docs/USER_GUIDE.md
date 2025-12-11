@@ -3,6 +3,20 @@
 ## Overview
 The **UE5 Question Generator** is an AI-powered tool designed to help educators and technical artists generate, review, and manage quiz questions for Unreal Engine 5. It supports multiple languages, disciplines, and difficulty levels.
 
+## 🛡️ Administrator Access
+Certain features are restricted to **Administrators** only to ensure data integrity and security.
+
+### How to Become an Admin
+*   Admin status is granted based on your email address (must be whitelisted).
+*   When logged in as an Admin, you will see a verified **ADMIN** badge next to your name in the top right corner.
+
+### Admin-Only Features
+1.  **Creation Mode:** Only admins can access the "Generate Questions" interface.
+2.  **Tag Management:** Admins can create and delete custom tags for each discipline.
+3.  **Advanced Settings:**
+    *   **Vertex AI Data:** Access to training data export.
+    *   **Danger Zone:** Bulk delete and database reset options.
+
 ---
 
 ## 🚀 Getting Started

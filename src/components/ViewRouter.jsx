@@ -66,7 +66,8 @@ const ViewRouter = ({
     state,
     setters,
     onNavigateToCreate, // callback to switch to Create mode
-    onNavigateHome // callback to go back to landing page
+    onNavigateHome, // callback to go back to landing page
+    onStartTutorial // callback to start tutorial scenario
 }) => {
 
     const {
@@ -81,7 +82,10 @@ const ViewRouter = ({
     return (
         <Suspense fallback={<LoadingSpinner />}>
             {appMode === 'analytics' ? (
-                <AnalyticsView onBack={onNavigateHome} />
+                <AnalyticsView 
+                    onBack={onNavigateHome} 
+                    onStartTutorial={() => onStartTutorial('analytics')}
+                />
             ) : appMode === 'database' ? (
                 <DatabaseView
                     questions={databaseQuestions}
@@ -96,6 +100,7 @@ const ViewRouter = ({
                     showMessage={showMessage}
                     filterMode={state.filterMode}
                     sortBy={state.sortBy}
+                    onStartTutorial={() => onStartTutorial('database')}
                 />
             ) : appMode === 'review' && uniqueFilteredQuestions.length > 0 ? (
                 <ReviewMode
@@ -114,6 +119,7 @@ const ViewRouter = ({
                     translationMap={translationMap}
                     isProcessing={isProcessing}
                     showMessage={showMessage}
+                    onStartTutorial={() => onStartTutorial('review')}
                 />
             ) : appMode === 'review' && uniqueFilteredQuestions.length === 0 ? (
                 /* NEW: Empty state for Review mode with CTA */

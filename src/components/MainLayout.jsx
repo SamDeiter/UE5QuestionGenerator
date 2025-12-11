@@ -51,7 +51,8 @@ const MainLayout = ({
     viewRouterHandlers,
     viewRouterState,
     viewRouterSetters,
-    handleGoHome
+    handleGoHome,
+    onStartTutorial
 }) => {
     return (
         <div className="flex flex-1 overflow-hidden">
@@ -91,11 +92,13 @@ const MainLayout = ({
                             databaseQuestions={databaseQuestions}
                             config={config}
                             isProcessing={isProcessing}
+                            // ViewRouter props
                             handlers={viewRouterHandlers}
                             state={viewRouterState}
                             setters={viewRouterSetters}
                             onNavigateToCreate={() => handleModeSelect('create')}
                             onNavigateHome={handleGoHome}
+                            onStartTutorial={onStartTutorial}
                         />
                     </Suspense>
                 </div>

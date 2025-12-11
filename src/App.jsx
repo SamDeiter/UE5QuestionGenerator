@@ -423,6 +423,7 @@ const App = () => {
                     setDatabaseQuestions, setCurrentReviewIndex, setFilterByCreator, showMessage
                 }}
                 handleGoHome={handleGoHome}
+                onStartTutorial={handleStartTutorial}
             />
 
             {/* API Key Modal - Simple popup for Configure Now button */}

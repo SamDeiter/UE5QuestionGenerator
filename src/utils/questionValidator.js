@@ -28,11 +28,18 @@ export function validateQuestion(question) {
     let isCriticalFailure = false;
     let overallConfidence = 100;
 
-    // 1. Validate Source URL (Critical)
+    // 1. Validate Source URL (Critical usually, but allowed if empty)
     const urlResult = validateURL(question.SourceURL || question.sourceUrl);
     if (!urlResult.isValid) {
-        isCriticalFailure = true;
-        warnings.push(`Critical: ${urlResult.warning}`);
+        if (urlResult.warning === 'Missing documentation URL') {
+            // Soft failure: Allow empty URL if unsure (prompt instruction), but flag it
+            warnings.push('Warning: Missing documentation URL');
+            overallConfidence = Math.min(overallConfidence, 50);
+        } else {
+            // Hard failure: Invalid domain, disallowed pattern, etc.
+            isCriticalFailure = true;
+            warnings.push(`Critical: ${urlResult.warning}`);
+        }
     } else if (urlResult.warning) {
         warnings.push(urlResult.warning);
         overallConfidence = Math.min(overallConfidence, urlResult.confidence);

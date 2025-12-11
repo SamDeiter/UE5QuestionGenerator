@@ -45,10 +45,10 @@ export const TUTORIAL_SCENARIOS = {
     // 3. Review Mode Tour
     review: [
         {
-            id: 'review-list',
-            title: 'Review Queue',
-            content: 'This list shows generated questions that need your attention. Select a question to review its details.',
-            target: '[data-tour="review-list"]',
+            id: 'review-card',
+            title: 'Review Card',
+            content: 'This card displays the current question. Review its difficulty, source context, and content here.',
+            target: '[data-tour="review-card"]',
             position: 'right'
         },
         {
@@ -81,6 +81,24 @@ export const TUTORIAL_SCENARIOS = {
             title: 'Export Options',
             content: 'Click "Export" to download your questions as CSV or sync them to Google Sheets.',
             target: '[data-tour="export-menu"]',
+            position: 'bottom'
+        }
+    ],
+
+    // 5. Analytics Mode Tour
+    analytics: [
+        {
+            id: 'analytics-dashboard',
+            title: 'Analytics Dashboard',
+            content: 'Track your question generation output, quality scores, and costs over time.',
+            target: null,
+            position: 'center'
+        },
+        {
+            id: 'disciplines-tab',
+            title: 'Discipline Breakdown',
+            content: 'View detailed stats per discipline to identify coverage gaps.',
+            target: '[data-tour="disciplines-tab"]', // Need to ensure this attribute exists in AnalyticsView
             position: 'bottom'
         }
     ]

@@ -21,32 +21,68 @@ export const constructSystemPrompt = (config, fileContext, rejectedExamples = []
     let mcCount = 0, tfCount = 0;
 
     // Parse difficulty setting
-    // Parse difficulty setting
-    const [difficulty, type] = config.difficulty.split(' ');
+    // Parse difficulty and type
+    let difficulty = config.difficulty;
+    let type = config.type;
 
-    if (difficulty === 'Balanced') {
-        if (batchNum % 6 !== 0) batchNum = Math.ceil(batchNum / 6) * 6;
-        const countPerCategory = batchNum / 6;
-        easyCount = mediumCount = hardCount = countPerCategory;
-        targetType = 'MC and T/F';
-        mcCount = tfCount = countPerCategory * 3;
+    // Legacy fallback: parse from difficulty string
+    if (!type && difficulty.includes(' ')) {
+        const parts = difficulty.split(' ');
+        difficulty = parts[0];
+        type = parts.slice(1).join(' ');
+    }
+
+    if (difficulty === 'Balanced' || difficulty === 'Balanced All') {
+        // Force batch size to be multiple of 6 for equal distribution (1 of each Type/Diff combo)
+        if (batchNum % 6 !== 0) {
+             batchNum = Math.ceil(batchNum / 6) * 6;
+        }
+        
+        const total = batchNum;
+        const perDiff = Math.floor(total / 3); // e.g. 2 per difficulty
+        
+        // Distribution targets
+        easyCount = perDiff;
+        mediumCount = perDiff;
+        hardCount = total - (easyCount + mediumCount); // Remainder to Hard
+
+        // Type targets
+        if (type === 'True/False') {
+             targetType = 'T/F ONLY';
+             tfCount = total;
+             mcCount = 0;
+        } else if (type === 'Multiple Choice') {
+             targetType = 'MC ONLY';
+             mcCount = total;
+             tfCount = 0;
+        } else {
+             targetType = 'Balanced (Equal MC & T/F)';
+             const half = Math.floor(total / 2);
+             mcCount = half;
+             tfCount = total - half;
+        }
     } else {
         if (difficulty === 'Easy') easyCount = batchNum;
         else if (difficulty === 'Medium') mediumCount = batchNum;
         else if (difficulty === 'Hard') hardCount = batchNum;
 
-        if (type === 'MC') {
+        if (type === 'Multiple Choice' || type === 'MC') {
             targetType = 'MC ONLY';
             mcCount = batchNum;
-        } else if (type === 'T/F') {
+        } else if (type === 'True/False' || type === 'T/F') {
             targetType = 'T/F ONLY';
             tfCount = batchNum;
         }
     }
 
-    const difficultyPrompt = (difficulty === 'Balanced')
-        ? `${easyCount} Easy, ${mediumCount} Medium, ${hardCount} Hard. ${mcCount} MC, ${tfCount} T/F.`
-        : `${batchNum} ${difficulty} questions.`;
+    const difficultyPrompt = (difficulty === 'Balanced' || difficulty === 'Balanced All')
+        ? `STRICT DISTRIBUTION REQUIRED:\n` +
+          `- Easy: ${easyCount} (Mix of MC & T/F)\n` +
+          `- Medium: ${mediumCount} (Mix of MC & T/F)\n` +
+          `- Hard: ${hardCount} (Mix of MC & T/F)\n` +
+          `- Total Types: ${mcCount} Multiple Choice, ${tfCount} True/False.\n` +
+          `Ensure an even spread of types across difficulties (e.g. 1 Easy MC, 1 Easy TF, etc).`
+        : `Generate exactly ${batchNum} ${difficulty} questions.`;
 
     // Temperature-based mode
     const temp = parseFloat(config.temperature) || 0.7;
@@ -285,15 +321,32 @@ To assess professional competence, use these question structures:
     - ** SourceExcerpt:** Copy the ** exact sentence(s) ** from documentation that validates the answer.This is REQUIRED even if URL is empty.
 
 ### 4. Database Output Format
-    ** DO NOT OUTPUT JSON.** Output ** ONLY ** the Markdown table below.No intro / outro text.
-
-| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt | Tags | QualityScore |
-| : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- | : --- |
-| 1 | ${config.discipline} | [MC / TF] | [Diff] | [Question Text] | [Exact Answer Text] | [Option A] | [Option B] | [Option C] | [Option D] | [A / B / C / D] | [https://dev.epicgames.com/...] | [Quote from Doc] | [Tag1, Tag2] | [0-100] |
+    **CRITICAL:** Output **ONLY valid JSON**. No conversational text. No markdown tables.
+    Return a JSON ARRAY of objects with this structure:
+    \`\`\`json
+    [
+        {
+            "Discipline": "${config.discipline}",
+            "Type": "Multiple Choice" or "True/False",
+            "Difficulty": "${difficulty}",
+            "Question": "Question text...",
+            "Answer": "Exact answer text",
+            "OptionA": "...",
+            "OptionB": "...",
+            "OptionC": "...",
+            "OptionD": "...",
+            "CorrectLetter": "A" or "B" or "C" or "D",
+            "SourceURL": "https://dev.epicgames.com/...",
+            "SourceExcerpt": "Quote from doc...",
+            "Tags": "Tag1, Tag2",
+            "QualityScore": 85
+        }
+    ]
+    \`\`\`
 
 ** Task:** Generate ${difficultyPrompt} based on the Input Variables above.
 
-        ${rejectedSection}
+${rejectedSection}
 
 ${config.customRules ? `### Custom Rules\n${config.customRules}` : ''}
 

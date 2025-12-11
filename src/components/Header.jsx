@@ -86,7 +86,7 @@ const Header = ({ apiKeyStatus, isCloudReady, onHome, creatorName, appMode, toke
                             <span className="font-bold">{formattedCost}</span>
                         </div>
                     </div>
-                    {onStartTutorial && ['create', 'review', 'database'].includes(appMode) && (
+                    {onStartTutorial && ['create', 'review', 'database', 'analytics'].includes(appMode) && (
                         <button
                             onClick={() => onStartTutorial(appMode)}
                             className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-900/50"

@@ -6,6 +6,9 @@ const TutorialOverlay = ({ steps, currentStepIndex, onNext, onPrev, onSkip, onCo
     const step = steps[currentStepIndex];
 
     useEffect(() => {
+        let pollInterval;
+        let resizeObserver;
+
         const updatePosition = () => {
             if (!step.target) {
                 setTargetRect(null);
@@ -14,31 +17,60 @@ const TutorialOverlay = ({ steps, currentStepIndex, onNext, onPrev, onSkip, onCo
 
             const element = document.querySelector(step.target);
             if (element) {
-                // Use instant scroll to avoid animation timing issues
-                element.scrollIntoView({ behavior: 'instant', block: 'center' });
+                // If we found it, verify it has dimension
+                const rect = element.getBoundingClientRect();
+                if (rect.width === 0 && rect.height === 0) return;
+
+                // Stop polling if we found it and it has size
+                // (But we might want to keep updating if it moves? No, separate observer for that)
                 
-                // Get position immediately after scroll
-                requestAnimationFrame(() => {
-                    const rect = element.getBoundingClientRect();
-                    // Store viewport coordinates with padding
-                    setTargetRect({
-                        top: rect.top - 10,
-                        left: rect.left - 10,
-                        width: rect.width + 20,
-                        height: rect.height + 20
-                    });
+                // Only scroll if it's the first time finding it for this step
+                // (We don't want to keep scrolling if the user scrolls away)
+                // Actually, for a tutorial, we want to keep it in view? 
+                // Let's scroll once per step change.
+                
+                // We'll calculate position every time updatePosition is called
+                setTargetRect({
+                    top: rect.top - 10,
+                    left: rect.left - 10,
+                    width: rect.width + 20,
+                    height: rect.height + 20
                 });
+
+                // Observe the element for resizing/movement
+                if (!resizeObserver) {
+                    resizeObserver = new ResizeObserver(updatePosition);
+                    resizeObserver.observe(element);
+                }
             } else {
-                // If target not found, just center it (fallback)
                 setTargetRect(null);
             }
         };
 
+        // Initial check
         updatePosition();
+
+        // Scroll into view ONCE when step changes
+        const element = document.querySelector(step.target);
+        if (element) {
+             element.scrollIntoView({ behavior: 'auto', block: 'center' });
+        } else {
+            // Poll for existence
+            pollInterval = setInterval(updatePosition, 100);
+            
+            // Try scrolling again after a delay if found
+            setTimeout(() => {
+                const el = document.querySelector(step.target);
+                if (el) el.scrollIntoView({ behavior: 'auto', block: 'center' });
+            }, 500);
+        }
+
         window.addEventListener('resize', updatePosition);
-        window.addEventListener('scroll', updatePosition, true); // Capture scroll events
+        window.addEventListener('scroll', updatePosition, true);
 
         return () => {
+            if (pollInterval) clearInterval(pollInterval);
+            if (resizeObserver) resizeObserver.disconnect();
             window.removeEventListener('resize', updatePosition);
             window.removeEventListener('scroll', updatePosition, true);
         };
@@ -149,7 +181,7 @@ const TutorialOverlay = ({ steps, currentStepIndex, onNext, onPrev, onSkip, onCo
         <div className="fixed inset-0 z-[9999] overflow-hidden">
             {/* Dimmed Background with Cutout */}
             {targetRect ? (
-                <div className="absolute inset-0 bg-black/70 transition-all duration-300 ease-in-out" style={{
+                <div className="absolute inset-0 bg-black/70" style={{
                     clipPath: `polygon(
                         0% 0%, 
                         0% 100%, 
@@ -170,7 +202,7 @@ const TutorialOverlay = ({ steps, currentStepIndex, onNext, onPrev, onSkip, onCo
             {/* Highlight Border */}
             {targetRect && (
                 <div
-                    className="absolute border-2 border-indigo-500 rounded-lg shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all duration-300 ease-in-out pointer-events-none"
+                    className="absolute border-2 border-indigo-500 rounded-lg shadow-[0_0_20px_rgba(99,102,241,0.5)] pointer-events-none"
                     style={{
                         top: targetRect.top,
                         left: targetRect.left,

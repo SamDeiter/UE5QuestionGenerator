@@ -115,6 +115,7 @@ const ReviewProgressBar = ({ question, onCritique, onVerify, onAccept, onFix, is
                                 ${step.locked ? 'opacity-40 cursor-not-allowed' : ''}
                             `}
                             title={step.locked ? 'Complete previous step first' : step.sublabel}
+                            data-tour={step.num === 1 ? "critique-button" : undefined}
                         >
                             {/* Circle */}
                             <div className={`
