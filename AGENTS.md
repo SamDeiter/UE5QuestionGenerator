@@ -11,9 +11,7 @@ This project uses the **Google Antigravity** platform to drive agentic developme
 4. **Security**: Always consider security implications of changes.
 5. **Performance**: Monitor and optimize bundle size and render performance.
 
-## Workflows
-
-## 2. Agent Workflow & Mode Selection
+## Agent Workflow & Mode Selection
 
 Antigravity agents operate in different modes that should be selected based on the complexity of the task.
 
@@ -21,14 +19,15 @@ Antigravity agents operate in different modes that should be selected based on t
 
 **The user is on Windows. To prevent UI freezing, you must strictly adhere to this serialized workflow:**
 
-1.  **Single-Threaded Execution**: Never run multiple complex sub-agents in parallel.
-2.  **Atomic Steps**: Break requests into a numbered list. Execute Step 1, Verify, then Step 2.
-3.  **Phase Your Work**: For large features, explicitly ask the user: "I will tackle this in phases. Phase 1 is [Task]. Proceed?"
+1. **Single-Threaded Execution**: Never run multiple complex sub-agents in parallel.
+2. **Atomic Steps**: Break requests into a numbered list. Execute Step 1, Verify, then Step 2.
+3. **Phase Your Work**: For large features, explicitly ask the user: "I will tackle this in phases. Phase 1 is [Task]. Proceed?"
 
-| Mode              | Task Type                              | Best Practice                   |
-| :---------------- | :------------------------------------- | :------------------------------ |
-| **Planning Mode** | **New Features, Complex Bug Fixes...** | **Always use Planning Mode**... |
-| **Fast Mode**     | **Simple, Localized Tasks...**         | Use for quick edits...          |
+| Mode               | Task Type                                             | Best Practice                                              |
+| :----------------- | :---------------------------------------------------- | :--------------------------------------------------------- |
+| **Planning Mode**  | New features, complex bug fixes, architecture changes | Always create implementation plan first, get user approval |
+| **Execution Mode** | Implementing approved plans                           | Follow plan, test as you go, commit frequently             |
+| **Fast Mode**      | Simple edits, renames, quick fixes                    | Use for quick edits, skip planning artifacts               |
 
 ### Planning Phase
 
@@ -63,26 +62,43 @@ npm test         # Run tests
 ### Deployment
 
 ```bash
-npm run deploy   # Deploy to GitHub Pages
+npm run deploy              # Deploy to GitHub Pages
+firebase deploy --only functions  # Deploy Cloud Functions
 ```
+
+Deploy scripts are located in `scripts/` directory.
 
 ## Key Files to Update
 
 When making changes, remember to update:
 
-- `AGENTS.md` - This file
+- `AGENTS.md` - This file (root - global scope)
+- `README.md` - Project overview
 - `docs/project-context/ANCHOR_MANIFEST.md` - Key component list
 - `docs/` - User and developer documentation
-- `README.md` - Project overview
 
-## Current Priorities (as of Dec 2024)
+## Project Structure
 
-1. **Security** - Implement Firebase Auth, update Firestore rules
-2. **Performance** - Refactor App.jsx and QuestionItem.jsx
-3. **Features** - Interactive tutorial, tagging system, analytics
-4. **UX** - Source validation, deletion feedback
+```text
+├── src/                 # React application source
+│   ├── App.jsx          # Main application component
+│   ├── components/      # UI components
+│   ├── hooks/           # Custom React hooks
+│   ├── services/        # API services (Gemini, Firebase)
+│   └── utils/           # Helper functions
+├── functions/           # Firebase Cloud Functions
+├── scripts/             # Build and deploy scripts
+├── docs/                # Documentation
+│   └── project-context/ # Architecture, licenses, tech stack
+└── public/              # Static assets
+```
 
-See `master_plan.md` in artifacts for detailed roadmap.
+## Current Priorities (as of Dec 2025)
+
+1. **Toast Improvements** - Smart replacement, priority levels (✅ Completed)
+2. **Critique Scoring** - Balanced evaluation prompts (✅ Completed)
+3. **Code Organization** - Root directory cleanup (✅ Completed)
+4. **Features** - Interactive tutorial, tagging system, analytics
 
 ## Communication
 
@@ -96,11 +112,11 @@ See `master_plan.md` in artifacts for detailed roadmap.
 
 Additional project context, architecture diagrams, and task logs are located in the `docs/project-context/` directory.
 
-**Key files moved there include:**
+**Key files include:**
 
 - `ANCHOR_MANIFEST.md` - Project structure reference
 - `ARCHITECTURE.mermaid` - System architecture diagram
 - `TECH_STACK.md` - Technology stack documentation
 - `LICENSES.md` - Detailed licensing information
 - `GEMINI.md` - AI model configuration guide
-- Task tracking files: `CURRENT_TASKS.md`, `TaskQueue.md`, `NEXT_SESSION.md`
+- Task tracking: `CURRENT_TASKS.md`, `TaskQueue.md`, `NEXT_SESSION.md`
