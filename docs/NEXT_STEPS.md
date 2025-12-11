@@ -23,7 +23,7 @@
 
 - [x] **Lint Config:** ESLint config already ignores tools/backups.
 - [x] **Cleanup:** Fixed remaining lint warnings (0 warnings now).
-- [ ] **Pre-commit:** Enforce linting before git commit.
+- [x] **Pre-commit:** Husky + lint-staged enforces ESLint before commit.
 
 ---
 
@@ -33,7 +33,7 @@
 
 ### 2.1 Smart Tools
 
-- [ ] **Auto-Fix:** Add a "Fix it" button next to AI Critiques to automatically apply suggestions.
+- [x] **Auto-Fix:** "APPLY FIX" button applies AI suggestions (keeps question pending for human review).
 - [ ] **Prompt Playground:** A UI to tweak system prompts without editing code.
 
 ### 2.2 Offline Capabilities
