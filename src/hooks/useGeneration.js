@@ -532,18 +532,17 @@ export const useGeneration = (
             const text = await generateContent(effectiveApiKey, sys, prompt, setStatus);
             const newQs = parseQuestions(text);
             if (newQs.length > 0) {
-                // Tag variations with parent ID for tracking
-                const taggedVariations = newQs.map(variation => ({
-                    ...variation,
-                    isVariation: true,
-                    parentQuestionId: q.id,
-                    variationNote: `Alternative version of: "${q.question.substring(0, 50)}..."`
-                }));
+                // Attach variations directly to the original question
+                const updatedOriginal = {
+                    ...q,
+                    alternatives: newQs, // Store alternatives array
+                    hasAlternatives: true
+                };
                 
-                const uniqueNewQuestions = await checkAndStoreQuestions(taggedVariations);
-                addQuestionsToState(uniqueNewQuestions, false);
+                // Update the original question with alternatives
+                updateQuestionInState(q.id, () => updatedOriginal);
 
-                showMessage(`🔄 Generated ${uniqueNewQuestions.length} alternatives! Navigate to next/previous questions to review them.`, 5000);
+                showMessage(`🔄 Generated ${newQs.length} alternatives! Use arrows to compare versions.`, 5000);
             } else {
                 showMessage("⚠️ No variations generated. Try again.", 3000);
             }
