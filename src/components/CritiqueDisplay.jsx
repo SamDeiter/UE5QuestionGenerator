@@ -218,7 +218,7 @@ const CritiqueDisplay = ({ critique, onRewrite, isProcessing, suggestedRewrite, 
                                     >
                                         WHY?
                                     </button>
-                                ))}
+                                )}
                                 {onVariate && (
                                     <button
                                         onClick={onVariate}
