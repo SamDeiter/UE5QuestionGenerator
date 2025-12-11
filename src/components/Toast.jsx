@@ -46,7 +46,7 @@ const Toast = ({ message, type = 'info', onClose, action = null, duration = 5000
         <div 
             className={`
                 ${bgColors[type] || bgColors.info} 
-                border rounded-lg shadow-2xl p-4 max-w-md backdrop-blur-sm 
+                border rounded-lg shadow-2xl p-4 max-w-lg backdrop-blur-sm 
                 transition-all duration-200
                 ${isExiting ? 'opacity-0 translate-x-4' : 'animate-in slide-in-from-right'}
             `}
@@ -59,7 +59,7 @@ const Toast = ({ message, type = 'info', onClose, action = null, duration = 5000
                         size={20} 
                         className={`text-white flex-shrink-0 ${type === 'progress' ? 'animate-spin' : ''}`} 
                     />
-                    <span className="text-white font-medium truncate">{message}</span>
+                    <span className="text-white font-medium text-sm leading-snug">{message}</span>
                 </div>
                 
                 <div className="flex items-center gap-2 flex-shrink-0">

@@ -542,7 +542,7 @@ export const useGeneration = (
                 // Update the original question with alternatives
                 updateQuestionInState(q.id, () => updatedOriginal);
 
-                showMessage(`🔄 Generated ${newQs.length} alternatives! Use arrows to compare versions.`, 5000);
+                showMessage(`🔄 ${newQs.length} alternative(s) ready! Use ← → arrows.`, 3000);
             } else {
                 showMessage("⚠️ No variations generated. Try again.", 3000);
             }
