@@ -1,0 +1,6 @@
+graph TD
+    App --> Sidebar
+    Sidebar --> useGeneration
+    useGeneration --> GeminiService[services/gemini.js]
+    App --> ReviewMode
+    ReviewMode --> QuestionItem
