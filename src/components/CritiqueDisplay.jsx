@@ -1,5 +1,6 @@
 import Icon from "./Icon";
 import { computeWordDiff } from "../utils/stringHelpers";
+import { QUALITY_PASS_THRESHOLD } from "../utils/constants";
 
 // Simple markdown to HTML converter
 const parseMarkdown = (text) => {
@@ -247,19 +248,28 @@ const CritiqueDisplay = ({
             </div>
             <div className="flex items-center gap-3">
               {/* FIX IT button - applies rewrite but keeps question PENDING for human review */}
+              {/* Only enabled when score < 60 (needs improvement) */}
               {onApplyRewrite && (
                 <button
                   onClick={onApplyRewrite}
-                  disabled={isProcessing}
+                  disabled={isProcessing || score >= QUALITY_PASS_THRESHOLD}
                   className={`px-5 py-2.5 rounded-lg text-white text-sm font-bold transition-all flex items-center gap-2 shadow-lg ${
-                    isProcessing
+                    isProcessing || score >= QUALITY_PASS_THRESHOLD
                       ? "bg-slate-700 cursor-not-allowed opacity-50"
                       : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 shadow-green-900/50"
                   }`}
-                  title="Apply AI improvements (question stays pending for your review)"
+                  title={
+                    score >= QUALITY_PASS_THRESHOLD
+                      ? "Score is acceptable - no fix needed"
+                      : "Apply AI improvements (question stays pending for your review)"
+                  }
                 >
                   <Icon name="zap" size={16} />
-                  {isProcessing ? "Applying..." : "APPLY FIX"}
+                  {isProcessing
+                    ? "Applying..."
+                    : score >= QUALITY_PASS_THRESHOLD
+                    ? "NO FIX NEEDED"
+                    : "APPLY FIX"}
                 </button>
               )}
 

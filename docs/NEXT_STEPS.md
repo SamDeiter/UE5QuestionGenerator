@@ -34,6 +34,7 @@
 ### 2.1 Smart Tools
 
 - [x] **Auto-Fix:** "APPLY FIX" button applies AI suggestions (keeps question pending for human review).
+- [ ] **Reduce Hardcoded Values:** Consolidate magic numbers into `constants.js` (e.g., `QUALITY_PASS_THRESHOLD = 70`).
 - [ ] **Prompt Playground:** A UI to tweak system prompts without editing code.
 
 ### 2.2 Offline Capabilities
