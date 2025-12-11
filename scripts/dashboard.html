@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Mission Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0d1117; color: #c9d1d9; font-family: monospace; }
+        .drag-active { border-color: #3fb950 !important; background-color: #0f2d18; }
+    </style>
+</head>
+<body class="p-6 h-screen flex flex-col gap-4">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center border-b border-gray-700 pb-4">
+        <h1 class="text-xl font-bold text-blue-400">🤖 Agent Mission Control</h1>
+        <button onclick="save()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold">
+            SAVE UPDATES (Ctrl+S)
+        </button>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="flex-1 grid grid-cols-2 gap-6 min-h-0">
+        
+        <!-- Editor Column -->
+        <div class="flex flex-col gap-2 h-full">
+            <label class="text-gray-400 font-bold">📄 CURRENT_TASKS.md</label>
+            <textarea id="editor" 
+                class="flex-1 bg-gray-900 border border-gray-700 p-4 rounded text-sm focus:border-blue-500 outline-none resize-none leading-relaxed"
+                spellcheck="false"></textarea>
+        </div>
+
+        <!-- Controls Column -->
+        <div class="flex flex-col gap-4">
+            
+            <!-- Quick Add -->
+            <div class="bg-gray-800 p-4 rounded border border-gray-700">
+                <h3 class="font-bold text-yellow-400 mb-2">⚡ Quick Add Task</h3>
+                <div class="flex gap-2">
+                    <input type="text" id="newTask" placeholder="Refactor the sidebar..." 
+                        class="flex-1 bg-gray-900 border border-gray-600 p-2 rounded text-white"
+                        onkeypress="if(event.key === 'Enter') addTask()">
+                    <button onclick="addTask()" class="bg-blue-600 px-4 rounded text-white hover:bg-blue-700">+</button>
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="addFeedback()" class="text-xs bg-red-900 text-red-200 px-2 py-1 rounded hover:bg-red-800">Add Correction</button>
+                    <button onclick="markDone()" class="text-xs bg-gray-700 text-gray-200 px-2 py-1 rounded hover:bg-gray-600">Mark Top Done</button>
+                </div>
+            </div>
+
+            <!-- Image Drop Zone -->
+            <div id="dropZone" 
+                class="flex-1 border-2 border-dashed border-gray-600 rounded flex flex-col items-center justify-center text-gray-500 hover:border-blue-500 transition-colors cursor-pointer relative"
+                ondragover="event.preventDefault(); this.classList.add('drag-active')"
+                ondragleave="this.classList.remove('drag-active')"
+                ondrop="handleDrop(event)">
+                <p class="text-4xl mb-2">📸</p>
+                <p>Drag & Drop Images Here</p>
+                <p class="text-xs mt-2 text-gray-600">Will be added to "Reference Images"</p>
+                <input type="file" id="fileInput" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFile(this.files[0])">
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+
+        // Load tasks on startup
+        async function load() {
+            const res = await fetch('/api/tasks');
+            editor.value = await res.text();
+        }
+
+        // Save tasks
+        async function save() {
+            await fetch('/api/tasks', { method: 'POST', body: editor.value });
+            const btn = document.querySelector('button[onclick="save()"]');
+            const originalText = btn.innerText;
+            btn.innerText = "SAVED!";
+            setTimeout(() => btn.innerText = originalText, 1000);
+        }
+
+        // Keyboard Shortcut
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                save();
+            }
+        });
+
+        // Quick Actions
+        function addTask() {
+            const input = document.getElementById('newTask');
+            if (!input.value) return;
+            
+            const lines = editor.value.split('\n');
+            const queueIndex = lines.findIndex(l => l.includes('## 📥 Upcoming Tasks'));
+            
+            if (queueIndex !== -1) {
+                lines.splice(queueIndex + 1, 0, `- [ ] ${input.value}`);
+                editor.value = lines.join('\n');
+                input.value = '';
+                save();
+            }
+        }
+
+        function addFeedback() {
+            const lines = editor.value.split('\n');
+            const feedbackIndex = lines.findIndex(l => l.includes('## 🛑 Feedback'));
+            if (feedbackIndex !== -1) {
+                lines.splice(feedbackIndex + 1, 0, `- [ ] CORRECTION: `);
+                editor.value = lines.join('\n');
+                save();
+                editor.focus();
+            }
+        }
+
+        function markDone() {
+            editor.value = editor.value.replace(/- \[ \] /, '- [x] ');
+            save();
+        }
+
+        // Image Handling
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.remove('drag-active');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        }
+
+        async function handleFile(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Manual upload fetch
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' }, // Fake boundary for custom handler
+                body: file // Sending raw file for simple node handler
+            });
+
+            // Re-implementing simplified upload for the specific raw handler in server.js
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", '/api/upload');
+            const formData2 = new FormData();
+            formData2.append("image", file);
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    const { markdown } = JSON.parse(xhr.responseText);
+                    
+                    const lines = editor.value.split('\n');
+                    const imgIndex = lines.findIndex(l => l.includes('## 📸 Reference Images'));
+                    if (imgIndex !== -1) {
+                        lines.splice(imgIndex + 1, 0, markdown);
+                        editor.value = lines.join('\n');
+                        save();
+                    }
+                }
+            };
+            xhr.send(formData2);
+        }
+
+        load();
+    </script>
+</body>
+</html>
