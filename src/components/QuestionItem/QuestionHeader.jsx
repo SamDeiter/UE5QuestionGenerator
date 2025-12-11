@@ -11,6 +11,17 @@ const QuestionHeader = ({ q, getDiffBadgeColor, onKickBack, appMode }) => {
                     </span>
                     <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">{q.type === 'True/False' ? 'T/F' : 'MC'}</span>
 
+                    {/* Variation Badge */}
+                    {q.isVariation && (
+                        <span 
+                            className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-purple-950 text-purple-400 border-purple-900 flex items-center gap-1"
+                            title={q.variationNote || 'Alternative question variation'}
+                        >
+                            <Icon name="git-branch" size={12} />
+                            ALT
+                        </span>
+                    )}
+
                     {/* AI Critique Score Badge */}
                     {q.critiqueScore !== undefined && q.critiqueScore !== null && (
                         <span
