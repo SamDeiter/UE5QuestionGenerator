@@ -100,7 +100,9 @@ const TermsOfUseModal = ({ isOpen, onAccept, onDecline }) => {
                     <section>
                         <h3 className="text-lg font-bold text-blue-400 mb-3">Privacy & Data</h3>
                         <p className="text-sm">
-                            Your data is processed according to our Privacy Policy. Key points:
+                            Your data is processed according to our{' '}
+                            <a href="https://legal.epicgames.com/en-US/epicgames/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Privacy Policy</a>.
+                            Key points:
                         </p>
                         <ul className="text-sm space-y-1 list-disc list-inside mt-2">
                             <li>Data stored in Google Firebase (USA)</li>
@@ -109,7 +111,7 @@ const TermsOfUseModal = ({ isOpen, onAccept, onDecline }) => {
                             <li>You can export or delete your data anytime</li>
                         </ul>
                         <p className="text-xs mt-2">
-                            See <strong>LICENSES.md</strong> for full privacy details and GDPR rights.
+                            See <a href="https://www.epicgames.com/site/en-US/tos" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Terms of Service</a> for full legal terms.
                         </p>
                     </section>
 

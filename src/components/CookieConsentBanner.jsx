@@ -88,7 +88,9 @@ const CookieConsentBanner = () => {
 
                         <p className="text-xs text-slate-500">
                             <strong>GDPR Rights:</strong> You can change your preferences anytime in Settings.
-                            Data is stored in Google Firebase (USA). See <a href="https://github.com/SamDeiter/UE5QuestionGenerator/blob/main/LICENSES.md" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">LICENSES.md</a> for full privacy details.
+                            Data is stored in Google Firebase (USA). See our{' '}
+                            <a href="https://legal.epicgames.com/en-US/epicgames/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Privacy Policy</a>
+                            {' '}for full details.
                         </p>
                     </div>
 

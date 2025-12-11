@@ -12,6 +12,7 @@ import ToastContainer from './components/ToastContainer';
 import GlobalModals from './components/GlobalModals';
 import MainLayout from './components/MainLayout';
 import CrashRecoveryPrompt from './components/CrashRecoveryPrompt';
+import Footer from './components/Footer';
 import SignIn from './components/SignIn';
 import ApiKeyModal from './components/ApiKeyModal';
 
@@ -427,6 +428,9 @@ const App = () => {
             />
 
             {/* API Key Modal - Simple popup for Configure Now button */}
+
+            {/* Footer */}
+            <Footer />
 
             {/* TOAST NOTIFICATIONS */}
             <ToastContainer toasts={toasts} onRemove={removeToast} />
