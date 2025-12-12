@@ -70,8 +70,6 @@ const Sidebar = ({
             showMessage={showMessage}
             setShowGenSettings={setShowGenSettings}
           />
-
-          <CustomRules config={config} handleChange={handleChange} />
         </>
       )}
 
@@ -114,6 +112,9 @@ const Sidebar = ({
       <div className="mt-4 pt-4 border-t border-slate-800">
         <TokenUsageDisplay showDetailed={true} />
       </div>
+
+      {/* Custom Rules - At the bottom */}
+      {isAdmin && <CustomRules config={config} handleChange={handleChange} />}
 
       <div className="mt-4 pt-4 border-slate-800">
         <button
