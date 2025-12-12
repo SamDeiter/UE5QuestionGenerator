@@ -44,31 +44,43 @@ VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
 
 ## Switching Environments
 
-### Option 1: Python Script (Recommended)
+> [!TIP]
+> **Quick Start:** Just run one of these commands to switch AND start the dev server:
 
+### 🟢 Switch to DEVELOPMENT
 ```powershell
-# Switch to development
-python scripts/switch_env.py dev
-
-# Switch to production  
-python scripts/switch_env.py prod
-
-# Check current environment
-python scripts/switch_env.py
+npm run dev:dev
 ```
 
-After switching, restart your dev server:
+### 🔴 Switch to PRODUCTION
+```powershell
+npm run dev:prod
+```
+
+### Other Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run env:dev` | Switch to dev (without starting server) |
+| `npm run env:prod` | Switch to prod (without starting server) |
+| `npm run env:check` | Show current environment |
+
+### What Happens When You Switch
+
+1. The script copies `.env.development` or `.env.production` → `.env.local`
+2. Vite reads from `.env.local` on startup
+3. The app displays "CLOUD DEV" (green) or "CLOUD PROD" (red) in the header
+4. Your version badge shows `v1.7-DEV` or `v1.7-PROD`
+
+### Manual Switch (Alternative)
 
 ```powershell
+# Copy the appropriate env file
+copy .env.production .env.local
+
+# Restart dev server
 npm run dev
 ```
-
-### Option 2: Manual Switch
-
-1. Copy the appropriate env file to `.env.local`:
-   - Development: `copy .env.development .env.local`
-   - Production: `copy .env.production .env.local`
-2. Restart dev server
 
 ---
 

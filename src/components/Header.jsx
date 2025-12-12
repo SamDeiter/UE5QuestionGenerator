@@ -2,6 +2,11 @@ import Icon from "./Icon";
 import useConnectionStatus from "../hooks/useConnectionStatus";
 
 const APP_VERSION = "v1.7";
+const getVersionDisplay = () => {
+  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || '';
+  const isProd = projectId.includes('prod');
+  return { version: `${APP_VERSION}-${isProd ? 'PROD' : 'DEV'}`, isProd };
+};
 
 const Header = ({
   apiKeyStatus,
@@ -98,9 +103,14 @@ const Header = ({
               >
                 {getBadgeText()}
               </span>
-              <span className="text-xs text-slate-500 font-mono border border-slate-800 rounded px-1.5 py-0.5">
-                {APP_VERSION}
-              </span>
+              {(() => {
+                const { version, isProd } = getVersionDisplay();
+                return (
+                  <span className={`text-xs font-mono border rounded px-1.5 py-0.5 ${isProd ? 'text-red-400 border-red-800 bg-red-950/30' : 'text-green-400 border-green-800 bg-green-950/30'}`}>
+                    {version}
+                  </span>
+                );
+              })()}
             </div>
             <p className="text-slate-400 text-xs mt-0.5">{getSubtitle()}</p>
           </div>
