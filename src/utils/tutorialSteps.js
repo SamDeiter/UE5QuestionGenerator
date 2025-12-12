@@ -69,47 +69,47 @@ export const TUTORIAL_SCENARIOS = {
       id: "review-welcome",
       title: "Review Mode",
       content:
-        "Welcome to Review Mode! Every AI-generated question needs human verification before it's approved. This ensures your question bank maintains high quality standards.",
+        "Your job: Review each AI-generated question and decide if it's good enough. Follow along and click each step as we guide you!",
       target: null,
       position: "center",
     },
     {
       id: "review-nav",
-      title: "Navigation Controls",
+      title: "Step 1: Pick a Question",
       content:
-        "Use these controls to navigate between pending questions. The counter shows your current position and total questions waiting for review.",
-      target: '[data-tour="review-area"]',
+        "Use PREV and NEXT buttons to browse pending questions. The counter shows your progress (1 of 6, etc).",
+      target: '[data-tour="review-nav"]',
       position: "bottom",
     },
     {
       id: "review-card",
-      title: "Question Card",
+      title: "Step 2: Read & Check",
       content:
-        "Each question displays:\n• The question text and answer options\n• Difficulty level badge\n• Discipline category\n• Correct answer indicator (green checkmark)\n\nReview each element carefully before making your decision.",
+        "Read the question. Is it clear? Is the highlighted answer correct? Are the other options wrong but believable?",
       target: '[data-tour="review-card"]',
-      position: "right",
+      position: "center",
     },
     {
       id: "critique",
-      title: "AI Critique Tool",
+      title: "Step 3: Run AI Critique",
       content:
-        "Click Critique to get AI feedback on the question quality. The AI analyzes:\n• Clarity and grammar\n• Accuracy of the correct answer\n• Quality of distractor options\n• Difficulty appropriateness\n\nUse this to spot issues you might miss!",
+        "Click the CRITIQUE button! The AI will analyze the question and give you a quality score with feedback. Wait for it to complete before deciding.",
       target: '[data-tour="critique-button"]',
       position: "bottom",
     },
     {
       id: "actions",
-      title: "Accept or Reject",
+      title: "Step 4: Accept or Reject",
       content:
-        "Make your decision:\n• ✓ Accept – Approve and add to Database\n• ✗ Reject – Discard permanently\n• ✎ Edit – Modify before accepting\n\nYou can also request variations or translations from the expanded menu.",
+        "Make your call:\n• ✓ ACCEPT – Good question, add to Database\n• ✗ REJECT – Bad question, discard it\n\nThen click NEXT to continue.",
       target: '[data-tour="review-actions"]',
       position: "top",
     },
     {
       id: "review-done",
-      title: "Quality Matters!",
+      title: "That's It!",
       content:
-        "Remember: Only accept questions that meet your quality standards. It's better to reject and regenerate than to add low-quality questions to your bank.\n\nAccepted questions appear in the Database tab.",
+        "Repeat for each question: Read → Critique → Accept/Reject → Next. Accepted questions appear in the Database tab.",
       target: null,
       position: "center",
     },
