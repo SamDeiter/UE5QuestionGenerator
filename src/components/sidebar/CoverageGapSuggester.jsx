@@ -37,9 +37,10 @@ const CoverageGapSuggester = ({
     (t) => tagCounts[t] > 0 && tagCounts[t] < 3
   );
 
-  // Only show if missing a significant number of topics (User Request: "only ... when you are missing a lot")
-  // Threshold set to 4 missing topics
-  if (zeroCoverageTags.length < 4) return null;
+  // Only show if there are any missing or low coverage topics
+  // Previously required 4 missing topics - now shows if any exist
+  if (zeroCoverageTags.length === 0 && lowCoverageTags.length === 0)
+    return null;
 
   const targetTags =
     zeroCoverageTags.length > 0

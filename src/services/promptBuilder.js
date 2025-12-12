@@ -1,10 +1,13 @@
+import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
+
 /**
- * Optimized Prompt Builder (v1.6)
+ * Optimized Prompt Builder (v1.7)
  * Reduces token usage by ~40% through:
  * - Abbreviated instructions
  * - Dynamic sections (only include when needed)
  * - Consolidated formatting rules
  * - Shorthand for repeated terms
+ * + AI-driven tag assignment based on question content
  */
 
 /**
@@ -19,6 +22,8 @@ export const constructSystemPrompt = (
   fileContext,
   rejectedExamples = []
 ) => {
+  // Get available tags for this discipline
+  const availableTags = TAGS_BY_DISCIPLINE[config.discipline] || [];
   let batchNum = parseInt(config.batchSize) || 6;
   let easyCount = 0,
     mediumCount = 0,
@@ -148,10 +153,13 @@ ${examplesText}
 **Tone:** Professional, direct, and challenging. Avoid "tutorial" language. Sound like a Lead Developer verifying a candidate's knowledge.
 **Input Variables:**
 - Discipline: ${config.discipline}
-- Focus Areas: ${
+- Priority Focus (generate more questions on these): ${
     config.tags && config.tags.length > 0
       ? config.tags.join(", ")
-      : "None specified"
+      : "All topics equally"
+  }
+- Available Tags for ${config.discipline}: ${
+    availableTags.length > 0 ? availableTags.join(", ") : "N/A"
   }
 - Difficulty: ${difficulty}
 - Quantity: ${batchNum}
@@ -369,7 +377,7 @@ ${examplesText}
             "CorrectLetter": "A" or "B" or "C" or "D",
             "SourceURL": "https://dev.epicgames.com/...",
             "SourceExcerpt": "Quote from doc...",
-            "Tags": "Tag1, Tag2",
+            "Tags": "#Tag1, #Tag2 (MUST be from Available Tags list above - pick 1-3 relevant to the question content)",
             "QualityScore": 85
         }
     ]

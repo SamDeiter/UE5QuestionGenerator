@@ -416,7 +416,7 @@ export const useGeneration = (
         model: config.model || "gemini-2.0-flash",
         groundingSources:
           groundingSources.length > 0 ? groundingSources.slice(0, 3) : null, // Store top 3 sources
-        tags: config.tags || [], // Attach active focus tags
+        tags: q.tags && q.tags.length > 0 ? q.tags : config.tags || [], // Use AI-assigned tags, fallback to focus tags
 
         // Enforce config values to ensure they match filters
         discipline: config.discipline,
