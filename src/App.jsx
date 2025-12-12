@@ -3,7 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import { useState } from "react";
+import { useState, useEffect } from "react";
 // UI Components
 
 import LandingPage from "./components/LandingPage";
@@ -281,6 +281,18 @@ const App = () => {
     setShowBulkExportModal,
     setHistoricalQuestions
   );
+
+  // Auto-load database questions on startup for difficulty distribution chart
+  useEffect(() => {
+    if (user && !authLoading) {
+      // Only load once on startup
+      const hasLoaded = sessionStorage.getItem("ue5_db_autoloaded");
+      if (!hasLoaded) {
+        handleLoadFromFirestore();
+        sessionStorage.setItem("ue5_db_autoloaded", "true");
+      }
+    }
+  }, [user, authLoading, handleLoadFromFirestore]);
 
   // 9. Review Actions (bulk operations)
   const {

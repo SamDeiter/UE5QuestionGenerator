@@ -196,7 +196,7 @@ const GenerationSettings = ({
               data-tour="inventory-chart"
             >
               <h4 className="text-[10px] font-bold uppercase text-slate-500 mb-1 flex items-center justify-between">
-                <span>Inventory Distribution</span>
+                <span>Difficulty Distribution</span>
                 <span className="text-[9px] text-slate-600">
                   Total:{" "}
                   {chartData.reduce((acc, curr) => acc + curr.mc + curr.tf, 0)}
