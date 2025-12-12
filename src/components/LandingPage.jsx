@@ -128,7 +128,7 @@ const LandingPage = ({
           </div>
           <h3 className="text-xl font-bold mb-2">Database View</h3>
           <p className="text-xs text-slate-400 text-center">
-            Read-only view of approved questions directly from Google Sheets.
+            Browse all approved questions from the shared Firestore database.
           </p>
         </button>
 

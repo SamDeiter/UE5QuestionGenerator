@@ -86,10 +86,10 @@ export const TUTORIAL_SCENARIOS = {
       position: "right",
     },
     {
-      id: "upload",
-      title: "Step 6: Add Context (Optional)",
+      id: "custom-rules",
+      title: "Step 6: Custom Rules (Optional)",
       content:
-        "Upload PDF documentation to provide additional context. The AI will reference this material when generating questions.",
+        "Add specific constraints or requirements for question generation. For example: 'No code snippets' or 'Focus on UE5.3 features'.",
       target: '[data-tour="file-upload"]',
       position: "right",
     },
