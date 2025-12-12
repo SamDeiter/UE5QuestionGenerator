@@ -16,168 +16,218 @@ admin.initializeApp();
  * 3. Calls Gemini API with server-side key
  * 4. Returns generated content
  */
-exports.generateQuestions = functions.https.onCall(async (data, context) => {
-  // 1. Authentication check
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "User must be authenticated to generate questions."
-    );
-  }
-
-  const userId = context.auth.uid;
-  const {
-    systemPrompt,
-    userPrompt,
-    temperature = 0.2,
-    model = "gemini-2.0-flash",
-  } = data;
-
-  // 2. Input validation
-  if (!systemPrompt || !userPrompt) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "systemPrompt and userPrompt are required."
-    );
-  }
-
-  // 3. Rate limiting check
-  const rateLimitCheck = await checkRateLimit(userId);
-  if (!rateLimitCheck.allowed) {
-    throw new functions.https.HttpsError(
-      "resource-exhausted",
-      `Rate limit exceeded. ${rateLimitCheck.message}`
-    );
-  }
-
-  try {
-    // 4. Get API key from Firebase config
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+exports.generateQuestions = functions
+  .runWith({
+    secrets: ["GEMINI_API_KEY"],
+    timeoutSeconds: 60,
+    memory: "256MB",
+  })
+  .https.onCall(async (data, context) => {
+    // 1. Authentication check
+    if (!context.auth) {
       throw new functions.https.HttpsError(
-        "failed-precondition",
-        'Gemini API key not configured. Run: firebase functions:config:set gemini.api_key="YOUR_KEY"'
+        "unauthenticated",
+        "User must be authenticated to generate questions."
+      );
+    }
+    // ... (start of function body remains)
+
+    const userId = context.auth.uid;
+    const {
+      systemPrompt,
+      userPrompt,
+      temperature = 0.2,
+      model = "gemini-2.0-flash",
+    } = data;
+
+    // 2. Input validation
+    if (!systemPrompt || !userPrompt) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "systemPrompt and userPrompt are required."
       );
     }
 
-    // 5. Call Gemini API
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    // 4. Rate limiting check
+    const rateLimitCheck = await checkRateLimit(userId);
+    if (!rateLimitCheck.allowed) {
+      throw new functions.https.HttpsError(
+        "resource-exhausted",
+        `Rate limit exceeded. ${rateLimitCheck.message}`
+      );
+    }
 
-    const payload = {
-      contents: [{ parts: [{ text: userPrompt }] }],
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      tools: [
-        {
-          googleSearch: {}, // Enable grounding
+    try {
+      // 4. Get API key from Secrets or Config
+      // secrets using .runWith() are available in process.env
+      let apiKey = process.env.GEMINI_API_KEY;
+
+      if (!apiKey) {
+        // Fallback for local emulator or legacy config
+        apiKey = functions.config().gemini?.api_key;
+      }
+
+      if (!apiKey) {
+        console.error("[ERROR] GEMINI_API_KEY secret is not set.");
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "Server configuration error: API Key missing."
+        );
+      }
+
+      // ... rest of logic
+
+      console.log("[DEBUG] API key found, length:", apiKey.length);
+
+      // 5. Call Gemini API
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      console.log(
+        "[DEBUG] Calling Gemini API (SKIPPED FOR DEBUGGING) with model:",
+        model
+      );
+
+      const payload = {
+        contents: [{ parts: [{ text: userPrompt }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        tools: [
+          {
+            googleSearch: {}, // Enable grounding
+          },
+        ],
+        generationConfig: {
+          temperature: temperature,
+          maxOutputTokens: 8192,
         },
-      ],
-      generationConfig: {
-        temperature: temperature,
-        maxOutputTokens: 8192,
-      },
-    };
+      };
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      console.log("[DEBUG] Payload prepared, calling fetch...");
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          `[ERROR] Gemini API failed: ${response.status} ${response.statusText}`,
+          errorText
+        );
+        throw new Error(
+          `Gemini API error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const responseData = await response.json();
+      const generatedText =
+        responseData.candidates?.[0]?.content?.parts?.[0]?.text;
+      const sources = extractGroundingSources(responseData);
+
+      if (!generatedText) {
+        console.error(
+          "[ERROR] No content in Gemini response:",
+          JSON.stringify(responseData)
+        );
+        throw new Error("No content generated from Gemini");
+      }
+
+      // Log usage
+      await logApiUsage(userId, {
+        model: model,
+        type: "generation",
+      });
+
+      return {
+        success: true,
+        textResponse: generatedText,
+        groundingSources: sources,
+      };
+    } catch (error) {
+      console.error("[ERROR] Error details:", JSON.stringify(error, null, 2));
       throw new functions.https.HttpsError(
         "internal",
-        `Gemini API error: ${errorData.error?.message || response.statusText}`
+        `Failed to generate questions: ${error.message}`
       );
     }
-
-    const responseData = await response.json();
-
-    // 6. Log usage for rate limiting
-    await logApiUsage(userId, {
-      model,
-      tokensUsed: responseData.usageMetadata || {},
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    // 7. Return response
-    return {
-      success: true,
-      data: responseData,
-      textResponse:
-        responseData.candidates?.[0]?.content?.parts?.[0]?.text || "",
-      groundingSources: extractGroundingSources(responseData),
-    };
-  } catch (error) {
-    console.error("Error in generateQuestions:", error);
-    throw new functions.https.HttpsError(
-      "internal",
-      `Failed to generate questions: ${error.message}`
-    );
-  }
-});
+  });
 
 /**
  * Cloud Function: generateCritique
  * Securely calls Gemini API for question critique
  */
-exports.generateCritique = functions.https.onCall(async (data, context) => {
-  // Authentication check
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "User must be authenticated."
-    );
-  }
-
-  const userId = context.auth.uid;
-  const { question, options, correct, modeLabel } = data;
-
-  // Input validation
-  if (!question || !options || !correct) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "question, options, and correct are required."
-    );
-  }
-
-  // Rate limiting
-  const rateLimitCheck = await checkRateLimit(userId, "critique");
-  if (!rateLimitCheck.allowed) {
-    throw new functions.https.HttpsError(
-      "resource-exhausted",
-      `Rate limit exceeded. ${rateLimitCheck.message}`
-    );
-  }
-
-  try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+exports.generateCritique = functions
+  .runWith({
+    secrets: ["GEMINI_API_KEY"],
+    timeoutSeconds: 60,
+    memory: "256MB",
+  })
+  .https.onCall(async (data, context) => {
+    // Authentication check
+    if (!context.auth) {
       throw new functions.https.HttpsError(
-        "failed-precondition",
-        "Gemini API key not configured."
+        "unauthenticated",
+        "User must be authenticated."
       );
     }
 
-    // Build critique prompt - Balanced and constructive evaluation
-    const systemPrompt =
-      "Expert UE5 Technical Reviewer. Output valid JSON only. Evaluate objectively and provide constructive feedback.";
+    const userId = context.auth.uid;
+    const { question, options, correct, modeLabel } = data;
 
-    let strictnessInstruction = "";
-    if (modeLabel === "Strict") {
-      strictnessInstruction = `
+    // Input validation
+    if (!question || !options || !correct) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "question, options, and correct are required."
+      );
+    }
+
+    // Rate limiting
+    const rateLimitCheck = await checkRateLimit(userId, "critique");
+    if (!rateLimitCheck.allowed) {
+      throw new functions.https.HttpsError(
+        "resource-exhausted",
+        `Rate limit exceeded. ${rateLimitCheck.message}`
+      );
+    }
+
+    try {
+      let apiKey = process.env.GEMINI_API_KEY;
+
+      if (!apiKey) {
+        try {
+          apiKey = functions.config().gemini?.api_key;
+        } catch (configError) {
+          // Ignore functions.config() errors
+        }
+      }
+
+      if (!apiKey) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "Gemini API key not configured."
+        );
+      }
+
+      // Build critique prompt - Balanced and constructive evaluation
+      const systemPrompt =
+        "Expert UE5 Technical Reviewer. Output valid JSON only. Evaluate objectively and provide constructive feedback.";
+
+      let strictnessInstruction = "";
+      if (modeLabel === "Strict") {
+        strictnessInstruction = `
             CONTEXT: The user requested a STRICT, FOUNDATIONAL question. 
             - If this is obscure, tricky, or niche: DEDUCT 20 POINTS. 
             - If it has multiple valid workflows (ambiguous) without context: DEDUCT 30 POINTS.
             - Must be textbook quality.`;
-    } else if (modeLabel === "Wild") {
-      strictnessInstruction = `
+      } else if (modeLabel === "Wild") {
+        strictnessInstruction = `
             CONTEXT: The user requested a WILD, EDGE-CASE question. 
             - If this is basic or obvious ("Documentation 101"): DEDUCT 20 POINTS.
             - Must be challenging and specific.`;
-    }
+      }
 
-    const userPrompt = `Evaluate this UE5 question as a Senior Technical Reviewer for a professional certification exam.
+      const userPrompt = `Evaluate this UE5 question as a Senior Technical Reviewer for a professional certification exam.
         ${strictnessInstruction}
         
         **SCORING GUIDELINES:** Score based on ACTUAL quality. Use the FULL 0-100 range appropriately:
@@ -210,88 +260,88 @@ exports.generateCritique = functions.https.onCall(async (data, context) => {
         Options: ${JSON.stringify(options)}
         Correct: ${correct}`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: userPrompt }] }],
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 8192,
-          responseMimeType: "application/json",
-        },
-      }),
-    });
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: userPrompt }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 8192,
+            responseMimeType: "application/json",
+          },
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
-    }
-
-    const responseData = await response.json();
-    const rawText =
-      responseData.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-    // Parse JSON response
-    let result;
-    try {
-      const cleanJson = rawText.replace(/```json\n?|\n?```/g, "").trim();
-      result = JSON.parse(cleanJson);
-    } catch {
-      // Fallback: extract score if JSON parsing fails
-      // Try multiple patterns to extract score (Robust Fallback)
-      let score = null;
-      const patterns = [
-        /SCORE:\s*(\d+)/i, // SCORE: 75
-        /"score"\s*:\s*(\d+)/i, // "score": 75
-        /\bscore\s*[:\-=]\s*(\d+)/i, // score: 75, score = 75
-        /(\d+)\s*\/\s*100/i, // 75/100
-        /^(\d{1,3})(?!\d)/m, // Just a number at start of line (0-999)
-      ];
-
-      for (const pattern of patterns) {
-        const match = rawText.match(pattern);
-        if (match) {
-          const parsed = parseInt(match[1]);
-          if (parsed >= 0 && parsed <= 100) {
-            score = parsed;
-            break;
-          }
-        }
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
       }
 
-      result = {
-        score: score !== null ? score : 0, // Default to 0 to signal failure/review needed
-        critique: rawText,
-        rewrite: null,
-        changes: null,
+      const responseData = await response.json();
+      const rawText =
+        responseData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+      // Parse JSON response
+      let result;
+      try {
+        const cleanJson = rawText.replace(/```json\n?|\n?```/g, "").trim();
+        result = JSON.parse(cleanJson);
+      } catch {
+        // Fallback: extract score if JSON parsing fails
+        // Try multiple patterns to extract score (Robust Fallback)
+        let score = null;
+        const patterns = [
+          /SCORE:\s*(\d+)/i, // SCORE: 75
+          /"score"\s*:\s*(\d+)/i, // "score": 75
+          /\bscore\s*[:\-=]\s*(\d+)/i, // score: 75, score = 75
+          /(\d+)\s*\/\s*100/i, // 75/100
+          /^(\d{1,3})(?!\d)/m, // Just a number at start of line (0-999)
+        ];
+
+        for (const pattern of patterns) {
+          const match = rawText.match(pattern);
+          if (match) {
+            const parsed = parseInt(match[1]);
+            if (parsed >= 0 && parsed <= 100) {
+              score = parsed;
+              break;
+            }
+          }
+        }
+
+        result = {
+          score: score !== null ? score : 0, // Default to 0 to signal failure/review needed
+          critique: rawText,
+          rewrite: null,
+          changes: null,
+        };
+      }
+
+      // Log usage
+      await logApiUsage(userId, {
+        model: "gemini-2.0-flash-exp",
+        type: "critique",
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return {
+        success: true,
+        score: result.score,
+        text: result.critique || result.text,
+        rewrite: result.rewrite,
+        changes: result.changes,
       };
+    } catch (error) {
+      console.error("Error in generateCritique:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        `Failed to generate critique: ${error.message}`
+      );
     }
-
-    // Log usage
-    await logApiUsage(userId, {
-      model: "gemini-2.0-flash-exp",
-      type: "critique",
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    return {
-      success: true,
-      score: result.score,
-      text: result.critique || result.text,
-      rewrite: result.rewrite,
-      changes: result.changes,
-    };
-  } catch (error) {
-    console.error("Error in generateCritique:", error);
-    throw new functions.https.HttpsError(
-      "internal",
-      `Failed to generate critique: ${error.message}`
-    );
-  }
-});
+  });
 
 /**
  * Rate limiting helper

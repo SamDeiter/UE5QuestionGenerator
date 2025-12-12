@@ -32,16 +32,24 @@ import {
 // but explicit tokens provide defense-in-depth.
 
 // Your web app's Firebase configuration
-// SECURITY: Firebase config now uses environment variables ONLY
-// No fallback values to prevent accidental API key exposure
+// SECURITY: Firebase config now uses environment variables with fallbacks
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey:
+    import.meta.env.VITE_FIREBASE_API_KEY ||
+    "AIzaSyA1g9RCrRH8AxuFUOLRRPxwqmXda6ChWCI",
+  authDomain:
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ||
+    "ue5questionssoure.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "ue5questionssoure",
+  storageBucket:
+    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
+    "ue5questionssoure.firebasestorage.app",
+  messagingSenderId:
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "10200378954",
+  appId:
+    import.meta.env.VITE_FIREBASE_APP_ID ||
+    "1:10200378954:web:5aaa8eb97cce0a4a6840b3",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-31HMNEB7S5",
 };
 
 // Initialize Firebase
@@ -250,40 +258,34 @@ export const saveQuestionToFirestore = async (question) => {
  */
 export const getQuestionsFromFirestore = async () => {
   try {
-    // Try user-specific query first
-    if (auth.currentUser) {
-      const userQuery = query(
-        collection(db, "questions"),
-        where("creatorId", "==", auth.currentUser.uid)
-      );
-      const userSnapshot = await getDocs(userQuery);
+    // Require authentication
+    if (!auth.currentUser) {
+      console.log("⚠️ No user signed in, cannot load questions");
+      return [];
+    }
 
-      // If user has questions, return them
-      if (!userSnapshot.empty) {
-        const questions = [];
-        userSnapshot.forEach((doc) => {
-          questions.push(doc.data());
-        });
-        console.log(
-          `✅ Loaded ${questions.length} questions for user ${auth.currentUser.uid}`
-        );
-        return questions;
-      }
+    // Load user-specific questions only
+    const userQuery = query(
+      collection(db, "questions"),
+      where("creatorId", "==", auth.currentUser.uid)
+    );
+    const userSnapshot = await getDocs(userQuery);
 
-      // If no user questions found, load all (for migration/debug)
+    const questions = [];
+    userSnapshot.forEach((doc) => {
+      questions.push(doc.data());
+    });
+
+    if (questions.length === 0) {
       console.log(
-        `⚠️ No questions found for user ${auth.currentUser.uid}, loading all questions`
+        `📭 No questions found for user ${auth.currentUser.uid} (this is normal for new users)`
+      );
+    } else {
+      console.log(
+        `✅ Loaded ${questions.length} questions for user ${auth.currentUser.uid}`
       );
     }
 
-    // Fallback: Load all questions (unauthenticated or no user questions)
-    const allQuery = collection(db, "questions");
-    const querySnapshot = await getDocs(allQuery);
-    const questions = [];
-    querySnapshot.forEach((doc) => {
-      questions.push(doc.data());
-    });
-    console.log(`✅ Loaded ${questions.length} questions (all users)`);
     return questions;
   } catch (error) {
     console.error("Error getting questions from Firestore:", error);

@@ -13,6 +13,35 @@ This document covers how to switch between **Development** and **Production** en
 
 ---
 
+## Initial Setup
+
+> [!IMPORTANT]
+> Before environment switching works, you must have both `.env.development` and `.env.production` files.
+
+### Creating Environment Files
+
+1. **Production file** (`.env.production`):
+   - Get Firebase config from: [Firebase Console](https://console.firebase.google.com/project/ue5-questions-prod/settings/general)
+   - Create `.env.production` with your prod Firebase credentials
+
+2. **Development file** (`.env.development`):
+   - Get Firebase config from: [Firebase Console](https://console.firebase.google.com/project/ue5questionssoure/settings/general)
+   - Create `.env.development` with your dev Firebase credentials
+
+Template format:
+
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
+
+---
+
 ## Switching Environments
 
 ### Option 1: Python Script (Recommended)

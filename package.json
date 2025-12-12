@@ -12,7 +12,13 @@
     "test": "vitest",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "prepare": "husky"
+    "prepare": "husky",
+    "env:dev": "python scripts/switch_env.py dev",
+    "env:prod": "python scripts/switch_env.py prod",
+    "env:check": "python scripts/switch_env.py",
+    "functions:check": "python scripts/test_cloud_functions.py",
+    "dev:dev": "python scripts/switch_env.py dev && vite",
+    "dev:prod": "python scripts/switch_env.py prod && vite"
   },
   "dependencies": {
     "crypto-js": "^4.2.0",
