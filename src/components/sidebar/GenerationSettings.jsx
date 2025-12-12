@@ -267,7 +267,7 @@ const GenerationSettings = ({
           </div>
 
           {/* ═══════════════════════════════════════════════════════════════
-                       FOCUS & MODEL SETTINGS - Collapsed by default
+                       TAGS SETTINGS - Collapsed by default
                        ═══════════════════════════════════════════════════════════════ */}
           <div className="border border-slate-700 rounded-lg overflow-hidden">
             <button
@@ -276,7 +276,7 @@ const GenerationSettings = ({
               data-tour="advanced-settings"
             >
               <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1">
-                <Icon name="settings" size={12} /> Focus & Model
+                <Icon name="tag" size={12} /> Tags
                 {(config.tags?.length > 0 ||
                   config.model !== "gemini-2.0-flash") && (
                   <span className="ml-2 px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded text-[9px]">
