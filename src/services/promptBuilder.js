@@ -60,33 +60,21 @@ export const constructSystemPrompt = (
     mediumCount = perDiff;
     hardCount = total - (easyCount + mediumCount); // Remainder to Hard
 
-    // Type targets
-    if (type === "True/False") {
-      targetType = "T/F ONLY";
-      tfCount = total;
-      mcCount = 0;
-    } else if (type === "Multiple Choice") {
-      targetType = "MC ONLY";
-      mcCount = total;
-      tfCount = 0;
-    } else {
-      targetType = "Balanced (Equal MC & T/F)";
-      const half = Math.floor(total / 2);
-      mcCount = half;
-      tfCount = total - half;
-    }
+    // ALWAYS BALANCED: Enforce 50/50 MC and T/F
+    targetType = "Balanced (Equal MC & T/F)";
+    const half = Math.floor(total / 2);
+    mcCount = half;
+    tfCount = total - half;
   } else {
     if (difficulty === "Easy") easyCount = batchNum;
     else if (difficulty === "Medium") mediumCount = batchNum;
     else if (difficulty === "Hard") hardCount = batchNum;
 
-    if (type === "Multiple Choice" || type === "MC") {
-      targetType = "MC ONLY";
-      mcCount = batchNum;
-    } else if (type === "True/False" || type === "T/F") {
-      targetType = "T/F ONLY";
-      tfCount = batchNum;
-    }
+    // ALWAYS BALANCED: Even for single-difficulty, enforce 50/50 MC:T/F
+    targetType = "Balanced (Equal MC & T/F)";
+    const half = Math.floor(batchNum / 2);
+    mcCount = half;
+    tfCount = batchNum - half;
   }
 
   const difficultyPrompt =
@@ -186,13 +174,15 @@ ${examplesText}
 4. **Tag Assignment**: Every question MUST have 1-3 tags from the Available Tags list that accurately describe its content.
 
 **SMART PRIORITIZATION:**
-${coverageGaps && (coverageGaps.zeroTags?.length > 0 || coverageGaps.lowTags?.length > 0)
+${
+  coverageGaps &&
+  (coverageGaps.zeroTags?.length > 0 || coverageGaps.lowTags?.length > 0)
     ? `⚠️ The following topics have ZERO or LOW coverage - PRIORITIZE THESE:
 - Zero coverage (MUST include): ${coverageGaps.zeroTags?.join(", ") || "None"}
 - Low coverage (prioritize): ${coverageGaps.lowTags?.join(", ") || "None"}
 Generate at least 50% of questions using these underrepresented tags.`
     : `No specific gaps detected. Spread questions evenly across all available tags.`
-  }
+}
 
 ---
 

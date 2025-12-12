@@ -1,12 +1,4 @@
 import React, { useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import { listModels } from "../../services/gemini";
 import Icon from "../Icon";
 import InfoTooltip from "../InfoTooltip";
@@ -177,20 +169,17 @@ const GenerationSettings = ({
                 <label className="text-xs font-bold uppercase text-slate-400">
                   Type
                 </label>
-                <select
-                  name="type"
-                  data-tour="type-selector"
-                  value={config.type || "Multiple Choice"}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500"
-                >
-                  <option value="Multiple Choice">Multiple Choice</option>
-                  <option value="True/False">True/False</option>
-                </select>
+                <div className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-300">
+                  Balanced (50/50 MC & T/F)
+                </div>
+                <p className="text-[9px] text-slate-500">
+                  Every batch generates equal Multiple Choice and True/False
+                  questions
+                </p>
               </div>
             </div>
 
-            {/* 📊 Inventory Stats Chart */}
+            {/* 📊 Inventory Stats Chart with Quota Progress */}
             <div
               className="mt-3 p-2 bg-slate-950/50 rounded border border-slate-800"
               data-tour="inventory-chart"
@@ -202,48 +191,77 @@ const GenerationSettings = ({
                   {chartData.reduce((acc, curr) => acc + curr.mc + curr.tf, 0)}
                 </span>
               </h4>
-              <div className="h-20 w-full" style={{ minHeight: "80px" }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={chartData}
-                    layout="vertical"
-                    barSize={12}
-                    margin={{ top: 0, right: 10, left: 0, bottom: 0 }}
-                  >
-                    <XAxis type="number" hide />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      width={65}
-                      tick={{ fill: "#94a3b8", fontSize: 9 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1e293b",
-                        borderColor: "#334155",
-                        fontSize: "10px",
-                      }}
-                      itemStyle={{ padding: 0 }}
-                      cursor={{ fill: "transparent" }}
-                    />
-                    <Bar
-                      dataKey="mc"
-                      name="Multiple Choice"
-                      stackId="a"
-                      fill="#3b82f6"
-                      radius={[0, 2, 2, 0]}
-                    />
-                    <Bar
-                      dataKey="tf"
-                      name="True/False"
-                      stackId="a"
-                      fill="#a855f7"
-                      radius={[0, 2, 2, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+
+              {/* Per-difficulty quota breakdown */}
+              <div className="space-y-2 mb-2">
+                {chartData.map((row) => (
+                  <div key={row.name} className="text-[9px]">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-slate-400 font-medium">
+                        {row.name}
+                      </span>
+                      <span className="text-slate-500">
+                        {row.mc + row.tf}/66
+                      </span>
+                    </div>
+                    <div className="flex gap-1">
+                      {/* MC progress bar */}
+                      <div className="flex-1">
+                        <div className="flex justify-between text-[8px] text-slate-500 mb-0.5">
+                          <span className="text-blue-400">MC</span>
+                          <span
+                            className={
+                              row.mc >= 33
+                                ? "text-green-400"
+                                : row.mc >= 28
+                                ? "text-yellow-400"
+                                : ""
+                            }
+                          >
+                            {row.mc}/33
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-slate-800 rounded overflow-hidden">
+                          <div
+                            className={`h-full transition-all ${
+                              row.mc >= 33 ? "bg-green-500" : "bg-blue-500"
+                            }`}
+                            style={{
+                              width: `${Math.min(100, (row.mc / 33) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                      {/* T/F progress bar */}
+                      <div className="flex-1">
+                        <div className="flex justify-between text-[8px] text-slate-500 mb-0.5">
+                          <span className="text-purple-400">T/F</span>
+                          <span
+                            className={
+                              row.tf >= 33
+                                ? "text-green-400"
+                                : row.tf >= 28
+                                ? "text-yellow-400"
+                                : ""
+                            }
+                          >
+                            {row.tf}/33
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-slate-800 rounded overflow-hidden">
+                          <div
+                            className={`h-full transition-all ${
+                              row.tf >= 33 ? "bg-green-500" : "bg-purple-500"
+                            }`}
+                            style={{
+                              width: `${Math.min(100, (row.tf / 33) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
