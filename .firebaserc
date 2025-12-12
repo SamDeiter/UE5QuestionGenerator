@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "ue5questionssoure"
+    "default": "ue5questionssoure",
+    "dev": "ue5questionssoure",
+    "prod": "ue5-questions-prod"
   }
 }
