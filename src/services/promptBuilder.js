@@ -174,6 +174,13 @@ ${examplesText}
 - Language: ${config.language}
 - Mode: ${modeInstruction || "Standard"}
 
+### TAG DISTRIBUTION RULE (CRITICAL)
+**Each tag MUST appear across ALL difficulty levels.** Do NOT cluster all questions for a tag at one difficulty.
+- Example: If using #Nanite tag, ensure there are #Nanite questions at Easy, Medium, AND Hard levels.
+- For each focus tag, spread questions evenly across Easy, Medium, and Hard.
+- Avoid: 5 Easy #Nanite questions and 0 Hard #Nanite questions.
+- Goal: Complete coverage matrix (each tag × each difficulty level).
+
 ---
 
 ### 1. Style & Format Rules

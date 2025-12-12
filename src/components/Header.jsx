@@ -13,7 +13,10 @@ const getVersionDisplay = () => {
     projectId.includes("prod")
   );
   const isProd = projectId.includes("prod");
-  return { version: `${APP_VERSION}-${isProd ? "PROD" : "DEV"}`, isProd };
+  // Get git commit hash from build-time define (set in vite.config.js)
+  const gitCommit = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : '';
+  const commitSuffix = gitCommit ? `-${gitCommit}` : '';
+  return { version: `${APP_VERSION}${commitSuffix}-${isProd ? "PROD" : "DEV"}`, isProd };
 };
 
 const Header = ({
