@@ -1,6 +1,6 @@
 import Icon from "./Icon";
 import { computeWordDiff } from "../utils/stringHelpers";
-import { QUALITY_PASS_THRESHOLD } from "../utils/constants";
+import { QUALITY_PASS_THRESHOLD, QUALITY_THRESHOLDS } from "../utils/constants";
 
 // Simple markdown to HTML converter
 const parseMarkdown = (text) => {
@@ -94,11 +94,11 @@ const CritiqueDisplay = ({
 
   // Color coding based on score
   const getScoreColor = (score) => {
-    if (score >= 90)
+    if (score >= QUALITY_THRESHOLDS.EXCELLENT)
       return "bg-green-900/30 border-green-700/50 text-green-300";
-    if (score >= 70)
+    if (score >= QUALITY_THRESHOLDS.PASS)
       return "bg-yellow-900/30 border-yellow-700/50 text-yellow-300";
-    if (score >= 50)
+    if (score >= QUALITY_THRESHOLDS.MEDIOCRE)
       return "bg-orange-900/30 border-orange-700/50 text-orange-300";
     return "bg-red-900/30 border-red-700/50 text-red-300";
   };
@@ -201,20 +201,20 @@ const CritiqueDisplay = ({
           AI Critique
         </div>
         <div className="flex items-center gap-3">
-          {isNewFormat && (
-            <div
-              className={`px-3 py-1.5 rounded-md border ${
-                score >= 90
-                  ? "bg-green-500/20 border-green-500 text-green-400"
-                  : score >= 70
-                  ? "bg-yellow-500/20 border-yellow-500 text-yellow-400"
-                  : score >= 50
-                  ? "bg-orange-500/20 border-orange-500 text-orange-400"
-                  : "bg-red-500/20 border-red-500 text-red-400"
+          {score !== null && (
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1 ${
+                score >= QUALITY_THRESHOLDS.EXCELLENT
+                  ? "bg-green-900/50 border-green-500 text-green-200"
+                  : score >= QUALITY_THRESHOLDS.PASS
+                  ? "bg-yellow-900/50 border-yellow-500 text-yellow-200"
+                  : score >= QUALITY_THRESHOLDS.MEDIOCRE
+                  ? "bg-orange-900/50 border-orange-500 text-orange-200"
+                  : "bg-red-900/50 border-red-500 text-red-200"
               }`}
             >
               <span className="text-sm font-bold">SCORE: {score}/100</span>
-            </div>
+            </span>
           )}
           {onRewrite && !suggestedRewrite && (
             <button

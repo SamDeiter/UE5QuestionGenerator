@@ -1,167 +1,280 @@
-# Firebase Environment Management
+# Environment Management Guide
 
-This directory contains scripts for managing multiple Firebase environments (development and production).
+This document covers how to switch between **Development** and **Production** environments for the UE5 Question Generator, including troubleshooting common issues.
 
-## Quick Start
+---
 
-### Switch to Development Database
+## Quick Reference
+
+| Environment | Firebase Project      | Firestore DB             | Purpose                     |
+|-------------|----------------------|--------------------------|------------------------------|
+| Development | `ue5questionssoure`  | Development database     | Local testing, new features  |
+| Production  | `ue5-questions-prod` | Production database      | Live app, real users         |
+
+---
+
+## Switching Environments
+
+### Option 1: Python Script (Recommended)
 
 ```powershell
+# Switch to development
 python scripts/switch_env.py dev
-```
 
-### Switch to Production Database
-
-```powershell
+# Switch to production  
 python scripts/switch_env.py prod
-```
 
-### Check Current Environment
-
-```powershell
+# Check current environment
 python scripts/switch_env.py
 ```
 
----
-
-## Environment Files
-
-| File | Purpose | Git Tracked? |
-|------|---------|--------------|
-| `.env.development` | Development Firebase config (old `ue5questionssoure` database) | ❌ No (add your dev API key) |
-| `.env.production` | Production Firebase config (`ue5-questions-prod` database) | ❌ No (already configured) |
-| `.env.local` | **Active** environment (used by Vite) | ❌ No (auto-generated) |
-| `.env.example` | Template for new environments | ✅ Yes |
-
----
-
-## Setup Instructions
-
-### 1. Configure Development Environment
-
-Edit `.env.development` and add your **development** Gemini API key:
-
-```env
-VITE_FIREBASE_API_KEY=your-dev-api-key-here
-```
-
-The other values are already set for the old `ue5questionssoure` database.
-
-### 2. Production Environment
-
-`.env.production` is already configured with:
-
-- Production Firebase project: `ue5-questions-prod`
-- Production Gemini API key
-
-### 3. Switch Environments
+After switching, restart your dev server:
 
 ```powershell
-# Use development database
-python scripts/switch_env.py dev
-
-# Use production database
-python scripts/switch_env.py prod
-```
-
-The script will:
-
-1. Backup your current `.env.local`
-2. Copy the selected environment to `.env.local`
-3. Show next steps (restart dev server, clear browser cache)
-
----
-
-## How It Works
-
-1. **Vite** reads environment variables from `.env.local` (highest priority)
-2. The `switch_env.py` script copies either `.env.development` or `.env.production` to `.env.local`
-3. Restart the dev server to load the new configuration
-4. Hard refresh your browser to clear cached Firebase config
-
----
-
-## Workflow Examples
-
-### Working on New Features (Development)
-
-```powershell
-# Switch to dev database
-python scripts/switch_env.py dev
-
-# Restart dev server
 npm run dev
-
-# Hard refresh browser (Ctrl+Shift+R)
 ```
 
-### Testing Production Setup
+### Option 2: Manual Switch
+
+1. Copy the appropriate env file to `.env.local`:
+   - Development: `copy .env.development .env.local`
+   - Production: `copy .env.production .env.local`
+2. Restart dev server
+
+---
+
+## Firebase Project Setup
+
+### Setting the Active Project
 
 ```powershell
-# Switch to prod database
-python scripts/switch_env.py prod
+# Switch Firebase CLI to production
+firebase use ue5-questions-prod
 
-# Restart dev server
-npm run dev
+# Switch Firebase CLI to development
+firebase use ue5questionssoure
 
-# Hard refresh browser (Ctrl+Shift+R)
+# List all projects
+firebase projects:list
 ```
 
-### Before Deploying
+### Deploying Cloud Functions
 
 ```powershell
-# Ensure production environment is active
-python scripts/switch_env.py prod
+# Deploy to production
+firebase deploy --only functions --project ue5-questions-prod
 
-# Build for production
-npm run build
-
-# Deploy
-npm run deploy
+# Deploy to development
+firebase deploy --only functions --project ue5questionssoure
 ```
 
 ---
 
-## Security Notes
+## Managing Secrets (Gemini API Key)
 
-- ✅ **Separate API Keys**: Use different Gemini API keys for dev and prod
-- ✅ **Git Ignored**: All `.env*` files (except `.env.example`) are in `.gitignore`
-- ✅ **No Hardcoded Keys**: Removed all hardcoded fallback values from source code
-- ⚠️ **API Key Restrictions**: Remember to add restrictions before public deployment
+The Gemini API key is stored securely in **Firebase Secrets Manager**, not in any code or config files.
 
----
+### Updating the Gemini API Key
 
-## Troubleshooting
+> [!CAUTION]
+> Never commit API keys to git. Always use Firebase Secrets.
 
-### Browser Still Using Old Configuration
+```powershell
+# Set secret for production
+firebase functions:secrets:set GEMINI_API_KEY --project ue5-questions-prod
 
-1. **Clear localStorage**:
-   - Open DevTools (F12)
-   - Application tab → Local Storage → `localhost:5173`
-   - Click "Clear All"
+# Set secret for development  
+firebase functions:secrets:set GEMINI_API_KEY --project ue5questionssoure
+```
 
-2. **Hard refresh**: Ctrl+Shift+R
+After setting the secret, you **must redeploy** functions:
 
-3. **Close browser completely** and reopen
+```powershell
+firebase deploy --only functions --project ue5-questions-prod
+```
 
-### Environment Not Switching
+### Viewing Secret Status
 
-1. Check that `.env.development` or `.env.production` exists
-2. Verify the script ran successfully (look for ✅ message)
-3. Restart the dev server
-4. Check `.env.local` was created/updated
-
-### API Key Errors
-
-1. Verify API key in `.env.development` or `.env.production` is correct
-2. Check API key restrictions in Google Cloud Console
-3. Wait 2-3 minutes for API key changes to propagate
+```powershell
+# Check if secret exists (won't show the value)
+firebase functions:secrets:access GEMINI_API_KEY --project ue5-questions-prod
+```
 
 ---
 
-## Related Scripts
+## Firestore Indexes
 
-- `switch_env.py` - Switch between dev/prod environments
-- `update_env_key.py` - Update API key in a specific `.env` file
-- `check_firebase_config.py` - Verify Firebase configuration
-- `check_vite_env.py` - Debug which environment variables Vite is loading
+When Cloud Functions use complex queries (e.g., rate limiting with multiple fields), Firestore requires **composite indexes**.
+
+### Creating Required Indexes
+
+If you see this error:
+
+```
+FAILED_PRECONDITION: The query requires an index
+```
+
+1. Check the Firebase Functions logs for a link like:
+   `https://console.firebase.google.com/v1/r/project/.../firestore/indexes?create_composite=...`
+2. Click the link to auto-create the index
+3. Wait 2-5 minutes for the index to build
+
+### Manual Index Creation
+
+Navigate to: **Firebase Console → Firestore Database → Indexes → Add Index**
+
+Required indexes for this project:
+
+| Collection | Fields                          | Query Scope |
+|------------|--------------------------------|-------------|
+| `apiUsage` | `userId` (Asc), `timestamp` (Asc) | Collection  |
+
+---
+
+## Common Issues & Fixes
+
+### Issue: 500 Internal Server Error from Cloud Functions
+
+**Symptoms:**
+
+- `POST .../generateQuestions 500 (Internal Server Error)`
+- `FirebaseError: INTERNAL`
+
+**Diagnosis:**
+
+1. Check Firebase Functions logs:
+
+   ```powershell
+   firebase functions:log --only generateQuestions -n 30
+   ```
+
+2. Or use Google Cloud Console → Logs Explorer
+
+**Common Causes:**
+
+| Error Message | Cause | Fix |
+|--------------|-------|-----|
+| `GEMINI_API_KEY secret is not set` | Missing/expired API key | Update secret and redeploy |
+| `FAILED_PRECONDITION: The query requires an index` | Missing Firestore index | Click the link in logs to create index |
+| `Gemini API error: 400` | Invalid API key or quota exceeded | Check/rotate API key |
+| `Gemini API error: 429` | Rate limit hit | Wait and retry |
+
+---
+
+### Issue: API Key Rotation
+
+When you create a new Gemini API key (e.g., after disabling an old one):
+
+1. **Update the Firebase Secret:**
+
+   ```powershell
+   firebase functions:secrets:set GEMINI_API_KEY --project ue5-questions-prod
+   ```
+
+   (Paste the new key when prompted)
+
+2. **Redeploy Functions:**
+
+   ```powershell
+   firebase deploy --only functions --project ue5-questions-prod
+   ```
+
+3. **Wait 1-2 minutes** for cold start with new config
+
+---
+
+### Issue: Wrong Environment in Browser
+
+**Symptoms:**
+
+- Console shows wrong project ID
+- Data not syncing as expected
+
+**Fix:**
+
+1. Check `.env.local` project ID
+2. Run `python scripts/switch_env.py dev` or `prod`
+3. Hard refresh browser: `Ctrl+Shift+R`
+4. Clear localStorage if needed: DevTools → Application → Local Storage → Clear
+
+---
+
+## Environment Files Reference
+
+| File                    | Purpose                           | Git Tracked? |
+|-------------------------|-----------------------------------|--------------|
+| `.env.example`          | Template for new developers       | ✅ Yes       |
+| `.env.development`      | Dev Firebase config               | ❌ No        |
+| `.env.production`       | Prod Firebase config              | ❌ No        |
+| `.env.local`            | Active config (symlink target)    | ❌ No        |
+| `functions/.env`        | Functions local dev only          | ❌ No        |
+
+---
+
+## Pre-Deployment Checklist
+
+Before deploying to production:
+
+- [ ] Confirm you're on the correct Firebase project: `firebase use`
+- [ ] Ensure Gemini API key secret is set: `firebase functions:secrets:access GEMINI_API_KEY`
+- [ ] Deploy functions: `firebase deploy --only functions`
+- [ ] Verify in logs: `firebase functions:log -n 10`
+- [ ] Test in browser with production `.env.local`
+
+---
+
+## QA Testing
+
+### Automated Health Check
+
+Run the health check script regularly to verify Cloud Functions are working:
+
+```powershell
+# Check current project (from .firebaserc)
+python scripts/test_cloud_functions.py
+
+# Check specific project
+python scripts/test_cloud_functions.py --project ue5-questions-prod
+```
+
+The script checks:
+
+- ✅ Functions are deployed (`generateQuestions`, `generateCritique`)
+- ✅ Gemini API key secret is configured
+- ✅ No recent errors in function logs
+
+### When to Run Health Checks
+
+| Trigger | Command |
+|---------|---------|
+| After deployment | `python scripts/test_cloud_functions.py` |
+| After API key rotation | `python scripts/test_cloud_functions.py` |
+| User reports 500 errors | `python scripts/test_cloud_functions.py` |
+| Daily (recommended) | Add to CI/CD or cron |
+
+### Manual Smoke Test
+
+1. Open the app: `npm run dev`
+2. Login with a test account
+3. Generate 1 question
+4. Verify generation succeeds
+5. Check browser console for: `✅ Cloud Function succeeded`
+
+---
+
+## Incident Log
+
+### 2025-12-11: Cloud Functions 500 Error
+
+**Symptom:** `generateQuestions` returning 500 Internal Server Error
+
+**Root Cause:** Missing Firestore composite index on `apiUsage` collection for rate limiting query (fields: `userId`, `timestamp`)
+
+**Resolution:**
+
+1. Found error in Cloud Functions logs
+2. Clicked the auto-generated link to create the composite index
+3. Waited ~3 minutes for index to build
+4. Functions began working again
+
+**Prevention:** Consider adding `firestore.indexes.json` to track required indexes in version control.

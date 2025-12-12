@@ -141,4 +141,13 @@ Additional project context, architecture diagrams, and task logs are located in 
 
 Agent persona definitions are located in the `.agent/` directory:
 
+### Master Orchestrator
+
+- `Omni-Dev-Prime.md` - **Lead Architect & Engineering Manager** - Routes to specialized personas based on trigger keywords
+
+### Specialized Personas
+
+- `React-Architect-Prime.md` - React Architecture & Zero-Regression Refactoring Specialist
+- `React-UIUX-Architect.md` - Frontend Architecture & Product Design Specialist
+- `Async-Architect-Prime.md` - Concurrency Engineering & Performance Optimization Specialist
 - `JavaSec-Guardian.md` - Java & Web Application Security Expert
