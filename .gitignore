@@ -4,12 +4,16 @@ node_modules
 # Build output
 dist
 
-# Environment variables
+# Environment variables (NEVER commit these!)
 key.env
 .env
 *.env
+.env.*
 .env.local
+.env.local.*
+.env.development
 .env.production
+.env.backup*
 
 # Python cache
 __pycache__/
