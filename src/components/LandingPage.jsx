@@ -188,6 +188,21 @@ const LandingPage = ({
             </div>
           );
         })()}
+        {(() => {
+          const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
+          const isProd = projectId.includes("prod");
+          return (
+            <div
+              className={`px-2 py-0.5 rounded border ${
+                isProd
+                  ? "text-red-400 border-red-800 bg-red-950/30"
+                  : "text-green-400 border-green-800 bg-green-950/30"
+              }`}
+            >
+              v2.0-{isProd ? "PROD" : "DEV"}
+            </div>
+          );
+        })()}
       </div>
     </div>
   </div>

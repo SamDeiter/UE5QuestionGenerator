@@ -1,5 +1,6 @@
 import Icon from "./Icon";
 import useConnectionStatus from "../hooks/useConnectionStatus";
+import { signOutUser } from "../services/firebase";
 
 const APP_VERSION = "v2.0";
 const getVersionDisplay = () => {
@@ -24,6 +25,7 @@ const Header = ({
   _onRestartTutorial,
   onStartTutorial,
   isAdmin,
+  onSignOut,
 }) => {
   const connectionStatus = useConnectionStatus();
   const isReview = appMode === "review";
@@ -141,6 +143,16 @@ const Header = ({
                   ADMIN
                 </span>
               )}
+              <button
+                onClick={async () => {
+                  if (onSignOut) onSignOut();
+                  await signOutUser();
+                }}
+                className="ml-2 p-1 text-slate-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
+                title="Sign Out"
+              >
+                <Icon name="log-out" size={14} />
+              </button>
             </div>
           )}
           {/* Token & Cost Display */}

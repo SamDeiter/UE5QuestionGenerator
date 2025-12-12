@@ -391,9 +391,6 @@ async function logApiUsage(userId, data) {
   });
 }
 
-/**
- * Extract grounding sources from Gemini response
- */
 function extractGroundingSources(responseData) {
   const groundingMetadata = responseData.candidates?.[0]?.groundingMetadata;
   const sources = [];
@@ -416,3 +413,475 @@ function extractGroundingSources(responseData) {
 
   return sources;
 }
+
+// ============================================================================
+// INVITE SYSTEM - Secure Registration with Invite Codes
+// ============================================================================
+
+const crypto = require("crypto");
+
+/**
+ * Check if a user is an admin (from Firestore admins collection)
+ * @param {string} uid - User ID
+ * @returns {Promise<boolean>}
+ */
+async function isAdminUser(uid) {
+  if (!uid) return false;
+  try {
+    const adminDoc = await admin
+      .firestore()
+      .collection("admins")
+      .doc(uid)
+      .get();
+    return adminDoc.exists && adminDoc.data()?.isAdmin === true;
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    return false;
+  }
+}
+
+/**
+ * Cloud Function: validateInvite
+ * Validates an invite code server-side with rate limiting
+ * Does NOT require authentication (pre-signup validation)
+ */
+exports.validateInvite = functions
+  .runWith({ timeoutSeconds: 30, memory: "256MB" })
+  .https.onCall(async (data, context) => {
+    const { code } = data;
+    const db = admin.firestore();
+
+    // === INPUT SANITIZATION ===
+    if (!code || typeof code !== "string") {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Invite code is required"
+      );
+    }
+
+    // Sanitize: alphanumeric only, max 16 chars
+    const sanitizedCode = code
+      .replace(/[^A-Za-z0-9]/g, "")
+      .substring(0, 16)
+      .toUpperCase();
+
+    if (sanitizedCode.length < 8) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Invalid invite code format"
+      );
+    }
+
+    // === RATE LIMITING ===
+    // Use a hash of the request IP or a session identifier
+    const clientId =
+      context.rawRequest?.ip ||
+      context.rawRequest?.headers?.["x-forwarded-for"] ||
+      "unknown";
+    const rateLimitRef = db
+      .collection("inviteAttempts")
+      .doc(clientId.replace(/[^a-zA-Z0-9]/g, "_"));
+
+    try {
+      const rateLimitDoc = await rateLimitRef.get();
+
+      if (rateLimitDoc.exists) {
+        const rateData = rateLimitDoc.data();
+
+        // Check if locked out
+        if (
+          rateData.lockedUntil &&
+          rateData.lockedUntil.toDate() > new Date()
+        ) {
+          const remainingMins = Math.ceil(
+            (rateData.lockedUntil.toDate() - new Date()) / 60000
+          );
+          throw new functions.https.HttpsError(
+            "resource-exhausted",
+            `Too many failed attempts. Try again in ${remainingMins} minutes.`
+          );
+        }
+
+        // Check if too many recent attempts
+        if (rateData.attempts >= 5) {
+          // Lock for 1 hour
+          await rateLimitRef.update({
+            lockedUntil: admin.firestore.Timestamp.fromDate(
+              new Date(Date.now() + 60 * 60 * 1000)
+            ),
+          });
+          throw new functions.https.HttpsError(
+            "resource-exhausted",
+            "Too many failed attempts. Locked for 1 hour."
+          );
+        }
+      }
+
+      // === VALIDATE INVITE CODE ===
+      const inviteRef = db.collection("invites").doc(sanitizedCode);
+      const inviteDoc = await inviteRef.get();
+
+      if (!inviteDoc.exists) {
+        // Increment failed attempts
+        await rateLimitRef.set(
+          {
+            attempts: admin.firestore.FieldValue.increment(1),
+            lastAttempt: admin.firestore.Timestamp.now(),
+          },
+          { merge: true }
+        );
+        throw new functions.https.HttpsError(
+          "not-found",
+          "Invalid invite code"
+        );
+      }
+
+      const invite = inviteDoc.data();
+
+      // Check if active
+      if (!invite.isActive) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "This invite has been revoked"
+        );
+      }
+
+      // Check expiration
+      if (invite.expiresAt && invite.expiresAt.toDate() < new Date()) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "This invite has expired"
+        );
+      }
+
+      // Check usage limit
+      if (invite.maxUses !== -1 && invite.currentUses >= invite.maxUses) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "This invite has reached its usage limit"
+        );
+      }
+
+      // === SUCCESS - Clear rate limit ===
+      await rateLimitRef.delete();
+
+      return {
+        valid: true,
+        role: invite.role || "user",
+        expiresAt: invite.expiresAt
+          ? invite.expiresAt.toDate().toISOString()
+          : null,
+        remainingUses:
+          invite.maxUses === -1
+            ? "unlimited"
+            : invite.maxUses - invite.currentUses,
+      };
+    } catch (error) {
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
+      console.error("Error validating invite:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to validate invite"
+      );
+    }
+  });
+
+/**
+ * Cloud Function: consumeInvite
+ * Marks an invite as used after successful authentication
+ * REQUIRES authentication
+ */
+exports.consumeInvite = functions
+  .runWith({ timeoutSeconds: 30, memory: "256MB" })
+  .https.onCall(async (data, context) => {
+    // MUST be authenticated
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Must be signed in to use invite"
+      );
+    }
+
+    const { code } = data;
+    const userEmail = context.auth.token.email;
+    const userId = context.auth.uid;
+    const db = admin.firestore();
+
+    // Sanitize code
+    const sanitizedCode = (code || "")
+      .replace(/[^A-Za-z0-9]/g, "")
+      .substring(0, 16)
+      .toUpperCase();
+
+    if (!sanitizedCode) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Invite code is required"
+      );
+    }
+
+    try {
+      const inviteRef = db.collection("invites").doc(sanitizedCode);
+      const inviteDoc = await inviteRef.get();
+
+      if (!inviteDoc.exists) {
+        throw new functions.https.HttpsError(
+          "not-found",
+          "Invalid invite code"
+        );
+      }
+
+      const invite = inviteDoc.data();
+
+      // Check if already used by this user
+      const alreadyUsed = invite.usedBy?.some(
+        (u) => u.email === userEmail || u.uid === userId
+      );
+      if (alreadyUsed) {
+        return { success: true, alreadyUsed: true, role: invite.role };
+      }
+
+      // Validate invite is still valid
+      if (!invite.isActive) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "Invite has been revoked"
+        );
+      }
+      if (invite.expiresAt && invite.expiresAt.toDate() < new Date()) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "Invite has expired"
+        );
+      }
+      if (invite.maxUses !== -1 && invite.currentUses >= invite.maxUses) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "Invite limit reached"
+        );
+      }
+
+      // Update invite usage
+      await inviteRef.update({
+        currentUses: admin.firestore.FieldValue.increment(1),
+        usedBy: admin.firestore.FieldValue.arrayUnion({
+          email: userEmail,
+          uid: userId,
+          usedAt: admin.firestore.Timestamp.now(),
+        }),
+      });
+
+      // Mark user as registered (for future access checks)
+      await db
+        .collection("registeredUsers")
+        .doc(userId)
+        .set(
+          {
+            email: userEmail,
+            uid: userId,
+            inviteCode: sanitizedCode,
+            role: invite.role || "user",
+            registeredAt: admin.firestore.Timestamp.now(),
+          },
+          { merge: true }
+        );
+
+      console.log(`Invite ${sanitizedCode} consumed by ${userEmail}`);
+
+      return { success: true, role: invite.role || "user" };
+    } catch (error) {
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
+      console.error("Error consuming invite:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to consume invite"
+      );
+    }
+  });
+
+/**
+ * Cloud Function: createInvite
+ * Creates a new invite code (ADMIN ONLY)
+ */
+exports.createInvite = functions
+  .runWith({ timeoutSeconds: 30, memory: "256MB" })
+  .https.onCall(async (data, context) => {
+    // ADMIN CHECK
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Must be signed in"
+      );
+    }
+
+    const isAdmin = await isAdminUser(context.auth.uid);
+    if (!isAdmin) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Admin access required"
+      );
+    }
+
+    const { maxUses = 1, expiresInDays = 7, role = "user", note = "" } = data;
+    const db = admin.firestore();
+
+    try {
+      // Generate cryptographically secure code
+      const code = crypto
+        .randomBytes(9)
+        .toString("base64")
+        .replace(/[^A-Za-z0-9]/g, "")
+        .substring(0, 12)
+        .toUpperCase();
+
+      // Calculate expiration (max 30 days)
+      const expiresAt = new Date();
+      expiresAt.setDate(
+        expiresAt.getDate() + Math.min(Math.max(expiresInDays, 1), 30)
+      );
+
+      const inviteData = {
+        code,
+        createdBy: context.auth.uid,
+        createdByEmail: context.auth.token.email,
+        createdAt: admin.firestore.Timestamp.now(),
+        expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+        maxUses: maxUses === -1 ? -1 : Math.max(1, maxUses),
+        currentUses: 0,
+        usedBy: [],
+        role: role === "admin" ? "admin" : "user",
+        isActive: true,
+        note: (note || "").substring(0, 200), // Limit note length
+      };
+
+      await db.collection("invites").doc(code).set(inviteData);
+
+      console.log(`Invite ${code} created by ${context.auth.token.email}`);
+
+      return {
+        success: true,
+        code,
+        inviteUrl: `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${code}`,
+        expiresAt: expiresAt.toISOString(),
+        maxUses: inviteData.maxUses,
+      };
+    } catch (error) {
+      console.error("Error creating invite:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to create invite"
+      );
+    }
+  });
+
+/**
+ * Cloud Function: revokeInvite
+ * Revokes an existing invite code (ADMIN ONLY)
+ */
+exports.revokeInvite = functions
+  .runWith({ timeoutSeconds: 30, memory: "256MB" })
+  .https.onCall(async (data, context) => {
+    // ADMIN CHECK
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Must be signed in"
+      );
+    }
+
+    const isAdmin = await isAdminUser(context.auth.uid);
+    if (!isAdmin) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Admin access required"
+      );
+    }
+
+    const { code } = data;
+    const db = admin.firestore();
+
+    const sanitizedCode = (code || "")
+      .replace(/[^A-Za-z0-9]/g, "")
+      .substring(0, 16)
+      .toUpperCase();
+
+    if (!sanitizedCode) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Invite code is required"
+      );
+    }
+
+    try {
+      const inviteRef = db.collection("invites").doc(sanitizedCode);
+      const inviteDoc = await inviteRef.get();
+
+      if (!inviteDoc.exists) {
+        throw new functions.https.HttpsError("not-found", "Invite not found");
+      }
+
+      await inviteRef.update({
+        isActive: false,
+        revokedAt: admin.firestore.Timestamp.now(),
+        revokedBy: context.auth.uid,
+      });
+
+      console.log(
+        `Invite ${sanitizedCode} revoked by ${context.auth.token.email}`
+      );
+
+      return { success: true };
+    } catch (error) {
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
+      console.error("Error revoking invite:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to revoke invite"
+      );
+    }
+  });
+
+/**
+ * Cloud Function: checkUserRegistration
+ * Checks if a user is registered (has used a valid invite)
+ */
+exports.checkUserRegistration = functions
+  .runWith({ timeoutSeconds: 15, memory: "128MB" })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      return { registered: false };
+    }
+
+    const db = admin.firestore();
+    const userId = context.auth.uid;
+
+    try {
+      const userDoc = await db.collection("registeredUsers").doc(userId).get();
+
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        return {
+          registered: true,
+          role: userData.role || "user",
+          registeredAt: userData.registeredAt?.toDate()?.toISOString(),
+        };
+      }
+
+      // Also check if user is an admin (admins don't need invites)
+      const isAdmin = await isAdminUser(userId);
+      if (isAdmin) {
+        return { registered: true, role: "admin" };
+      }
+
+      return { registered: false };
+    } catch (error) {
+      console.error("Error checking registration:", error);
+      return { registered: false };
+    }
+  });
