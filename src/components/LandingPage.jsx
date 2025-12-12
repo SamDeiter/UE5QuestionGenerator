@@ -150,21 +150,44 @@ const LandingPage = ({
         <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${
-              apiKeyStatus.includes("Loaded") || apiKeyStatus.includes("Auto")
+              apiKeyStatus.includes("Loaded") ||
+              apiKeyStatus.includes("Auto") ||
+              apiKeyStatus.includes("Cloud")
                 ? "bg-green-500"
                 : "bg-red-500"
             }`}
           ></div>
-          API Key: {apiKeyStatus}
+          <span
+            className={
+              apiKeyStatus.includes("Loaded") ||
+              apiKeyStatus.includes("Auto") ||
+              apiKeyStatus.includes("Cloud")
+                ? "text-green-400"
+                : "text-red-400"
+            }
+          >
+            API Key: {apiKeyStatus}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-2 h-2 rounded-full ${
-              isCloudReady ? "bg-blue-500" : "bg-orange-500"
-            }`}
-          ></div>
-          {isCloudReady ? "Cloud Connected" : "Local Mode"}
-        </div>
+        {(() => {
+          const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
+          const isProd = projectId.includes("prod");
+          const envLabel = isProd ? "PROD" : "DEV";
+          const dotColor = isProd ? "bg-red-500" : "bg-green-500";
+          const textColor = isProd ? "text-red-400" : "text-green-400";
+          return (
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  isCloudReady ? dotColor : "bg-orange-500"
+                } ${isCloudReady ? "animate-pulse" : ""}`}
+              ></div>
+              <span className={isCloudReady ? textColor : "text-orange-400"}>
+                {isCloudReady ? `Cloud ${envLabel}` : "Local Mode"}
+              </span>
+            </div>
+          );
+        })()}
       </div>
     </div>
   </div>
