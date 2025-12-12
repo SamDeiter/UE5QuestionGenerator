@@ -52,24 +52,40 @@ const GenerationSettings = ({
     // Flatten the map values since values are arrays of variants
     const allQuestions = Array.from(allQuestionsMap.values()).flat();
 
-    // Filter to only count questions for the currently selected discipline
-    allQuestions
-      .filter(
-        (q) => q.discipline === currentDiscipline && q.status !== "rejected"
-      )
-      .forEach((q) => {
-        let diff = q.difficulty;
-        // Normalize difficulty naming
-        if (diff === "Hard") diff = "Expert";
-        if (diff === "Medium") diff = "Intermediate";
-        if (diff === "Easy") diff = "Beginner";
+    // DEBUG: Log what questions we have
+    if (allQuestions.length > 0) {
+      console.log(
+        `📊 Chart: ${allQuestions.length} total questions, filtering for "${currentDiscipline}"`
+      );
+      console.log(`📊 Sample question:`, allQuestions[0]);
+    }
 
-        if (stats[diff]) {
-          const isTF = q.type === "True/False" || q.type === "T/F";
-          if (isTF) stats[diff].tf++;
-          else stats[diff].mc++;
-        }
-      });
+    // Filter to only count questions for the currently selected discipline
+    const filtered = allQuestions.filter(
+      (q) => q.discipline === currentDiscipline && q.status !== "rejected"
+    );
+
+    if (filtered.length !== allQuestions.length) {
+      console.log(
+        `📊 Filtered to ${filtered.length} questions for ${currentDiscipline}`
+      );
+    }
+
+    filtered.forEach((q) => {
+      let diff = q.difficulty;
+      // Normalize difficulty naming
+      if (diff === "Hard") diff = "Expert";
+      if (diff === "Medium") diff = "Intermediate";
+      if (diff === "Easy") diff = "Beginner";
+
+      if (stats[diff]) {
+        const isTF = q.type === "True/False" || q.type === "T/F";
+        if (isTF) stats[diff].tf++;
+        else stats[diff].mc++;
+      }
+    });
+
+    console.log(`📊 Chart stats:`, stats);
 
     return [stats["Beginner"], stats["Intermediate"], stats["Expert"]];
   }, [allQuestionsMap, config.discipline]);
