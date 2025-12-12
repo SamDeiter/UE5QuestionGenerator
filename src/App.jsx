@@ -473,7 +473,6 @@ const App = () => {
       <MainLayout
         appMode={appMode}
         setAppMode={setAppMode}
-        setAppMode={setAppMode}
         effectiveApiKey={effectiveApiKey}
         isAdmin={isAdmin}
         sidebarProps={{
