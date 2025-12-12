@@ -89,13 +89,21 @@ export const constructSystemPrompt = (
 
   const difficultyPrompt =
     difficulty === "Balanced" || difficulty === "Balanced All"
-      ? `STRICT DISTRIBUTION REQUIRED:\n` +
-        `- Easy: ${easyCount} (Mix of MC & T/F)\n` +
-        `- Medium: ${mediumCount} (Mix of MC & T/F)\n` +
-        `- Hard: ${hardCount} (Mix of MC & T/F)\n` +
-        `- Total Types: ${mcCount} Multiple Choice, ${tfCount} True/False.\n` +
-        `Ensure an even spread of types across difficulties (e.g. 1 Easy MC, 1 Easy TF, etc).`
-      : `Generate exactly ${batchNum} ${difficulty} questions.`;
+      ? `🚨 STRICT DISTRIBUTION REQUIRED - NO EXCEPTIONS 🚨\n` +
+        `You MUST generate EXACTLY these counts:\n` +
+        `- Easy: ${easyCount} questions\n` +
+        `- Medium: ${mediumCount} questions\n` +
+        `- Hard: ${hardCount} questions\n\n` +
+        `**TYPE DISTRIBUTION (MANDATORY):**\n` +
+        `- EXACTLY ${mcCount} Multiple Choice questions\n` +
+        `- EXACTLY ${tfCount} True/False questions\n\n` +
+        `**VERIFICATION CHECKLIST:**\n` +
+        `Before submitting, COUNT your questions:\n` +
+        `□ Total MC questions = ${mcCount}? If not, FIX IT.\n` +
+        `□ Total T/F questions = ${tfCount}? If not, FIX IT.\n` +
+        `□ Total Easy = ${easyCount}? □ Medium = ${mediumCount}? □ Hard = ${hardCount}?\n\n` +
+        `Distribute types evenly across difficulties (e.g., 1 Easy MC, 1 Easy TF, 1 Medium MC, 1 Medium TF, etc).`
+      : `Generate exactly ${batchNum} ${difficulty} questions of type: ${targetType}.`;
 
   // Temperature-based mode
   const temp = parseFloat(config.temperature) || 0.7;
