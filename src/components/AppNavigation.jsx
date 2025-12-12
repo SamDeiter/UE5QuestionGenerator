@@ -2,7 +2,13 @@ import Icon from "./Icon";
 
 const AppNavigation = ({ activeMode, onNavigate, counts = {}, isAdmin }) => {
   const navItems = [
-    { id: "create", label: "Create", icon: "plus-circle", color: "green" },
+    {
+      id: "create",
+      label: "Create",
+      icon: "plus-circle",
+      color: "green",
+      adminOnly: true,
+    },
     {
       id: "review",
       label: "Review",
@@ -22,8 +28,9 @@ const AppNavigation = ({ activeMode, onNavigate, counts = {}, isAdmin }) => {
       label: "Prompt Lab",
       icon: "terminal",
       color: "purple",
+      adminOnly: true,
     },
-  ].filter((item) => item.id !== "playground" || isAdmin);
+  ].filter((item) => !item.adminOnly || isAdmin);
 
   // Note: Analytics in App.jsx was a modal (setShowAnalytics).
   // The plan suggests making it a tab or at least part of this nav.

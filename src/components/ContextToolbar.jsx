@@ -27,6 +27,7 @@ const ContextToolbar = ({
   filterTags = [],
   setFilterTags,
   customTags = {},
+  isAdmin = false, // Admin-only features
 }) => {
   const [dataMenuOpen, setDataMenuOpen] = useState(false);
   const dataMenuRef = useRef(null);
@@ -131,16 +132,18 @@ const ContextToolbar = ({
                   Load from Firestore
                 </button>
                 <div className="h-px bg-slate-700 my-1"></div>
-                <button
-                  onClick={() => {
-                    onBulkExport();
-                    setDataMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-green-300 hover:bg-slate-700 flex items-center gap-2"
-                >
-                  <Icon name="download" size={14} />
-                  Export Questions
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      onBulkExport();
+                      setDataMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs text-green-300 hover:bg-slate-700 flex items-center gap-2"
+                  >
+                    <Icon name="download" size={14} />
+                    Export Questions
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -364,14 +367,16 @@ const ContextToolbar = ({
           Load from Sheets
         </button>
 
-        <button
-          onClick={onBulkExport}
-          className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white"
-          data-tour="export-menu"
-        >
-          <Icon name="download" size={14} />
-          Export
-        </button>
+        {isAdmin && (
+          <button
+            onClick={onBulkExport}
+            className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white"
+            data-tour="export-menu"
+          >
+            <Icon name="download" size={14} />
+            Export
+          </button>
+        )}
 
         <div className="h-4 w-px bg-slate-700"></div>
 

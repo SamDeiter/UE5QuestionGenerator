@@ -77,7 +77,7 @@ const MainLayout = ({
             counts={{ pending: pendingCount }}
             isAdmin={isAdmin}
           />
-          <ContextToolbar {...toolbarProps} />
+          <ContextToolbar {...toolbarProps} isAdmin={isAdmin} />
         </div>
 
         <div
