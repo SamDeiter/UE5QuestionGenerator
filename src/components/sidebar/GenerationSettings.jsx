@@ -324,6 +324,37 @@ const GenerationSettings = ({
                         );
                       })}
                     </div>
+                    {/* Quick action buttons */}
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => {
+                          // Select all tags with 0 questions, or if none, those with < 3
+                          const zeroTags = availableTags.filter(
+                            (t) => (tagCounts[t] || 0) === 0
+                          );
+                          const lowTags = availableTags.filter((t) => {
+                            const c = tagCounts[t] || 0;
+                            return c > 0 && c < 3;
+                          });
+                          const tagsToSelect =
+                            zeroTags.length > 0 ? zeroTags : lowTags;
+                          handleChange({
+                            target: { name: "tags", value: tagsToSelect },
+                          });
+                        }}
+                        className="flex-1 py-1.5 text-[10px] font-bold uppercase bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/50 rounded transition-colors flex items-center justify-center gap-1"
+                      >
+                        <Icon name="target" size={10} /> Select Gaps
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleChange({ target: { name: "tags", value: [] } })
+                        }
+                        className="px-2 py-1.5 text-[10px] font-bold uppercase bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 rounded transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
                 )}
 
