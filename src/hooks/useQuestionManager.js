@@ -264,13 +264,42 @@ export const useQuestionManager = (config, showMessage) => {
     return Math.min(100, (totalApproved / TARGET_TOTAL) * 100);
   }, [totalApproved]);
 
+  // Check if global quota is reached
+  const isGlobalQuotaMet = useMemo(() => {
+    return totalApproved >= TARGET_TOTAL;
+  }, [totalApproved]);
+
+  // Calculate per-difficulty totals (combining MC and T/F)
+  const difficultyTotals = useMemo(() => {
+    return {
+      Easy:
+        (approvedCounts["Easy MC"] || 0) + (approvedCounts["Easy T/F"] || 0),
+      Medium:
+        (approvedCounts["Medium MC"] || 0) +
+        (approvedCounts["Medium T/F"] || 0),
+      Hard:
+        (approvedCounts["Hard MC"] || 0) + (approvedCounts["Hard T/F"] || 0),
+    };
+  }, [approvedCounts]);
+
+  // Target per difficulty level (2 categories * TARGET_PER_CATEGORY = 66 per difficulty)
+  const TARGET_PER_DIFFICULTY = TARGET_PER_CATEGORY * 2; // 66
+
   const isTargetMet = useMemo(() => {
+    // Always block if global quota is reached
+    if (isGlobalQuotaMet) return true;
+
     if (config.difficulty === "Balanced All") return false;
-    const currentCount = approvedCounts[config.difficulty];
-    return currentCount >= TARGET_PER_CATEGORY;
-  }, [config.difficulty, approvedCounts]);
+
+    // Check if this difficulty level is full (both MC + T/F combined)
+    const currentCount = difficultyTotals[config.difficulty] || 0;
+    return currentCount >= TARGET_PER_DIFFICULTY;
+  }, [config.difficulty, difficultyTotals, isGlobalQuotaMet]);
 
   const maxBatchSize = useMemo(() => {
+    // If global quota is met, no generation allowed
+    if (isGlobalQuotaMet) return 0;
+
     if (config.difficulty === "Balanced All") {
       const maxRemaining = Math.max(
         ...CATEGORY_KEYS.map((key) => TARGET_PER_CATEGORY - approvedCounts[key])
@@ -278,10 +307,20 @@ export const useQuestionManager = (config, showMessage) => {
       if (maxRemaining <= 0) return 0;
       return Math.min(30, Math.floor(TARGET_TOTAL / 6) * 6);
     } else {
-      const remaining = TARGET_PER_CATEGORY - approvedCounts[config.difficulty];
-      return Math.min(33, Math.max(0, remaining));
+      // Calculate remaining for this difficulty level
+      const currentCount = difficultyTotals[config.difficulty] || 0;
+      const remaining = TARGET_PER_DIFFICULTY - currentCount;
+      // Also cap by remaining global quota
+      const globalRemaining = TARGET_TOTAL - totalApproved;
+      return Math.min(33, Math.max(0, remaining), Math.max(0, globalRemaining));
     }
-  }, [config.difficulty, approvedCounts]);
+  }, [
+    config.difficulty,
+    approvedCounts,
+    difficultyTotals,
+    isGlobalQuotaMet,
+    totalApproved,
+  ]);
 
   // Delete Handlers
   const handleDelete = (id) => setDeleteConfirmId(id);
