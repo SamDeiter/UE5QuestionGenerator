@@ -1,227 +1,259 @@
 export const TUTORIAL_SCENARIOS = {
-  // 1. General Welcome Tour (Landing Page)
+  // 1. General Welcome Tour (Landing Page) - Expanded from 2 to 5 steps
   welcome: [
     {
       id: "welcome",
       title: "Welcome to UE5 Question Generator",
       content:
-        "This tool helps you generate **high-quality Unreal Engine 5** assessment questions using **AI**. We'll walk you through the main features to get you started quickly.",
+        "This tool helps you generate high-quality Unreal Engine 5 assessment questions using AI. Let's take a quick tour!",
       target: null,
       position: "center",
     },
     {
       id: "modes",
-      title: "Choose Your Mode",
+      title: "Application Modes",
       content:
-        "Use the **navigation bar** to switch between modes:\n• **Create** – Generate new questions with AI\n• **Review** – Quality-check pending questions\n• **Database** – View and export approved questions\n• **Analytics** – Track generation metrics",
+        'Choose a mode to start: "Creation" for AI generation, "Review" for quality control, or "Database" to view your saved question bank.',
       target: '[data-tour="create-mode"]',
+      position: "bottom",
+    },
+    {
+      id: "header-info",
+      title: "Status & Token Usage",
+      content:
+        "The header shows your API status, token usage, and cost tracking. Keep an eye on this to monitor your generation costs.",
+      target: null,
+      position: "center",
+    },
+    {
+      id: "tutorial-button",
+      title: "Need Help?",
+      content:
+        'You can restart this tutorial anytime by clicking the "Tutorial" button in the header. Each mode has its own contextual tutorial.',
+      target: null,
+      position: "center",
+    },
+    {
+      id: "get-started",
+      title: "Ready to Start!",
+      content:
+        'Click on "Creation" mode to start generating questions, or explore "Database" to view existing questions. Happy question crafting!',
+      target: null,
       position: "center",
     },
   ],
 
-  // 2. Creation Mode Tour - More comprehensive
+  // 2. Creation Mode Tour - Expanded from 3 to 8 steps
   create: [
-    {
-      id: "create-welcome",
-      title: "Creation Mode",
-      content:
-        "Welcome to **Creation Mode**! This is where you'll generate new assessment questions using **AI**. Let's walk through the process step by step.",
-      target: null,
-      position: "center",
-    },
     {
       id: "discipline",
       title: "Step 1: Select a Discipline",
       content:
-        "Choose the **UE5 discipline** area for your questions. Options include:\n• **Blueprints** – Visual scripting\n• **C++** – Native programming\n• **Materials** – Look development\n• **Niagara** – VFX systems\n• And 6 more specialized areas",
+        "Start by choosing the UE5 discipline you want to generate questions for (e.g., Blueprints, C++, Lighting). This focuses the AI on relevant topics.",
       target: '[data-tour="discipline-selector"]',
-      position: "center",
+      position: "right",
     },
     {
-      id: "settings",
-      title: "Step 2: Configure Settings",
+      id: "difficulty",
+      title: "Step 2: Set Difficulty Level",
       content:
-        "Set your generation preferences:\n• **Difficulty** – Beginner, Intermediate, or Expert\n• **Type** – Multiple Choice or True/False\n\nThese settings determine the complexity and format of generated questions.",
-      target: '[data-tour="generation-settings"]',
-      position: "center",
+        "Choose Beginner, Intermediate, or Expert difficulty. This controls how challenging the generated questions will be.",
+      target: '[data-tour="difficulty-selector"]',
+      position: "right",
+    },
+    {
+      id: "type",
+      title: "Step 3: Question Type",
+      content:
+        'Select "Multiple Choice" for 4-option questions or "True/False" for binary questions. Mix both for a balanced assessment.',
+      target: '[data-tour="type-selector"]',
+      position: "right",
+    },
+    {
+      id: "inventory",
+      title: "Step 4: Inventory Overview",
+      content:
+        "This chart shows your current question inventory by difficulty and type. Use it to identify gaps in your question bank.",
+      target: '[data-tour="inventory-chart"]',
+      position: "right",
+    },
+    {
+      id: "advanced",
+      title: "Step 5: Advanced Settings",
+      content:
+        'Expand "Focus & Model" for advanced options: Focus Tags to narrow topics, and AI Model selection for different generation behaviors.',
+      target: '[data-tour="advanced-settings"]',
+      position: "right",
+    },
+    {
+      id: "upload",
+      title: "Step 6: Add Context (Optional)",
+      content:
+        "Upload PDF documentation to provide additional context. The AI will reference this material when generating questions.",
+      target: '[data-tour="file-upload"]',
+      position: "right",
     },
     {
       id: "generate",
-      title: "Step 3: Generate Questions",
+      title: "Step 7: Generate Questions",
       content:
-        "Click the **Generate Questions** button to start AI generation. The process typically takes **10-30 seconds**. Generated questions will appear in the main panel for review.",
+        'Click "Generate Questions" to start the AI process. The button shows a progress indicator while generating.',
       target: '[data-tour="generate-button"]',
-      position: "center",
+      position: "top",
     },
     {
-      id: "create-done",
-      title: "You're Ready!",
+      id: "results",
+      title: "Step 8: Review Results",
       content:
-        "That's the basic workflow! After generating questions, switch to **Review mode** to quality-check them before adding to your database.\n\n**Tip:** Use the Focus Tags in advanced settings to target specific sub-topics.",
-      target: '[data-tour="review-mode"]',
-      position: "center",
+        "Generated questions appear in the main area. Each shows the question text, options, and metadata. Click any question to expand details.",
+      target: '[data-tour="review-area"]',
+      position: "left",
     },
   ],
 
-  // 3. Review Mode Tour - More comprehensive
+  // 3. Review Mode Tour - Expanded from 3 to 7 steps
   review: [
     {
-      id: "review-welcome",
-      title: "Review Mode",
+      id: "review-nav",
+      title: "Step 1: Navigation Controls",
       content:
-        "Your job: Review each AI-generated question and decide if it's good enough. Follow along and click each step as we guide you!",
-      target: null,
-      position: "center",
-    },
-    {
-      id: "review-prev",
-      title: "Step 1a: Go Back",
-      content:
-        "Click **PREV** to go to the previous question in your review queue.",
-      target: '[data-tour="prev-button"]',
-      position: "center",
-    },
-    {
-      id: "review-next",
-      title: "Step 1b: Go Forward",
-      content:
-        "Click **NEXT** to advance to the next question. The counter shows your progress.",
-      target: '[data-tour="next-button"]',
-      position: "center",
+        "Use the navigation bar to move between questions. The counter shows your current position in the review queue.",
+      target: '[data-tour="review-nav"]',
+      position: "bottom",
     },
     {
       id: "review-card",
-      title: "Step 2: Read & Check",
+      title: "Step 2: Question Card",
       content:
-        "Read the question. Is it **clear**? Is the **highlighted answer correct**? Are the other options **wrong but believable**?",
+        "This card displays the current question with all its details: text, options, correct answer, difficulty, and source URL.",
       target: '[data-tour="review-card"]',
-      position: "center",
+      position: "right",
+    },
+    {
+      id: "prev-next",
+      title: "Step 3: Previous & Next",
+      content:
+        "Use the Prev/Next buttons or keyboard arrows to navigate quickly between questions in your review queue.",
+      target: '[data-tour="next-button"]',
+      position: "bottom",
     },
     {
       id: "critique",
-      title: "Step 3: Run AI Critique",
+      title: "Step 4: AI Critique",
       content:
-        "Click the **CRITIQUE button**! The AI will analyze the question and give you a **quality score** with feedback. Wait for it to complete.",
+        'Click "Critique" to have AI analyze the question quality. It provides a score (0-100) and specific improvement suggestions.',
       target: '[data-tour="critique-button"]',
-      position: "center",
+      position: "bottom",
     },
     {
-      id: "critique-score",
-      title: "Understanding the Score",
+      id: "verify",
+      title: "Step 5: Verify Before Accepting",
       content:
-        "The AI gives a score from **0-100**. Scores **70+** are good. The critique shows what's good and what needs improvement.",
-      target: null,
-      position: "center",
-    },
-    {
-      id: "critique-fix",
-      title: "Fix It & Alternatives",
-      content:
-        "If the score is low, use **NO FIX NEEDED** to keep it as-is, or the AI may offer **suggested improvements**. Click **WHY?** to understand the reasoning or **ALTERNATIVES** to see other answer options.",
-      target: null,
-      position: "center",
+        "Before accepting, verify the source URL and answer accuracy. Click the shield icon to mark as human-verified.",
+      target: '[data-tour="review-card"]',
+      position: "right",
     },
     {
       id: "actions",
-      title: "Step 4: Accept or Reject",
+      title: "Step 6: Accept or Reject",
       content:
-        "Make your call:\n• **✓ ACCEPT** – Good question, add to Database\n• **✗ REJECT** – Bad question, discard it\n\nThen click **NEXT** to continue.",
+        "Accept verified questions (score 70+) to move them to the Database. Reject poor questions with a reason for tracking.",
       target: '[data-tour="review-actions"]',
-      position: "center",
+      position: "top",
     },
     {
-      id: "review-done",
-      title: "That's It!",
+      id: "edit",
+      title: "Step 7: Edit & Improve",
       content:
-        "Repeat for each question: **Read** → **Critique** → **Accept/Reject** → **Next**. Accepted questions appear in the **Database** tab.",
-      target: '[data-tour="database-mode"]',
-      position: "center",
+        "Click the edit icon to manually modify question text, options, or metadata. Apply AI-suggested rewrites with one click.",
+      target: '[data-tour="review-card"]',
+      position: "right",
     },
   ],
 
-  // 4. Database Mode Tour - More comprehensive
+  // 4. Database Mode Tour - Expanded from 2 to 5 steps
   database: [
     {
-      id: "db-welcome",
-      title: "Database Mode",
-      content:
-        "Welcome to Your **Question Bank**! This is where all your **approved questions** are stored. From here, you can **browse**, **filter**, and **export** your questions for use in assessments.",
-      target: null,
-      position: "center",
-    },
-    {
       id: "db-grid",
-      title: "Question Grid",
+      title: "Step 1: Question Bank",
       content:
-        "Your approved questions are displayed in this **grid**. Each row shows:\n• **Question text** preview\n• **Type** (MC or T/F)\n• **Difficulty** level\n• **Discipline** category\n\nClick any row to expand and see full details.",
-      target: null,
+        "This grid shows all your approved questions. Each row displays key info: question text, type, difficulty, and status.",
+      target: '[data-tour="database-grid"]',
       position: "center",
     },
     {
-      id: "db-filter",
-      title: "Filter & Sort",
+      id: "search",
+      title: "Step 2: Search & Filter",
       content:
-        "Use the **Sort** dropdown to organize questions by:\n• **Discipline**\n• **Difficulty**\n• **Language**\n• **Newest/Oldest**\n\nThis helps you find specific questions quickly.",
-      target: '[data-tour="sort-dropdown"]',
+        "Use the search box to find specific questions. Filter by discipline, difficulty, or status to narrow your view.",
+      target: '[data-tour="database-search"]',
+      position: "bottom",
+    },
+    {
+      id: "details",
+      title: "Step 3: View Details",
+      content:
+        "Click any question row to expand and see full details including all answer options, source URL, and metadata.",
+      target: '[data-tour="database-grid"]',
       position: "center",
+    },
+    {
+      id: "bulk",
+      title: "Step 4: Bulk Actions",
+      content:
+        "Select multiple questions to perform bulk operations like export, delete, or status changes.",
+      target: '[data-tour="database-actions"]',
+      position: "bottom",
     },
     {
       id: "export",
-      title: "Export Your Questions (Admin)",
+      title: "Step 5: Export Options",
       content:
-        "**Admins only:** Use the **Export** button to download questions in multiple formats:\n• **CSV** – For spreadsheets\n• **Google Sheets** – Direct cloud sync\n• **SCORM 1.2** – LMS-ready package",
+        'Click "Export" to download your questions as CSV, sync to Google Sheets, or export in other formats for your LMS.',
       target: '[data-tour="export-menu"]',
-      position: "center",
-    },
-    {
-      id: "db-done",
-      title: "Build Your Library!",
-      content:
-        "Your question bank grows as you **accept** more questions. Aim for good coverage across **disciplines** and **difficulty levels** for comprehensive assessments.\n\nCheck the **Analytics** tab to see your coverage gaps!",
-      target: '[data-tour="analytics-mode"]',
-      position: "center",
+      position: "bottom",
     },
   ],
 
-  // 5. Analytics Mode Tour - More comprehensive
+  // 5. Analytics Mode Tour - Expanded from 2 to 5 steps
   analytics: [
     {
-      id: "analytics-welcome",
-      title: "Analytics Dashboard",
+      id: "analytics-dashboard",
+      title: "Step 1: Dashboard Overview",
       content:
-        "Welcome to **Analytics**! Track your question generation performance with **real-time metrics**. Monitor **acceptance rates**, **quality scores**, and identify **coverage gaps**.",
+        "The Analytics Dashboard provides insights into your question generation activity, quality metrics, and cost tracking.",
       target: null,
-      position: "center",
-    },
-    {
-      id: "analytics-overview",
-      title: "Overview Stats",
-      content:
-        "The **overview** shows your key metrics:\n• **Total Questions** – Your complete bank size\n• **Acceptance Rate** – Quality pass rate\n• **Average Quality** – Mean critique score\n• **Estimated Cost** – API token usage cost",
-      target: '[data-tour="overview-tab"]',
       position: "center",
     },
     {
       id: "disciplines-tab",
-      title: "Discipline Breakdown",
+      title: "Step 2: Discipline Breakdown",
       content:
-        "Click the **Disciplines tab** to see question distribution across all **10 UE5 disciplines**. The chart visualizes:\n• **Questions per discipline**\n• **Coverage gaps** (low numbers)\n• Click any discipline for **detailed stats**",
+        "View question counts by discipline. Click any discipline card to drill down into detailed statistics.",
       target: '[data-tour="disciplines-tab"]',
-      position: "center",
+      position: "bottom",
     },
     {
-      id: "analytics-quality",
-      title: "Quality Tab",
+      id: "quality-tab",
+      title: "Step 3: Quality Metrics",
       content:
-        "The **Quality tab** shows:\n• **Score distribution** histogram\n• **Token usage** trends\n• **Generation history**\n\nUse this to optimize your question generation strategy.",
+        "The Quality tab shows score distributions from AI critiques. Use this to identify areas needing improvement.",
       target: '[data-tour="quality-tab"]',
-      position: "center",
+      position: "bottom",
     },
     {
-      id: "analytics-done",
-      title: "Data-Driven Decisions",
+      id: "token-stats",
+      title: "Step 4: Token & Cost Tracking",
       content:
-        "Use these analytics to:\n• Identify **weak discipline areas**\n• Track **quality over time**\n• Optimize for **cost efficiency**\n\nRegular monitoring helps build a **balanced, high-quality** question bank!",
+        "Monitor your API usage with token counts and estimated costs. Track trends over time to optimize your workflow.",
+      target: '[data-tour="token-stats"]',
+      position: "top",
+    },
+    {
+      id: "trends",
+      title: "Step 5: Generation Trends",
+      content:
+        "Charts show your generation activity over time. Identify patterns and optimize your question creation strategy.",
       target: null,
       position: "center",
     },
