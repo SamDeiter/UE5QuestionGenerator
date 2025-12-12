@@ -60,6 +60,7 @@ const ReviewMode = ({
           onClick={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
           disabled={!canGoPrev}
           className="flex items-center gap-2 px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold"
+          data-tour="prev-button"
         >
           <Icon name="arrow-left" size={16} /> PREV
         </button>
@@ -79,6 +80,7 @@ const ReviewMode = ({
           }
           disabled={!canGoNext}
           className="flex items-center gap-2 px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold"
+          data-tour="next-button"
         >
           NEXT <Icon name="arrow-right" size={16} />
         </button>

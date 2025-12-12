@@ -115,7 +115,8 @@ const TutorialOverlay = ({
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    if (!targetRect) {
+    // Always center if position is "center" or no target
+    if (!targetRect || step.position === "center") {
       return {
         top: "50%",
         left: "50%",
@@ -275,7 +276,19 @@ const TutorialOverlay = ({
           </button>
         </div>
 
-        <p className="text-slate-300 text-sm leading-relaxed">{step.content}</p>
+        {/* Parse content for **highlighted** keywords */}
+        <p className="text-slate-300 text-sm leading-relaxed">
+          {step.content.split(/(\*\*[^*]+\*\*)/).map((part, i) => {
+            if (part.startsWith("**") && part.endsWith("**")) {
+              return (
+                <span key={i} className="text-orange-400 font-semibold">
+                  {part.slice(2, -2)}
+                </span>
+              );
+            }
+            return part;
+          })}
+        </p>
 
         {/* Warning when element cannot be found */}
         {elementNotFound && step.target && (

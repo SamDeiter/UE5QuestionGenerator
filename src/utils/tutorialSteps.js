@@ -74,18 +74,26 @@ export const TUTORIAL_SCENARIOS = {
       position: "center",
     },
     {
-      id: "review-nav",
-      title: "Step 1: Pick a Question",
+      id: "review-prev",
+      title: "Step 1a: Go Back",
       content:
-        "Use PREV and NEXT buttons to browse pending questions. The counter shows your progress (1 of 6, etc).",
-      target: '[data-tour="review-nav"]',
+        "Click **PREV** to go to the previous question in your review queue.",
+      target: '[data-tour="prev-button"]',
+      position: "center",
+    },
+    {
+      id: "review-next",
+      title: "Step 1b: Go Forward",
+      content:
+        "Click **NEXT** to advance to the next question. The counter shows your progress.",
+      target: '[data-tour="next-button"]',
       position: "center",
     },
     {
       id: "review-card",
       title: "Step 2: Read & Check",
       content:
-        "Read the question. Is it clear? Is the highlighted answer correct? Are the other options wrong but believable?",
+        "Read the question. Is it **clear**? Is the **highlighted answer correct**? Are the other options **wrong but believable**?",
       target: '[data-tour="review-card"]',
       position: "center",
     },
@@ -93,15 +101,31 @@ export const TUTORIAL_SCENARIOS = {
       id: "critique",
       title: "Step 3: Run AI Critique",
       content:
-        "Click the CRITIQUE button! The AI will analyze the question and give you a quality score with feedback. Wait for it to complete before deciding.",
+        "Click the **CRITIQUE button**! The AI will analyze the question and give you a **quality score** with feedback. Wait for it to complete.",
       target: '[data-tour="critique-button"]',
+      position: "center",
+    },
+    {
+      id: "critique-score",
+      title: "Understanding the Score",
+      content:
+        "The AI gives a score from **0-100**. Scores **70+** are good. The critique shows what's good and what needs improvement.",
+      target: null,
+      position: "center",
+    },
+    {
+      id: "critique-fix",
+      title: "Fix It & Alternatives",
+      content:
+        "If the score is low, use **NO FIX NEEDED** to keep it as-is, or the AI may offer **suggested improvements**. Click **WHY?** to understand the reasoning or **ALTERNATIVES** to see other answer options.",
+      target: null,
       position: "center",
     },
     {
       id: "actions",
       title: "Step 4: Accept or Reject",
       content:
-        "Make your call:\n• ✓ ACCEPT – Good question, add to Database\n• ✗ REJECT – Bad question, discard it\n\nThen click NEXT to continue.",
+        "Make your call:\n• **✓ ACCEPT** – Good question, add to Database\n• **✗ REJECT** – Bad question, discard it\n\nThen click **NEXT** to continue.",
       target: '[data-tour="review-actions"]',
       position: "center",
     },
