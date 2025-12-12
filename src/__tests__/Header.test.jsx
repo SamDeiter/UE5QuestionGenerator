@@ -119,15 +119,16 @@ describe("Header Component", () => {
       expect(screen.getByText("ADMIN")).toBeInTheDocument();
     });
 
-    it("shows CLOUD DEV indicator when cloud ready", () => {
+    it("shows CLOUD indicator when cloud ready", () => {
       render(<Header {...defaultProps} isCloudReady={true} />);
       expect(screen.getByText("CLOUD")).toBeInTheDocument();
-      expect(screen.getByText("DEV")).toBeInTheDocument();
+      // DEV/PROD is now shown in the version badge (v2.0-DEV)
+      expect(screen.getByText("v2.0-DEV")).toBeInTheDocument();
     });
 
-    it("shows LOCAL MODE when cloud not ready", () => {
+    it("shows LOCAL when cloud not ready", () => {
       render(<Header {...defaultProps} isCloudReady={false} />);
-      expect(screen.getByText("LOCAL MODE")).toBeInTheDocument();
+      expect(screen.getByText("LOCAL")).toBeInTheDocument();
     });
   });
 

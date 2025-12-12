@@ -102,38 +102,38 @@ const Header = ({
             />
           </div>
           <div>
-            <div className="flex items-center gap-3">
-              <h1
-                className={`text-xl font-bold tracking-tight uppercase ${titleColor} transition-colors duration-500`}
-              >
-                {getTitle()}
-              </h1>
-              <span
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider border ${getBadgeStyle()}`}
-              >
-                {getBadgeText()}
-              </span>
-              {(() => {
-                const { version, isProd } = getVersionDisplay();
-                return (
-                  <span
-                    className={`text-xs font-mono border rounded px-1.5 py-0.5 ${
-                      isProd
-                        ? "text-red-400 border-red-800 bg-red-950/30"
-                        : "text-green-400 border-green-800 bg-green-950/30"
-                    }`}
-                  >
-                    {version}
-                  </span>
-                );
-              })()}
-            </div>
+            <h1
+              className={`text-xl font-bold tracking-tight uppercase ${titleColor} transition-colors duration-500`}
+            >
+              {getTitle()}
+            </h1>
             <p className="text-slate-400 text-xs mt-0.5">{getSubtitle()}</p>
           </div>
         </div>
         <div className="hidden md:flex items-center gap-3 text-xs font-mono">
+          {/* Mode Badge */}
+          <span
+            className={`flex items-center h-7 px-2.5 rounded text-[11px] font-semibold uppercase tracking-wider border ${getBadgeStyle()}`}
+          >
+            {getBadgeText()}
+          </span>
+          {/* Version Badge - consolidated with environment indicator */}
+          {(() => {
+            const { version, isProd } = getVersionDisplay();
+            return (
+              <span
+                className={`flex items-center h-7 font-mono border rounded px-2 text-[11px] ${
+                  isProd
+                    ? "text-red-400 border-red-800 bg-red-950/30"
+                    : "text-green-400 border-green-800 bg-green-950/30"
+                }`}
+              >
+                {version}
+              </span>
+            );
+          })()}
           {creatorName && (
-            <div className="flex items-center gap-2 font-medium text-slate-300 px-3 py-1.5 bg-slate-800/50 rounded-lg">
+            <div className="flex items-center h-7 gap-2 font-medium text-slate-300 px-3 bg-slate-800/50 rounded-lg whitespace-nowrap">
               <Icon
                 name={isAdmin ? "shield-check" : "user"}
                 size={14}
@@ -160,7 +160,7 @@ const Header = ({
           )}
           {/* Token & Cost Display */}
           <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded border border-slate-700 bg-slate-800/30"
+            className="flex items-center h-7 gap-2 px-3 rounded border border-slate-700 bg-slate-800/30 whitespace-nowrap"
             title={`Input: ${tokenUsage.inputTokens || 0} | Output: ${
               tokenUsage.outputTokens || 0
             }`}
@@ -188,7 +188,7 @@ const Header = ({
               </button>
             )}
           <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded border border-slate-700"
+            className="flex items-center h-7 gap-2 px-3 rounded border border-slate-700 whitespace-nowrap"
             role="status"
             aria-live="polite"
           >
@@ -237,26 +237,13 @@ const Header = ({
               API Key: {apiKeyStatus}
             </span>
             {isCloudReady ? (
-              (() => {
-                const projectId =
-                  import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
-                const isProd = projectId.includes("prod");
-                const envLabel = isProd ? "PROD" : "DEV";
-                const envColor = isProd ? "text-red-400" : "text-green-400";
-                const dotColor = isProd ? "bg-red-500" : "bg-green-500";
-                return (
-                  <div className="flex items-center gap-1.5 text-blue-400 font-bold border-l border-slate-700 pl-2 ml-2">
-                    <div
-                      className={`w-2 h-2 ${dotColor} rounded-full animate-pulse`}
-                    ></div>
-                    <span>CLOUD</span>
-                    <span className={`${envColor} font-bold`}>{envLabel}</span>
-                  </div>
-                );
-              })()
+              <div className="flex items-center gap-1.5 text-green-400 font-semibold border-l border-slate-700 pl-2 ml-2 whitespace-nowrap">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>CLOUD</span>
+              </div>
             ) : (
-              <span className="text-orange-400 font-bold border-l border-slate-700 pl-2 ml-2">
-                LOCAL MODE
+              <span className="text-orange-400 font-semibold border-l border-slate-700 pl-2 ml-2 whitespace-nowrap">
+                LOCAL
               </span>
             )}
           </div>
