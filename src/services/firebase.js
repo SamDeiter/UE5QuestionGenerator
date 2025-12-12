@@ -32,25 +32,26 @@ import {
 // but explicit tokens provide defense-in-depth.
 
 // Your web app's Firebase configuration
-// SECURITY: Firebase config now uses environment variables with fallbacks
+// SECURITY: Firebase config REQUIRES environment variables - no fallbacks
 const firebaseConfig = {
-  apiKey:
-    import.meta.env.VITE_FIREBASE_API_KEY ||
-    "AIzaSyA1g9RCrRH8AxuFUOLRRPxwqmXda6ChWCI",
-  authDomain:
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ||
-    "ue5questionssoure.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "ue5questionssoure",
-  storageBucket:
-    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
-    "ue5questionssoure.firebasestorage.app",
-  messagingSenderId:
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "10200378954",
-  appId:
-    import.meta.env.VITE_FIREBASE_APP_ID ||
-    "1:10200378954:web:5aaa8eb97cce0a4a6840b3",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-31HMNEB7S5",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
+
+// Validate required config
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  console.error(
+    "❌ Firebase configuration missing. Ensure .env.local is set up correctly."
+  );
+  console.error(
+    "Run: npm run env:dev or npm run env:prod to configure environment."
+  );
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
