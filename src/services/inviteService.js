@@ -127,3 +127,20 @@ export const clearInviteFromUrl = () => {
   url.searchParams.delete("invite");
   window.history.replaceState({}, "", url.toString());
 };
+
+/**
+ * Sets up the current user as an initial admin.
+ * Only works for whitelisted emails (sam.deiter@epicgames.com, samdeiter@gmail.com)
+ *
+ * @returns {Promise<{success: boolean, message: string, role: string}>}
+ */
+export const setupInitialAdmin = async () => {
+  try {
+    const setupFn = httpsCallable(functions, "setupInitialAdmin");
+    const result = await setupFn({});
+    return result.data;
+  } catch (error) {
+    console.error("Initial admin setup error:", error);
+    throw new Error(error.message || "Failed to setup admin");
+  }
+};

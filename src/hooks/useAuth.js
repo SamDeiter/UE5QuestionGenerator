@@ -13,10 +13,16 @@ import { useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, getCustomTags, saveCustomTags } from "../services/firebase";
 import { getTokenUsage } from "../utils/analyticsStore";
-import { checkUserRegistration } from "../services/inviteService";
+import {
+  checkUserRegistration,
+  setupInitialAdmin,
+} from "../services/inviteService";
 
-// Fallback admin emails (used if Firestore admins collection check fails)
-const FALLBACK_ADMIN_EMAILS = ["sam.deiter@epicgames.com"];
+// Fallback admin emails - these get auto-promoted to admin on first sign-in
+const FALLBACK_ADMIN_EMAILS = [
+  "sam.deiter@epicgames.com",
+  "samdeiter@gmail.com",
+];
 
 /**
  * Custom hook for managing authentication and compliance state.
@@ -55,18 +61,31 @@ export function useAuth(showMessage) {
         // Check registration status via Cloud Function
         setRegistrationLoading(true);
         try {
-          const regStatus = await checkUserRegistration();
-          setIsRegistered(regStatus.registered);
+          let regStatus = await checkUserRegistration();
 
-          // Admin status comes from the registration check or fallback
-          if (regStatus.role === "admin") {
-            setIsAdmin(true);
-          } else if (
+          // Auto-promote whitelisted emails to admin if not yet registered
+          if (
+            !regStatus.registered &&
             FALLBACK_ADMIN_EMAILS.includes(currentUser.email?.toLowerCase())
           ) {
-            // Fallback to hardcoded list if Cloud Function doesn't return admin
+            console.log("Auto-promoting whitelisted admin:", currentUser.email);
+            try {
+              const adminResult = await setupInitialAdmin();
+              console.log("Admin setup result:", adminResult);
+              // Re-check registration after setup
+              regStatus = { registered: true, role: "admin" };
+            } catch (setupError) {
+              console.error("Auto-admin setup failed:", setupError);
+              // Still treat as registered admin via fallback
+              regStatus = { registered: true, role: "admin" };
+            }
+          }
+
+          setIsRegistered(regStatus.registered);
+
+          // Admin status comes from the registration check
+          if (regStatus.role === "admin") {
             setIsAdmin(true);
-            setIsRegistered(true); // Admins are always registered
           } else {
             setIsAdmin(false);
           }

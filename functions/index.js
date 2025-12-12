@@ -885,3 +885,70 @@ exports.checkUserRegistration = functions
       return { registered: false };
     }
   });
+
+/**
+ * Cloud Function: setupInitialAdmin
+ * One-time setup function to add initial admin user
+ * Can only be called by the specified email
+ */
+exports.setupInitialAdmin = functions
+  .runWith({ timeoutSeconds: 30, memory: "128MB" })
+  .https.onCall(async (data, context) => {
+    // Must be authenticated
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Must be signed in"
+      );
+    }
+
+    const userEmail = context.auth.token.email;
+    const userId = context.auth.uid;
+    const db = admin.firestore();
+
+    // Only allow specific emails to become initial admin
+    const ALLOWED_INITIAL_ADMINS = [
+      "sam.deiter@epicgames.com",
+      "samdeiter@gmail.com",
+    ];
+
+    if (!ALLOWED_INITIAL_ADMINS.includes(userEmail.toLowerCase())) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Not authorized for initial admin setup"
+      );
+    }
+
+    try {
+      // Add to admins collection
+      await db.collection("admins").doc(userId).set({
+        email: userEmail,
+        isAdmin: true,
+        createdAt: admin.firestore.Timestamp.now(),
+        createdBy: "setupInitialAdmin",
+      });
+
+      // Add to registeredUsers collection
+      await db.collection("registeredUsers").doc(userId).set(
+        {
+          email: userEmail,
+          uid: userId,
+          role: "admin",
+          registeredAt: admin.firestore.Timestamp.now(),
+          inviteCode: "INITIAL_ADMIN_SETUP",
+        },
+        { merge: true }
+      );
+
+      console.log(`Initial admin setup complete for ${userEmail}`);
+
+      return {
+        success: true,
+        message: `${userEmail} is now an admin`,
+        role: "admin",
+      };
+    } catch (error) {
+      console.error("Error in setupInitialAdmin:", error);
+      throw new functions.https.HttpsError("internal", "Failed to setup admin");
+    }
+  });
