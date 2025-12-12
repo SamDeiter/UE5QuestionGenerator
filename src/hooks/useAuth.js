@@ -1,8 +1,10 @@
 /**
  * useAuth Hook
  *
- * Manages authentication state, custom tags, and compliance modals:
+ * Manages authentication state, registration, custom tags, and compliance modals:
  * - Firebase authentication state
+ * - User registration status (invite system)
+ * - Admin status from Firestore
  * - Custom tags from Firestore
  * - Token usage tracking
  * - Age verification and terms acceptance modals
@@ -11,12 +13,10 @@ import { useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, getCustomTags, saveCustomTags } from "../services/firebase";
 import { getTokenUsage } from "../utils/analyticsStore";
+import { checkUserRegistration } from "../services/inviteService";
 
-// Hardcoded whitelist for Admin access (Create Mode, Settings)
-const ADMIN_EMAILS = [
-  "sam.deiter@epicgames.com",
-  // Add other admin emails here
-];
+// Fallback admin emails (used if Firestore admins collection check fails)
+const FALLBACK_ADMIN_EMAILS = ["sam.deiter@epicgames.com"];
 
 /**
  * Custom hook for managing authentication and compliance state.
@@ -31,6 +31,8 @@ export function useAuth(showMessage) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [registrationLoading, setRegistrationLoading] = useState(true);
   const [customTags, setCustomTags] = useState({});
   const [tokenUsage, setTokenUsage] = useState(() => getTokenUsage());
 
@@ -43,22 +45,43 @@ export function useAuth(showMessage) {
   // EFFECTS
   // ========================================================================
 
-  // Listen for auth state changes and load custom tags
+  // Listen for auth state changes and check registration
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-
-      // Determine Admin Status
-      if (currentUser && currentUser.email) {
-        const isWhitelisted = ADMIN_EMAILS.includes(
-          currentUser.email.toLowerCase()
-        );
-        setIsAdmin(isWhitelisted);
-      } else {
-        setIsAdmin(false);
-      }
+      setAuthLoading(false);
 
       if (currentUser) {
+        // Check registration status via Cloud Function
+        setRegistrationLoading(true);
+        try {
+          const regStatus = await checkUserRegistration();
+          setIsRegistered(regStatus.registered);
+
+          // Admin status comes from the registration check or fallback
+          if (regStatus.role === "admin") {
+            setIsAdmin(true);
+          } else if (
+            FALLBACK_ADMIN_EMAILS.includes(currentUser.email?.toLowerCase())
+          ) {
+            // Fallback to hardcoded list if Cloud Function doesn't return admin
+            setIsAdmin(true);
+            setIsRegistered(true); // Admins are always registered
+          } else {
+            setIsAdmin(false);
+          }
+        } catch (error) {
+          console.error("Failed to check registration:", error);
+          // Fallback to email whitelist
+          const isWhitelisted = FALLBACK_ADMIN_EMAILS.includes(
+            currentUser.email?.toLowerCase()
+          );
+          setIsAdmin(isWhitelisted);
+          setIsRegistered(isWhitelisted); // Whitelisted admins are registered
+        } finally {
+          setRegistrationLoading(false);
+        }
+
         // Load custom tags from Firestore
         try {
           const tags = await getCustomTags();
@@ -66,8 +89,11 @@ export function useAuth(showMessage) {
         } catch (error) {
           console.error("Failed to load custom tags:", error);
         }
+      } else {
+        setIsAdmin(false);
+        setIsRegistered(false);
+        setRegistrationLoading(false);
       }
-      setAuthLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -112,6 +138,16 @@ export function useAuth(showMessage) {
     }
   };
 
+  /**
+   * Mark user as registered (called after successful invite consumption)
+   */
+  const markAsRegistered = (role = "user") => {
+    setIsRegistered(true);
+    if (role === "admin") {
+      setIsAdmin(true);
+    }
+  };
+
   // ========================================================================
   // RETURN
   // ========================================================================
@@ -120,6 +156,11 @@ export function useAuth(showMessage) {
     user,
     authLoading,
     isAdmin,
+
+    // Registration state (invite system)
+    isRegistered,
+    registrationLoading,
+    markAsRegistered,
 
     // Custom tags
     customTags,

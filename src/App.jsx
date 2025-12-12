@@ -14,7 +14,9 @@ import MainLayout from "./components/MainLayout";
 import CrashRecoveryPrompt from "./components/CrashRecoveryPrompt";
 import Footer from "./components/Footer";
 import SignIn from "./components/SignIn";
+import InviteSignUp from "./components/InviteSignUp";
 import ApiKeyModal from "./components/ApiKeyModal";
+import { getInviteFromUrl } from "./services/inviteService";
 
 // Custom Hooks
 import { useAppConfig } from "./hooks/useAppConfig";
@@ -55,7 +57,10 @@ const App = () => {
   const {
     user,
     authLoading,
-    isAdmin, // Get admin status
+    isAdmin,
+    isRegistered,
+    registrationLoading,
+    markAsRegistered,
     customTags,
     setCustomTags: _setCustomTags,
     handleSaveCustomTags,
@@ -345,13 +350,42 @@ const App = () => {
       setShowApiKeyModal,
     });
 
-  // Render
-  if (authLoading) {
+  // Render - Loading state
+  if (authLoading || registrationLoading) {
     return <LoadingSpinner />;
   }
 
+  // Render - Not authenticated
   if (!user) {
+    // Check if there's an invite code in URL - show invite signup
+    const inviteCode = getInviteFromUrl();
+    if (inviteCode) {
+      return (
+        <InviteSignUp
+          onSuccess={(role) => {
+            markAsRegistered(role);
+          }}
+        />
+      );
+    }
     return <SignIn />;
+  }
+
+  // Render - Authenticated but not registered
+  if (!isRegistered) {
+    return (
+      <InviteSignUp
+        onSuccess={(role) => {
+          markAsRegistered(role);
+        }}
+        onCancel={() => {
+          // Sign out and go back to sign in
+          import("./services/firebase").then(({ signOutUser }) =>
+            signOutUser()
+          );
+        }}
+      />
+    );
   }
 
   if (appMode === "landing") {
