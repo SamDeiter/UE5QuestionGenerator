@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import Icon from "./Icon";
 import useConnectionStatus from "../hooks/useConnectionStatus";
 import { signOutUser } from "../services/firebase";
+import { APP_VERSION } from "../utils/constants";
 
-const APP_VERSION = "v1.8";
 const getVersionDisplay = () => {
   const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
   console.log(
