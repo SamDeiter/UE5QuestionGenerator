@@ -85,6 +85,8 @@ const Header = ({
   return (
     <header
       className={`${headerBg} text-white p-6 shadow-xl border-b ${borderColor} relative z-20 transition-all duration-500`}
+      role="banner"
+      aria-label="Application header"
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div
@@ -107,7 +109,7 @@ const Header = ({
                 {getTitle()}
               </h1>
               <span
-                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${getBadgeStyle()}`}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider border ${getBadgeStyle()}`}
               >
                 {getBadgeText()}
               </span>
@@ -129,9 +131,9 @@ const Header = ({
             <p className="text-slate-400 text-xs mt-0.5">{getSubtitle()}</p>
           </div>
         </div>
-        <div className="hidden md:flex items-center gap-4 text-xs font-mono">
+        <div className="hidden md:flex items-center gap-3 text-xs font-mono">
           {creatorName && (
-            <div className="flex items-center gap-1.5 font-bold text-slate-300 px-3 py-1 bg-slate-800/50 rounded-lg">
+            <div className="flex items-center gap-2 font-medium text-slate-300 px-3 py-1.5 bg-slate-800/50 rounded-lg">
               <Icon
                 name={isAdmin ? "shield-check" : "user"}
                 size={14}
@@ -139,7 +141,7 @@ const Header = ({
               />
               <span>{creatorName}</span>
               {isAdmin && (
-                <span className="text-[10px] bg-orange-900/50 text-orange-400 px-1 py-0.5 rounded border border-orange-800 ml-1">
+                <span className="text-[11px] font-semibold bg-orange-900/50 text-orange-400 px-1.5 py-0.5 rounded border border-orange-800 ml-1">
                   ADMIN
                 </span>
               )}
@@ -148,8 +150,9 @@ const Header = ({
                   if (onSignOut) onSignOut();
                   await signOutUser();
                 }}
-                className="ml-2 p-1 text-slate-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
+                className="ml-2 p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
                 title="Sign Out"
+                aria-label="Sign out of application"
               >
                 <Icon name="log-out" size={14} />
               </button>
@@ -157,20 +160,20 @@ const Header = ({
           )}
           {/* Token & Cost Display */}
           <div
-            className="flex items-center gap-2 px-3 py-1 rounded border border-slate-700 bg-slate-800/30"
+            className="flex items-center gap-2 px-3 py-1.5 rounded border border-slate-700 bg-slate-800/30"
             title={`Input: ${tokenUsage.inputTokens || 0} | Output: ${
               tokenUsage.outputTokens || 0
             }`}
           >
-            <div className="flex items-center gap-1 text-purple-400">
+            <div className="flex items-center gap-1.5 text-purple-400">
               <Icon name="zap" size={12} />
-              <span className="font-bold">{formattedTokens}</span>
+              <span className="font-semibold">{formattedTokens}</span>
               <span className="text-slate-500">tok</span>
             </div>
             <div className="w-px h-4 bg-slate-700"></div>
-            <div className="flex items-center gap-1 text-emerald-400">
+            <div className="flex items-center gap-1.5 text-emerald-400">
               <span className="text-slate-500">$</span>
-              <span className="font-bold">{formattedCost}</span>
+              <span className="font-semibold">{formattedCost}</span>
             </div>
           </div>
           {onStartTutorial &&
@@ -184,7 +187,11 @@ const Header = ({
                 Tutorial
               </button>
             )}
-          <div className="flex items-center gap-2 px-3 py-1 rounded border border-slate-700">
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded border border-slate-700"
+            role="status"
+            aria-live="polite"
+          >
             {/* Connection Status */}
             {!connectionStatus.isOnline && (
               <div
@@ -219,8 +226,10 @@ const Header = ({
               <div className="w-px h-4 bg-slate-700"></div>
             )}
             <span
-              className={`font-bold ${
-                apiKeyStatus.includes("Loaded") || apiKeyStatus.includes("Auto")
+              className={`font-semibold ${
+                apiKeyStatus.includes("Loaded") ||
+                apiKeyStatus.includes("Auto") ||
+                apiKeyStatus.includes("Cloud")
                   ? "text-green-400"
                   : "text-red-400"
               }`}
