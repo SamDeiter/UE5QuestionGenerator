@@ -37,8 +37,24 @@ const CoverageGapSuggester = ({
     (t) => tagCounts[t] > 0 && tagCounts[t] < 3
   );
 
-  // Only show if there are any missing or low coverage topics
-  // Previously required 4 missing topics - now shows if any exist
+  // Calculate total questions for this discipline
+  const totalQuestions = Array.from(allQuestionsMap.values())
+    .flat()
+    .filter(
+      (q) => q.discipline === currentDiscipline && q.status !== "rejected"
+    ).length;
+
+  // SMART VISIBILITY: Only show alert when:
+  // 1. User has generated ~50% of target (100+ questions), OR
+  // 2. Extreme mismatch: more than half the tags have ZERO coverage
+  const TARGET_HALF = 100; // 50% of 198 target
+  const hasReachedHalfway = totalQuestions >= TARGET_HALF;
+  const hasExtremeMismatch = zeroCoverageTags.length > availableTags.length / 2;
+
+  // Don't show if not enough questions yet AND no extreme mismatch
+  if (!hasReachedHalfway && !hasExtremeMismatch) return null;
+
+  // Also don't show if no gaps at all
   if (zeroCoverageTags.length === 0 && lowCoverageTags.length === 0)
     return null;
 
