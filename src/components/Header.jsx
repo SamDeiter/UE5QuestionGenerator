@@ -113,25 +113,23 @@ const Header = ({
         <div className="hidden md:flex items-center gap-3 text-xs font-mono">
           {/* Mode Badge */}
           <span
-            className={`flex items-center h-7 px-2.5 rounded text-[11px] font-semibold uppercase tracking-wider border ${getBadgeStyle()}`}
+            className={`flex items-center h-7 px-2.5 rounded text-[11px] font-semibold uppercase tracking-wider border whitespace-nowrap ${getBadgeStyle()}`}
           >
             {getBadgeText()}
           </span>
-          {/* Version Badge - consolidated with environment indicator */}
-          {(() => {
-            const { version, isProd } = getVersionDisplay();
-            return (
-              <span
-                className={`flex items-center h-7 font-mono border rounded px-2 text-[11px] ${
-                  isProd
-                    ? "text-red-400 border-red-800 bg-red-950/30"
-                    : "text-green-400 border-green-800 bg-green-950/30"
-                }`}
+          {/* Tutorial Button - First */}
+          {onStartTutorial &&
+            ["create", "review", "database", "analytics"].includes(appMode) && (
+              <button
+                onClick={() => onStartTutorial(appMode)}
+                className="flex items-center h-7 gap-1.5 px-3 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-900/50 whitespace-nowrap"
+                title={`Start ${appMode} tutorial`}
               >
-                {version}
-              </span>
-            );
-          })()}
+                <Icon name="help-circle" size={14} />
+                Tutorial
+              </button>
+            )}
+          {/* User Info */}
           {creatorName && (
             <div className="flex items-center h-7 gap-2 font-medium text-slate-300 px-3 bg-slate-800/50 rounded-lg whitespace-nowrap">
               <Icon
@@ -158,73 +156,62 @@ const Header = ({
               </button>
             </div>
           )}
-          {/* Token & Cost Display */}
+          {/* Consolidated Status Box: Tokens | Cost | Connection | API Key | CLOUD v2.0-DEV */}
           <div
-            className="flex items-center h-7 gap-2 px-3 rounded border border-slate-700 bg-slate-800/30 whitespace-nowrap"
-            title={`Input: ${tokenUsage.inputTokens || 0} | Output: ${
-              tokenUsage.outputTokens || 0
-            }`}
+            className="flex items-center h-7 gap-2 px-3 rounded border border-slate-700 whitespace-nowrap"
+            role="status"
+            aria-live="polite"
+            title={`Input: ${tokenUsage.inputTokens || 0} | Output: ${tokenUsage.outputTokens || 0}`}
           >
+            {/* Token Display */}
             <div className="flex items-center gap-1.5 text-purple-400">
               <Icon name="zap" size={12} />
               <span className="font-semibold">{formattedTokens}</span>
               <span className="text-slate-500">tok</span>
             </div>
             <div className="w-px h-4 bg-slate-700"></div>
+            {/* Cost Display */}
             <div className="flex items-center gap-1.5 text-emerald-400">
               <span className="text-slate-500">$</span>
               <span className="font-semibold">{formattedCost}</span>
             </div>
-          </div>
-          {onStartTutorial &&
-            ["create", "review", "database", "analytics"].includes(appMode) && (
-              <button
-                onClick={() => onStartTutorial(appMode)}
-                className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-900/50"
-                title={`Start ${appMode} tutorial`}
-              >
-                <Icon name="help-circle" size={14} />
-                Tutorial
-              </button>
-            )}
-          <div
-            className="flex items-center h-7 gap-2 px-3 rounded border border-slate-700 whitespace-nowrap"
-            role="status"
-            aria-live="polite"
-          >
-            {/* Connection Status */}
-            {!connectionStatus.isOnline && (
-              <div
-                className="flex items-center gap-1.5 text-yellow-400 font-bold animate-pulse"
-                title="You are offline. Changes will sync when connection is restored."
-              >
-                <Icon name="wifi-off" size={14} />
-                <span>OFFLINE</span>
-              </div>
-            )}
-            {connectionStatus.queuedCount > 0 && (
-              <div
-                className="flex items-center gap-1 text-orange-400 font-bold"
-                title={`${connectionStatus.queuedCount} items queued for sync`}
-              >
-                <Icon name="upload-cloud" size={14} />
-                <span>{connectionStatus.queuedCount}</span>
-              </div>
-            )}
-            {connectionStatus.syncInProgress && (
-              <div
-                className="flex items-center gap-1 text-blue-400 font-bold animate-pulse"
-                title="Syncing queued items..."
-              >
-                <Icon name="refresh-cw" size={14} className="animate-spin" />
-                <span>SYNCING</span>
-              </div>
-            )}
+            {/* Connection Status (only if needed) */}
             {(!connectionStatus.isOnline ||
               connectionStatus.queuedCount > 0 ||
               connectionStatus.syncInProgress) && (
-              <div className="w-px h-4 bg-slate-700"></div>
+              <>
+                <div className="w-px h-4 bg-slate-700"></div>
+                {!connectionStatus.isOnline && (
+                  <div
+                    className="flex items-center gap-1.5 text-yellow-400 font-bold animate-pulse"
+                    title="You are offline. Changes will sync when connection is restored."
+                  >
+                    <Icon name="wifi-off" size={14} />
+                    <span>OFFLINE</span>
+                  </div>
+                )}
+                {connectionStatus.queuedCount > 0 && (
+                  <div
+                    className="flex items-center gap-1 text-orange-400 font-bold"
+                    title={`${connectionStatus.queuedCount} items queued for sync`}
+                  >
+                    <Icon name="upload-cloud" size={14} />
+                    <span>{connectionStatus.queuedCount}</span>
+                  </div>
+                )}
+                {connectionStatus.syncInProgress && (
+                  <div
+                    className="flex items-center gap-1 text-blue-400 font-bold animate-pulse"
+                    title="Syncing queued items..."
+                  >
+                    <Icon name="refresh-cw" size={14} className="animate-spin" />
+                    <span>SYNCING</span>
+                  </div>
+                )}
+              </>
             )}
+            <div className="w-px h-4 bg-slate-700"></div>
+            {/* API Key Status */}
             <span
               className={`font-semibold ${
                 apiKeyStatus.includes("Loaded") ||
@@ -236,16 +223,28 @@ const Header = ({
             >
               API Key: {apiKeyStatus}
             </span>
-            {isCloudReady ? (
-              <div className="flex items-center gap-1.5 text-green-400 font-semibold border-l border-slate-700 pl-2 ml-2 whitespace-nowrap">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>CLOUD</span>
-              </div>
-            ) : (
-              <span className="text-orange-400 font-semibold border-l border-slate-700 pl-2 ml-2 whitespace-nowrap">
-                LOCAL
-              </span>
-            )}
+            <div className="w-px h-4 bg-slate-700"></div>
+            {/* Cloud/Local + Version indicator */}
+            {(() => {
+              const { version, isProd } = getVersionDisplay();
+              const versionColor = isProd ? "text-red-400" : "text-green-400";
+              if (isCloudReady) {
+                return (
+                  <div className="flex items-center gap-1.5 font-semibold whitespace-nowrap">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-green-400">CLOUD</span>
+                    <span className={versionColor}>{version}</span>
+                  </div>
+                );
+              } else {
+                return (
+                  <div className="flex items-center gap-1.5 font-semibold whitespace-nowrap">
+                    <span className="text-orange-400">LOCAL</span>
+                    <span className={versionColor}>{version}</span>
+                  </div>
+                );
+              }
+            })()}
           </div>
         </div>
       </div>
