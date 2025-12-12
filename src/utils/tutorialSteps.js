@@ -5,7 +5,7 @@ export const TUTORIAL_SCENARIOS = {
       id: "welcome",
       title: "Welcome to UE5 Question Generator",
       content:
-        "This tool helps you generate high-quality Unreal Engine 5 assessment questions using AI. We'll walk you through the main features to get you started quickly.",
+        "This tool helps you generate **high-quality Unreal Engine 5** assessment questions using **AI**. We'll walk you through the main features to get you started quickly.",
       target: null,
       position: "center",
     },
@@ -13,7 +13,7 @@ export const TUTORIAL_SCENARIOS = {
       id: "modes",
       title: "Choose Your Mode",
       content:
-        "Use the navigation bar to switch between modes:\n• Create – Generate new questions with AI\n• Review – Quality-check pending questions\n• Database – View and export approved questions\n• Analytics – Track generation metrics",
+        "Use the **navigation bar** to switch between modes:\n• **Create** – Generate new questions with AI\n• **Review** – Quality-check pending questions\n• **Database** – View and export approved questions\n• **Analytics** – Track generation metrics",
       target: '[data-tour="create-mode"]',
       position: "center",
     },
@@ -25,7 +25,7 @@ export const TUTORIAL_SCENARIOS = {
       id: "create-welcome",
       title: "Creation Mode",
       content:
-        "Welcome to Creation Mode! This is where you'll generate new assessment questions using AI. Let's walk through the process step by step.",
+        "Welcome to **Creation Mode**! This is where you'll generate new assessment questions using **AI**. Let's walk through the process step by step.",
       target: null,
       position: "center",
     },
@@ -33,7 +33,7 @@ export const TUTORIAL_SCENARIOS = {
       id: "discipline",
       title: "Step 1: Select a Discipline",
       content:
-        "Choose the UE5 discipline area for your questions. Options include:\n• Blueprints – Visual scripting\n• C++ – Native programming\n• Materials – Look development\n• Niagara – VFX systems\n• And 6 more specialized areas",
+        "Choose the **UE5 discipline** area for your questions. Options include:\n• **Blueprints** – Visual scripting\n• **C++** – Native programming\n• **Materials** – Look development\n• **Niagara** – VFX systems\n• And 6 more specialized areas",
       target: '[data-tour="discipline-selector"]',
       position: "center",
     },
@@ -41,7 +41,7 @@ export const TUTORIAL_SCENARIOS = {
       id: "settings",
       title: "Step 2: Configure Settings",
       content:
-        "Set your generation preferences:\n• Difficulty – Beginner, Intermediate, or Expert\n• Type – Multiple Choice or True/False\n\nThese settings determine the complexity and format of generated questions.",
+        "Set your generation preferences:\n• **Difficulty** – Beginner, Intermediate, or Expert\n• **Type** – Multiple Choice or True/False\n\nThese settings determine the complexity and format of generated questions.",
       target: '[data-tour="generation-settings"]',
       position: "center",
     },
@@ -49,7 +49,7 @@ export const TUTORIAL_SCENARIOS = {
       id: "generate",
       title: "Step 3: Generate Questions",
       content:
-        "Click this button to start AI generation. The process typically takes 10-30 seconds. Generated questions will appear in the main panel for review.",
+        "Click the **Generate Questions** button to start AI generation. The process typically takes **10-30 seconds**. Generated questions will appear in the main panel for review.",
       target: '[data-tour="generate-button"]',
       position: "center",
     },
@@ -57,8 +57,8 @@ export const TUTORIAL_SCENARIOS = {
       id: "create-done",
       title: "You're Ready!",
       content:
-        "That's the basic workflow! After generating questions, switch to Review mode to quality-check them before adding to your database.\n\nTip: Use the Focus Tags in advanced settings to target specific sub-topics.",
-      target: null,
+        "That's the basic workflow! After generating questions, switch to **Review mode** to quality-check them before adding to your database.\n\n**Tip:** Use the Focus Tags in advanced settings to target specific sub-topics.",
+      target: '[data-tour="review-mode"]',
       position: "center",
     },
   ],
@@ -133,8 +133,8 @@ export const TUTORIAL_SCENARIOS = {
       id: "review-done",
       title: "That's It!",
       content:
-        "Repeat for each question: Read → Critique → Accept/Reject → Next. Accepted questions appear in the Database tab.",
-      target: null,
+        "Repeat for each question: **Read** → **Critique** → **Accept/Reject** → **Next**. Accepted questions appear in the **Database** tab.",
+      target: '[data-tour="database-mode"]',
       position: "center",
     },
   ],
@@ -145,7 +145,7 @@ export const TUTORIAL_SCENARIOS = {
       id: "db-welcome",
       title: "Database Mode",
       content:
-        "Welcome to Your Question Bank! This is where all your approved questions are stored. From here, you can browse, filter, and export your questions for use in assessments.",
+        "Welcome to Your **Question Bank**! This is where all your **approved questions** are stored. From here, you can **browse**, **filter**, and **export** your questions for use in assessments.",
       target: null,
       position: "center",
     },
@@ -153,23 +153,23 @@ export const TUTORIAL_SCENARIOS = {
       id: "db-grid",
       title: "Question Grid",
       content:
-        "Your approved questions are displayed in this grid. Each row shows:\n• Question text preview\n• Type (MC or T/F)\n• Difficulty level\n• Discipline category\n\nClick any row to expand and see full details.",
-      target: '[data-tour="database-grid"]',
+        "Your approved questions are displayed in this **grid**. Each row shows:\n• **Question text** preview\n• **Type** (MC or T/F)\n• **Difficulty** level\n• **Discipline** category\n\nClick any row to expand and see full details.",
+      target: null,
       position: "center",
     },
     {
       id: "db-filter",
       title: "Filter & Sort",
       content:
-        "Use the toolbar to filter questions by:\n• Discipline\n• Difficulty\n• Question type\n• Search keywords\n\nThis helps you find specific questions quickly.",
-      target: null,
+        "Use the **Sort** dropdown to organize questions by:\n• **Discipline**\n• **Difficulty**\n• **Language**\n• **Newest/Oldest**\n\nThis helps you find specific questions quickly.",
+      target: '[data-tour="sort-dropdown"]',
       position: "center",
     },
     {
       id: "export",
-      title: "Export Your Questions",
+      title: "Export Your Questions (Admin)",
       content:
-        "Ready to use your questions? Export them in multiple formats:\n• CSV – For spreadsheets and custom imports\n• Google Sheets – Direct cloud sync\n• SCORM 1.2 – LMS-ready package\n\nExports include all question data.",
+        "**Admins only:** Use the **Export** button to download questions in multiple formats:\n• **CSV** – For spreadsheets\n• **Google Sheets** – Direct cloud sync\n• **SCORM 1.2** – LMS-ready package",
       target: '[data-tour="export-menu"]',
       position: "center",
     },
@@ -177,8 +177,8 @@ export const TUTORIAL_SCENARIOS = {
       id: "db-done",
       title: "Build Your Library!",
       content:
-        "Your question bank grows as you accept more questions. Aim for good coverage across disciplines and difficulty levels for comprehensive assessments.\n\nCheck the Analytics tab to see your coverage gaps!",
-      target: null,
+        "Your question bank grows as you **accept** more questions. Aim for good coverage across **disciplines** and **difficulty levels** for comprehensive assessments.\n\nCheck the **Analytics** tab to see your coverage gaps!",
+      target: '[data-tour="analytics-mode"]',
       position: "center",
     },
   ],
@@ -189,7 +189,7 @@ export const TUTORIAL_SCENARIOS = {
       id: "analytics-welcome",
       title: "Analytics Dashboard",
       content:
-        "Welcome to Analytics! Track your question generation performance with real-time metrics. Monitor acceptance rates, quality scores, and identify coverage gaps.",
+        "Welcome to **Analytics**! Track your question generation performance with **real-time metrics**. Monitor **acceptance rates**, **quality scores**, and identify **coverage gaps**.",
       target: null,
       position: "center",
     },
@@ -197,15 +197,15 @@ export const TUTORIAL_SCENARIOS = {
       id: "analytics-overview",
       title: "Overview Stats",
       content:
-        "The overview shows your key metrics:\n• Total Questions – Your complete bank size\n• Acceptance Rate – Quality pass rate\n• Average Quality – Mean critique score\n• Estimated Cost – API token usage cost",
-      target: null,
+        "The **overview** shows your key metrics:\n• **Total Questions** – Your complete bank size\n• **Acceptance Rate** – Quality pass rate\n• **Average Quality** – Mean critique score\n• **Estimated Cost** – API token usage cost",
+      target: '[data-tour="overview-tab"]',
       position: "center",
     },
     {
       id: "disciplines-tab",
       title: "Discipline Breakdown",
       content:
-        "Click this tab to see question distribution across all 10 UE5 disciplines. The chart visualizes:\n• Questions per discipline\n• Coverage gaps (low numbers)\n• Click any discipline for detailed stats",
+        "Click the **Disciplines tab** to see question distribution across all **10 UE5 disciplines**. The chart visualizes:\n• **Questions per discipline**\n• **Coverage gaps** (low numbers)\n• Click any discipline for **detailed stats**",
       target: '[data-tour="disciplines-tab"]',
       position: "center",
     },
@@ -213,15 +213,15 @@ export const TUTORIAL_SCENARIOS = {
       id: "analytics-quality",
       title: "Quality Tab",
       content:
-        "The Quality tab shows:\n• Score distribution histogram\n• Token usage trends\n• Generation history\n\nUse this to optimize your question generation strategy.",
-      target: null,
+        "The **Quality tab** shows:\n• **Score distribution** histogram\n• **Token usage** trends\n• **Generation history**\n\nUse this to optimize your question generation strategy.",
+      target: '[data-tour="quality-tab"]',
       position: "center",
     },
     {
       id: "analytics-done",
       title: "Data-Driven Decisions",
       content:
-        "Use these analytics to:\n• Identify weak discipline areas\n• Track quality over time\n• Optimize for cost efficiency\n\nRegular monitoring helps build a balanced, high-quality question bank!",
+        "Use these analytics to:\n• Identify **weak discipline areas**\n• Track **quality over time**\n• Optimize for **cost efficiency**\n\nRegular monitoring helps build a **balanced, high-quality** question bank!",
       target: null,
       position: "center",
     },

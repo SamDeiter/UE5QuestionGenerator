@@ -1,7 +1,7 @@
 import Icon from "./Icon";
 import useConnectionStatus from "../hooks/useConnectionStatus";
 
-const APP_VERSION = "v1.7";
+const APP_VERSION = "v2.0";
 const getVersionDisplay = () => {
   const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
   console.log(

@@ -318,7 +318,10 @@ const ContextToolbar = ({
         </span>
 
         {/* Sort Control */}
-        <div className="flex items-center gap-2 bg-slate-800/50 p-1 rounded border border-slate-700">
+        <div
+          className="flex items-center gap-2 bg-slate-800/50 p-1 rounded border border-slate-700"
+          data-tour="sort-dropdown"
+        >
           <span className="text-[10px] font-bold text-slate-500 uppercase px-1">
             Sort:
           </span>

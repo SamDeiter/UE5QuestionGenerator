@@ -73,14 +73,24 @@ const AnalyticsView = ({ onBack, onStartTutorial }) => {
   }, []); // Empty deps - run only once on mount
 
   const tabs = [
-    { id: "overview", label: "Overview", icon: "layout-dashboard" },
+    {
+      id: "overview",
+      label: "Overview",
+      icon: "layout-dashboard",
+      dataTour: "overview-tab",
+    },
     {
       id: "disciplines",
       label: "Disciplines",
       icon: "layers",
       dataTour: "disciplines-tab",
     },
-    { id: "quality", label: "Quality", icon: "target" },
+    {
+      id: "quality",
+      label: "Quality",
+      icon: "target",
+      dataTour: "quality-tab",
+    },
   ];
 
   // Process analytics data
