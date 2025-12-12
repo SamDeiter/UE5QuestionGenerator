@@ -15,7 +15,7 @@ export const TUTORIAL_SCENARIOS = {
       content:
         "Use the navigation bar to switch between modes:\n• Create – Generate new questions with AI\n• Review – Quality-check pending questions\n• Database – View and export approved questions\n• Analytics – Track generation metrics",
       target: '[data-tour="create-mode"]',
-      position: "bottom",
+      position: "center",
     },
   ],
 
@@ -35,7 +35,7 @@ export const TUTORIAL_SCENARIOS = {
       content:
         "Choose the UE5 discipline area for your questions. Options include:\n• Blueprints – Visual scripting\n• C++ – Native programming\n• Materials – Look development\n• Niagara – VFX systems\n• And 6 more specialized areas",
       target: '[data-tour="discipline-selector"]',
-      position: "right",
+      position: "center",
     },
     {
       id: "settings",
@@ -43,7 +43,7 @@ export const TUTORIAL_SCENARIOS = {
       content:
         "Set your generation preferences:\n• Difficulty – Beginner, Intermediate, or Expert\n• Type – Multiple Choice or True/False\n\nThese settings determine the complexity and format of generated questions.",
       target: '[data-tour="generation-settings"]',
-      position: "right",
+      position: "center",
     },
     {
       id: "generate",
@@ -51,7 +51,7 @@ export const TUTORIAL_SCENARIOS = {
       content:
         "Click this button to start AI generation. The process typically takes 10-30 seconds. Generated questions will appear in the main panel for review.",
       target: '[data-tour="generate-button"]',
-      position: "top",
+      position: "center",
     },
     {
       id: "create-done",
@@ -79,7 +79,7 @@ export const TUTORIAL_SCENARIOS = {
       content:
         "Use PREV and NEXT buttons to browse pending questions. The counter shows your progress (1 of 6, etc).",
       target: '[data-tour="review-nav"]',
-      position: "bottom",
+      position: "center",
     },
     {
       id: "review-card",
@@ -95,7 +95,7 @@ export const TUTORIAL_SCENARIOS = {
       content:
         "Click the CRITIQUE button! The AI will analyze the question and give you a quality score with feedback. Wait for it to complete before deciding.",
       target: '[data-tour="critique-button"]',
-      position: "bottom",
+      position: "center",
     },
     {
       id: "actions",
@@ -103,7 +103,7 @@ export const TUTORIAL_SCENARIOS = {
       content:
         "Make your call:\n• ✓ ACCEPT – Good question, add to Database\n• ✗ REJECT – Bad question, discard it\n\nThen click NEXT to continue.",
       target: '[data-tour="review-actions"]',
-      position: "top",
+      position: "center",
     },
     {
       id: "review-done",
@@ -147,7 +147,7 @@ export const TUTORIAL_SCENARIOS = {
       content:
         "Ready to use your questions? Export them in multiple formats:\n• CSV – For spreadsheets and custom imports\n• Google Sheets – Direct cloud sync\n• SCORM 1.2 – LMS-ready package\n\nExports include all question data.",
       target: '[data-tour="export-menu"]',
-      position: "bottom",
+      position: "center",
     },
     {
       id: "db-done",
@@ -183,7 +183,7 @@ export const TUTORIAL_SCENARIOS = {
       content:
         "Click this tab to see question distribution across all 10 UE5 disciplines. The chart visualizes:\n• Questions per discipline\n• Coverage gaps (low numbers)\n• Click any discipline for detailed stats",
       target: '[data-tour="disciplines-tab"]',
-      position: "bottom",
+      position: "center",
     },
     {
       id: "analytics-quality",
