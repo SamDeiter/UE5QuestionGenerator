@@ -1,8 +1,12 @@
 import Icon from "./Icon";
 import TokenUsageDisplay from "./TokenUsageDisplay";
 import TagManager from "./TagManager";
+import AdminInviteManager from "./AdminInviteManager";
 import { getTokenUsage, downloadTrainingData } from "../utils/analyticsStore";
 import { UI_LABELS } from "../utils/constants";
+
+// Check if we're in production mode
+const isProduction = import.meta.env.VITE_FIREBASE_PROJECT_ID?.includes("prod");
 
 const SettingsModal = ({
   showSettings,
@@ -46,6 +50,17 @@ const SettingsModal = ({
         <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
           {/* Token Usage Stats */}
           <TokenUsageDisplay tokenUsage={tokenUsage} />
+
+          {/* ADMIN: Invite Management - At the TOP for easy access */}
+          {isAdmin && (
+            <div className="bg-orange-900/20 p-4 rounded-lg border border-orange-700/30">
+              <h3 className="text-sm font-bold text-orange-300 mb-3 flex items-center gap-2">
+                <Icon name="user-plus" size={16} />
+                Invite Management
+              </h3>
+              <AdminInviteManager />
+            </div>
+          )}
 
           {/* Source Material */}
           <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
@@ -391,28 +406,42 @@ const SettingsModal = ({
                 </p>
               </div>
 
-              {/* DANGER ZONE - Link to separate modal */}
-              <div className="bg-red-900/10 p-4 rounded-lg border border-red-900/30">
-                <h3 className="text-sm font-bold text-red-400 mb-2 flex items-center gap-2">
-                  <Icon name="alert-triangle" size={16} />
-                  Data Management
-                </h3>
-                <p className="text-xs text-slate-400 mb-3">
-                  For destructive operations (clear data, factory reset), use
-                  the Danger Zone.
-                </p>
-                <button
-                  onClick={() => {
-                    setShowSettings(false);
-                    // Signal parent to open DangerZoneModal
-                    if (window.openDangerZone) window.openDangerZone();
-                  }}
-                  className="w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 text-sm font-bold rounded border border-red-900/50 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Icon name="alert-triangle" size={16} />
-                  Open Danger Zone
-                </button>
-              </div>
+              {/* DANGER ZONE - Hidden in Production for safety */}
+              {!isProduction ? (
+                <div className="bg-red-900/10 p-4 rounded-lg border border-red-900/30">
+                  <h3 className="text-sm font-bold text-red-400 mb-2 flex items-center gap-2">
+                    <Icon name="alert-triangle" size={16} />
+                    Data Management
+                  </h3>
+                  <p className="text-xs text-slate-400 mb-3">
+                    For destructive operations (clear data, factory reset), use
+                    the Danger Zone.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowSettings(false);
+                      // Signal parent to open DangerZoneModal
+                      if (window.openDangerZone) window.openDangerZone();
+                    }}
+                    className="w-full px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 text-sm font-bold rounded border border-red-900/50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Icon name="alert-triangle" size={16} />
+                    Open Danger Zone
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                  <h3 className="text-sm font-bold text-slate-500 mb-2 flex items-center gap-2">
+                    <Icon name="lock" size={16} />
+                    Danger Zone (Locked)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    🔒 Database deletion is disabled in production mode for
+                    safety. Switch to DEV environment to access destructive
+                    operations.
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>
