@@ -192,7 +192,7 @@ const Header = ({
             <div className="flex items-center gap-1.5 text-purple-400">
               <Icon name="zap" size={12} />
               <span className="font-semibold">{formattedTokens}</span>
-              <span className="text-slate-500">tok</span>
+              <span className="text-slate-500">tokens</span>
             </div>
             <div className="w-px h-4 bg-slate-700"></div>
             {/* Cost Display */}

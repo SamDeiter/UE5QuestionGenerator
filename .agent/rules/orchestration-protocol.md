@@ -31,3 +31,7 @@ The following delegation rules define when to engage specialized Prime agents:
 | **React UI/UX** (Frontend Components) | React UIUX Architect | [React-UIUX-Architect.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/React-UIUX-Architect.md:0:0-0:0) |
 | **Async/Concurrency** (Background Tasks) | Async Architect Prime | [Async-Architect-Prime.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/Async-Architect-Prime.md:0:0-0:0) |
 | **Full-Stack Implementation** | Omni Dev Prime | [Omni-Dev-Prime.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/Omni-Dev-Prime.md:0:0-0:0) |
+
+## 🖼️ UI/UX Delegation Rule
+
+When the plan involves writing code for a specific user-facing component (e.g., a button, a form, a complex layout, or handling user interaction/state logic), the task MUST be delegated to the **Interface-Engineer-Prime.md**.
