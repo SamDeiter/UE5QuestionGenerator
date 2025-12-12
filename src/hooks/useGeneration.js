@@ -406,6 +406,51 @@ export const useGeneration = (
         );
       }
 
+      // TYPE BALANCE ENFORCEMENT: Ensure equal MC and T/F in Balanced mode
+      if (
+        (config.difficulty === "Balanced" ||
+          config.difficulty === "Balanced All") &&
+        (!config.type || config.type === "Balanced")
+      ) {
+        const mcQuestions = newQuestions.filter(
+          (q) => q.type === "Multiple Choice"
+        );
+        const tfQuestions = newQuestions.filter(
+          (q) => q.type === "True/False" || q.type === "T/F"
+        );
+
+        const targetPerType = Math.floor(newQuestions.length / 2);
+        const mcExcess = mcQuestions.length - targetPerType;
+
+        console.log(
+          `📊 Type Distribution: ${mcQuestions.length} MC, ${tfQuestions.length} T/F. Target: ${targetPerType} each.`
+        );
+
+        if (mcExcess > 0) {
+          // Convert excess MC questions to T/F to balance
+          console.log(
+            `🔄 Converting ${mcExcess} excess MC questions to T/F for balance...`
+          );
+          let converted = 0;
+          newQuestions = newQuestions.map((q) => {
+            if (q.type === "Multiple Choice" && converted < mcExcess) {
+              converted++;
+              return convertMCtoTF(q, q.difficulty);
+            }
+            return q;
+          });
+          showMessage(
+            `⚖️ Balanced: Converted ${mcExcess} MC → T/F for equal distribution.`,
+            TOAST_DURATION.MEDIUM
+          );
+        } else if (mcExcess < 0) {
+          // More T/F than MC - just log a warning (can't easily convert T/F to MC)
+          console.warn(
+            `⚠️ More T/F (${tfQuestions.length}) than MC (${mcQuestions.length}). Cannot auto-balance.`
+          );
+        }
+      }
+
       // Enrich questions with metadata
       const enrichedQuestions = newQuestions.map((q) => ({
         ...q,
