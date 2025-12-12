@@ -473,6 +473,9 @@ exports.validateInvite = functions
     }
 
     // === RATE LIMITING ===
+    // TESTING: Set to true to enable rate limiting
+    const ENABLE_RATE_LIMIT = false;
+    
     // Use a hash of the request IP or a session identifier
     const clientId =
       context.rawRequest?.ip ||
@@ -483,37 +486,39 @@ exports.validateInvite = functions
       .doc(clientId.replace(/[^a-zA-Z0-9]/g, "_"));
 
     try {
-      const rateLimitDoc = await rateLimitRef.get();
+      if (ENABLE_RATE_LIMIT) {
+        const rateLimitDoc = await rateLimitRef.get();
 
-      if (rateLimitDoc.exists) {
-        const rateData = rateLimitDoc.data();
+        if (rateLimitDoc.exists) {
+          const rateData = rateLimitDoc.data();
 
-        // Check if locked out
-        if (
-          rateData.lockedUntil &&
-          rateData.lockedUntil.toDate() > new Date()
-        ) {
-          const remainingMins = Math.ceil(
-            (rateData.lockedUntil.toDate() - new Date()) / 60000
-          );
-          throw new functions.https.HttpsError(
-            "resource-exhausted",
-            `Too many failed attempts. Try again in ${remainingMins} minutes.`
-          );
-        }
+          // Check if locked out
+          if (
+            rateData.lockedUntil &&
+            rateData.lockedUntil.toDate() > new Date()
+          ) {
+            const remainingMins = Math.ceil(
+              (rateData.lockedUntil.toDate() - new Date()) / 60000
+            );
+            throw new functions.https.HttpsError(
+              "resource-exhausted",
+              `Too many failed attempts. Try again in ${remainingMins} minutes.`
+            );
+          }
 
-        // Check if too many recent attempts
-        if (rateData.attempts >= 5) {
-          // Lock for 1 hour
-          await rateLimitRef.update({
-            lockedUntil: admin.firestore.Timestamp.fromDate(
-              new Date(Date.now() + 60 * 60 * 1000)
-            ),
-          });
-          throw new functions.https.HttpsError(
-            "resource-exhausted",
-            "Too many failed attempts. Locked for 1 hour."
-          );
+          // Check if too many recent attempts
+          if (rateData.attempts >= 5) {
+            // Lock for 1 hour
+            await rateLimitRef.update({
+              lockedUntil: admin.firestore.Timestamp.fromDate(
+                new Date(Date.now() + 60 * 60 * 1000)
+              ),
+            });
+            throw new functions.https.HttpsError(
+              "resource-exhausted",
+              "Too many failed attempts. Locked for 1 hour."
+            );
+          }
         }
       }
 

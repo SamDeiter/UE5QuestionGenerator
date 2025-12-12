@@ -23,6 +23,7 @@ const LoadingSpinner = () => (
 const EmptyReviewState = ({
   onNavigateToCreate,
   hasQuestionsInOtherFilters = false,
+  isAdmin = false,
 }) => (
   <div className="flex flex-col items-center justify-center h-full py-16 px-8">
     {/* Illustration */}
@@ -42,30 +43,36 @@ const EmptyReviewState = ({
     <p className="text-slate-400 text-center max-w-md mb-6">
       {hasQuestionsInOtherFilters
         ? "All questions in this filter have been reviewed! Check other filters or generate more."
-        : "Generate your first batch of questions to start reviewing and approving them for your assessments."}
+        : isAdmin
+        ? "Generate your first batch of questions to start reviewing and approving them for your assessments."
+        : "No questions are pending review. Ask an administrator to generate more questions."}
     </p>
 
-    {/* CTA Button */}
-    <button
-      onClick={onNavigateToCreate}
-      className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 transition-all hover:scale-105 active:scale-95"
-    >
-      <Icon name="plus-circle" size={20} />
-      Generate Your First Batch
-    </button>
+    {/* CTA Button - Admin only */}
+    {isAdmin && (
+      <button
+        onClick={onNavigateToCreate}
+        className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 transition-all hover:scale-105 active:scale-95"
+      >
+        <Icon name="plus-circle" size={20} />
+        Generate Your First Batch
+      </button>
+    )}
 
-    {/* Keyboard shortcut hint */}
-    <p className="text-xs text-slate-600 mt-4">
-      or press{" "}
-      <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">
-        Ctrl
-      </kbd>{" "}
-      +{" "}
-      <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">
-        Enter
-      </kbd>{" "}
-      in Create mode
-    </p>
+    {/* Keyboard shortcut hint - Admin only */}
+    {isAdmin && (
+      <p className="text-xs text-slate-600 mt-4">
+        or press{" "}
+        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">
+          Ctrl
+        </kbd>{" "}
+        +{" "}
+        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">
+          Enter
+        </kbd>{" "}
+        in Create mode
+      </p>
+    )}
   </div>
 );
 
@@ -176,6 +183,7 @@ const ViewRouter = ({
           hasQuestionsInOtherFilters={
             filteredQuestions.length > 0 || questions.length > 0
           }
+          isAdmin={isAdmin}
         />
       ) : (
         <>
