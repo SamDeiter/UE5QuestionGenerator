@@ -339,6 +339,7 @@ const App = () => {
     setShowBulkExportModal,
     uniqueFilteredQuestionsLength: uniqueFilteredQuestions.length,
     setCurrentReviewIndex,
+    isAdmin, // Only admins can use export shortcuts (Ctrl+S, Ctrl+E)
   });
 
   // App Handlers (extracted to useAppHandlers hook)
