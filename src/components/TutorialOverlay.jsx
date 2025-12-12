@@ -123,15 +123,18 @@ const TutorialOverlay = ({
       };
     }
 
-    // Use viewport coordinates for positioning
-    let top = targetRect.top;
-    let left = targetRect.left;
+    // Account for the 10px padding added to targetRect for highlight
+    // Get actual element position by removing the padding offset
+    const actualTop = targetRect.top + 10;
+    const actualLeft = targetRect.left + 10;
+    const actualWidth = targetRect.width - 20;
+    const actualHeight = targetRect.height - 20;
 
     // Calculate available space in each direction
-    const spaceRight = viewportWidth - (targetRect.left + targetRect.width);
-    const spaceLeft = targetRect.left;
-    const spaceBottom = viewportHeight - (targetRect.top + targetRect.height);
-    const spaceTop = targetRect.top;
+    const spaceRight = viewportWidth - (actualLeft + actualWidth);
+    const spaceLeft = actualLeft;
+    const spaceBottom = viewportHeight - (actualTop + actualHeight);
+    const spaceTop = actualTop;
 
     // Choose position based on preferred direction and available space
     let finalPosition = step.position;
@@ -162,28 +165,32 @@ const TutorialOverlay = ({
       finalPosition = "top";
     }
 
-    // Apply positioning based on final decision (using viewport coordinates)
-    const vLeft = targetRect.viewportLeft || targetRect.left;
-    const vTop = targetRect.viewportTop || targetRect.top;
+    // Calculate final position
+    let top, left;
 
     switch (finalPosition) {
       case "right":
-        left = vLeft + targetRect.width + padding;
-        top = vTop;
+        left = actualLeft + actualWidth + padding;
+        // Center vertically relative to element
+        top = actualTop + actualHeight / 2 - tooltipHeight / 2;
         break;
       case "left":
-        left = vLeft - tooltipWidth - padding;
-        top = vTop;
+        left = actualLeft - tooltipWidth - padding;
+        // Center vertically relative to element
+        top = actualTop + actualHeight / 2 - tooltipHeight / 2;
         break;
       case "bottom":
-        top = vTop + targetRect.height + padding;
-        left = vLeft;
+        top = actualTop + actualHeight + padding;
+        // Center horizontally relative to element
+        left = actualLeft + actualWidth / 2 - tooltipWidth / 2;
         break;
       case "top":
-        top = vTop - tooltipHeight - padding;
-        left = vLeft;
+        top = actualTop - tooltipHeight - padding;
+        // Center horizontally relative to element
+        left = actualLeft + actualWidth / 2 - tooltipWidth / 2;
         break;
       case "center":
+      default:
         left = (viewportWidth - tooltipWidth) / 2;
         top = (viewportHeight - tooltipHeight) / 2;
         break;
