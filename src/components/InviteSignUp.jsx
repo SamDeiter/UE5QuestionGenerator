@@ -98,16 +98,22 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
         {/* Invite Code Input */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label
+              htmlFor="invite-code"
+              className="block text-sm font-medium text-slate-300 mb-2"
+            >
               Invite Code
             </label>
             <input
+              id="invite-code"
               type="text"
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
               placeholder="Enter your invite code"
               className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 font-mono tracking-wider"
               disabled={validationStatus === "valid"}
+              aria-describedby={validationError ? "invite-error" : undefined}
+              aria-invalid={validationStatus === "invalid"}
             />
           </div>
 
