@@ -3,7 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 // UI Components
 
 import LandingPage from "./components/LandingPage";
@@ -283,14 +283,12 @@ const App = () => {
   );
 
   // Auto-load database questions on startup for difficulty distribution chart
+  const hasAutoLoadedRef = useRef(false);
   useEffect(() => {
-    if (user && !authLoading) {
-      // Only load once on startup
-      const hasLoaded = sessionStorage.getItem("ue5_db_autoloaded");
-      if (!hasLoaded) {
-        handleLoadFromFirestore();
-        sessionStorage.setItem("ue5_db_autoloaded", "true");
-      }
+    if (user && !authLoading && !hasAutoLoadedRef.current) {
+      hasAutoLoadedRef.current = true;
+      console.log("📊 Auto-loading database for difficulty chart...");
+      handleLoadFromFirestore();
     }
   }, [user, authLoading, handleLoadFromFirestore]);
 

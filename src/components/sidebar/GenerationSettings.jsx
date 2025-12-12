@@ -279,7 +279,6 @@ const GenerationSettings = ({
                 className="text-slate-500"
               />
             </button>
-
             {showAdvanced && (
               <div className="p-3 space-y-4 bg-slate-900/30 animate-in slide-in-from-top-1 duration-150">
                 {/* Focus Tags */}
@@ -328,16 +327,12 @@ const GenerationSettings = ({
                     <div className="flex gap-2 mt-2">
                       <button
                         onClick={() => {
-                          // Select all tags with 0 questions, or if none, those with < 3
-                          const zeroTags = availableTags.filter(
-                            (t) => (tagCounts[t] || 0) === 0
+                          // Select tags with lowest coverage (bottom 5 by count)
+                          const sortedTags = [...availableTags].sort(
+                            (a, b) => (tagCounts[a] || 0) - (tagCounts[b] || 0)
                           );
-                          const lowTags = availableTags.filter((t) => {
-                            const c = tagCounts[t] || 0;
-                            return c > 0 && c < 3;
-                          });
-                          const tagsToSelect =
-                            zeroTags.length > 0 ? zeroTags : lowTags;
+                          // Get bottom 5 tags (those with fewest questions)
+                          const tagsToSelect = sortedTags.slice(0, 5);
                           handleChange({
                             target: { name: "tags", value: tagsToSelect },
                           });

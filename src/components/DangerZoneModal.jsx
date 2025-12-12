@@ -3,18 +3,32 @@ import Icon from "./Icon";
 import ConfirmDialog from "./ConfirmDialog";
 import PromptDialog from "./PromptDialog";
 import { clearQuestionsFromSheets } from "../services/googleSheets";
-import { clearAllQuestionsFromFirestore } from "../services/firebase";
+import {
+  clearAllQuestionsFromFirestore,
+  db,
+  auth,
+  deleteQuestionFromFirestore,
+} from "../services/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 /**
  * DangerZoneModal - Separate modal for destructive operations
  * Isolated from Settings to prevent accidental data loss
  */
-const DangerZoneModal = ({ isOpen, onClose, config, onClearData }) => {
+const DangerZoneModal = ({
+  isOpen,
+  onClose,
+  config,
+  onClearData,
+  isAdmin = false,
+}) => {
   const [isResetting, setIsResetting] = useState(false);
   const [showFactoryResetConfirm, setShowFactoryResetConfirm] = useState(false);
   const [showFactoryResetPrompt, setShowFactoryResetPrompt] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
   const [migrationResult, setMigrationResult] = useState(null);
+  const [isNuking, setIsNuking] = useState(false);
+  const [nukeProgress, setNukeProgress] = useState({ current: 0, total: 0 });
 
   const handleFactoryResetClick = () => {
     setShowFactoryResetConfirm(true);
@@ -172,6 +186,85 @@ const DangerZoneModal = ({ isOpen, onClose, config, onClearData }) => {
     }
   };
 
+  // Admin-only: Nuke ALL questions from Firestore (any user's questions)
+  const handleNukeAllQuestions = async () => {
+    if (!auth.currentUser) {
+      alert("You must be signed in to use this feature.");
+      return;
+    }
+
+    if (
+      !confirm(
+        "⚠️ ADMIN NUKE: This will delete ALL questions from ALL users. Are you sure?"
+      )
+    ) {
+      return;
+    }
+    if (!confirm("⚠️ FINAL WARNING: This is IRREVERSIBLE. Continue?")) {
+      return;
+    }
+
+    setIsNuking(true);
+    setNukeProgress({ current: 0, total: 0 });
+
+    try {
+      console.log("🔥 Admin nuke initiated by:", auth.currentUser.email);
+
+      // Fetch ALL questions without filter
+      const snapshot = await getDocs(collection(db, "questions"));
+      const allQuestions = snapshot.docs.map((doc) => ({
+        uniqueId: doc.id,
+        ...doc.data(),
+      }));
+
+      if (allQuestions.length === 0) {
+        alert("No questions found in the database.");
+        setIsNuking(false);
+        return;
+      }
+
+      setNukeProgress({ current: 0, total: allQuestions.length });
+
+      let deletedCount = 0;
+      let errorCount = 0;
+      const BATCH_SIZE = 10;
+
+      for (let i = 0; i < allQuestions.length; i += BATCH_SIZE) {
+        const batch = allQuestions.slice(i, i + BATCH_SIZE);
+
+        await Promise.all(
+          batch.map(async (q) => {
+            try {
+              await deleteQuestionFromFirestore(q.uniqueId);
+              deletedCount++;
+            } catch (e) {
+              console.error("Delete failed for", q.uniqueId, e);
+              errorCount++;
+            }
+          })
+        );
+
+        setNukeProgress({
+          current: Math.min(i + BATCH_SIZE, allQuestions.length),
+          total: allQuestions.length,
+        });
+      }
+
+      alert(
+        `Nuke complete!\n\nDeleted: ${deletedCount}\nFailed: ${errorCount}`
+      );
+
+      // Clear local storage and reload
+      localStorage.clear();
+      window.location.reload();
+    } catch (error) {
+      console.error("Nuke failed:", error);
+      alert("Nuke failed: " + error.message);
+    } finally {
+      setIsNuking(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -263,6 +356,40 @@ const DangerZoneModal = ({ isOpen, onClose, config, onClearData }) => {
                     </>
                   )}
                 </button>
+
+                {/* Admin-only: Nuke All Questions */}
+                {isAdmin && (
+                  <div className="mt-4 pt-4 border-t border-red-900/50">
+                    <p className="text-[10px] text-orange-400 mb-2 font-semibold">
+                      🔐 ADMIN ONLY
+                    </p>
+                    <button
+                      onClick={handleNukeAllQuestions}
+                      disabled={isNuking}
+                      className="w-full px-4 py-3 bg-orange-950 hover:bg-orange-900 text-orange-400 text-sm font-bold rounded border-2 border-orange-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {isNuking ? (
+                        <>
+                          <Icon
+                            name="loader"
+                            size={16}
+                            className="animate-spin"
+                          />
+                          Nuking... ({nukeProgress.current}/{nukeProgress.total}
+                          )
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="zap" size={16} /> NUKE ALL QUESTIONS (All
+                          Users)
+                        </>
+                      )}
+                    </button>
+                    <p className="text-[9px] text-orange-400/60 mt-1 text-center">
+                      Deletes ALL questions from ALL users in the database
+                    </p>
+                  </div>
+                )}
               </div>
 
               <p className="text-[10px] text-red-400/70 mt-3 text-center">
