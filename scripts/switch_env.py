@@ -23,12 +23,22 @@ def switch_environment(env: str) -> None:
     
     # Define source files
     env_files = {
-        'dev': project_root / '.env.development',
+        'dev': project_root / '.env.development.base',  # Base dev config
         'prod': project_root / '.env.production'
     }
     
+    # Check if base dev file exists, if not use .env.development
+    if env == 'dev' and not env_files['dev'].exists():
+        env_files['dev'] = project_root / '.env.development'
+    
     source_file = env_files[env]
-    target_file = project_root / '.env.local'
+    
+    # IMPORTANT: Vite loads .env.development in dev mode with high priority
+    # We must update .env.development for changes to take effect
+    target_files = [
+        project_root / '.env.local',
+        project_root / '.env.development',  # Vite uses this in dev mode!
+    ]
     
     if not source_file.exists():
         print(f"❌ Error: {source_file} does not exist")
@@ -39,24 +49,22 @@ def switch_environment(env: str) -> None:
         print(f"  ... (other Firebase config values)")
         sys.exit(1)
     
-    # Backup current .env.local if it exists
-    if target_file.exists():
-        backup_file = project_root / f'.env.local.backup.{env}'
-        shutil.copy2(target_file, backup_file)
-        print(f"📦 Backed up current .env.local to {backup_file.name}")
-    
-    # Copy environment file to .env.local
-    shutil.copy2(source_file, target_file)
+    # Copy environment file to all target files
+    for target_file in target_files:
+        # Backup current file if it exists
+        if target_file.exists():
+            backup_file = project_root / f'{target_file.name}.backup.{env}'
+            shutil.copy2(target_file, backup_file)
+        shutil.copy2(source_file, target_file)
     
     print("=" * 60)
     print(f"✅ Switched to {env.upper()} environment")
     print("=" * 60)
     print(f"\nConfiguration loaded from: {source_file.name}")
-    print(f"Active configuration: .env.local")
+    print(f"Updated files: .env.local, .env.development")
     print("\n📋 Next steps:")
     print("1. Restart your dev server: npm run dev")
     print("2. Hard refresh your browser (Ctrl+Shift+R)")
-    print("3. Clear browser localStorage if needed")
     print("\n" + "=" * 60)
 
 

@@ -3,9 +3,15 @@ import useConnectionStatus from "../hooks/useConnectionStatus";
 
 const APP_VERSION = "v1.7";
 const getVersionDisplay = () => {
-  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || '';
-  const isProd = projectId.includes('prod');
-  return { version: `${APP_VERSION}-${isProd ? 'PROD' : 'DEV'}`, isProd };
+  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
+  console.log(
+    "🔍 [Header] Project ID:",
+    projectId,
+    "| isProd:",
+    projectId.includes("prod")
+  );
+  const isProd = projectId.includes("prod");
+  return { version: `${APP_VERSION}-${isProd ? "PROD" : "DEV"}`, isProd };
 };
 
 const Header = ({
@@ -106,7 +112,13 @@ const Header = ({
               {(() => {
                 const { version, isProd } = getVersionDisplay();
                 return (
-                  <span className={`text-xs font-mono border rounded px-1.5 py-0.5 ${isProd ? 'text-red-400 border-red-800 bg-red-950/30' : 'text-green-400 border-green-800 bg-green-950/30'}`}>
+                  <span
+                    className={`text-xs font-mono border rounded px-1.5 py-0.5 ${
+                      isProd
+                        ? "text-red-400 border-red-800 bg-red-950/30"
+                        : "text-green-400 border-green-800 bg-green-950/30"
+                    }`}
+                  >
                     {version}
                   </span>
                 );
