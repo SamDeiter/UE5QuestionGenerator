@@ -1,12 +1,3 @@
-/**
- * InviteSignUp Component
- *
- * Handles user registration via invite codes.
- * Shows invite validation status and auth options.
- *
- * Following react-architecture.md: Component under 150 lines
- */
-
 import { useState, useEffect } from "react";
 import {
   validateInvite,
@@ -14,7 +5,11 @@ import {
   getInviteFromUrl,
   clearInviteFromUrl,
 } from "../services/inviteService";
-import { signInWithGoogle } from "../services/firebase";
+import {
+  signInWithGoogle,
+  signUpWithEmail,
+  signInWithEmail,
+} from "../services/firebase";
 import Icon from "./Icon";
 
 /**
@@ -26,13 +21,18 @@ import Icon from "./Icon";
  */
 const InviteSignUp = ({ onSuccess, onCancel }) => {
   const [inviteCode, setInviteCode] = useState("");
-  const [validationStatus, setValidationStatus] = useState(null); // null | 'validating' | 'valid' | 'invalid'
+  const [validationStatus, setValidationStatus] = useState(null);
   const [validationError, setValidationError] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState("");
 
-  // Check for invite code in URL on mount
+  // Email auth state
+  const [showEmailAuth, setShowEmailAuth] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isNewUser, setIsNewUser] = useState(true);
+
   useEffect(() => {
     const urlInvite = getInviteFromUrl();
     if (urlInvite) {
@@ -66,15 +66,41 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
   const handleGoogleSignIn = async () => {
     setIsAuthenticating(true);
     setAuthError("");
-
     try {
       await signInWithGoogle();
-      // After auth, consume the invite
       const result = await consumeInvite(inviteCode.trim());
       clearInviteFromUrl();
       onSuccess?.(result.role);
     } catch (error) {
       setAuthError(error.message || "Authentication failed");
+      setIsAuthenticating(false);
+    }
+  };
+
+  const handleEmailAuth = async (e) => {
+    e.preventDefault();
+    setIsAuthenticating(true);
+    setAuthError("");
+    try {
+      if (isNewUser) {
+        await signUpWithEmail(email, password);
+      } else {
+        await signInWithEmail(email, password);
+      }
+      const result = await consumeInvite(inviteCode.trim());
+      clearInviteFromUrl();
+      onSuccess?.(result.role);
+    } catch (error) {
+      let message = error.message || "Authentication failed";
+      if (error.code === "auth/email-already-in-use") {
+        message = "Email already registered. Try signing in instead.";
+        setIsNewUser(false);
+      } else if (error.code === "auth/weak-password") {
+        message = "Password should be at least 6 characters.";
+      } else if (error.code === "auth/wrong-password") {
+        message = "Incorrect password. Try again.";
+      }
+      setAuthError(message);
       setIsAuthenticating(false);
     }
   };
@@ -95,8 +121,8 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
           </p>
         </div>
 
-        {/* Invite Code Input */}
         <div className="space-y-4">
+          {/* Invite Code Input */}
           <div>
             <label
               htmlFor="invite-code"
@@ -112,19 +138,16 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
               placeholder="Enter your invite code"
               className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 font-mono tracking-wider"
               disabled={validationStatus === "valid"}
-              aria-describedby={validationError ? "invite-error" : undefined}
-              aria-invalid={validationStatus === "invalid"}
             />
           </div>
 
-          {/* Validation Status */}
+          {/* Status Messages */}
           {validationStatus === "validating" && (
             <div className="flex items-center gap-2 text-blue-400">
               <Icon name="loader" size={16} className="animate-spin" />
               <span>Validating invite code...</span>
             </div>
           )}
-
           {validationStatus === "valid" && (
             <div className="flex items-center gap-2 text-green-400 bg-green-900/20 p-3 rounded-lg">
               <Icon name="check-circle" size={16} />
@@ -133,14 +156,12 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
               </span>
             </div>
           )}
-
           {validationError && (
             <div className="flex items-center gap-2 text-red-400 bg-red-900/20 p-3 rounded-lg">
               <Icon name="x-circle" size={16} />
               <span>{validationError}</span>
             </div>
           )}
-
           {authError && (
             <div className="flex items-center gap-2 text-red-400 bg-red-900/20 p-3 rounded-lg">
               <Icon name="alert-triangle" size={16} />
@@ -157,22 +178,88 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
             >
               Validate Invite Code
             </button>
+          ) : showEmailAuth ? (
+            /* Email/Password Form */
+            <form onSubmit={handleEmailAuth} className="space-y-3">
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                required
+              />
+              <input
+                type="password"
+                placeholder="Password (6+ characters)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                required
+                minLength={6}
+              />
+              <button
+                type="submit"
+                disabled={isAuthenticating}
+                className="w-full py-3 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white font-bold rounded-lg transition-colors"
+              >
+                {isAuthenticating
+                  ? "Please wait..."
+                  : isNewUser
+                  ? "Create Account"
+                  : "Sign In"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsNewUser(!isNewUser)}
+                className="w-full text-sm text-slate-400 hover:text-white"
+              >
+                {isNewUser
+                  ? "Already have an account? Sign in"
+                  : "New user? Create account"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowEmailAuth(false)}
+                className="w-full text-sm text-slate-500 hover:text-slate-300"
+              >
+                ← Back to sign-in options
+              </button>
+            </form>
           ) : (
-            <button
-              onClick={handleGoogleSignIn}
-              disabled={isAuthenticating}
-              className="w-full flex items-center justify-center gap-3 py-3 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-lg transition-colors disabled:opacity-50"
-            >
-              {isAuthenticating ? (
-                <Icon name="loader" size={20} className="animate-spin" />
-              ) : (
-                <GoogleIcon />
-              )}
-              {isAuthenticating ? "Signing in..." : "Continue with Google"}
-            </button>
+            /* Auth Options */
+            <div className="space-y-3">
+              <button
+                onClick={handleGoogleSignIn}
+                disabled={isAuthenticating}
+                className="w-full flex items-center justify-center gap-3 py-3 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-lg transition-colors disabled:opacity-50"
+              >
+                {isAuthenticating ? (
+                  <Icon name="loader" size={20} className="animate-spin" />
+                ) : (
+                  <GoogleIcon />
+                )}
+                {isAuthenticating ? "Signing in..." : "Continue with Google"}
+              </button>
+              <div className="flex items-center gap-3 text-slate-500 text-sm">
+                <div className="flex-1 h-px bg-slate-700" />
+                <span>or</span>
+                <div className="flex-1 h-px bg-slate-700" />
+              </div>
+              <button
+                onClick={() => setShowEmailAuth(true)}
+                className="w-full flex items-center justify-center gap-3 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg transition-colors border border-slate-700"
+              >
+                <Icon name="mail" size={20} />
+                Continue with Email
+              </button>
+              <p className="text-xs text-slate-500 text-center">
+                Any Google or email account works. No Epic Games login required.
+              </p>
+            </div>
           )}
 
-          {onCancel && (
+          {onCancel && !showEmailAuth && (
             <button
               onClick={onCancel}
               className="w-full py-2 text-slate-400 hover:text-white transition-colors"
