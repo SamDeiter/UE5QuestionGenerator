@@ -37,7 +37,7 @@ exports.generateQuestions = functions
       systemPrompt,
       userPrompt,
       temperature = 0.2,
-      model = "gemini-2.0-flash",
+      model = "gemini-2.0-flash-exp",
     } = data;
 
     // 2. Input validation
@@ -475,7 +475,7 @@ exports.validateInvite = functions
     // === RATE LIMITING ===
     // TESTING: Set to true to enable rate limiting
     const ENABLE_RATE_LIMIT = false;
-    
+
     // Use a hash of the request IP or a session identifier
     const clientId =
       context.rawRequest?.ip ||
