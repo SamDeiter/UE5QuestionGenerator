@@ -39,7 +39,7 @@ const GenerationSettings = ({
     return counts;
   }, [allQuestionsMap, availableTags]);
 
-  // Compute inventory stats for Recharts
+  // Compute inventory stats for chart - filter by current discipline
   const chartData = React.useMemo(() => {
     const stats = {
       Beginner: { name: "Beginner", mc: 0, tf: 0 },
@@ -47,11 +47,19 @@ const GenerationSettings = ({
       Expert: { name: "Expert", mc: 0, tf: 0 },
     };
 
+    const currentDiscipline = config.discipline || "Technical Art";
+
     // Flatten the map values since values are arrays of variants
-    Array.from(allQuestionsMap.values())
-      .flat()
+    const allQuestions = Array.from(allQuestionsMap.values()).flat();
+
+    // Filter to only count questions for the currently selected discipline
+    allQuestions
+      .filter(
+        (q) => q.discipline === currentDiscipline && q.status !== "rejected"
+      )
       .forEach((q) => {
         let diff = q.difficulty;
+        // Normalize difficulty naming
         if (diff === "Hard") diff = "Expert";
         if (diff === "Medium") diff = "Intermediate";
         if (diff === "Easy") diff = "Beginner";
@@ -62,8 +70,9 @@ const GenerationSettings = ({
           else stats[diff].mc++;
         }
       });
+
     return [stats["Beginner"], stats["Intermediate"], stats["Expert"]];
-  }, [allQuestionsMap]);
+  }, [allQuestionsMap, config.discipline]);
 
   // Auto-expand Focus & Model if tags are selected or custom model is used
   // Removed showAdvanced from dependency to allow manual collapse

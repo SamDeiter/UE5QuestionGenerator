@@ -360,6 +360,9 @@ export const useGeneration = (
           }
         }
 
+        // CRITICAL: Set discipline so chart can filter correctly
+        updatedQ.discipline = config.discipline;
+
         return updatedQ;
       });
 
