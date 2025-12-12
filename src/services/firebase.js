@@ -317,6 +317,41 @@ export const getQuestionsFromFirestore = async () => {
   }
 };
 
+/**
+ * Retrieves ALL questions from Firestore (for shared database view).
+ * All authenticated users can see all questions for review purposes.
+ * @param {number} maxResults - Maximum number of questions to retrieve (default 500)
+ * @returns {Promise<Array>} Array of question objects.
+ */
+export const getAllQuestionsFromFirestore = async (maxResults = 500) => {
+  try {
+    // Require authentication
+    if (!auth.currentUser) {
+      console.log("⚠️ No user signed in, cannot load questions");
+      return [];
+    }
+
+    // Load ALL questions (not filtered by creatorId)
+    const allQuery = query(
+      collection(db, "questions"),
+      orderBy("firestoreUpdatedAt", "desc"),
+      limit(maxResults)
+    );
+    const snapshot = await getDocs(allQuery);
+
+    const questions = [];
+    snapshot.forEach((doc) => {
+      questions.push(doc.data());
+    });
+
+    console.log(`✅ Loaded ${questions.length} questions from shared database`);
+    return questions;
+  } catch (error) {
+    console.error("Error getting all questions from Firestore:", error);
+    return [];
+  }
+};
+
 // PERFORMANCE: Paginated question loading
 export const getQuestionsPaginated = async (
   userId,

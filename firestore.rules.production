@@ -11,10 +11,10 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
     
-    // Questions collection - users can only access their own questions
+    // Questions collection - all authenticated users can READ, but only owners can WRITE
     match /questions/{questionId} {
-      allow read: if isSignedIn() 
-        && resource.data.creatorId == request.auth.uid;
+      // All authenticated users can read questions (for shared review workflow)
+      allow read: if isSignedIn();
       
       allow create: if isSignedIn()
         && request.resource.data.creatorId == request.auth.uid

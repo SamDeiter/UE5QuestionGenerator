@@ -1,8 +1,9 @@
+import { useState, useEffect, useRef } from "react";
 import Icon from "./Icon";
 import useConnectionStatus from "../hooks/useConnectionStatus";
 import { signOutUser } from "../services/firebase";
 
-const APP_VERSION = "v2.0";
+const APP_VERSION = "v1.8";
 const getVersionDisplay = () => {
   const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
   console.log(
@@ -28,6 +29,28 @@ const Header = ({
   onSignOut,
 }) => {
   const connectionStatus = useConnectionStatus();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close mobile menu on ESC key or click outside
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    };
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMobileMenuOpen(false);
+      }
+    };
+    if (mobileMenuOpen) {
+      document.addEventListener("keydown", handleEsc);
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("keydown", handleEsc);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [mobileMenuOpen]);
   const isReview = appMode === "review";
   const isAnalytics = appMode === "analytics";
   const borderColor = isReview
@@ -161,7 +184,9 @@ const Header = ({
             className="flex items-center h-7 gap-2 px-3 rounded border border-slate-700 whitespace-nowrap"
             role="status"
             aria-live="polite"
-            title={`Input: ${tokenUsage.inputTokens || 0} | Output: ${tokenUsage.outputTokens || 0}`}
+            title={`Input: ${tokenUsage.inputTokens || 0} | Output: ${
+              tokenUsage.outputTokens || 0
+            }`}
           >
             {/* Token Display */}
             <div className="flex items-center gap-1.5 text-purple-400">
@@ -204,7 +229,11 @@ const Header = ({
                     className="flex items-center gap-1 text-blue-400 font-bold animate-pulse"
                     title="Syncing queued items..."
                   >
-                    <Icon name="refresh-cw" size={14} className="animate-spin" />
+                    <Icon
+                      name="refresh-cw"
+                      size={14}
+                      className="animate-spin"
+                    />
                     <span>SYNCING</span>
                   </div>
                 )}
@@ -247,7 +276,163 @@ const Header = ({
             })()}
           </div>
         </div>
+
+        {/* Mobile Hamburger Button */}
+        <button
+          className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-menu"
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+        >
+          <Icon name={mobileMenuOpen ? "x" : "menu"} size={20} />
+        </button>
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div
+          id="mobile-menu"
+          ref={menuRef}
+          className="md:hidden absolute left-0 right-0 top-full bg-slate-900 border-b border-slate-700 shadow-xl z-30 animate-in slide-in-from-top-2 duration-200"
+          role="menu"
+        >
+          <div className="max-w-7xl mx-auto p-4 flex flex-col gap-3 text-xs font-mono">
+            {/* Mode Badge */}
+            <div className="flex items-center justify-between">
+              <span
+                className={`flex items-center h-7 px-2.5 rounded text-[11px] font-semibold uppercase tracking-wider border whitespace-nowrap ${getBadgeStyle()}`}
+              >
+                {getBadgeText()}
+              </span>
+              {/* Version/Cloud Status */}
+              {(() => {
+                const { version, isProd } = getVersionDisplay();
+                const versionColor = isProd ? "text-red-400" : "text-green-400";
+                return (
+                  <div className="flex items-center gap-1.5 font-semibold">
+                    {isCloudReady ? (
+                      <>
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <span className="text-green-400">CLOUD</span>
+                      </>
+                    ) : (
+                      <span className="text-orange-400">LOCAL</span>
+                    )}
+                    <span className={versionColor}>{version}</span>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* User Info */}
+            {creatorName && (
+              <div className="flex items-center justify-between py-2 border-t border-slate-700">
+                <div className="flex items-center gap-2 font-medium text-slate-300">
+                  <Icon
+                    name={isAdmin ? "shield-check" : "user"}
+                    size={14}
+                    className={isAdmin ? "text-orange-500" : "text-green-500"}
+                  />
+                  <span>{creatorName}</span>
+                  {isAdmin && (
+                    <span className="text-[11px] font-semibold bg-orange-900/50 text-orange-400 px-1.5 py-0.5 rounded border border-orange-800">
+                      ADMIN
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={async () => {
+                    setMobileMenuOpen(false);
+                    if (onSignOut) onSignOut();
+                    await signOutUser();
+                  }}
+                  className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
+                  aria-label="Sign out of application"
+                >
+                  <Icon name="log-out" size={16} />
+                </button>
+              </div>
+            )}
+
+            {/* Tutorial Button */}
+            {onStartTutorial &&
+              ["create", "review", "database", "analytics"].includes(
+                appMode
+              ) && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onStartTutorial(appMode);
+                  }}
+                  className="flex items-center justify-center h-10 gap-2 px-4 text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-900/50"
+                >
+                  <Icon name="help-circle" size={16} />
+                  Start Tutorial
+                </button>
+              )}
+
+            {/* Stats Row */}
+            <div className="flex items-center justify-between py-2 border-t border-slate-700 text-[11px]">
+              <div className="flex items-center gap-3">
+                {/* Tokens */}
+                <div className="flex items-center gap-1 text-purple-400">
+                  <Icon name="zap" size={12} />
+                  <span className="font-semibold">{formattedTokens}</span>
+                  <span className="text-slate-500">tok</span>
+                </div>
+                {/* Cost */}
+                <div className="flex items-center gap-1 text-emerald-400">
+                  <span className="text-slate-500">$</span>
+                  <span className="font-semibold">{formattedCost}</span>
+                </div>
+              </div>
+              {/* API Status */}
+              <span
+                className={`font-semibold ${
+                  apiKeyStatus.includes("Loaded") ||
+                  apiKeyStatus.includes("Auto") ||
+                  apiKeyStatus.includes("Cloud")
+                    ? "text-green-400"
+                    : "text-red-400"
+                }`}
+              >
+                API: {apiKeyStatus}
+              </span>
+            </div>
+
+            {/* Connection Status (if offline or syncing) */}
+            {(!connectionStatus.isOnline ||
+              connectionStatus.queuedCount > 0 ||
+              connectionStatus.syncInProgress) && (
+              <div className="flex items-center gap-3 py-2 border-t border-slate-700">
+                {!connectionStatus.isOnline && (
+                  <div className="flex items-center gap-1.5 text-yellow-400 font-bold animate-pulse">
+                    <Icon name="wifi-off" size={14} />
+                    <span>OFFLINE</span>
+                  </div>
+                )}
+                {connectionStatus.queuedCount > 0 && (
+                  <div className="flex items-center gap-1 text-orange-400 font-bold">
+                    <Icon name="upload-cloud" size={14} />
+                    <span>{connectionStatus.queuedCount} queued</span>
+                  </div>
+                )}
+                {connectionStatus.syncInProgress && (
+                  <div className="flex items-center gap-1 text-blue-400 font-bold animate-pulse">
+                    <Icon
+                      name="refresh-cw"
+                      size={14}
+                      className="animate-spin"
+                    />
+                    <span>SYNCING</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 };

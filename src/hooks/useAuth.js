@@ -21,7 +21,7 @@ import {
 // Fallback admin emails - these get auto-promoted to admin on first sign-in
 const FALLBACK_ADMIN_EMAILS = [
   "sam.deiter@epicgames.com",
-  "samdeiter@gmail.com",
+  // samdeiter@gmail.com removed for non-admin testing
 ];
 
 /**
