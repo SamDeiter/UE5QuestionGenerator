@@ -1,4 +1,5 @@
 import Icon from "./Icon";
+import { APP_VERSION } from "../utils/constants";
 
 const LandingPage = ({
   onSelectMode,
@@ -199,7 +200,7 @@ const LandingPage = ({
                   : "text-green-400 border-green-800 bg-green-950/30"
               }`}
             >
-              v2.0-{isProd ? "PROD" : "DEV"}
+              {APP_VERSION}-{isProd ? "PROD" : "DEV"}
             </div>
           );
         })()}
