@@ -15,12 +15,14 @@ import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
  * @param {Object} config - Application configuration
  * @param {string} fileContext - Context from uploaded files (pre-optimized)
  * @param {Array} rejectedExamples - Optional array of rejected questions to learn from
+ * @param {Object} coverageGaps - Optional coverage gap info { zeroTags: [], lowTags: [] }
  * @returns {string} Optimized system prompt
  */
 export const constructSystemPrompt = (
   config,
   fileContext,
-  rejectedExamples = []
+  rejectedExamples = [],
+  coverageGaps = null
 ) => {
   // Get available tags for this discipline
   const availableTags = TAGS_BY_DISCIPLINE[config.discipline] || [];
@@ -174,12 +176,23 @@ ${examplesText}
 - Language: ${config.language}
 - Mode: ${modeInstruction || "Standard"}
 
-### TAG DISTRIBUTION RULE (CRITICAL)
-**Each tag MUST appear across ALL difficulty levels.** Do NOT cluster all questions for a tag at one difficulty.
-- Example: If using #Nanite tag, ensure there are #Nanite questions at Easy, Medium, AND Hard levels.
-- For each focus tag, spread questions evenly across Easy, Medium, and Hard.
-- Avoid: 5 Easy #Nanite questions and 0 Hard #Nanite questions.
-- Goal: Complete coverage matrix (each tag × each difficulty level).
+### COMPREHENSIVE TOPIC COVERAGE (CRITICAL)
+**You MUST spread questions evenly across ALL available tags.** Do NOT focus on just 1-2 topics.
+
+**COVERAGE RULES:**
+1. **Breadth First**: Each batch should touch as many different tags as possible. If there are 10 tags, try to cover 6+ in a batch of 6.
+2. **No Clustering**: Do NOT generate 3 questions about #Nanite and 0 about #Lumen. Spread evenly.
+3. **Difficulty Spread**: Each tag should have questions at Easy, Medium, AND Hard levels over time.
+4. **Tag Assignment**: Every question MUST have 1-3 tags from the Available Tags list that accurately describe its content.
+
+**SMART PRIORITIZATION:**
+${coverageGaps && (coverageGaps.zeroTags?.length > 0 || coverageGaps.lowTags?.length > 0)
+    ? `⚠️ The following topics have ZERO or LOW coverage - PRIORITIZE THESE:
+- Zero coverage (MUST include): ${coverageGaps.zeroTags?.join(", ") || "None"}
+- Low coverage (prioritize): ${coverageGaps.lowTags?.join(", ") || "None"}
+Generate at least 50% of questions using these underrepresented tags.`
+    : `No specific gaps detected. Spread questions evenly across all available tags.`
+  }
 
 ---
 

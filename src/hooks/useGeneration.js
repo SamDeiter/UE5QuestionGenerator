@@ -199,10 +199,46 @@ export const useGeneration = (
       const _firstVal = Array.from(allQuestionsMap.values())[0];
     }
 
+    // AUTO-DETECT COVERAGE GAPS: Calculate which tags need more questions
+    const { TAGS_BY_DISCIPLINE } = await import("../utils/tagTaxonomy");
+    const availableTags = TAGS_BY_DISCIPLINE[config.discipline] || [];
+    const tagCounts = {};
+    availableTags.forEach((t) => (tagCounts[t] = 0));
+
+    // Count tag usage from existing questions
+    Array.from(allQuestionsMap.values())
+      .flat()
+      .filter((q) => q.discipline === config.discipline)
+      .forEach((q) => {
+        if (q.tags && Array.isArray(q.tags)) {
+          q.tags.forEach((t) => {
+            const norm = t.startsWith("#") ? t : `#${t}`;
+            const key = availableTags.find(
+              (at) => at.toLowerCase() === norm.toLowerCase()
+            );
+            if (key) tagCounts[key]++;
+          });
+        }
+      });
+
+    // Find gaps
+    const zeroTags = availableTags.filter((t) => tagCounts[t] === 0);
+    const lowTags = availableTags.filter(
+      (t) => tagCounts[t] > 0 && tagCounts[t] < 3
+    );
+    const coverageGaps = { zeroTags, lowTags };
+
+    if (zeroTags.length > 0 || lowTags.length > 0) {
+      console.log(
+        `📊 Coverage gaps detected: ${zeroTags.length} zero, ${lowTags.length} low`
+      );
+    }
+
     const systemPrompt = constructSystemPrompt(
       config,
       getFileContext(),
-      rejectedExamples
+      rejectedExamples,
+      coverageGaps
     );
     const userPrompt = `Generate ${config.batchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}. Ensure links work for UE 5.7 or latest available.`;
 
