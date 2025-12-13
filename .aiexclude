@@ -1,4 +1,4 @@
-# Dependencies & Locks
+                    # Dependencies & Locks
 node_modules/
 package-lock.json
 yarn.lock

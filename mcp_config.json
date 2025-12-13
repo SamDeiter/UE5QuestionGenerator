@@ -2,7 +2,7 @@
   "mcpServers": {
     "ue5-guardian": {
       "command": "C:\\Users\\Sam Deiter\\Documents\\GitHub\\UE5QuestionGenerator\\.venv\\Scripts\\python.exe",
-      "args": ["optimized_performance_server.py"],
+      "args": ["scripts/mcp_server/optimized_performance_server.py"],
       "env": {}
     },
     "antigravity-dev-helper": {
