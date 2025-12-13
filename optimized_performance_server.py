@@ -8,24 +8,21 @@ import logging
 # This prevents libraries from printing to stdout and breaking the JSON connection
 logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# 2. FORCE UTF-8 ENCODING (Crucial for Windows)
+# 2. WINDOWS COMPATIBILITY
 if sys.platform == "win32":
     try:
-        sys.stdin.reconfigure(encoding='utf-8')
-        sys.stdout.reconfigure(encoding='utf-8')
-        # CRITICAL: Use WindowsSelectorEventLoopPolicy for stdio compatibility
-        # The default ProactorEventLoop can cause issues with stdin/stdout streams
+        # We rely on PYTHONUTF8=1 in mcp_config.json for encoding.
+        # Explicitly reconfiguring streams here can cause "invalid trailing data" errors.
+        
+        # Fix Asyncio Event Loop on Windows to prevent pipe errors
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     except Exception as e:
         sys.stderr.write(f"Warning: Failed to configure Windows environment: {e}\n")
 
 # Import standard MCP SDK components
 from mcp.server import Server
-import mcp.types as types
-
-# For Python 3.13 compatibility, we'll use a custom stdio implementation
-# that avoids the _overlapped module issue
 from mcp.server.stdio import stdio_server
+import mcp.types as types
 
 # Initialize the Standard Server
 server = Server("ue5-guardian")
@@ -196,7 +193,6 @@ async def handle_call_tool(
         return [types.TextContent(type="text", text=f"Tool Execution Error: {str(e)}")]
 
 async def main():
-    """Main entry point for the MCP server."""
     # Connect using stdio (Standard Input/Output)
     # This context manager handles the communication loop automatically
     async with stdio_server() as (read_stream, write_stream):
@@ -213,4 +209,3 @@ if __name__ == "__main__":
         # CRITICAL: Write crash logs to stderr, NEVER stdout
         sys.stderr.write(f"Server Crash: {e}\n")
         traceback.print_exc(file=sys.stderr)
-        sys.exit(1)
