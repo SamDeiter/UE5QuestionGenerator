@@ -564,6 +564,7 @@ export const useGeneration = (
       // Enrich questions with metadata
       const enrichedQuestions = newQuestions.map((q) => ({
         ...q,
+        status: "pending", // New questions start as pending, not accepted
         language: "English", // All generated questions are in English
         creatorName: config.creatorName || "Unknown", // Set creator name from config
         estimatedCost: costPerQuestion,
