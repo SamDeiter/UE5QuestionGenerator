@@ -17,12 +17,13 @@ const OmniWatchdog = () => {
   const [userRole, setUserRole] = useState("Anonymous");
   const [lastFetchTime, setLastFetchTime] = useState(null);
 
-  // 🛑 Production Safety: Only run in development
-  if (process.env.NODE_ENV !== "development") {
-    return null;
-  }
+  // 🛑 Production Safety: Check if we're in development
+  const isDev = import.meta.env.DEV;
 
   useEffect(() => {
+    // Don't run in production
+    if (!isDev) return;
+
     // 🛡️ Security Scanner: Check for exposed API keys
     const scanForLeaks = () => {
       const bodyHTML = document.body.innerHTML;
@@ -106,17 +107,21 @@ const OmniWatchdog = () => {
       unsubscribe();
       window.fetch = originalFetch; // Restore original fetch
     };
-  }, [lastFetchTime]);
+  }, [isDev, lastFetchTime]);
 
   // Auto-dismiss alerts after 10 seconds
   useEffect(() => {
+    if (!isDev) return;
     if (alerts.length > 0) {
       const timer = setTimeout(() => {
         setAlerts((prev) => prev.slice(1));
       }, 10000);
       return () => clearTimeout(timer);
     }
-  }, [alerts]);
+  }, [isDev, alerts]);
+
+  // Don't render in production
+  if (!isDev) return null;
 
   return (
     <div

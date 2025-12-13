@@ -4,7 +4,6 @@ import { generateContentSecure } from "../services/geminiSecure";
 import { useAppConfig } from "../hooks/useAppConfig";
 import Icon from "./Icon";
 
-
 const PromptPlayground = ({
   config,
   onClose,
@@ -39,7 +38,7 @@ const PromptPlayground = ({
   };
 
   const handleExecute = async () => {
-    if (!process.env.NODE_ENV === "development" && !apiKeyReady) {
+    if (!import.meta.env.DEV && !apiKeyReady) {
       setError("API Key required");
       return;
     }
