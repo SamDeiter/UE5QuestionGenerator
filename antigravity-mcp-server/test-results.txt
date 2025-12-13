@@ -1,0 +1,76 @@
+≡ƒº¬ Direct MCP Server Tool Tests
+
+============================================================
+
+Test 1: Workspace Path Resolution
+============================================================
+WORKSPACE_ROOT: C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\antigravity-mcp-server
+Γ£à Resolved: package.json -> C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\antigravity-mcp-server\package.json
+Γ£à PASS: Path traversal blocked correctly
+
+
+Test 2: List Files Tool
+============================================================
+Γ£à Found 10 entries:
+   ≡ƒôä .gitignore
+   ≡ƒôü dist
+   ≡ƒôä mcp-config.antigravity-dev-helper.json
+   ≡ƒôü node_modules
+   ≡ƒôä package-lock.json
+   ≡ƒôä package.json
+   ≡ƒôä README.md
+   ≡ƒôü src
+   ≡ƒôä test-results.txt
+   ≡ƒôä test.mjs
+
+
+Test 3: Read File Tool
+============================================================
+Γ£à Read package.json (692 bytes)
+   Truncated: true
+   Preview:
+{
+  "name": "antigravity-mcp-server",
+  "version": "2.0.0",
+  "description": "TypeScript MCP server for Antigravity IDE productivity tools",
+  "type": "module",
+
+
+Test 4: File Not Found Handling
+============================================================
+Γ£à PASS: Correctly handles missing files
+
+
+Test 5: Echo Tool Logic
+============================================================
+Γ£à PASS: Echo returned correct value
+   Input: "Hello, MCP Server!"
+   Output: "Hello, MCP Server!"
+
+
+Test 6: TypeScript Compilation
+============================================================
+Γ£à PASS: Compiled JavaScript exists
+   Size: 16394 bytes
+   Modified: 2025-12-13T15:04:12.379Z
+
+
+============================================================
+≡ƒÄë Test Summary
+============================================================
+Core functionality verified:
+  Γ£à Workspace path resolution and security
+  Γ£à List files logic
+  Γ£à Read file logic
+  Γ£à Error handling (file not found)
+  Γ£à Echo tool logic
+  Γ£à TypeScript compilation
+
+Γ£¿ All MCP server components are working correctly!
+
+≡ƒô¥ Next steps:
+  1. Add this server to your Antigravity MCP config
+  2. Test the tools through Antigravity IDE
+  3. Use the tools for real development tasks
+
+
