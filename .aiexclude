@@ -32,6 +32,13 @@ __pycache__/
 *.jpeg
 *.ico
 *.gif
+*.woff
+*.woff2
+*.ttf
+*.eot
+*.mp4
+*.webm
+*.webp
 public/
 
 # Antigravity/Gemini Brain (CRITICAL)
@@ -39,6 +46,37 @@ public/
 .gemini/
 .antigravity/
 artifacts/
+
+# SCORM Extract Directories (HEAVY - Skip these!)
+temp_scorm_extract/
+temp_scorm12_extract/
+UE5ScenarioTracker-main.zip
+UE5_Scenario_Tracker_SCORM12_Build.zip
+
+# Test & Diagnostic Scripts (Not needed for AI context)
+test_*.py
+diagnostic_*.py
+minimal_server.py
+
+# Scripts Directory (HEAVY - 69+ files!)
+# Only exclude heavy subdirectories, keep main scripts accessible
+scripts/archive/
+scripts/backups/
+scripts/security_backups/
+scripts/deploy/
+scripts/examples/
+scripts/__pycache__/
+
+# Temporary Fix Scripts (Not needed after fixes applied)
+scripts/fix_*.py
+scripts/refactor_*.py
+scripts/perf_fix_*.py
+scripts/add_*.py
+scripts/integrate_*.py
+
+# MCP Debug Files
+mcp_debug.log
+update_mcp_config.py
 
 # Documentation (Optional: Un-comment if you want the agent to ignore old docs)
 # docs/
