@@ -73,25 +73,25 @@ def update_firebase_config(editor):
     
     # Replace hardcoded Firebase config with environment variables
     old_config = """const firebaseConfig = {
-    apiKey: "AIzaSyA1g9RCrRH8AxuFUOLRRPxwqmXda6ChWCI",
-    authDomain: "ue5questionssoure.firebaseapp.com",
-    projectId: "ue5questionssoure",
-    storageBucket: "ue5questionssoure.firebasestorage.app",
-    messagingSenderId: "10200378954",
-    appId: "1:10200378954:web:5aaa8eb97cce0a4a6840b3",
-    measurementId: "G-31HMNEB7S5"
+    apiKey: "YOUR_OLD_API_KEY",
+    authDomain: "your-project.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project.firebasestorage.app",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef123456",
+    measurementId: "G-ABCDEF123"
 };"""
     
     new_config = """// SECURITY: Firebase config now uses environment variables
 // Create a .env file based on .env.example and add your actual keys
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyA1g9RCrRH8AxuFUOLRRPxwqmXda6ChWCI",
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "ue5questionssoure.firebaseapp.com",
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "ue5questionssoure",
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "ue5questionssoure.firebasestorage.app",
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "10200378954",
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:10200378954:web:5aaa8eb97cce0a4a6840b3",
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-31HMNEB7S5"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "YOUR_API_KEY_PLACEHOLDER",
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "your-project.firebaseapp.com",
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "your-project-id",
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "your-project.firebasestorage.app",
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abcdef123456",
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-ABCDEF123"
 };"""
     
     content = content.replace(old_config, new_config)
