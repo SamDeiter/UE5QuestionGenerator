@@ -34,8 +34,8 @@ export const CATEGORY_KEYS = [
   "Hard MC",
   "Hard T/F",
 ];
-export const TARGET_PER_CATEGORY = 80;
-export const TARGET_TOTAL = 480; // 6 categories × 80 questions each
+export const TARGET_PER_CATEGORY = 40; // 40 MC + 40 T/F per difficulty
+export const TARGET_TOTAL = 240; // 3 difficulties × 80 questions each
 export const FIELD_DELIMITER = ",";
 
 // Quality Score Thresholds

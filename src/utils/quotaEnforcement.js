@@ -191,8 +191,8 @@ export const validateGeneration = (
     (q) => q.type === "True/False" || q.type === "T/F"
   ).length;
 
-  const MC_QUOTA = 33;
-  const TF_QUOTA = 33;
+  const MC_QUOTA = TARGET_PER_CATEGORY;
+  const TF_QUOTA = TARGET_PER_CATEGORY;
 
   // Check if both MC and T/F are full for this difficulty
   if (mcCount >= MC_QUOTA && tfCount >= TF_QUOTA) {
