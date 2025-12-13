@@ -2,37 +2,26 @@ import asyncio
 import os
 import sys
 import traceback
-import io
+import logging
 
-# ==============================================================================
-# CRITICAL: COMPLETE STDOUT ISOLATION FOR MCP JSON-RPC PROTOCOL
-# ==============================================================================
-# MCP uses JSON-RPC over stdio. ANY non-JSON text on stdout breaks the protocol.
-# We must suppress ALL output during imports, then restore stdout for MCP.
+# 1. CRITICAL: Redirect ALL logging to stderr
+# This prevents libraries from printing to stdout and breaking the JSON connection
+logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Store original stdout for later restoration
-_original_stdout = sys.stdout
-_original_stderr = sys.stderr
-
-# 1. FORCE UTF-8 ENCODING (Crucial for Windows)
+# 2. FORCE UTF-8 ENCODING (Crucial for Windows)
 if sys.platform == "win32":
-    sys.stdin.reconfigure(encoding='utf-8')
-    _original_stdout.reconfigure(encoding='utf-8')
+    try:
+        sys.stdin.reconfigure(encoding='utf-8')
+        sys.stdout.reconfigure(encoding='utf-8')
+        # Fix Asyncio Event Loop on Windows to prevent pipe errors
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    except Exception as e:
+        sys.stderr.write(f"Warning: Failed to configure Windows environment: {e}\n")
 
-# 2. SUPPRESS ALL OUTPUT DURING IMPORTS
-# Redirect stdout to devnull to catch any package banners/prints
-sys.stdout = io.StringIO()  # Capture any stdout during imports
-sys.stderr = io.StringIO()  # Capture any stderr during imports
-
-try:
-    # Import standard MCP SDK components (may print banners)
-    from mcp.server import Server
-    from mcp.server.stdio import stdio_server
-    import mcp.types as types
-finally:
-    # 3. RESTORE STDOUT for MCP communication
-    sys.stdout = _original_stdout
-    sys.stderr = _original_stderr
+# Import standard MCP SDK components
+from mcp.server import Server
+from mcp.server.stdio import stdio_server
+import mcp.types as types
 
 # Initialize the Standard Server
 server = Server("ue5-guardian")
