@@ -35,7 +35,7 @@ export const CATEGORY_KEYS = [
   "Hard T/F",
 ];
 export const TARGET_PER_CATEGORY = 80;
-export const TARGET_TOTAL = 200;
+export const TARGET_TOTAL = 480; // 6 categories × 80 questions each
 export const FIELD_DELIMITER = ",";
 
 // Quality Score Thresholds
