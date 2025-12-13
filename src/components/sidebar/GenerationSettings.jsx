@@ -242,7 +242,7 @@ const GenerationSettings = ({
                                 ? "text-green-400"
                                 : row.mc >= 28
                                 ? "text-yellow-400"
-                                : ""
+                                : "text-slate-400"
                             }
                           >
                             {row.mc >= 33 ? `✓ ${row.mc}` : `${row.mc}/33`}
@@ -269,7 +269,7 @@ const GenerationSettings = ({
                                 ? "text-green-400"
                                 : row.tf >= 28
                                 ? "text-yellow-400"
-                                : ""
+                                : "text-slate-400"
                             }
                           >
                             {row.tf >= 33 ? `✓ ${row.tf}` : `${row.tf}/33`}
