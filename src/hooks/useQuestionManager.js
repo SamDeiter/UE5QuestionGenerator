@@ -99,7 +99,12 @@ export const useQuestionManager = (config, showMessage) => {
     combined.forEach((q) => {
       const id = q.uniqueId;
       if (!newMap.has(id)) newMap.set(id, []);
-      newMap.get(id).push(q);
+      // Dedupe by language within each uniqueId bucket to prevent double-counting
+      const variants = newMap.get(id);
+      const lang = q.language || "English";
+      if (!variants.some((v) => (v.language || "English") === lang)) {
+        variants.push(q);
+      }
     });
     setAllQuestionsMap(newMap);
   }, [questions, historicalQuestions, databaseQuestions]);
