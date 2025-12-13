@@ -6,7 +6,6 @@ import ProgressStats from "./sidebar/ProgressStats";
 import BatchSizeControl from "./sidebar/BatchSizeControl";
 import ActionFooter from "./sidebar/ActionFooter";
 import TokenUsageDisplay from "./TokenUsageDisplay";
-import CoverageGapSuggester from "./sidebar/CoverageGapSuggester";
 
 const Sidebar = ({
   showGenSettings,
@@ -46,6 +45,8 @@ const Sidebar = ({
               isOpen={showGenSettings}
               onToggle={() => setShowGenSettings(!showGenSettings)}
               allQuestionsMap={allQuestionsMap}
+              showMessage={showMessage}
+              setShowGenSettings={setShowGenSettings}
             />
           </div>
 
@@ -60,15 +61,6 @@ const Sidebar = ({
             isProcessing={isProcessing}
             allQuestionsMap={allQuestionsMap}
             status={status}
-          />
-
-          {/* Coverage Gap Alert - Only show when there are gaps */}
-          <CoverageGapSuggester
-            allQuestionsMap={allQuestionsMap}
-            config={config}
-            handleChange={handleChange}
-            showMessage={showMessage}
-            setShowGenSettings={setShowGenSettings}
           />
         </>
       )}

@@ -3,6 +3,7 @@ import { listModels } from "../../services/gemini";
 import Icon from "../Icon";
 import InfoTooltip from "../InfoTooltip";
 import { getMergedTags } from "../../utils/tagTaxonomy";
+import CoverageGapSuggester from "./CoverageGapSuggester";
 
 /**
  * GenerationSettings - Configuration panel with progressive disclosure
@@ -15,6 +16,8 @@ const GenerationSettings = ({
   isOpen,
   onToggle,
   allQuestionsMap = {},
+  showMessage,
+  setShowGenSettings,
 }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const availableTags = getMergedTags(config.discipline, customTags);
@@ -394,6 +397,15 @@ const GenerationSettings = ({
                     </div>
                   </div>
                 )}
+
+                {/* Coverage Gap Suggester - Inside Tags Section */}
+                <CoverageGapSuggester
+                  allQuestionsMap={allQuestionsMap}
+                  config={config}
+                  handleChange={handleChange}
+                  showMessage={showMessage}
+                  setShowGenSettings={setShowGenSettings}
+                />
 
                 {/* AI Model Selection */}
                 <div className="space-y-1">
