@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UE5 Test Key Auditor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #1a202c; 
+            color: #e2e8f0; 
+            font-family: ui-sans-serif, system-ui;
+        }
+        .audit-card {
+            background-color: #2d3748; 
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+        .time-correct { color: #34d399; } /* green-400 */
+        .time-partial { color: #facc15; } /* yellow-400 */
+        .time-misguided { color: #fb923c; } /* orange-400 */
+        .time-wrong { color: #f87171; } /* red-400 */
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto space-y-8">
+        <h1 class="text-4xl font-extrabold text-blue-400 border-b border-gray-700 pb-4">Test Key Auditor</h1>
+
+        <div class="audit-card p-6 rounded-xl space-y-4">
+            <label for="test-key-input" class="block text-lg font-semibold text-gray-200">Paste Reproducible Test Key:</label>
+            <textarea id="test-key-input" rows="4" placeholder="Enter Base64 Test Key here..." 
+                      class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-yellow-300 placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"></textarea>
+            
+            <div class="flex space-x-4">
+                <button id="check-key-btn" 
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-all duration-200">
+                    Audit Key
+                </button>
+                <button id="clear-btn" 
+                        class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-all duration-200">
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        <div id="audit-output" class="space-y-6">
+            <!-- Audit Report goes here -->
+        </div>
+    </div>
+
+    <script>
+        // --- 1. SCENARIOS DATA (Copied from questions.js) ---
+        // This is necessary to resolve the human-readable names and costs.
+        window.SCENARIOS = {
+          // GOLEM SCENARIO
+          golem: {
+            meta: {
+              title: "BP_GuardianGolem is Non-Functional: Full Debug Hunt",
+              description:
+                "Critical enemy asset fails to spawn, T-poses, leaks VFX memory, and breaks on the network.",
+              estimateHours: 14.0
+            },
+            start: "step-1",
+            steps:
+              {
+                'step-1': {isTask: true, skill:'compile',title:'Abstract Class Error',prompt:"...",choices:[{text:"Implement the required unimplemented function inherited from the parent C++ class.",type:'correct',feedback:"...",next:'step-2'},{text:'Delete the asset and re-create it, hoping the corruption clears.',type:'wrong',feedback:"...",next:'step-1W'},{text:'Check the Blueprint\'s variables for an unchecked <code>Expose on Spawn</code> property.',type:'misguided',feedback:"...",next:'step-1M'},{text:'Recompile the parent C++ code without making any changes.',type:'partial',feedback:"...",next:'step-3'}]},
+                'step-1W': {isTask: false, skill:'compile',title:'Asset Deletion Wastes Time',prompt:"...",choices:[{text:'In the My Blueprint panel, right-click the parent function name and select "Implement function".',type:'correct',feedback:"...",next:'step-3'},{text:'Open the parent C++ class and remove the "BlueprintImplementableEvent" tag.',type:'wrong',feedback:"...",next:'step-3'}]},
+                'step-1M': {isTask: false, skill:'compile',title:'Misguided Variable Check Failure',prompt:"...",choices:[{text:'Go back and investigate the inherited functions in the My Blueprint panel.',type:'correct',feedback:"...",next:'step-3'},{text:'Try recompiling the parent C++ code again (Partial answer from Step 1).',type:'partial',feedback:"...",next:'step-3'}]},
+                'step-2': {isTask: true, skill:'anim',title:'The Runtime T-Pose',prompt:"...",choices:[{text:"Trace the AnimBP's Event Graph logic to ensure data variables (like Speed) are being updated from the main Golem Blueprint (Cast failure).",type:'correct',feedback:"...",next:'step-3'},{text:'Change the Skeletal Mesh Component\'s "Animation Mode" to "Use Animation Asset".',type:'partial',feedback:"...",next:'step-3'},{text:'Reimport the Skeletal Mesh and all associated animations.',type:'wrong',feedback:"...",next:'step-2W'},{text:'Check if the character\'s physics asset is blocking movement.',type:'misguided',feedback:"...",next:'step-2M'}]},
+                'step-2W': {isTask: false, skill:'anim',title:'Asset Reimport Was Useless',prompt:"...",choices:[{text:'Check the data casting between the AnimBP and the main Golem Blueprint.',type:'correct',feedback:"...",next:'step-3'},{text:'Check the Golem\'s <code>Movement Mode</code>, maybe it\'s set to <code>None</code>.',type:'misguided',feedback:"...",next:'step-3'}]},
+                'step-2M': {isTask: false, skill:'anim',title:'Physics Asset Investigation (Dead End)',prompt:"...",choices:[{text:'Check the data casting between the AnimBP and the main Golem Blueprint.',type:'correct',feedback:"...",next:'step-3'},{text:'Check if the Golem\'s <code>Skeletal Mesh Component</code> is set to <code>Visible</code>.',type:'wrong',feedback:"...",next:'step-3'}]},
+                'step-3': {isTask: true, skill:'anim',title:'Tracing the Data Flow Failure',prompt:"...",choices:[{text:"Use <code>Event Blueprint Initialize Animation</code> to establish a solid reference to the Golem once, avoiding the per-frame cast and potential timing issues.",type:'correct',feedback:"...",next:'step-4'},{text:'Add an <code>IsValid</code> check after the Cast. Only update variables if the Cast succeeds.',type:'misguided',feedback:"...",next:'step-4'},{text:'Add a 0.2 second Delay before the Cast to ensure the character is fully possessed.',type:'misguided',feedback:"...",next:'step-4'},{text:'Move the Cast logic to the Golem Blueprint and send the data back to the AnimBP via a variable binding.',type:'wrong',feedback:"...",next:'step-4'}]},
+                'step-4': {isTask: true, skill:'anim',title:'The T-Pose Visual Tech Debt',prompt:"...",choices:[{text:"The robust, event-driven reference initialization pattern (using <code>Initialize Animation</code>).",type:'correct',feedback:"...",next:'step-5'},{text:'The <code>Character Movement Component</code> has its <code>Default Land Movement Mode</code> set to None.',type:'misguided',feedback:"...",next:'step-5'},{text:'The AnimBP is overriding the wrong function, it should use <code>Post Update Animation</code>.',type:'wrong',feedback:"...",next:'step-5'},{text:'The delay node was still the better solution for reliability.',type:'partial',feedback:"...",next:'step-5'}]},
+                'step-5': {isTask: true, skill:'vfx',title:'The Missing Anim Notify',prompt:"...",choices:[{text:"Open the Animation Sequence (A_Golem_Slam) and verify the <code>FX_SlamImpact</code> notify exists on the <code>Notify Track</code> and is correctly placed/spelled.",type:'correct',feedback:"...",next:'step-6'},{text:'Place a breakpoint on the corresponding event in the AnimBP\'s <code>Event Graph</code>.',type:'partial',feedback:"...",next:'step-6'},{text:'Check the <code>Niagara System</code> asset to ensure it is not compiled with errors.',type:'misguided',feedback:"...",next:'step-6'},{text:'Change the notify\'s timing in the Montage instead of the <code>Anim Sequence</code>.',type:'wrong',feedback:"...",next:'step-6'}]},
+                'step-6': {isTask: true, skill:'vfx',title:'The Emitter Spawns at Origin',prompt:"...",choices:[{text:'Use <code>Spawn Emitter Attached</code> and provide the Golem\'s mesh and a foot socket name as the attach point.',type:'correct',feedback:"...",next:'step-7'},{text:'Use <code>Get Socket Location</code> on the mesh and feed that world location into <code>Spawn Emitter at Location</code>.',type:'partial',feedback:"...",next:'step-7'},{text:"Manually add the Golem's world location to a hard-coded offset vector.",type:'misguided',feedback:"...",next:'step-7'},{text:'The <code>Niagara System</code> needs its <code>Local Space</code> flag enabled.',type:'wrong',feedback:"...",next:'step-6W'}]},
+                'step-6W': {isTask: false, skill:'vfx',title:'Local Space Confusion (Dead End)',prompt:"...",choices:[{text:'Use <code>Spawn Emitter Attached</code> and provide the Golem\'s mesh and a socket name as the attach point.',type:'correct',feedback:"...",next:'step-7'},{text:'Set the <code>Spawn Emitter at Location</code> node to use the character\'s world <code>Root Component</code> location.',type:'partial',feedback:"...",next:'step-7'}]},
+                'step-7': {isTask: true, skill:'vfx',title:'Leaking VFX Actors',prompt:"...",choices:[{text:"Check the <code>Spawn Emitter Attached</code> node to ensure the <code>Auto Destroy</code> checkbox is checked.",type:'correct',feedback:"...",next:'step-8'},{text:'Manually call <code>Destroy Actor</code> on the emitter reference after a Delay node matching the effect\'s duration.',type:'partial',feedback:"...",next:'step-8'},{text:'Reduce the particle count in the <code>Niagara System</code> to lessen memory pressure.',type:'misguided',feedback:"...",next:'step-8'},{text:'Wait for the <code>Garbage Collector</code> to run; it will eventually clean up unused actors.',type:'wrong',feedback:"...",next:'step-8'}]},
+                'step-8': {isTask: true, skill:'material',title:'Unlit Gray VFX',prompt:"...",choices:[{text:'In the Niagara emitter, add or adjust the <code>Scale Color</code> module to output the necessary color data for the Material to use.',type:'correct',feedback:"...",next:'step-9'},{text:"Delete the <code>Particle Color</code> node and connect the texture directly to the material's <code>Emissive</code> output.",type:'partial',feedback:"...",next:'step-9'},{text:'Change the material\'s <code>Blend Mode</code> from Opaque to Additive.',type:'misguided',feedback:"...",next:'step-9'},{text:'Reimport the texture files used by the material.',type:'wrong',feedback:"...",next:'step-9'}]},
+                'step-9': {isTask: true, skill:'perf',title:'Overdraw Crisis (Visual Tech Debt)',prompt:"...",choices:[{text:'Change the material\'s <code>Blend Mode</code> from <code>Translucent</code> to a more performant option like <code>Additive</code> or <code>Masked</code>.',type:'correct',feedback:"...",next:'step-10'},{text:'Reduce the size of the particle sprites in the <code>Niagara system</code>.',type:'partial',feedback:"...",next:'step-10'},{text:'Enable the <code>Use Ray Tracing</code> flag on the material.',type:'misguided',feedback:"...",next:'step-10'},{text:'Wait for the rendering team to provide a better shader.',type:'wrong',feedback:"...",next:'step-10'}]},
+                'step-10': {isTask: true, skill:'perf',title:'The Draw Call Spike (Mass Placement)',prompt:"...",choices:[{text:'Check if the Golem\'s eye glow or another feature is generating a unique <code>Dynamic Material Instance (DMI)</code> per Golem, thus breaking instancing.',type:'correct',feedback:"...",next:'step-11'},{text:'The VFX material is still causing complexity issues.',type:'partial',feedback:"...",next:'step-11'},{text:'The Golem <code>Skeletal Mesh</code> has too many material slots (<code>sub-meshes</code>).',type:'misguided',feedback:"...",next:'step-10M'},{text:'The <code>Tick</code> function is too heavy, starving the <code>Render Thread</code>.',type:'wrong',feedback:"...",next:'step-11'}]},
+                'step-10M': {isTask: false, skill:'perf',title:'Merging Mesh Slots (Dead End)',prompt:"...",choices:[{text:'The eye glow is generating a unique <code>Dynamic Material Instance (DMI)</code> per Golem, thus breaking instancing.',type:'correct',feedback:"...",next:'step-11'},{text:'The mesh is using <code>World Position Offset</code>, which prevents instancing.',type:'misguided',feedback:"...",next:'step-11'}]},
+                'step-11': {isTask: true, skill:'material',title:'The DMI Refactor',prompt:"...",choices:[{text:'Refactor the eye material to use a <code>Material Parameter Collection (MPC)</code>, which is a global data asset that can be updated in a single render pass.',type:'correct',feedback:"...",next:'step-12'},{text:'Use a <code>Per-Instance Custom Data</code> node in the material, driven by C++ code.',type:'partial',feedback:"...",next:'step-12'},{text:'Remove the <code>DMI</code> and simplify the material until it no longer needs instance-specific parameters.',type:'misguided',feedback:"...",next:'step-12'},{text:'Set the material to <code>Unlit</code>, as <code>unlit</code> materials are inherently faster to draw.',type:'wrong',feedback:"...",next:'step-12'}]},
+                'step-12': {isTask: true, skill:'material',title:'MPC Naming Conflict',prompt:"...",choices:[{text:'Another system in the level is also writing to the same <code>MPC</code> parameter every frame, causing a <code>naming collision</code> and overwriting your value.',type:'correct',feedback:"...",next:'step-13'},{text:"The Material assigned to the eye doesn't actually reference the <code>MPC</code>.",type:'partial',feedback:"...",next:'step-13'},{text:'The Golem Blueprint is setting the <code>MPC</code> value on <code>Event BeginPlay</code>, which is too early.',type:'misguided',feedback:"...",next:'step-13'},{text:'You must call <code>Apply Changes</code> after setting an <code>MPC</code> value.',type:'wrong',feedback:"...",next:'step-13'}]},
+                'step-13': {isTask: true, skill:'rep',title:'Multilayer Glow Failure',prompt:"...",choices:[{text:"Change the <code>IsEnraged</code> boolean variable's replication type to <code>RepNotify</code> and place the visual update logic in the generated <code>OnRep_IsEnraged</code> function.",type:'correct',feedback:"...",next:'step-14'},{text:'Create a <code>Multicast RPC</code> that runs the visual update logic on all clients whenever the state changes.',type:'partial',feedback:"...",next:'step-14'},{text:'Run the visual update logic on the client\'s <code>Event Tick</code>, checking for the server-replicated variable change.',type:'misguided',feedback:"...",next:'step-14'},{text:'Enable the "Replicates" flag on the <code>Material Parameter Collection</code> asset itself.',type:'wrong',feedback:"...",next:'step-14'}]},
+                'step-14': {isTask: true, skill:'rep',title:'Multilayer Animation Desync',prompt:"...",choices:[{text:"Place the <code>Play Anim Montage</code> node inside a reliable <code>Multicast RPC</code>, ensuring all clients are explicitly told to run the cosmetic animation.",type:'correct',feedback:"...",next:'step-15'},{text:'Change the <code>montage trigger variable</code> to a <code>RepNotify</code>.',type:'partial',feedback:"...",next:'step-15'},{text:'Increase the replication rate settings on the Golem\'s <code>Skeletal Mesh Component</code>.',type:'misguided',feedback:"...",next:'step-15'},{text:'Set the <code>Anim Montage</code> asset\'s "Replicate" property to true.',type:'wrong',feedback:"...",next:'step-15'}]},
+                'step-15': {isTask: true, skill:'rep',title:'Input Lockout Bug',prompt:"...",choices:[{text:'A logic path is enabling a <code>Gameplay Ability</code> input or setting a <code>Gameplay Tag</code> on the character, but the corresponding disabling logic is failing to run.',type:'correct',feedback:"...",next:'step-16'},{text:'The <code>character movement component</code> is disabled, preventing only movement-related inputs.',type:'partial',feedback:"...",next:'step-16'},{text:'The <code>player controller</code> is losing its input focus (<code>Unpossessed</code>).',type:'misguided',feedback:"...",next:'step-16'},{text:'The <code>input mapping context</code> is corrupted.',type:'wrong',feedback:"...",next:'step-16'}]},
+                'step-16': {isTask: true, skill:'perf',title:'Collision Snagging',prompt:"...",choices:[{text:"Select the Golem's <code>CapsuleComponent</code> in its Blueprint and check its size and position. Use the <code>p.ShowCollision</code> console command in-game to visualize it.",type:'correct',feedback:"...",next:'step-17'},{text:"Open the Golem's <code>Physics Asset</code> and simplify the collision bodies on its legs and feet.",type:'partial',feedback:"...",next:'step-17'},{text:'Increase the <code>Max Step Height</code> in the <code>Character Movement Component</code>.',type:'misguided',feedback:"...",next:'step-17'},{text:"Increase the Golem's mass in its <code>Character Movement Component</code>.",type:'wrong',feedback:"...",next:'step-17'}]},
+                'step-17': {isTask: true, skill:'material',title:'Build Packaging Failure',prompt:"...",choices:[{text:'A <code>debug node</code> was left in the eye material. These nodes are not allowed in packaged builds and must be removed.',type:'correct',feedback:"...",next:'step-18'},{text:"The material has a compile error that only shows up during cooking.",type:'partial',feedback:"...",next:'step-18'},{text:'You need to install the <code>Material Debugging Utilities</code> plugin for the packaged game.',type:'wrong',feedback:"...",next:'step-18'},{text:'The material needs to be saved with the <code>Shipping Build</code> flag enabled.',type:'misguided',feedback:"...",next:'step-18'}]},
+                'step-18': {isTask: true, skill:'material',title:'Cleaning the Shader',prompt:"...",choices:[{text:'The <code>Collision Hull</code> for the mesh is missing or the <code>LODs</code> were imported incorrectly, causing a <code>static mesh validation error</code> during cook.',type:'correct',feedback:"...",next:'conclusion'},{text:'The material is still using a <code>virtual texture asset</code>.',type:'partial',feedback:"...",next:'conclusion'},{text:'You forgot to set the <code>Skeletal Mesh Component</code> to "Hidden In Game".',type:'wrong',feedback:"...",next:'conclusion'},{text:'The issue is actually with the AnimBP, which must be compiled for the target platform.',type:'misguided',feedback:"...",next:'conclusion'}]}
+              }
+          },
+          // DASH SCENARIO
+          dash: {
+            meta: {
+              title: "Player Dash Ability is Broken",
+              description:
+                "Traversal ability unresponsive. Covers input setup, cooldowns, movement, effects, and replication.",
+              estimateHours: 16.0
+            },
+            start: "step-1",
+            steps:
+              {
+                'step-1': {isTask: true, skill:'input',title:'The Unresponsive Dash',prompt:"...",choices:[{text:'The <code>Input Mapping Context</code> containing the dash action has not been added to the <code>Player Controller</code> at runtime.',type:'correct',feedback:"...",next:'step-2'},{text:'The input event is being consumed by another Blueprint.',type:'partial',feedback:"...",next:'step-2'},{text:'The <code>Input Action</code> asset has <code>Consume Input</code> unchecked.',type:'wrong',feedback:"...",next:'step-2'},{text:'The <code>Character Movement Component</code> is blocking the input.',type:'wrong',feedback:"...",next:'step-1W'}]},
+                'step-1W': {isTask: false, skill:'input',title:'Wrong Subsystem',prompt:"...",choices:[{text:'Get the <code>Player Controller</code>, get its <code>Enhanced Input Local Player Subsystem</code>, and call <code>Add Mapping Context</code>.',type:'correct',feedback:"...",next:'step-2'},{text:'Add it in the <code>Project Settings</code> under <code>Input</code>.',type:'misguided',feedback:"...",next:'step-2'},{text:'The <code>Level Blueprint</code> must add it for all players.',type:'wrong',feedback:"...",next:'step-2'},{text:'You have to cast to the specific pawn from the <code>Player Controller</code> first.',type:'wrong',feedback:"...",next:'step-2'}]},
+                'step-2': {isTask: true, skill:'movement',title:'Movement Without Motion',prompt:"...",choices:[{text:'The <code>Launch Velocity</code> input is <code>(0,0,0)</code>, or the player is already moving at max speed and the current velocity is not being overridden.',type:'correct',feedback:"...",next:'step-3'},{text:'The <code>Character Movement Component</code> has <code>Simulate Physics</code> enabled.',type:'wrong',feedback:"...",next:'step-3'},{text:'The player is blocked by a small object on the floor.',type:'misguided',feedback:"...",next:'step-2M'},{text:'The <code>Event Tick</code> on the character is disabled.',type:'wrong',feedback:"...",next:'step-3'}]},
+                'step-2M': {isTask: false, skill:'movement',title:'Adjusting Walk Speed (Dead End)',prompt:"...",choices:[{text:'Check the <code>Launch Velocity</code> input for a zero vector, and check the <code>XYOverride</code>/<code>ZOverride</code> booleans.',type:'correct',feedback:"...",next:'step-3'},{text:'Delete the <code>Launch Character</code> node and replace it with <code>Add Force</code>.',type:'wrong',feedback:"...",next:'step-3'},{text:'Check if the character\'s mesh has <code>No Collision</code> set.',type:'misguided',feedback:"...",next:'step-3'}]},
+                'step-3': {isTask: true, skill:'systems',title:'Infinite Dashes',prompt:"...",choices:[{text:'Use a boolean like <code>bIsDashOnCooldown</code>, set it to true after dashing, and use a <code>Set Timer by Event</code> node with a 2-second delay to call an event that sets it back to false.',type:'correct',feedback:"...",next:'step-4'},{text:'On dash, record the <code>Get Game Time in Seconds</code> and, on the next attempt, check if the current time is greater than the recorded time plus 2.',type:'partial',feedback:"...",next:'step-4'},{text:'Add a <code>Delay</code> node for 2 seconds at the end of the dash logic.',type:'wrong',feedback:"...",next:'step-4'},{text:'Create a <code>Timeline</code> that is 2 seconds long and only allow dashing when it is finished.',type:'misguided',feedback:"...",next:'step-4'}]},
+                'step-4': {isTask: true, skill:'systems',title:'Free Stamina',prompt:"...",choices:[{text:'The logic checks if the player has <strong>enough</strong> stamina <strong>before</strong> subtracting, but the initial check is failing, preventing the subtraction from ever running.',type:'correct',feedback:"...",next:'step-5'},{text:'The <code>Stamina</code> variable is not marked as <code>Instance Editable</code>.',type:'wrong',feedback:"...",next:'step-5'},{text:'The subtraction is happening, but another node on <code>Event Tick</code> is resetting the stamina back to full every frame.',type:'partial',feedback:"...",next:'step-5'},{text:'You are trying to subtract from a local variable that was copied from the real Stamina variable, instead of the actual class member variable.',type:'misguided',feedback:"...",next:'step-5'}]},
+                'step-5': {isTask: true, skill:'vfx',title:'The Silent Whoosh',prompt:"...",choices:[{text:'The <code>Sound</code> input pin on the node is not assigned to a <code>Sound Wave</code> or <code>Sound Cue</code> asset.',type:'correct',feedback:"...",next:'step-6'},{text:'The <code>Location</code> input is <code>(0,0,0)</code> and the player is far away from the world origin.',type:'partial',feedback:"...",next:'step-6'},{text:"The sound's <code>Attenuation</code> settings have a radius of zero.",type:'misguided',feedback:"...",next:'step-6'},{text:'You are using <code>Play Sound at Location</code> instead of <code>Play Sound 2D</code>.',type:'wrong',feedback:"...",next:'step-6'}]},
+                'step-6': {isTask: true, skill:'vfx',title:'The Invisible Trail',prompt:"...",choices:[{text:'The component\'s <code>Auto Activate</code> property is set to false, and you have not explicitly called the <code>Activate</code> node on the component in your dash logic.',type:'correct',feedback:"...",next:'step-7'},{text:'The Niagara System asset itself has a compile error.',type:'partial',feedback:"...",next:'step-7'},{text:'The material used by the particles is transparent, making them invisible.',type:'misguided',feedback:"...",next:'step-7'},{text:'The <code>Niagara Component</code> must be the root component of the <code>Blueprint</code>.',type:'wrong',feedback:"...",next:'step-7'}]},
+                'step-7': {isTask: true, skill:'rep',title:'The Invisible Dash',prompt:"...",choices:[{text:'The events that trigger the cosmetics are only running on the server and the local client. They need to be called from a <code>Multicast</code> RPC to execute on all clients.',type:'correct',feedback:"...",next:'step-8'},{text:'The <code>Niagara System</code> asset needs its <code>Replicates</code> flag checked.',type:'wrong',feedback:"...",next:'step-8'},{text:'The other clients are too far away to see the effect.',type:'misguided',feedback:"...",next:'step-8'},{text:'The logic should be in a <code>Run on Owning Client</code> RPC instead.',type:'partial',feedback:"...",next:'step-8'}]},
+                'step-8': {isTask: true, skill:'rep',title:'The Snap-Back',prompt:"...",choices:[{text:"The dash logic (e.g., <code>Launch Character</code>) is only being executed on the client. The server, which has authority, doesn't know the dash occurred and corrects the client's position.",type:'correct',feedback:"...",next:'step-9'},{text:'The client\'s network connection is lagging.',type:'partial',feedback:"...",next:'step-9'},{text:'The <code>Character Movement Component</code> has <code>Allow Client-Side Prediction</code> disabled.',type:'misguided',feedback:"...",next:'step-8M'},{text:'The Multicast event for the VFX is interfering with the movement.',type:'wrong',feedback:"...",next:'step-8W'}]},
+                'step-8M': {isTask: false, skill:'rep',title:'Client Prediction Failure (Dead End)',prompt:"...",choices:[{text:'The client\'s input must trigger a <code>Run on Server</code> RPC that contains the movement logic.',type:'correct',feedback:"...",next:'step-9'},{text:'Check the <code>Is Authority</code> node before the launch and branch the logic.',type:'partial',feedback:"...",next:'step-9'},{text:'Increase the <code>Network Update Frequency</code> on the character.',type:'misguided',feedback:"...",next:'step-9'}]},
+                'step-8W': {isTask: false, skill:'rep',title:'Irrelevant Authority Check (Dead End)',prompt:"...",choices:[{text:"The client's input must trigger a <code>Run on Server</code> RPC that contains the movement logic.",type:'correct',feedback:"...",next:'step-9'},{text:'Check the <code>Is Valid</code> node before the launch and branch the logic.',type:'misguided',feedback:"...",next:'step-9'},{text:'Increase the size of the <code>Replicated Movement</code> property struct.',type:'wrong',feedback:"...",next:'step-9'}]},
+                'step-9': {isTask: true, skill:'collision',title:'Dashing Through Walls',prompt:"...",choices:[{text:'Enabling <code>Sweep</code> on the movement call (e.g., <code>Set Actor Location</code>) or using a movement component function that sweeps automatically, like <code>Add Movement Input</code>.',type:'correct',feedback:"...",next:'step-10'},{text:'Increasing the character\'s capsule radius.',type:'misguided',feedback:"...",next:'step-10'},{text:'Enabling <code>Continuous Collision Detection</code> (CCD) on the capsule component.',type:'partial',feedback:"...",next:'step-10'},{text:'Increasing the mass of the character.',type:'wrong',feedback:"...",next:'step-10'}]},
+                'step-10': {isTask: true, skill:'animation',title:'The Static Dash',prompt:"...",choices:[{text:"The <code>Anim BP's AnimGraph</code> is missing a <code>Slot</code> node. Montages need a named slot to play into, which overrides the base animation from the state machine.",type:'correct',feedback:"...",next:'step-11'},{text:'The montage asset has not been saved.',type:'wrong',feedback:"...",next:'step-11'},{text:'The character is not in the correct <code>Movement Mode</code> (e.g., <code>Falling</code>).',type:'wrong',feedback:"...",next:'step-11'},{text:'You must use <code>Play Animation</code> instead of <code>Play Anim Montage</code>.',type:'misguided',feedback:"...",next:'step-11'}]},
+                'step-11': {isTask: true, skill:'animation',title:'The Blending Snap',prompt:"...",choices:[{text:'The <code>Blend In</code> and <code>Blend Out</code> time settings within the <code>Anim Montage</code> asset itself.',type:'correct',feedback:"...",next:'step-12'},{text:'The <code>Interpolation</code> settings on the <code>Blendspace</code> used in the <code>State Machine</code>.',type:'wrong',feedback:"...",next:'step-12'},{text:'A "Montage Blend" node in the Anim BP event graph.',type:'wrong',feedback:"...",next:'step-12'},{text:'The <code>Play Rate</code> input on the <code>Play Anim Montage</code> node.',type:'misguided',feedback:"...",next:'step-12'}]},
+                'step-12': {isTask: true, skill:'animation',title:'The Root Motion Problem',prompt:"...",choices:[{text:'The animation has <code>Root Motion</code>, and you are also applying movement with a <code>Launch Character</code> node. You should do one or the other, not both.',type:'correct',feedback:"...",next:'step-13'},{text:'The animation\'s <code>Play Rate</code> is set to 2.0.',type:'wrong',feedback:"...",next:'step-13'},{text:'The server is correcting the client\'s position, causing an overshoot.',type:'misguided',feedback:"...",next:'step-13'},{text:'The character\'s <code>Max Walk Speed</code> is too high.',type:'wrong',feedback:"...",next:'step-13'}]},
+                'step-13': {isTask: true, skill:'ui',title:'Stale Stamina Bar',prompt:"...",choices:[{text:'The UI is not being notified of the change. The stamina bar\'s value is probably only being updated by other events (like jumping) and not by the dash event.',type:'correct',feedback:"...",next:'step-14'},{text:'The stamina bar widget has <code>Is Volatile</code> set to false.',type:'wrong',feedback:"...",next:'step-14'},{text:'The widget has its <code>Tick</code> disabled.',type:'misguided',feedback:"...",next:'step-14'},{text:'The player\'s stamina variable is not replicated.',type:'partial',feedback:"...",next:'step-14'}]},
+                'step-14': {isTask: true, skill:'render',title:'The Missing Blur',prompt:"...",choices:[{text:'The component is not enabled. You need to set its <code>Enabled</code> property to true at the start of the dash and false at the end.',type:'correct',feedback:"...",next:'step-15'},{text:'The <code>Blend Weight</code> of the component is set to 0.',type:'partial',feedback:"...",next:'step-15'},{text:'The level already has an Unbound <code>Post Process Volume</code> with a higher priority.',type:'misguided',feedback:"...",next:'step-15'},{text:'The material used for the effect has a compile error.',type:'wrong',feedback:"...",next:'step-15'}]},
+                'step-15': {isTask: true, skill:'camera',title:'The Static Camera',prompt:"...",choices:[{text:'You are getting a reference to the wrong camera. You might be modifying the default Camera Component instead of the active one, especially if you are using a system like a spring arm.',type:'correct',feedback:"...",next:'step-16'},{text:'The <code>Camera Manager</code> is overriding your settings.',type:'partial',feedback:"...",next:'step-16'},{text:'The "Lock Camera" setting is enabled on the character.',type:'wrong',feedback:"...",next:'step-16'},{text:'You cannot change the <code>FOV</code> at runtime; it must be set in the <code>Blueprint</code> defaults.',type:'wrong',feedback:"...",next:'step-16'}]},
+                'step-16': {isTask: true, skill:'physics',title:'The Immovable Crate',prompt:"...",choices:[{text:'The impulse strength is too low compared to the mass of the object, or the crate has its <code>Lock Position</code> constraint enabled in its physics settings.',type:'correct',feedback:"...",next:'step-17'},{text:'The <code>Velocity Change</code> boolean on the <code>Add Impulse</code> node is unchecked.',type:'partial',feedback:"...",next:'step-17'},{text:'The crate is not a child of a Voxel Physics object.',type:'wrong',feedback:"...",next:'step-17'},{text:'The server is rejecting the physics interaction.',type:'misguided',feedback:"...",next:'step-17'}]},
+                'step-17': {isTask: true, skill:'collision',title:'Dashing Off Ledges',prompt:"...",choices:[{text:'Check the <code>Z Override</code> boolean. This will make the Z component of your launch velocity replace the character\'s current vertical velocity (i.e., gravity).',type:'correct',feedback:"...",next:'step-18'},{text:'Set the <code>Character Movement Component\'s Gravity Scale</code> to 0 before the dash.',type:'partial',feedback:"...",next:'step-18'},{text:'Set the <code>Movement Mode</code> to <code>Flying</code> before the dash.',type:'misguided',feedback:"...",next:'step-18'},{text:'The Z value of the <code>Launch Velocity</code> needs to be a large positive number.',type:'wrong',feedback:"...",next:'step-18'}]},
+                'step-18': {isTask: true, skill:'systems',title:'Dashing While Stunned',prompt:"...",choices:[{text:'Use <code>Gameplay Tags</code>. The stun effect should grant the player a <code>State.Stunned</code> tag, and the dash ability logic should have a check for <code>Has Tag: State.Stunned</code> at the very beginning.',type:'correct',feedback:"...",next:'step-19'},{text:'Create a <code>bIsStunned</code> boolean on the Player Character and check it before dashing.',type:'partial',feedback:"...",next:'step-19'},{text:'From the stun logic, call <code>Disable Input</code> on the <code>Player Controller</code>.',type:'misguided',feedback:"...",next:'step-19'},{text:'The dash logic should get all actors with a "stun" component and check if the player is one of them.',type:'wrong',feedback:"...",next:'step-19'}]},
+                'step-19': {isTask: true, skill:'collision',title:'The Trace Check',prompt:"...",choices:[{text:'Add your character to the <code>Actors to Ignore</code> array pin on the trace node.',type:'correct',feedback:"...",next:'step-20'},{text:'In your character\'s collision settings, set the <code>Trace Response</code> channel to <code>Ignore</code>.',type:'misguided',feedback:"...",next:'step-20'},{text:'Set the <code>Trace Complexity</code> to <code>Simple Collision</code>.',type:'wrong',feedback:"...",next:'step-20'},{text:'Start the trace from a location far in front of the character.',type:'partial',feedback:"...",next:'step-20'}]},
+                'step-20': {isTask: true, skill:'perf',title:'The Cost of Dashing',prompt:"...",choices:[{text:'Using <code>Format Text</code> nodes or string <code>Append</code> nodes. These create new <code>FString</code> objects in memory that the garbage collector eventually needs to clean up.',type:'correct',feedback:"...",next:'step-21'},{text:'Calling a pure function.',type:'wrong',feedback:"...",next:'step-21'},{text:'Using a <code>For Each Loop</code> node.',type:'wrong',feedback:"...",next:'step-21'},{text:'Creating a local variable inside a function.',type:'misguided',feedback:"...",next:'step-21'}]},
+                'step-21': {isTask: true, skill:'audio',title:'The Abrupt Sound Cutoff',prompt:"...",choices:[{text:'In the <code>Sound Cue</code> or <code>Sound Wave</code> asset, adjust the <code>Concurrency</code> settings to allow more than one instance of the sound to play at once.',type:'correct',feedback:"...",next:'step-22'},{text:'Use "Spawn Sound Attached" instead of "Play Sound at Location".',type:'misguided',feedback:"...",next:'step-22'},{text:'Add a <code>Fade Out</code> node before playing the new sound.',type:'wrong',feedback:"...",next:'step-22'},{text:'In the <code>Project Settings</code>, increase the <code>Max Audio Channels</code>.',type:'partial',feedback:"...",next:'step-22'}]},
+                'step-22': {isTask: true, skill:'systems',title:'The State Machine Conflict (GAS)',prompt:"...",choices:[{text:'The ability is being blocked by another tag. The <code>Blocked by Tags</code> property on the ability is preventing it from running while the character has a tag like <code>State.Sprinting</code>.',type:'correct',feedback:"...",next:'step-23'},{text:'The <code>Ability System Component</code> is not on the <code>Player State</code>.',type:'misguided',feedback:"...",next:'step-23'},{text:'The ability has no "Cost" Gameplay Effect.',type:'wrong',feedback:"...",next:'step-23'},{text:'The <code>Try Activate Ability by Class</code> node is bugged.',type:'wrong',feedback:"...",next:'step-23'}]},
+                'step-23': {isTask: true, skill:'systems',title:'The Unapplied Cooldown (GAS)',prompt:"...",choices:[{text:'The <code>Gameplay Effect\'s</code> duration is set to <code>Instant</code> instead of <code>Has Duration</code>. A cooldown must have a duration to be effective.',type:'correct',feedback:"...",next:'step-24'},{text:'The <code>Gameplay Effect</code> is missing a <code>Magnitude</code> modifier.',type:'wrong',feedback:"...",next:'step-24'},{text:'The <code>Cooldown Tags</code> in the ability are not set correctly.',type:'partial',feedback:"...",next:'step-24'},{text:'The server is not authoritative over the Gameplay Effect.',type:'wrong',feedback:"...",next:'step-24'}]},
+                'step-24': {isTask: true, skill:'build',title:'The Cooker Warning',prompt:"...",choices:[{text:'Wrap the logic that creates the debug widget in a <code>Is Standalone Screen</code> or <code>Is With Editor</code> macro node to ensure it only runs in editor builds.',type:'correct',feedback:"...",next:'step-25'},{text:'Delete the debug widget logic entirely.',type:'misguided',feedback:"...",next:'step-25'},{text:'Move the debug widget to the "Developer" content folder.',type:'partial',feedback:"...",next:'step-25'},{text:'Ignore the warning, since the build succeeded.',type:'wrong',feedback:"...",next:'step-25'}]},
+                'step-25': {isTask: true, skill:'perf',title:'The Final Polish',prompt:"...",choices:[{text:'<code>Braking Deceleration Walking</code>. Increasing this value will make the character decelerate faster, resulting in a tighter, more responsive stop.',type:'correct',feedback:"...",next:'conclusion'},{text:'<code>Max Acceleration</code>.',type:'misguided',feedback:"...",next:'conclusion'},{text:'"Mass".',type:'wrong',feedback:"...",next:'conclusion'},{text:'<code>Use Separate Braking Friction</code>.',type:'partial',feedback:"...",next:'conclusion'}]}
+              }
+          },
+        };
+
+        // --- 2. UTILITY FUNCTIONS (Borrowed from game.js) ---
+        
+        /**
+         * Decodes a Unicode-safe Base64 string back to a regular string.
+         */
+        function base64DecodeUnicode(str) {
+            try {
+                // Atob() decodes the Base64
+                return decodeURIComponent(atob(str).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+            } catch (e) {
+                return null;
+            }
+        }
+
+        /**
+         * Calculates the time cost in hours based on the choice type.
+         */
+        function getTimeCostForChoice(type) {
+            switch (type) {
+                case 'correct': return 0.5;
+                case 'partial': return 1.0;
+                case 'misguided': return 1.5;
+                case 'wrong': return 2.0;
+                default: return 0;
+            }
+        }
+        
+        // --- 3. MAIN AUDIT LOGIC ---
+
+        const keyInput = document.getElementById('test-key-input');
+        const checkBtn = document.getElementById('check-key-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const outputDiv = document.getElementById('audit-output');
+
+        checkBtn.addEventListener('click', checkKey);
+        clearBtn.addEventListener('click', clearOutput);
+
+        function clearOutput() {
+            keyInput.value = '';
+            outputDiv.innerHTML = '';
+        }
+
+        function checkKey() {
+            outputDiv.innerHTML = '';
+            const key = keyInput.value.trim();
+
+            if (!key) {
+                outputDiv.innerHTML = '<p class="text-red-400 font-semibold p-4 audit-card rounded-xl">Please paste a test key.</p>';
+                return;
+            }
+
+            let decodedJsonString = base64DecodeUnicode(key);
+            let choicesData;
+
+            if (!decodedJsonString) {
+                outputDiv.innerHTML = '<p class="text-red-400 font-semibold p-4 audit-card rounded-xl">Decoding Error: Invalid Base64 format or key corruption.</p>';
+                return;
+            }
+            
+            try {
+                choicesData = JSON.parse(decodedJsonString);
+            } catch (e) {
+                outputDiv.innerHTML = `
+                    <p class="text-red-400 font-semibold p-4 audit-card rounded-xl">Parsing Error: Key decoded, but JSON is invalid.</p>
+                    <h3 class="text-lg font-bold text-gray-300 mb-2">Raw Decoded Text:</h3>
+                    <pre class="bg-gray-700 p-4 rounded-lg text-sm text-red-300 overflow-x-auto">${decodedJsonString}</pre>
+                `;
+                return;
+            }
+
+            // --- A. RAW DATA DISPLAY ---
+            const rawDataHtml = `
+                <div class="audit-card p-6 rounded-xl">
+                    <h3 class="text-xl font-bold text-blue-300 mb-4">1. Raw Decoded Data</h3>
+                    <pre class="bg-gray-700 p-4 rounded-lg text-sm text-yellow-300 overflow-x-auto">${JSON.stringify(choicesData, null, 2)}</pre>
+                </div>
+            `;
+
+            // --- B. HUMAN-READABLE AUDIT ---
+            let totalLoggedTime = 0;
+            let auditDetailsHtml = '';
+            let stepCount = 0;
+
+            Object.keys(choicesData).forEach(scenarioId => {
+                const scenario = window.SCENARIOS[scenarioId];
+                const choicesMade = choicesData[scenarioId];
+
+                if (!scenario) {
+                    auditDetailsHtml += `<p class="text-red-400">Error: Scenario ID <code>${scenarioId}</code> not found in data.</p>`;
+                    return;
+                }
+                
+                let scenarioTime = 0;
+                let stepDetailsHtml = '';
+                
+                Object.keys(choicesMade).forEach(stepId => {
+                    const step = scenario.steps[stepId];
+                    const originalIndex = choicesMade[stepId];
+                    
+                    if (!step || step.choices.length <= originalIndex) {
+                        stepDetailsHtml += `<li class="text-red-400">Step <code>${stepId}</code> or choice index ${originalIndex} invalid.</li>`;
+                        return;
+                    }
+
+                    const choice = step.choices[originalIndex];
+                    const timeCost = getTimeCostForChoice(choice.type);
+                    totalLoggedTime += timeCost;
+                    scenarioTime += timeCost;
+                    stepCount++;
+                    
+                    const timeClass = `time-${choice.type}`;
+                    const skill = step.skill ? `(${step.skill.toUpperCase()})` : '';
+
+                    stepDetailsHtml += `
+                        <li class="p-3 border-b border-gray-600 last:border-b-0 flex justify-between items-start">
+                            <span class="flex flex-col text-gray-300">
+                                <strong>${step.title}</strong>
+                                <span class="text-xs text-gray-400 italic mt-0.5">Choice: ${choice.text.substring(0, 100)}...</span>
+                            </span>
+                            <span class="flex-shrink-0 ml-4 text-right">
+                                <span class="font-bold block ${timeClass}">${timeCost.toFixed(1)} hrs</span>
+                                <span class="text-xs text-gray-400">${choice.type} ${skill}</span>
+                            </span>
+                        </li>
+                    `;
+                });
+
+                auditDetailsHtml += `
+                    <h4 class="text-xl font-bold text-gray-100 mt-6 mb-2">${scenario.meta.title}</h4>
+                    <p class="text-sm text-gray-400 mb-3">Estimated: ${scenario.meta.estimateHours.toFixed(1)} hrs | Logged: ${scenarioTime.toFixed(1)} hrs</p>
+                    <ul class="bg-gray-700 rounded-lg divide-y divide-gray-600">
+                        ${stepDetailsHtml}
+                    </ul>
+                `;
+            });
+
+            const { idealTotalTime } = calculateTotalIdealTime();
+            const efficiencyScore = totalLoggedTime > 0 ? (idealTotalTime / totalLoggedTime) : 0;
+            const finalEfficiencyPercent = Math.round(efficiencyScore * 100);
+            const passed = efficiencyScore >= 0.80; // Assuming 80% is the hardcoded pass threshold
+
+            const scoreColor = passed ? 'text-green-400' : 'text-red-400';
+            const statusText = passed ? 'PASSED' : 'FAILED';
+
+
+            const summaryHtml = `
+                <div class="audit-card p-6 rounded-xl">
+                    <h3 class="text-xl font-bold text-blue-300 mb-4">2. Summary & Efficiency Score</h3>
+                    <div class="space-y-3 text-lg text-gray-300">
+                        <div class="flex justify-between">
+                            <span>Total Steps Completed:</span>
+                            <span class="font-bold text-gray-200">${stepCount} / ${Object.keys(window.SCENARIOS.golem.steps).length + Object.keys(window.SCENARIOS.dash.steps).length}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Total Ideal Time (0.5h/step):</span>
+                            <span class="font-bold text-green-400">${idealTotalTime.toFixed(1)} hrs</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Total Logged Time:</span>
+                            <span class="font-bold text-gray-200">${totalLoggedTime.toFixed(1)} hrs</span>
+                        </div>
+                        <div class="flex justify-between text-2xl border-t border-gray-600 pt-3">
+                            <span class="font-bold">Efficiency Score:</span>
+                            <span class="font-bold ${scoreColor}">${finalEfficiencyPercent}% (${statusText})</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const detailedAuditHtml = `
+                <div class="audit-card p-6 rounded-xl">
+                    <h3 class="text-xl font-bold text-blue-300 mb-4">3. Detailed Choice Audit</h3>
+                    ${auditDetailsHtml}
+                </div>
+            `;
+
+
+            outputDiv.innerHTML = summaryHtml + rawDataHtml + detailedAuditHtml;
+        }
+        
+        function calculateTotalIdealTime() {
+            let totalSteps = 0;
+            Object.values(window.SCENARIOS).forEach(scenario => {
+                if (scenario.steps) {
+                    totalSteps += Object.keys(scenario.steps).length;
+                }
+            });
+            return {
+                totalSteps: totalSteps,
+                idealTotalTime: totalSteps * 0.5 
+            };
+        }
+    </script>
+</body>
+</html>

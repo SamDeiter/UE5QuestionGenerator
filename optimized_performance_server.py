@@ -1,21 +1,14 @@
 #!/usr/bin/env python3
 """
-UE5 Guardian MCP Server - Ultra Clean Edition
-CRITICAL: No stdout output except JSON-RPC messages
+UE5 Guardian MCP Server - Batch Wrapper Compatible
+Works with mcp_wrapper.bat for Windows compatibility
 """
 import sys
 import os
 
-# CRITICAL: Must be FIRST - before ANY imports that might print
-if sys.platform == "win32":
-    import msvcrt
-    # Set stdout to binary mode IMMEDIATELY to prevent CRLF issues
-    msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
-    msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
-    # Suppress all stderr output to prevent pollution
-    sys.stderr = open(os.devnull, 'w')
+# Suppress stderr only (batch file handles stdio encoding)
+sys.stderr = open(os.devnull, 'w')
 
-# Now safe to import other modules
 import asyncio
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -24,7 +17,6 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 import mcp.types as types
 
-# Initialize server
 server = Server("ue5-guardian")
 
 # Configuration
@@ -198,4 +190,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     except Exception:
-        pass  # Suppress all error output
+        pass

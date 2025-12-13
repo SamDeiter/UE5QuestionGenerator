@@ -1,0 +1,77 @@
+/* Use Tailwind's base styles, component styles, and utility styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom base styles */
+body {
+    background-color: #1a202c; /* bg-gray-900 */
+    color: #e2e8f0; /* text-gray-200 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* --- SECURITY: ANTI-COPY/PASTE CLASS --- */
+/* Prevents text selection and changes the cursor to default/text */
+.unselectable {
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+    cursor: default;
+}
+
+/* Allow input fields (like password modal) and text areas to be selectable and usable */
+input, textarea, #test-key-display {
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    cursor: text !important;
+}
+/* ------------------------------------- */
+
+
+/* Custom class for the glowing border on correct answers in debug mode */
+.debug-correct {
+    box-shadow: 0 0 15px 4px rgba(22, 163, 74, 0.7); /* Green-600 glow */
+    border-color: #16a34a; /* green-600 */
+}
+
+/* Custom class for the pulsing red timer */
+.pulse-red {
+    animation: pulse-red-animation 1.5s infinite;
+}
+
+@keyframes pulse-red-animation {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+/* Custom styles for code blocks inside prompts/feedback */
+code {
+    background-color: #2d3748; /* bg-gray-700 */
+    color: #90cdf4; /* text-blue-300 */
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "Fira Code", "Courier New", monospace;
+    font-size: 0.9em;
+}
+
+/* Custom styles for paragraphs inside prompts/feedback */
+#ticket-step-prompt p,
+#ticket-step-feedback p {
+    margin-bottom: 1rem; 
+    color: #d1d5db; /* text-gray-300 */
+}
+
+/* Custom styles for strong tags inside prompts/feedback */
+#ticket-step-prompt strong,
+#ticket-step-feedback strong {
+    color: #93c5fd; /* text-blue-300 */
+}
