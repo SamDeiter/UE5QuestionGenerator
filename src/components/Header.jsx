@@ -258,23 +258,19 @@ const Header = ({
               API: {apiKeyStatus}
             </span>
             <div className="w-px h-3 bg-slate-700"></div>
-            {/* Cloud/Local + Version indicator */}
+            {/* Cloud/Local indicator (version moved to footer) */}
             {(() => {
-              const { version, isProd } = getVersionDisplay();
-              const versionColor = isProd ? "text-red-400" : "text-green-400";
               if (isCloudReady) {
                 return (
                   <div className="flex items-center gap-1 font-semibold whitespace-nowrap">
                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
                     <span className="text-green-400">CLOUD</span>
-                    <span className={versionColor}>{version}</span>
                   </div>
                 );
               } else {
                 return (
                   <div className="flex items-center gap-1 font-semibold whitespace-nowrap">
                     <span className="text-orange-400">LOCAL</span>
-                    <span className={versionColor}>{version}</span>
                   </div>
                 );
               }
