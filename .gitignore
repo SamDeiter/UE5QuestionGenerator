@@ -15,6 +15,10 @@ key.env
 .env.production
 .env.backup*
 
+# Firebase service account keys (NEVER commit these!)
+*firebase-adminsdk*.json
+*serviceAccountKey*.json
+
 # Python cache
 __pycache__/
 *.pyc
