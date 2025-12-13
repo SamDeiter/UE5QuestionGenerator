@@ -4,12 +4,23 @@ import sys
 import traceback
 
 # ==============================================================================
-# CRITICAL: Windows Asyncio Configuration
+# 0. CRITICAL WINDOWS FIXES
 # ==============================================================================
-# DO NOT reconfigure stdin/stdout - it breaks the MCP JSON-RPC protocol!
-# We rely on PYTHONUTF8=1 environment variable set in mcp_config.json.
 if sys.platform == "win32":
-    # Use SelectorEventLoop for Windows stdio pipe compatibility
+    import io
+    import msvcrt
+    
+    # 1. Force binary mode at the OS level (prevents implicit \r\n conversion)
+    # This is the "nuclear option" for Windows pipe encoding issues.
+    msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+    msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
+    
+    # 2. Re-wrap stdin/stdout as UTF-8 text streams with NO newline translation
+    # This overrides the default system encoding (often cp1252 on Windows)
+    sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8', newline='')
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', newline='')
+    
+    # 3. Use the SelectorEventLoop which supports pipes on Windows
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # Import standard MCP SDK components
