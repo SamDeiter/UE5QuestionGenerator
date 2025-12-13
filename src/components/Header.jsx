@@ -14,9 +14,12 @@ const getVersionDisplay = () => {
   );
   const isProd = projectId.includes("prod");
   // Get git commit hash from build-time define (set in vite.config.js)
-  const gitCommit = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : '';
-  const commitSuffix = gitCommit ? `-${gitCommit}` : '';
-  return { version: `${APP_VERSION}${commitSuffix}-${isProd ? "PROD" : "DEV"}`, isProd };
+  const gitCommit = typeof __GIT_COMMIT__ !== "undefined" ? __GIT_COMMIT__ : "";
+  const commitSuffix = gitCommit ? `-${gitCommit}` : "";
+  return {
+    version: `${APP_VERSION}${commitSuffix}-${isProd ? "PROD" : "DEV"}`,
+    isProd,
+  };
 };
 
 const Header = ({
@@ -136,10 +139,10 @@ const Header = ({
             <p className="text-slate-400 text-xs mt-0.5">{getSubtitle()}</p>
           </div>
         </div>
-        <div className="hidden md:flex items-center gap-3 text-xs font-mono">
+        <div className="hidden lg:flex items-center gap-2 text-xs font-mono">
           {/* Mode Badge */}
           <span
-            className={`flex items-center h-7 px-2.5 rounded text-[11px] font-semibold uppercase tracking-wider border whitespace-nowrap ${getBadgeStyle()}`}
+            className={`flex items-center h-7 px-2 rounded text-[10px] font-semibold uppercase tracking-wider border whitespace-nowrap ${getBadgeStyle()}`}
           >
             {getBadgeText()}
           </span>
@@ -148,24 +151,24 @@ const Header = ({
             ["create", "review", "database", "analytics"].includes(appMode) && (
               <button
                 onClick={() => onStartTutorial(appMode)}
-                className="flex items-center h-7 gap-1.5 px-3 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-900/50 whitespace-nowrap"
+                className="flex items-center h-7 gap-1 px-2 text-[10px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-900/50 whitespace-nowrap"
                 title={`Start ${appMode} tutorial`}
               >
-                <Icon name="help-circle" size={14} />
+                <Icon name="help-circle" size={12} />
                 Tutorial
               </button>
             )}
           {/* User Info */}
           {creatorName && (
-            <div className="flex items-center h-7 gap-2 font-medium text-slate-300 px-3 bg-slate-800/50 rounded-lg whitespace-nowrap">
+            <div className="flex items-center h-7 gap-1.5 font-medium text-slate-300 px-2 bg-slate-800/50 rounded-lg whitespace-nowrap text-[10px]">
               <Icon
                 name={isAdmin ? "shield-check" : "user"}
-                size={14}
+                size={12}
                 className={isAdmin ? "text-orange-500" : "text-green-500"}
               />
               <span>{creatorName}</span>
               {isAdmin && (
-                <span className="text-[11px] font-semibold bg-orange-900/50 text-orange-400 px-1.5 py-0.5 rounded border border-orange-800 ml-1">
+                <span className="text-[9px] font-semibold bg-orange-900/50 text-orange-400 px-1 py-0.5 rounded border border-orange-800 ml-0.5">
                   ADMIN
                 </span>
               )}
@@ -174,17 +177,17 @@ const Header = ({
                   if (onSignOut) onSignOut();
                   await signOutUser();
                 }}
-                className="ml-2 p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
+                className="ml-1 p-1 text-slate-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
                 title="Sign Out"
                 aria-label="Sign out of application"
               >
-                <Icon name="log-out" size={14} />
+                <Icon name="log-out" size={12} />
               </button>
             </div>
           )}
           {/* Consolidated Status Box: Tokens | Cost | Connection | API Key | CLOUD v2.0-DEV */}
           <div
-            className="flex items-center h-7 gap-2 px-3 rounded border border-slate-700 whitespace-nowrap"
+            className="flex items-center h-7 gap-1.5 px-2 rounded border border-slate-700 whitespace-nowrap text-[10px]"
             role="status"
             aria-live="polite"
             title={`Input: ${tokenUsage.inputTokens || 0} | Output: ${
@@ -192,14 +195,13 @@ const Header = ({
             }`}
           >
             {/* Token Display */}
-            <div className="flex items-center gap-1.5 text-purple-400">
-              <Icon name="zap" size={12} />
+            <div className="flex items-center gap-1 text-purple-400">
+              <Icon name="zap" size={10} />
               <span className="font-semibold">{formattedTokens}</span>
-              <span className="text-slate-500">tokens</span>
             </div>
-            <div className="w-px h-4 bg-slate-700"></div>
+            <div className="w-px h-3 bg-slate-700"></div>
             {/* Cost Display */}
-            <div className="flex items-center gap-1.5 text-emerald-400">
+            <div className="flex items-center gap-1 text-emerald-400">
               <span className="text-slate-500">$</span>
               <span className="font-semibold">{formattedCost}</span>
             </div>
@@ -208,42 +210,42 @@ const Header = ({
               connectionStatus.queuedCount > 0 ||
               connectionStatus.syncInProgress) && (
               <>
-                <div className="w-px h-4 bg-slate-700"></div>
+                <div className="w-px h-3 bg-slate-700"></div>
                 {!connectionStatus.isOnline && (
                   <div
-                    className="flex items-center gap-1.5 text-yellow-400 font-bold animate-pulse"
+                    className="flex items-center gap-1 text-yellow-400 font-bold animate-pulse"
                     title="You are offline. Changes will sync when connection is restored."
                   >
-                    <Icon name="wifi-off" size={14} />
+                    <Icon name="wifi-off" size={12} />
                     <span>OFFLINE</span>
                   </div>
                 )}
                 {connectionStatus.queuedCount > 0 && (
                   <div
-                    className="flex items-center gap-1 text-orange-400 font-bold"
+                    className="flex items-center gap-0.5 text-orange-400 font-bold"
                     title={`${connectionStatus.queuedCount} items queued for sync`}
                   >
-                    <Icon name="upload-cloud" size={14} />
+                    <Icon name="upload-cloud" size={12} />
                     <span>{connectionStatus.queuedCount}</span>
                   </div>
                 )}
                 {connectionStatus.syncInProgress && (
                   <div
-                    className="flex items-center gap-1 text-blue-400 font-bold animate-pulse"
+                    className="flex items-center gap-0.5 text-blue-400 font-bold animate-pulse"
                     title="Syncing queued items..."
                   >
                     <Icon
                       name="refresh-cw"
-                      size={14}
+                      size={12}
                       className="animate-spin"
                     />
-                    <span>SYNCING</span>
+                    <span>SYNC</span>
                   </div>
                 )}
               </>
             )}
-            <div className="w-px h-4 bg-slate-700"></div>
-            {/* API Key Status */}
+            <div className="w-px h-3 bg-slate-700"></div>
+            {/* API Key Status - Shortened */}
             <span
               className={`font-semibold ${
                 apiKeyStatus.includes("Loaded") ||
@@ -253,24 +255,24 @@ const Header = ({
                   : "text-red-400"
               }`}
             >
-              API Key: {apiKeyStatus}
+              API: {apiKeyStatus}
             </span>
-            <div className="w-px h-4 bg-slate-700"></div>
+            <div className="w-px h-3 bg-slate-700"></div>
             {/* Cloud/Local + Version indicator */}
             {(() => {
               const { version, isProd } = getVersionDisplay();
               const versionColor = isProd ? "text-red-400" : "text-green-400";
               if (isCloudReady) {
                 return (
-                  <div className="flex items-center gap-1.5 font-semibold whitespace-nowrap">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <div className="flex items-center gap-1 font-semibold whitespace-nowrap">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
                     <span className="text-green-400">CLOUD</span>
                     <span className={versionColor}>{version}</span>
                   </div>
                 );
               } else {
                 return (
-                  <div className="flex items-center gap-1.5 font-semibold whitespace-nowrap">
+                  <div className="flex items-center gap-1 font-semibold whitespace-nowrap">
                     <span className="text-orange-400">LOCAL</span>
                     <span className={versionColor}>{version}</span>
                   </div>
@@ -282,7 +284,7 @@ const Header = ({
 
         {/* Mobile Hamburger Button */}
         <button
-          className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+          className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-expanded={mobileMenuOpen}
           aria-controls="mobile-menu"
@@ -297,7 +299,7 @@ const Header = ({
         <div
           id="mobile-menu"
           ref={menuRef}
-          className="md:hidden absolute left-0 right-0 top-full bg-slate-900 border-b border-slate-700 shadow-xl z-30 animate-in slide-in-from-top-2 duration-200"
+          className="lg:hidden absolute left-0 right-0 top-full bg-slate-900 border-b border-slate-700 shadow-xl z-30 animate-in slide-in-from-top-2 duration-200"
           role="menu"
         >
           <div className="max-w-7xl mx-auto p-4 flex flex-col gap-3 text-xs font-mono">
