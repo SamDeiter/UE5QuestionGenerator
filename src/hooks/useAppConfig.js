@@ -89,10 +89,10 @@ export const useAppConfig = () => {
   const [showApiKey, setShowApiKey] = useState(false);
 
   // Effects
-   
+
   useEffect(() => {
     if (!config.creatorName) setShowNameModal(true);
-  }, []);
+  }, [config.creatorName]);
   useEffect(() => {
     setSecureItem("ue5_gen_config", config);
   }, [config]);

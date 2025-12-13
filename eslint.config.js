@@ -15,6 +15,13 @@ export default [
       "tools/**",
       "archive/**",
       "scripts/**",
+      "public/**",
+      ".venv/**",
+      "**/.venv/**",
+      "antigravity-mcp-server/**",
+      "mcp_wrapper.js",
+      "mcp_wrapper.cjs",
+      "temp_*/**",
     ],
   },
 

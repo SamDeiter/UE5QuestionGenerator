@@ -1,0 +1,32 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.14 [39m[90mC:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator[39m
+
+ [31mΓ¥»[39m src/services/__tests__/scormExporter.test.js [2m([22m[2m7 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 15[2mms[22m[39m
+       [32mΓ£ô[39m should transform Firestore question to SCORM format[32m 3[2mms[22m[39m
+       [32mΓ£ô[39m should handle T/F questions[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should pass valid questions[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m should detect invalid questions[39m[32m 7[2mms[22m[39m
+       [32mΓ£ô[39m should warn on low question count[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m should fetch all template files and generate questions.js[32m 2[2mms[22m[39m
+       [32mΓ£ô[39m should replace template variables in manifest[32m 1[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/services/__tests__/scormExporter.test.js > SCORM Exporter Service > validateQuestionsForExport > should detect invalid questions
+AssertionError: expected [ ΓÇª(3) ] to include StringMatching /Missing question text/
+ Γ¥» src/services/__tests__/scormExporter.test.js:69:29
+     67|       const result = validateQuestionsForExport([invalidQuestion]);
+     68|       expect(result.valid).toBe(false);
+     69|       expect(result.errors).toContain(
+       |                             ^
+     70|         expect.stringMatching(/Missing question text/)
+     71|       );
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 17:18:41
+[2m   Duration [22m 1.27s[2m (transform 50ms, setup 129ms, import 96ms, tests 15ms, environment 810ms)[22m
+

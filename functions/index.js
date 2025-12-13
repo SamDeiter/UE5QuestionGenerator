@@ -197,7 +197,7 @@ exports.generateCritique = functions
       if (!apiKey) {
         try {
           apiKey = functions.config().gemini?.api_key;
-        } catch (configError) {
+        } catch {
           // Ignore functions.config() errors
         }
       }

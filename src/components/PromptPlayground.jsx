@@ -1,15 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { constructSystemPrompt } from "../services/promptBuilder";
 import { generateContentSecure } from "../services/geminiSecure";
-import { useAppConfig } from "../hooks/useAppConfig";
+
 import Icon from "./Icon";
 
-const PromptPlayground = ({
-  config,
-  onClose,
-  apiKeyReady,
-  effectiveApiKey,
-}) => {
+const PromptPlayground = ({ config, apiKeyReady, effectiveApiKey }) => {
   // Local state for prompts and parameters
   // Initialize with current config's system prompt
   const [systemPrompt, setSystemPrompt] = useState("");
@@ -25,17 +20,17 @@ const PromptPlayground = ({
   const [status, setStatus] = useState("");
   const [error, setError] = useState(null);
 
-  // Initial load
-  useEffect(() => {
-    handleResetToDefaults();
-  }, []);
-
-  const handleResetToDefaults = () => {
+  const handleResetToDefaults = useCallback(() => {
     // Construct prompt using current app config
     // We pass empty file context for now as we're testing the core prompt
     const prompt = constructSystemPrompt(config, "");
     setSystemPrompt(prompt);
-  };
+  }, [config]);
+
+  // Initial load
+  useEffect(() => {
+    handleResetToDefaults();
+  }, [handleResetToDefaults]);
 
   const handleExecute = async () => {
     if (!import.meta.env.DEV && !apiKeyReady) {

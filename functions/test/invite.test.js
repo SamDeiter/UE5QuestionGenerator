@@ -8,27 +8,7 @@
 const { expect } = require("chai");
 
 // Mock Firebase Admin SDK
-const adminMock = {
-  firestore: () => ({
-    collection: (name) => ({
-      doc: (id) => ({
-        get: async () => ({ exists: false, data: () => null }),
-        set: async () => {},
-        update: async () => {},
-        delete: async () => {},
-      }),
-    }),
-    FieldValue: {
-      increment: (n) => n,
-      arrayUnion: (item) => [item],
-      serverTimestamp: () => new Date(),
-    },
-    Timestamp: {
-      now: () => ({ toDate: () => new Date() }),
-      fromDate: (d) => ({ toDate: () => d }),
-    },
-  }),
-};
+// Mock Firebase Admin SDK removed (unused)
 
 // Test data
 const validInviteData = {

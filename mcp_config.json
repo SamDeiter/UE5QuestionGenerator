@@ -5,10 +5,18 @@
       "args": ["optimized_performance_server.py"],
       "env": {}
     },
-    "firebase-mcp-server": {
+    "antigravity-dev-helper": {
       "command": "npx",
-      "args": ["-y", "firebase-tools@latest", "mcp"],
-      "env": {}
+      "args": [
+        "-y",
+        "tsx",
+        "C:\\Users\\Sam Deiter\\Documents\\GitHub\\UE5QuestionGenerator\\antigravity-mcp-server\\src\\server.ts"
+      ],
+      "cwd": "C:\\Users\\Sam Deiter\\Documents\\GitHub\\UE5QuestionGenerator\\antigravity-mcp-server",
+      "env": {
+        "NODE_ENV": "production",
+        "WORKSPACE_ROOT": "C:\\Users\\Sam Deiter\\Documents\\GitHub\\UE5QuestionGenerator"
+      }
     }
   }
 }

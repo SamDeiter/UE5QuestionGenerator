@@ -243,22 +243,38 @@ export const useQuestionManager = (config, showMessage) => {
     return counts;
   }, [allQuestionsMap, config.discipline]);
 
-  const allItems = useMemo(
-    () => [...questions, ...historicalQuestions],
-    [questions, historicalQuestions]
-  );
+  // Unified List (Source of Truth for Counts)
+  const unifiedQuestions = useMemo(() => {
+    const all = [];
+    allQuestionsMap.forEach((variants) => {
+      // Use the first variant or English version as the canonical entry
+      const canonical =
+        variants.find((v) => (v.language || "English") === "English") ||
+        variants[0];
+      if (canonical) all.push(canonical);
+    });
+
+    // Sort by date (newest first)
+    return all.sort(
+      (a, b) =>
+        new Date(b.created || b.dateAdded || 0) -
+        new Date(a.created || a.dateAdded || 0)
+    );
+  }, [allQuestionsMap]);
 
   const approvedCount = useMemo(
-    () => allItems.filter((q) => q.status === "accepted").length,
-    [allItems]
+    () => unifiedQuestions.filter((q) => q.status === "accepted").length,
+    [unifiedQuestions]
   );
   const rejectedCount = useMemo(
-    () => allItems.filter((q) => q.status === "rejected").length,
-    [allItems]
+    () => unifiedQuestions.filter((q) => q.status === "rejected").length,
+    [unifiedQuestions]
   );
   const pendingCount = useMemo(
-    () => allItems.filter((q) => !q.status || q.status === "pending").length,
-    [allItems]
+    () =>
+      unifiedQuestions.filter((q) => !q.status || q.status === "pending")
+        .length,
+    [unifiedQuestions]
   );
 
   const totalApproved = useMemo(() => {
@@ -299,7 +315,12 @@ export const useQuestionManager = (config, showMessage) => {
     // Check if this difficulty level is full (both MC + T/F combined)
     const currentCount = difficultyTotals[config.difficulty] || 0;
     return currentCount >= TARGET_PER_DIFFICULTY;
-  }, [config.difficulty, difficultyTotals, isGlobalQuotaMet]);
+  }, [
+    config.difficulty,
+    difficultyTotals,
+    isGlobalQuotaMet,
+    TARGET_PER_DIFFICULTY,
+  ]);
 
   const maxBatchSize = useMemo(() => {
     // If global quota is met, no generation allowed
@@ -325,6 +346,7 @@ export const useQuestionManager = (config, showMessage) => {
     difficultyTotals,
     isGlobalQuotaMet,
     totalApproved,
+    TARGET_PER_DIFFICULTY,
   ]);
 
   // Delete Handlers
@@ -421,5 +443,6 @@ export const useQuestionManager = (config, showMessage) => {
     confirmDelete,
     handleDeleteAllQuestions,
     checkAndStoreQuestions,
+    unifiedQuestions,
   };
 };

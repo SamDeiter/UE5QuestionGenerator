@@ -42,7 +42,7 @@ const GlobalModals = ({ visibility, state, handlers }) => {
     allQuestionsMap,
     currentStep,
     tutorialSteps,
-    metrics, // passed for Analytics/DangerZone
+
     isAdmin, // passed for SettingsModal
   } = state;
 

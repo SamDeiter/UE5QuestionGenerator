@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   validateInvite,
   consumeInvite,
@@ -39,29 +39,32 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
       setInviteCode(urlInvite);
       handleValidate(urlInvite);
     }
-  }, []);
+  }, [handleValidate]);
 
-  const handleValidate = async (code) => {
-    const codeToValidate = code || inviteCode;
-    if (!codeToValidate.trim()) {
-      setValidationError("Please enter an invite code");
-      return;
-    }
-
-    setValidationStatus("validating");
-    setValidationError("");
-
-    try {
-      const result = await validateInvite(codeToValidate.trim());
-      if (result.valid) {
-        setValidationStatus("valid");
-        setInviteRole(result.role);
+  const handleValidate = useCallback(
+    async (code) => {
+      const codeToValidate = code || inviteCode;
+      if (!codeToValidate.trim()) {
+        setValidationError("Please enter an invite code");
+        return;
       }
-    } catch (error) {
-      setValidationStatus("invalid");
-      setValidationError(error.message || "Invalid invite code");
-    }
-  };
+
+      setValidationStatus("validating");
+      setValidationError("");
+
+      try {
+        const result = await validateInvite(codeToValidate.trim());
+        if (result.valid) {
+          setValidationStatus("valid");
+          setInviteRole(result.role);
+        }
+      } catch (error) {
+        setValidationStatus("invalid");
+        setValidationError(error.message || "Invalid invite code");
+      }
+    },
+    [inviteCode]
+  );
 
   const handleGoogleSignIn = async () => {
     setIsAuthenticating(true);

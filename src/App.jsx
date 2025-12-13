@@ -146,6 +146,7 @@ const App = () => {
     confirmDelete,
     handleDeleteAllQuestions,
     checkAndStoreQuestions,
+    unifiedQuestions,
   } = useQuestionManager(config, showMessage);
 
   // 2.5. Crash Recovery - detect and restore from cloud backup
@@ -201,8 +202,8 @@ const App = () => {
     filteredQuestions,
     uniqueFilteredQuestions,
   } = useFiltering({
-    questions,
-    historicalQuestions,
+    questions: unifiedQuestions,
+    historicalQuestions: [], // We are using the unified list as source of truth
     config,
     appMode,
   });
