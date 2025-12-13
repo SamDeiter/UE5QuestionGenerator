@@ -53,8 +53,13 @@ const GenerationSettings = ({
     // Flatten the map values since values are arrays of variants
     const allQuestions = Array.from(allQuestionsMap.values()).flat();
 
+    // Deduplicate by question ID to avoid counting variants multiple times
+    const uniqueQuestions = Array.from(
+      new Map(allQuestions.map((q) => [q.id, q])).values()
+    );
+
     // Count all non-rejected questions (no discipline filter for simplicity)
-    const filtered = allQuestions.filter((q) => q.status !== "rejected");
+    const filtered = uniqueQuestions.filter((q) => q.status !== "rejected");
 
     filtered.forEach((q) => {
       // Extract difficulty - handle formats like "Easy MC", "Medium T/F", "Hard", "Beginner", etc.
