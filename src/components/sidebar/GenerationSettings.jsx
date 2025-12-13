@@ -72,11 +72,16 @@ const GenerationSettings = ({
     }
 
     filtered.forEach((q) => {
-      let diff = q.difficulty;
+      // Extract difficulty - handle formats like "Easy MC", "Medium T/F", "Hard", "Beginner", etc.
+      const rawDiff = q.difficulty || "";
+
+      // Parse out the difficulty portion (first word before any space)
+      let diff = rawDiff.split(" ")[0];
+
       // Normalize difficulty naming
       if (diff === "Hard") diff = "Expert";
-      if (diff === "Medium") diff = "Intermediate";
-      if (diff === "Easy") diff = "Beginner";
+      else if (diff === "Medium") diff = "Intermediate";
+      else if (diff === "Easy") diff = "Beginner";
 
       if (stats[diff]) {
         const isTF = q.type === "True/False" || q.type === "T/F";
@@ -194,12 +199,18 @@ const GenerationSettings = ({
                 <label className="text-xs font-bold uppercase text-slate-400">
                   Type
                 </label>
-                <div className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-300">
-                  Balanced (50/50 MC & T/F)
-                </div>
+                <select
+                  name="type"
+                  value={config.type || "Multiple Choice"}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm text-slate-300 focus:border-teal-500"
+                >
+                  <option value="Multiple Choice">Multiple Choice</option>
+                  <option value="True/False">True/False</option>
+                </select>
                 <p className="text-[9px] text-slate-500">
-                  Every batch generates equal Multiple Choice and True/False
-                  questions
+                  Select question type to generate (33 of each required per
+                  difficulty)
                 </p>
               </div>
             </div>

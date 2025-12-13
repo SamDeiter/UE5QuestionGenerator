@@ -152,6 +152,19 @@ export const validateGeneration = (
   questions,
   type = "Balanced"
 ) => {
+  // Helper to normalize difficulty from "Easy MC" -> "Easy"
+  const normalizeDiff = (d) => {
+    if (!d) return d;
+    const base = d.split(" ")[0];
+    // Map config values to base difficulty
+    if (base === "Beginner") return "Easy";
+    if (base === "Intermediate") return "Medium";
+    if (base === "Expert") return "Hard";
+    return base;
+  };
+
+  const targetDiff = normalizeDiff(difficulty);
+
   // Check total quota
   if (isTotalQuotaMet(questions)) {
     return {
@@ -161,72 +174,95 @@ export const validateGeneration = (
     };
   }
 
-  // Check category quota
-  const remaining = getRemainingQuota(difficulty, questions);
+  // Filter questions for this discipline and base difficulty
+  const relevantQuestions = questions.filter((q) => {
+    if (q.status === "rejected") return false;
+    if (q.discipline !== discipline) return false;
+    const qDiff = normalizeDiff(q.difficulty);
+    return qDiff === targetDiff;
+  });
 
-  if (remaining === 0) {
+  // Count MC and T/F separately
+  const mcCount = relevantQuestions.filter(
+    (q) => q.type === "Multiple Choice" || q.type === "MC"
+  ).length;
+
+  const tfCount = relevantQuestions.filter(
+    (q) => q.type === "True/False" || q.type === "T/F"
+  ).length;
+
+  const MC_QUOTA = 33;
+  const TF_QUOTA = 33;
+
+  // Check if both MC and T/F are full for this difficulty
+  if (mcCount >= MC_QUOTA && tfCount >= TF_QUOTA) {
     return {
       allowed: false,
-      reason: `Category "${difficulty}" is full (${TARGET_PER_CATEGORY}/${TARGET_PER_CATEGORY}). Select a different difficulty.`,
+      reason: `Both MC (${mcCount}/${MC_QUOTA}) and T/F (${tfCount}/${TF_QUOTA}) are full for ${difficulty}. Select a different difficulty.`,
       maxAllowed: 0,
     };
   }
 
-  // TYPE BALANCE CHECK: Prevent generating more of an overrepresented type
-  const difficultyQuestions = questions.filter(
-    (q) =>
-      q.discipline === discipline &&
-      q.difficulty === difficulty &&
-      q.status !== "rejected"
-  );
-
-  const mcCount = difficultyQuestions.filter(
-    (q) => q.type === "Multiple Choice" || q.type === "MC"
-  ).length;
-
-  const tfCount = difficultyQuestions.filter(
-    (q) => q.type === "True/False" || q.type === "T/F"
-  ).length;
-
-  const imbalance = Math.abs(mcCount - tfCount);
-  const IMBALANCE_THRESHOLD = 3; // Allow up to 3 difference before enforcing
-
-  // If there's a significant imbalance, force generation of the underrepresented type
-  if (imbalance > IMBALANCE_THRESHOLD) {
-    const needsMore = mcCount < tfCount ? "Multiple Choice" : "True/False";
-    const hasMore = mcCount > tfCount ? "Multiple Choice" : "True/False";
-
-    // If trying to generate MORE of the overrepresented type, block it
-    if (type === hasMore) {
+  // For Balanced mode, check which type needs more
+  if (type === "Balanced" || type === "Balanced (50/50 MC & T/F)") {
+    if (mcCount >= MC_QUOTA && tfCount < TF_QUOTA) {
       return {
-        allowed: false,
-        reason: `Type imbalance detected at ${difficulty}: ${mcCount} MC vs ${tfCount} T/F. Generate ${needsMore} questions first to restore balance.`,
-        maxAllowed: 0,
-        forceType: needsMore,
+        allowed: true,
+        reason: `MC is full (${mcCount}/${MC_QUOTA}). Will generate T/F only.`,
+        maxAllowed: Math.min(batchSize, TF_QUOTA - tfCount),
+        forceType: "True/False",
+        warning: true,
       };
     }
+    if (tfCount >= TF_QUOTA && mcCount < MC_QUOTA) {
+      return {
+        allowed: true,
+        reason: `T/F is full (${tfCount}/${TF_QUOTA}). Will generate MC only.`,
+        maxAllowed: Math.min(batchSize, MC_QUOTA - mcCount),
+        forceType: "Multiple Choice",
+        warning: true,
+      };
+    }
+  }
 
+  // For specific type selection
+  if (type === "Multiple Choice" || type === "MC") {
+    if (mcCount >= MC_QUOTA) {
+      return {
+        allowed: false,
+        reason: `MC quota full for ${difficulty} (${mcCount}/${MC_QUOTA}). Switch to T/F or Balanced.`,
+        maxAllowed: 0,
+        forceType: "True/False",
+      };
+    }
     return {
       allowed: true,
-      reason: `Imbalance detected (${mcCount} MC, ${tfCount} T/F). Prioritizing ${needsMore}.`,
-      maxAllowed: batchSize,
-      forceType: needsMore,
-      warning: true,
+      reason: "Generation allowed",
+      maxAllowed: Math.min(batchSize, MC_QUOTA - mcCount),
     };
   }
 
-  if (batchSize > remaining) {
+  if (type === "True/False" || type === "T/F") {
+    if (tfCount >= TF_QUOTA) {
+      return {
+        allowed: false,
+        reason: `T/F quota full for ${difficulty} (${tfCount}/${TF_QUOTA}). Switch to MC or Balanced.`,
+        maxAllowed: 0,
+        forceType: "Multiple Choice",
+      };
+    }
     return {
       allowed: true,
-      reason: `Only ${remaining} questions remaining for "${difficulty}". Batch size reduced.`,
-      maxAllowed: remaining,
-      warning: true,
+      reason: "Generation allowed",
+      maxAllowed: Math.min(batchSize, TF_QUOTA - tfCount),
     };
   }
 
+  // Default: allow generation
+  const totalRemaining = MC_QUOTA - mcCount + (TF_QUOTA - tfCount);
   return {
     allowed: true,
     reason: "Generation allowed",
-    maxAllowed: batchSize,
+    maxAllowed: Math.min(batchSize, totalRemaining),
   };
 };

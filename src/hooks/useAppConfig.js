@@ -24,7 +24,8 @@ export const useAppConfig = () => {
     const defaults = {
       discipline: "Technical Art",
       batchSize: "6",
-      difficulty: "Easy MC",
+      difficulty: "Beginner",
+      type: "Multiple Choice", // Explicit type selection (no Balanced mode)
       language: "English",
       creatorName: "",
       reviewerName: "",
@@ -88,7 +89,7 @@ export const useAppConfig = () => {
   const [showApiKey, setShowApiKey] = useState(false);
 
   // Effects
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   useEffect(() => {
     if (!config.creatorName) setShowNameModal(true);
   }, []);

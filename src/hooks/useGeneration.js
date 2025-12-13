@@ -161,7 +161,8 @@ export const useGeneration = (
       config.discipline,
       config.difficulty,
       config.batchSize,
-      allQuestions
+      allQuestions,
+      config.type || "Balanced" // Pass current type setting
     );
 
     if (!quotaCheck.allowed) {
@@ -170,11 +171,65 @@ export const useGeneration = (
     }
 
     // If batch size needs to be reduced, update it
+    let effectiveBatchSize = config.batchSize;
     if (quotaCheck.warning && quotaCheck.maxAllowed < config.batchSize) {
-      config.batchSize = quotaCheck.maxAllowed;
+      effectiveBatchSize = quotaCheck.maxAllowed;
       showMessage(
         `Batch size reduced to ${quotaCheck.maxAllowed} (quota limit). ${quotaCheck.reason}`,
         TOAST_DURATION.EXTENDED
+      );
+    }
+
+    // Determine the effective type to generate (may be forced by quota)
+    let effectiveType = quotaCheck.forceType || config.type || "Balanced";
+
+    // BALANCED MODE: Alternate between MC and T/F to ensure equal distribution
+    if (
+      effectiveType === "Balanced" ||
+      effectiveType === "Balanced (50/50 MC & T/F)"
+    ) {
+      // Check current MC vs T/F counts to decide which type to generate
+      const normalizeDiff = (d) => {
+        if (!d) return d;
+        const base = d.split(" ")[0];
+        if (base === "Beginner") return "Easy";
+        if (base === "Intermediate") return "Medium";
+        if (base === "Expert") return "Hard";
+        return base;
+      };
+
+      const targetDiff = normalizeDiff(config.difficulty);
+      const relevantQuestions = allQuestions.filter((q) => {
+        if (q.status === "rejected") return false;
+        if (q.discipline !== config.discipline) return false;
+        const qDiff = normalizeDiff(q.difficulty);
+        return qDiff === targetDiff;
+      });
+
+      const currentMC = relevantQuestions.filter(
+        (q) => q.type === "Multiple Choice" || q.type === "MC"
+      ).length;
+      const currentTF = relevantQuestions.filter(
+        (q) => q.type === "True/False" || q.type === "T/F"
+      ).length;
+
+      // Pick the type with fewer questions
+      if (currentMC <= currentTF) {
+        effectiveType = "Multiple Choice";
+        console.log(
+          `⚖️ Balanced: Generating MC (${currentMC} MC vs ${currentTF} T/F)`
+        );
+      } else {
+        effectiveType = "True/False";
+        console.log(
+          `⚖️ Balanced: Generating T/F (${currentMC} MC vs ${currentTF} T/F)`
+        );
+      }
+    }
+
+    if (quotaCheck.forceType) {
+      console.log(
+        `🎯 Quota forcing generation of ${quotaCheck.forceType} questions`
       );
     }
 
@@ -234,13 +289,29 @@ export const useGeneration = (
       );
     }
 
+    // Build system prompt with adjusted config for forced type
+    const adjustedConfig = {
+      ...config,
+      type: effectiveType,
+      batchSize: effectiveBatchSize,
+    };
     const systemPrompt = constructSystemPrompt(
-      config,
+      adjustedConfig,
       getFileContext(),
       rejectedExamples,
       coverageGaps
     );
-    const userPrompt = `Generate ${config.batchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}. Ensure links work for UE 5.7 or latest available.`;
+
+    // Build user prompt with explicit type instruction
+    let typeInstruction = "";
+    if (effectiveType === "True/False" || effectiveType === "T/F") {
+      typeInstruction =
+        " Generate ONLY True/False questions (no Multiple Choice).";
+    } else if (effectiveType === "Multiple Choice" || effectiveType === "MC") {
+      typeInstruction =
+        " Generate ONLY Multiple Choice questions (no True/False).";
+    }
+    const userPrompt = `Generate ${effectiveBatchSize} scenario-based questions for ${config.discipline} in ${config.language}. Focus: ${config.difficulty}.${typeInstruction} Ensure links work for UE 5.7 or latest available.`;
 
     // Analyze token usage before API call
     const tokenAnalysis = analyzeRequest(
