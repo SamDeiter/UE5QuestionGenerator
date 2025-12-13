@@ -1,4 +1,4 @@
-export const APP_VERSION = "v2.0.1";
+export const APP_VERSION = "v2.2.0";
 
 export const LANGUAGE_FLAGS = {
   English: "🇺🇸",
