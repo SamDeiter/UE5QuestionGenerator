@@ -34,7 +34,7 @@ export const CATEGORY_KEYS = [
   "Hard MC",
   "Hard T/F",
 ];
-export const TARGET_PER_CATEGORY = 33;
+export const TARGET_PER_CATEGORY = 80;
 export const TARGET_TOTAL = 200;
 export const FIELD_DELIMITER = ",";
 
