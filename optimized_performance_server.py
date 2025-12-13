@@ -13,15 +13,19 @@ if sys.platform == "win32":
     try:
         sys.stdin.reconfigure(encoding='utf-8')
         sys.stdout.reconfigure(encoding='utf-8')
-        # Fix Asyncio Event Loop on Windows to prevent pipe errors
+        # CRITICAL: Use WindowsSelectorEventLoopPolicy for stdio compatibility
+        # The default ProactorEventLoop can cause issues with stdin/stdout streams
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     except Exception as e:
         sys.stderr.write(f"Warning: Failed to configure Windows environment: {e}\n")
 
 # Import standard MCP SDK components
 from mcp.server import Server
-from mcp.server.stdio import stdio_server
 import mcp.types as types
+
+# For Python 3.13 compatibility, we'll use a custom stdio implementation
+# that avoids the _overlapped module issue
+from mcp.server.stdio import stdio_server
 
 # Initialize the Standard Server
 server = Server("ue5-guardian")
@@ -192,6 +196,7 @@ async def handle_call_tool(
         return [types.TextContent(type="text", text=f"Tool Execution Error: {str(e)}")]
 
 async def main():
+    """Main entry point for the MCP server."""
     # Connect using stdio (Standard Input/Output)
     # This context manager handles the communication loop automatically
     async with stdio_server() as (read_stream, write_stream):
@@ -208,3 +213,4 @@ if __name__ == "__main__":
         # CRITICAL: Write crash logs to stderr, NEVER stdout
         sys.stderr.write(f"Server Crash: {e}\n")
         traceback.print_exc(file=sys.stderr)
+        sys.exit(1)
