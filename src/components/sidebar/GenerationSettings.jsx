@@ -58,8 +58,10 @@ const GenerationSettings = ({
       new Map(allQuestions.map((q) => [q.id, q])).values()
     );
 
-    // Count all non-rejected questions (no discipline filter for simplicity)
-    const filtered = uniqueQuestions.filter((q) => q.status !== "rejected");
+    // Count all non-rejected questions filtered by current discipline
+    const filtered = uniqueQuestions.filter(
+      (q) => q.status !== "rejected" && q.discipline === config.discipline
+    );
 
     filtered.forEach((q) => {
       // Extract difficulty - handle formats like "Easy MC", "Medium T/F", "Hard", "Beginner", etc.
@@ -81,7 +83,7 @@ const GenerationSettings = ({
     });
 
     return [stats["Beginner"], stats["Intermediate"], stats["Expert"]];
-  }, [allQuestionsMap]);
+  }, [allQuestionsMap, config.discipline]);
 
   // Auto-expand Focus & Model if tags are selected or custom model is used
   // Removed showAdvanced from dependency to allow manual collapse
