@@ -2,22 +2,15 @@ import asyncio
 import os
 import sys
 import traceback
-import logging
 
-# 1. CRITICAL: Redirect ALL logging to stderr
-# This prevents libraries from printing to stdout and breaking the JSON connection
-logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# 2. WINDOWS COMPATIBILITY
+# ==============================================================================
+# CRITICAL: Windows Asyncio Configuration
+# ==============================================================================
+# DO NOT reconfigure stdin/stdout - it breaks the MCP JSON-RPC protocol!
+# We rely on PYTHONUTF8=1 environment variable set in mcp_config.json.
 if sys.platform == "win32":
-    try:
-        # We rely on PYTHONUTF8=1 in mcp_config.json for encoding.
-        # Explicitly reconfiguring streams here can cause "invalid trailing data" errors.
-        
-        # Fix Asyncio Event Loop on Windows to prevent pipe errors
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    except Exception as e:
-        sys.stderr.write(f"Warning: Failed to configure Windows environment: {e}\n")
+    # Use SelectorEventLoop for Windows stdio pipe compatibility
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # Import standard MCP SDK components
 from mcp.server import Server
@@ -189,12 +182,10 @@ async def handle_call_tool(
             raise ValueError(f"Unknown tool: {name}")
 
     except Exception as e:
-        # Send errors back as text content so the agent sees them
         return [types.TextContent(type="text", text=f"Tool Execution Error: {str(e)}")]
 
 async def main():
     # Connect using stdio (Standard Input/Output)
-    # This context manager handles the communication loop automatically
     async with stdio_server() as (read_stream, write_stream):
         await server.run(
             read_stream,
@@ -206,6 +197,5 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
-        # CRITICAL: Write crash logs to stderr, NEVER stdout
         sys.stderr.write(f"Server Crash: {e}\n")
         traceback.print_exc(file=sys.stderr)
