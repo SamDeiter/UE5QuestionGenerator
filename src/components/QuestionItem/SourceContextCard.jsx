@@ -1,4 +1,5 @@
 import React from "react";
+import DOMPurify from "dompurify";
 import Icon from "../Icon";
 
 const SourceContextCard = ({ sourceUrl, sourceExcerpt }) => {
@@ -24,7 +25,11 @@ const SourceContextCard = ({ sourceUrl, sourceExcerpt }) => {
       {sourceExcerpt && (
         <p
           className="text-slate-400 text-sm italic leading-relaxed mb-3"
-          dangerouslySetInnerHTML={{ __html: `"${highlightExcerpt()}"` }}
+          dangerouslySetInnerHTML={{
+            __html: `"${DOMPurify.sanitize(highlightExcerpt(), {
+              ALLOWED_TAGS: [],
+            })}"`,
+          }}
         />
       )}
 
