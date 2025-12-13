@@ -46,12 +46,12 @@ We use **ESLint** with a modern Flat Config (`eslint.config.js`).
 
 ### Current Status (Dec 12, 2025)
 
-- **Errors**: 4 (primarily `react-hooks/exhaustive-deps`)
+- **Errors**: 0 ✅
 - **Warnings**: 14 (unused variables, missing dependencies)
 - **Last Check**: Dec 12, 2025
 
 ### Pending Tasks
 
-- [ ] Fix `react-hooks/exhaustive-deps` errors in hooks
+- [x] Fix `react-hooks/exhaustive-deps` errors in hooks
 - [ ] Address remaining unused variable warnings
 - [ ] Set up pre-commit hooks for automated linting
