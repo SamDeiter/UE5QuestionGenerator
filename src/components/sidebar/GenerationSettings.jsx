@@ -39,7 +39,7 @@ const GenerationSettings = ({
     return counts;
   }, [allQuestionsMap, availableTags]);
 
-  // Compute inventory stats for chart - filter by current discipline
+  // Compute inventory stats for chart - show ALL disciplines combined
   const chartData = React.useMemo(() => {
     const stats = {
       Beginner: { name: "Beginner", mc: 0, tf: 0 },
@@ -47,29 +47,11 @@ const GenerationSettings = ({
       Expert: { name: "Expert", mc: 0, tf: 0 },
     };
 
-    const currentDiscipline = config.discipline || "Technical Art";
-
     // Flatten the map values since values are arrays of variants
     const allQuestions = Array.from(allQuestionsMap.values()).flat();
 
-    // DEBUG: Log what questions we have
-    if (allQuestions.length > 0) {
-      console.log(
-        `📊 Chart: ${allQuestions.length} total questions, filtering for "${currentDiscipline}"`
-      );
-      console.log(`📊 Sample question:`, allQuestions[0]);
-    }
-
-    // Filter to only count questions for the currently selected discipline
-    const filtered = allQuestions.filter(
-      (q) => q.discipline === currentDiscipline && q.status !== "rejected"
-    );
-
-    if (filtered.length !== allQuestions.length) {
-      console.log(
-        `📊 Filtered to ${filtered.length} questions for ${currentDiscipline}`
-      );
-    }
+    // Count all non-rejected questions (no discipline filter for simplicity)
+    const filtered = allQuestions.filter((q) => q.status !== "rejected");
 
     filtered.forEach((q) => {
       // Extract difficulty - handle formats like "Easy MC", "Medium T/F", "Hard", "Beginner", etc.
@@ -90,10 +72,8 @@ const GenerationSettings = ({
       }
     });
 
-    console.log(`📊 Chart stats:`, stats);
-
     return [stats["Beginner"], stats["Intermediate"], stats["Expert"]];
-  }, [allQuestionsMap, config.discipline]);
+  }, [allQuestionsMap]);
 
   // Auto-expand Focus & Model if tags are selected or custom model is used
   // Removed showAdvanced from dependency to allow manual collapse
@@ -236,8 +216,16 @@ const GenerationSettings = ({
                       <span className="text-slate-400 font-medium">
                         {row.name}
                       </span>
-                      <span className="text-slate-500">
-                        {row.mc + row.tf}/66
+                      <span
+                        className={
+                          row.mc + row.tf >= 66
+                            ? "text-green-400"
+                            : "text-slate-500"
+                        }
+                      >
+                        {row.mc + row.tf >= 66
+                          ? `✓ ${row.mc + row.tf}`
+                          : `${row.mc + row.tf}/66`}
                       </span>
                     </div>
                     <div className="flex gap-1">
@@ -254,7 +242,7 @@ const GenerationSettings = ({
                                 : ""
                             }
                           >
-                            {row.mc}/33
+                            {row.mc >= 33 ? `✓ ${row.mc}` : `${row.mc}/33`}
                           </span>
                         </div>
                         <div className="h-1.5 bg-slate-800 rounded overflow-hidden">
@@ -281,7 +269,7 @@ const GenerationSettings = ({
                                 : ""
                             }
                           >
-                            {row.tf}/33
+                            {row.tf >= 33 ? `✓ ${row.tf}` : `${row.tf}/33`}
                           </span>
                         </div>
                         <div className="h-1.5 bg-slate-800 rounded overflow-hidden">
