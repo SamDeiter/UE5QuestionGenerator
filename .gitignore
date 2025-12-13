@@ -18,6 +18,7 @@ key.env
 # Firebase service account credentials (NEVER commit these!)
 *firebase-adminsdk*.json
 *serviceAccountKey*.json
+ue5-questions-prod-*.json
 
 # Python cache
 __pycache__/
