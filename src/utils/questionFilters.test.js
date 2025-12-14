@@ -9,31 +9,31 @@ describe('createFilteredQuestions', () => {
     ];
 
     it('filters by status', () => {
-        const result = createFilteredQuestions(mockQuestions, [], false, 'accepted', false, '', 'Sam', 'Tech Art', 'Balanced All', 'English');
+        const result = createFilteredQuestions(mockQuestions, [], false, 'accepted', false, '', 'Sam', 'Tech Art', 'Easy', 'English');
         expect(result).toHaveLength(1);
         expect(result[0].uniqueId).toBe('2');
     });
 
     it('filters by creator', () => {
-        const result = createFilteredQuestions(mockQuestions, [], false, 'all', true, '', 'Sam', 'Tech Art', 'Balanced All', 'English');
+        const result = createFilteredQuestions(mockQuestions, [], false, 'all', true, '', 'Sam', 'Tech Art', 'Easy', 'English');
         expect(result).toHaveLength(2);
         expect(result.every(q => q.creatorName === 'Sam')).toBe(true);
     });
 
     it('filters by discipline', () => {
-        const result = createFilteredQuestions(mockQuestions, [], false, 'all', false, '', 'Sam', 'VFX', 'Balanced All', 'English');
+        const result = createFilteredQuestions(mockQuestions, [], false, 'all', false, '', 'Sam', 'VFX', 'Easy', 'English');
         expect(result).toHaveLength(1);
         expect(result[0].discipline).toBe('VFX');
     });
 
     it('filters by difficulty and type', () => {
-        const result = createFilteredQuestions(mockQuestions, [], false, 'all', false, '', 'Sam', 'Tech Art', 'Easy MC', 'English');
+        const result = createFilteredQuestions(mockQuestions, [], false, 'all', false, '', 'Sam', 'Tech Art', 'Easy', 'English');
         expect(result).toHaveLength(1);
         expect(result[0].uniqueId).toBe('1');
     });
 
     it('filters by search term', () => {
-        const result = createFilteredQuestions(mockQuestions, [], false, 'all', false, 'Q2', 'Sam', 'Tech Art', 'Balanced All', 'English');
+        const result = createFilteredQuestions(mockQuestions, [], false, 'all', false, 'Q2', 'Sam', 'Tech Art', 'Easy', 'English');
         expect(result).toHaveLength(1);
         expect(result[0].question).toBe('Q2');
     });

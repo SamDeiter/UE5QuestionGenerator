@@ -44,11 +44,6 @@ export const useAppConfig = () => {
     initialConfig.apiKey = initialConfig.apiKey || "";
     initialConfig.sheetUrl = initialConfig.sheetUrl || defaults.sheetUrl;
 
-    // Reset deprecated difficulty setting
-    // if (initialConfig.difficulty === 'Balanced All') {
-    //     initialConfig.difficulty = 'Easy MC';
-    // }
-
     return initialConfig;
   });
 
@@ -105,20 +100,9 @@ export const useAppConfig = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Validate batch size for Balanced All mode
+    // Validate batch size
     if (name === "batchSize") {
-      if (config.difficulty === "Balanced All") {
-        const num = parseInt(value);
-        if (num % 6 !== 0) {
-          setBatchSizeWarning(
-            "Batch size must be a multiple of 6 for Balanced Mode."
-          );
-        } else {
-          setBatchSizeWarning("");
-        }
-      } else {
-        setBatchSizeWarning("");
-      }
+      setBatchSizeWarning("");
     }
 
     setConfig((prev) => ({ ...prev, [name]: value }));

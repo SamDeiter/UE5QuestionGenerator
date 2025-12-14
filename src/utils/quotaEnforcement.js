@@ -142,7 +142,7 @@ export const getQuotaStatus = (questions) => {
  * @param {string} difficulty - Selected difficulty
  * @param {number} batchSize - Number of questions to generate
  * @param {Array} questions - All existing questions
- * @param {string} type - Selected type (MC, T/F, or Balanced)
+ * @param {string} type - Selected type (MC or T/F)
  * @returns {Object} { allowed: boolean, reason: string, maxAllowed: number, forceType: string }
  */
 export const validateGeneration = (
@@ -150,7 +150,7 @@ export const validateGeneration = (
   difficulty,
   batchSize,
   questions,
-  type = "Balanced"
+  type = "Multiple Choice"
 ) => {
   // Helper to normalize difficulty from "Easy MC" -> "Easy"
   const normalizeDiff = (d) => {
@@ -203,34 +203,12 @@ export const validateGeneration = (
     };
   }
 
-  // For Balanced mode, check which type needs more
-  if (type === "Balanced" || type === "Balanced (50/50 MC & T/F)") {
-    if (mcCount >= MC_QUOTA && tfCount < TF_QUOTA) {
-      return {
-        allowed: true,
-        reason: `MC is full (${mcCount}/${MC_QUOTA}). Will generate T/F only.`,
-        maxAllowed: Math.min(batchSize, TF_QUOTA - tfCount),
-        forceType: "True/False",
-        warning: true,
-      };
-    }
-    if (tfCount >= TF_QUOTA && mcCount < MC_QUOTA) {
-      return {
-        allowed: true,
-        reason: `T/F is full (${tfCount}/${TF_QUOTA}). Will generate MC only.`,
-        maxAllowed: Math.min(batchSize, MC_QUOTA - mcCount),
-        forceType: "Multiple Choice",
-        warning: true,
-      };
-    }
-  }
-
   // For specific type selection
   if (type === "Multiple Choice" || type === "MC") {
     if (mcCount >= MC_QUOTA) {
       return {
         allowed: false,
-        reason: `MC quota full for ${difficulty} (${mcCount}/${MC_QUOTA}). Switch to T/F or Balanced.`,
+        reason: `MC quota full for ${difficulty} (${mcCount}/${MC_QUOTA}). Switch to T/F.`,
         maxAllowed: 0,
         forceType: "True/False",
       };
@@ -246,7 +224,7 @@ export const validateGeneration = (
     if (tfCount >= TF_QUOTA) {
       return {
         allowed: false,
-        reason: `T/F quota full for ${difficulty} (${tfCount}/${TF_QUOTA}). Switch to MC or Balanced.`,
+        reason: `T/F quota full for ${difficulty} (${tfCount}/${TF_QUOTA}). Switch to MC.`,
         maxAllowed: 0,
         forceType: "Multiple Choice",
       };

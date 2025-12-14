@@ -12,7 +12,7 @@
  * @param {string} searchTerm - Text search term
  * @param {string} creatorName - Current user's creator name
  * @param {string} discipline - Selected discipline (e.g., 'Technical Art')
- * @param {string} difficulty - Selected difficulty setting (e.g., 'Easy MC', 'Hard T/F', or 'Balanced All')
+ * @param {string} difficulty - Selected difficulty setting (e.g., 'Easy', 'Medium', 'Hard')
  * @param {string} language - Selected language (e.g., 'English', 'Chinese (Simplified)')
  * @returns {Array} Filtered questions
  */
@@ -73,10 +73,7 @@ export const createFilteredQuestions = (
         }
 
         // 5. Difficulty & Type Filter
-        // Explicitly check for "Balanced" logic to skip filtering
-        const isBalanced = difficulty === 'Balanced All' || difficulty === 'Balanced';
-        
-        if (!isBalanced && difficulty) {
+        if (difficulty) {
             // Check Difficulty (both normalized to lowercase for comparison)
             if (normalizeDiff(q.difficulty) !== normalizeDiff(difficulty)) return false;
 

@@ -178,7 +178,7 @@ const OmniWatchdog = () => {
           pointerEvents: "auto",
         }}
       >
-        {alerts.slice(-3).map((alert, index) => (
+        {alerts.slice(-3).map((alert, _index) => (
           <div
             key={alert.timestamp}
             style={{

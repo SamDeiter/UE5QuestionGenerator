@@ -310,8 +310,6 @@ export const useQuestionManager = (config, showMessage) => {
     // Always block if global quota is reached
     if (isGlobalQuotaMet) return true;
 
-    if (config.difficulty === "Balanced All") return false;
-
     // Check if this difficulty level is full (both MC + T/F combined)
     const currentCount = difficultyTotals[config.difficulty] || 0;
     return currentCount >= TARGET_PER_DIFFICULTY;
@@ -326,23 +324,14 @@ export const useQuestionManager = (config, showMessage) => {
     // If global quota is met, no generation allowed
     if (isGlobalQuotaMet) return 0;
 
-    if (config.difficulty === "Balanced All") {
-      const maxRemaining = Math.max(
-        ...CATEGORY_KEYS.map((key) => TARGET_PER_CATEGORY - approvedCounts[key])
-      );
-      if (maxRemaining <= 0) return 0;
-      return Math.min(30, Math.floor(TARGET_TOTAL / 6) * 6);
-    } else {
-      // Calculate remaining for this difficulty level
-      const currentCount = difficultyTotals[config.difficulty] || 0;
-      const remaining = TARGET_PER_DIFFICULTY - currentCount;
-      // Also cap by remaining global quota
-      const globalRemaining = TARGET_TOTAL - totalApproved;
-      return Math.min(33, Math.max(0, remaining), Math.max(0, globalRemaining));
-    }
+    // Calculate remaining for this difficulty level
+    const currentCount = difficultyTotals[config.difficulty] || 0;
+    const remaining = TARGET_PER_DIFFICULTY - currentCount;
+    // Also cap by remaining global quota
+    const globalRemaining = TARGET_TOTAL - totalApproved;
+    return Math.min(30, Math.max(0, remaining), Math.max(0, globalRemaining));
   }, [
     config.difficulty,
-    approvedCounts,
     difficultyTotals,
     isGlobalQuotaMet,
     totalApproved,

@@ -147,7 +147,7 @@ export const useGeneration = (
       return;
     }
 
-    if (config.difficulty !== "Balanced All" && isTargetMet) {
+    if (isTargetMet) {
       showMessage(
         `Quota met for ${config.difficulty}! Change difficulty/type or discipline to continue.`,
         TOAST_DURATION.LONG
@@ -162,7 +162,7 @@ export const useGeneration = (
       config.difficulty,
       config.batchSize,
       allQuestions,
-      config.type || "Balanced" // Pass current type setting
+      config.type || "Multiple Choice" // Pass current type setting
     );
 
     if (!quotaCheck.allowed) {
@@ -181,51 +181,7 @@ export const useGeneration = (
     }
 
     // Determine the effective type to generate (may be forced by quota)
-    let effectiveType = quotaCheck.forceType || config.type || "Balanced";
-
-    // BALANCED MODE: Alternate between MC and T/F to ensure equal distribution
-    if (
-      effectiveType === "Balanced" ||
-      effectiveType === "Balanced (50/50 MC & T/F)"
-    ) {
-      // Check current MC vs T/F counts to decide which type to generate
-      const normalizeDiff = (d) => {
-        if (!d) return d;
-        const base = d.split(" ")[0];
-        if (base === "Beginner") return "Easy";
-        if (base === "Intermediate") return "Medium";
-        if (base === "Expert") return "Hard";
-        return base;
-      };
-
-      const targetDiff = normalizeDiff(config.difficulty);
-      const relevantQuestions = allQuestions.filter((q) => {
-        if (q.status === "rejected") return false;
-        if (q.discipline !== config.discipline) return false;
-        const qDiff = normalizeDiff(q.difficulty);
-        return qDiff === targetDiff;
-      });
-
-      const currentMC = relevantQuestions.filter(
-        (q) => q.type === "Multiple Choice" || q.type === "MC"
-      ).length;
-      const currentTF = relevantQuestions.filter(
-        (q) => q.type === "True/False" || q.type === "T/F"
-      ).length;
-
-      // Pick the type with fewer questions
-      if (currentMC <= currentTF) {
-        effectiveType = "Multiple Choice";
-        console.log(
-          `⚖️ Balanced: Generating MC (${currentMC} MC vs ${currentTF} T/F)`
-        );
-      } else {
-        effectiveType = "True/False";
-        console.log(
-          `⚖️ Balanced: Generating T/F (${currentMC} MC vs ${currentTF} T/F)`
-        );
-      }
-    }
+    const effectiveType = quotaCheck.forceType || config.type || "Multiple Choice";
 
     if (quotaCheck.forceType) {
       console.log(
@@ -418,17 +374,12 @@ export const useGeneration = (
         }
 
         // Apply difficulty and type conversion
-        if (
-          requestedDifficulty !== "Balanced" &&
-          requestedDifficulty !== "Balanced All"
-        ) {
-          if (expectedType === "True/False" && q.type === "Multiple Choice") {
-            updatedQ = convertMCtoTF(updatedQ, requestedDifficulty);
-            updatedQ.sourceVerified = q.sourceVerified; // Preserve verification status
-          } else {
-            // Use requested difficulty as-is (normalization handles variants)
-            updatedQ.difficulty = requestedDifficulty;
-          }
+        if (expectedType === "True/False" && q.type === "Multiple Choice") {
+          updatedQ = convertMCtoTF(updatedQ, requestedDifficulty);
+          updatedQ.sourceVerified = q.sourceVerified; // Preserve verification status
+        } else {
+          // Use requested difficulty as-is (normalization handles variants)
+          updatedQ.difficulty = requestedDifficulty;
         }
 
         // CRITICAL: Set discipline so chart can filter correctly
@@ -514,51 +465,6 @@ export const useGeneration = (
           `⚠️ ${warningCount} questions flagged for review (check warnings).`,
           8000
         );
-      }
-
-      // TYPE BALANCE ENFORCEMENT: Ensure equal MC and T/F in Balanced mode
-      if (
-        (config.difficulty === "Balanced" ||
-          config.difficulty === "Balanced All") &&
-        (!config.type || config.type === "Balanced")
-      ) {
-        const mcQuestions = newQuestions.filter(
-          (q) => q.type === "Multiple Choice"
-        );
-        const tfQuestions = newQuestions.filter(
-          (q) => q.type === "True/False" || q.type === "T/F"
-        );
-
-        const targetPerType = Math.floor(newQuestions.length / 2);
-        const mcExcess = mcQuestions.length - targetPerType;
-
-        console.log(
-          `📊 Type Distribution: ${mcQuestions.length} MC, ${tfQuestions.length} T/F. Target: ${targetPerType} each.`
-        );
-
-        if (mcExcess > 0) {
-          // Convert excess MC questions to T/F to balance
-          console.log(
-            `🔄 Converting ${mcExcess} excess MC questions to T/F for balance...`
-          );
-          let converted = 0;
-          newQuestions = newQuestions.map((q) => {
-            if (q.type === "Multiple Choice" && converted < mcExcess) {
-              converted++;
-              return convertMCtoTF(q, q.difficulty);
-            }
-            return q;
-          });
-          showMessage(
-            `⚖️ Balanced: Converted ${mcExcess} MC → T/F for equal distribution.`,
-            TOAST_DURATION.MEDIUM
-          );
-        } else if (mcExcess < 0) {
-          // More T/F than MC - just log a warning (can't easily convert T/F to MC)
-          console.warn(
-            `⚠️ More T/F (${tfQuestions.length}) than MC (${mcQuestions.length}). Cannot auto-balance.`
-          );
-        }
       }
 
       // Enrich questions with metadata
