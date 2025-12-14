@@ -383,22 +383,7 @@ const App = () => {
     return <SignIn />;
   }
 
-  // Render - Authenticated but not registered
-  if (!isRegistered) {
-    return (
-      <InviteSignUp
-        onSuccess={(role) => {
-          markAsRegistered(role);
-        }}
-        onCancel={() => {
-          // Sign out and go back to sign in
-          import("./services/firebase").then(({ signOutUser }) =>
-            signOutUser()
-          );
-        }}
-      />
-    );
-  }
+  // User is authenticated - proceed to app (no registration check needed)
 
   if (appMode === "landing") {
     return (
