@@ -6,12 +6,27 @@
  */
 
 /**
+ * Generate a UUID, with fallback for environments where crypto.randomUUID isn't available
+ */
+const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback UUID v4 implementation
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
+/**
  * Required question schema with default values
  */
 const QUESTION_DEFAULTS = {
   // Identity
   id: () => Date.now() + Math.random(),
-  uniqueId: () => crypto.randomUUID(),
+  uniqueId: () => generateUUID(),
   
   // Content
   discipline: "General",
