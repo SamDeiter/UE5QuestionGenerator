@@ -11,6 +11,7 @@ import {
   getQuestionsPaginated,
 } from "../services/firebase";
 import { logQuestion } from "../utils/analyticsStore";
+import { completeReviewTracking } from "../utils/normalizeQuestion";
 
 export const useQuestionManager = (config, showMessage) => {
   // Current session questions
@@ -183,18 +184,27 @@ export const useQuestionManager = (config, showMessage) => {
     }
   }, []);
 
-  // Status update handler - now accepts optional rejection reason
+  // Status update handler - now accepts optional rejection reason and tracks review time
   const handleUpdateStatus = useCallback(
     (id, newStatus, rejectionReason = null) => {
       updateQuestionInState(id, (q) => {
-        const updatedQ = {
-          ...q,
+        // Complete review tracking if status is changing to accepted or rejected
+        let updatedQ = q;
+        if ((newStatus === "accepted" || newStatus === "rejected") && q.reviewStartedAt) {
+          updatedQ = completeReviewTracking(q, config.creatorName);
+        }
+        
+        updatedQ = {
+          ...updatedQ,
           status: newStatus,
-          critique: newStatus === "accepted" ? null : q.critique,
+          critique: newStatus === "accepted" ? null : updatedQ.critique,
           // Store rejection reason if provided
           rejectionReason: newStatus === "rejected" ? rejectionReason : null,
           rejectedAt:
             newStatus === "rejected" ? new Date().toISOString() : null,
+          // Track acceptance time
+          acceptedAt:
+            newStatus === "accepted" ? new Date().toISOString() : updatedQ.acceptedAt,
         };
 
         // Sync to Firestore
@@ -205,7 +215,7 @@ export const useQuestionManager = (config, showMessage) => {
         return updatedQ;
       });
     },
-    [updateQuestionInState]
+    [updateQuestionInState, config.creatorName]
   );
 
   // Statistics - count both pending and accepted questions for generation target

@@ -1,5 +1,6 @@
 
 import { textSimilarity } from './stringHelpers';
+import { normalizeQuestion } from './normalizeQuestion';
 
 /**
  * Remove near-duplicate questions from an array (intra-batch deduplication)
@@ -301,7 +302,10 @@ export const parseQuestions = (text) => {
     });
 
     // Remove duplicates within this batch (fuzzy matching at 85% threshold)
-    return removeDuplicateQuestions(parsed);
+    const deduplicated = removeDuplicateQuestions(parsed);
+    
+    // Normalize all questions to ensure consistent data structure
+    return deduplicated.map(q => normalizeQuestion(q));
 };
 
 export const downloadFile = (data, filename) => {
