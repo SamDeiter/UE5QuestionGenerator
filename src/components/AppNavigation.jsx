@@ -24,6 +24,13 @@ const AppNavigation = ({ activeMode, onNavigate, counts = {}, isAdmin }) => {
       color: "emerald",
     },
     {
+      id: "test",
+      label: "Test",
+      icon: "clipboard-list",
+      color: "orange",
+      adminOnly: true,
+    },
+    {
       id: "playground",
       label: "Prompt Lab",
       icon: "terminal",

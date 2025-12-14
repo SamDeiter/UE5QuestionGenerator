@@ -4,6 +4,7 @@ import Icon from "./Icon";
 // Lazy load heavy views
 const DatabaseView = React.lazy(() => import("./DatabaseView"));
 const ReviewMode = React.lazy(() => import("./ReviewMode"));
+const TestView = React.lazy(() => import("./TestView"));
 
 const AnalyticsView = React.lazy(() => import("./AnalyticsView"));
 const PromptPlayground = React.lazy(() => import("./PromptPlayground"));
@@ -150,6 +151,12 @@ const ViewRouter = ({
           filterMode={state.filterMode}
           sortBy={state.sortBy}
           onStartTutorial={() => onStartTutorial("database")}
+        />
+      ) : appMode === "test" && isAdmin ? (
+        <TestView
+          questions={[...questions, ...databaseQuestions]}
+          config={config}
+          isAdmin={isAdmin}
         />
       ) : appMode === "playground" && isAdmin ? (
         <PromptPlayground
