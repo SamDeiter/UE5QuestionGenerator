@@ -55,8 +55,9 @@ const GenerationSettings = ({
     const allQuestions = Array.from(allQuestionsMap.values()).flat();
 
     // Deduplicate by question ID to avoid counting variants multiple times
+    // Use q.id || q.uniqueId since questions may have either or both
     const uniqueQuestions = Array.from(
-      new Map(allQuestions.map((q) => [q.id, q])).values()
+      new Map(allQuestions.map((q) => [q.id || q.uniqueId, q])).values()
     );
 
     // Count all non-rejected questions filtered by current discipline
