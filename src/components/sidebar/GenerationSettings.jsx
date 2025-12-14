@@ -4,6 +4,7 @@ import Icon from "../Icon";
 import InfoTooltip from "../InfoTooltip";
 import { getMergedTags } from "../../utils/tagTaxonomy";
 import CoverageGapSuggester from "./CoverageGapSuggester";
+import { TARGET_PER_CATEGORY } from "../../utils/constants";
 
 /**
  * GenerationSettings - Configuration panel with progressive disclosure
@@ -199,7 +200,7 @@ const GenerationSettings = ({
                   <option value="True/False">True/False</option>
                 </select>
                 <p className="text-[9px] text-slate-500">
-                  Select question type to generate (33 of each required per
+                  Select question type to generate ({TARGET_PER_CATEGORY} of each required per
                   difficulty)
                 </p>
               </div>
@@ -228,14 +229,14 @@ const GenerationSettings = ({
                       </span>
                       <span
                         className={
-                          row.mc + row.tf >= 66
+                          row.mc + row.tf >= TARGET_PER_CATEGORY * 2
                             ? "text-green-400"
                             : "text-slate-500"
                         }
                       >
-                        {row.mc + row.tf >= 66
+                        {row.mc + row.tf >= TARGET_PER_CATEGORY * 2
                           ? `✓ ${row.mc + row.tf}`
-                          : `${row.mc + row.tf}/66`}
+                          : `${row.mc + row.tf}/${TARGET_PER_CATEGORY * 2}`}
                       </span>
                     </div>
                     <div className="flex gap-1">
@@ -245,23 +246,23 @@ const GenerationSettings = ({
                           <span className="text-blue-400">MC</span>
                           <span
                             className={
-                              row.mc >= 33
+                              row.mc >= TARGET_PER_CATEGORY
                                 ? "text-green-400"
-                                : row.mc >= 28
+                                : row.mc >= TARGET_PER_CATEGORY - 5
                                 ? "text-yellow-400"
                                 : "text-slate-400"
                             }
                           >
-                            {row.mc >= 33 ? `✓ ${row.mc}` : `${row.mc}/33`}
+                            {row.mc >= TARGET_PER_CATEGORY ? `✓ ${row.mc}` : `${row.mc}/${TARGET_PER_CATEGORY}`}
                           </span>
                         </div>
                         <div className="h-1.5 bg-slate-800 rounded overflow-hidden">
                           <div
                             className={`h-full transition-all ${
-                              row.mc >= 33 ? "bg-green-500" : "bg-blue-500"
+                              row.mc >= TARGET_PER_CATEGORY ? "bg-green-500" : "bg-blue-500"
                             }`}
                             style={{
-                              width: `${Math.min(100, (row.mc / 33) * 100)}%`,
+                              width: `${Math.min(100, (row.mc / TARGET_PER_CATEGORY) * 100)}%`,
                             }}
                           />
                         </div>
@@ -272,23 +273,23 @@ const GenerationSettings = ({
                           <span className="text-purple-400">T/F</span>
                           <span
                             className={
-                              row.tf >= 33
+                              row.tf >= TARGET_PER_CATEGORY
                                 ? "text-green-400"
-                                : row.tf >= 28
+                                : row.tf >= TARGET_PER_CATEGORY - 5
                                 ? "text-yellow-400"
                                 : "text-slate-400"
                             }
                           >
-                            {row.tf >= 33 ? `✓ ${row.tf}` : `${row.tf}/33`}
+                            {row.tf >= TARGET_PER_CATEGORY ? `✓ ${row.tf}` : `${row.tf}/${TARGET_PER_CATEGORY}`}
                           </span>
                         </div>
                         <div className="h-1.5 bg-slate-800 rounded overflow-hidden">
                           <div
                             className={`h-full transition-all ${
-                              row.tf >= 33 ? "bg-green-500" : "bg-purple-500"
+                              row.tf >= TARGET_PER_CATEGORY ? "bg-green-500" : "bg-purple-500"
                             }`}
                             style={{
-                              width: `${Math.min(100, (row.tf / 33) * 100)}%`,
+                              width: `${Math.min(100, (row.tf / TARGET_PER_CATEGORY) * 100)}%`,
                             }}
                           />
                         </div>
