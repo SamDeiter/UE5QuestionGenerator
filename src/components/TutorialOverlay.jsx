@@ -105,6 +105,17 @@ const TutorialOverlay = ({
     };
   }, [currentStepIndex, step.target]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'Escape') onSkip();
+      if (e.key === 'ArrowRight' && !isLastStep) onNext();
+      if (e.key === 'ArrowLeft' && currentStepIndex > 0) onPrev();
+    };
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [onSkip, onNext, onPrev, currentStepIndex, isLastStep]);
+
   const isLastStep = currentStepIndex === steps.length - 1;
 
   return (
@@ -190,15 +201,20 @@ const TutorialOverlay = ({
           )}
 
           <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-800">
-            <div className="flex gap-1">
-              {steps.map((_, idx) => (
-                <div
-                  key={idx}
-                  className={`w-2 h-2 rounded-full ${
-                    idx === currentStepIndex ? "bg-indigo-500" : "bg-slate-700"
-                  }`}
-                />
-              ))}
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                {steps.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`w-2 h-2 rounded-full ${
+                      idx === currentStepIndex ? "bg-indigo-500" : "bg-slate-700"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-xs text-slate-500 ml-1">
+                {currentStepIndex + 1} / {steps.length}
+              </span>
             </div>
 
             <div className="flex gap-2">
