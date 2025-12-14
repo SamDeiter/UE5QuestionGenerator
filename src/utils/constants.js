@@ -92,3 +92,41 @@ export const STORAGE_KEYS = {
   PREF_FILTER: "ue5_pref_filter",
   PREF_HISTORY: "ue5_pref_history",
 };
+
+// Context Optimization Limits
+export const CONTEXT_LIMITS = {
+  MAX_TOKENS: 2000,
+  MAX_EXCERPT_LENGTH: 500, // characters per excerpt
+  CHUNK_SIZE: 1000,
+};
+
+// Token Usage Warning Levels (percentage thresholds)
+export const TOKEN_WARNING_LEVELS = {
+  DANGER: 90, // >= 90%: Critical, near limit
+  WARNING: 70, // >= 70%: Caution, approaching limit
+};
+
+// UI Timing Constants
+export const TIMING = {
+  COOLDOWN_SECONDS: 60,
+  DELETE_BATCH_SIZE: 10,
+  AUTO_SAVE_INTERVAL: 10000, // ms
+  MAX_POLLING_ATTEMPTS: 20,
+};
+
+// SCORM Export Defaults
+export const SCORM_DEFAULTS = {
+  PASSING_SCORE: 80,
+  TIME_LIMIT_MINUTES: 30,
+};
+
+// Firestore Query Limits
+export const FIRESTORE_LIMITS = {
+  MAX_RESULTS: 500,
+  DEFAULT_PAGE_SIZE: 20,
+};
+
+// History Limits
+export const HISTORY_LIMITS = {
+  MAX_STATES_PER_QUESTION: 10,
+};

@@ -6,6 +6,7 @@ import {
   doc,
 } from "firebase/firestore";
 import { db } from "../services/firebase";
+import { TARGET_PER_CATEGORY } from "./constants";
 
 /**
  * Production Database Cleanup Tool
@@ -100,7 +101,7 @@ export const cleanupProductionDatabase = async () => {
     });
   });
 
-  const QUOTA = 33;
+  const QUOTA = TARGET_PER_CATEGORY;
   let excessRemoved = 0;
   const excessDeletePromises = [];
 

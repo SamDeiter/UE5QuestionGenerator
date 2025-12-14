@@ -5,10 +5,11 @@
  */
 
 import { estimateTokens } from './tokenCounter';
+import { CONTEXT_LIMITS } from './constants';
 
-// Maximum tokens allowed for file context
-const MAX_CONTEXT_TOKENS = 2000;
-const MAX_EXCERPT_LENGTH = 500; // characters per excerpt
+// Use centralized constants
+const MAX_CONTEXT_TOKENS = CONTEXT_LIMITS.MAX_TOKENS;
+const MAX_EXCERPT_LENGTH = CONTEXT_LIMITS.MAX_EXCERPT_LENGTH;
 
 /**
  * Extracts relevant keywords based on discipline

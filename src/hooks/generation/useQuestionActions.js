@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { generateContentSecure as generateContent, generateCritiqueSecure as generateCritique } from '../../services/geminiSecure';
 import { constructSystemPrompt } from '../../services/promptBuilder';
 import { parseQuestions } from '../../utils/questionHelpers';
+import { QUALITY_THRESHOLDS } from '../../utils/constants';
 
 /**
  * Custom hook for question-related actions (explain, variate, critique).
@@ -138,9 +139,9 @@ Output in Markdown Table format.`;
             const previousAttempts = q.critiqueAttempts || 0;
             const newAttemptCount = previousAttempts + 1;
 
-            // Check if this is the 3rd failed attempt (score < 70)
+            // Check if this is the 3rd failed attempt (score < passing threshold)
             const MAX_ATTEMPTS = 3;
-            const PASSING_SCORE = 70;
+            const PASSING_SCORE = QUALITY_THRESHOLDS.PASS;
 
             if (score < PASSING_SCORE && newAttemptCount >= MAX_ATTEMPTS) {
                 // Auto-reject after 3 failed attempts
