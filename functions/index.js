@@ -37,7 +37,7 @@ exports.generateQuestions = functions
       systemPrompt,
       userPrompt,
       temperature = 0.2,
-      model = "gemini-2.0-flash-exp",
+      model = "gemini-1.5-flash", // Updated to stable model (2.0-flash-exp was returning 404)
     } = data;
 
     // 2. Input validation
@@ -260,7 +260,7 @@ exports.generateCritique = functions
         Options: ${JSON.stringify(options)}
         Correct: ${correct}`;
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
       const response = await fetch(url, {
         method: "POST",
@@ -322,7 +322,7 @@ exports.generateCritique = functions
 
       // Log usage
       await logApiUsage(userId, {
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-1.5-flash",
         type: "critique",
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
