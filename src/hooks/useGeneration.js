@@ -719,7 +719,7 @@ export const useGeneration = (
           type: q.type,
           difficulty: q.difficulty,
           language: targetLang,
-          status: "accepted",
+          status: "pending", // CRITICAL: Force pending - ALL questions must be reviewed
           dateAdded: new Date().toISOString(),
         };
 
@@ -1038,7 +1038,7 @@ export const useGeneration = (
             type: q.type,
             difficulty: q.difficulty,
             language: targetLang,
-            status: "accepted",
+            status: "pending", // CRITICAL: Force pending - ALL questions must be reviewed
             dateAdded: new Date().toISOString(),
           };
 

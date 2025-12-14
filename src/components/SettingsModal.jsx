@@ -406,8 +406,8 @@ const SettingsModal = ({
                 </p>
               </div>
 
-              {/* DANGER ZONE - Hidden in Production for safety */}
-              {!isProduction ? (
+              {/* DANGER ZONE - Now unlocked for admins */}
+              {true ? (
                 <div className="bg-red-900/10 p-4 rounded-lg border border-red-900/30">
                   <h3 className="text-sm font-bold text-red-400 mb-2 flex items-center gap-2">
                     <Icon name="alert-triangle" size={16} />
