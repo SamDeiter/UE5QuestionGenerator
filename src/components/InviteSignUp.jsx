@@ -33,14 +33,6 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
   const [password, setPassword] = useState("");
   const [isNewUser, setIsNewUser] = useState(true);
 
-  useEffect(() => {
-    const urlInvite = getInviteFromUrl();
-    if (urlInvite) {
-      setInviteCode(urlInvite);
-      handleValidate(urlInvite);
-    }
-  }, [handleValidate]);
-
   const handleValidate = useCallback(
     async (code) => {
       const codeToValidate = code || inviteCode;
@@ -65,6 +57,14 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
     },
     [inviteCode]
   );
+
+  useEffect(() => {
+    const urlInvite = getInviteFromUrl();
+    if (urlInvite) {
+      setInviteCode(urlInvite);
+      handleValidate(urlInvite);
+    }
+  }, [handleValidate]);
 
   const handleGoogleSignIn = async () => {
     setIsAuthenticating(true);
