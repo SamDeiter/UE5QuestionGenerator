@@ -293,6 +293,35 @@ const App = () => {
     }
   }, [user, authLoading, handleLoadFromFirestore]);
 
+  // ONE-TIME MIGRATION: Fix auto-accepted questions in Firestore
+  const hasMigratedRef = useRef(false);
+  useEffect(() => {
+    const runMigration = async () => {
+      const migrationKey = 'ue5_migration_auto_accept_fix';
+      if (localStorage.getItem(migrationKey) === 'completed') return;
+
+      if (user && !authLoading && !hasMigratedRef.current) {
+        hasMigratedRef.current = true;
+        try {
+          console.log('🔄 Running migration: fixing auto-accepted questions...');
+          const { migrateAutoAcceptedQuestions } = await import('./utils/migrateAutoAccepted.js');
+          const result = await migrateAutoAcceptedQuestions();
+          if (result.success) {
+            console.log(`✅ Migration: Fixed ${result.fixed} of ${result.totalChecked} questions`);
+            if (result.fixed > 0) {
+              showMessage(`✅ Fixed ${result.fixed} auto-accepted questions - now pending`, 5000);
+              setTimeout(() => handleLoadFromFirestore(), 1000);
+            }
+            localStorage.setItem(migrationKey, 'completed');
+          }
+        } catch (error) {
+          console.error('❌ Migration error:', error);
+        }
+      }
+    };
+    runMigration();
+  }, [user, authLoading, showMessage, handleLoadFromFirestore]);
+
   // 9. Review Actions (bulk operations)
   const {
     handleClearPending,
