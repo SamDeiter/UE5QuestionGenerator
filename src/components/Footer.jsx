@@ -1,3 +1,5 @@
+import { APP_VERSION } from '../utils/constants';
+
 /**
  * Footer - Legal links and copyright
  * Displays at bottom of app with Privacy Policy and Terms of Service links
@@ -17,7 +19,7 @@ const Footer = () => {
 
         {/* Legal Links with Version */}
         <div className="flex items-center gap-4">
-          <span className="text-slate-600 text-[10px]">v2.0.1</span>
+          <span className="text-slate-600 text-[10px]">{APP_VERSION}</span>
           <a
             href="https://legal.epicgames.com/en-US/epicgames/privacy-policy"
             target="_blank"
