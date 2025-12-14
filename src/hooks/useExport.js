@@ -208,9 +208,9 @@ export const useExport = (
     }
   };
 
-  const handleLoadFromFirestore = async () => {
+  const handleLoadFromFirestore = async (silent = false) => {
     setIsProcessing(true);
-    setStatus("Loading from Firestore...");
+    setStatus(silent ? "" : "Loading from Firestore...");
     if (setShowExportMenu) setShowExportMenu(false);
 
     try {
@@ -228,13 +228,17 @@ export const useExport = (
 
       // Don't auto-switch to database view - let user navigate manually
       // setAppMode("database"); // REMOVED - only switch when user clicks Database button
-      showMessage(
-        `Loaded ${loadedQuestions.length} questions from Firestore!`,
-        3000
-      );
+      if (!silent) {
+        showMessage(
+          `Loaded ${loadedQuestions.length} questions from Firestore!`,
+          3000
+        );
+      }
     } catch (e) {
       console.error("Firestore Load Error:", e);
-      showMessage(`Firestore Load Failed: ${e.message}`, 7000);
+      if (!silent) {
+        showMessage(`Firestore Load Failed: ${e.message}`, 7000);
+      }
     } finally {
       setIsProcessing(false);
       setStatus("");

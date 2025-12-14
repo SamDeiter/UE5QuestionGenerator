@@ -289,7 +289,7 @@ const App = () => {
     if (user && !authLoading && !hasAutoLoadedRef.current) {
       hasAutoLoadedRef.current = true;
       console.log("📊 Auto-loading database for difficulty chart...");
-      handleLoadFromFirestore();
+      handleLoadFromFirestore(true); // Silent auto-recovery
     }
   }, [user, authLoading, handleLoadFromFirestore]);
 
