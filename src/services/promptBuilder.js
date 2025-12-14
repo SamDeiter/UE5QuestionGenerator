@@ -26,96 +26,28 @@ export const constructSystemPrompt = (
 ) => {
   // Get available tags for this discipline
   const availableTags = TAGS_BY_DISCIPLINE[config.discipline] || [];
-  let batchNum = parseInt(config.batchSize) || 6;
-  let easyCount = 0,
-    mediumCount = 0,
-    hardCount = 0;
-  let targetType = "MC and T/F";
-  let mcCount = 0,
-    tfCount = 0;
+  const batchNum = parseInt(config.batchSize) || 6;
+  let targetType = "Multiple Choice ONLY";
 
-  // Parse difficulty setting
   // Parse difficulty and type
   let difficulty = config.difficulty;
   let type = config.type;
 
-  // Legacy fallback: parse from difficulty string
+  // Legacy fallback: parse from difficulty string (e.g., "Easy MC")
   if (!type && difficulty.includes(" ")) {
     const parts = difficulty.split(" ");
     difficulty = parts[0];
     type = parts.slice(1).join(" ");
   }
 
-  if (difficulty === "Balanced" || difficulty === "Balanced All") {
-    // Force batch size to be multiple of 6 for equal distribution (1 of each Type/Diff combo)
-    if (batchNum % 6 !== 0) {
-      batchNum = Math.ceil(batchNum / 6) * 6;
-    }
-
-    const total = batchNum;
-    const perDiff = Math.floor(total / 3); // e.g. 2 per difficulty
-
-    // Distribution targets
-    easyCount = perDiff;
-    mediumCount = perDiff;
-    hardCount = total - (easyCount + mediumCount); // Remainder to Hard
-
-    // Check if user explicitly wants a specific type or balanced
-    if (type === "Multiple Choice") {
-      targetType = "Multiple Choice ONLY";
-      mcCount = total;
-      tfCount = 0;
-    } else if (type === "True/False") {
-      targetType = "True/False ONLY";
-      mcCount = 0;
-      tfCount = total;
-    } else {
-      // Default to balanced
-      targetType = "Balanced (Equal MC & T/F)";
-      const half = Math.floor(total / 2);
-      mcCount = half;
-      tfCount = total - half;
-    }
+  // Set type based on explicit selection (required - no balanced mode)
+  if (type === "True/False" || type === "T/F") {
+    targetType = "True/False ONLY";
   } else {
-    if (difficulty === "Easy") easyCount = batchNum;
-    else if (difficulty === "Medium") mediumCount = batchNum;
-    else if (difficulty === "Hard") hardCount = batchNum;
-
-    // Respect user's type selection
-    if (type === "Multiple Choice") {
-      targetType = "Multiple Choice ONLY";
-      mcCount = batchNum;
-      tfCount = 0;
-    } else if (type === "True/False") {
-      targetType = "True/False ONLY";
-      mcCount = 0;
-      tfCount = batchNum;
-    } else {
-      // Default to balanced if no specific type selected
-      targetType = "Balanced (Equal MC & T/F)";
-      const half = Math.floor(batchNum / 2);
-      mcCount = half;
-      tfCount = batchNum - half;
-    }
+    targetType = "Multiple Choice ONLY";
   }
 
-  const difficultyPrompt =
-    difficulty === "Balanced" || difficulty === "Balanced All"
-      ? `🚨 STRICT DISTRIBUTION REQUIRED - NO EXCEPTIONS 🚨\n` +
-        `You MUST generate EXACTLY these counts:\n` +
-        `- Easy: ${easyCount} questions\n` +
-        `- Medium: ${mediumCount} questions\n` +
-        `- Hard: ${hardCount} questions\n\n` +
-        `**TYPE DISTRIBUTION (MANDATORY):**\n` +
-        `- EXACTLY ${mcCount} Multiple Choice questions\n` +
-        `- EXACTLY ${tfCount} True/False questions\n\n` +
-        `**VERIFICATION CHECKLIST:**\n` +
-        `Before submitting, COUNT your questions:\n` +
-        `□ Total MC questions = ${mcCount}? If not, FIX IT.\n` +
-        `□ Total T/F questions = ${tfCount}? If not, FIX IT.\n` +
-        `□ Total Easy = ${easyCount}? □ Medium = ${mediumCount}? □ Hard = ${hardCount}?\n\n` +
-        `Distribute types evenly across difficulties (e.g., 1 Easy MC, 1 Easy TF, 1 Medium MC, 1 Medium TF, etc).`
-      : `Generate exactly ${batchNum} ${difficulty} questions of type: ${targetType}.`;
+  const difficultyPrompt = `Generate exactly ${batchNum} ${difficulty} questions of type: ${targetType}.`;
 
   // Temperature-based mode
   const temp = parseFloat(config.temperature) || 0.7;
