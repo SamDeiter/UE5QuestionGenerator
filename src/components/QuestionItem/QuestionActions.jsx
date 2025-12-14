@@ -1,15 +1,33 @@
 import { useState, useRef, useEffect } from 'react';
 import Icon from '../Icon';
-// Rejection reason options
+
+// Rejection reason options with categories for analytics
 const REJECTION_REASONS = [
-    { id: 'too_easy', label: 'Too Easy', icon: 'arrow-down' },
-    { id: 'too_hard', label: 'Too Difficult', icon: 'arrow-up' },
-    { id: 'incorrect', label: 'Incorrect Answer', icon: 'x-circle' },
-    { id: 'unclear', label: 'Unclear Question', icon: 'help-circle' },
-    { id: 'duplicate', label: 'Duplicate', icon: 'copy' },
-    { id: 'poor_quality', label: 'Poor Quality', icon: 'thumbs-down' },
-    { id: 'bad_source', label: 'Bad/Missing Source', icon: 'link-2' },
-    { id: 'other', label: 'Other', icon: 'more-horizontal' },
+    // Content Issues
+    { id: 'too_easy', label: 'Too Easy', icon: 'arrow-down', category: 'content' },
+    { id: 'too_hard', label: 'Too Difficult', icon: 'arrow-up', category: 'content' },
+    { id: 'unclear', label: 'Unclear Question', icon: 'help-circle', category: 'content' },
+    { id: 'irrelevant', label: 'Off Topic/Irrelevant', icon: 'slash', category: 'content' },
+    
+    // Accuracy Issues
+    { id: 'incorrect', label: 'Incorrect Answer', icon: 'x-circle', category: 'accuracy' },
+    { id: 'outdated', label: 'Outdated Info', icon: 'clock', category: 'accuracy' },
+    { id: 'misleading', label: 'Misleading Options', icon: 'alert-triangle', category: 'accuracy' },
+    
+    // Duplicate Issues
+    { id: 'duplicate', label: 'Duplicate', icon: 'copy', category: 'duplicate' },
+    { id: 'too_similar', label: 'Too Similar to Another', icon: 'git-merge', category: 'duplicate' },
+    
+    // Source Issues
+    { id: 'bad_source', label: 'Bad/Missing Source', icon: 'link-2', category: 'source' },
+    { id: 'broken_link', label: 'Broken Link', icon: 'link-off', category: 'source' },
+    
+    // Quality Issues  
+    { id: 'poor_quality', label: 'Poor Quality', icon: 'thumbs-down', category: 'quality' },
+    { id: 'formatting', label: 'Formatting Issues', icon: 'type', category: 'quality' },
+    
+    // Other
+    { id: 'other', label: 'Other (Add Notes)', icon: 'more-horizontal', category: 'other' },
 ];
 
 const QuestionActions = ({
@@ -132,7 +150,7 @@ const QuestionActions = ({
                 // REVIEW MODE: Only show Reject button (Critique/Verify/Accept handled by ReviewProgressBar)
                 <>
 
-                    {/* Reject Button with Reason Dropdown */}
+                    {/* REJECT BUTTON - Made more prominent */}
                     <div className="relative" ref={rejectMenuRef}>
                         <button
                             onClick={() => {
@@ -142,36 +160,49 @@ const QuestionActions = ({
                                     setRejectMenuOpen(!rejectMenuOpen);
                                 }
                             }}
-                            className={`p-2 rounded-lg transition-all flex items-center gap-1 ${q.status === 'rejected' ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' : 'bg-slate-800 text-slate-500 hover:bg-red-900/20 hover:text-red-500'}`}
-                            title={q.status === 'rejected' && q.rejectionReason ? `Rejected: ${REJECTION_REASONS.find(r => r.id === q.rejectionReason)?.label || q.rejectionReason}` : "Reject"}
+                            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 font-bold text-sm ${
+                                q.status === 'rejected' 
+                                    ? 'bg-red-600 text-white shadow-lg shadow-red-900/50 ring-2 ring-red-500' 
+                                    : 'bg-red-900/40 text-red-300 hover:bg-red-800/60 hover:text-red-200 border-2 border-red-700/50 hover:border-red-500'
+                            }`}
+                            title={q.status === 'rejected' && q.rejectionReason ? `Rejected: ${REJECTION_REASONS.find(r => r.id === q.rejectionReason)?.label || q.rejectionReason}` : "Mark as bad question"}
                             aria-label="Reject question"
                             data-tour="review-actions"
                         >
-                            <Icon name="x" size={18} />
-                            <span className="text-xs font-bold">REJECT</span>
+                            <Icon name="x-circle" size={18} />
+                            <span>REJECT</span>
+                            {!q.status && <Icon name="chevron-down" size={14} />}
                         </button>
 
                         {rejectMenuOpen && (
-                            <div className="absolute right-0 bottom-full mb-2 w-48 bg-slate-800 border border-red-900/50 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                                <div className="px-3 py-2 bg-red-900/30 border-b border-red-900/50">
-                                    <span className="text-xs font-bold text-red-400 uppercase">Reject Because:</span>
+                            <div className="absolute right-0 bottom-full mb-2 w-64 bg-slate-800 border-2 border-red-700/50 rounded-lg shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                <div className="px-3 py-2 bg-red-900/40 border-b border-red-700/50">
+                                    <span className="text-sm font-bold text-red-300 flex items-center gap-2">
+                                        <Icon name="alert-octagon" size={16} />
+                                        Why is this question bad?
+                                    </span>
                                 </div>
-                                <div className="py-1">
+                                <div className="py-1 max-h-72 overflow-y-auto">
                                     {REJECTION_REASONS.map(reason => (
                                         <button
                                             key={reason.id}
                                             onClick={(e) => {
                                                 e.stopPropagation();
+                                                // Note: rejectionCategory and qualityIssues are now tracked via normalizeQuestion
                                                 onUpdateStatus(q.id, 'rejected', reason.id);
                                                 setRejectMenuOpen(false);
-                                                if (showMessage) showMessage(`Rejected: ${reason.label}`);
+                                                if (showMessage) showMessage(`❌ Rejected: ${reason.label}`, 3000);
                                             }}
-                                            className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-red-900/30 hover:text-red-300 flex items-center gap-2 transition-colors"
+                                            className="w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-red-900/40 hover:text-white flex items-center gap-3 transition-colors border-l-2 border-transparent hover:border-red-500"
                                         >
-                                            <Icon name={reason.icon} size={14} className="text-red-400" />
-                                            {reason.label}
+                                            <Icon name={reason.icon} size={16} className="text-red-400" />
+                                            <span className="flex-1">{reason.label}</span>
+                                            <span className="text-xs text-slate-500 uppercase">{reason.category}</span>
                                         </button>
                                     ))}
+                                </div>
+                                <div className="px-3 py-2 bg-slate-900/50 border-t border-slate-700">
+                                    <span className="text-xs text-slate-400">💡 Tip: Rejecting helps the AI learn what to avoid</span>
                                 </div>
                             </div>
                         )}
