@@ -11,9 +11,46 @@ const CookieConsentBanner = () => {
         // Check if user has already consented
         const consent = localStorage.getItem('ue5_cookie_consent');
         if (!consent) {
-            // Delay showing banner by 2 seconds for better UX
-            const timer = setTimeout(() => setIsVisible(true), 2000);
-            return () => clearTimeout(timer);
+            // Wait for age gate and terms to be completed before showing cookie banner
+            const checkAndShow = () => {
+                const ageVerified = localStorage.getItem('ue5_age_verified');
+                const termsAccepted = localStorage.getItem('ue5_terms_accepted');
+                
+                // Only show if both age verification and terms are complete
+                if (ageVerified && termsAccepted) {
+                    setIsVisible(true);
+                }
+            };
+            
+            // Delay showing banner by 1 second after conditions are met
+            const timer = setTimeout(checkAndShow, 1000);
+            
+            // Also listen for storage changes in case user completes them
+            const handleStorageChange = () => {
+                const ageVerified = localStorage.getItem('ue5_age_verified');
+                const termsAccepted = localStorage.getItem('ue5_terms_accepted');
+                if (ageVerified && termsAccepted) {
+                    setTimeout(() => setIsVisible(true), 500);
+                }
+            };
+            
+            window.addEventListener('storage', handleStorageChange);
+            
+            // Poll for changes since storage event doesn't fire for same-tab changes
+            const pollInterval = setInterval(() => {
+                const ageVerified = localStorage.getItem('ue5_age_verified');
+                const termsAccepted = localStorage.getItem('ue5_terms_accepted');
+                if (ageVerified && termsAccepted) {
+                    setIsVisible(true);
+                    clearInterval(pollInterval);
+                }
+            }, 500);
+            
+            return () => {
+                clearTimeout(timer);
+                clearInterval(pollInterval);
+                window.removeEventListener('storage', handleStorageChange);
+            };
         }
     }, []);
 

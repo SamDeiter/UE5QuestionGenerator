@@ -20,10 +20,14 @@ const ReviewMode = ({
   showMessage,
   onStartTutorial,
 }) => {
-  // Auto-start tutorial if not completed
+  // Auto-start tutorial if not completed (and compliance modals are done)
   useEffect(() => {
     const isCompleted = localStorage.getItem("ue5_tutorial_review_completed");
-    if (!isCompleted && onStartTutorial && questions.length > 0) {
+    const ageVerified = localStorage.getItem("ue5_age_verified");
+    const termsAccepted = localStorage.getItem("ue5_terms_accepted");
+    
+    // Only start tutorial if compliance modals are complete
+    if (!isCompleted && onStartTutorial && questions.length > 0 && ageVerified && termsAccepted) {
       // Small delay to ensure view is rendered
       setTimeout(() => onStartTutorial("review"), 500);
     }

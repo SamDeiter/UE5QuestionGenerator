@@ -23,10 +23,14 @@ const DatabaseView = ({
   const [_loadMenuOpen, setLoadMenuOpen] = useState(false);
   const loadMenuRef = useRef(null);
 
-  // Auto-start tutorial if not completed
+  // Auto-start tutorial if not completed (and compliance modals are done)
   useEffect(() => {
     const isCompleted = localStorage.getItem("ue5_tutorial_database_completed");
-    if (!isCompleted && onStartTutorial) {
+    const ageVerified = localStorage.getItem("ue5_age_verified");
+    const termsAccepted = localStorage.getItem("ue5_terms_accepted");
+    
+    // Only start tutorial if compliance modals are complete
+    if (!isCompleted && onStartTutorial && ageVerified && termsAccepted) {
       // Small delay to ensure view is rendered
       setTimeout(() => onStartTutorial("database"), 500);
     }
