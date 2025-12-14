@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { deleteQuestionFromFirestore } from '../services/firebase';
+import { saveQuestionToFirestore } from '../services/firebase';
 
 /**
  * Hook for managing database view actions.
@@ -40,8 +40,14 @@ export const useDatabaseActions = ({
      */
     const handleKickBackToReview = useCallback(async (question) => {
         try {
-            // Delete from Firestore
-            await deleteQuestionFromFirestore(question.uniqueId);
+            // Update status to pending in Firestore (preserve the question)
+            await saveQuestionToFirestore({
+                ...question,
+                status: 'pending',
+                kickedBackAt: new Date().toISOString(),
+                kickedBackBy: 'user',
+                kickedBackReason: 'Moved from Database to Review'
+            });
 
             // Remove from database view
             setDatabaseQuestions(prev => prev.filter(q => q.uniqueId !== question.uniqueId));
