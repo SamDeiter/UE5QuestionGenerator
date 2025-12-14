@@ -220,7 +220,7 @@ export const useExport = (
       const loadedQuestions = data.map((q, index) => ({
         ...q,
         id: q.id || Date.now() + index + Math.random(), // Ensure React key
-        status: "accepted", // Assume DB questions are accepted
+        status: q.status || "pending", // CRITICAL: Preserve actual status
       }));
 
       setDatabaseQuestions(loadedQuestions);
