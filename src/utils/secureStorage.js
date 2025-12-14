@@ -1,11 +1,26 @@
 import CryptoJS from 'crypto-js';
+import { auth } from '../services/firebase';
 
 // SECURITY: Encryption key derived from user session
 // This is client-side encryption - provides defense-in-depth but not foolproof against XSS
 const getEncryptionKey = () => {
-    // In production, derive this from user's Firebase UID or session token
-    // For now, use a consistent key (better than plain text)
-    return 'ue5-question-generator-v1-key'; // TODO: Derive from user session
+    // Priority 1: Use Firebase user UID (when authenticated)
+    const currentUser = auth.currentUser;
+    if (currentUser?.uid) {
+        // Derive key from UID + app-specific salt
+        return CryptoJS.SHA256(currentUser.uid + 'ue5-question-generator-v1').toString();
+    }
+    
+    // Priority 2: Use stable device ID (for unauthenticated users)
+    let deviceId = localStorage.getItem('ue5_device_id');
+    if (!deviceId) {
+        // Generate and persist a device ID
+        deviceId = CryptoJS.lib.WordArray.random(16).toString();
+        localStorage.setItem('ue5_device_id', deviceId);
+    }
+    
+    // Derive key from device ID + app-specific salt
+    return CryptoJS.SHA256(deviceId + 'ue5-question-generator-v1').toString();
 };
 
 /**
