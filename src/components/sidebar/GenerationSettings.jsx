@@ -43,7 +43,7 @@ const GenerationSettings = ({
     return counts;
   }, [allQuestionsMap, availableTags]);
 
-  // Compute inventory stats for chart - show ALL disciplines combined
+  // Compute inventory stats for chart - show questions for selected discipline
   const chartData = React.useMemo(() => {
     const stats = {
       Beginner: { name: "Beginner", mc: 0, tf: 0 },
@@ -60,10 +60,16 @@ const GenerationSettings = ({
       new Map(allQuestions.map((q) => [q.id || q.uniqueId, q])).values()
     );
 
-    // Count all non-rejected questions filtered by current discipline
-    const filtered = uniqueQuestions.filter(
-      (q) => q.status !== "rejected" && q.discipline === config.discipline
-    );
+    // Helper: normalize discipline for comparison (case-insensitive, trim whitespace)
+    const normalizeDiscipline = (d) => (d || "").toLowerCase().trim();
+    const selectedDisciplineNorm = normalizeDiscipline(config.discipline);
+
+    // Count all non-rejected questions filtered by current discipline (case-insensitive)
+    const filtered = uniqueQuestions.filter((q) => {
+      if (q.status === "rejected") return false;
+      // Case-insensitive discipline matching
+      return normalizeDiscipline(q.discipline) === selectedDisciplineNorm;
+    });
 
     filtered.forEach((q) => {
       // Extract difficulty - handle formats like "Easy MC", "Medium T/F", "Hard", "Beginner", etc.
@@ -78,9 +84,10 @@ const GenerationSettings = ({
       else if (diff === "Easy") diff = "Beginner";
 
       if (stats[diff]) {
+        // Handle old "Balanced" type as MC, plus standard T/F detection
         const isTF = q.type === "True/False" || q.type === "T/F";
         if (isTF) stats[diff].tf++;
-        else stats[diff].mc++;
+        else stats[diff].mc++;  // Includes "Multiple Choice", "Balanced", and other types
       }
     });
 
