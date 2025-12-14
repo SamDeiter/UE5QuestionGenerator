@@ -60,21 +60,43 @@ export const constructSystemPrompt = (
     mediumCount = perDiff;
     hardCount = total - (easyCount + mediumCount); // Remainder to Hard
 
-    // ALWAYS BALANCED: Enforce 50/50 MC and T/F
-    targetType = "Balanced (Equal MC & T/F)";
-    const half = Math.floor(total / 2);
-    mcCount = half;
-    tfCount = total - half;
+    // Check if user explicitly wants a specific type or balanced
+    if (type === "Multiple Choice") {
+      targetType = "Multiple Choice ONLY";
+      mcCount = total;
+      tfCount = 0;
+    } else if (type === "True/False") {
+      targetType = "True/False ONLY";
+      mcCount = 0;
+      tfCount = total;
+    } else {
+      // Default to balanced
+      targetType = "Balanced (Equal MC & T/F)";
+      const half = Math.floor(total / 2);
+      mcCount = half;
+      tfCount = total - half;
+    }
   } else {
     if (difficulty === "Easy") easyCount = batchNum;
     else if (difficulty === "Medium") mediumCount = batchNum;
     else if (difficulty === "Hard") hardCount = batchNum;
 
-    // ALWAYS BALANCED: Even for single-difficulty, enforce 50/50 MC:T/F
-    targetType = "Balanced (Equal MC & T/F)";
-    const half = Math.floor(batchNum / 2);
-    mcCount = half;
-    tfCount = batchNum - half;
+    // Respect user's type selection
+    if (type === "Multiple Choice") {
+      targetType = "Multiple Choice ONLY";
+      mcCount = batchNum;
+      tfCount = 0;
+    } else if (type === "True/False") {
+      targetType = "True/False ONLY";
+      mcCount = 0;
+      tfCount = batchNum;
+    } else {
+      // Default to balanced if no specific type selected
+      targetType = "Balanced (Equal MC & T/F)";
+      const half = Math.floor(batchNum / 2);
+      mcCount = half;
+      tfCount = batchNum - half;
+    }
   }
 
   const difficultyPrompt =
