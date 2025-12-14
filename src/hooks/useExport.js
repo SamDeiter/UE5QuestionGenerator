@@ -226,7 +226,8 @@ export const useExport = (
       setDatabaseQuestions(loadedQuestions);
       if (setHistoricalQuestions) setHistoricalQuestions(loadedQuestions);
 
-      setAppMode("database");
+      // Don't auto-switch to database view - let user navigate manually
+      // setAppMode("database"); // REMOVED - only switch when user clicks Database button
       showMessage(
         `Loaded ${loadedQuestions.length} questions from Firestore!`,
         3000
