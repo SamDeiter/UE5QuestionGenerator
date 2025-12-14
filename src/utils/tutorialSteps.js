@@ -154,16 +154,32 @@ export const TUTORIAL_SCENARIOS = {
       position: "right",
     },
     {
-      id: "actions",
-      title: "Step 6: Accept or Reject",
+      id: "reject",
+      title: "Step 6: Rejecting Bad Questions",
       content:
-        "Accept verified questions (score 70+) to move them to the Database. Reject poor questions with a reason for tracking.",
+        "Click the red REJECT button to mark poor questions. Choose a reason (Too Easy, Incorrect, Duplicate, etc.) to help improve future AI generation. Rejecting is just as important as accepting!",
+      target: '[data-tour="review-actions"]',
+      position: "top",
+    },
+    {
+      id: "reject-reasons",
+      title: "Step 7: Rejection Categories",
+      content:
+        "Select from 14 categorized rejection reasons: Content issues (too easy/hard), Accuracy issues (incorrect answers), Duplicates, Source problems, or Quality issues. This data helps track patterns.",
+      target: '[data-tour="review-actions"]',
+      position: "top",
+    },
+    {
+      id: "accept",
+      title: "Step 8: Accept Verified Questions",
+      content:
+        "Accept questions that pass verification (score 70+). Accepted questions move to the Database and become part of your official question bank.",
       target: '[data-tour="review-actions"]',
       position: "top",
     },
     {
       id: "edit",
-      title: "Step 7: Edit & Improve",
+      title: "Step 9: Edit & Improve",
       content:
         "Click the edit icon to manually modify question text, options, or metadata. Apply AI-suggested rewrites with one click.",
       target: '[data-tour="review-card"]',
