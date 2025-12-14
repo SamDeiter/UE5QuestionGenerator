@@ -143,6 +143,11 @@ export const useQuestionManager = (config, showMessage) => {
         const otherList = isHistory ? questions : historicalQuestions;
         const uniqueNew = filterDuplicateQuestions(newItems, prev, otherList);
 
+        // DEBUG: Log questions being added to state
+        console.log('🐛 [DEBUG] Adding to state:', 
+          uniqueNew.map(q => ({ id: q.uniqueId?.slice(0, 8), status: q.status }))
+        );
+
         if (insertAfterId && uniqueNew.length > 0) {
           // Find index to insert after
           const idx = prev.findIndex(

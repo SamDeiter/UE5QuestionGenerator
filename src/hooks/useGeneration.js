@@ -468,23 +468,34 @@ export const useGeneration = (
       }
 
       // Enrich questions with metadata
-      const enrichedQuestions = newQuestions.map((q) => ({
-        ...q,
-        status: "pending", // New questions start as pending, not accepted
-        language: "English", // All generated questions are in English
-        creatorName: config.creatorName || "Unknown", // Set creator name from config
-        estimatedCost: costPerQuestion,
-        generationTime: duration,
-        model: config.model || "gemini-2.0-flash",
-        groundingSources:
-          groundingSources.length > 0 ? groundingSources.slice(0, 3) : null, // Store top 3 sources
-        tags: q.tags && q.tags.length > 0 ? q.tags : config.tags || [], // Use AI-assigned tags, fallback to focus tags
+      const enrichedQuestions = newQuestions.map((q) => {
+        const enriched = {
+          ...q,
+          // CRITICAL: Force status to pending - NEVER auto-accept
+          status: "pending",
+          language: "English", // All generated questions are in English
+          creatorName: config.creatorName || "Unknown", // Set creator name from config
+          estimatedCost: costPerQuestion,
+          generationTime: duration,
+          model: config.model || "gemini-2.0-flash",
+          groundingSources:
+            groundingSources.length > 0 ? groundingSources.slice(0, 3) : null, // Store top 3 sources
+          tags: q.tags && q.tags.length > 0 ? q.tags : config.tags || [], // Use AI-assigned tags, fallback to focus tags
 
-        // Enforce config values to ensure they match filters
-        discipline: config.discipline,
-        type: expectedType, // Use the normalized type
-        difficulty: requestedDifficulty, // Use the normalized difficulty
-      }));
+          // Enforce config values to ensure they match filters
+          discipline: config.discipline,
+          type: expectedType, // Use the normalized type
+          difficulty: requestedDifficulty, // Use the normalized difficulty
+        };
+        
+        // SAFEGUARD: Double-check status is pending (paranoid validation)
+        if (enriched.status !== "pending") {
+          console.warn('⚠️ Question had non-pending status, forcing to pending:', enriched);
+          enriched.status = "pending";
+        }
+        
+        return enriched;
+      });
 
       // Save to storage and get unique ones
       const uniqueNewQuestions = await checkAndStoreQuestions(
@@ -523,6 +534,11 @@ export const useGeneration = (
           questionText: q.question,
         });
       });
+
+      // DEBUG: Log question statuses before adding to state
+      console.log('🐛 [DEBUG] Questions before addQuestionsToState:', 
+        uniqueNewQuestions.map(q => ({ id: q.uniqueId?.slice(0, 8), status: q.status }))
+      );
 
       addQuestionsToState(uniqueNewQuestions, false);
 
