@@ -9,7 +9,7 @@ import {
   auth,
   deleteQuestionFromFirestore,
 } from "../services/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 
 /**
  * DangerZoneModal - Separate modal for destructive operations
@@ -112,11 +112,6 @@ const DangerZoneModal = ({
     setMigrationResult(null);
 
     try {
-      const { getDocs, collection, doc, updateDoc } = await import(
-        "firebase/firestore"
-      );
-      const { db } = await import("../services/firebase");
-
       const creatorName = config.creatorName || "Unknown";
       const querySnapshot = await getDocs(collection(db, "questions"));
 
