@@ -1,13 +1,38 @@
 import Icon from '../Icon';
 
+/**
+ * Normalize difficulty value - handles legacy "BALANCED ALL" and other invalid values
+ */
+const normalizeDifficulty = (difficulty) => {
+    if (!difficulty) return 'Unknown';
+    const d = difficulty.toString().toLowerCase().trim();
+    
+    // Handle legacy "balanced" values - default to the difficulty that was most common
+    if (d.includes('balanced')) return 'Beginner';
+    
+    // Normalize to standard values
+    if (d.includes('easy') || d.includes('beginner')) return 'Beginner';
+    if (d.includes('medium') || d.includes('intermediate')) return 'Intermediate';
+    if (d.includes('hard') || d.includes('expert') || d.includes('advanced')) return 'Expert';
+    
+    // Return original if it's already valid
+    if (['beginner', 'intermediate', 'expert'].includes(d)) {
+        return difficulty.charAt(0).toUpperCase() + difficulty.slice(1).toLowerCase();
+    }
+    
+    return difficulty; // Return as-is if we can't normalize
+};
+
 const QuestionHeader = ({ q, getDiffBadgeColor, onKickBack, appMode }) => {
+    const displayDifficulty = normalizeDifficulty(q.difficulty);
+    
     return (
         <div className="flex justify-between items-start">
             <div className="flex flex-col gap-1">
                 <div className="flex gap-2 items-center">
-                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(q.difficulty)} flex items-center gap-1`}>
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(displayDifficulty)} flex items-center gap-1`}>
                         <Icon name="zap" size={12} />
-                        {q.difficulty}
+                        {displayDifficulty}
                     </span>
                     <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">{q.type === 'True/False' ? 'T/F' : 'MC'}</span>
 
