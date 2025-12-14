@@ -293,7 +293,7 @@ const App = () => {
     }
   }, [user, authLoading, handleLoadFromFirestore]);
 
-  // ONE-TIME MIGRATION: Fix auto-accepted questions in Firestore
+  // ONE-TIME MIGRATION: Fix auto-accepted questions in Firestore (inlined)
   const hasMigratedRef = useRef(false);
   useEffect(() => {
     const runMigration = async () => {
@@ -304,16 +304,41 @@ const App = () => {
         hasMigratedRef.current = true;
         try {
           console.log('🔄 Running migration: fixing auto-accepted questions...');
-          const { migrateAutoAcceptedQuestions } = await import('./utils/migrateAutoAccepted.js');
-          const result = await migrateAutoAcceptedQuestions();
-          if (result.success) {
-            console.log(`✅ Migration: Fixed ${result.fixed} of ${result.totalChecked} questions`);
-            if (result.fixed > 0) {
-              showMessage(`✅ Fixed ${result.fixed} auto-accepted questions - now pending`, 5000);
-              setTimeout(() => handleLoadFromFirestore(), 1000);
+          
+          // Inline migration code (can't use dynamic import - not bundled by Vite)
+          const { db, auth } = await import('./services/firebase');
+          const { collection, getDocs, doc, updateDoc } = await import('firebase/firestore');
+          
+          const questionsRef = collection(db, 'questions');
+          const snapshot = await getDocs(questionsRef);
+          
+          let fixedCount = 0;
+          const batch = [];
+          
+          snapshot.forEach((docSnap) => {
+            const question = docSnap.data();
+            if (question.status === 'accepted' && !question.reviewCompletedAt) {
+              batch.push(
+                updateDoc(doc(db, 'questions', docSnap.id), {
+                  status: 'pending',
+                  migratedAt: new Date().toISOString(),
+                  migrationReason: 'auto-accept-bug-fix'
+                })
+              );
+              fixedCount++;
             }
-            localStorage.setItem(migrationKey, 'completed');
+          });
+          
+          if (batch.length > 0) {
+            await Promise.all(batch);
+            console.log(`✅ Migration: Fixed ${fixedCount} of ${snapshot.size} questions`);
+            showMessage(`✅ Fixed ${fixedCount} auto-accepted questions - now pending`, 5000);
+            setTimeout(() => handleLoadFromFirestore(), 1000);
+          } else {
+            console.log(`✅ No questions needed fixing (checked ${snapshot.size} questions)`);
           }
+          
+          localStorage.setItem(migrationKey, 'completed');
         } catch (error) {
           console.error('❌ Migration error:', error);
         }
