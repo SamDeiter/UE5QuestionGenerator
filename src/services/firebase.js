@@ -190,7 +190,10 @@ export const signUpWithEmail = async (email, password) => {
     const result = await createUserWithEmailAndPassword(auth, email, password);
     return result.user;
   } catch (error) {
-    console.error("Error signing up with email:", error);
+    // Only log unexpected errors (not user mistakes like "email already in use")
+    if (error.code !== 'auth/email-already-in-use' && error.code !== 'auth/weak-password') {
+      console.error("Error signing up with email:", error);
+    }
     throw error;
   }
 };
@@ -200,7 +203,10 @@ export const signInWithEmail = async (email, password) => {
     const result = await signInWithEmailAndPassword(auth, email, password);
     return result.user;
   } catch (error) {
-    console.error("Error signing in with email:", error);
+    // Only log unexpected errors (not user mistakes like "invalid credentials")
+    if (error.code !== 'auth/invalid-credential' && error.code !== 'auth/wrong-password' && error.code !== 'auth/user-not-found') {
+      console.error("Error signing in with email:", error);
+    }
     throw error;
   }
 };

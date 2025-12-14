@@ -66,14 +66,14 @@ export const useAppConfig = () => {
     apiKeyStatus = "Not Set";
   }
 
-  // DEBUG: Log the computed values
-  console.log("🔍 [useAppConfig] API Status Debug:", {
-    isInternalEnvironment,
-    hasClientKey,
-    isAuthReady,
-    isApiReady,
-    apiKeyStatus,
-  });
+  // DEBUG: Uncomment to debug API status (removed to reduce console spam)
+  // console.log("🔍 [useAppConfig] API Status Debug:", {
+  //   isInternalEnvironment,
+  //   hasClientKey,
+  //   isAuthReady,
+  //   isApiReady,
+  //   apiKeyStatus,
+  // });
 
   // UI States
   const [showNameModal, setShowNameModal] = useState(false);
