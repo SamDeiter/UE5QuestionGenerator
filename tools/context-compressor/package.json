@@ -1,0 +1,22 @@
+{
+  "name": "context-compressor",
+  "version": "1.0.0",
+  "description": "CLI utility to compress AI chat logs while retaining technical value",
+  "main": "compress.js",
+  "scripts": {
+    "zip": "node compress.js"
+  },
+  "keywords": [
+    "cli",
+    "ai",
+    "context",
+    "compression",
+    "gemini"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "dotenv": "^16.4.5"
+  }
+}
