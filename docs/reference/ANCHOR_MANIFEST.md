@@ -83,6 +83,16 @@ This file lists the key components and files ("anchors") of the project for quic
   - `translation.integration.test.jsx`
   - `testHelpers.js`
 
+## Custom Tools & Scripts
+
+- `context_monitor.py` - Desktop widget for tracking Antigravity token usage
+  - Displays circular token usage percentage and remaining tokens
+  - Features: mini mode, position preservation, diagnostic tools
+  - Custom-built Python/tkinter desktop widget (not a built-in IDE feature)
+- `.agent/workflows/pre-edit-checklist.md` - Pre-edit checklist workflow
+  - Ensures ANCHOR_MANIFEST.md and other context files are checked before code edits
+  - Prevents contradictions and context errors
+
 ## Known Issues
 
 - ✅ ~~`App.jsx` - Too large (701 lines), needs refactoring~~ → Refactored to ~432 lines
