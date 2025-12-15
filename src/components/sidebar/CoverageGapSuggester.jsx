@@ -45,14 +45,14 @@ const CoverageGapSuggester = ({
     ).length;
 
   // SMART VISIBILITY: Only show alert when:
-  // 1. User has generated ~50% of target (100+ questions), OR
+  // 1. User has generated ~25% of target (50+ questions), OR
   // 2. Extreme mismatch: more than half the tags have ZERO coverage
-  const TARGET_HALF = 100; // 50% of 198 target
-  const hasReachedHalfway = totalQuestions >= TARGET_HALF;
+  const TARGET_QUARTER = 50; // 25% of 198 target (lowered for earlier visibility)
+  const hasReachedThreshold = totalQuestions >= TARGET_QUARTER;
   const hasExtremeMismatch = zeroCoverageTags.length > availableTags.length / 2;
 
   // Don't show if not enough questions yet AND no extreme mismatch
-  if (!hasReachedHalfway && !hasExtremeMismatch) return null;
+  if (!hasReachedThreshold && !hasExtremeMismatch) return null;
 
   // Also don't show if no gaps at all
   if (zeroCoverageTags.length === 0 && lowCoverageTags.length === 0)
