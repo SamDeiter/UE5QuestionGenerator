@@ -168,8 +168,8 @@ export const validateGeneration = (
   // Check total quota - WARN only, don't block
   // Individual category quotas (below) control actual blocking
   // This prevents blocking generation for unfilled categories when others are full
-  const totalQuotaMet = isTotalQuotaMet(questions);
-  const warnAboutTotal = totalQuotaMet;
+  // Note: we call isTotalQuotaMet but don't block on it - individual category limits control blocking
+  isTotalQuotaMet(questions);
 
   // Filter questions for this discipline and base difficulty
   const relevantQuestions = questions.filter((q) => {

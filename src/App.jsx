@@ -58,7 +58,7 @@ const App = () => {
     user,
     authLoading,
     isAdmin,
-    isRegistered,
+    isRegistered: _isRegistered,
     registrationLoading,
     markAsRegistered,
     customTags,
@@ -308,7 +308,7 @@ const App = () => {
           );
 
           // Inline migration code (can't use dynamic import - not bundled by Vite)
-          const { db, auth } = await import("./services/firebase");
+          const { db, auth: _auth } = await import("./services/firebase");
           const { collection, getDocs, doc, updateDoc } = await import(
             "firebase/firestore"
           );
