@@ -57,15 +57,19 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-let analytics;
-try {
-  analytics = getAnalytics(app);
-} catch (e) {
-  console.warn(
-    "Firebase Analytics failed to initialize (likely blocked by ad blocker):",
-    e
-  );
-}
+
+// NOTE: Analytics disabled - requires additional Firebase Console configuration
+// that causes errors in production. Re-enable after configuring in Firebase Console:
+// 1. Go to Firebase Console > Analytics > Enable Analytics
+// 2. Add the measurementId to your .env files
+const analytics = null;
+// try {
+//   if (firebaseConfig.measurementId) {
+//     analytics = getAnalytics(app);
+//   }
+// } catch (e) {
+//   console.warn("Firebase Analytics not available:", e.message);
+// }
 const db = getFirestore(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
@@ -191,7 +195,10 @@ export const signUpWithEmail = async (email, password) => {
     return result.user;
   } catch (error) {
     // Only log unexpected errors (not user mistakes like "email already in use")
-    if (error.code !== 'auth/email-already-in-use' && error.code !== 'auth/weak-password') {
+    if (
+      error.code !== "auth/email-already-in-use" &&
+      error.code !== "auth/weak-password"
+    ) {
       console.error("Error signing up with email:", error);
     }
     throw error;
@@ -204,7 +211,11 @@ export const signInWithEmail = async (email, password) => {
     return result.user;
   } catch (error) {
     // Only log unexpected errors (not user mistakes like "invalid credentials")
-    if (error.code !== 'auth/invalid-credential' && error.code !== 'auth/wrong-password' && error.code !== 'auth/user-not-found') {
+    if (
+      error.code !== "auth/invalid-credential" &&
+      error.code !== "auth/wrong-password" &&
+      error.code !== "auth/user-not-found"
+    ) {
       console.error("Error signing in with email:", error);
     }
     throw error;
