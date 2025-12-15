@@ -84,10 +84,19 @@ export const cleanupProductionDatabase = async () => {
     let difficulty = data.difficulty || "Unknown";
     let qtype = data.type || "Unknown";
 
-    // Normalize
-    if (difficulty === "Easy") difficulty = "Beginner";
-    if (difficulty === "Medium") difficulty = "Intermediate";
-    if (difficulty === "Hard") difficulty = "Expert";
+    // Normalize difficulty - handle combined formats like "Easy MC", "Medium T/F", etc.
+    // Extract base difficulty from combined value
+    const baseDiff = difficulty.split(" ")[0]; // "Easy MC" -> "Easy"
+
+    // Map to canonical names
+    if (baseDiff === "Easy" || baseDiff === "Beginner") difficulty = "Beginner";
+    else if (baseDiff === "Medium" || baseDiff === "Intermediate")
+      difficulty = "Intermediate";
+    else if (baseDiff === "Hard" || baseDiff === "Expert")
+      difficulty = "Expert";
+    else difficulty = baseDiff; // Keep as-is if not recognized
+
+    // Normalize type
     if (qtype === "T/F" || qtype === "True/False") qtype = "T/F";
     else qtype = "MC";
 
