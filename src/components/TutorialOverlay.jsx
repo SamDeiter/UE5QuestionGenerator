@@ -105,18 +105,18 @@ const TutorialOverlay = ({
     };
   }, [currentStepIndex, step.target]);
 
+  const isLastStep = currentStepIndex === steps.length - 1;
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (e.key === 'Escape') onSkip();
-      if (e.key === 'ArrowRight' && !isLastStep) onNext();
-      if (e.key === 'ArrowLeft' && currentStepIndex > 0) onPrev();
+      if (e.key === "Escape") onSkip();
+      if (e.key === "ArrowRight" && !isLastStep) onNext();
+      if (e.key === "ArrowLeft" && currentStepIndex > 0) onPrev();
     };
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
   }, [onSkip, onNext, onPrev, currentStepIndex, isLastStep]);
-
-  const isLastStep = currentStepIndex === steps.length - 1;
 
   return (
     <div className="fixed inset-0 z-[9999] overflow-hidden">
@@ -207,7 +207,9 @@ const TutorialOverlay = ({
                   <div
                     key={idx}
                     className={`w-2 h-2 rounded-full ${
-                      idx === currentStepIndex ? "bg-indigo-500" : "bg-slate-700"
+                      idx === currentStepIndex
+                        ? "bg-indigo-500"
+                        : "bg-slate-700"
                     }`}
                   />
                 ))}
