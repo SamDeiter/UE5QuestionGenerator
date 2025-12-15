@@ -92,6 +92,7 @@ const ViewRouter = ({
   onNavigateToCreate, // callback to switch to Create mode
   onNavigateHome, // callback to go back to landing page
   onStartTutorial, // callback to start tutorial scenario
+  allQuestionsMap, // all questions for analytics
 }) => {
   const {
     handleLoadFromSheets,
@@ -135,6 +136,7 @@ const ViewRouter = ({
         <AnalyticsView
           onBack={onNavigateHome}
           onStartTutorial={() => onStartTutorial("analytics")}
+          allQuestionsMap={allQuestionsMap}
         />
       ) : appMode === "database" ? (
         <DatabaseView

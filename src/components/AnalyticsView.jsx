@@ -55,11 +55,20 @@ const DIFFICULTY_COLORS = {
  * AnalyticsView - Dedicated full-page analytics dashboard
  * Replaces the modal-based analytics with a standalone view
  */
-const AnalyticsView = ({ onBack, onStartTutorial }) => {
+const AnalyticsView = ({
+  onBack,
+  onStartTutorial,
+  allQuestionsMap = new Map(),
+}) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedDiscipline, setSelectedDiscipline] = useState(null);
   const analytics = getAnalytics();
   const tokenStats = getTokenStats();
+
+  // Convert allQuestionsMap to flat array for TagCloudAnalytics
+  const allQuestions = useMemo(() => {
+    return Array.from(allQuestionsMap.values()).flat();
+  }, [allQuestionsMap]);
 
   // Auto-start tutorial if not completed (only runs once on mount)
   useEffect(() => {
@@ -491,7 +500,7 @@ const AnalyticsView = ({ onBack, onStartTutorial }) => {
 
             {/* Tag Cloud Analytics */}
             <TagCloudAnalytics
-              questions={analytics.questions || []}
+              questions={allQuestions}
               selectedDiscipline={selectedDiscipline}
             />
 

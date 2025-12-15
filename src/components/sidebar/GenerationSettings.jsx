@@ -44,6 +44,7 @@ const GenerationSettings = ({
   }, [allQuestionsMap, availableTags]);
 
   // Compute inventory stats for chart - show questions for selected discipline
+  // SIMPLIFIED: Use uniqueId for deduplication, cleaner difficulty/type detection
   const chartData = React.useMemo(() => {
     const stats = {
       Beginner: { name: "Beginner", mc: 0, tf: 0 },
@@ -51,44 +52,38 @@ const GenerationSettings = ({
       Expert: { name: "Expert", mc: 0, tf: 0 },
     };
 
-    // Flatten the map values since values are arrays of variants
+    // Flatten and deduplicate by uniqueId (the true unique identifier)
     const allQuestions = Array.from(allQuestionsMap.values()).flat();
-
-    // Deduplicate by question ID to avoid counting variants multiple times
-    // Use q.id || q.uniqueId since questions may have either or both
-    const uniqueQuestions = Array.from(
-      new Map(allQuestions.map((q) => [q.id || q.uniqueId, q])).values()
-    );
-
-    // Helper: normalize discipline for comparison (case-insensitive, trim whitespace)
-    const normalizeDiscipline = (d) => (d || "").toLowerCase().trim();
-    const selectedDisciplineNorm = normalizeDiscipline(config.discipline);
-
-    // Count all non-rejected questions filtered by current discipline (case-insensitive)
-    const filtered = uniqueQuestions.filter((q) => {
-      if (q.status === "rejected") return false;
-      // Case-insensitive discipline matching
-      return normalizeDiscipline(q.discipline) === selectedDisciplineNorm;
+    const seenIds = new Set();
+    const uniqueQuestions = allQuestions.filter((q) => {
+      const id = q.uniqueId;
+      if (!id || seenIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
     });
 
+    // Filter to selected discipline (non-rejected only)
+    const selectedDiscipline = config.discipline?.toLowerCase().trim();
+    const filtered = uniqueQuestions.filter((q) => {
+      if (q.status === "rejected") return false;
+      return (q.discipline || "").toLowerCase().trim() === selectedDiscipline;
+    });
+
+    // Count by difficulty and type
     filtered.forEach((q) => {
-      // Extract difficulty - handle formats like "Easy MC", "Medium T/F", "Hard", "Beginner", etc.
-      const rawDiff = q.difficulty || "";
+      // Normalize difficulty: Easy→Beginner, Medium→Intermediate, Hard→Expert
+      const rawDiff = (q.difficulty || "").split(" ")[0]; // Get first word
+      let diff = rawDiff;
+      if (rawDiff === "Easy") diff = "Beginner";
+      else if (rawDiff === "Medium") diff = "Intermediate";
+      else if (rawDiff === "Hard") diff = "Expert";
 
-      // Parse out the difficulty portion (first word before any space)
-      let diff = rawDiff.split(" ")[0];
+      if (!stats[diff]) return; // Skip unknown difficulties
 
-      // Normalize difficulty naming
-      if (diff === "Hard") diff = "Expert";
-      else if (diff === "Medium") diff = "Intermediate";
-      else if (diff === "Easy") diff = "Beginner";
-
-      if (stats[diff]) {
-        // Handle old "Balanced" type as MC, plus standard T/F detection
-        const isTF = q.type === "True/False" || q.type === "T/F";
-        if (isTF) stats[diff].tf++;
-        else stats[diff].mc++;  // Includes "Multiple Choice", "Balanced", and other types
-      }
+      // Determine type: T/F or MC (default)
+      const isTF = q.type === "True/False" || q.type === "T/F";
+      if (isTF) stats[diff].tf++;
+      else stats[diff].mc++;
     });
 
     return [stats["Beginner"], stats["Intermediate"], stats["Expert"]];
@@ -208,8 +203,8 @@ const GenerationSettings = ({
                   <option value="True/False">True/False</option>
                 </select>
                 <p className="text-[9px] text-slate-500">
-                  Select question type to generate ({TARGET_PER_CATEGORY} of each required per
-                  difficulty)
+                  Select question type to generate ({TARGET_PER_CATEGORY} of
+                  each required per difficulty)
                 </p>
               </div>
             </div>
@@ -261,16 +256,23 @@ const GenerationSettings = ({
                                 : "text-slate-400"
                             }
                           >
-                            {row.mc >= TARGET_PER_CATEGORY ? `✓ ${row.mc}` : `${row.mc}/${TARGET_PER_CATEGORY}`}
+                            {row.mc >= TARGET_PER_CATEGORY
+                              ? `✓ ${row.mc}`
+                              : `${row.mc}/${TARGET_PER_CATEGORY}`}
                           </span>
                         </div>
                         <div className="h-1.5 bg-slate-800 rounded overflow-hidden">
                           <div
                             className={`h-full transition-all ${
-                              row.mc >= TARGET_PER_CATEGORY ? "bg-green-500" : "bg-blue-500"
+                              row.mc >= TARGET_PER_CATEGORY
+                                ? "bg-green-500"
+                                : "bg-blue-500"
                             }`}
                             style={{
-                              width: `${Math.min(100, (row.mc / TARGET_PER_CATEGORY) * 100)}%`,
+                              width: `${Math.min(
+                                100,
+                                (row.mc / TARGET_PER_CATEGORY) * 100
+                              )}%`,
                             }}
                           />
                         </div>
@@ -288,16 +290,23 @@ const GenerationSettings = ({
                                 : "text-slate-400"
                             }
                           >
-                            {row.tf >= TARGET_PER_CATEGORY ? `✓ ${row.tf}` : `${row.tf}/${TARGET_PER_CATEGORY}`}
+                            {row.tf >= TARGET_PER_CATEGORY
+                              ? `✓ ${row.tf}`
+                              : `${row.tf}/${TARGET_PER_CATEGORY}`}
                           </span>
                         </div>
                         <div className="h-1.5 bg-slate-800 rounded overflow-hidden">
                           <div
                             className={`h-full transition-all ${
-                              row.tf >= TARGET_PER_CATEGORY ? "bg-green-500" : "bg-purple-500"
+                              row.tf >= TARGET_PER_CATEGORY
+                                ? "bg-green-500"
+                                : "bg-purple-500"
                             }`}
                             style={{
-                              width: `${Math.min(100, (row.tf / TARGET_PER_CATEGORY) * 100)}%`,
+                              width: `${Math.min(
+                                100,
+                                (row.tf / TARGET_PER_CATEGORY) * 100
+                              )}%`,
                             }}
                           />
                         </div>

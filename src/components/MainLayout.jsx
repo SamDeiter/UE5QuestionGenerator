@@ -48,6 +48,7 @@ const MainLayout = ({
   databaseQuestions,
   config,
   isProcessing,
+  allQuestionsMap, // Add this prop
 
   // ViewRouter props
   viewRouterHandlers,
@@ -113,6 +114,7 @@ const MainLayout = ({
               onNavigateToCreate={() => handleModeSelect("create")}
               onNavigateHome={handleGoHome}
               onStartTutorial={onStartTutorial}
+              allQuestionsMap={allQuestionsMap}
             />
           </Suspense>
         </div>
