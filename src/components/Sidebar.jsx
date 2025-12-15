@@ -32,7 +32,6 @@ const Sidebar = ({
   status = "", // Live generation status text
   showMessage,
   isAdmin, // Add isAdmin prop
-  tokenUsage = { inputTokens: 0, outputTokens: 0, totalCost: 0 }, // Token usage data
 }) => {
   return (
     <aside className="w-80 flex-shrink-0 z-10 shadow-xl border-r border-slate-700 bg-slate-950 p-6 overflow-y-auto flex flex-col gap-6">
@@ -103,7 +102,7 @@ const Sidebar = ({
 
       {/* Token Usage Display */}
       <div className="mt-4 pt-4 border-t border-slate-800">
-        <TokenUsageDisplay tokenUsage={tokenUsage} />
+        <TokenUsageDisplay showDetailed={true} />
       </div>
 
       {/* Custom Rules - At the bottom */}
