@@ -165,14 +165,11 @@ export const validateGeneration = (
 
   const targetDiff = normalizeDiff(difficulty);
 
-  // Check total quota
-  if (isTotalQuotaMet(questions)) {
-    return {
-      allowed: false,
-      reason: `Total quota reached (${TARGET_TOTAL} questions). No more generation allowed.`,
-      maxAllowed: 0,
-    };
-  }
+  // Check total quota - WARN only, don't block
+  // Individual category quotas (below) control actual blocking
+  // This prevents blocking generation for unfilled categories when others are full
+  const totalQuotaMet = isTotalQuotaMet(questions);
+  const warnAboutTotal = totalQuotaMet;
 
   // Filter questions for this discipline and base difficulty
   const relevantQuestions = questions.filter((q) => {
