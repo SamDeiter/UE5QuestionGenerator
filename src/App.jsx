@@ -297,50 +297,61 @@ const App = () => {
   const hasMigratedRef = useRef(false);
   useEffect(() => {
     const runMigration = async () => {
-      const migrationKey = 'ue5_migration_auto_accept_fix';
-      if (localStorage.getItem(migrationKey) === 'completed') return;
+      const migrationKey = "ue5_migration_auto_accept_fix";
+      if (localStorage.getItem(migrationKey) === "completed") return;
 
       if (user && !authLoading && !hasMigratedRef.current) {
         hasMigratedRef.current = true;
         try {
-          console.log('🔄 Running migration: fixing auto-accepted questions...');
-          
+          console.log(
+            "🔄 Running migration: fixing auto-accepted questions..."
+          );
+
           // Inline migration code (can't use dynamic import - not bundled by Vite)
-          const { db, auth } = await import('./services/firebase');
-          const { collection, getDocs, doc, updateDoc } = await import('firebase/firestore');
-          
-          const questionsRef = collection(db, 'questions');
+          const { db, auth } = await import("./services/firebase");
+          const { collection, getDocs, doc, updateDoc } = await import(
+            "firebase/firestore"
+          );
+
+          const questionsRef = collection(db, "questions");
           const snapshot = await getDocs(questionsRef);
-          
+
           let fixedCount = 0;
           const batch = [];
-          
+
           snapshot.forEach((docSnap) => {
             const question = docSnap.data();
-            if (question.status === 'accepted' && !question.reviewCompletedAt) {
+            if (question.status === "accepted" && !question.reviewCompletedAt) {
               batch.push(
-                updateDoc(doc(db, 'questions', docSnap.id), {
-                  status: 'pending',
+                updateDoc(doc(db, "questions", docSnap.id), {
+                  status: "pending",
                   migratedAt: new Date().toISOString(),
-                  migrationReason: 'auto-accept-bug-fix'
+                  migrationReason: "auto-accept-bug-fix",
                 })
               );
               fixedCount++;
             }
           });
-          
+
           if (batch.length > 0) {
             await Promise.all(batch);
-            console.log(`✅ Migration: Fixed ${fixedCount} of ${snapshot.size} questions`);
-            showMessage(`✅ Fixed ${fixedCount} auto-accepted questions - now pending`, 5000);
+            console.log(
+              `✅ Migration: Fixed ${fixedCount} of ${snapshot.size} questions`
+            );
+            showMessage(
+              `✅ Fixed ${fixedCount} auto-accepted questions - now pending`,
+              5000
+            );
             setTimeout(() => handleLoadFromFirestore(), 1000);
           } else {
-            console.log(`✅ No questions needed fixing (checked ${snapshot.size} questions)`);
+            console.log(
+              `✅ No questions needed fixing (checked ${snapshot.size} questions)`
+            );
           }
-          
-          localStorage.setItem(migrationKey, 'completed');
+
+          localStorage.setItem(migrationKey, "completed");
         } catch (error) {
-          console.error('❌ Migration error:', error);
+          console.error("❌ Migration error:", error);
         }
       }
     };
@@ -583,6 +594,7 @@ const App = () => {
           status,
           showMessage,
           isAdmin,
+          tokenUsage,
         }}
         handleModeSelect={handleModeSelect}
         handleViewDatabase={handleViewDatabase}
