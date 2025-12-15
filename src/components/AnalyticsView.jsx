@@ -23,6 +23,7 @@ import { CATEGORY_KEYS } from "../utils/constants";
 import StatCard from "./analytics/StatCard";
 import EmptyState from "./analytics/EmptyState";
 import DisciplineDetailPanel from "./analytics/DisciplineDetailPanel";
+import TagCloudAnalytics from "./analytics/TagCloudAnalytics";
 
 // Define discipline list from tagTaxonomy
 const DISCIPLINES = Object.keys(TAGS_BY_DISCIPLINE);
@@ -487,6 +488,12 @@ const AnalyticsView = ({ onBack, onStartTutorial }) => {
                 )}
               </div>
             </div>
+
+            {/* Tag Cloud Analytics */}
+            <TagCloudAnalytics
+              questions={analytics.questions || []}
+              selectedDiscipline={selectedDiscipline}
+            />
 
             {/* Discipline Cards Grid */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
