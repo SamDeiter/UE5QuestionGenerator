@@ -309,8 +309,8 @@ export const useQuestionManager = (config, showMessage) => {
     return Math.min(100, (totalApproved / TARGET_TOTAL) * 100);
   }, [totalApproved]);
 
-  // Check if global quota is reached
-  const isGlobalQuotaMet = useMemo(() => {
+  // Check if global quota is reached (kept for informational purposes)
+  const _isGlobalQuotaMet = useMemo(() => {
     return totalApproved >= TARGET_TOTAL;
   }, [totalApproved]);
 
@@ -331,35 +331,24 @@ export const useQuestionManager = (config, showMessage) => {
   const _TARGET_PER_DIFFICULTY = TARGET_PER_CATEGORY * 2; // 66
 
   const isTargetMet = useMemo(() => {
-    // Always block if global quota is reached
-    if (isGlobalQuotaMet) return true;
-
-    // Check if the selected type for this difficulty is full
+    // Only block if the selected type for this difficulty is full
+    // Global quota blocking is handled by validateGeneration() which
+    // checks individual category limits properly
     const typeKey = config.type === "True/False" ? "T/F" : "MC";
     const categoryKey = `${config.difficulty} ${typeKey}`;
     const currentCount = approvedCounts[categoryKey] || 0;
     return currentCount >= TARGET_PER_CATEGORY;
-  }, [config.difficulty, config.type, approvedCounts, isGlobalQuotaMet]);
+  }, [config.difficulty, config.type, approvedCounts]);
 
   const maxBatchSize = useMemo(() => {
-    // If global quota is met, no generation allowed
-    if (isGlobalQuotaMet) return 0;
-
-    // Calculate remaining for this specific type
+    // Calculate remaining for this specific type only
+    // validateGeneration() handles cross-category logic
     const typeKey = config.type === "True/False" ? "T/F" : "MC";
     const categoryKey = `${config.difficulty} ${typeKey}`;
     const currentCount = approvedCounts[categoryKey] || 0;
     const remaining = TARGET_PER_CATEGORY - currentCount;
-    // Also cap by remaining global quota
-    const globalRemaining = TARGET_TOTAL - totalApproved;
-    return Math.min(30, Math.max(0, remaining), Math.max(0, globalRemaining));
-  }, [
-    config.difficulty,
-    config.type,
-    approvedCounts,
-    isGlobalQuotaMet,
-    totalApproved,
-  ]);
+    return Math.min(30, Math.max(0, remaining));
+  }, [config.difficulty, config.type, approvedCounts]);
 
   // Delete Handlers
   const handleDelete = (id) => setDeleteConfirmId(id);
