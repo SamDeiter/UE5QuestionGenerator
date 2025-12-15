@@ -88,7 +88,7 @@ export const cleanupProductionDatabase = async () => {
     // Extract base difficulty from combined value
     const baseDiff = difficulty.split(" ")[0]; // "Easy MC" -> "Easy"
 
-    // Map to canonical names
+    // Map to canonical names - combine equivalent difficulties
     if (baseDiff === "Easy" || baseDiff === "Beginner") difficulty = "Beginner";
     else if (baseDiff === "Medium" || baseDiff === "Intermediate")
       difficulty = "Intermediate";
@@ -96,9 +96,10 @@ export const cleanupProductionDatabase = async () => {
       difficulty = "Expert";
     else difficulty = baseDiff; // Keep as-is if not recognized
 
-    // Normalize type
+    // Normalize type - combine equivalent types
     if (qtype === "T/F" || qtype === "True/False") qtype = "T/F";
-    else qtype = "MC";
+    else if (qtype === "MC" || qtype === "Multiple Choice") qtype = "MC";
+    else qtype = "MC"; // Default to MC
 
     const key = `${discipline}|${difficulty}|${qtype}`;
     if (!quotaMap.has(key)) quotaMap.set(key, []);
@@ -108,6 +109,14 @@ export const cleanupProductionDatabase = async () => {
       dateAdded: data.dateAdded || "",
       status: data.status || "pending",
     });
+  });
+
+  // Log normalized categories
+  console.log("\n📊 Normalized categories after combining equivalents:");
+  quotaMap.forEach((questions, key) => {
+    if (questions.length > 30) {
+      console.log(`  ${key}: ${questions.length}`);
+    }
   });
 
   const QUOTA = TARGET_PER_CATEGORY;
@@ -153,7 +162,113 @@ export const cleanupProductionDatabase = async () => {
   };
 };
 
+/**
+ * Debug: Audit the database to see what categories and counts exist
+ */
+export const auditDatabaseCategories = async () => {
+  console.log("🔍 Auditing database categories...");
+
+  const questionsRef = collection(db, "questions");
+  const snapshot = await getDocs(questionsRef);
+
+  console.log(`📊 Found ${snapshot.size} total questions`);
+
+  // Log unique values
+  const disciplines = new Set();
+  const difficulties = new Set();
+  const types = new Set();
+  const categoryMap = new Map();
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const discipline = data.discipline || "Unknown";
+    const difficulty = data.difficulty || "Unknown";
+    const qtype = data.type || "Unknown";
+
+    disciplines.add(discipline);
+    difficulties.add(difficulty);
+    types.add(qtype);
+
+    // Raw key (no normalization) to see actual data
+    const rawKey = `${discipline}|${difficulty}|${qtype}`;
+    if (!categoryMap.has(rawKey)) categoryMap.set(rawKey, 0);
+    categoryMap.set(rawKey, categoryMap.get(rawKey) + 1);
+  });
+
+  console.log("\n📋 Unique disciplines:", Array.from(disciplines));
+  console.log("📋 Unique difficulties:", Array.from(difficulties));
+  console.log("📋 Unique types:", Array.from(types));
+
+  console.log("\n📊 Categories over 30 questions (quota is 40):");
+  categoryMap.forEach((count, key) => {
+    if (count > 30) {
+      console.log(`  ${key}: ${count}`);
+    }
+  });
+
+  console.log("\n📊 All Animation & Rigging categories:");
+  categoryMap.forEach((count, key) => {
+    if (key.startsWith("Animation")) {
+      console.log(`  ${key}: ${count}`);
+    }
+  });
+
+  return { disciplines, difficulties, types, categoryMap };
+};
+
+/**
+ * Migration: Normalize all difficulty values in the database
+ * Converts Easy->Beginner, Medium->Intermediate, Hard->Expert
+ */
+export const migrateDifficultyNames = async () => {
+  console.log("🔄 Starting difficulty name migration...");
+
+  const questionsRef = collection(db, "questions");
+  const snapshot = await getDocs(questionsRef);
+
+  console.log(`📊 Found ${snapshot.size} total questions`);
+
+  const updates = [];
+  let needsMigration = 0;
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const difficulty = data.difficulty || "";
+
+    // Check if needs migration
+    let newDifficulty = null;
+    if (difficulty === "Easy") newDifficulty = "Beginner";
+    else if (difficulty === "Medium") newDifficulty = "Intermediate";
+    else if (difficulty === "Hard") newDifficulty = "Expert";
+
+    if (newDifficulty) {
+      needsMigration++;
+      updates.push(
+        updateDoc(doc(db, "questions", docSnap.id), {
+          difficulty: newDifficulty,
+          _migratedDifficulty: difficulty, // Keep original for reference
+          _migratedAt: new Date().toISOString(),
+        })
+      );
+    }
+  });
+
+  console.log(`📝 Found ${needsMigration} questions needing migration`);
+
+  if (needsMigration > 0) {
+    console.log("⏳ Updating documents...");
+    await Promise.all(updates);
+    console.log(`✅ Migrated ${needsMigration} questions!`);
+  } else {
+    console.log("✅ All questions already have correct difficulty names!");
+  }
+
+  return { migrated: needsMigration };
+};
+
 // Make it available globally in production
 if (typeof window !== "undefined") {
   window.cleanupProductionDatabase = cleanupProductionDatabase;
+  window.auditDatabaseCategories = auditDatabaseCategories;
+  window.migrateDifficultyNames = migrateDifficultyNames;
 }
