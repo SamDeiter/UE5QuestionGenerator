@@ -1,5 +1,5 @@
 import Icon from "./Icon";
-import GranularProgress from "./GranularProgress";
+
 import GenerationSettings from "./sidebar/GenerationSettings";
 import CustomRules from "./sidebar/CustomRules";
 import ProgressStats from "./sidebar/ProgressStats";
@@ -83,14 +83,6 @@ const Sidebar = ({
         totalApproved={totalApproved}
         TARGET_TOTAL={TARGET_TOTAL}
         overallPercentage={overallPercentage}
-      />
-
-      <GranularProgress
-        approvedCounts={approvedCounts}
-        target={TARGET_PER_CATEGORY}
-        isTargetMet={isTargetMet}
-        selectedDifficulty={config.difficulty}
-        handleSelectCategory={handleSelectCategory}
       />
 
       <BatchSizeControl
