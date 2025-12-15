@@ -317,13 +317,15 @@ export const useQuestionManager = (config, showMessage) => {
   // Calculate per-difficulty totals (combining MC and T/F)
   const _difficultyTotals = useMemo(() => {
     return {
-      Easy:
-        (approvedCounts["Easy MC"] || 0) + (approvedCounts["Easy T/F"] || 0),
-      Medium:
-        (approvedCounts["Medium MC"] || 0) +
-        (approvedCounts["Medium T/F"] || 0),
-      Hard:
-        (approvedCounts["Hard MC"] || 0) + (approvedCounts["Hard T/F"] || 0),
+      Beginner:
+        (approvedCounts["Beginner MC"] || 0) +
+        (approvedCounts["Beginner T/F"] || 0),
+      Intermediate:
+        (approvedCounts["Intermediate MC"] || 0) +
+        (approvedCounts["Intermediate T/F"] || 0),
+      Expert:
+        (approvedCounts["Expert MC"] || 0) +
+        (approvedCounts["Expert T/F"] || 0),
     };
   }, [approvedCounts]);
 

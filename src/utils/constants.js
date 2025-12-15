@@ -27,12 +27,12 @@ export const LANGUAGE_CODES = {
 };
 
 export const CATEGORY_KEYS = [
-  "Easy MC",
-  "Easy T/F",
-  "Medium MC",
-  "Medium T/F",
-  "Hard MC",
-  "Hard T/F",
+  "Beginner MC",
+  "Beginner T/F",
+  "Intermediate MC",
+  "Intermediate T/F",
+  "Expert MC",
+  "Expert T/F",
 ];
 export const TARGET_PER_CATEGORY = 40; // 40 MC + 40 T/F per difficulty
 export const TARGET_TOTAL = 240; // 3 difficulties × 80 questions each

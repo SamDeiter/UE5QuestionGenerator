@@ -1,9 +1,6 @@
 import Icon from "./Icon";
 
 import GenerationSettings from "./sidebar/GenerationSettings";
-import CustomRules from "./sidebar/CustomRules";
-import ProgressStats from "./sidebar/ProgressStats";
-import BatchSizeControl from "./sidebar/BatchSizeControl";
 import ActionFooter from "./sidebar/ActionFooter";
 import TokenUsageDisplay from "./TokenUsageDisplay";
 
@@ -14,13 +11,13 @@ const Sidebar = ({
   handleChange,
   allQuestionsMap,
   approvedCounts: _approvedCounts,
-  overallPercentage,
-  totalApproved,
-  TARGET_TOTAL,
+  overallPercentage: _overallPercentage,
+  totalApproved: _totalApproved,
+  TARGET_TOTAL: _TARGET_TOTAL,
   TARGET_PER_CATEGORY: _TARGET_PER_CATEGORY,
   isTargetMet,
   maxBatchSize,
-  batchSizeWarning,
+  batchSizeWarning: _batchSizeWarning,
   handleGenerate,
   isGenerating,
   isApiReady,
@@ -78,27 +75,10 @@ const Sidebar = ({
         </div>
       )}
 
-      <ProgressStats
-        allQuestionsMap={allQuestionsMap}
-        totalApproved={totalApproved}
-        TARGET_TOTAL={TARGET_TOTAL}
-        overallPercentage={overallPercentage}
-      />
-
-      <BatchSizeControl
-        maxBatchSize={maxBatchSize}
-        config={config}
-        handleChange={handleChange}
-        batchSizeWarning={batchSizeWarning}
-      />
-
       {/* Token Usage Display */}
       <div className="mt-4 pt-4 border-t border-slate-800">
         <TokenUsageDisplay showDetailed={true} />
       </div>
-
-      {/* Custom Rules - At the bottom */}
-      {isAdmin && <CustomRules config={config} handleChange={handleChange} />}
 
       <div className="mt-4 pt-4 border-slate-800">
         <button
