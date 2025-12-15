@@ -165,11 +165,16 @@ export const validateGeneration = (
 
   const targetDiff = normalizeDiff(difficulty);
 
-  // Check total quota
-  if (isTotalQuotaMet(questions)) {
+  // Check total quota PER DISCIPLINE (not global)
+  // Each discipline has its own quota of TARGET_TOTAL questions
+  const disciplineQuestions = questions.filter(
+    (q) => q.discipline === discipline && q.status !== "rejected"
+  );
+
+  if (disciplineQuestions.length >= TARGET_TOTAL) {
     return {
       allowed: false,
-      reason: `Total quota reached (${TARGET_TOTAL} questions). No more generation allowed.`,
+      reason: `Quota reached for ${discipline} (${disciplineQuestions.length}/${TARGET_TOTAL} questions). Select a different discipline.`,
       maxAllowed: 0,
     };
   }
