@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getSecureItem, setSecureItem } from "../utils/secureStorage";
 
 export const useAppConfig = () => {
@@ -83,9 +83,22 @@ export const useAppConfig = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
 
-  // Effects
+  // Track if this is the initial mount
+  const hasInitialized = useRef(false);
 
+  // Effects
   useEffect(() => {
+    // Skip the first render to allow localStorage to hydrate
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      // Only show modal if name is truly empty after initial load
+      const savedConfig = getSecureItem("ue5_gen_config");
+      if (!savedConfig?.creatorName && !config.creatorName) {
+        setShowNameModal(true);
+      }
+      return;
+    }
+    // After initial mount, show modal if name becomes empty
     if (!config.creatorName) setShowNameModal(true);
   }, [config.creatorName]);
   useEffect(() => {
