@@ -38,7 +38,7 @@ const SourceContextCard = ({ sourceUrl, sourceExcerpt }) => {
           href={sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 hover:text-orange-300 text-xs font-semibold rounded-md border border-orange-500/40 transition-all hover:border-orange-500/60"
         >
           <Icon name="external-link" size={12} /> View Full Documentation
         </a>
