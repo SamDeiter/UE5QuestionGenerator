@@ -144,8 +144,12 @@ export const useQuestionManager = (config, showMessage) => {
         const uniqueNew = filterDuplicateQuestions(newItems, prev, otherList);
 
         // DEBUG: Log questions being added to state
-        console.log('🐛 [DEBUG] Adding to state:', 
-          uniqueNew.map(q => ({ id: q.uniqueId?.slice(0, 8), status: q.status }))
+        console.log(
+          "🐛 [DEBUG] Adding to state:",
+          uniqueNew.map((q) => ({
+            id: q.uniqueId?.slice(0, 8),
+            status: q.status,
+          }))
         );
 
         if (insertAfterId && uniqueNew.length > 0) {
@@ -195,10 +199,13 @@ export const useQuestionManager = (config, showMessage) => {
       updateQuestionInState(id, (q) => {
         // Complete review tracking if status is changing to accepted or rejected
         let updatedQ = q;
-        if ((newStatus === "accepted" || newStatus === "rejected") && q.reviewStartedAt) {
+        if (
+          (newStatus === "accepted" || newStatus === "rejected") &&
+          q.reviewStartedAt
+        ) {
           updatedQ = completeReviewTracking(q, config.creatorName);
         }
-        
+
         updatedQ = {
           ...updatedQ,
           status: newStatus,
@@ -209,7 +216,9 @@ export const useQuestionManager = (config, showMessage) => {
             newStatus === "rejected" ? new Date().toISOString() : null,
           // Track acceptance time
           acceptedAt:
-            newStatus === "accepted" ? new Date().toISOString() : updatedQ.acceptedAt,
+            newStatus === "accepted"
+              ? new Date().toISOString()
+              : updatedQ.acceptedAt,
         };
 
         // Sync to Firestore
@@ -306,7 +315,7 @@ export const useQuestionManager = (config, showMessage) => {
   }, [totalApproved]);
 
   // Calculate per-difficulty totals (combining MC and T/F)
-  const difficultyTotals = useMemo(() => {
+  const _difficultyTotals = useMemo(() => {
     return {
       Easy:
         (approvedCounts["Easy MC"] || 0) + (approvedCounts["Easy T/F"] || 0),
@@ -319,38 +328,37 @@ export const useQuestionManager = (config, showMessage) => {
   }, [approvedCounts]);
 
   // Target per difficulty level (2 categories * TARGET_PER_CATEGORY = 66 per difficulty)
-  const TARGET_PER_DIFFICULTY = TARGET_PER_CATEGORY * 2; // 66
+  const _TARGET_PER_DIFFICULTY = TARGET_PER_CATEGORY * 2; // 66
 
   const isTargetMet = useMemo(() => {
     // Always block if global quota is reached
     if (isGlobalQuotaMet) return true;
 
-    // Check if this difficulty level is full (both MC + T/F combined)
-    const currentCount = difficultyTotals[config.difficulty] || 0;
-    return currentCount >= TARGET_PER_DIFFICULTY;
-  }, [
-    config.difficulty,
-    difficultyTotals,
-    isGlobalQuotaMet,
-    TARGET_PER_DIFFICULTY,
-  ]);
+    // Check if the selected type for this difficulty is full
+    const typeKey = config.type === "True/False" ? "T/F" : "MC";
+    const categoryKey = `${config.difficulty} ${typeKey}`;
+    const currentCount = approvedCounts[categoryKey] || 0;
+    return currentCount >= TARGET_PER_CATEGORY;
+  }, [config.difficulty, config.type, approvedCounts, isGlobalQuotaMet]);
 
   const maxBatchSize = useMemo(() => {
     // If global quota is met, no generation allowed
     if (isGlobalQuotaMet) return 0;
 
-    // Calculate remaining for this difficulty level
-    const currentCount = difficultyTotals[config.difficulty] || 0;
-    const remaining = TARGET_PER_DIFFICULTY - currentCount;
+    // Calculate remaining for this specific type
+    const typeKey = config.type === "True/False" ? "T/F" : "MC";
+    const categoryKey = `${config.difficulty} ${typeKey}`;
+    const currentCount = approvedCounts[categoryKey] || 0;
+    const remaining = TARGET_PER_CATEGORY - currentCount;
     // Also cap by remaining global quota
     const globalRemaining = TARGET_TOTAL - totalApproved;
     return Math.min(30, Math.max(0, remaining), Math.max(0, globalRemaining));
   }, [
     config.difficulty,
-    difficultyTotals,
+    config.type,
+    approvedCounts,
     isGlobalQuotaMet,
     totalApproved,
-    TARGET_PER_DIFFICULTY,
   ]);
 
   // Delete Handlers
