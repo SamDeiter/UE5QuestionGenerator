@@ -86,15 +86,6 @@ const GenerationSettings = ({
       else stats[diff].mc++;
     });
 
-    // Debug: Log unique difficulty values found
-    const diffValues = [...new Set(filtered.map((q) => q.difficulty))];
-    console.log("📊 Chart Debug:", {
-      discipline: config.discipline,
-      totalFiltered: filtered.length,
-      uniqueDifficulties: diffValues,
-      stats,
-    });
-
     return [stats["Beginner"], stats["Intermediate"], stats["Expert"]];
   }, [allQuestionsMap, config.discipline]);
 

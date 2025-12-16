@@ -1,8 +1,8 @@
 import React from "react";
 import { Suspense } from "react";
 import Icon from "./Icon";
-import AnalyticsView from "./AnalyticsView"; // Eager load - analytics needs immediate data access
-// Lazy load heavy views
+// Lazy load heavy views - all views are now lazy for better navigation perf
+const AnalyticsView = React.lazy(() => import("./AnalyticsView"));
 const DatabaseView = React.lazy(() => import("./DatabaseView"));
 const ReviewMode = React.lazy(() => import("./ReviewMode"));
 const TestView = React.lazy(() => import("./TestView"));
