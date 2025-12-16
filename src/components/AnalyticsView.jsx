@@ -15,6 +15,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { format } from "date-fns";
 import { getAnalytics, getTokenStats } from "../utils/analyticsStore";
 import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
 import { CATEGORY_KEYS } from "../utils/constants";
@@ -346,6 +347,25 @@ const AnalyticsView = ({
                 </button>
               ))}
             </div>
+
+            {/* Date Range Display */}
+            {timeRange !== "all" && (
+              <div className="text-xs text-slate-500">
+                {(() => {
+                  const range = TIME_RANGES.find((r) => r.id === timeRange);
+                  if (range && range.days) {
+                    const endDate = new Date();
+                    const startDate = new Date();
+                    startDate.setDate(startDate.getDate() - range.days);
+                    return `${format(startDate, "MMM d")} - ${format(
+                      endDate,
+                      "MMM d, yyyy"
+                    )}`;
+                  }
+                  return "";
+                })()}
+              </div>
+            )}
 
             {/* Tab Navigation */}
             <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1">
