@@ -14,6 +14,16 @@ import * as firebase from "../../services/firebase";
 
 // Mock the services
 vi.mock("../../services/inviteService");
+
+// Mock the firebase service to prevent initialization
+vi.mock("../../services/firebase", () => ({
+  signInWithGoogle: vi.fn(),
+  signOut: vi.fn(),
+  auth: { currentUser: null },
+  db: {},
+  analytics: {},
+}));
+
 // Mock Firebase SDKs to allow service logic to run without initialization errors
 vi.mock("firebase/app", () => ({
   initializeApp: vi.fn(() => ({})),

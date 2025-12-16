@@ -1,9 +1,6 @@
 import { useCallback } from "react";
 import { QUALITY_PASS_THRESHOLD, TOAST_DURATION } from "../utils/constants";
-import {
-  generateTagsSecure as generateTagsForQuestion,
-  classifyQuestionDiscipline,
-} from "../services/geminiSecure";
+import { generateTagsSecure as generateTagsForQuestion } from "../services/geminiSecure";
 
 /**
  * Hook for managing review mode bulk actions.
@@ -197,36 +194,21 @@ export const useReviewActions = ({
             `Proceed to delete them?`
         )
       ) {
+        // Get IDs of questions to delete
+        const idsToDelete = new Set(pendingToDelete.map((q) => q.id));
+
+        // Actually remove questions from the array
+        setQuestions((prevQuestions) =>
+          prevQuestions.filter((q) => !idsToDelete.has(q.id))
+        );
+
         showMessage(
-          `Trimming ${pendingToDelete.length} questions... (please wait)`,
+          `✅ Trimmed ${pendingToDelete.length} questions successfully!`,
           TOAST_DURATION.LONG
         );
-
-        // Parallelize updates to avoid sequential Firestore latency
-        // Use allSettled to ensure one failure doesn't stop the rest
-        const results = await Promise.allSettled(
-          pendingToDelete.map((q) =>
-            handleUpdateStatus(q.id, "deleted", "Trimmed to balance")
-          )
-        );
-
-        const successCount = results.filter(
-          (r) => r.status === "fulfilled"
-        ).length;
-        const failCount = results.length - successCount;
-
-        if (failCount > 0) {
-          console.warn(`Trim completed with ${failCount} failures.`);
-          showMessage(
-            `Trimmed ${successCount} questions (${failCount} failed). Check console.`,
-            5000
-          );
-        } else {
-          showMessage(`Trimmed ${successCount} questions successfully.`, 4000);
-        }
       }
     },
-    [uniqueFilteredQuestions, allQuestions, handleUpdateStatus, showMessage]
+    [uniqueFilteredQuestions, allQuestions, showMessage, setQuestions]
   );
 
   /**
