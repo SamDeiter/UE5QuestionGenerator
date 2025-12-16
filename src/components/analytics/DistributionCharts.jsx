@@ -10,7 +10,6 @@ import {
   Tooltip,
 } from "recharts";
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
-import { CATEGORY_KEYS } from "../../utils/constants";
 
 const COLORS = [
   "#F472B6", // Pink 400
@@ -24,11 +23,46 @@ const COLORS = [
 ];
 
 const DistributionCharts = ({ questions }) => {
-  // Process data for Difficulty Pie Chart
-  const difficultyData = CATEGORY_KEYS.map((key) => ({
-    name: key,
-    value: questions.filter((q) => q.difficulty === key).length,
-  })).filter((item) => item.value > 0);
+  // Normalize difficulty to base level (Easy/Medium/Hard)
+  const normalizeDifficulty = (d) => {
+    if (!d) return null;
+    const lower = d.toString().toLowerCase().trim();
+    if (
+      lower === "easy" ||
+      lower === "beginner" ||
+      lower.includes("beginner") ||
+      lower.includes("easy")
+    )
+      return "Easy";
+    if (
+      lower === "medium" ||
+      lower === "intermediate" ||
+      lower.includes("intermediate") ||
+      lower.includes("medium")
+    )
+      return "Medium";
+    if (
+      lower === "hard" ||
+      lower === "expert" ||
+      lower.includes("expert") ||
+      lower.includes("hard")
+    )
+      return "Hard";
+    return null;
+  };
+
+  // Process data for Difficulty Pie Chart - count by normalized difficulty
+  const difficultyCounts = { Easy: 0, Medium: 0, Hard: 0 };
+  questions.forEach((q) => {
+    const normalized = normalizeDifficulty(q.difficulty);
+    if (normalized) {
+      difficultyCounts[normalized]++;
+    }
+  });
+
+  const difficultyData = Object.entries(difficultyCounts)
+    .map(([name, value]) => ({ name, value }))
+    .filter((item) => item.value > 0);
 
   // Process data for Discipline Bar Chart
   const disciplineCounts = questions.reduce((acc, q) => {
