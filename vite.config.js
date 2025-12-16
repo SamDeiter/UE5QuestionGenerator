@@ -1,4 +1,4 @@
-                                import { defineConfig } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { execSync } from "child_process";
 
@@ -29,5 +29,30 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./src/setupTests.js",
     css: true,
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React vendor chunk (~150 KB)
+          "vendor-react": ["react", "react-dom"],
+
+          // Firebase vendor chunk (~300 KB)
+          "vendor-firebase": [
+            "firebase/app",
+            "firebase/auth",
+            "firebase/firestore",
+            "firebase/analytics",
+          ],
+
+          // Charts vendor chunk (~200 KB) - only loaded in Analytics view
+          "vendor-charts": ["recharts"],
+
+          // Export utilities (~100 KB) - only loaded when exporting
+          "vendor-export": ["jszip"],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600, // Adjust threshold to avoid warnings for vendor chunks
   },
 });

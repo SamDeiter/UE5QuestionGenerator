@@ -3,20 +3,24 @@
 // ============================================================================
 
 // React core hooks
-import { useState, useEffect, useRef } from "react";
-// UI Components
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 
-import LandingPage from "./components/LandingPage";
+// Critical components - keep eager loading (needed immediately)
 import Header from "./components/Header";
 import ToastContainer from "./components/ToastContainer";
-import GlobalModals from "./components/GlobalModals";
-import MainLayout from "./components/MainLayout";
-import CrashRecoveryPrompt from "./components/CrashRecoveryPrompt";
 import Footer from "./components/Footer";
 import SignIn from "./components/SignIn";
 import InviteSignUp from "./components/InviteSignUp";
 import ApiKeyModal from "./components/ApiKeyModal";
 import { getInviteFromUrl } from "./services/inviteService";
+
+// Lazy load heavy components (loaded on-demand)
+const LandingPage = lazy(() => import("./components/LandingPage"));
+const MainLayout = lazy(() => import("./components/MainLayout"));
+const GlobalModals = lazy(() => import("./components/GlobalModals"));
+const CrashRecoveryPrompt = lazy(() =>
+  import("./components/CrashRecoveryPrompt")
+);
 
 // Custom Hooks
 import { useAppConfig } from "./hooks/useAppConfig";
@@ -459,7 +463,7 @@ const App = () => {
 
   if (appMode === "landing") {
     return (
-      <>
+      <Suspense fallback={<LoadingSpinner />}>
         <LandingPage
           onSelectMode={handleModeSelect}
           apiKeyStatus={apiKeyStatus}
@@ -478,89 +482,92 @@ const App = () => {
           onSave={handleSaveApiKey}
           currentKey={config.apiKey}
         />
-      </>
+      </Suspense>
     );
   }
 
   return (
     <div className="flex flex-col h-screen bg-slate-950 font-sans text-slate-200">
-      {/* Crash Recovery Prompt - highest priority */}
-      <CrashRecoveryPrompt
-        isOpen={showRecoveryPrompt}
-        recoveryData={recoveryData}
-        isRecovering={isRecovering}
-        onRecover={handleRecover}
-        onDismiss={dismissRecovery}
-      />
-      <GlobalModals
-        visibility={{
-          showNameModal,
-          showClearModal,
-          showBulkExportModal,
-          showSettings,
-          showAnalytics,
-          showDangerZone,
-          showApiKeyModal,
-          showTerms,
-          showAgeGate,
-          tutorialActive,
-          deleteConfirmId,
-          showAdvancedConfig,
-          showApiKey,
-        }}
-        state={{
-          config,
-          isProcessing,
-          status,
-          translationProgress,
-          allQuestionsMap,
-          appMode,
-          currentStep,
-          tutorialSteps,
-          metrics: {
-            totalApproved: approvedCount,
-            totalQuestions: questions.length,
-          },
-          isApiReady,
-          customTags,
-          isAdmin,
-        }}
-        handlers={{
-          handleNameSave,
-          handleDeleteAllQuestions,
-          handleBulkExport,
-          confirmDelete,
-          setDeleteConfirmId,
-          onCloseBulkExport: () => setShowBulkExportModal(false),
-          onCloseSettings: () => setShowSettings(false),
-          onCloseAnalytics: () => setShowAnalytics(false),
-          onCloseDangerZone: () => setShowDangerZone(false),
-          onCloseApiKey: () => setShowApiKeyModal(false),
-          handleChange,
-          handleSaveApiKey,
-          setShowTerms,
-          setTermsAccepted,
-          setShowAgeGate,
-          setShowClearModal,
-          handleTutorialNext,
-          handleTutorialPrev,
-          handleTutorialSkip,
-          handleTutorialComplete,
-          onResetSettings: () =>
-            setConfig({ ...config, ...useAppConfig.defaultConfig }),
-          onHardReset: () => {
-            localStorage.clear();
-            window.location.reload();
-          },
-          fileInputRef,
-          handleFileChange,
-          setShowAdvancedConfig,
-          setShowApiKey,
-          handleDetectTopics,
-          onSaveCustomTags: handleSaveCustomTags,
-          window: window,
-        }}
-      />
+      <Suspense fallback={null}>
+        {/* Crash Recovery Prompt - highest priority */}
+        <CrashRecoveryPrompt
+          isOpen={showRecoveryPrompt}
+          recoveryData={recoveryData}
+          isRecovering={isRecovering}
+          onRecover={handleRecover}
+          onDismiss={dismissRecovery}
+        />
+        <GlobalModals
+          visibility={{
+            showNameModal,
+            showClearModal,
+            showBulkExportModal,
+            showSettings,
+            showAnalytics,
+            showDangerZone,
+            showApiKeyModal,
+            showTerms,
+            showAgeGate,
+            tutorialActive,
+            deleteConfirmId,
+            showAdvancedConfig,
+            showApiKey,
+          }}
+          state={{
+            config,
+            isProcessing,
+            status,
+            translationProgress,
+            allQuestionsMap,
+            appMode,
+            currentStep,
+            tutorialSteps,
+            metrics: {
+              totalApproved: approvedCount,
+              totalQuestions: questions.length,
+            },
+            isApiReady,
+            customTags,
+            isAdmin,
+          }}
+          handlers={{
+            handleNameSave,
+            handleDeleteAllQuestions,
+            handleBulkExport,
+            confirmDelete,
+            setDeleteConfirmId,
+            onCloseBulkExport: () => setShowBulkExportModal(false),
+            onCloseSettings: () => setShowSettings(false),
+            onCloseAnalytics: () => setShowAnalytics(false),
+            onCloseDangerZone: () => setShowDangerZone(false),
+            onCloseApiKey: () => setShowApiKeyModal(false),
+            handleChange,
+            handleSaveApiKey,
+            setShowTerms,
+            setTermsAccepted,
+            setShowAgeGate,
+            setShowClearModal,
+            handleTutorialNext,
+            handleTutorialPrev,
+            handleTutorialSkip,
+            handleTutorialComplete,
+            onResetSettings: () =>
+              setConfig({ ...config, ...useAppConfig.defaultConfig }),
+            onHardReset: () => {
+              localStorage.clear();
+              window.location.reload();
+            },
+            fileInputRef,
+            handleFileChange,
+            setShowAdvancedConfig,
+            setShowApiKey,
+            handleDetectTopics,
+            onSaveCustomTags: handleSaveCustomTags,
+            window: window,
+          }}
+        />
+      </Suspense>
+
       <Header
         apiKeyStatus={apiKeyStatus}
         isCloudReady={isAuthReady}
@@ -573,124 +580,126 @@ const App = () => {
         isAdmin={isAdmin}
       />
 
-      <MainLayout
-        appMode={appMode}
-        setAppMode={setAppMode}
-        effectiveApiKey={effectiveApiKey}
-        isAdmin={isAdmin}
-        sidebarProps={{
-          showGenSettings,
-          setShowGenSettings,
-          config,
-          handleChange,
-          allQuestionsMap,
-          approvedCounts,
-          overallPercentage,
-          totalApproved,
-          isTargetMet,
-          maxBatchSize,
-          batchSizeWarning,
-          handleGenerate,
-          isGenerating,
-          isApiReady,
-          handleBulkTranslateMissing,
-          isProcessing,
-          setShowSettings,
-          handleSelectCategory,
-          customTags,
-          status,
-          showMessage,
-          isAdmin,
-        }}
-        handleModeSelect={handleModeSelect}
-        handleViewDatabase={handleViewDatabase}
-        pendingCount={pendingCount}
-        toolbarProps={{
-          mode: appMode,
-          counts: contextCounts,
-          filterMode,
-          setFilterMode,
-          filterByCreator,
-          setFilterByCreator,
-          filterTags,
-          setFilterTags,
-          customTags,
-          searchTerm,
-          setSearchTerm,
-          sortBy,
-          setSortBy,
-          isProcessing,
-          status,
-          isAuthReady,
-          config,
-          onLoadSheets: handleLoadFromSheets,
-          onLoadFirestore: handleLoadFromFirestore,
-          onBulkExport: () => setShowBulkExportModal(true),
-          onClearPending: handleClearPending,
-          onBulkAcceptHighScores:
-            appMode === "review" ? handleBulkAcceptHighScores : undefined,
-          onBulkCritiqueAll:
-            appMode === "review" ? handleBulkCritiqueAll : undefined,
-          onTrimExcess: handleTrimExcess,
-          onBulkMove: handleBulkMove,
-          onAutoClassify: handleAutoClassify, // Added
-          onAutoTag: handleAutoTag, // Added
-          onAutoTagAll: handleAutoTagAll, // Added
-          effectiveApiKey: effectiveApiKey, // Added
-          selectedIds: selectedIds, // Added
-          handleChange, // Pass config handler for Discipline selector
-        }}
-        showHistory={showHistory}
-        uniqueFilteredQuestions={uniqueFilteredQuestions}
-        questions={questions}
-        status={status}
-        databaseQuestions={databaseQuestions}
-        config={config}
-        isProcessing={isProcessing}
-        allQuestionsMap={allQuestionsMap}
-        viewRouterHandlers={{
-          handleLoadFromSheets,
-          handleLoadFromFirestore,
-          handleUpdateDatabaseQuestion,
-          handleKickBackToReview,
-          handleUpdateStatus,
-          handleExplain,
-          handleVariate,
-          handleCritique,
-          handleApplyRewrite,
-          handleTranslateSingle,
-          handleLanguageSwitch,
-          handleDelete,
-          handleManualUpdate,
-          selectAll,
-          clearSelection,
-          bulkUpdateStatus,
-          toggleSelection,
-          handleTrimExcess, // Added
-          handleBulkMove, // Added
-          handleUpdateQuestion, // Added persistent handler
-        }}
-        viewRouterState={{
-          currentReviewIndex,
-          selectedIds,
-          translationMap,
-          filterByCreator,
-          filteredQuestions,
-          questions,
-          status,
-          filterMode,
-          sortBy,
-          showHistory,
-        }}
-        viewRouterSetters={{
-          setDatabaseQuestions,
-          setCurrentReviewIndex,
-          setFilterByCreator,
-          showMessage,
-        }}
-        handleGoHome={handleGoHome}
-        onStartTutorial={handleStartTutorial}
-      />
+      <Suspense fallback={<LoadingSpinner />}>
+        <MainLayout
+          appMode={appMode}
+          setAppMode={setAppMode}
+          effectiveApiKey={effectiveApiKey}
+          isAdmin={isAdmin}
+          sidebarProps={{
+            showGenSettings,
+            setShowGenSettings,
+            config,
+            handleChange,
+            allQuestionsMap,
+            approvedCounts,
+            overallPercentage,
+            totalApproved,
+            isTargetMet,
+            maxBatchSize,
+            batchSizeWarning,
+            handleGenerate,
+            isGenerating,
+            isApiReady,
+            handleBulkTranslateMissing,
+            isProcessing,
+            setShowSettings,
+            handleSelectCategory,
+            customTags,
+            status,
+            showMessage,
+            isAdmin,
+          }}
+          handleModeSelect={handleModeSelect}
+          handleViewDatabase={handleViewDatabase}
+          pendingCount={pendingCount}
+          toolbarProps={{
+            mode: appMode,
+            counts: contextCounts,
+            filterMode,
+            setFilterMode,
+            filterByCreator,
+            setFilterByCreator,
+            filterTags,
+            setFilterTags,
+            customTags,
+            searchTerm,
+            setSearchTerm,
+            sortBy,
+            setSortBy,
+            isProcessing,
+            status,
+            isAuthReady,
+            config,
+            onLoadSheets: handleLoadFromSheets,
+            onLoadFirestore: handleLoadFromFirestore,
+            onBulkExport: () => setShowBulkExportModal(true),
+            onClearPending: handleClearPending,
+            onBulkAcceptHighScores:
+              appMode === "review" ? handleBulkAcceptHighScores : undefined,
+            onBulkCritiqueAll:
+              appMode === "review" ? handleBulkCritiqueAll : undefined,
+            onTrimExcess: handleTrimExcess,
+            onBulkMove: handleBulkMove,
+            onAutoClassify: handleAutoClassify, // Added
+            onAutoTag: handleAutoTag, // Added
+            onAutoTagAll: handleAutoTagAll, // Added
+            effectiveApiKey: effectiveApiKey, // Added
+            selectedIds: selectedIds, // Added
+            handleChange, // Pass config handler for Discipline selector
+          }}
+          showHistory={showHistory}
+          uniqueFilteredQuestions={uniqueFilteredQuestions}
+          questions={questions}
+          status={status}
+          databaseQuestions={databaseQuestions}
+          config={config}
+          isProcessing={isProcessing}
+          allQuestionsMap={allQuestionsMap}
+          viewRouterHandlers={{
+            handleLoadFromSheets,
+            handleLoadFromFirestore,
+            handleUpdateDatabaseQuestion,
+            handleKickBackToReview,
+            handleUpdateStatus,
+            handleExplain,
+            handleVariate,
+            handleCritique,
+            handleApplyRewrite,
+            handleTranslateSingle,
+            handleLanguageSwitch,
+            handleDelete,
+            handleManualUpdate,
+            selectAll,
+            clearSelection,
+            bulkUpdateStatus,
+            toggleSelection,
+            handleTrimExcess, // Added
+            handleBulkMove, // Added
+            handleUpdateQuestion, // Added persistent handler
+          }}
+          viewRouterState={{
+            currentReviewIndex,
+            selectedIds,
+            translationMap,
+            filterByCreator,
+            filteredQuestions,
+            questions,
+            status,
+            filterMode,
+            sortBy,
+            showHistory,
+          }}
+          viewRouterSetters={{
+            setDatabaseQuestions,
+            setCurrentReviewIndex,
+            setFilterByCreator,
+            showMessage,
+          }}
+          handleGoHome={handleGoHome}
+          onStartTutorial={handleStartTutorial}
+        />
+      </Suspense>
 
       {/* API Key Modal - Simple popup for Configure Now button */}
 
