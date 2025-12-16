@@ -1,5 +1,4 @@
 import {
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
@@ -10,6 +9,7 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import { CATEGORY_KEYS } from "../../utils/constants";
 
 const COLORS = [
@@ -51,7 +51,12 @@ const DistributionCharts = ({ questions }) => {
           Difficulty Distribution
         </h3>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <SafeResponsiveContainer
+            width="100%"
+            height="100%"
+            minWidth={0}
+            minHeight={0}
+          >
             <PieChart>
               <Pie
                 data={difficultyData}
@@ -81,7 +86,7 @@ const DistributionCharts = ({ questions }) => {
                 itemStyle={{ color: "#f1f5f9" }}
               />
             </PieChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
       </div>
 
@@ -91,7 +96,12 @@ const DistributionCharts = ({ questions }) => {
           Questions by Discipline
         </h3>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <SafeResponsiveContainer
+            width="100%"
+            height="100%"
+            minWidth={0}
+            minHeight={0}
+          >
             <BarChart
               data={disciplineData}
               layout="vertical"
@@ -127,7 +137,7 @@ const DistributionCharts = ({ questions }) => {
                 ))}
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
       </div>
     </div>

@@ -1,5 +1,4 @@
 import {
-  ResponsiveContainer,
   LineChart,
   AreaChart,
   Line,
@@ -10,6 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import SafeResponsiveContainer from "./SafeResponsiveContainer";
 
 // Define gradient configuration outside component to avoid minification issues
 const GRADIENT_CONFIG = {
@@ -51,7 +51,12 @@ const TrendCharts = ({ generations }) => {
           Average Quality Score Trend
         </h3>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <SafeResponsiveContainer
+            width="100%"
+            height="100%"
+            minWidth={0}
+            minHeight={0}
+          >
             <LineChart
               data={data}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -76,7 +81,7 @@ const TrendCharts = ({ generations }) => {
                 name="Avg Quality Score"
               />
             </LineChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
       </div>
 
@@ -86,7 +91,12 @@ const TrendCharts = ({ generations }) => {
           Token Usage & Cost Trend
         </h3>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <SafeResponsiveContainer
+            width="100%"
+            height="100%"
+            minWidth={0}
+            minHeight={0}
+          >
             <AreaChart
               data={data}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
@@ -123,7 +133,7 @@ const TrendCharts = ({ generations }) => {
                 name="Total Tokens"
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
         <p className="text-[10px] text-slate-500 text-center mt-2">
           * Cost is correlated with token usage.

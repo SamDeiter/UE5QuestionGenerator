@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import Icon from "./Icon";
 import {
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
@@ -15,6 +14,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import SafeResponsiveContainer from "./analytics/SafeResponsiveContainer";
 import { format } from "date-fns";
 import { getAnalytics, getTokenStats } from "../utils/analyticsStore";
 import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
@@ -435,7 +435,7 @@ const AnalyticsView = ({
                 </h3>
                 <div className="h-64">
                   {statusData.length > 0 ? (
-                    <ResponsiveContainer
+                    <SafeResponsiveContainer
                       width="100%"
                       height="100%"
                       minWidth={0}
@@ -464,7 +464,7 @@ const AnalyticsView = ({
                           }}
                         />
                       </PieChart>
-                    </ResponsiveContainer>
+                    </SafeResponsiveContainer>
                   ) : (
                     <EmptyState message="No question data yet" />
                   )}
@@ -479,7 +479,7 @@ const AnalyticsView = ({
                 </h3>
                 <div className="h-64">
                   {difficultyData.length > 0 ? (
-                    <ResponsiveContainer
+                    <SafeResponsiveContainer
                       width="100%"
                       height="100%"
                       minWidth={0}
@@ -514,7 +514,7 @@ const AnalyticsView = ({
                           ))}
                         </Bar>
                       </BarChart>
-                    </ResponsiveContainer>
+                    </SafeResponsiveContainer>
                   ) : (
                     <EmptyState message="No difficulty data yet" />
                   )}
@@ -530,7 +530,7 @@ const AnalyticsView = ({
               </h3>
               <div className="h-64">
                 {recentGenerations.length > 0 ? (
-                  <ResponsiveContainer
+                  <SafeResponsiveContainer
                     width="100%"
                     height="100%"
                     minWidth={0}
@@ -609,7 +609,7 @@ const AnalyticsView = ({
                         name="Questions"
                       />
                     </AreaChart>
-                  </ResponsiveContainer>
+                  </SafeResponsiveContainer>
                 ) : (
                   <EmptyState message="Generate some questions to see trends" />
                 )}
@@ -628,7 +628,7 @@ const AnalyticsView = ({
               </h3>
               <div className="h-96">
                 {disciplineData.length > 0 ? (
-                  <ResponsiveContainer
+                  <SafeResponsiveContainer
                     width="100%"
                     height="100%"
                     minWidth={0}
@@ -673,7 +673,7 @@ const AnalyticsView = ({
                         ))}
                       </Bar>
                     </BarChart>
-                  </ResponsiveContainer>
+                  </SafeResponsiveContainer>
                 ) : (
                   <EmptyState message="No discipline data yet. Generate some questions!" />
                 )}
@@ -776,7 +776,7 @@ const AnalyticsView = ({
               </h3>
               <div className="h-64">
                 {qualityDistribution.length > 0 ? (
-                  <ResponsiveContainer
+                  <SafeResponsiveContainer
                     width="100%"
                     height="100%"
                     minWidth={0}
@@ -807,7 +807,7 @@ const AnalyticsView = ({
                         ))}
                       </Bar>
                     </BarChart>
-                  </ResponsiveContainer>
+                  </SafeResponsiveContainer>
                 ) : (
                   <EmptyState message="Run AI Critique on questions to see quality distribution" />
                 )}

@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import {
-  ResponsiveContainer,
   AreaChart,
   Area,
   BarChart,
@@ -13,6 +12,7 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
+import SafeResponsiveContainer from "./analytics/SafeResponsiveContainer";
 import { format } from "date-fns";
 import {
   BarChart2,
@@ -185,7 +185,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                 <Activity size={16} /> Token Usage History
               </h3>
               <div className="flex-1 min-h-0 w-full" style={{ minHeight: 200 }}>
-                <ResponsiveContainer
+                <SafeResponsiveContainer
                   width="100%"
                   height="100%"
                   minWidth={1}
@@ -244,7 +244,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                       name="Output Tokens"
                     />
                   </AreaChart>
-                </ResponsiveContainer>
+                </SafeResponsiveContainer>
               </div>
             </div>
 
@@ -254,7 +254,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                 <BarChart2 size={16} /> Quality Score Distribution
               </h3>
               <div className="flex-1 min-h-0 w-full" style={{ minHeight: 200 }}>
-                <ResponsiveContainer
+                <SafeResponsiveContainer
                   width="100%"
                   height="100%"
                   minWidth={1}
@@ -312,7 +312,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
-                </ResponsiveContainer>
+                </SafeResponsiveContainer>
               </div>
             </div>
 
@@ -322,7 +322,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                 <PieChart size={16} /> Acceptance Rate by Discipline
               </h3>
               <div className="flex-1 min-h-0 w-full" style={{ minHeight: 200 }}>
-                <ResponsiveContainer
+                <SafeResponsiveContainer
                   width="100%"
                   height="100%"
                   minWidth={1}
@@ -364,7 +364,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                       name="Acceptance Rate"
                     />
                   </BarChart>
-                </ResponsiveContainer>
+                </SafeResponsiveContainer>
               </div>
             </div>
 
@@ -410,7 +410,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                     "#ec4899",
                   ];
                   return rejectionData.length > 0 ? (
-                    <ResponsiveContainer
+                    <SafeResponsiveContainer
                       width="100%"
                       height="100%"
                       minWidth={1}
@@ -443,7 +443,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                           }}
                         />
                       </RechartsPieChart>
-                    </ResponsiveContainer>
+                    </SafeResponsiveContainer>
                   ) : (
                     <div className="text-slate-500 text-sm">
                       No rejection data yet
