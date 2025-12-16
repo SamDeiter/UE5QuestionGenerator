@@ -499,11 +499,17 @@ const AnalyticsView = ({
             </div>
 
             {/* Tag Cloud Analytics */}
-            <TagCloudAnalytics
-              questions={allQuestions}
-              selectedDiscipline={selectedDiscipline}
-              showAllDisciplines={!selectedDiscipline}
-            />
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-slate-300 mb-6 flex items-center gap-2">
+                <Icon name="tag" size={20} className="text-cyan-400" />
+                Tag Cloud
+              </h3>
+              <TagCloudAnalytics
+                questions={allQuestions}
+                selectedDiscipline={selectedDiscipline}
+                showAllDisciplines={!selectedDiscipline}
+              />
+            </div>
 
             {/* Discipline Cards Grid */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
