@@ -1,5 +1,10 @@
-                    # Dependencies & Locks
+# ============================================================================
+# AI EXCLUDE FILE - Optimized for React + Firebase Project
+# ============================================================================
+
+# Dependencies & Locks
 node_modules/
+functions/node_modules/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
@@ -13,11 +18,16 @@ coverage/
 .firebase/
 firebase-debug.log
 
-# Python (If you use local scripts)
+# Python (MCP Server & Local Scripts)
 venv/
 .venv/
+.env/
 __pycache__/
 *.pyc
+antigravity-mcp-server/__pycache__/
+antigravity-mcp-server/venv/
+antigravity-mcp-server/.venv/
+antigravity-mcp-server/.env/
 
 # IDE & Git System Files
 .git/
@@ -53,19 +63,19 @@ temp_scorm12_extract/
 UE5ScenarioTracker-main.zip
 UE5_Scenario_Tracker_SCORM12_Build.zip
 
-# Test & Diagnostic Scripts (Not needed for AI context)
-test_*.py
-diagnostic_*.py
-minimal_server.py
-
-# Scripts Directory (HEAVY - 69+ files!)
-# Only exclude heavy subdirectories, keep main scripts accessible
+# Large Backup Directories
+backups/
 scripts/archive/
 scripts/backups/
 scripts/security_backups/
 scripts/deploy/
 scripts/examples/
 scripts/__pycache__/
+
+# Test & Diagnostic Scripts (Not needed for AI context)
+test_*.py
+diagnostic_*.py
+minimal_server.py
 
 # Temporary Fix Scripts (Not needed after fixes applied)
 scripts/fix_*.py
@@ -74,8 +84,14 @@ scripts/perf_fix_*.py
 scripts/add_*.py
 scripts/integrate_*.py
 
-# MCP Debug Files
+# Large Log & Output Files
+test_output.txt
+lint_output.json
+lint_current.txt
 mcp_debug.log
+*.log
+
+# MCP Debug Files
 update_mcp_config.py
 
 # Documentation (Optional: Un-comment if you want the agent to ignore old docs)
