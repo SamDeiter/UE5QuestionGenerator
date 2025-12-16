@@ -1,5 +1,9 @@
 import { useCallback } from "react";
-import { QUALITY_PASS_THRESHOLD, TOAST_DURATION } from "../utils/constants";
+import {
+  QUALITY_PASS_THRESHOLD,
+  TOAST_DURATION,
+  TARGET_PER_CATEGORY,
+} from "../utils/constants";
 import { generateTagsSecure as generateTagsForQuestion } from "../services/geminiSecure";
 
 /**
@@ -136,29 +140,8 @@ export const useReviewActions = ({
         }
       });
 
-      // 2. Find the target count (Minimum Total across all groups)
-      const groupKeys = Object.keys(groups);
-      if (groupKeys.length === 0) {
-        showMessage("No questions found in this discipline.", 3000);
-        return;
-      }
-
-      let minTotal = Infinity;
-      groupKeys.forEach((key) => {
-        const count = groups[key].total;
-        if (count < minTotal) minTotal = count;
-      });
-
-      // Safety floor - don't trim below 1 unless they only have 1?
-      // User said "same amount". If one group has 0, target is 0? That would delete everything.
-      // Let's assume a minimum safe floor of 10 or just strict equality.
-      // If minTotal is 0, we probably shouldn't delete everything else to 0.
-      // Let's ensure target is at least some reasonable number if minTotal is 0, or just warn.
-      // Actually, if a group has 2 questions, we probably don't want to trim others to 2.
-      // But user demand was explicit: "each section ahs the same aount".
-      // I'll stick to minTotal but maybe warn if it's very low.
-
-      const target = minTotal;
+      // 2. Use the standard target (40) instead of finding the minimum
+      const target = TARGET_PER_CATEGORY;
 
       // 3. Determine which pending questions to delete
       let deleteCount = 0;
