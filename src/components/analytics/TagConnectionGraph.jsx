@@ -215,6 +215,9 @@ const TagConnectionGraph = ({
               )
             : false;
           const shouldHighlight = isSelected || isConnected;
+          const connectionCount = connections.filter(
+            (conn) => conn.source === tag.name || conn.target === tag.name
+          ).length;
           const nodeSize = 6 + (tag.count / maxCount) * 14;
 
           // Calculate label position (outside the circle)
@@ -260,6 +263,24 @@ const TagConnectionGraph = ({
                   selectedTag && !shouldHighlight && !isSelected ? 0.3 : 1
                 }
               />
+              {/* Connection count inside node */}
+              {connectionCount > 0 && nodeSize >= 10 && (
+                <text
+                  x={pos.x}
+                  y={pos.y}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="#ffffff"
+                  fontSize={nodeSize > 15 ? 10 : 8}
+                  fontWeight="bold"
+                  className="select-none pointer-events-none"
+                  opacity={
+                    selectedTag && !shouldHighlight && !isSelected ? 0.3 : 1
+                  }
+                >
+                  {connectionCount}
+                </text>
+              )}
               {/* Tag label */}
               <text
                 x={labelX}
