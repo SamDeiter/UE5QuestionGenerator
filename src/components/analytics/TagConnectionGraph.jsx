@@ -13,6 +13,7 @@ const TagConnectionGraph = ({
   selectedDiscipline,
   showAllDisciplines,
 }) => {
+  const containerRef = useRef(null);
   const svgRef = useRef(null);
   const [sortOrder, setSortOrder] = useState("most_connected"); // 'most_connected' | 'least_connected'
 
@@ -40,24 +41,46 @@ const TagConnectionGraph = ({
 
   useEffect(() => {
     const updateDimensions = () => {
-      if (svgRef.current) {
-        const parent = svgRef.current.parentElement;
-        if (parent && parent.clientWidth > 0) {
-          // Use 65% of parent width
-          const size = Math.floor(parent.clientWidth * 0.65);
-          setDimensions({
-            width: size,
-            height: size, // Make it square
-          });
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth;
+        if (containerWidth) {
+          // Guard against invalid widths - use minimum of 400px
+          if (containerWidth > 100) {
+            // Use 55% of parent width, with min 400 and max 800
+            const size = Math.min(
+              800,
+              Math.max(400, Math.floor(containerWidth * 0.55))
+            );
+            setDimensions({
+              width: size,
+              height: size, // Make it square
+            });
+          }
         }
       }
     };
-    // Initial delay to let layout settle
-    const timer = setTimeout(updateDimensions, 100);
+
+    // Use ResizeObserver for more reliable dimension updates
+    let resizeObserver = null;
+    if (containerRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        updateDimensions();
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+
+    // Initial delays to let layout settle (try multiple times)
+    const timer1 = setTimeout(updateDimensions, 100);
+    const timer2 = setTimeout(updateDimensions, 300);
+    const timer3 = setTimeout(updateDimensions, 600);
+
     window.addEventListener("resize", updateDimensions);
     return () => {
       window.removeEventListener("resize", updateDimensions);
-      clearTimeout(timer);
+      if (resizeObserver) resizeObserver.disconnect();
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
     };
   }, []);
 
@@ -194,7 +217,10 @@ const TagConnectionGraph = ({
   const centerY = dimensions.height / 2;
 
   return (
-    <div className="flex flex-col items-center mx-auto">
+    <div
+      ref={containerRef}
+      className="flex flex-col items-center mx-auto w-full"
+    >
       {/* View Toggle - Centered */}
       <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700 mb-4">
         <button
@@ -221,9 +247,9 @@ const TagConnectionGraph = ({
 
       <svg
         ref={svgRef}
-        width="100%"
+        width={dimensions.width}
         height={dimensions.height}
-        className="overflow-visible"
+        className="mx-auto block overflow-visible"
       >
         {/* Background concentric circles */}
         {[0.25, 0.5, 0.75, 1].map((ratio, index) => (
