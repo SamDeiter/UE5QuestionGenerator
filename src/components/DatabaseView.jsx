@@ -35,9 +35,12 @@ const DatabaseView = ({
   
   // Migration handler
   const handleMigrateScores = async () => {
+    console.log("🔘 Migrate button clicked!");
     if (!window.confirm('This will estimate improved scores for all questions with critiques. Continue?')) {
+      console.log("❌ User cancelled migration");
       return;
     }
+    console.log("✅ User confirmed, starting migration...");
     setIsMigrating(true);
     try {
       const result = await migrateFirestoreScores(showMessage);
