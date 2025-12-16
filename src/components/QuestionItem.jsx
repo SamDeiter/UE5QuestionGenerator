@@ -223,6 +223,8 @@ const QuestionItem = ({
                 q.suggestedRewrite.critiqueScore || q.critiqueScore,
             }}
             changesExplanation={q.rewriteChanges || "AI improvements applied"}
+            critiqueText={q.critique || "No critique available"}
+            critiqueScore={q.critiqueScore || 0}
             onApply={async (improved) => {
               // Apply improvements to question
               await onUpdateQuestion(q.id, {
