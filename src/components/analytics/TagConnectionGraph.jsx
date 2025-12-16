@@ -14,15 +14,17 @@ const TagConnectionGraph = ({
   showAllDisciplines,
 }) => {
   const svgRef = useRef(null);
-  const [hoveredTag, setHoveredTag] = useState(null);
-  const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
+  const [selectedTag, setSelectedTag] = useState(null);
+  const [dimensions, setDimensions] = useState({ width: 500, height: 450 });
 
   // Update dimensions on resize
   useEffect(() => {
     const updateDimensions = () => {
       if (svgRef.current) {
-        const rect = svgRef.current.getBoundingClientRect();
-        setDimensions({ width: rect.width || 400, height: 400 });
+        const container = svgRef.current.parentElement;
+        if (container) {
+          setDimensions({ width: container.clientWidth || 500, height: 450 });
+        }
       }
     };
     updateDimensions();
@@ -87,16 +89,16 @@ const TagConnectionGraph = ({
 
     // Get connections between these top tags
     const relevantConnections = Object.entries(coOccurrences)
-      .filter(([key, count]) => {
+      .filter(([key]) => {
         const [tag1, tag2] = key.split("|||");
-        return tagNames.has(tag1) && tagNames.has(tag2) && count >= 1;
+        return tagNames.has(tag1) && tagNames.has(tag2);
       })
       .map(([key, count]) => {
         const [source, target] = key.split("|||");
         return { source, target, count };
       })
       .sort((a, b) => b.count - a.count)
-      .slice(0, 40); // Top 40 connections
+      .slice(0, 50); // Top 50 connections
 
     return { tags: sortedTags, connections: relevantConnections };
   }, [questions, selectedDiscipline, showAllDisciplines]);
@@ -105,7 +107,7 @@ const TagConnectionGraph = ({
   const nodePositions = useMemo(() => {
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
-    const radius = Math.min(dimensions.width, dimensions.height) / 2 - 60;
+    const radius = Math.min(dimensions.width, dimensions.height) / 2 - 80;
 
     const positions = {};
     tags.forEach((tag, index) => {
@@ -118,6 +120,11 @@ const TagConnectionGraph = ({
     });
     return positions;
   }, [tags, dimensions]);
+
+  // Handle node click
+  const handleNodeClick = (tagName) => {
+    setSelectedTag(selectedTag === tagName ? null : tagName);
+  };
 
   if (tags.length === 0) {
     return (
@@ -137,6 +144,8 @@ const TagConnectionGraph = ({
     ...connections.map((conn) => conn.count),
     1
   );
+  const centerX = dimensions.width / 2;
+  const centerY = dimensions.height / 2;
 
   return (
     <div className="relative">
@@ -146,6 +155,20 @@ const TagConnectionGraph = ({
         height={dimensions.height}
         className="overflow-visible"
       >
+        {/* Background concentric circles */}
+        {[0.25, 0.5, 0.75, 1].map((ratio, index) => (
+          <circle
+            key={index}
+            cx={centerX}
+            cy={centerY}
+            r={(Math.min(dimensions.width, dimensions.height) / 2 - 80) * ratio}
+            fill="none"
+            stroke="#1e293b"
+            strokeWidth={1}
+            strokeOpacity={0.5}
+          />
+        ))}
+
         {/* Connections */}
         {connections.map((connection, index) => {
           const start = nodePositions[connection.source];
@@ -153,12 +176,16 @@ const TagConnectionGraph = ({
           if (!start || !end) return null;
 
           const isHighlighted =
-            hoveredTag === connection.source ||
-            hoveredTag === connection.target;
-          const opacity = isHighlighted
-            ? 0.8
-            : 0.2 + (connection.count / maxConnectionCount) * 0.3;
-          const strokeWidth = 1 + (connection.count / maxConnectionCount) * 2;
+            selectedTag === connection.source ||
+            selectedTag === connection.target;
+          const opacity = selectedTag
+            ? isHighlighted
+              ? 0.9
+              : 0.05
+            : 0.15 + (connection.count / maxConnectionCount) * 0.3;
+          const strokeWidth = isHighlighted
+            ? 2 + (connection.count / maxConnectionCount) * 2
+            : 1 + connection.count / maxConnectionCount;
 
           return (
             <line
@@ -167,7 +194,7 @@ const TagConnectionGraph = ({
               y1={start.y}
               x2={end.x}
               y2={end.y}
-              stroke={isHighlighted ? "#3b82f6" : "#64748b"}
+              stroke={isHighlighted ? "#818cf8" : "#475569"}
               strokeWidth={strokeWidth}
               strokeOpacity={opacity}
             />
@@ -179,55 +206,100 @@ const TagConnectionGraph = ({
           const pos = nodePositions[tag.name];
           if (!pos) return null;
 
-          const isHovered = hoveredTag === tag.name;
-          const nodeSize = 4 + (tag.count / maxCount) * 8;
+          const isSelected = selectedTag === tag.name;
+          const isConnected = selectedTag
+            ? connections.some(
+                (conn) =>
+                  (conn.source === selectedTag && conn.target === tag.name) ||
+                  (conn.target === selectedTag && conn.source === tag.name)
+              )
+            : false;
+          const shouldHighlight = isSelected || isConnected;
+          const nodeSize = 6 + (tag.count / maxCount) * 14;
+
+          // Calculate label position (outside the circle)
+          const angle = Math.atan2(pos.y - centerY, pos.x - centerX);
+          const labelOffset = nodeSize + 8;
+          const labelX = pos.x + Math.cos(angle) * labelOffset;
+          const labelY = pos.y + Math.sin(angle) * labelOffset;
+          const textAnchor = pos.x > centerX ? "start" : "end";
 
           return (
             <g
               key={tag.name}
-              onMouseEnter={() => setHoveredTag(tag.name)}
-              onMouseLeave={() => setHoveredTag(null)}
+              onClick={() => handleNodeClick(tag.name)}
               style={{ cursor: "pointer" }}
             >
+              {/* Node glow for selected */}
+              {isSelected && (
+                <circle
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={nodeSize + 6}
+                  fill="none"
+                  stroke="#818cf8"
+                  strokeWidth={2}
+                  strokeOpacity={0.5}
+                />
+              )}
+              {/* Node circle */}
               <circle
                 cx={pos.x}
                 cy={pos.y}
                 r={nodeSize}
-                fill={isHovered ? "#3b82f6" : "#06b6d4"}
-                stroke={isHovered ? "#60a5fa" : "#0891b2"}
-                strokeWidth={2}
+                fill={
+                  isSelected
+                    ? "#818cf8"
+                    : shouldHighlight
+                    ? "#6366f1"
+                    : "#475569"
+                }
+                stroke={isSelected ? "#a5b4fc" : "#64748b"}
+                strokeWidth={isSelected ? 2 : 1}
+                opacity={
+                  selectedTag && !shouldHighlight && !isSelected ? 0.3 : 1
+                }
               />
+              {/* Tag label */}
               <text
-                x={pos.x}
-                y={pos.y + nodeSize + 12}
-                textAnchor="middle"
-                fill={isHovered ? "#ffffff" : "#94a3b8"}
-                fontSize={10}
-                className="select-none"
+                x={labelX}
+                y={labelY}
+                textAnchor={textAnchor}
+                dominantBaseline="middle"
+                fill={shouldHighlight || isSelected ? "#e2e8f0" : "#64748b"}
+                fontSize={11}
+                className="select-none pointer-events-none"
+                opacity={
+                  selectedTag && !shouldHighlight && !isSelected ? 0.3 : 1
+                }
               >
-                {tag.name.length > 12
-                  ? tag.name.substring(0, 10) + "..."
-                  : tag.name}
+                #{tag.name}
               </text>
             </g>
           );
         })}
       </svg>
 
-      {/* Hover Info */}
-      {hoveredTag && (
-        <div className="absolute bottom-4 left-4 bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm">
-          <div className="font-semibold text-white capitalize">
-            {hoveredTag}
+      {/* Click instruction */}
+      <p className="text-center text-slate-500 text-sm mt-2">
+        Click a node to highlight connections
+      </p>
+
+      {/* Selected tag info */}
+      {selectedTag && (
+        <div className="absolute top-4 right-4 bg-slate-800/90 border border-slate-700 rounded-lg p-3 text-sm backdrop-blur-sm">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-3 h-3 rounded-full bg-indigo-400"></div>
+            <span className="font-semibold text-white">#{selectedTag}</span>
           </div>
           <div className="text-slate-400">
-            {nodePositions[hoveredTag]?.count || 0} questions
+            {nodePositions[selectedTag]?.count || 0} questions
           </div>
-          <div className="text-slate-500 text-xs mt-1">
+          <div className="text-slate-500 text-xs">
             {
               connections.filter(
                 (conn) =>
-                  conn.source === hoveredTag || conn.target === hoveredTag
+                  conn.source === selectedTag || conn.target === selectedTag
               ).length
             }{" "}
             connections

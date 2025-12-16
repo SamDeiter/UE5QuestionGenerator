@@ -520,7 +520,7 @@ const AnalyticsView = ({
                   size={20}
                   className="text-emerald-400"
                 />
-                Tag Connections
+                Tag Connections (Top 20)
               </h3>
               <TagConnectionGraph
                 questions={allQuestions}
