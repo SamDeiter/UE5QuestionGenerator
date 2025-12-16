@@ -1,46 +1,79 @@
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, useCallback } from "react";
 import { ResponsiveContainer } from "recharts";
 
 /**
  * SafeResponsiveContainer - Wrapper that prevents recharts dimension warnings
- * Only renders the chart once the container has valid dimensions
+ * Only renders the chart once the container has valid dimensions (>= 10px)
+ * Uses multiple delayed checks to handle layout settling
  */
-const SafeResponsiveContainer = ({ children, ...props }) => {
+const SafeResponsiveContainer = ({ children, minDimension = 10, ...props }) => {
   const containerRef = useRef(null);
-  const [isReady, setIsReady] = useState(false);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const timeoutsRef = useRef([]);
+
+  const checkDimensions = useCallback(() => {
+    if (containerRef.current) {
+      const { clientWidth, clientHeight } = containerRef.current;
+      if (clientWidth >= minDimension && clientHeight >= minDimension) {
+        setDimensions({ width: clientWidth, height: clientHeight });
+      }
+    }
+  }, [minDimension]);
 
   useLayoutEffect(() => {
-    const checkDimensions = () => {
-      if (containerRef.current) {
-        const { clientWidth, clientHeight } = containerRef.current;
-        if (clientWidth > 0 && clientHeight > 0) {
-          setIsReady(true);
-        }
-      }
-    };
+    // Clear any existing timeouts
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
 
     // Check immediately
     checkDimensions();
 
-    // Also check after a short delay for layout settling
-    const timeoutId = setTimeout(checkDimensions, 100);
+    // Multiple delayed checks to handle various layout settling scenarios
+    const delays = [50, 150, 300];
+    delays.forEach((delay) => {
+      const timeoutId = setTimeout(checkDimensions, delay);
+      timeoutsRef.current.push(timeoutId);
+    });
 
     // Use ResizeObserver for dynamic updates
-    const observer = new ResizeObserver(checkDimensions);
+    const observer = new ResizeObserver(() => {
+      // Debounced check after resize
+      const resizeTimeout = setTimeout(checkDimensions, 50);
+      timeoutsRef.current.push(resizeTimeout);
+    });
+
     if (containerRef.current) {
       observer.observe(containerRef.current);
     }
 
     return () => {
-      clearTimeout(timeoutId);
+      timeoutsRef.current.forEach(clearTimeout);
       observer.disconnect();
     };
-  }, []);
+  }, [checkDimensions]);
+
+  const isReady =
+    dimensions.width >= minDimension && dimensions.height >= minDimension;
 
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+    <div
+      ref={containerRef}
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        minWidth: 0,
+        minHeight: 0,
+      }}
+    >
       {isReady ? (
-        <ResponsiveContainer {...props} minWidth={0} minHeight={0}>
+        <ResponsiveContainer
+          {...props}
+          width="100%"
+          height="100%"
+          minWidth={0}
+          minHeight={0}
+        >
           {children}
         </ResponsiveContainer>
       ) : (
