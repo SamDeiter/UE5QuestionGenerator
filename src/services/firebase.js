@@ -224,6 +224,11 @@ export const signInWithEmail = async (email, password) => {
 
 // --- Firestore Helpers ---
 
+// PERFORMANCE: In-memory cache for getAllQuestionsFromFirestore
+let _questionsCache = null;
+let _questionsCacheTimestamp = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Internal save function (used by queue processor)
  */
@@ -251,6 +256,9 @@ const saveQuestionToFirestoreInternal = async (question) => {
   // Set the document (overwrite if exists, create if new)
   await setDoc(docRef, payload, { merge: true });
   console.log(`Question ${question.uniqueId} saved to Firestore.`);
+
+  // Invalidate cache so next load gets fresh data
+  _questionsCache = null;
 
   // Log event to Analytics
   if (analytics) {
@@ -337,16 +345,39 @@ export const getQuestionsFromFirestore = async () => {
 /**
  * Retrieves ALL questions from Firestore (for shared database view).
  * All authenticated users can see all questions for review purposes.
+ * Uses in-memory caching for faster repeat loads.
  * @param {number} maxResults - Maximum number of questions to retrieve (default 5000)
+ * @param {boolean} forceRefresh - If true, bypass cache and reload from Firestore
  * @returns {Promise<Array>} Array of question objects.
  */
-export const getAllQuestionsFromFirestore = async (maxResults = 5000) => {
+export const getAllQuestionsFromFirestore = async (
+  maxResults = 5000,
+  forceRefresh = false
+) => {
   try {
     // Require authentication
     if (!auth.currentUser) {
       console.log("⚠️ No user signed in, cannot load questions");
       return [];
     }
+
+    // PERFORMANCE: Return cached data if fresh (within 5 minutes)
+    const now = Date.now();
+    if (
+      !forceRefresh &&
+      _questionsCache &&
+      now - _questionsCacheTimestamp < CACHE_TTL_MS
+    ) {
+      console.log(
+        `⚡ Returning ${_questionsCache.length} cached questions (${Math.round(
+          (now - _questionsCacheTimestamp) / 1000
+        )}s old)`
+      );
+      return _questionsCache;
+    }
+
+    console.log("🔄 Fetching questions from Firestore...");
+    const startTime = performance.now();
 
     // Load ALL questions (not filtered by creatorId)
     const allQuery = query(
@@ -361,12 +392,27 @@ export const getAllQuestionsFromFirestore = async (maxResults = 5000) => {
       questions.push(doc.data());
     });
 
-    console.log(`✅ Loaded ${questions.length} questions from shared database`);
+    const duration = Math.round(performance.now() - startTime);
+    console.log(
+      `✅ Loaded ${questions.length} questions from Firestore in ${duration}ms`
+    );
+
+    // Update cache
+    _questionsCache = questions;
+    _questionsCacheTimestamp = now;
+
     return questions;
   } catch (error) {
     console.error("Error getting all questions from Firestore:", error);
     return [];
   }
+};
+
+// Export function to invalidate cache (call after saves/deletes)
+export const invalidateQuestionsCache = () => {
+  _questionsCache = null;
+  _questionsCacheTimestamp = 0;
+  console.log("🗑️ Questions cache invalidated");
 };
 
 // PERFORMANCE: Paginated question loading
