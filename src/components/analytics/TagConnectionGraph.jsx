@@ -43,8 +43,8 @@ const TagConnectionGraph = ({
       if (svgRef.current) {
         const parent = svgRef.current.parentElement;
         if (parent && parent.clientWidth > 0) {
-          // Use 70% of parent width
-          const size = Math.floor(parent.clientWidth * 0.7);
+          // Use 65% of parent width
+          const size = Math.floor(parent.clientWidth * 0.65);
           setDimensions({
             width: size,
             height: size, // Make it square
@@ -194,7 +194,7 @@ const TagConnectionGraph = ({
   const centerY = dimensions.height / 2;
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className="flex flex-col items-center mx-auto">
       {/* View Toggle - Centered */}
       <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700 mb-4">
         <button
