@@ -206,12 +206,45 @@ const AnalyticsView = ({
       .filter((d) => d.value > 0)
       .sort((a, b) => b.value - a.value);
 
-    // Difficulty breakdown
-    const difficultyData = CATEGORY_KEYS.map((key) => ({
-      name: key,
-      value: questions.filter((q) => q.difficulty === key).length,
-      fill: DIFFICULTY_COLORS[key],
-    })).filter((d) => d.value > 0);
+    // Difficulty breakdown - normalize all difficulty values to base type
+    // Helper to normalize any difficulty format to a base level
+    const getDifficultyBase = (difficulty) => {
+      if (!difficulty) return null;
+      const d = difficulty.toString().toLowerCase().trim();
+      if (d.includes("easy") || d.includes("beginner")) return "Beginner";
+      if (d.includes("medium") || d.includes("intermediate"))
+        return "Intermediate";
+      if (d.includes("hard") || d.includes("expert") || d.includes("advanced"))
+        return "Expert";
+      return null;
+    };
+
+    // Count questions by normalized difficulty
+    const difficultyCounts = questions.reduce((acc, q) => {
+      const base = getDifficultyBase(q.difficulty);
+      if (base) {
+        acc[base] = (acc[base] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    const difficultyData = [
+      {
+        name: "Beginner",
+        value: difficultyCounts["Beginner"] || 0,
+        fill: "#22c55e",
+      },
+      {
+        name: "Intermediate",
+        value: difficultyCounts["Intermediate"] || 0,
+        fill: "#eab308",
+      },
+      {
+        name: "Expert",
+        value: difficultyCounts["Expert"] || 0,
+        fill: "#ef4444",
+      },
+    ].filter((d) => d.value > 0);
 
     // Status breakdown
     const statusCounts = {
