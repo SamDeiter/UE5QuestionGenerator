@@ -10,20 +10,6 @@
 - Proposed: Single Firestore source of truth + simple counts object
 - Complexity reduction: ~50%
 
-### 2. Fix Remaining 14 Lint Warnings
-
-**Run:** `npm run lint`
-
-- Unused variables and missing dependencies
-- Low effort, high hygiene
-
-### 3. Set Up Pre-Commit Hooks
-
-**File:** Add husky + lint-staged config
-
-- Auto-lint on commit
-- Prevent regressions
-
 ---
 
 ## 🎯 Feature Backlog
@@ -37,7 +23,17 @@
 
 ---
 
-## ✅ Recently Completed (Dec 12)
+## ✅ Recently Completed (Dec 16)
+
+- [x] **Fixed all 14 ESLint warnings** - 100% code hygiene achievement
+  - Removed unused imports (getAnalytics, getSecureItem)
+  - Fixed React Hook dependency arrays
+  - Prefixed intentionally unused parameters
+- [x] **Set up pre-commit hooks** with husky + lint-staged
+  - Auto-lints all staged files before commit
+  - Prevents regression of code quality issues
+
+## ✅ Previously Completed (Dec 12)
 
 - [x] Fixed hardcoded API key (security)
 - [x] Removed tracked .env files from git
