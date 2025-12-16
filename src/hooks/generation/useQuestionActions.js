@@ -133,7 +133,7 @@ Output in Markdown Table format.`;
         setStatus('Critiquing...');
 
         try {
-            const { score, text, rewrite, changes } = await generateCritique(effectiveApiKey, q);
+            const { score, text, rewrite, improvedScore, changes } = await generateCritique(effectiveApiKey, q);
 
             // Track critique attempts
             const previousAttempts = q.critiqueAttempts || 0;
@@ -151,6 +151,7 @@ Output in Markdown Table format.`;
                     critiqueScore: score,
                     suggestedRewrite: rewrite,
                     rewriteChanges: changes,
+                    improvedScore: improvedScore, // Score for the improved version
                     critiqueAttempts: newAttemptCount,
                     status: 'rejected',
                     rejectionReason: 'low_score_after_retries',
@@ -165,6 +166,7 @@ Output in Markdown Table format.`;
                     critiqueScore: score,
                     suggestedRewrite: rewrite,
                     rewriteChanges: changes,
+                    improvedScore: improvedScore, // Score for the improved version
                     critiqueAttempts: newAttemptCount
                 }));
 

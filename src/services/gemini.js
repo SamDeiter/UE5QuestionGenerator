@@ -250,15 +250,18 @@ export const generateCritique = async (apiKey, q) => {
     
     MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this structure:
     {
-        "score": number, // 0-100 (Integer only) - Use the FULL range appropriately
+        "originalScore": number, // 0-100 score for the ORIGINAL question (as provided)
         "critique": "string", // Detailed feedback with specific suggestions
         "rewrite": {
             "question": "string", // Improved question text
             "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
             "correct": "string" // Correct letter (A, B, C, or D)
         },
+        "improvedScore": number, // 0-100 estimated score for the IMPROVED question (after your changes)
         "changes": "string" // Brief explanation of what was changed and why
     }
+    
+    NOTE: The "improvedScore" should be HIGHER than "originalScore" to demonstrate the improvement.
 
     Question: ${q.question}
     Options: ${optionsStr}
@@ -305,9 +308,10 @@ export const generateCritique = async (apiKey, q) => {
     );
 
     return {
-      score: finalScore,
-      text: result.critique || result.text, // Handle potential schema drift
+      score: result.originalScore || result.score || finalScore, // Handle both new and legacy formats
+      text: result.critique || result.text,
       rewrite: result.rewrite,
+      improvedScore: result.improvedScore, // New: score for the improved version
       changes: result.changes,
     };
   } catch (e) {

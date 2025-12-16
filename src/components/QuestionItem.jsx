@@ -213,7 +213,7 @@ const QuestionItem = ({
                     correctLetter:
                       q.suggestedRewrite.correct || q.correctLetter,
                     tags: q.suggestedRewrite.tags || q.tags,
-                    critiqueScore: null, // Improved version hasn't been critiqued yet
+                    critiqueScore: q.improvedScore || null, // AI's estimated score for the improved version
                   }
                 : null
             }
