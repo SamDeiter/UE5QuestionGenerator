@@ -41,6 +41,7 @@ const ContextToolbar = ({
   const dataMenuRef = useRef(null);
   const [tagMenuOpen, setTagMenuOpen] = useState(false);
   const tagMenuRef = useRef(null);
+  const [confirmTagAll, setConfirmTagAll] = useState(false);
 
   // Click outside handler for Data menu
   useEffect(() => {
@@ -172,16 +173,35 @@ const ContextToolbar = ({
             name="discipline" // Required for handleChange
             value={config.discipline}
             onChange={handleChange}
-            className="bg-transparent text-xs text-slate-200 font-medium outline-none border-none cursor-pointer focus:ring-0 hover:text-white transition-colors"
+            className="bg-slate-800 text-xs text-slate-200 font-medium outline-none border-none cursor-pointer focus:ring-0 hover:text-white transition-colors"
           >
-            <option value="">All Disciplines</option>
-            <option value="Worldbuilding">Worldbuilding</option>
-            <option value="Game Dev">Game Dev</option>
-            <option value="Look Dev">Look Dev</option>
-            <option value="Tech Art">Tech Art</option>
-            <option value="VFX">VFX</option>
-            <option value="Animation">Animation</option>
-            <option value="Programming">Programming</option>
+            <option value="" className="bg-slate-800 text-slate-200">
+              All Disciplines
+            </option>
+            <option
+              value="Worldbuilding"
+              className="bg-slate-800 text-slate-200"
+            >
+              Worldbuilding
+            </option>
+            <option value="Game Dev" className="bg-slate-800 text-slate-200">
+              Game Dev
+            </option>
+            <option value="Look Dev" className="bg-slate-800 text-slate-200">
+              Look Dev
+            </option>
+            <option value="Tech Art" className="bg-slate-800 text-slate-200">
+              Tech Art
+            </option>
+            <option value="VFX" className="bg-slate-800 text-slate-200">
+              VFX
+            </option>
+            <option value="Animation" className="bg-slate-800 text-slate-200">
+              Animation
+            </option>
+            <option value="Programming" className="bg-slate-800 text-slate-200">
+              Programming
+            </option>
           </select>
         </div>
         <FilterButton
@@ -278,7 +298,7 @@ const ContextToolbar = ({
             {config.discipline && counts.pending > 40 && (
               <button
                 onClick={() => onTrimExcess(config.discipline)}
-                className="px-2 py-1 text-[10px] font-medium rounded border border-orange-500/50 text-orange-400 hover:bg-orange-500/20 flex items-center gap-1 transition-colors"
+                className="px-2 py-1 text-xs font-medium rounded border border-orange-500/50 text-orange-400 hover:bg-orange-500/20 flex items-center gap-1 transition-colors"
                 title={`Trim pending questions in ${config.discipline} to 40`}
               >
                 <Icon name="scissors" size={12} /> Trim Excess
@@ -288,11 +308,32 @@ const ContextToolbar = ({
             {/* Tag All Pending - Show if discipline selected and has pending */}
             {config.discipline && counts.pending > 0 && (
               <button
-                onClick={() => onAutoTagAll(config.discipline)}
-                className="px-2 py-1 text-[10px] font-medium rounded border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20 flex items-center gap-1 transition-colors"
-                title={`Auto-generate tags for all ${counts.pending} pending questions in ${config.discipline}`}
+                onClick={() => {
+                  if (confirmTagAll) {
+                    onAutoTagAll(config.discipline, effectiveApiKey);
+                    setConfirmTagAll(false);
+                  } else {
+                    setConfirmTagAll(true);
+                    // Auto-reset after 3 seconds if not confirmed
+                    setTimeout(() => setConfirmTagAll(false), 3000);
+                  }
+                }}
+                className={`px-3 py-1.5 text-xs font-bold rounded border transition-colors flex items-center gap-1.5 ${
+                  confirmTagAll
+                    ? "border-red-500 bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-900/50"
+                    : "border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20"
+                }`}
+                title={
+                  confirmTagAll
+                    ? "Click again to confirm tagging all questions"
+                    : `Auto-generate tags for all ${counts.pending} pending questions in ${config.discipline}`
+                }
               >
-                <Icon name="tag" size={12} /> Tag All Pending
+                <Icon
+                  name={confirmTagAll ? "alert-triangle" : "tag"}
+                  size={12}
+                />
+                {confirmTagAll ? "Are you sure?" : "Tag All Pending"}
               </button>
             )}
           </>
@@ -335,7 +376,7 @@ const ContextToolbar = ({
           {tagMenuOpen && (
             <div className="absolute right-0 top-full mt-1 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
               <div className="p-2 border-b border-slate-700 bg-slate-900/50">
-                <span className="text-[10px] font-bold uppercase text-slate-500">
+                <span className="text-xs font-bold uppercase text-slate-300">
                   Filter by Tags (OR)
                 </span>
               </div>
@@ -350,10 +391,10 @@ const ContextToolbar = ({
                           setFilterTags(filterTags.filter((t) => t !== tag));
                         else setFilterTags([...filterTags, tag]);
                       }}
-                      className={`text-[10px] px-2 py-1 rounded border transition-all ${
+                      className={`text-xs px-2 py-1 rounded border transition-all ${
                         isSelected
-                          ? "bg-orange-500/20 border-orange-500 text-orange-200"
-                          : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"
+                          ? "bg-orange-600 border-orange-400 text-white font-medium"
+                          : "bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-400 hover:bg-slate-700"
                       }`}
                     >
                       {tag}

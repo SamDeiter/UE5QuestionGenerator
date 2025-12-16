@@ -109,5 +109,43 @@ export const generateCritiqueSecure = async (apiKey, question) => {
   return result;
 };
 
+/**
+ * Secure Tags Generator
+ * Uses the same pipeline as generateContentSecure
+ */
+// Secure Tags Generator
+export const generateTagsSecure = async (apiKey, questionText) => {
+  const systemPrompt = `You are an expert UE5 tagger.
+    Generate 3-5 relevant technical tags for the provided question.
+    - Tags should be specific (e.g., "Blueprints", "Lumen", "Niagara").
+    - Return ONLY a valid JSON array of strings.
+    - Example: ["Blueprints", "Actors", "Level Design"]`;
+
+  const userPrompt = `Tags for: "${questionText}"`;
+
+  try {
+    // Reuse the secure generation pipeline (Cloud Function <-> Direct Fallback)
+    const text = await generateContentSecure(
+      apiKey,
+      systemPrompt,
+      userPrompt,
+      () => {}, // No status updates needed for fast tagging
+      0.3, // Temp
+      "gemini-2.0-flash-exp" // Model
+    );
+
+    // Parse result
+    const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
+    return JSON.parse(cleanText);
+  } catch (error) {
+    console.warn("Secure Tagging failed:", error);
+    return [];
+  }
+};
+
 // Re-export other functions from gemini.js for backward compatibility
-export { rewriteQuestion, listModels } from "./gemini.js";
+export {
+  rewriteQuestion,
+  listModels,
+  classifyQuestionDiscipline,
+} from "./gemini.js";

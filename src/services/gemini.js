@@ -112,7 +112,8 @@ export const generateContent = async (
   model = "gemini-2.0-flash"
 ) => {
   // Note: If effectiveKey is "", the platform runtime will inject the correct key.
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${effectiveKey}`;
+  const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const url = effectiveKey ? `${baseUrl}?key=${effectiveKey}` : baseUrl;
 
   const payload = {
     contents: [{ parts: [{ text: userPrompt }] }],
@@ -264,7 +265,10 @@ export const generateCritique = async (apiKey, q) => {
     Correct: ${q.correct}`;
 
   // 3. API Call
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+  // 3. API Call
+  const baseUrl =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
+  const url = apiKey ? `${baseUrl}?key=${apiKey}` : baseUrl;
 
   const data = await fetchWithRetry(url, {
     method: "POST",
@@ -364,7 +368,9 @@ export const rewriteQuestion = async (apiKey, q, critiqueText) => {
     q.question
   }\nOptions: ${JSON.stringify(q.options)}\nCorrect: ${q.correct}`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+  const baseUrl =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
+  const url = apiKey ? `${baseUrl}?key=${apiKey}` : baseUrl;
 
   const data = await fetchWithRetry(url, {
     method: "POST",
@@ -400,7 +406,9 @@ export const classifyQuestionDiscipline = async (apiKey, questionText) => {
 
   const userPrompt = `Classify this question: "${questionText}"`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+  const baseUrl =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
+  const url = apiKey ? `${baseUrl}?key=${apiKey}` : baseUrl;
 
   const data = await fetchWithRetry(url, {
     method: "POST",
@@ -430,7 +438,9 @@ export const generateTagsForQuestion = async (apiKey, questionText) => {
 
   const userPrompt = `Tags for: "${questionText}"`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+  const baseUrl =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
+  const url = apiKey ? `${baseUrl}?key=${apiKey}` : baseUrl;
 
   const data = await fetchWithRetry(url, {
     method: "POST",
@@ -461,7 +471,8 @@ export const generateTagsForQuestion = async (apiKey, questionText) => {
  * @returns {Promise<string[]>} List of model names
  */
 export const listModels = async (apiKey) => {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+  const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
+  const url = apiKey ? `${baseUrl}?key=${apiKey}` : baseUrl;
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`List Models Failed: ${response.status}`);

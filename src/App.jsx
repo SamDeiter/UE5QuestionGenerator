@@ -147,6 +147,7 @@ const App = () => {
     handleDeleteAllQuestions,
     checkAndStoreQuestions,
     unifiedQuestions,
+    handleUpdateQuestion, // Persistent update handler
   } = useQuestionManager(config, showMessage);
 
   // 2.5. Crash Recovery - detect and restore from cloud backup
@@ -372,6 +373,7 @@ const App = () => {
     uniqueFilteredQuestions,
     setQuestions,
     handleUpdateStatus,
+    handleUpdateQuestion, // Pass persistent handler
     handleCritique,
     showMessage,
   });
@@ -633,8 +635,7 @@ const App = () => {
           onBulkMove: handleBulkMove,
           onAutoClassify: handleAutoClassify, // Added
           onAutoTag: handleAutoTag, // Added
-          onAutoTagAll: (discipline) =>
-            handleAutoTagAll(discipline, effectiveApiKey), // Added
+          onAutoTagAll: handleAutoTagAll, // Added
           effectiveApiKey: effectiveApiKey, // Added
           selectedIds: selectedIds, // Added
           handleChange, // Pass config handler for Discipline selector
@@ -667,6 +668,7 @@ const App = () => {
           toggleSelection,
           handleTrimExcess, // Added
           handleBulkMove, // Added
+          handleUpdateQuestion, // Added persistent handler
         }}
         viewRouterState={{
           currentReviewIndex,

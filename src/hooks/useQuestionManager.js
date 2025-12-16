@@ -232,6 +232,21 @@ export const useQuestionManager = (config, showMessage) => {
     [updateQuestionInState, config.creatorName]
   );
 
+  // Generic persisted update handler
+  const handleUpdateQuestion = useCallback(
+    (id, updates) => {
+      updateQuestionInState(id, (q) => {
+        const updatedQ = { ...q, ...updates };
+        // Sync to Firestore
+        saveQuestionToFirestore(updatedQ).catch((err) =>
+          console.error("Firestore sync failed:", err)
+        );
+        return updatedQ;
+      });
+    },
+    [updateQuestionInState]
+  );
+
   // Statistics - count both pending and accepted questions for generation target
   const approvedCounts = useMemo(() => {
     const counts = CATEGORY_KEYS.reduce(
@@ -447,5 +462,6 @@ export const useQuestionManager = (config, showMessage) => {
     handleDeleteAllQuestions,
     checkAndStoreQuestions,
     unifiedQuestions,
+    handleUpdateQuestion, // Added persistent update handler
   };
 };

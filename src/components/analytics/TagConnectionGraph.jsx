@@ -35,6 +35,30 @@ const TagConnectionGraph = ({
     return TAG_COLORS[index % TAG_COLORS.length];
   };
 
+  // Determine dimensions for SVG - MUST BE DEFINED BEFORE nodePositions
+  const [dimensions, setDimensions] = useState({ width: 600, height: 600 });
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (svgRef.current) {
+        const parent = svgRef.current.parentElement;
+        if (parent && parent.clientWidth > 0) {
+          setDimensions({
+            width: parent.clientWidth,
+            height: parent.clientWidth, // Make it square
+          });
+        }
+      }
+    };
+    // Initial delay to let layout settle
+    const timer = setTimeout(updateDimensions, 100);
+    window.addEventListener("resize", updateDimensions);
+    return () => {
+      window.removeEventListener("resize", updateDimensions);
+      clearTimeout(timer);
+    };
+  }, []);
+
   // Calculate tag co-occurrences and sort by CONNECTIONS
   const { tags, connections } = useMemo(() => {
     const tagCounts = {};
@@ -125,13 +149,12 @@ const TagConnectionGraph = ({
 
   // Calculate node positions (circular layout)
   const nodePositions = useMemo(() => {
-    const dimensions = {
-      width: svgRef.current?.clientWidth || 600,
-      height: svgRef.current?.clientHeight || 600,
-    };
-    const centerX = dimensions.width / 2;
-    const centerY = dimensions.height / 2;
-    const radius = Math.min(dimensions.width, dimensions.height) / 2 - 80;
+    const w = dimensions.width || 600;
+    const h = dimensions.height || 600;
+    const centerX = w / 2;
+    const centerY = h / 2;
+    // Reduce scale to 75% of available space to be less "in your face"
+    const radius = (Math.min(w, h) / 2 - 40) * 0.75;
 
     const positions = {};
     tags.forEach((tag, index) => {
@@ -143,26 +166,9 @@ const TagConnectionGraph = ({
       };
     });
     return positions;
-  }, [tags]);
+  }, [tags, dimensions]);
 
   // Handle node click - removed as per instruction
-
-  // Determine dimensions for SVG
-  const [dimensions, setDimensions] = useState({ width: 600, height: 600 });
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (svgRef.current) {
-        const parent = svgRef.current.parentElement;
-        setDimensions({
-          width: parent ? parent.clientWidth : 600,
-          height: parent ? parent.clientWidth : 600, // Make it square
-        });
-      }
-    };
-    updateDimensions();
-    window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
-  }, []);
 
   if (tags.length === 0) {
     return (

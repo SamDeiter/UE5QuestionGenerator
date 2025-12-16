@@ -1,5 +1,10 @@
 import { useCallback } from "react";
 import { QUALITY_PASS_THRESHOLD, TOAST_DURATION } from "../utils/constants";
+import { getSecureItem } from "../utils/secureStorage";
+import {
+  generateTagsSecure as generateTagsForQuestion,
+  classifyQuestionDiscipline,
+} from "../services/geminiSecure";
 
 /**
  * Hook for managing review mode bulk actions.
@@ -17,6 +22,7 @@ export const useReviewActions = ({
   uniqueFilteredQuestions,
   setQuestions,
   handleUpdateStatus,
+  handleUpdateQuestion, // Added persisted update handler
   handleCritique,
   showMessage,
 }) => {
@@ -177,20 +183,19 @@ export const useReviewActions = ({
       const ids = Array.from(selectedIds);
       let count = 0;
 
-      setQuestions((prev) =>
-        prev.map((q) => {
-          if (ids.includes(q.id) || ids.includes(q.uniqueId)) {
-            // Check both id and uniqueId
-            count++;
-            return {
-              ...q,
-              discipline: newDiscipline,
-              modifiedAt: new Date().toISOString(),
-            };
-          }
-          return q;
-        })
+      // Identify questions to move
+      const questionsToMove = uniqueFilteredQuestions.filter(
+        (q) => ids.includes(q.id) || ids.includes(q.uniqueId)
       );
+
+      // Persist changes using handleUpdateQuestion
+      questionsToMove.forEach((q) => {
+        handleUpdateQuestion(q.id, {
+          discipline: newDiscipline,
+          modifiedAt: new Date().toISOString(),
+        });
+        count++;
+      });
 
       showMessage(`Moved ${count} questions to ${newDiscipline}`, 3000);
     },
@@ -219,8 +224,8 @@ export const useReviewActions = ({
       );
 
       let processed = 0;
-      // Import dynamically to avoid circular dependencies if any (though gemini.js is a service)
-      const { classifyQuestionDiscipline } = await import("../services/gemini");
+      // Static import used
+      // const { classifyQuestionDiscipline } = await import("../services/gemini");
 
       for (const q of questionsToProcess) {
         try {
@@ -229,7 +234,7 @@ export const useReviewActions = ({
             q.question
           );
           if (discipline) {
-            handleUpdateStatus(q.id, null, null, { discipline }); // Update only discipline
+            handleUpdateQuestion(q.id, { discipline }); // Use persisted handler
             processed++;
           }
         } catch (error) {
@@ -247,11 +252,6 @@ export const useReviewActions = ({
    */
   const handleAutoTagAll = useCallback(
     async (discipline, apiKey) => {
-      if (!apiKey) {
-        showMessage("❌ Please configure a Gemini API key first.", 4000);
-        return;
-      }
-
       const pendingQuestions = uniqueFilteredQuestions.filter(
         (q) => q.discipline === discipline && q.status === "pending"
       );
@@ -261,18 +261,22 @@ export const useReviewActions = ({
         return;
       }
 
-      if (
-        !window.confirm(
-          `Generate tags for ${pendingQuestions.length} pending questions in ${discipline}?\n\nThis may take a few moments.`
-        )
-      ) {
-        return;
-      }
-
       let processed = 0;
-      const { generateTagsForQuestion } = await import("../services/gemini");
+      let errors = 0;
+      let lastErrorMessage = "";
 
-      for (const q of pendingQuestions) {
+      showMessage(
+        `Starting rate-limited tagging for ${pendingQuestions.length} questions. This will take time (approx 8.5s per item) to respect Cloud limits.`,
+        TOAST_DURATION.LONG
+      );
+
+      for (const [index, q] of pendingQuestions.entries()) {
+        // Enforce Cloud Function Rate Limit (Strict 10 per minute = 1 request every 6s)
+        // Using 8.5s to be safe and account for network latency/server clock variance
+        if (index > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 8500));
+        }
+
         try {
           const newTags = await generateTagsForQuestion(apiKey, q.question);
           if (newTags && newTags.length > 0) {
@@ -284,15 +288,32 @@ export const useReviewActions = ({
                 ...newTags.map((t) => t.replace(/^#/, "")),
               ]),
             ];
-            handleUpdateStatus(q.id, null, null, { tags: mergedTags });
+            handleUpdateQuestion(q.id, { tags: mergedTags }); // Use persisted handler
             processed++;
           }
         } catch (error) {
           console.error("Tag generation failed for:", q.id, error);
+          errors++;
+          lastErrorMessage = error.message;
         }
       }
 
-      showMessage(`✓ Added tags to ${processed} questions!`, 4000);
+      if (errors > 0 && processed === 0) {
+        showMessage(
+          `Failed to tag questions. Error: ${lastErrorMessage || "Unknown"}`,
+          TOAST_DURATION.EXTENDED
+        );
+      } else if (errors > 0) {
+        showMessage(
+          `✓ Tagged ${processed} questions, but ${errors} failed. Check console for details.`,
+          TOAST_DURATION.LONG
+        );
+      } else {
+        showMessage(
+          `✓ Successfully added tags to ${processed} questions!`,
+          TOAST_DURATION.LONG
+        );
+      }
     },
     [uniqueFilteredQuestions, handleUpdateStatus, showMessage]
   );
@@ -303,10 +324,7 @@ export const useReviewActions = ({
   const handleAutoTag = useCallback(
     async (selectedIds, apiKey) => {
       if (!selectedIds || selectedIds.size === 0) return;
-      if (!apiKey) {
-        showMessage("API Key required for auto-tagging.", 3000);
-        return;
-      }
+      // Removed strict apiKey check to allow internal env
 
       const ids = Array.from(selectedIds);
       const questionsToProcess = uniqueFilteredQuestions.filter(
@@ -326,7 +344,7 @@ export const useReviewActions = ({
             const existingTags = q.tags || [];
             const mergedTags = [...new Set([...existingTags, ...tags])];
 
-            handleUpdateStatus(q.id, null, null, { tags: mergedTags });
+            handleUpdateQuestion(q.id, { tags: mergedTags }); // Use persisted handler
             processed++;
           }
         } catch (error) {
