@@ -24,6 +24,7 @@ import StatCard from "./analytics/StatCard";
 import EmptyState from "./analytics/EmptyState";
 import DisciplineDetailPanel from "./analytics/DisciplineDetailPanel";
 import TagCloudAnalytics from "./analytics/TagCloudAnalytics";
+import TagConnectionGraph from "./analytics/TagConnectionGraph";
 
 // Define discipline list from tagTaxonomy
 const DISCIPLINES = Object.keys(TAGS_BY_DISCIPLINE);
@@ -511,7 +512,22 @@ const AnalyticsView = ({
               />
             </div>
 
-            {/* Discipline Cards Grid */}
+            {/* Tag Connection Graph */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-slate-300 mb-6 flex items-center gap-2">
+                <Icon
+                  name="git-branch"
+                  size={20}
+                  className="text-emerald-400"
+                />
+                Tag Connections
+              </h3>
+              <TagConnectionGraph
+                questions={allQuestions}
+                selectedDiscipline={selectedDiscipline}
+                showAllDisciplines={!selectedDiscipline}
+              />
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {DISCIPLINES.map((disc) => {
                 const count = (analytics.questions || []).filter(
