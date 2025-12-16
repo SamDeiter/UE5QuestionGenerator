@@ -1,5 +1,5 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReviewProgressBar from "./ReviewProgressBar";
 import QuestionHeader from "./QuestionItem/QuestionHeader";
 import QuestionContent from "./QuestionItem/QuestionContent";
@@ -35,6 +35,13 @@ const QuestionItem = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(q.question);
   const [showImprovementModal, setShowImprovementModal] = useState(false);
+
+  // Auto-open modal when critique completes (with or without improvements)
+  useEffect(() => {
+    if (q.critique && q.critiqueScore !== undefined) {
+      setShowImprovementModal(true);
+    }
+  }, [q.critique, q.critiqueScore]);
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -104,23 +111,6 @@ const QuestionItem = ({
               showMessage={showMessage}
             />
           </div>
-
-          {/* AI Improvement Badge */}
-          {q.suggestedRewrite && (
-            <button
-              onClick={() => setShowImprovementModal(true)}
-              className="px-3 py-2 rounded-lg font-bold text-sm bg-green-600/20 text-green-300 hover:bg-green-600/30 border-2 border-green-500/50 hover:border-green-400 transition-all flex items-center gap-2 animate-pulse hover:animate-none"
-              title="AI improvement available"
-            >
-              <Icon name="sparkles" size={16} />
-              <span>
-                +
-                {(q.suggestedRewrite.critiqueScore || 0) -
-                  (q.critiqueScore || 0)}{" "}
-                pts
-              </span>
-            </button>
-          )}
         </div>
 
         {/* Review Progress Bar - Only in Review Mode */}
@@ -204,26 +194,35 @@ const QuestionItem = ({
 
         <QuestionMetadata q={q} />
 
-        {/* AI Improvement Modal */}
-        {showImprovementModal && q.suggestedRewrite && (
+        {/* AI Improvement Modal - Shows critique + improvements (if any) */}
+        {showImprovementModal && q.critique && (
           <ImprovementModal
             originalQuestion={q}
-            improvedQuestion={{
-              ...q,
-              question: q.suggestedRewrite.question || q.question,
-              options: q.suggestedRewrite.options || q.options,
-              optionA: q.suggestedRewrite.options?.A || q.options?.A,
-              optionB: q.suggestedRewrite.options?.B || q.options?.B,
-              optionC: q.suggestedRewrite.options?.C || q.options?.C,
-              optionD: q.suggestedRewrite.options?.D || q.options?.D,
-              correct: q.suggestedRewrite.correct || q.correct,
-              correctLetter: q.suggestedRewrite.correct || q.correctLetter,
-              tags: q.suggestedRewrite.tags || q.tags,
-              critiqueScore:
-                q.suggestedRewrite.critiqueScore || q.critiqueScore,
-            }}
-            changesExplanation={q.rewriteChanges || "AI improvements applied"}
-            critiqueText={q.critique || "No critique available"}
+            improvedQuestion={
+              q.suggestedRewrite
+                ? {
+                    ...q,
+                    question: q.suggestedRewrite.question || q.question,
+                    options: q.suggestedRewrite.options || q.options,
+                    optionA: q.suggestedRewrite.options?.A || q.options?.A,
+                    optionB: q.suggestedRewrite.options?.B || q.options?.B,
+                    optionC: q.suggestedRewrite.options?.C || q.options?.C,
+                    optionD: q.suggestedRewrite.options?.D || q.options?.D,
+                    correct: q.suggestedRewrite.correct || q.correct,
+                    correctLetter:
+                      q.suggestedRewrite.correct || q.correctLetter,
+                    tags: q.suggestedRewrite.tags || q.tags,
+                    critiqueScore:
+                      q.suggestedRewrite.critiqueScore || q.critiqueScore,
+                  }
+                : null
+            }
+            changesExplanation={
+              q.suggestedRewrite
+                ? q.rewriteChanges || "AI improvements applied"
+                : null
+            }
+            critiqueText={q.critique}
             critiqueScore={q.critiqueScore || 0}
             onApply={async (improved) => {
               // Apply improvements to question
