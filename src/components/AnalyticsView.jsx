@@ -38,28 +38,28 @@ const TIME_RANGES = [
   { id: "all", label: "All", days: null },
 ];
 
-// Color palettes
+// Color palettes - using highly distinct, contrasting colors
 const DISCIPLINE_COLORS = {
   // Full names
-  "Technical Art": "#f97316",
-  "Lighting & Rendering": "#eab308",
-  "Look Development (Materials)": "#84cc16",
-  "Animation & Rigging": "#22c55e",
-  "VFX (Niagara)": "#06b6d4",
-  "World Building & Level Design": "#3b82f6",
-  Blueprints: "#8b5cf6",
-  "Game Logic & Systems": "#ec4899",
-  "C++ Programming": "#f43f5e",
-  Networking: "#6366f1",
+  "Technical Art": "#f97316", // Orange
+  "Lighting & Rendering": "#eab308", // Yellow
+  "Look Development (Materials)": "#facc15", // Bright yellow (was lime, too similar to Animation)
+  "Animation & Rigging": "#14b8a6", // Teal (was green, too similar to Look Dev)
+  "VFX (Niagara)": "#22d3ee", // Bright cyan
+  "World Building & Level Design": "#6366f1", // Indigo
+  Blueprints: "#a855f7", // Purple
+  "Game Logic & Systems": "#ec4899", // Pink
+  "C++ Programming": "#dc2626", // Crimson red (was similar pink, now distinct red)
+  Networking: "#8b5cf6", // Violet
 
   // Abbreviated names (for compatibility with question data)
-  "Tech Art": "#f97316",
-  "Look Dev": "#84cc16",
-  Animation: "#22c55e",
-  VFX: "#06b6d4",
-  Worldbuilding: "#3b82f6",
-  "Game Dev": "#ec4899",
-  Programming: "#f43f5e",
+  "Tech Art": "#f97316", // Orange
+  "Look Dev": "#facc15", // Bright yellow
+  Animation: "#14b8a6", // Teal
+  VFX: "#22d3ee", // Bright cyan
+  Worldbuilding: "#6366f1", // Indigo
+  "Game Dev": "#ec4899", // Pink
+  Programming: "#dc2626", // Crimson red
 };
 
 const DIFFICULTY_COLORS = {
