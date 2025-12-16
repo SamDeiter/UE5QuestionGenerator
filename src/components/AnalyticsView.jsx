@@ -87,10 +87,12 @@ const AnalyticsView = ({
   const analytics = getAnalytics();
   const tokenStats = getTokenStats();
 
-  // Convert allQuestionsMap to flat array for TagCloudAnalytics
+  // PERFORMANCE: Stable reference for allQuestions - only update when map size actually changes
+  const mapSize = allQuestionsMap?.size || 0;
   const allQuestions = useMemo(() => {
+    if (!allQuestionsMap || mapSize === 0) return [];
     return Array.from(allQuestionsMap.values()).flat();
-  }, [allQuestionsMap]);
+  }, [allQuestionsMap, mapSize]);
 
   // Auto-start tutorial if not completed (only runs once on mount)
   useEffect(() => {
