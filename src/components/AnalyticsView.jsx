@@ -622,14 +622,11 @@ const AnalyticsView = ({
                 />
                 Tag Connections (Top 20)
               </h3>
-              {/* Center wrapper */}
-              <div className="flex justify-center">
-                <TagConnectionGraph
-                  questions={allQuestions}
-                  selectedDiscipline={selectedDiscipline}
-                  showAllDisciplines={!selectedDiscipline}
-                />
-              </div>
+              <TagConnectionGraph
+                questions={allQuestions}
+                selectedDiscipline={selectedDiscipline}
+                showAllDisciplines={!selectedDiscipline}
+              />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {DISCIPLINES.map((disc) => {

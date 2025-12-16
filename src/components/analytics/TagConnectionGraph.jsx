@@ -194,7 +194,7 @@ const TagConnectionGraph = ({
   const centerY = dimensions.height / 2;
 
   return (
-    <div className="flex flex-col items-center mx-auto">
+    <div className="w-full flex flex-col items-center">
       {/* View Toggle - Centered */}
       <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700 mb-4">
         <button
