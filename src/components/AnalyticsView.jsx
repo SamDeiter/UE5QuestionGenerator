@@ -630,7 +630,7 @@ const AnalyticsView = ({
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {DISCIPLINES.map((disc) => {
-                const count = (analytics.questions || []).filter(
+                const count = allQuestions.filter(
                   (q) => q.discipline === disc
                 ).length;
                 const color = DISCIPLINE_COLORS[disc] || "#64748b";
