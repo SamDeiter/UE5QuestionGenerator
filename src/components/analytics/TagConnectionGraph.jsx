@@ -36,15 +36,15 @@ const TagConnectionGraph = ({
   };
 
   // Determine dimensions for SVG - MUST BE DEFINED BEFORE nodePositions
-  const [dimensions, setDimensions] = useState({ width: 800, height: 800 }); // Increased from 450x450
+  const [dimensions, setDimensions] = useState({ width: 1200, height: 1200 }); // Increased for larger display
 
   useEffect(() => {
     const updateDimensions = () => {
       if (svgRef.current) {
         const parent = svgRef.current.parentElement;
         if (parent && parent.clientWidth > 0) {
-          // Cap at 1000px (was 500px, now 2x larger)
-          const size = Math.min(parent.clientWidth, 1000);
+          // Cap at 1400px (much larger)
+          const size = Math.min(parent.clientWidth, 1400);
           setDimensions({
             width: size,
             height: size, // Make it square
@@ -151,8 +151,8 @@ const TagConnectionGraph = ({
 
   // Calculate node positions (circular layout)
   const nodePositions = useMemo(() => {
-    const w = dimensions.width || 800;
-    const h = dimensions.height || 800;
+    const w = dimensions.width || 1200;
+    const h = dimensions.height || 1200;
     const centerX = w / 2;
     const centerY = h / 2;
     // Use full radius (removed 0.75 scale reduction)
