@@ -304,7 +304,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                         borderColor: "#334155",
                       }}
                     />
-                    <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                    <Bar cursor="default" dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -349,8 +349,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                         borderColor: "#334155",
                       }}
                     />
-                    <Bar
-                      dataKey="rate"
+                    <Bar cursor="default" dataKey="rate"
                       fill="#6366f1"
                       radius={[4, 4, 0, 0]}
                       name="Acceptance Rate"

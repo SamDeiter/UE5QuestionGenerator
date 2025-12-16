@@ -51,7 +51,7 @@ const DistributionCharts = ({ questions }) => {
           Difficulty Distribution
         </h3>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <PieChart>
               <Pie
                 data={difficultyData}
@@ -91,7 +91,7 @@ const DistributionCharts = ({ questions }) => {
           Questions by Discipline
         </h3>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <BarChart
               data={disciplineData}
               layout="vertical"
@@ -118,7 +118,7 @@ const DistributionCharts = ({ questions }) => {
                   color: "#f1f5f9",
                 }}
               />
-              <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+              <Bar cursor="default" dataKey="value" radius={[0, 4, 4, 0]}>
                 {disciplineData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}

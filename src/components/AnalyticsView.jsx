@@ -382,7 +382,12 @@ const AnalyticsView = ({
                 </h3>
                 <div className="h-64">
                   {statusData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer
+                      width="100%"
+                      height="100%"
+                      minWidth={0}
+                      minHeight={0}
+                    >
                       <PieChart>
                         <Pie
                           data={statusData}
@@ -421,7 +426,12 @@ const AnalyticsView = ({
                 </h3>
                 <div className="h-64">
                   {difficultyData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer
+                      width="100%"
+                      height="100%"
+                      minWidth={0}
+                      minHeight={0}
+                    >
                       <BarChart
                         data={difficultyData}
                         margin={{ top: 10, right: 10, left: 0, bottom: 30 }}
@@ -440,7 +450,11 @@ const AnalyticsView = ({
                             border: "1px solid #334155",
                           }}
                         />
-                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        <Bar
+                          dataKey="value"
+                          radius={[4, 4, 0, 0]}
+                          activeBar={false}
+                        >
                           {difficultyData.map((entry, idx) => (
                             <Cell key={idx} fill={entry.fill} />
                           ))}
@@ -462,7 +476,12 @@ const AnalyticsView = ({
               </h3>
               <div className="h-64">
                 {recentGenerations.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                    minWidth={0}
+                    minHeight={0}
+                  >
                     <AreaChart
                       data={recentGenerations}
                       margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
@@ -555,7 +574,12 @@ const AnalyticsView = ({
               </h3>
               <div className="h-96">
                 {disciplineData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                    minWidth={0}
+                    minHeight={0}
+                  >
                     <BarChart
                       data={disciplineData}
                       layout="vertical"
@@ -586,6 +610,8 @@ const AnalyticsView = ({
                         radius={[0, 4, 4, 0]}
                         fill="none"
                         isAnimationActive={false}
+                        activeBar={false}
+                        cursor="default"
                       >
                         {disciplineData.map((entry, idx) => (
                           <Cell key={idx} fill={entry.fill} />
@@ -695,7 +721,12 @@ const AnalyticsView = ({
               </h3>
               <div className="h-64">
                 {qualityDistribution.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                    minWidth={0}
+                    minHeight={0}
+                  >
                     <BarChart
                       data={qualityDistribution}
                       margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
@@ -710,7 +741,11 @@ const AnalyticsView = ({
                         }}
                         formatter={(value) => [value, "Questions"]}
                       />
-                      <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                      <Bar
+                        dataKey="count"
+                        radius={[4, 4, 0, 0]}
+                        activeBar={false}
+                      >
                         {qualityDistribution.map((entry, idx) => (
                           <Cell key={idx} fill={entry.fill} />
                         ))}

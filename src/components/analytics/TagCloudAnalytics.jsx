@@ -81,14 +81,17 @@ const TagCloudAnalytics = ({
     return minSize + normalized * (maxSize - minSize);
   };
 
-  // Get color based on tag frequency - using brighter, more vibrant colors for better readability
+  // Get color based on tag frequency - 7 categories for better granularity
   const getTagColor = (count) => {
     const maxCount = sortedTags[0]?.count || 1;
     const ratio = count / maxCount;
-    if (ratio > 0.7) return "text-amber-300"; // Bright yellow/gold for most used
-    if (ratio > 0.4) return "text-emerald-300"; // Bright green
-    if (ratio > 0.2) return "text-sky-300"; // Bright light blue
-    return "text-fuchsia-300"; // Bright pink for least used
+    if (ratio > 0.85) return "text-red-400"; // Very high - bright red
+    if (ratio > 0.7) return "text-orange-400"; // High - orange
+    if (ratio > 0.55) return "text-yellow-300"; // Above average - yellow
+    if (ratio > 0.4) return "text-lime-300"; // Average - lime
+    if (ratio > 0.25) return "text-cyan-300"; // Below average - cyan
+    if (ratio > 0.1) return "text-purple-300"; // Low - purple
+    return "text-pink-300"; // Very low - pink
   };
 
   if (sortedTags.length === 0) {
@@ -167,19 +170,28 @@ const TagCloudAnalytics = ({
         </div>
       )}
 
-      {/* Legend */}
-      <div className="mt-4 flex justify-center gap-4 text-xs text-slate-500">
+      {/* Legend - 7 categories */}
+      <div className="mt-4 flex flex-wrap justify-center gap-3 text-xs text-slate-500">
         <span>
-          <span className="text-amber-300">●</span> Most frequent
+          <span className="text-red-400">●</span> Very High (85%+)
         </span>
         <span>
-          <span className="text-emerald-300">●</span> Frequent
+          <span className="text-orange-400">●</span> High (70-85%)
         </span>
         <span>
-          <span className="text-sky-300">●</span> Moderate
+          <span className="text-yellow-300">●</span> Above Avg (55-70%)
         </span>
         <span>
-          <span className="text-fuchsia-300">●</span> Rare
+          <span className="text-lime-300">●</span> Average (40-55%)
+        </span>
+        <span>
+          <span className="text-cyan-300">●</span> Below Avg (25-40%)
+        </span>
+        <span>
+          <span className="text-purple-300">●</span> Low (10-25%)
+        </span>
+        <span>
+          <span className="text-pink-300">●</span> Very Low (&lt;10%)
         </span>
       </div>
     </div>
