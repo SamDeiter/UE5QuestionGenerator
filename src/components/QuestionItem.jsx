@@ -94,6 +94,7 @@ const QuestionItem = ({
               getDiffBadgeColor={getDiffBadgeColor}
               onKickBack={onKickBack}
               appMode={appMode}
+              onOpenCritiqueModal={() => setShowImprovementModal(true)}
             />
           </div>
 

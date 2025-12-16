@@ -206,40 +206,51 @@ const ImprovementModal = ({
 
               {/* Tags */}
               {(originalTags.length > 0 || improvedTags.length > 0) && (
-                <>
+                <div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">
                     Tags
                   </div>
                   <div className="grid grid-cols-2 gap-4">
+                    {/* Original Tags */}
                     <div className="flex flex-wrap gap-1.5">
-                      {originalTags.map((tag, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-0.5 bg-slate-700/50 border border-slate-600/50 rounded text-xs text-slate-300"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {improvedTags.map((tag, idx) => {
-                        const isNew = newTags.includes(tag);
-                        return (
+                      {originalTags.length > 0 ? (
+                        originalTags.map((tag, idx) => (
                           <span
                             key={idx}
-                            className={`px-2 py-0.5 rounded text-xs ${
-                              isNew
-                                ? "bg-green-600/30 border border-green-500/50 text-green-200"
-                                : "bg-slate-700/50 border border-slate-600/50 text-slate-300"
-                            }`}
+                            className="px-2 py-0.5 bg-slate-700/50 border border-slate-600/50 rounded text-xs text-slate-300"
                           >
                             #{tag}
                           </span>
-                        );
-                      })}
+                        ))
+                      ) : (
+                        <span className="text-xs text-slate-500 italic">No tags</span>
+                      )}
+                    </div>
+
+                    {/* Improved Tags */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {improvedTags.length > 0 ? (
+                        improvedTags.map((tag, idx) => {
+                          const isNew = newTags.includes(tag);
+                          return (
+                            <span
+                              key={idx}
+                              className={`px-2 py-0.5 rounded text-xs ${
+                                isNew
+                                  ? "bg-green-600/30 border border-green-500/50 text-green-200"
+                                  : "bg-slate-700/50 border border-slate-600/50 text-slate-300"
+                              }`}
+                            >
+                              #{tag}
+                            </span>
+                          );
+                        })
+                      ) : (
+                        <span className="text-xs text-slate-500 italic">No tags</span>
+                      )}
                     </div>
                   </div>
-                </>
+                </div>
               )}
             </div>
           )}
