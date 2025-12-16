@@ -36,7 +36,7 @@ import { useNavigation } from "./hooks/useNavigation";
 import { useFiltering } from "./hooks/useFiltering";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useToast } from "./hooks/useToast";
-import { useBulkSelection } from "./hooks/useBulkSelection";
+// useBulkSelection removed - bulk selection feature no longer used
 import { useAuth } from "./hooks/useAuth";
 import { useModalState } from "./hooks/useModalState";
 import { useAppHandlers } from "./hooks/useAppHandlers";
@@ -399,18 +399,7 @@ const App = () => {
     handleLoadFromFirestore,
   });
 
-  // Bulk selection (extracted to useBulkSelection hook)
-  const {
-    selectedIds,
-    toggleSelection,
-    clearSelection,
-    selectAll,
-    bulkUpdateStatus,
-  } = useBulkSelection({
-    items: uniqueFilteredQuestions,
-    handleUpdateStatus,
-    showMessage,
-  });
+  // Bulk selection feature removed
 
   // Keyboard Shortcuts (extracted to useKeyboardShortcuts hook)
   useKeyboardShortcuts({
@@ -644,8 +633,7 @@ const App = () => {
             onAutoClassify: handleAutoClassify, // Added
             onAutoTag: handleAutoTag, // Added
             onAutoTagAll: handleAutoTagAll, // Added
-            effectiveApiKey: effectiveApiKey, // Added
-            selectedIds: selectedIds, // Added
+            effectiveApiKey: effectiveApiKey,
             handleChange, // Pass config handler for Discipline selector
           }}
           showHistory={showHistory}
@@ -670,17 +658,13 @@ const App = () => {
             handleLanguageSwitch,
             handleDelete,
             handleManualUpdate,
-            selectAll,
-            clearSelection,
-            bulkUpdateStatus,
-            toggleSelection,
+
             handleTrimExcess, // Added
             handleBulkMove, // Added
             handleUpdateQuestion, // Added persistent handler
           }}
           viewRouterState={{
             currentReviewIndex,
-            selectedIds,
             translationMap,
             filterByCreator,
             filteredQuestions,

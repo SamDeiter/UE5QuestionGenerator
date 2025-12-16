@@ -35,7 +35,6 @@ const ContextToolbar = ({
   onAutoTag,
   onAutoTagAll,
   effectiveApiKey,
-  selectedIds,
 }) => {
   const [dataMenuOpen, setDataMenuOpen] = useState(false);
   const dataMenuRef = useRef(null);
@@ -236,108 +235,48 @@ const ContextToolbar = ({
       </div>
 
       <div className="flex items-center gap-3">
-        {/* SELECTION ACTIONS */}
-        {selectedIds?.size > 0 ? (
-          <>
-            <span className="text-[10px] font-bold text-indigo-400 bg-indigo-900/30 px-2 py-1 rounded border border-indigo-900/50">
-              {selectedIds.size} Selected
-            </span>
-
-            {/* Auto-Classify */}
+        {/* GLOBAL ACTIONS */}
+        <>
+          {/* Trim Excess - Only show if discipline selected and pending > 40 */}
+          {config.discipline && counts.pending > 40 && (
             <button
-              onClick={() => onAutoClassify(selectedIds, effectiveApiKey)}
-              disabled={isProcessing}
-              className="px-2 py-1 text-[10px] font-medium rounded border border-indigo-500/50 text-indigo-300 hover:bg-indigo-500/20 flex items-center gap-1 transition-colors"
-              title="Auto-detect Discipline using Gemini"
+              onClick={() => onTrimExcess(config.discipline)}
+              className="px-2 py-1 text-xs font-medium rounded border border-orange-500/50 text-orange-400 hover:bg-orange-500/20 flex items-center gap-1 transition-colors"
+              title={`Trim pending questions in ${config.discipline} to 40`}
             >
-              <Icon name="cpu" size={12} /> Auto-Classify
+              <Icon name="scissors" size={12} /> Trim Excess
             </button>
+          )}
 
-            {/* Auto-Tag */}
+          {/* Tag All Pending - Show if discipline selected and has pending */}
+          {config.discipline && counts.pending > 0 && (
             <button
-              onClick={() => onAutoTag(selectedIds, effectiveApiKey)}
-              disabled={isProcessing}
-              className="px-2 py-1 text-[10px] font-medium rounded border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20 flex items-center gap-1 transition-colors"
-              title="Auto-generate Tags using Gemini"
-            >
-              <Icon name="hash" size={12} /> Auto-Tag
-            </button>
-
-            {/* Move To Dropdown */}
-            <div className="relative group">
-              <button className="px-2 py-1 text-[10px] font-medium rounded border border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center gap-1 transition-colors">
-                Move To... <Icon name="chevron-down" size={10} />
-              </button>
-              <div className="absolute right-0 top-full mt-1 w-32 bg-slate-800 border border-slate-700 rounded shadow-xl hidden group-hover:block z-50">
-                {[
-                  "Worldbuilding",
-                  "Game Dev",
-                  "Look Dev",
-                  "Tech Art",
-                  "VFX",
-                  "Animation",
-                  "Programming",
-                ].map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => onBulkMove(selectedIds, d)}
-                    className="w-full text-left px-3 py-1.5 text-[10px] text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="h-4 w-px bg-slate-700"></div>
-          </>
-        ) : (
-          /* GLOBAL ACTIONS used when nothing selected */
-          <>
-            {/* Trim Excess - Only show if discipline selected and pending > 40 */}
-            {config.discipline && counts.pending > 40 && (
-              <button
-                onClick={() => onTrimExcess(config.discipline)}
-                className="px-2 py-1 text-xs font-medium rounded border border-orange-500/50 text-orange-400 hover:bg-orange-500/20 flex items-center gap-1 transition-colors"
-                title={`Trim pending questions in ${config.discipline} to 40`}
-              >
-                <Icon name="scissors" size={12} /> Trim Excess
-              </button>
-            )}
-
-            {/* Tag All Pending - Show if discipline selected and has pending */}
-            {config.discipline && counts.pending > 0 && (
-              <button
-                onClick={() => {
-                  if (confirmTagAll) {
-                    onAutoTagAll(config.discipline, effectiveApiKey);
-                    setConfirmTagAll(false);
-                  } else {
-                    setConfirmTagAll(true);
-                    // Auto-reset after 3 seconds if not confirmed
-                    setTimeout(() => setConfirmTagAll(false), 3000);
-                  }
-                }}
-                className={`px-3 py-1.5 text-xs font-bold rounded border transition-colors flex items-center gap-1.5 ${
-                  confirmTagAll
-                    ? "border-red-500 bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-900/50"
-                    : "border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20"
-                }`}
-                title={
-                  confirmTagAll
-                    ? "Click again to confirm tagging all questions"
-                    : `Auto-generate tags for all ${counts.pending} pending questions in ${config.discipline}`
+              onClick={() => {
+                if (confirmTagAll) {
+                  onAutoTagAll(config.discipline, effectiveApiKey);
+                  setConfirmTagAll(false);
+                } else {
+                  setConfirmTagAll(true);
+                  // Auto-reset after 3 seconds if not confirmed
+                  setTimeout(() => setConfirmTagAll(false), 3000);
                 }
-              >
-                <Icon
-                  name={confirmTagAll ? "alert-triangle" : "tag"}
-                  size={12}
-                />
-                {confirmTagAll ? "Are you sure?" : "Tag All Pending"}
-              </button>
-            )}
-          </>
-        )}
+              }}
+              className={`px-3 py-1.5 text-xs font-bold rounded border transition-colors flex items-center gap-1.5 ${
+                confirmTagAll
+                  ? "border-red-500 bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-900/50"
+                  : "border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20"
+              }`}
+              title={
+                confirmTagAll
+                  ? "Click again to confirm tagging all questions"
+                  : `Auto-generate tags for all ${counts.pending} pending questions in ${config.discipline}`
+              }
+            >
+              <Icon name={confirmTagAll ? "alert-triangle" : "tag"} size={12} />
+              {confirmTagAll ? "Are you sure?" : "Tag All Pending"}
+            </button>
+          )}
+        </>
 
         <div className="h-4 w-px bg-slate-700"></div>
 

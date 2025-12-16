@@ -319,11 +319,11 @@ export const useReviewActions = ({
 
   /**
    * Auto-generates tags for selected questions using Gemini.
+   * Uses the secure Cloud Function via geminiSecure.
    */
   const handleAutoTag = useCallback(
     async (selectedIds, apiKey) => {
       if (!selectedIds || selectedIds.size === 0) return;
-      // Removed strict apiKey check to allow internal env
 
       const ids = Array.from(selectedIds);
       const questionsToProcess = uniqueFilteredQuestions.filter(
@@ -333,8 +333,7 @@ export const useReviewActions = ({
       showMessage(`Tagging ${questionsToProcess.length} questions...`, 3000);
 
       let processed = 0;
-      const { generateTagsForQuestion } = await import("../services/gemini");
-
+      // Use the secure function already imported at top of file
       for (const q of questionsToProcess) {
         try {
           const tags = await generateTagsForQuestion(apiKey, q.question);
@@ -343,7 +342,7 @@ export const useReviewActions = ({
             const existingTags = q.tags || [];
             const mergedTags = [...new Set([...existingTags, ...tags])];
 
-            handleUpdateQuestion(q.id, { tags: mergedTags }); // Use persisted handler
+            handleUpdateQuestion(q.id, { tags: mergedTags });
             processed++;
           }
         } catch (error) {

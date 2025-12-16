@@ -28,9 +28,6 @@ const QuestionItem = ({
   isProcessing,
   appMode,
   showMessage,
-  isSelected,
-  onToggleSelect,
-  showCheckbox,
   isAdmin = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -79,25 +76,6 @@ const QuestionItem = ({
         q.difficulty
       )} ${getStatusStyle(q.status)}`}
     >
-      {/* Selection Button */}
-      {showCheckbox && (
-        <div className="absolute top-2 right-2 z-20">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleSelect();
-            }}
-            className={`px-2 py-1 text-[10px] font-medium rounded border transition-all ${
-              isSelected
-                ? "bg-indigo-600 border-indigo-500 text-white"
-                : "bg-slate-800/50 border-slate-600 text-slate-400 hover:bg-slate-700 hover:border-slate-500"
-            }`}
-          >
-            {isSelected ? "✓ Selected" : "Select"}
-          </button>
-        </div>
-      )}
-
       <div className="flex flex-col gap-2 mb-3 pl-6">
         <div className="flex justify-between items-start">
           <div className="flex-1">

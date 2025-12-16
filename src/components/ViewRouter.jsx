@@ -7,7 +7,6 @@ const DatabaseView = React.lazy(() => import("./DatabaseView"));
 const ReviewMode = React.lazy(() => import("./ReviewMode"));
 const TestView = React.lazy(() => import("./TestView"));
 const PromptPlayground = React.lazy(() => import("./PromptPlayground"));
-import BulkActionBar from "./BulkActionBar";
 import QuestionList from "./QuestionList";
 
 const LoadingSpinner = () => (
@@ -107,15 +106,10 @@ const ViewRouter = ({
     handleLanguageSwitch,
     handleDelete,
     handleManualUpdate,
-    selectAll,
-    clearSelection,
-    bulkUpdateStatus,
-    toggleSelection,
   } = handlers;
 
   const {
     currentReviewIndex,
-    selectedIds,
     translationMap,
     filterByCreator,
     filteredQuestions,
@@ -183,9 +177,6 @@ const ViewRouter = ({
           isProcessing={isProcessing}
           showMessage={showMessage}
           onStartTutorial={() => onStartTutorial("review")}
-          // Selection props for bulk actions
-          selectedIds={state.selectedIds}
-          toggleSelection={handlers.toggleSelection}
         />
       ) : appMode === "review" && uniqueFilteredQuestions.length === 0 ? (
         /* NEW: Empty state for Review mode with CTA */
@@ -198,17 +189,9 @@ const ViewRouter = ({
         />
       ) : (
         <>
-          <BulkActionBar
-            selectedCount={selectedIds.size}
-            onSelectAll={selectAll}
-            onClearSelection={clearSelection}
-            onAcceptAll={() => bulkUpdateStatus("accepted")}
-            onRejectAll={() => bulkUpdateStatus("rejected", "other")}
-          />
           <QuestionList
             questions={uniqueFilteredQuestions}
             translationMap={translationMap}
-            selectedIds={selectedIds}
             appMode={appMode}
             isProcessing={isProcessing}
             onUpdateStatus={handleUpdateStatus}
@@ -221,7 +204,6 @@ const ViewRouter = ({
             onDelete={handleDelete}
             onUpdateQuestion={handleManualUpdate}
             showMessage={showMessage}
-            toggleSelection={toggleSelection}
           />
         </>
       )}

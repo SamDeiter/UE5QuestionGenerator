@@ -19,9 +19,6 @@ const ReviewMode = ({
   isProcessing,
   showMessage,
   onStartTutorial,
-  // Selection props for bulk actions
-  selectedIds,
-  toggleSelection,
 }) => {
   // Auto-start tutorial if not completed (and compliance modals are done)
   useEffect(() => {
@@ -119,10 +116,6 @@ const ReviewMode = ({
           isProcessing={isProcessing}
           appMode="review"
           showMessage={showMessage}
-          // Selection props
-          isSelected={selectedIds?.has(currentQuestion.id) || false}
-          onToggleSelect={() => toggleSelection?.(currentQuestion.id)}
-          showCheckbox={true}
         />
       </div>
     </div>

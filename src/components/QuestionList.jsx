@@ -5,7 +5,6 @@ import QuestionItem from "./QuestionItem";
 const QuestionList = ({
   questions,
   translationMap,
-  selectedIds,
   appMode,
   isProcessing,
   onUpdateStatus,
@@ -18,7 +17,6 @@ const QuestionList = ({
   onDelete,
   onUpdateQuestion,
   showMessage,
-  toggleSelection,
 }) => {
   return (
     <Virtuoso
@@ -42,9 +40,6 @@ const QuestionList = ({
             isProcessing={isProcessing}
             appMode={appMode}
             showMessage={showMessage}
-            isSelected={selectedIds.has(q.id)}
-            onToggleSelect={() => toggleSelection(q.id)}
-            showCheckbox={appMode === "review"}
           />
         </div>
       )}
