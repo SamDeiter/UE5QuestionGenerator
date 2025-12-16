@@ -239,14 +239,20 @@ const TagConnectionGraph = ({
           />
         ))}
 
-        {/* Connections - Static Style */}
+        {/* Connections - Colored by strength (red = more, green = fewer) */}
         {connections.map((connection, index) => {
           const start = nodePositions[connection.source];
           const end = nodePositions[connection.target];
           if (!start || !end) return null;
 
-          const opacity = 0.15 + (connection.count / maxConnectionCount) * 0.3;
-          const strokeWidth = 1 + connection.count / maxConnectionCount;
+          // Calculate color: green (few connections) to red (many connections)
+          const ratio = connection.count / maxConnectionCount;
+          const red = Math.floor(ratio * 255);
+          const green = Math.floor((1 - ratio) * 255);
+          const lineColor = `rgb(${red}, ${green}, 20)`; // Adding a bit of blue for depth
+
+          const opacity = 0.3 + ratio * 0.5; // More connections = more opaque
+          const strokeWidth = 1 + ratio * 2;
 
           return (
             <line
@@ -255,7 +261,7 @@ const TagConnectionGraph = ({
               y1={start.y}
               x2={end.x}
               y2={end.y}
-              stroke="#64748b" // Slate 500
+              stroke={lineColor}
               strokeWidth={strokeWidth}
               strokeOpacity={opacity}
             />
