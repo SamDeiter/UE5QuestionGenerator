@@ -112,15 +112,23 @@ const ImprovementModal = ({
                 </div>
               </div>
 
-              {/* Column Headers */}
+              {/* Column Headers with Scores */}
               <div className="grid grid-cols-2 gap-4 mb-3">
                 <div className="flex items-center justify-between px-2">
                   <h3 className="text-xs font-bold text-slate-400 flex items-center gap-1.5 uppercase tracking-wide">
                     <Icon name="file-text" size={14} />
                     Original
                   </h3>
-                  <span className="px-2 py-0.5 bg-slate-700 rounded text-xs font-bold text-slate-400">
-                    {originalQuestion.critiqueScore || "N/A"}
+                  <span
+                    className={`px-2 py-0.5 rounded text-xs font-bold border ${
+                      critiqueScore >= 90
+                        ? "bg-green-900/50 border-green-500 text-green-300"
+                        : critiqueScore >= 70
+                        ? "bg-yellow-900/50 border-yellow-500 text-yellow-300"
+                        : "bg-red-900/50 border-red-500 text-red-300"
+                    }`}
+                  >
+                    {critiqueScore}/100
                   </span>
                 </div>
                 <div className="flex items-center justify-between px-2">
@@ -128,9 +136,28 @@ const ImprovementModal = ({
                     <Icon name="check-circle" size={14} />
                     Improved
                   </h3>
-                  <span className="px-2 py-0.5 bg-green-600/30 border border-green-500/50 rounded text-xs font-bold text-green-300">
-                    {improvedQuestion.critiqueScore || "N/A"}
-                  </span>
+                  {improvedQuestion?.critiqueScore ? (
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs font-bold border ${
+                        improvedQuestion.critiqueScore >= 90
+                          ? "bg-green-900/50 border-green-500 text-green-300"
+                          : improvedQuestion.critiqueScore >= 70
+                          ? "bg-yellow-900/50 border-yellow-500 text-yellow-300"
+                          : "bg-orange-900/50 border-orange-500 text-orange-300"
+                      }`}
+                    >
+                      {improvedQuestion.critiqueScore}/100
+                      {scoreDelta > 0 && (
+                        <span className="ml-1 text-green-400">
+                          (+{scoreDelta})
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 bg-slate-700/50 rounded text-xs text-slate-500 italic">
+                      Not scored
+                    </span>
+                  )}
                 </div>
               </div>
 
