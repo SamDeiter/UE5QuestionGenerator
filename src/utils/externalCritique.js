@@ -53,31 +53,36 @@ export const exportQuestionsForCritique = (questions) => {
  * Generate the prompt for ChatGPT/Gemini
  */
 const generateCritiquePrompt = (questionCount) => {
-  return `I need you to critique ${questionCount} Unreal Engine 5 technical questions and assign scores.
+  return `I need you to score ${questionCount} Unreal Engine 5 technical questions.
 
-For EACH question, provide:
-1. originalScore (0-100): Quality score for the question AS PROVIDED
-2. improvedScore (0-100): Estimated score IF improvements were applied (should be higher)
+For EACH question, provide a single quality score (0-100).
 
 SCORING GUIDELINES:
 - 90-100: Excellent - Clear, accurate, well-written, strong distractors
-- 80-89: Good - Minor issues but professionally acceptable
+- 80-89: Good - Minor issues but professionally acceptable  
 - 70-79: Acceptable - Needs polish but fundamentally sound
 - 60-69: Needs Work - Multiple issues requiring revision
 - Below 60: Poor - Major problems
 
-OUTPUT FORMAT (JSON):
+REQUIRED OUTPUT FORMAT (JSON):
 [
   {
     "index": 0,
     "id": "question_id_here",
-    "originalScore": 75,
-    "improvedScore": 92
+    "originalScore": 88
   },
-  ...
+  {
+    "index": 1,
+    "id": "another_id",
+    "originalScore": 75
+  }
 ]
 
-IMPORTANT: Return ONLY the JSON array, no other text.
+CRITICAL: 
+- Return ONLY the JSON array, no other text
+- Include EVERY question from the input file
+- Use the EXACT "id" values from the input
+- Score should be the "originalScore" field
 
 I'll paste the questions in my next message.`;
 };
@@ -104,13 +109,19 @@ export const importCritiqueScores = async (jsonText, db, showMessage) => {
 
     for (const item of scores) {
       try {
-        await updateDoc(doc(db, "questions", item.id), {
+        const updateData = {
           critiqueScore: item.originalScore,
-          improvedScore: item.improvedScore,
           critique: `AI scored this question ${item.originalScore}/100`,
           lastCritiquedAt: new Date().toISOString(),
           critiqueSource: "external_ai",
-        });
+        };
+        
+        // Only add improvedScore if provided
+        if (item.improvedScore) {
+          updateData.improvedScore = item.improvedScore;
+        }
+        
+        await updateDoc(doc(db, "questions", item.id), updateData);
         updated++;
       } catch (error) {
         console.error(`Failed to update ${item.id}:`, error);
@@ -142,8 +153,7 @@ export const downloadScoreTemplate = () => {
     {
       index: 0,
       id: "example_question_id",
-      originalScore: 75,
-      improvedScore: 92,
+      originalScore: 88,
     },
   ];
 
