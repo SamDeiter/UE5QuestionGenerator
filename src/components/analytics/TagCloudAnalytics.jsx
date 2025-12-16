@@ -81,14 +81,14 @@ const TagCloudAnalytics = ({
     return minSize + normalized * (maxSize - minSize);
   };
 
-  // Get color based on tag frequency
+  // Get color based on tag frequency - using brighter, more vibrant colors for better readability
   const getTagColor = (count) => {
     const maxCount = sortedTags[0]?.count || 1;
     const ratio = count / maxCount;
-    if (ratio > 0.7) return "text-blue-400";
-    if (ratio > 0.4) return "text-cyan-400";
-    if (ratio > 0.2) return "text-teal-400";
-    return "text-slate-400";
+    if (ratio > 0.7) return "text-amber-300"; // Bright yellow/gold for most used
+    if (ratio > 0.4) return "text-emerald-300"; // Bright green
+    if (ratio > 0.2) return "text-sky-300"; // Bright light blue
+    return "text-fuchsia-300"; // Bright pink for least used
   };
 
   if (sortedTags.length === 0) {
@@ -170,13 +170,16 @@ const TagCloudAnalytics = ({
       {/* Legend */}
       <div className="mt-4 flex justify-center gap-4 text-xs text-slate-500">
         <span>
-          <span className="text-blue-400">●</span> High frequency
+          <span className="text-amber-300">●</span> Most frequent
         </span>
         <span>
-          <span className="text-cyan-400">●</span> Medium
+          <span className="text-emerald-300">●</span> Frequent
         </span>
         <span>
-          <span className="text-teal-400">●</span> Low
+          <span className="text-sky-300">●</span> Moderate
+        </span>
+        <span>
+          <span className="text-fuchsia-300">●</span> Rare
         </span>
       </div>
     </div>
