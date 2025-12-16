@@ -44,10 +44,10 @@ const DISCIPLINE_COLORS = {
   "Technical Art": "#f97316", // Orange
   "Lighting & Rendering": "#eab308", // Yellow
   "Look Development (Materials)": "#facc15", // Bright yellow (was lime, too similar to Animation)
-  "Animation & Rigging": "#14b8a6", // Teal (was green, too similar to Look Dev)
+  "Animation & Rigging": "#a855f7", // Purple (was teal, too similar to VFX)
   "VFX (Niagara)": "#22d3ee", // Bright cyan
   "World Building & Level Design": "#6366f1", // Indigo
-  Blueprints: "#a855f7", // Purple
+  Blueprints: "#8b5cf6", // Purple (lighter shade)
   "Game Logic & Systems": "#ec4899", // Pink
   "C++ Programming": "#dc2626", // Crimson red (was similar pink, now distinct red)
   Networking: "#8b5cf6", // Violet
@@ -55,7 +55,7 @@ const DISCIPLINE_COLORS = {
   // Abbreviated names (for compatibility with question data)
   "Tech Art": "#f97316", // Orange
   "Look Dev": "#facc15", // Bright yellow
-  Animation: "#14b8a6", // Teal
+  Animation: "#a855f7", // Purple
   VFX: "#22d3ee", // Bright cyan
   Worldbuilding: "#6366f1", // Indigo
   "Game Dev": "#ec4899", // Pink
