@@ -2,9 +2,15 @@
 
 ## Status as of Dec 16, 2025
 
-- **Recharts Warnings Fix**: ✅ **RESOLVED** - Fixed `width(-1)/height(-1)` warnings by passing explicit pixel dimensions to `ResponsiveContainer` instead of percentages.
-- **SafeResponsiveContainer**: ✅ Enhanced with dimension measurement, multiple delayed checks, and explicit pixel-based dimensions.
+- **Recharts Warnings Fix**: ✅ **RESOLVED** - Fixed `width(-1)/height(-1)` warnings by passing explicit pixel dimensions to `ResponsiveContainer`.
+- **JSON Parsing Fix**: ✅ **RESOLVED** - Fixed markdown code block stripping to handle Windows line endings (`\r\n`).
 - **Git**: ✅ All changes committed and pushed to `main`.
+
+## Commits This Session
+
+1. `fix: improve SafeResponsiveContainer dimension detection to prevent recharts warnings`
+2. `fix: use explicit pixel dimensions in ResponsiveContainer to eliminate warnings`
+3. `fix: handle Windows line endings when stripping markdown code blocks from AI response`
 
 ## Previous Session Completed Work
 
