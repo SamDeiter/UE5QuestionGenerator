@@ -166,6 +166,7 @@ const GenerationSettings = ({
                 <option value="VFX">VFX</option>
                 <option value="Animation">Animation</option>
                 <option value="Programming">Programming</option>
+                {/* Updated Categories v2 */}
               </select>
             </div>
 
