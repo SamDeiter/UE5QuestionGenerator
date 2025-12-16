@@ -28,14 +28,28 @@ export const migrateFirestoreScores = async (showMessage) => {
     console.log("🔄 Starting Firestore migration...");
 
     const questionsRef = collection(db, "questions");
+    console.log("📥 Fetching questions from Firestore...");
     const snapshot = await getDocs(questionsRef);
+    console.log(`📊 Found ${snapshot.size} total questions in Firestore`);
 
     let updatedCount = 0;
+    let totalWithCritiques = 0;
+    let alreadyMigrated = 0;
     const updates = [];
 
     snapshot.forEach((docSnap) => {
       const q = docSnap.data();
 
+      // Track questions with critiques
+      if (q.critiqueScore !== undefined && q.critiqueScore !== null) {
+        totalWithCritiques++;
+      }
+      
+      // Track already migrated
+      if (q.improvedScore) {
+        alreadyMigrated++;
+      }
+      
       // Only migrate if has critique, suggested rewrite, and no improvedScore
       if (
         q.critiqueScore !== undefined &&
@@ -53,7 +67,23 @@ export const migrateFirestoreScores = async (showMessage) => {
       }
     });
 
+    // Log summary
+    console.log(`📋 Migration Summary:`);
+    console.log(`   - Total questions: ${snapshot.size}`);
+    console.log(`   - With critiques: ${totalWithCritiques}`);
+    console.log(`   - Already migrated: ${alreadyMigrated}`);
+    console.log(`   - Need migration: ${updatedCount}`);
+    
+    if (updatedCount === 0) {
+      console.log("✅ No questions need migration");
+      if (showMessage) {
+        showMessage("✅ All questions already have improved scores!", 3000);
+      }
+      return { success: true, updated: 0 };
+    }
+    
     // Execute all updates
+    console.log(`⏳ Updating ${updatedCount} questions...`);
     await Promise.all(updates);
 
     console.log(`✅ Migrated ${updatedCount} questions in Firestore`);
