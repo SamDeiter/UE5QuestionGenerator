@@ -149,21 +149,29 @@ const ImprovementModal = ({
               <div className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">
                 Answer Options
               </div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="space-y-1.5">
-                  {["A", "B", "C", "D"].map((letter) => {
-                    const opt =
-                      originalQuestion.options?.[letter] ||
-                      originalQuestion[`option${letter}`] ||
-                      "";
-                    const isCorrect =
-                      originalQuestion.correctLetter === letter ||
-                      originalQuestion.correct === letter;
-                    return (
+              <div className="space-y-1.5 mb-4">
+                {["A", "B", "C", "D"].map((letter) => {
+                  const originalOpt =
+                    originalQuestion.options?.[letter] ||
+                    originalQuestion[`option${letter}`] ||
+                    "";
+                  const improvedOpt =
+                    improvedQuestion.options?.[letter] ||
+                    improvedQuestion[`option${letter}`] ||
+                    "";
+                  const originalCorrect =
+                    originalQuestion.correctLetter === letter ||
+                    originalQuestion.correct === letter;
+                  const improvedCorrect =
+                    improvedQuestion.correctLetter === letter ||
+                    improvedQuestion.correct === letter;
+
+                  return (
+                    <div key={letter} className="grid grid-cols-2 gap-4">
+                      {/* Original Option */}
                       <div
-                        key={letter}
                         className={`p-2 rounded text-xs border ${
-                          isCorrect
+                          originalCorrect
                             ? "bg-green-600/10 border-green-500/40"
                             : "bg-slate-800/40 border-slate-700/40"
                         }`}
@@ -171,25 +179,15 @@ const ImprovementModal = ({
                         <span className="font-bold text-slate-400 mr-1.5">
                           {letter})
                         </span>
-                        <span className="text-white">{opt || "(empty)"}</span>
+                        <span className="text-white">
+                          {originalOpt || "(empty)"}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-                <div className="space-y-1.5">
-                  {["A", "B", "C", "D"].map((letter) => {
-                    const opt =
-                      improvedQuestion.options?.[letter] ||
-                      improvedQuestion[`option${letter}`] ||
-                      "";
-                    const isCorrect =
-                      improvedQuestion.correctLetter === letter ||
-                      improvedQuestion.correct === letter;
-                    return (
+
+                      {/* Improved Option */}
                       <div
-                        key={letter}
                         className={`p-2 rounded text-xs border ${
-                          isCorrect
+                          improvedCorrect
                             ? "bg-green-600/10 border-green-500/40"
                             : "bg-slate-800/40 border-slate-700/40"
                         }`}
@@ -197,11 +195,13 @@ const ImprovementModal = ({
                         <span className="font-bold text-slate-400 mr-1.5">
                           {letter})
                         </span>
-                        <span className="text-white">{opt || "(empty)"}</span>
+                        <span className="text-white">
+                          {improvedOpt || "(empty)"}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Tags */}
