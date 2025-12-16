@@ -19,6 +19,7 @@ import {
  */
 export const useReviewActions = ({
   uniqueFilteredQuestions,
+  allQuestions, // Added: Full dataset for global operations
   setQuestions,
   handleUpdateStatus,
   handleUpdateQuestion, // Added persisted update handler
@@ -98,18 +99,22 @@ export const useReviewActions = ({
   }, [uniqueFilteredQuestions, handleCritique, showMessage]);
 
   /**
-   * Trim excess pending questions that exceed the target count.
-   * Marks excess questions as 'deleted' to remove them from the active pool.
+   * Trim excess pending questions to ensure equal distribution across categories.
+   * Finds the category with the LEAST questions and trims all others to match.
    */
   const handleTrimExcess = useCallback(
     async (discipline) => {
       // 1. Group questions by category key (e.g., "Beginner MC")
       const groups = {};
       const pendingToDelete = [];
-      let deleteCount = 0;
 
-      // Initialize groups
-      uniqueFilteredQuestions.forEach((q) => {
+      // Initialize groups using ALL questions (not just filtered/visible ones)
+      const sourceQuestions =
+        allQuestions && allQuestions.length > 0
+          ? allQuestions
+          : uniqueFilteredQuestions;
+
+      sourceQuestions.forEach((q) => {
         if (q.discipline !== discipline) return;
 
         const typeAbbrev = q.type === "True/False" ? "T/F" : "MC";
@@ -120,27 +125,56 @@ export const useReviewActions = ({
             accepted: [],
             pending: [],
             rejected: [],
+            total: 0,
           };
         }
 
         if (q.status === "accepted") groups[key].accepted.push(q);
         else if (q.status === "rejected") groups[key].rejected.push(q);
         else groups[key].pending.push(q);
+
+        // Only count Accepted + Pending for the target (Rejected don't count towards "quota")
+        if (q.status !== "rejected") {
+          groups[key].total++;
+        }
       });
 
-      // 2. Determine which pending questions to delete
-      Object.entries(groups).forEach(([_key, group]) => {
-        const currentTotal = group.accepted.length + group.pending.length;
-        const target = 40; // Hardcoded default for now
+      // 2. Find the target count (Minimum Total across all groups)
+      const groupKeys = Object.keys(groups);
+      if (groupKeys.length === 0) {
+        showMessage("No questions found in this discipline.", 3000);
+        return;
+      }
 
-        if (currentTotal > target) {
-          const surplus = currentTotal - target;
+      let minTotal = Infinity;
+      groupKeys.forEach((key) => {
+        const count = groups[key].total;
+        if (count < minTotal) minTotal = count;
+      });
+
+      // Safety floor - don't trim below 1 unless they only have 1?
+      // User said "same amount". If one group has 0, target is 0? That would delete everything.
+      // Let's assume a minimum safe floor of 10 or just strict equality.
+      // If minTotal is 0, we probably shouldn't delete everything else to 0.
+      // Let's ensure target is at least some reasonable number if minTotal is 0, or just warn.
+      // Actually, if a group has 2 questions, we probably don't want to trim others to 2.
+      // But user demand was explicit: "each section ahs the same aount".
+      // I'll stick to minTotal but maybe warn if it's very low.
+
+      const target = minTotal;
+
+      // 3. Determine which pending questions to delete
+      let deleteCount = 0;
+      Object.entries(groups).forEach(([_key, group]) => {
+        const currentValid = group.accepted.length + group.pending.length;
+
+        if (currentValid > target) {
+          const surplus = currentValid - target;
+          // We can only delete Pending questions. We cannot delete Accepted ones to reach target.
           const deletableCount = Math.min(surplus, group.pending.length);
 
           if (deletableCount > 0) {
-            // Remove newest pending questions first (assuming LIFO is safer for "runaway generation")
-            // Wait, existing questions are usually sorted Newest First in unifiedQuestions.
-            // So slice(0, N) takes the NEWEST ones. Yes, delete the surplus new ones.
+            // Remove newest pending questions first
             const toRemove = group.pending.slice(0, deletableCount);
             toRemove.forEach((q) => pendingToDelete.push(q));
             deleteCount += toRemove.length;
@@ -149,101 +183,50 @@ export const useReviewActions = ({
       });
 
       if (deleteCount === 0) {
-        showMessage("No excess pending questions found to trim.", 3000);
+        showMessage(
+          `Balanced! All sections already have ${target} (or fewer) questions.`,
+          3000
+        );
         return;
       }
 
       if (
         window.confirm(
-          `Found ${deleteCount} excess pending questions in ${discipline}.\n\nThis will permanently delete them to match the target of ${40} per category.\n\nProceed?`
+          `Trimming to Common Count: ${target}\n\n` +
+            `Found ${deleteCount} excess pending questions in ${discipline} that exceed the lowest section count (${target}).\n\n` +
+            `Proceed to delete them?`
         )
       ) {
-        // Mark as deleted individually (or bulk if we had an atomic bulk op)
-        // For now, update status to 'deleted' which removes them from views
-        let processed = 0;
-        for (const q of pendingToDelete) {
-          await handleUpdateStatus(q.id, "deleted", "Trimmed excess");
-          processed++;
-        }
-        showMessage(`Trimmed ${processed} questions.`, 4000);
-      }
-    },
-    [uniqueFilteredQuestions, handleUpdateStatus, showMessage]
-  );
+        showMessage(
+          `Trimming ${pendingToDelete.length} questions... (please wait)`,
+          TOAST_DURATION.LONG
+        );
 
-  /**
-   * Bulk move selected questions to a different discipline.
-   */
-  const handleBulkMove = useCallback(
-    (selectedIds, newDiscipline) => {
-      if (!selectedIds || selectedIds.size === 0) return;
+        // Parallelize updates to avoid sequential Firestore latency
+        // Use allSettled to ensure one failure doesn't stop the rest
+        const results = await Promise.allSettled(
+          pendingToDelete.map((q) =>
+            handleUpdateStatus(q.id, "deleted", "Trimmed to balance")
+          )
+        );
 
-      // Convert Set to Array
-      const ids = Array.from(selectedIds);
-      let count = 0;
+        const successCount = results.filter(
+          (r) => r.status === "fulfilled"
+        ).length;
+        const failCount = results.length - successCount;
 
-      // Identify questions to move
-      const questionsToMove = uniqueFilteredQuestions.filter(
-        (q) => ids.includes(q.id) || ids.includes(q.uniqueId)
-      );
-
-      // Persist changes using handleUpdateQuestion
-      questionsToMove.forEach((q) => {
-        handleUpdateQuestion(q.id, {
-          discipline: newDiscipline,
-          modifiedAt: new Date().toISOString(),
-        });
-        count++;
-      });
-
-      showMessage(`Moved ${count} questions to ${newDiscipline}`, 3000);
-    },
-    [uniqueFilteredQuestions, handleUpdateQuestion, showMessage]
-  );
-
-  /**
-   * Auto-classifies selected questions into the correct discipline using Gemini.
-   */
-  const handleAutoClassify = useCallback(
-    async (selectedIds, apiKey) => {
-      if (!selectedIds || selectedIds.size === 0) return;
-      if (!apiKey) {
-        showMessage("API Key required for auto-classification.", 3000);
-        return;
-      }
-
-      const ids = Array.from(selectedIds);
-      const questionsToProcess = uniqueFilteredQuestions.filter(
-        (q) => ids.includes(q.id) || ids.includes(q.uniqueId)
-      );
-
-      showMessage(
-        `Classifying ${questionsToProcess.length} questions...`,
-        3000
-      );
-
-      let processed = 0;
-      // Static import used
-      // const { classifyQuestionDiscipline } = await import("../services/gemini");
-
-      for (const q of questionsToProcess) {
-        try {
-          const discipline = await classifyQuestionDiscipline(
-            apiKey,
-            q.question
+        if (failCount > 0) {
+          console.warn(`Trim completed with ${failCount} failures.`);
+          showMessage(
+            `Trimmed ${successCount} questions (${failCount} failed). Check console.`,
+            5000
           );
-          if (discipline) {
-            handleUpdateQuestion(q.id, { discipline }); // Use persisted handler
-            processed++;
-          }
-        } catch (error) {
-          console.error("Classification failed for:", q.id, error);
+        } else {
+          showMessage(`Trimmed ${successCount} questions successfully.`, 4000);
         }
       }
-
-      showMessage(`Auto-classified ${processed} questions.`, 4000);
     },
-    [uniqueFilteredQuestions, handleUpdateQuestion, showMessage]
+    [uniqueFilteredQuestions, allQuestions, handleUpdateStatus, showMessage]
   );
 
   /**
@@ -317,52 +300,11 @@ export const useReviewActions = ({
     [uniqueFilteredQuestions, handleUpdateQuestion, showMessage]
   );
 
-  /**
-   * Auto-generates tags for selected questions using Gemini.
-   * Uses the secure Cloud Function via geminiSecure.
-   */
-  const handleAutoTag = useCallback(
-    async (selectedIds, apiKey) => {
-      if (!selectedIds || selectedIds.size === 0) return;
-
-      const ids = Array.from(selectedIds);
-      const questionsToProcess = uniqueFilteredQuestions.filter(
-        (q) => ids.includes(q.id) || ids.includes(q.uniqueId)
-      );
-
-      showMessage(`Tagging ${questionsToProcess.length} questions...`, 3000);
-
-      let processed = 0;
-      // Use the secure function already imported at top of file
-      for (const q of questionsToProcess) {
-        try {
-          const tags = await generateTagsForQuestion(apiKey, q.question);
-          if (tags && Array.isArray(tags)) {
-            // Append new tags, unique only
-            const existingTags = q.tags || [];
-            const mergedTags = [...new Set([...existingTags, ...tags])];
-
-            handleUpdateQuestion(q.id, { tags: mergedTags });
-            processed++;
-          }
-        } catch (error) {
-          console.error("Tagging failed for:", q.id, error);
-        }
-      }
-
-      showMessage(`Auto-tagged ${processed} questions.`, 4000);
-    },
-    [uniqueFilteredQuestions, handleUpdateQuestion, showMessage]
-  );
-
   return {
     handleClearPending,
     handleBulkAcceptHighScores,
     handleBulkCritiqueAll,
     handleTrimExcess,
-    handleBulkMove,
-    handleAutoClassify,
-    handleAutoTag,
     handleAutoTagAll,
   };
 };

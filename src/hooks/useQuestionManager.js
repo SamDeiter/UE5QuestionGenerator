@@ -9,6 +9,7 @@ import {
 import {
   saveQuestionToFirestore,
   getQuestionsPaginated,
+  deleteQuestionFromFirestore,
 } from "../services/firebase";
 import { logQuestion } from "../utils/analyticsStore";
 import { completeReviewTracking } from "../utils/normalizeQuestion";
@@ -195,56 +196,114 @@ export const useQuestionManager = (config, showMessage) => {
 
   // Status update handler - now accepts optional rejection reason and tracks review time
   const handleUpdateStatus = useCallback(
-    (id, newStatus, rejectionReason = null) => {
-      updateQuestionInState(id, (q) => {
-        // Complete review tracking if status is changing to accepted or rejected
-        let updatedQ = q;
-        if (
-          (newStatus === "accepted" || newStatus === "rejected") &&
-          q.reviewStartedAt
-        ) {
-          updatedQ = completeReviewTracking(q, config.creatorName);
+    async (id, newStatus, rejectionReason = null) => {
+      // Find the question using the map to avoid 'questions' dependency causing expensive rerenders
+      // (allQuestionsMap is updated whenever questions changes)
+      const variants = allQuestionsMap.get(id) || [];
+      const currentQ =
+        variants.find((v) => v.id === id) ||
+        questions.find((q) => q.id === id) ||
+        historicalQuestions.find((q) => q.id === id);
+
+      if (!currentQ) {
+        console.warn(`handleUpdateStatus: Question ${id} not found`);
+        return;
+      }
+
+      // SPECIAL CASE: Hard Delete if status is 'deleted'
+      if (newStatus === "deleted") {
+        try {
+          // Delete from Firestore
+          await deleteQuestionFromFirestore(currentQ.uniqueId || currentQ.id);
+
+          // Remove from local state
+          setQuestions((prev) => prev.filter((q) => q.id !== id));
+          setHistoricalQuestions((prev) => prev.filter((q) => q.id !== id));
+
+          // Log analytics
+          logQuestion({
+            ...currentQ,
+            status: "deleted",
+            deletionReason: rejectionReason || "Status update to deleted",
+            deletedAt: new Date().toISOString(),
+          });
+        } catch (err) {
+          console.error("Failed to delete question:", err);
+          if (showMessage)
+            showMessage("Failed to delete question from cloud.", 3000);
         }
+        return;
+      }
 
-        updatedQ = {
-          ...updatedQ,
-          status: newStatus,
-          critique: newStatus === "accepted" ? null : updatedQ.critique,
-          // Store rejection reason if provided
-          rejectionReason: newStatus === "rejected" ? rejectionReason : null,
-          rejectedAt:
-            newStatus === "rejected" ? new Date().toISOString() : null,
-          // Track acceptance time
-          acceptedAt:
-            newStatus === "accepted"
-              ? new Date().toISOString()
-              : updatedQ.acceptedAt,
-        };
+      // Calculate new state
+      let updatedQ = { ...currentQ };
+      if (
+        (newStatus === "accepted" || newStatus === "rejected") &&
+        currentQ.reviewStartedAt
+      ) {
+        updatedQ = completeReviewTracking(updatedQ, config.creatorName);
+      }
 
-        // Sync to Firestore
-        saveQuestionToFirestore(updatedQ).catch((err) =>
-          console.error("Firestore sync failed:", err)
-        );
+      updatedQ = {
+        ...updatedQ,
+        status: newStatus,
+        critique: newStatus === "accepted" ? null : updatedQ.critique,
+        rejectionReason: newStatus === "rejected" ? rejectionReason : null,
+        rejectedAt: newStatus === "rejected" ? new Date().toISOString() : null,
+        acceptedAt:
+          newStatus === "accepted"
+            ? new Date().toISOString()
+            : updatedQ.acceptedAt,
+      };
 
-        return updatedQ;
-      });
+      try {
+        // Sync to Firestore FIRST
+        await saveQuestionToFirestore(updatedQ);
+
+        // Then update local state
+        updateQuestionInState(id, () => updatedQ);
+      } catch (err) {
+        console.error("Firestore sync failed:", err);
+        // Optionally show toast?
+      }
     },
-    [updateQuestionInState, config.creatorName]
+    [
+      updateQuestionInState,
+      config.creatorName,
+      allQuestionsMap,
+      questions,
+      historicalQuestions,
+    ]
   );
 
   // Generic persisted update handler
   const handleUpdateQuestion = useCallback(
-    (id, updates) => {
-      updateQuestionInState(id, (q) => {
-        const updatedQ = { ...q, ...updates };
+    async (id, updates) => {
+      // Find the question
+      const variants = allQuestionsMap.get(id) || [];
+      const currentQ =
+        variants.find((v) => v.id === id) ||
+        questions.find((q) => q.id === id) ||
+        historicalQuestions.find((q) => q.id === id);
+
+      if (!currentQ) {
+        console.warn(`handleUpdateQuestion: Question ${id} not found`);
+        return;
+      }
+
+      const updatedQ = { ...currentQ, ...updates };
+
+      try {
         // Sync to Firestore
-        saveQuestionToFirestore(updatedQ).catch((err) =>
-          console.error("Firestore sync failed:", err)
-        );
-        return updatedQ;
-      });
+        await saveQuestionToFirestore(updatedQ);
+
+        // Update local state
+        updateQuestionInState(id, () => updatedQ);
+      } catch (err) {
+        console.error("Firestore sync failed:", err);
+      }
     },
-    [updateQuestionInState]
+    [updateQuestionInState, allQuestionsMap, questions, historicalQuestions]
   );
 
   // Statistics - count both pending and accepted questions for generation target
@@ -370,7 +429,7 @@ export const useQuestionManager = (config, showMessage) => {
   // Delete Handlers
   const handleDelete = (id) => setDeleteConfirmId(id);
 
-  const confirmDelete = (reason = "Unknown") => {
+  const confirmDelete = async (reason = "Unknown") => {
     if (deleteConfirmId) {
       // Find the question before deleting to log it
       const questionToDelete =
@@ -385,6 +444,18 @@ export const useQuestionManager = (config, showMessage) => {
           deletionReason: reason,
           deletedAt: new Date().toISOString(),
         });
+
+        // Perform Hard Delete from Firestore
+        try {
+          await deleteQuestionFromFirestore(
+            questionToDelete.uniqueId || questionToDelete.id
+          );
+        } catch (err) {
+          console.error(
+            "Failed to delete from Firestore during confirmDelete:",
+            err
+          );
+        }
       }
 
       console.log(`Deleting question ${deleteConfirmId}. Reason: ${reason}`);

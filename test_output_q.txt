@@ -1,0 +1,203 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.14 [39m[90mC:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator[39m
+
+ [31mΓ¥»[39m src/components/QuestionItem.test.jsx [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 134[2mms[22m[39m
+     [32mΓ£ô[39m renders question text and metadata correctly[32m 57[2mms[22m[39m
+     [32mΓ£ô[39m renders options for Multiple Choice[32m 13[2mms[22m[39m
+[31m     [31m├ù[31m calls onUpdateStatus when Accept button is clicked[39m[32m 26[2mms[22m[39m
+     [32mΓ£ô[39m calls onUpdateStatus when Reject button is clicked[32m 30[2mms[22m[39m
+     [32mΓ£ô[39m shows correct styling for accepted status[32m 8[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/components/QuestionItem.test.jsx > QuestionItem > calls onUpdateStatus when Accept button is clicked
+TestingLibraryElementError: Found multiple elements with the text: Accept
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+<span
+  class="text-sm font-bold text-orange-400"
+>
+  Accept
+</span>
+
+Ignored nodes: comments, script, style
+<strong>
+  Accept
+</strong>
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="group rounded-lg border shadow-sm transition-all p-4 relative bg-gradient-to-br from-slate-900/50 to-green-950 border-green-700 shadow-[0_0_15px_-5px_rgba(34,197,94,0.3)] "
+    >
+      <div
+        class="flex flex-col gap-2 mb-3 pl-6"
+      >
+        <div
+          class="flex justify-between items-start"
+        >
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex justify-between items-start"
+            >
+              <div
+                class="flex flex-col gap-1"
+              >
+                <div
+                  class="flex gap-2 items-center"
+                >
+                  <span
+                    class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-slate-800 text-slate-400 border-slate-700 flex items-center gap-1"
+                  >
+                    <span
+                      data-testid="icon-zap"
+                    >
+                      zap
+                    </span>
+                    Beginner
+                  </span>
+                  <span
+                    class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900"
+                  >
+                    MC
+                  </span>
+                  <span
+                    class="px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 bg-green-900/50 text-green-400 border border-green-700/50"
+                    title="AI Critique Score: 90/100"
+                  >
+                    <span
+                      data-testid="icon-brain"
+                    >
+                      brain
+                    </span>
+                    90
+                  </span>
+                  <span
+                    class="px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 bg-emerald-900/50 text-emerald-400 border border-emerald-700/50"
+                    title="Human Verified by Unknown"
+                  >
+                    <span
+                      data-testid="icon-eye"
+                    >
+                      eye
+                    </span>
+                    VERIFIED
+                  </span>
+                  <div
+                    class="flex items-center gap-2 ml-1 border-l border-slate-700/50 pl-2"
+                  >
+                    <div
+                      class="flex items-center gap-1 text-xs text-slate-500"
+                      title="Creator"
+                    >
+                      <span
+                        data-testid="icon-user"
+                      >
+                        user
+                      </span>
+                      <span
+                        class="font-bold text-slate-400"
+                      >
+                        TestUser
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="flex items-center gap-2"
+              />
+            </div>
+          </div>
+          <div
+            class="flex items-center gap-2"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <div
+                class="relative"
+              >
+                <button
+                  aria-label="Reject question"
+                  class="px-4 py-2 rounded-lg transition-all flex items-center gap-2 font-bold text-sm bg-red-900/40 text-red-300 hover:bg-red-800/60 hover:text-red-200 border-2 border-red-700/50 hover:border-red-500"
+                  data-tour="review-actions"
+                  title="Mark as bad question"
+                >
+                  <span
+                    data-testid="icon-x-circle"
+                  >
+                    x-circle
+                  </span>
+                  <span>
+                    REJECT
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="py-4 px-6 bg-slate-900/70 border border-slate-700/50 rounded-lg"
+        >
+          <div
+            class="flex items-center justify-between"
+          >
+            <div
+              class="flex items-center flex-1"
+            >
+              <button
+                class="
+                                flex items-center gap-3 transition-all
+                                
+                                
+                            "
+                data-tour="critique-button"
+                disabled=""
+                title="Score: 90/100"
+              >
+                <div
+                  class="
+                                w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all
+                                bg-green-600 text-white
+                            "
+                >
+                  <span
+                    data-testid="icon-check"
+                  >
+                    check
+                  </span>
+                </div>
+                <div
+                  class="flex flex-col"
+                >
+                  <span
+                    class="text-sm font-bold text-green-4...
+ Γ¥» Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ Γ¥» getElementError node_modules/@testing-library/dom/dist/query-helpers.js:20:35
+ Γ¥» getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:23:10
+ Γ¥» node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+ Γ¥» node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ Γ¥» src/components/QuestionItem.test.jsx:64:30
+     62| 
+     63|     // Accept button is part of ReviewProgressBar now
+     64|     const acceptBtn = screen.getByText("Accept");
+       |                              ^
+     65|     fireEvent.click(acceptBtn);
+     66| 
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 14:45:05
+[2m   Duration [22m 1.78s[2m (transform 289ms, setup 134ms, import 433ms, tests 134ms, environment 846ms)[22m
+

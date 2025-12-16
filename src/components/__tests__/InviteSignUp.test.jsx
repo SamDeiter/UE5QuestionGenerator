@@ -14,7 +14,41 @@ import * as firebase from "../../services/firebase";
 
 // Mock the services
 vi.mock("../../services/inviteService");
-vi.mock("../../services/firebase");
+// Mock Firebase SDKs to allow service logic to run without initialization errors
+vi.mock("firebase/app", () => ({
+  initializeApp: vi.fn(() => ({})),
+}));
+
+vi.mock("firebase/analytics", () => ({
+  getAnalytics: vi.fn(),
+  logEvent: vi.fn(),
+}));
+
+vi.mock("firebase/auth", () => ({
+  getAuth: vi.fn(() => ({ currentUser: null })),
+  GoogleAuthProvider: vi.fn(),
+  signInWithPopup: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
+  signOut: vi.fn(),
+  onAuthStateChanged: vi.fn(),
+}));
+
+vi.mock("firebase/firestore", () => ({
+  getFirestore: vi.fn(() => ({})),
+  collection: vi.fn(),
+  doc: vi.fn(),
+  setDoc: vi.fn(),
+  getDoc: vi.fn(),
+  getDocs: vi.fn(),
+  deleteDoc: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  orderBy: vi.fn(),
+  limit: vi.fn(),
+  startAfter: vi.fn(),
+  Timestamp: { now: vi.fn(() => 12345) },
+}));
 
 describe("InviteSignUp Component", () => {
   const mockOnSuccess = vi.fn();

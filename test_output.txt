@@ -10,185 +10,16 @@
 Γ¥ô User not authenticated - using direct API
 ≡ƒôí Calling direct API with key: test-api-k...
 
-stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should generate a question successfully
-≡ƒÜ½ Auto-rejected question: Critical: Not an Epic Games documentation URL, Critical: Source excerpt too short ("Source") {
-  id: 1765854089263.321,
-  uniqueId: 'a5c06a21-fe58-463d-b4a6-240fa218b3f6',
-  discipline: 'Graphics',
-  difficulty: 'Medium',
-  type: 'Multiple Choice',
-  question: 'What does UE5 stand for?',
-  options: {
-    A: 'Unreal Engine 5',
-    B: 'Unity Engine 5',
-    C: 'Unreal Editor 5',
-    D: 'Universal Engine 5'
-  },
-  correct: 'A',
-  status: 'pending',
-  language: 'English',
-  creatorName: 'Unknown',
-  timestamp: '2025-12-16T03:01:29.264Z',
-  dateAdded: '2025-12-16T03:01:29.264Z',
-  sourceUrl: 'https://docs.unrealengine.com',
-  sourceExcerpt: 'Source',
-  tags: [],
-  explanation: null,
-  qualityScore: null,
-  critique: null,
-  critiqueScore: null,
-  suggestedRewrite: null,
-  rewriteChanges: null,
-  sourceVerified: false,
-  humanVerified: false,
-  humanVerifiedBy: null,
-  _validation: null,
-  answerMismatch: false,
-  invalidUrl: true,
-  rejectionReason: null,
-  rejectionCategory: null,
-  rejectionNotes: null,
-  rejectedAt: null,
-  rejectedBy: null,
-  isDuplicate: false,
-  duplicateOf: null,
-  similarityScore: null,
-  duplicateCheckAt: null,
-  qualityIssues: [],
-  flaggedForReview: false,
-  flaggedReason: null,
-  flaggedAt: null,
-  flaggedBy: null,
-  reviewStartedAt: null,
-  reviewDuration: null,
-  reviewerName: null,
-  reviewCompletedAt: null,
-  estimatedCost: null,
-  generationTime: null,
-  model: 'gemini-2.0-flash',
-  groundingSources: null,
-  variations: null,
-  originalMC: null,
-  creatorId: null,
-  creatorEmail: null,
-  firestoreUpdatedAt: null,
-  batchId: null,
-  sessionId: null,
-  generationIndex: null,
-  editCount: 0,
-  lastEditedAt: null,
-  lastEditedBy: null,
-  editHistory: [],
-  viewCount: 0,
-  firstViewedAt: null,
-  lastViewedAt: null,
-  acceptedAt: null,
-  acceptedBy: null,
-  kickedBackAt: null,
-  kickedBackBy: null,
-  kickedBackReason: null,
-  wasRewritten: false,
-  rewriteAppliedAt: null,
-  originalQuestionText: null,
-  exportedAt: null,
-  exportedTo: null,
-  exportCount: 0
-}
-≡ƒÜ½ Auto-rejected question: Critical: Not an Epic Games documentation URL, Critical: Source excerpt too short ("Source") {
-  id: 1765854089264.1377,
-  uniqueId: 'dc08c5d7-b7ea-46c9-a719-33136b989ba7',
-  discipline: 'Graphics',
-  difficulty: 'Medium',
-  type: 'True/False',
-  question: 'Lumen provides real-time global illumination.',
-  options: { A: 'TRUE', B: 'FALSE' },
-  correct: 'A',
-  status: 'pending',
-  language: 'English',
-  creatorName: 'Unknown',
-  timestamp: '2025-12-16T03:01:29.264Z',
-  dateAdded: '2025-12-16T03:01:29.264Z',
-  sourceUrl: 'https://docs.unrealengine.com',
-  sourceExcerpt: 'Source',
-  tags: [],
-  explanation: null,
-  qualityScore: null,
-  critique: null,
-  critiqueScore: null,
-  suggestedRewrite: null,
-  rewriteChanges: null,
-  sourceVerified: false,
-  humanVerified: false,
-  humanVerifiedBy: null,
-  _validation: null,
-  answerMismatch: false,
-  invalidUrl: true,
-  rejectionReason: null,
-  rejectionCategory: null,
-  rejectionNotes: null,
-  rejectedAt: null,
-  rejectedBy: null,
-  isDuplicate: false,
-  duplicateOf: null,
-  similarityScore: null,
-  duplicateCheckAt: null,
-  qualityIssues: [],
-  flaggedForReview: false,
-  flaggedReason: null,
-  flaggedAt: null,
-  flaggedBy: null,
-  reviewStartedAt: null,
-  reviewDuration: null,
-  reviewerName: null,
-  reviewCompletedAt: null,
-  estimatedCost: null,
-  generationTime: null,
-  model: 'gemini-2.0-flash',
-  groundingSources: null,
-  variations: null,
-  originalMC: null,
-  creatorId: null,
-  creatorEmail: null,
-  firestoreUpdatedAt: null,
-  batchId: null,
-  sessionId: null,
-  generationIndex: null,
 [90mstdout[2m | src/__tests__/questionGeneration.integration.test.jsx[2m > [22m[2mQuestion Generation Integration Tests[2m > [22m[2mSingle Question Generation[2m > [22m[2mshould generate a question successfully
 [22m[39m≡ƒöì Verifiable sources from search: [33m0[39m
-≡ƒôè Source verification: 0 verified, 0 unverified, 0 missing
-
-  editCount: 0,
-  lastEditedAt: null,
-  lastEditedBy: null,
-  editHistory: [],
-  viewCount: 0,
-  firstViewedAt: null,
-  lastViewedAt: null,
-  acceptedAt: null,
-  acceptedBy: null,
-  kickedBackAt: null,
-  kickedBackBy: null,
-  kickedBackReason: null,
-  wasRewritten: false,
-  rewriteAppliedAt: null,
-  originalQuestionText: null,
-  exportedAt: null,
-  exportedTo: null,
-  exportCount: 0
-}
-≡ƒùæ∩╕Å Auto-rejected 2 questions due to critical quality issues.
+≡ƒôè Source verification: 0 verified, 2 unverified, 0 missing
 
 [90mstdout[2m | src/__tests__/questionGeneration.integration.test.jsx[2m > [22m[2mQuestion Generation Integration Tests[2m > [22m[2mSingle Question Generation[2m > [22m[2mshould generate a question successfully
-[22m[39m≡ƒÉ¢ [DEBUG] Questions before addQuestionsToState: []
+[22m[39m≡ƒÉ¢ [DEBUG] Questions before addQuestionsToState: [
+  { id: [32m'uid-1765'[39m, status: [32m'pending'[39m },
+  { id: [32m'uid-1765'[39m, status: [32m'pending'[39m }
+]
 
-stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should handle API errors gracefully
-Error: Network timeout
-    at Module.simulateError (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/mocks/gemini.mock.js:58:43)
-    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:228:24
-    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:145:11
-    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:919:26
-    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1244:20
-    at new Promise (<anonymous>)
 [90mstdout[2m | src/__tests__/questionGeneration.integration.test.jsx[2m > [22m[2mQuestion Generation Integration Tests[2m > [22m[2mSingle Question Generation[2m > [22m[2mshould handle API errors gracefully
 [22m[39m≡ƒöì [geminiSecure] Checking authentication: {
   isAuthenticated: [33mfalse[39m,
@@ -198,6 +29,14 @@ Error: Network timeout
 Γ¥ô User not authenticated - using direct API
 ≡ƒôí Calling direct API with key: test-api-k...
 
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should handle API errors gracefully
+Error: Network timeout
+    at Module.simulateError (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/mocks/gemini.mock.js:135:41)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:270:18
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:919:26
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1244:20
+    at new Promise (<anonymous>)
     at runWithTimeout (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1210:10)
     at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1654:37
     at Traces.$ (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/traces.U4xDYhzZ.js:115:27)
@@ -226,27 +65,17 @@ Error: Network timeout
 ≡ƒôí [CritiqueSecure DEBUG] Calling direct API for critique
 
 stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate critique for question
-Critique failed: Error: [vitest] No "generateCritique" export is defined on the "../services/gemini" mock. Did you forget to return it from "vi.mock"?
-If you need to partially mock a module, you can use "importOriginal" helper inside:
-
-    at VitestMocker.createError (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/startModuleRunner.W28wBIgJ.js:310:17)
-    at Object.get (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/startModuleRunner.W28wBIgJ.js:383:16)
-    at generateCritiqueSecure (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/services/geminiSecure.js:104:24)
-    at Object.handleCritique (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:861:71)
-    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:392:38
-    at C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\act-compat.js:48:24
-    at act (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react\cjs\react.development.js:2512:16)
-    at Proxy.<anonymous> (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\act-compat.js:47:25)
-    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:391:19
-    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:145:11 {
-  codeFrame: 'vi.mock(import("../services/gemini"), async (importOriginal) => {\n' +
-    '  const actual = await importOriginal()\n' +
-    '  return {\n' +
-    '    ...actual,\n' +
-    '    // your mocked methods\n' +
-    '  }\n' +
-    '})'
-}
+Critique failed: Error: Network timeout
+    at Module.simulateError (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/mocks/gemini.mock.js:136:42)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:270:18
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:919:26
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1244:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1210:10)
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1654:37
+    at Traces.$ (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/traces.U4xDYhzZ.js:115:27)
+    at trace (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/test.DqQZzsWf.js:234:21)
 
 [90mstdout[2m | src/__tests__/questionGeneration.integration.test.jsx[2m > [22m[2mQuestion Generation Integration Tests[2m > [22m[2mToken Usage Tracking[2m > [22m[2mshould log token usage for successful generation
 [22m[39m≡ƒöì [geminiSecure] Checking authentication: {
@@ -257,176 +86,15 @@ If you need to partially mock a module, you can use "importOriginal" helper insi
 Γ¥ô User not authenticated - using direct API
 ≡ƒôí Calling direct API with key: test-api-k...
 
-stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Token Usage Tracking > should log token usage for successful generation
-≡ƒÜ½ Auto-rejected question: Critical: Not an Epic Games documentation URL, Critical: Source excerpt too short ("Source") {
-  id: 1765854089678.5032,
-  uniqueId: '2ccca20e-210f-4ccc-b63c-52a9489ff8d6',
-  discipline: 'Graphics',
-  difficulty: 'Medium',
-  type: 'Multiple Choice',
-  question: 'What does UE5 stand for?',
-  options: {
-    A: 'Unreal Engine 5',
-    B: 'Unity Engine 5',
-    C: 'Unreal Editor 5',
-    D: 'Universal Engine 5'
-  },
-  correct: 'A',
-  status: 'pending',
-  language: 'English',
-  creatorName: 'Unknown',
-  timestamp: '2025-12-16T03:01:29.679Z',
-  dateAdded: '2025-12-16T03:01:29.679Z',
-  sourceUrl: 'https://docs.unrealengine.com',
-  sourceExcerpt: 'Source',
-  tags: [],
-  explanation: null,
-  qualityScore: null,
-  critique: null,
-  critiqueScore: null,
-  suggestedRewrite: null,
-  rewriteChanges: null,
-  sourceVerified: false,
-  humanVerified: false,
-  humanVerifiedBy: null,
-  _validation: null,
-  answerMismatch: false,
-  invalidUrl: true,
-  rejectionReason: null,
-  rejectionCategory: null,
-  rejectionNotes: null,
-  rejectedAt: null,
-  rejectedBy: null,
-  isDuplicate: false,
-  duplicateOf: null,
-  similarityScore: null,
-  duplicateCheckAt: null,
-  qualityIssues: [],
-  flaggedForReview: false,
-  flaggedReason: null,
-  flaggedAt: null,
-  flaggedBy: null,
-  reviewStartedAt: null,
-  reviewDuration: null,
-  reviewerName: null,
-  reviewCompletedAt: null,
-  estimatedCost: null,
-  generationTime: null,
-  model: 'gemini-2.0-flash',
-  groundingSources: null,
-  variations: null,
-  originalMC: null,
-  creatorId: null,
-  creatorEmail: null,
-  firestoreUpdatedAt: null,
-  batchId: null,
-  sessionId: null,
-  generationIndex: null,
-  editCount: 0,
-  lastEditedAt: null,
-  lastEditedBy: null,
-  editHistory: [],
-  viewCount: 0,
-  firstViewedAt: null,
-  lastViewedAt: null,
-  acceptedAt: null,
-  acceptedBy: null,
-  kickedBackAt: null,
-  kickedBackBy: null,
-  kickedBackReason: null,
-  wasRewritten: false,
-  rewriteAppliedAt: null,
-  originalQuestionText: null,
-  exportedAt: null,
-  exportedTo: null,
-  exportCount: 0
-}
-≡ƒÜ½ Auto-rejected question: Critical: Not an Epic Games documentation URL, Critical: Source excerpt too short ("Source") {
-  id: 1765854089679.1091,
-  uniqueId: '1d2b01d4-26b1-43a7-a931-22302131715b',
-  discipline: 'Graphics',
-  difficulty: 'Medium',
-  type: 'True/False',
-  question: 'Lumen provides real-time global illumination.',
-  options: { A: 'TRUE', B: 'FALSE' },
-  correct: 'A',
-  status: 'pending',
-  language: 'English',
-  creatorName: 'Unknown',
-  timestamp: '2025-12-16T03:01:29.679Z',
-  dateAdded: '2025-12-16T03:01:29.679Z',
-  sourceUrl: 'https://docs.unrealengine.com',
-  sourceExcerpt: 'Source',
-  tags: [],
-  explanation: null,
-  qualityScore: null,
-  critique: null,
-  critiqueScore: null,
-  suggestedRewrite: null,
-  rewriteChanges: null,
-  sourceVerified: false,
-  humanVerified: false,
-  humanVerifiedBy: null,
-  _validation: null,
-  answerMismatch: false,
-  invalidUrl: true,
-  rejectionReason: null,
-  rejectionCategory: null,
-  rejectionNotes: null,
-  rejectedAt: null,
-  rejectedBy: null,
-  isDuplicate: false,
-  duplicateOf: null,
-  similarityScore: null,
-  duplicateCheckAt: null,
-  qualityIssues: [],
-  flaggedForReview: false,
-  flaggedReason: null,
-  flaggedAt: null,
-  flaggedBy: null,
-  reviewStartedAt: null,
-  reviewDuration: null,
-  reviewerName: null,
-  reviewCompletedAt: null,
-  estimatedCost: null,
-  generationTime: null,
-  model: 'gemini-2.0-flash',
-  groundingSources: null,
-  variations: null,
-  originalMC: null,
-  creatorId: null,
-  creatorEmail: null,
-  firestoreUpdatedAt: null,
-  batchId: null,
-  sessionId: null,
-  generationIndex: null,
-  editCount: 0,
-  lastEditedAt: null,
-  lastEditedBy: null,
-  editHistory: [],
-  viewCount: 0,
-  firstViewedAt: null,
-  lastViewedAt: null,
-  acceptedAt: null,
-  acceptedBy: null,
-  kickedBackAt: null,
-  kickedBackBy: null,
-  kickedBackReason: null,
-  wasRewritten: false,
-  rewriteAppliedAt: null,
-  originalQuestionText: null,
-  exportedAt: null,
-  exportedTo: null,
-  exportCount: 0
-}
-≡ƒùæ∩╕Å Auto-rejected 2 questions due to critical quality issues.
-
 [90mstdout[2m | src/__tests__/questionGeneration.integration.test.jsx[2m > [22m[2mQuestion Generation Integration Tests[2m > [22m[2mToken Usage Tracking[2m > [22m[2mshould log token usage for successful generation
 [22m[39m≡ƒöì Verifiable sources from search: [33m0[39m
-≡ƒôè Source verification: 0 verified, 0 unverified, 0 missing
+≡ƒôè Source verification: 0 verified, 2 unverified, 0 missing
 
 [90mstdout[2m | src/__tests__/questionGeneration.integration.test.jsx[2m > [22m[2mQuestion Generation Integration Tests[2m > [22m[2mToken Usage Tracking[2m > [22m[2mshould log token usage for successful generation
-[22m[39m≡ƒÉ¢ [DEBUG] Questions before addQuestionsToState: []
+[22m[39m≡ƒÉ¢ [DEBUG] Questions before addQuestionsToState: [
+  { id: [32m'uid-1765'[39m, status: [32m'pending'[39m },
+  { id: [32m'uid-1765'[39m, status: [32m'pending'[39m }
+]
 
 [90mstdout[2m | src/__tests__/questionGeneration.integration.test.jsx[2m > [22m[2mQuestion Generation Integration Tests[2m > [22m[2mToken Usage Tracking[2m > [22m[2mshould log failed generation attempts
 [22m[39m≡ƒöì [geminiSecure] Checking authentication: {
@@ -439,77 +107,65 @@ stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Genera
 
 stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Token Usage Tracking > should log failed generation attempts
 Error: API Error
-    at Module.simulateError (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/mocks/gemini.mock.js:58:43)
-    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:457:24
+    at Module.simulateError (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/mocks/gemini.mock.js:135:41)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:501:18
     at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:919:20
 
- [31mΓ¥»[39m src/__tests__/questionGeneration.integration.test.jsx [2m([22m[2m9 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[33m 569[2mms[22m[39m
-[31m       [31m├ù[31m should generate a question successfully[39m[32m 142[2mms[22m[39m
-       [32mΓ£ô[39m should not generate without creator name[32m 4[2mms[22m[39m
-[31m       [31m├ù[31m should not generate without API key[39m[32m 3[2mms[22m[39m
-       [32mΓ£ô[39m should handle API errors gracefully[32m 18[2mms[22m[39m
-[31m       [31m├ù[31m should generate variations of existing question[39m[32m 123[2mms[22m[39m
-       [32mΓ£ô[39m should generate explanation for question[32m 122[2mms[22m[39m
-[31m       [31m├ù[31m should generate critique for question[39m[32m 16[2mms[22m[39m
-       [32mΓ£ô[39m should log token usage for successful generation[32m 124[2mms[22m[39m
+ [31mΓ¥»[39m src/__tests__/questionGeneration.integration.test.jsx [2m([22m[2m9 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[33m 586[2mms[22m[39m
+       [32mΓ£ô[39m should generate a question successfully[32m 141[2mms[22m[39m
+       [32mΓ£ô[39m should not generate without creator name[32m 6[2mms[22m[39m
+[31m       [31m├ù[31m should not generate without API key[39m[32m 9[2mms[22m[39m
+       [32mΓ£ô[39m should handle API errors gracefully[32m 28[2mms[22m[39m
+[31m       [31m├ù[31m should generate variations of existing question[39m[32m 124[2mms[22m[39m
+       [32mΓ£ô[39m should generate explanation for question[32m 124[2mms[22m[39m
+[31m       [31m├ù[31m should generate critique for question[39m[32m 15[2mms[22m[39m
+       [32mΓ£ô[39m should log token usage for successful generation[32m 122[2mms[22m[39m
        [32mΓ£ô[39m should log failed generation attempts[32m 15[2mms[22m[39m
 
-ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 4 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
-
- FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should generate a question successfully
-AssertionError: expected 0 to be greater than 0
- Γ¥» src/__tests__/questionGeneration.integration.test.jsx:134:43
-    132|             expect(mockAddQuestionsToState).toHaveBeenCalled();
-    133|             const addedQuestions = mockAddQuestionsToState.mock.calls[ΓÇª
-    134|             expect(addedQuestions.length).toBeGreaterThan(0);
-       |                                           ^
-    135|             expect(addedQuestions[0]).toHaveProperty('question');
-    136|             expect(addedQuestions[0]).toHaveProperty('difficulty');
-
-ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/4]ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 3 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
 
  FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should not generate without API key
 AssertionError: expected "vi.fn()" to be called with arguments: [ true ]
 
 Number of calls: 0
 
- Γ¥» src/__tests__/questionGeneration.integration.test.jsx:216:41
-    214| 
-    215|             // Should show error
-    216|             expect(mockSetShowApiError).toHaveBeenCalledWith(true);
-       |                                         ^
-    217|             expect(mockShowMessage).toHaveBeenCalledWith(
-    218|                 expect.stringContaining('API key'),
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:258:35
+    256| 
+    257|       // Should show error
+    258|       expect(mockSetShowApiError).toHaveBeenCalledWith(true);
+       |                                   ^
+    259|       expect(mockShowMessage).toHaveBeenCalledWith(
+    260|         expect.stringContaining("API key"),
 
-ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/4]ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/3]ΓÄ»
 
  FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate variations of existing question
 AssertionError: expected "vi.fn()" to be called at least once
- Γ¥» src/__tests__/questionGeneration.integration.test.jsx:316:45
-    314| 
-    315|             // Verify variations were added
-    316|             expect(mockAddQuestionsToState).toHaveBeenCalled();
-       |                                             ^
-    317|             expect(mockShowMessage).toHaveBeenCalledWith(
-    318|                 expect.stringContaining('variations'),
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:360:39
+    358| 
+    359|       // Verify variations were added
+    360|       expect(mockAddQuestionsToState).toHaveBeenCalled();
+       |                                       ^
+    361|       expect(mockShowMessage).toHaveBeenCalledWith(
+    362|         expect.stringContaining("variations"),
 
-ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/4]ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/3]ΓÄ»
 
  FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate critique for question
 AssertionError: expected "vi.fn()" to be called at least once
- Γ¥» src/__tests__/questionGeneration.integration.test.jsx:400:47
-    398| 
-    399|             // Verify critique was added
-    400|             expect(mockUpdateQuestionInState).toHaveBeenCalled();
-       |                                               ^
-    401|             expect(mockShowMessage).toHaveBeenCalledWith('Critique ReaΓÇª
-    402|         });
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:444:41
+    442| 
+    443|       // Verify critique was added
+    444|       expect(mockUpdateQuestionInState).toHaveBeenCalled();
+       |                                         ^
+    445|       expect(mockShowMessage).toHaveBeenCalledWith("Critique Ready", 3ΓÇª
+    446|     });
 
-ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[4/4]ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/3]ΓÄ»
 
 
 [2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
-[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m5 passed[39m[22m[90m (9)[39m
-[2m   Start at [22m 22:01:27
-[2m   Duration [22m 2.48s[2m (transform 357ms, setup 205ms, import 638ms, tests 569ms, environment 846ms)[22m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (9)[39m
+[2m   Start at [22m 15:05:34
+[2m   Duration [22m 2.46s[2m (transform 356ms, setup 163ms, import 564ms, tests 586ms, environment 906ms)[22m
 

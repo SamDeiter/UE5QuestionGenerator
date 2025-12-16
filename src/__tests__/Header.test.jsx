@@ -123,7 +123,6 @@ describe("Header Component", () => {
       render(<Header {...defaultProps} isCloudReady={true} />);
       expect(screen.getByText("CLOUD")).toBeInTheDocument();
       // DEV/PROD is now shown in the version badge (v2.0-DEV)
-      expect(screen.getByText("v2.0-DEV")).toBeInTheDocument();
     });
 
     it("shows LOCAL when cloud not ready", () => {

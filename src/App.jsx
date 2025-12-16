@@ -369,12 +369,10 @@ const App = () => {
     handleBulkAcceptHighScores,
     handleBulkCritiqueAll,
     handleTrimExcess,
-    handleBulkMove,
-    handleAutoClassify,
-    handleAutoTag,
     handleAutoTagAll,
   } = useReviewActions({
     uniqueFilteredQuestions,
+    allQuestions: unifiedQuestions, // Pass complete dataset for Trim accuracy
     setQuestions,
     handleUpdateStatus,
     handleUpdateQuestion, // Pass persistent handler
@@ -629,9 +627,6 @@ const App = () => {
             onBulkCritiqueAll:
               appMode === "review" ? handleBulkCritiqueAll : undefined,
             onTrimExcess: handleTrimExcess,
-            onBulkMove: handleBulkMove,
-            onAutoClassify: handleAutoClassify, // Added
-            onAutoTag: handleAutoTag, // Added
             onAutoTagAll: handleAutoTagAll, // Added
             effectiveApiKey: effectiveApiKey,
             handleChange, // Pass config handler for Discipline selector
@@ -660,7 +655,6 @@ const App = () => {
             handleManualUpdate,
 
             handleTrimExcess, // Added
-            handleBulkMove, // Added
             handleUpdateQuestion, // Added persistent handler
           }}
           viewRouterState={{

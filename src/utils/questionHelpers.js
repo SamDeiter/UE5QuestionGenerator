@@ -172,12 +172,17 @@ export const parseQuestions = (text) => {
     .trim();
 
   // 1. Try Parsing as JSON first (Robust Search)
+  // Strip common conversational prefixes if present (e.g. "Here is the JSON:", "Sure, here...")
+  const prefixRegex =
+    /^(?:Here (?:is|are) (?:the )?(?:JSON|questions?|data)|Sure|Okay|Certainly).{0,50}[:\n]/i;
+  const contentStart = cleanText.replace(prefixRegex, "");
+
   // Look for the first '[' or '{' and the last ']' or '}'
-  const jsonStart = cleanText.search(/[[{]/);
-  const jsonEnd = cleanText.search(/[\]}][^\]}]*$/);
+  const jsonStart = contentStart.search(/[[{]/);
+  const jsonEnd = contentStart.search(/[\]}][^\]}]*$/);
 
   if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-    const potentialJson = cleanText.substring(jsonStart, jsonEnd + 1);
+    const potentialJson = contentStart.substring(jsonStart, jsonEnd + 1);
     try {
       const jsonData = JSON.parse(potentialJson);
       const dataArray = Array.isArray(jsonData) ? jsonData : [jsonData];

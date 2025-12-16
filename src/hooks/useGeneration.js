@@ -130,6 +130,12 @@ export const useGeneration = (
   };
 
   const handleGenerate = async () => {
+    console.log(
+      "🐛 [DEBUG] handleGenerate called. isApiReady:",
+      isApiReady,
+      "creatorName:",
+      config.creatorName
+    );
     if (!config.creatorName) {
       showMessage(
         "Please enter your Creator Name to start generating.",
@@ -181,7 +187,8 @@ export const useGeneration = (
     }
 
     // Determine the effective type to generate (may be forced by quota)
-    const effectiveType = quotaCheck.forceType || config.type || "Multiple Choice";
+    const effectiveType =
+      quotaCheck.forceType || config.type || "Multiple Choice";
 
     if (quotaCheck.forceType) {
       console.log(
@@ -487,13 +494,16 @@ export const useGeneration = (
           type: expectedType, // Use the normalized type
           difficulty: requestedDifficulty, // Use the normalized difficulty
         };
-        
+
         // SAFEGUARD: Double-check status is pending (paranoid validation)
         if (enriched.status !== "pending") {
-          console.warn('⚠️ Question had non-pending status, forcing to pending:', enriched);
+          console.warn(
+            "⚠️ Question had non-pending status, forcing to pending:",
+            enriched
+          );
           enriched.status = "pending";
         }
-        
+
         return enriched;
       });
 
@@ -536,8 +546,12 @@ export const useGeneration = (
       });
 
       // DEBUG: Log question statuses before adding to state
-      console.log('🐛 [DEBUG] Questions before addQuestionsToState:', 
-        uniqueNewQuestions.map(q => ({ id: q.uniqueId?.slice(0, 8), status: q.status }))
+      console.log(
+        "🐛 [DEBUG] Questions before addQuestionsToState:",
+        uniqueNewQuestions.map((q) => ({
+          id: q.uniqueId?.slice(0, 8),
+          status: q.status,
+        }))
       );
 
       addQuestionsToState(uniqueNewQuestions, false);
@@ -774,6 +788,7 @@ export const useGeneration = (
   };
 
   const handleVariate = async (q) => {
+    console.log("🐛 [DEBUG] handleVariate called. isApiReady:", isApiReady);
     if (!isApiReady) {
       showMessage(
         "API key is required for creation. Please enter it in the settings panel.",
@@ -812,6 +827,12 @@ export const useGeneration = (
         setStatus
       );
       const newQs = parseQuestions(text);
+      console.log(
+        "🐛 [DEBUG] handleVariate text:",
+        text,
+        "newQs length:",
+        newQs.length
+      );
       if (newQs.length > 0) {
         // Attach variations directly to the original question
         const updatedOriginal = {
@@ -824,7 +845,7 @@ export const useGeneration = (
         updateQuestionInState(q.id, () => updatedOriginal);
 
         showMessage(
-          `🔄 ${newQs.length} alternative(s) ready! Use ← → arrows.`,
+          `🔄 ${newQs.length} variations ready! Use ← → arrows.`,
           TOAST_DURATION.MEDIUM
         );
       } else {
@@ -939,9 +960,13 @@ export const useGeneration = (
     const translationQueue = [];
 
     const baseQuestions = Array.from(allQuestionsMap.values()).map(
-      (variants) =>
-        variants.find((v) => (v.language || "English") === "English") ||
-        variants[0]
+      (variants) => {
+        // Defensive check for integration tests where data might be malformed
+        const list = Array.isArray(variants) ? variants : [variants];
+        return (
+          list.find((v) => (v.language || "English") === "English") || list[0]
+        );
+      }
     );
 
     baseQuestions.forEach((q) => {

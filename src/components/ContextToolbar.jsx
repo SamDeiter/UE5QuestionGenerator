@@ -30,9 +30,6 @@ const ContextToolbar = ({
   isAdmin = false, // Admin-only features
   handleChange, // Added prop for config updates
   onTrimExcess,
-  onBulkMove,
-  onAutoClassify,
-  onAutoTag,
   onAutoTagAll,
   effectiveApiKey,
 }) => {
@@ -237,14 +234,14 @@ const ContextToolbar = ({
       <div className="flex items-center gap-3">
         {/* GLOBAL ACTIONS */}
         <>
-          {/* Trim Excess - Only show if discipline selected and pending > 40 */}
-          {config.discipline && counts.pending > 40 && (
+          {/* Trim Excess - Show if discipline selected and there are pending questions */}
+          {config.discipline && counts.pending > 0 && (
             <button
               onClick={() => onTrimExcess(config.discipline)}
               className="px-2 py-1 text-xs font-medium rounded border border-orange-500/50 text-orange-400 hover:bg-orange-500/20 flex items-center gap-1 transition-colors"
-              title={`Trim pending questions in ${config.discipline} to 40`}
+              title={`Trim ${config.discipline} questions to lowest common count`}
             >
-              <Icon name="scissors" size={12} /> Trim Excess
+              <Icon name="scissors" size={12} /> Trim
             </button>
           )}
 
