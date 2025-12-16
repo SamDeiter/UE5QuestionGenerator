@@ -63,12 +63,12 @@ const DISCIPLINE_COLORS = {
 };
 
 const DIFFICULTY_COLORS = {
-  "Easy MC": "#22c55e",
-  "Easy T/F": "#4ade80",
-  "Medium MC": "#eab308",
-  "Medium T/F": "#facc15",
-  "Hard MC": "#ef4444",
-  "Hard T/F": "#f87171",
+  "Beginner MC": "#22c55e",
+  "Beginner T/F": "#4ade80",
+  "Intermediate MC": "#eab308",
+  "Intermediate T/F": "#facc15",
+  "Expert MC": "#ef4444",
+  "Expert T/F": "#f87171",
 };
 
 /**
@@ -445,6 +445,7 @@ const AnalyticsView = ({
                         />
                         <YAxis stroke="#94a3b8" />
                         <Tooltip
+                          cursor={false}
                           contentStyle={{
                             backgroundColor: "#1e293b",
                             border: "1px solid #334155",
@@ -599,6 +600,7 @@ const AnalyticsView = ({
                         tick={{ fontSize: 11 }}
                       />
                       <Tooltip
+                        cursor={false}
                         contentStyle={{
                           backgroundColor: "#1e293b",
                           border: "1px solid #334155",
@@ -735,6 +737,7 @@ const AnalyticsView = ({
                       <XAxis dataKey="range" stroke="#94a3b8" />
                       <YAxis stroke="#94a3b8" />
                       <Tooltip
+                        cursor={false}
                         contentStyle={{
                           backgroundColor: "#1e293b",
                           border: "1px solid #334155",
