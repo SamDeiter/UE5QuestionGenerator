@@ -36,15 +36,15 @@ const TagConnectionGraph = ({
   };
 
   // Determine dimensions for SVG - MUST BE DEFINED BEFORE nodePositions
-  const [dimensions, setDimensions] = useState({ width: 1200, height: 1200 });
+  const [dimensions, setDimensions] = useState({ width: 800, height: 800 });
 
   useEffect(() => {
     const updateDimensions = () => {
       if (svgRef.current) {
         const parent = svgRef.current.parentElement;
         if (parent && parent.clientWidth > 0) {
-          // Use 63% of parent width (was 90%, reduced by 30%)
-          const size = Math.floor(parent.clientWidth * 0.63);
+          // Use 50% of parent width - good balance of size and fit
+          const size = Math.floor(parent.clientWidth * 0.5);
           setDimensions({
             width: size,
             height: size, // Make it square
@@ -194,7 +194,7 @@ const TagConnectionGraph = ({
   const centerY = dimensions.height / 2;
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className="flex flex-col items-center mx-auto">
       {/* View Toggle - Centered */}
       <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700 mb-4">
         <button
