@@ -306,6 +306,12 @@ export const generateCritique = async (apiKey, q) => {
       "[Critique DEBUG] JSON parsed successfully. Score:",
       finalScore
     );
+    console.log(
+      "[Critique DEBUG] Scores - Original:",
+      result.originalScore || result.score,
+      "| Improved:",
+      result.improvedScore
+    );
 
     return {
       score: result.originalScore || result.score || finalScore, // Handle both new and legacy formats
