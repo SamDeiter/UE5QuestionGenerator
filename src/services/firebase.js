@@ -337,10 +337,10 @@ export const getQuestionsFromFirestore = async () => {
 /**
  * Retrieves ALL questions from Firestore (for shared database view).
  * All authenticated users can see all questions for review purposes.
- * @param {number} maxResults - Maximum number of questions to retrieve (default 500)
+ * @param {number} maxResults - Maximum number of questions to retrieve (default 5000)
  * @returns {Promise<Array>} Array of question objects.
  */
-export const getAllQuestionsFromFirestore = async (maxResults = 500) => {
+export const getAllQuestionsFromFirestore = async (maxResults = 5000) => {
   try {
     // Require authentication
     if (!auth.currentUser) {
