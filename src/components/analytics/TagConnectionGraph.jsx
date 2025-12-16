@@ -151,12 +151,12 @@ const TagConnectionGraph = ({
 
   // Calculate node positions (circular layout)
   const nodePositions = useMemo(() => {
-    const w = dimensions.width || 600;
-    const h = dimensions.height || 600;
+    const w = dimensions.width || 800;
+    const h = dimensions.height || 800;
     const centerX = w / 2;
     const centerY = h / 2;
-    // Reduce scale to 75% of available space to be less "in your face"
-    const radius = (Math.min(w, h) / 2 - 40) * 0.75;
+    // Use full radius (removed 0.75 scale reduction)
+    const radius = Math.min(w, h) / 2 - 40;
 
     const positions = {};
     tags.forEach((tag, index) => {
