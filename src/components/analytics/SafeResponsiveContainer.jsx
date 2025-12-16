@@ -3,8 +3,8 @@ import { ResponsiveContainer } from "recharts";
 
 /**
  * SafeResponsiveContainer - Wrapper that prevents recharts dimension warnings
- * Only renders the chart once the container has valid dimensions (>= 10px)
- * Uses multiple delayed checks to handle layout settling
+ * Measures container dimensions first, then passes explicit pixel values to ResponsiveContainer
+ * This eliminates the width(-1)/height(-1) warnings by ensuring valid dimensions always exist
  */
 const SafeResponsiveContainer = ({ children, minDimension = 10, ...props }) => {
   const containerRef = useRef(null);
@@ -15,7 +15,13 @@ const SafeResponsiveContainer = ({ children, minDimension = 10, ...props }) => {
     if (containerRef.current) {
       const { clientWidth, clientHeight } = containerRef.current;
       if (clientWidth >= minDimension && clientHeight >= minDimension) {
-        setDimensions({ width: clientWidth, height: clientHeight });
+        // Only update if dimensions actually changed to prevent re-renders
+        setDimensions((prev) => {
+          if (prev.width !== clientWidth || prev.height !== clientHeight) {
+            return { width: clientWidth, height: clientHeight };
+          }
+          return prev;
+        });
       }
     }
   }, [minDimension]);
@@ -69,10 +75,8 @@ const SafeResponsiveContainer = ({ children, minDimension = 10, ...props }) => {
       {isReady ? (
         <ResponsiveContainer
           {...props}
-          width="100%"
-          height="100%"
-          minWidth={0}
-          minHeight={0}
+          width={dimensions.width}
+          height={dimensions.height}
         >
           {children}
         </ResponsiveContainer>
