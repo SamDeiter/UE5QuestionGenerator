@@ -581,7 +581,12 @@ const AnalyticsView = ({
                         }}
                         formatter={(value) => [value, "Questions"]}
                       />
-                      <Bar dataKey="value" radius={[0, 4, 4, 0]} fill="none">
+                      <Bar
+                        dataKey="value"
+                        radius={[0, 4, 4, 0]}
+                        fill="none"
+                        isAnimationActive={false}
+                      >
                         {disciplineData.map((entry, idx) => (
                           <Cell key={idx} fill={entry.fill} />
                         ))}

@@ -194,12 +194,12 @@ const TagConnectionGraph = ({
   const centerY = dimensions.height / 2;
 
   return (
-    <div className="relative">
-      {/* View Toggle */}
-      <div className="absolute top-0 right-0 z-10 flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+    <div className="flex flex-col items-center">
+      {/* View Toggle - Centered */}
+      <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700 mb-4">
         <button
           onClick={() => setSortOrder("most_connected")}
-          className={`px-2 py-1 text-[10px] font-bold uppercase rounded ${
+          className={`px-3 py-1.5 text-xs font-bold uppercase rounded ${
             sortOrder === "most_connected"
               ? "bg-slate-600 text-white"
               : "text-slate-400 hover:text-white"
@@ -209,7 +209,7 @@ const TagConnectionGraph = ({
         </button>
         <button
           onClick={() => setSortOrder("least_connected")}
-          className={`px-2 py-1 text-[10px] font-bold uppercase rounded ${
+          className={`px-3 py-1.5 text-xs font-bold uppercase rounded ${
             sortOrder === "least_connected"
               ? "bg-slate-600 text-white"
               : "text-slate-400 hover:text-white"
