@@ -206,6 +206,28 @@ const GenerationSettings = ({
                   each required per difficulty)
                 </p>
               </div>
+
+              {/* Batch Size Slider */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase text-slate-400">
+                    Amount to Generate
+                  </label>
+                  <span className="text-xs font-mono text-orange-400">
+                    {config.batchSize}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  name="batchSize"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={config.batchSize || 6}
+                  onChange={handleChange}
+                  className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer focus:outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-orange-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:hover:bg-orange-400"
+                />
+              </div>
             </div>
 
             {/* 📊 Inventory Stats Chart with Quota Progress */}

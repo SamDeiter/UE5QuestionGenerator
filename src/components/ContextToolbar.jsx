@@ -28,6 +28,7 @@ const ContextToolbar = ({
   setFilterTags,
   customTags = {},
   isAdmin = false, // Admin-only features
+  handleChange, // Added prop for config updates
 }) => {
   const [dataMenuOpen, setDataMenuOpen] = useState(false);
   const dataMenuRef = useRef(null);
@@ -155,9 +156,26 @@ const ContextToolbar = ({
   const renderReviewToolbar = () => (
     <div className="flex justify-between items-center w-full">
       <div className="flex items-center gap-2">
-        <span className="text-xs font-bold text-slate-500 uppercase mr-2">
-          Filters:
-        </span>
+        {/* Discipline Selector in Toolbar */}
+        <div className="flex items-center gap-1 mr-2 px-2 py-1 bg-slate-800/50 rounded border border-slate-700">
+          <span className="text-[10px] uppercase font-bold text-slate-500">
+            Discipline:
+          </span>
+          <select
+            name="discipline" // Required for handleChange
+            value={config.discipline}
+            onChange={handleChange}
+            className="bg-transparent text-xs text-orange-400 font-bold outline-none border-none cursor-pointer"
+          >
+            <option value="Worldbuilding">Worldbuilding</option>
+            <option value="Game Dev">Game Dev</option>
+            <option value="Look Dev">Look Dev</option>
+            <option value="Tech Art">Tech Art</option>
+            <option value="VFX">VFX</option>
+            <option value="Animation">Animation</option>
+            <option value="Programming">Programming</option>
+          </select>
+        </div>
         <FilterButton
           mode="pending"
           current={filterMode}

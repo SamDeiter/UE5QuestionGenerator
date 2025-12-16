@@ -624,6 +624,7 @@ const App = () => {
             appMode === "review" ? handleBulkAcceptHighScores : undefined,
           onBulkCritiqueAll:
             appMode === "review" ? handleBulkCritiqueAll : undefined,
+          handleChange, // Pass config handler for Discipline selector
         }}
         showHistory={showHistory}
         uniqueFilteredQuestions={uniqueFilteredQuestions}
