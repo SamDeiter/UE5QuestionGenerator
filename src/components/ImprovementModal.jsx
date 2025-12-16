@@ -23,12 +23,15 @@ const ImprovementModal = ({
   };
 
   const scoreDelta =
-    (improvedQuestion.critiqueScore || 0) -
-    (originalQuestion.critiqueScore || 0);
+    improvedQuestion?.critiqueScore && originalQuestion?.critiqueScore
+      ? improvedQuestion.critiqueScore - originalQuestion.critiqueScore
+      : 0;
 
-  const originalTags = originalQuestion.tags || [];
-  const improvedTags = improvedQuestion.tags || [];
-  const newTags = improvedTags.filter((t) => !originalTags.includes(t));
+  const originalTags = originalQuestion?.tags || [];
+  const improvedTags = improvedQuestion?.tags || [];
+  const newTags = improvedQuestion
+    ? improvedTags.filter((tag) => !originalTags.includes(tag))
+    : [];
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
@@ -223,7 +226,9 @@ const ImprovementModal = ({
                           </span>
                         ))
                       ) : (
-                        <span className="text-xs text-slate-500 italic">No tags</span>
+                        <span className="text-xs text-slate-500 italic">
+                          No tags
+                        </span>
                       )}
                     </div>
 
@@ -246,7 +251,9 @@ const ImprovementModal = ({
                           );
                         })
                       ) : (
-                        <span className="text-xs text-slate-500 italic">No tags</span>
+                        <span className="text-xs text-slate-500 italic">
+                          No tags
+                        </span>
                       )}
                     </div>
                   </div>
