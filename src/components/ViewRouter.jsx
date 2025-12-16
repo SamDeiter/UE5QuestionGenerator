@@ -1,12 +1,11 @@
 import React from "react";
 import { Suspense } from "react";
 import Icon from "./Icon";
+import AnalyticsView from "./AnalyticsView"; // Eager load - analytics needs immediate data access
 // Lazy load heavy views
 const DatabaseView = React.lazy(() => import("./DatabaseView"));
 const ReviewMode = React.lazy(() => import("./ReviewMode"));
 const TestView = React.lazy(() => import("./TestView"));
-
-const AnalyticsView = React.lazy(() => import("./AnalyticsView"));
 const PromptPlayground = React.lazy(() => import("./PromptPlayground"));
 import BulkActionBar from "./BulkActionBar";
 import QuestionList from "./QuestionList";
