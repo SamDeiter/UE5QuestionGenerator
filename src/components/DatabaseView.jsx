@@ -1,7 +1,12 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Icon from "./Icon";
 import MetricsDashboard from "./MetricsDashboard";
 import QuestionItem from "./QuestionItem";
+
+// PERFORMANCE: Number of items to render initially and load per batch
+const INITIAL_RENDER_COUNT = 50;
+const LOAD_MORE_COUNT = 50;
+
 const DatabaseView = ({
   questions,
   _sheetUrl,
@@ -19,16 +24,19 @@ const DatabaseView = ({
 }) => {
   const [_isSyncing, _setIsSyncing] = useState(false);
   const [_syncProgress, _setSyncProgress] = useState(0);
-  // sortBy is now a prop
   const [_loadMenuOpen, setLoadMenuOpen] = useState(false);
   const loadMenuRef = useRef(null);
+
+  // PERFORMANCE: Track how many items to render (windowed rendering)
+  const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
+  const loaderRef = useRef(null);
 
   // Auto-start tutorial if not completed (and compliance modals are done)
   useEffect(() => {
     const isCompleted = localStorage.getItem("ue5_tutorial_database_completed");
     const ageVerified = localStorage.getItem("ue5_age_verified");
     const termsAccepted = localStorage.getItem("ue5_terms_accepted");
-    
+
     // Only start tutorial if compliance modals are complete
     if (!isCompleted && onStartTutorial && ageVerified && termsAccepted) {
       // Small delay to ensure view is rendered
@@ -36,6 +44,11 @@ const DatabaseView = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Reset visible count when questions change
+  useEffect(() => {
+    setVisibleCount(INITIAL_RENDER_COUNT);
+  }, [questions]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -52,10 +65,9 @@ const DatabaseView = ({
     if (!questions) return [];
 
     // Database mode shows ALL questions - no status filtering
-    // (status filtering is for Review mode only)
     const filtered = questions;
 
-    // 2. Then Sort
+    // Then Sort
     const sorted = [...filtered];
     switch (sortBy) {
       case "newest":
@@ -91,6 +103,40 @@ const DatabaseView = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions, sortBy, filterMode]);
+
+  // PERFORMANCE: Only render visible items
+  const visibleQuestions = useMemo(() => {
+    return sortedQuestions.slice(0, visibleCount);
+  }, [sortedQuestions, visibleCount]);
+
+  const hasMore = visibleCount < sortedQuestions.length;
+
+  // Load more items when scrolling near bottom
+  const loadMore = useCallback(() => {
+    if (hasMore) {
+      setVisibleCount((prev) =>
+        Math.min(prev + LOAD_MORE_COUNT, sortedQuestions.length)
+      );
+    }
+  }, [hasMore, sortedQuestions.length]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const loader = loaderRef.current;
+    if (!loader) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(loader);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore]);
 
   // Calculate available languages for each uniqueId
   const translationMap = useMemo(() => {
@@ -136,22 +182,28 @@ const DatabaseView = ({
         (q) => q.id === targetQuestion.id
       );
       if (index !== -1) {
-        // Scroll to the question
-        const element = document.querySelector(
-          `[data-question-index="${index}"]`
-        );
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-          element.classList.add("ring-2", "ring-green-500");
-          setTimeout(
-            () => element.classList.remove("ring-2", "ring-green-500"),
-            2000
-          );
+        // Ensure the question is rendered by expanding visible count if needed
+        if (index >= visibleCount) {
+          setVisibleCount(index + 10); // Load up to that question plus a few more
         }
+
+        // Wait for render then scroll
+        setTimeout(() => {
+          const element = document.querySelector(
+            `[data-question-index="${index}"]`
+          );
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            element.classList.add("ring-2", "ring-green-500");
+            setTimeout(
+              () => element.classList.remove("ring-2", "ring-green-500"),
+              2000
+            );
+          }
+        }, 100);
         showMessage(`Scrolled to ${targetLang} version.`);
       }
     } else {
-      // Translation exists in theory but not in current dataset
       showMessage(
         `${targetLang} version not found in current view. Try using "Sort by Language" to find it.`
       );
@@ -170,8 +222,9 @@ const DatabaseView = ({
               <Icon name="database" /> Database View
             </h2>
             <p className="text-xs text-blue-300/70">
-              Viewing {sortedQuestions.length} of {questions.length} loaded
+              Showing {visibleQuestions.length} of {sortedQuestions.length}{" "}
               records
+              {hasMore && ` (scroll for more)`}
             </p>
           </div>
         </div>
@@ -185,33 +238,45 @@ const DatabaseView = ({
             No questions loaded from database. Click Refresh.
           </div>
         ) : (
-          sortedQuestions.map((q, i) => (
-            <div
-              key={i}
-              data-question-index={i}
-              className="opacity-75 hover:opacity-100 transition-all"
-            >
-              <QuestionItem
-                q={q}
-                // Pass dummy handlers or read-only mode if supported
-                onUpdateStatus={() => {}}
-                onExplain={() => {}}
-                onVariate={() => {}}
-                onCritique={() => {}}
-                onTranslateSingle={() => {}}
-                onSwitchLanguage={(targetLang) =>
-                  handleSwitchLanguage(q, targetLang)
-                }
-                onDelete={() => {}}
-                onUpdateQuestion={onUpdateQuestion}
-                onKickBack={onKickBack}
-                availableLanguages={translationMap.get(q.uniqueId)}
-                isProcessing={false}
-                appMode="database"
-                showMessage={showMessage}
-              />
-            </div>
-          ))
+          <>
+            {visibleQuestions.map((q, i) => (
+              <div
+                key={q.uniqueId || q.id || i}
+                data-question-index={i}
+                className="opacity-75 hover:opacity-100 transition-all"
+              >
+                <QuestionItem
+                  q={q}
+                  onUpdateStatus={() => {}}
+                  onExplain={() => {}}
+                  onVariate={() => {}}
+                  onCritique={() => {}}
+                  onTranslateSingle={() => {}}
+                  onSwitchLanguage={(targetLang) =>
+                    handleSwitchLanguage(q, targetLang)
+                  }
+                  onDelete={() => {}}
+                  onUpdateQuestion={onUpdateQuestion}
+                  onKickBack={onKickBack}
+                  availableLanguages={translationMap.get(q.uniqueId)}
+                  isProcessing={false}
+                  appMode="database"
+                  showMessage={showMessage}
+                />
+              </div>
+            ))}
+
+            {/* Infinite scroll trigger */}
+            {hasMore && (
+              <div
+                ref={loaderRef}
+                className="flex items-center justify-center py-8 text-slate-500"
+              >
+                <Icon name="loader" className="animate-spin mr-2" size={16} />
+                <span className="text-sm">Loading more questions...</span>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
