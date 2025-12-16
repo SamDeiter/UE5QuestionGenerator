@@ -43,8 +43,8 @@ const TagConnectionGraph = ({
       if (svgRef.current) {
         const parent = svgRef.current.parentElement;
         if (parent && parent.clientWidth > 0) {
-          // Use 80% of parent width - good balance
-          const size = Math.floor(parent.clientWidth * 0.8);
+          // Use 70% of parent width
+          const size = Math.floor(parent.clientWidth * 0.7);
           setDimensions({
             width: size,
             height: size, // Make it square
