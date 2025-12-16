@@ -248,20 +248,24 @@ export const generateCritique = async (apiKey, q) => {
     4. Professional Tone: Is it suitable for certification/interview use?
     5. Source Quality: Can the answer be verified from official documentation?
     
-    MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this structure:
+    CRITICAL: You MUST provide TWO scores in your response:
+    1. originalScore: Score for the question AS PROVIDED (the current version)
+    2. improvedScore: Score for your IMPROVED rewrite (should be higher)
+    
+    MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this EXACT structure:
     {
-        "originalScore": number, // 0-100 score for the ORIGINAL question (as provided)
+        "originalScore": 75,  // REQUIRED: Score (0-100) for ORIGINAL question
         "critique": "string", // Detailed feedback with specific suggestions
         "rewrite": {
             "question": "string", // Improved question text
             "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
             "correct": "string" // Correct letter (A, B, C, or D)
         },
-        "improvedScore": number, // 0-100 estimated score for the IMPROVED question (after your changes)
+        "improvedScore": 92,  // REQUIRED: Score (0-100) for IMPROVED version (must be > originalScore)
         "changes": "string" // Brief explanation of what was changed and why
     }
     
-    NOTE: The "improvedScore" should be HIGHER than "originalScore" to demonstrate the improvement.
+    IMPORTANT: Both originalScore AND improvedScore are REQUIRED fields. Do not omit either one.
 
     Question: ${q.question}
     Options: ${optionsStr}
