@@ -36,15 +36,15 @@ const TagConnectionGraph = ({
   };
 
   // Determine dimensions for SVG - MUST BE DEFINED BEFORE nodePositions
-  const [dimensions, setDimensions] = useState({ width: 800, height: 800 });
+  const [dimensions, setDimensions] = useState({ width: 900, height: 900 });
 
   useEffect(() => {
     const updateDimensions = () => {
       if (svgRef.current) {
         const parent = svgRef.current.parentElement;
         if (parent && parent.clientWidth > 0) {
-          // Use 70% of parent width - good balance
-          const size = Math.floor(parent.clientWidth * 0.7);
+          // Use min of 100% parent width or 900px max - ensures it's big enough
+          const size = Math.min(parent.clientWidth, 900);
           setDimensions({
             width: size,
             height: size, // Make it square
