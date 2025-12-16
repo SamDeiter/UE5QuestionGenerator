@@ -47,8 +47,9 @@ const getVerificationBadge = (status) => {
   }
 };
 
-const QuestionMetadata = ({ q }) => {
+const QuestionMetadata = ({ q, onAutoTag, isProcessing }) => {
   const verification = getVerificationBadge(q.sourceVerified);
+  const hasLowTags = !q.tags || q.tags.length < 3;
 
   return (
     <>
@@ -76,20 +77,43 @@ const QuestionMetadata = ({ q }) => {
         </div>
       )}
 
-      {/* Tags Display - Subtle inline */}
-      {q.tags && q.tags.length > 0 && (
-        <div className="flex items-center gap-1 mb-2 text-[9px] text-slate-500">
-          <span className="text-slate-600">Tags:</span>
-          {q.tags.map((tag) => (
-            <span
-              key={tag}
-              className="px-1.5 py-0.5 rounded bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:text-slate-300 transition-colors"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
+      {/* Tags Display with Auto-Tag Button */}
+      <div className="flex items-center gap-2 mb-2">
+        {q.tags && q.tags.length > 0 && (
+          <div className="flex items-center gap-1 text-[9px] text-slate-500 flex-1">
+            <span className="text-slate-600">Tags:</span>
+            {q.tags.map((tag) => (
+              <span
+                key={tag}
+                className="px-1.5 py-0.5 rounded bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:text-slate-300 transition-colors"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Auto-Tag Button */}
+        {onAutoTag && (hasLowTags || q.status === "pending") && (
+          <button
+            onClick={() => onAutoTag(q)}
+            disabled={isProcessing}
+            className={`px-2 py-1 text-[10px] font-medium rounded border transition-all flex items-center gap-1 ${
+              hasLowTags
+                ? "bg-cyan-900/30 border-cyan-700/50 text-cyan-400 hover:bg-cyan-800/40 hover:border-cyan-600"
+                : "bg-slate-800/50 border-slate-600 text-slate-400 hover:bg-slate-700 hover:border-slate-500"
+            } ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
+            title={
+              hasLowTags
+                ? `Add tags (current: ${q.tags?.length || 0}/3)`
+                : "Generate AI tags for this question"
+            }
+          >
+            <Icon name="tag" size={12} />
+            {hasLowTags ? `Add Tags (${q.tags?.length || 0}/3)` : "Auto-Tag"}
+          </button>
+        )}
+      </div>
 
       {/* Grounding Sources (if available) */}
       {q.groundingSources && q.groundingSources.length > 0 && (

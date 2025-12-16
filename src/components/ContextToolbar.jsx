@@ -29,6 +29,13 @@ const ContextToolbar = ({
   customTags = {},
   isAdmin = false, // Admin-only features
   handleChange, // Added prop for config updates
+  onTrimExcess,
+  onBulkMove,
+  onAutoClassify,
+  onAutoTag,
+  onAutoTagAll,
+  effectiveApiKey,
+  selectedIds,
 }) => {
   const [dataMenuOpen, setDataMenuOpen] = useState(false);
   const dataMenuRef = useRef(null);
@@ -157,16 +164,17 @@ const ContextToolbar = ({
     <div className="flex justify-between items-center w-full">
       <div className="flex items-center gap-2">
         {/* Discipline Selector in Toolbar */}
-        <div className="flex items-center gap-1 mr-2 px-2 py-1 bg-slate-800/50 rounded border border-slate-700">
-          <span className="text-[10px] uppercase font-bold text-slate-500">
+        <div className="flex items-center gap-1 mr-2 px-2 py-1 bg-slate-800 rounded border border-slate-700 shadow-sm">
+          <span className="text-[10px] uppercase font-bold text-slate-500 select-none">
             Discipline:
           </span>
           <select
             name="discipline" // Required for handleChange
             value={config.discipline}
             onChange={handleChange}
-            className="bg-transparent text-xs text-orange-400 font-bold outline-none border-none cursor-pointer"
+            className="bg-transparent text-xs text-slate-200 font-medium outline-none border-none cursor-pointer focus:ring-0 hover:text-white transition-colors"
           >
+            <option value="">All Disciplines</option>
             <option value="Worldbuilding">Worldbuilding</option>
             <option value="Game Dev">Game Dev</option>
             <option value="Look Dev">Look Dev</option>
@@ -208,16 +216,86 @@ const ContextToolbar = ({
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Clear Pending Button */}
-        {counts.pending > 0 && (
-          <button
-            onClick={onClearPending}
-            className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-red-900/20 text-red-400 border border-red-900/50 hover:bg-red-900/40 hover:text-red-300"
-            title="Delete all pending questions"
-          >
-            <Icon name="trash-2" size={14} />
-            Clear Pending
-          </button>
+        {/* SELECTION ACTIONS */}
+        {selectedIds?.size > 0 ? (
+          <>
+            <span className="text-[10px] font-bold text-indigo-400 bg-indigo-900/30 px-2 py-1 rounded border border-indigo-900/50">
+              {selectedIds.size} Selected
+            </span>
+
+            {/* Auto-Classify */}
+            <button
+              onClick={() => onAutoClassify(selectedIds, effectiveApiKey)}
+              disabled={isProcessing}
+              className="px-2 py-1 text-[10px] font-medium rounded border border-indigo-500/50 text-indigo-300 hover:bg-indigo-500/20 flex items-center gap-1 transition-colors"
+              title="Auto-detect Discipline using Gemini"
+            >
+              <Icon name="cpu" size={12} /> Auto-Classify
+            </button>
+
+            {/* Auto-Tag */}
+            <button
+              onClick={() => onAutoTag(selectedIds, effectiveApiKey)}
+              disabled={isProcessing}
+              className="px-2 py-1 text-[10px] font-medium rounded border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20 flex items-center gap-1 transition-colors"
+              title="Auto-generate Tags using Gemini"
+            >
+              <Icon name="hash" size={12} /> Auto-Tag
+            </button>
+
+            {/* Move To Dropdown */}
+            <div className="relative group">
+              <button className="px-2 py-1 text-[10px] font-medium rounded border border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center gap-1 transition-colors">
+                Move To... <Icon name="chevron-down" size={10} />
+              </button>
+              <div className="absolute right-0 top-full mt-1 w-32 bg-slate-800 border border-slate-700 rounded shadow-xl hidden group-hover:block z-50">
+                {[
+                  "Worldbuilding",
+                  "Game Dev",
+                  "Look Dev",
+                  "Tech Art",
+                  "VFX",
+                  "Animation",
+                  "Programming",
+                ].map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => onBulkMove(selectedIds, d)}
+                    className="w-full text-left px-3 py-1.5 text-[10px] text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-4 w-px bg-slate-700"></div>
+          </>
+        ) : (
+          /* GLOBAL ACTIONS used when nothing selected */
+          <>
+            {/* Trim Excess - Only show if discipline selected and pending > 40 */}
+            {config.discipline && counts.pending > 40 && (
+              <button
+                onClick={() => onTrimExcess(config.discipline)}
+                className="px-2 py-1 text-[10px] font-medium rounded border border-orange-500/50 text-orange-400 hover:bg-orange-500/20 flex items-center gap-1 transition-colors"
+                title={`Trim pending questions in ${config.discipline} to 40`}
+              >
+                <Icon name="scissors" size={12} /> Trim Excess
+              </button>
+            )}
+
+            {/* Tag All Pending - Show if discipline selected and has pending */}
+            {config.discipline && counts.pending > 0 && (
+              <button
+                onClick={() => onAutoTagAll(config.discipline)}
+                className="px-2 py-1 text-[10px] font-medium rounded border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20 flex items-center gap-1 transition-colors"
+                title={`Auto-generate tags for all ${counts.pending} pending questions in ${config.discipline}`}
+              >
+                <Icon name="tag" size={12} /> Tag All Pending
+              </button>
+            )}
+          </>
         )}
 
         <div className="h-4 w-px bg-slate-700"></div>

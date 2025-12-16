@@ -14,28 +14,32 @@ const TagConnectionGraph = ({
   showAllDisciplines,
 }) => {
   const svgRef = useRef(null);
-  const [selectedTag, setSelectedTag] = useState(null);
-  const [dimensions, setDimensions] = useState({ width: 500, height: 450 });
+  const [sortOrder, setSortOrder] = useState("most_connected"); // 'most_connected' | 'least_connected'
 
-  // Update dimensions on resize
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (svgRef.current) {
-        const container = svgRef.current.parentElement;
-        if (container) {
-          setDimensions({ width: container.clientWidth || 500, height: 450 });
-        }
-      }
-    };
-    updateDimensions();
-    window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
-  }, []);
+  // No selection state needed if we are removing highlighting
+  // User said "do not highlight when you hover", implying they want a static view or at least no distinct active state.
 
-  // Calculate tag co-occurrences
+  // Vibrant color palette for tags
+  const TAG_COLORS = [
+    "#F472B6", // Pink 400
+    "#A78BFA", // Violet 400
+    "#60A5FA", // Blue 400
+    "#34D399", // Emerald 400
+    "#FBBF24", // Amber 400
+    "#F87171", // Red 400
+    "#22D3EE", // Cyan 400
+    "#E879F9", // Fuchsia 400
+  ];
+
+  const getColorForTag = (tagName, index) => {
+    return TAG_COLORS[index % TAG_COLORS.length];
+  };
+
+  // Calculate tag co-occurrences and sort by CONNECTIONS
   const { tags, connections } = useMemo(() => {
     const tagCounts = {};
     const coOccurrences = {};
+    const connectionCounts = {}; // Track degree (number of connections) for each tag
 
     // Filter by discipline if needed
     const filteredQuestions =
@@ -54,7 +58,7 @@ const TagConnectionGraph = ({
         .replace(/[^a-z0-9\s-]/g, "");
     };
 
-    // Count tags and co-occurrences
+    // 1. Count tags and co-occurrences
     filteredQuestions.forEach((question) => {
       if (!question.tags || !Array.isArray(question.tags)) return;
 
@@ -65,6 +69,7 @@ const TagConnectionGraph = ({
       // Count individual tags
       normalizedTags.forEach((tag) => {
         tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        if (!connectionCounts[tag]) connectionCounts[tag] = 0;
       });
 
       // Count co-occurrences (pairs)
@@ -72,22 +77,38 @@ const TagConnectionGraph = ({
         for (let j = i + 1; j < normalizedTags.length; j++) {
           const tag1 = normalizedTags[i];
           const tag2 = normalizedTags[j];
+
           const key = [tag1, tag2].sort().join("|||");
-          coOccurrences[key] = (coOccurrences[key] || 0) + 1;
+          if (!coOccurrences[key]) {
+            coOccurrences[key] = 0;
+            // Increment connection degree for both tags (unique connections)
+            connectionCounts[tag1]++;
+            connectionCounts[tag2]++;
+          }
+          coOccurrences[key]++;
         }
       }
     });
 
-    // Get top 20 tags by count
-    const sortedTags = Object.entries(tagCounts)
-      .filter(([, count]) => count >= 2) // Only tags used 2+ times
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 20)
-      .map(([name, count]) => ({ name, count }));
+    // 2. Sort tags by CONNECTION DEGREE (not just usage count)
+    const sortedTags = Object.keys(tagCounts)
+      .map((name) => ({
+        name,
+        count: tagCounts[name],
+        degree: connectionCounts[name] || 0,
+      }))
+      .sort((a, b) => {
+        if (sortOrder === "most_connected") {
+          return b.degree - a.degree; // Descending (High number first)
+        } else {
+          return a.degree - b.degree; // Ascending (Low number first)
+        }
+      })
+      .slice(0, 20); // Top 20
 
     const tagNames = new Set(sortedTags.map((tag) => tag.name));
 
-    // Get connections between these top tags
+    // 3. Get connections ONLY between these selected tags
     const relevantConnections = Object.entries(coOccurrences)
       .filter(([key]) => {
         const [tag1, tag2] = key.split("|||");
@@ -97,14 +118,17 @@ const TagConnectionGraph = ({
         const [source, target] = key.split("|||");
         return { source, target, count };
       })
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 50); // Top 50 connections
+      .sort((a, b) => b.count - a.count);
 
     return { tags: sortedTags, connections: relevantConnections };
-  }, [questions, selectedDiscipline, showAllDisciplines]);
+  }, [questions, selectedDiscipline, showAllDisciplines, sortOrder]);
 
   // Calculate node positions (circular layout)
   const nodePositions = useMemo(() => {
+    const dimensions = {
+      width: svgRef.current?.clientWidth || 600,
+      height: svgRef.current?.clientHeight || 600,
+    };
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
     const radius = Math.min(dimensions.width, dimensions.height) / 2 - 80;
@@ -119,12 +143,26 @@ const TagConnectionGraph = ({
       };
     });
     return positions;
-  }, [tags, dimensions]);
+  }, [tags]);
 
-  // Handle node click
-  const handleNodeClick = (tagName) => {
-    setSelectedTag(selectedTag === tagName ? null : tagName);
-  };
+  // Handle node click - removed as per instruction
+
+  // Determine dimensions for SVG
+  const [dimensions, setDimensions] = useState({ width: 600, height: 600 });
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (svgRef.current) {
+        const parent = svgRef.current.parentElement;
+        setDimensions({
+          width: parent ? parent.clientWidth : 600,
+          height: parent ? parent.clientWidth : 600, // Make it square
+        });
+      }
+    };
+    updateDimensions();
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
+  }, []);
 
   if (tags.length === 0) {
     return (
@@ -149,6 +187,30 @@ const TagConnectionGraph = ({
 
   return (
     <div className="relative">
+      {/* View Toggle */}
+      <div className="absolute top-0 right-0 z-10 flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+        <button
+          onClick={() => setSortOrder("most_connected")}
+          className={`px-2 py-1 text-[10px] font-bold uppercase rounded ${
+            sortOrder === "most_connected"
+              ? "bg-slate-600 text-white"
+              : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Most Connected
+        </button>
+        <button
+          onClick={() => setSortOrder("least_connected")}
+          className={`px-2 py-1 text-[10px] font-bold uppercase rounded ${
+            sortOrder === "least_connected"
+              ? "bg-slate-600 text-white"
+              : "text-slate-400 hover:text-white"
+          }`}
+        >
+          Least Connected
+        </button>
+      </div>
+
       <svg
         ref={svgRef}
         width="100%"
@@ -169,23 +231,14 @@ const TagConnectionGraph = ({
           />
         ))}
 
-        {/* Connections */}
+        {/* Connections - Static Style */}
         {connections.map((connection, index) => {
           const start = nodePositions[connection.source];
           const end = nodePositions[connection.target];
           if (!start || !end) return null;
 
-          const isHighlighted =
-            selectedTag === connection.source ||
-            selectedTag === connection.target;
-          const opacity = selectedTag
-            ? isHighlighted
-              ? 0.9
-              : 0.05
-            : 0.15 + (connection.count / maxConnectionCount) * 0.3;
-          const strokeWidth = isHighlighted
-            ? 2 + (connection.count / maxConnectionCount) * 2
-            : 1 + connection.count / maxConnectionCount;
+          const opacity = 0.15 + (connection.count / maxConnectionCount) * 0.3;
+          const strokeWidth = 1 + connection.count / maxConnectionCount;
 
           return (
             <line
@@ -194,7 +247,7 @@ const TagConnectionGraph = ({
               y1={start.y}
               x2={end.x}
               y2={end.y}
-              stroke={isHighlighted ? "#818cf8" : "#475569"}
+              stroke="#64748b" // Slate 500
               strokeWidth={strokeWidth}
               strokeOpacity={opacity}
             />
@@ -202,23 +255,16 @@ const TagConnectionGraph = ({
         })}
 
         {/* Tag Nodes */}
-        {tags.map((tag) => {
+        {tags.map((tag, index) => {
           const pos = nodePositions[tag.name];
           if (!pos) return null;
 
-          const isSelected = selectedTag === tag.name;
-          const isConnected = selectedTag
-            ? connections.some(
-                (conn) =>
-                  (conn.source === selectedTag && conn.target === tag.name) ||
-                  (conn.target === selectedTag && conn.source === tag.name)
-              )
-            : false;
-          const shouldHighlight = isSelected || isConnected;
           const connectionCount = connections.filter(
             (conn) => conn.source === tag.name || conn.target === tag.name
           ).length;
-          const nodeSize = 6 + (tag.count / maxCount) * 14;
+
+          const nodeSize = 14 + (tag.count / maxCount) * 16;
+          const color = getColorForTag(tag.name, index);
 
           // Calculate label position (outside the circle)
           const angle = Math.atan2(pos.y - centerY, pos.x - centerX);
@@ -230,69 +276,41 @@ const TagConnectionGraph = ({
           return (
             <g
               key={tag.name}
-              onClick={() => handleNodeClick(tag.name)}
-              style={{ cursor: "pointer" }}
+              // No onClick
             >
-              {/* Node glow for selected */}
-              {isSelected && (
-                <circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={nodeSize + 6}
-                  fill="none"
-                  stroke="#818cf8"
-                  strokeWidth={2}
-                  strokeOpacity={0.5}
-                />
-              )}
               {/* Node circle */}
               <circle
                 cx={pos.x}
                 cy={pos.y}
                 r={nodeSize}
-                fill={
-                  isSelected
-                    ? "#818cf8"
-                    : shouldHighlight
-                    ? "#6366f1"
-                    : "#475569"
-                }
-                stroke={isSelected ? "#a5b4fc" : "#64748b"}
-                strokeWidth={isSelected ? 2 : 1}
-                opacity={
-                  selectedTag && !shouldHighlight && !isSelected ? 0.3 : 1
-                }
+                fill={color}
+                stroke={color}
+                strokeWidth={0}
+                fillOpacity={0.8}
               />
               {/* Connection count inside node */}
-              {connectionCount > 0 && nodeSize >= 10 && (
-                <text
-                  x={pos.x}
-                  y={pos.y}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fill="#ffffff"
-                  fontSize={nodeSize > 15 ? 10 : 8}
-                  fontWeight="bold"
-                  className="select-none pointer-events-none"
-                  opacity={
-                    selectedTag && !shouldHighlight && !isSelected ? 0.3 : 1
-                  }
-                >
-                  {connectionCount}
-                </text>
-              )}
+              <text
+                x={pos.x}
+                y={pos.y}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill="#ffffff" // White text on colored background
+                fontSize={10}
+                fontWeight="bold"
+                className="select-none pointer-events-none"
+                style={{ textShadow: "0px 1px 2px rgba(0,0,0,0.5)" }}
+              >
+                {connectionCount}
+              </text>
               {/* Tag label */}
               <text
                 x={labelX}
                 y={labelY}
                 textAnchor={textAnchor}
                 dominantBaseline="middle"
-                fill={shouldHighlight || isSelected ? "#e2e8f0" : "#64748b"}
+                fill="#cbd5e1" // Slate 300
                 fontSize={11}
                 className="select-none pointer-events-none"
-                opacity={
-                  selectedTag && !shouldHighlight && !isSelected ? 0.3 : 1
-                }
               >
                 #{tag.name}
               </text>
@@ -300,33 +318,6 @@ const TagConnectionGraph = ({
           );
         })}
       </svg>
-
-      {/* Click instruction */}
-      <p className="text-center text-slate-500 text-sm mt-2">
-        Click a node to highlight connections
-      </p>
-
-      {/* Selected tag info */}
-      {selectedTag && (
-        <div className="absolute top-4 right-4 bg-slate-800/90 border border-slate-700 rounded-lg p-3 text-sm backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-3 h-3 rounded-full bg-indigo-400"></div>
-            <span className="font-semibold text-white">#{selectedTag}</span>
-          </div>
-          <div className="text-slate-400">
-            {nodePositions[selectedTag]?.count || 0} questions
-          </div>
-          <div className="text-slate-500 text-xs">
-            {
-              connections.filter(
-                (conn) =>
-                  conn.source === selectedTag || conn.target === selectedTag
-              ).length
-            }{" "}
-            connections
-          </div>
-        </div>
-      )}
     </div>
   );
 };

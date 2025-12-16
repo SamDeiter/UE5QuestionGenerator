@@ -129,14 +129,14 @@ ${
 1. **Tags are REQUIRED**: Every question MUST be directly related to one of the selected Focus Tags above.
 2. **No off-topic questions**: Do NOT generate questions about topics outside the selected tags.
 3. **Distribute among selected**: If multiple tags are selected, spread questions evenly across them.
-4. **Tag Assignment**: Every question MUST be tagged with 1-3 tags from the Selected Tags list.`
+4. **Tag Assignment**: Every question MUST be tagged with 3-5 tags from the Selected Tags list.`
     : `**Spread questions evenly across ALL available tags.** Do NOT focus on just 1-2 topics.
     
 **COVERAGE RULES:**
 1. **Breadth First**: Each batch should touch as many different tags as possible. If there are 10 tags, try to cover 6+ in a batch of 6.
 2. **No Clustering**: Do NOT generate 3 questions about #Nanite and 0 about #Lumen. Spread evenly.
 3. **Difficulty Spread**: Each tag should have questions at Easy, Medium, AND Hard levels over time.
-4. **Tag Assignment**: Every question MUST have 1-3 tags from the Available Tags list that accurately describe its content.`
+4. **Tag Assignment**: Every question MUST have 3-5 tags from the Available Tags list that accurately describe its content.`
 }
 
 **SMART PRIORITIZATION:**
@@ -361,7 +361,7 @@ Generate at least 50% of questions using these underrepresented tags.`
             "CorrectLetter": "A" or "B" or "C" or "D",
             "SourceURL": "https://dev.epicgames.com/...",
             "SourceExcerpt": "Quote from doc...",
-            "Tags": "#Tag1, #Tag2 (MUST be from Available Tags list above - pick 1-3 relevant to the question content)",
+            "Tags": ["Tag1", "Tag2", "Tag3"] (REQUIRED: Minimum 3 relevant tags from the Available Tags list),
             "QualityScore": 85
         }
     ]

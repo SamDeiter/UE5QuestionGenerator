@@ -63,8 +63,18 @@ const AnalyticsView = ({
 }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedDiscipline, setSelectedDiscipline] = useState(null);
+  const [timeRange, setTimeRange] = useState("all");
   const analytics = getAnalytics();
   const tokenStats = getTokenStats();
+
+  const TIME_RANGES = [
+    { id: "24h", label: "24h", days: 1 },
+    { id: "7d", label: "7d", days: 7 },
+    { id: "15d", label: "15d", days: 15 },
+    { id: "30d", label: "30d", days: 30 },
+    { id: "90d", label: "90d", days: 90 },
+    { id: "all", label: "All", days: null },
+  ];
 
   // Convert allQuestionsMap to flat array for TagCloudAnalytics
   const allQuestions = useMemo(() => {
@@ -111,9 +121,63 @@ const AnalyticsView = ({
     statusData,
     qualityDistribution,
     recentGenerations,
+    filteredSummary, // New: Summary stats for the selected period
   } = useMemo(() => {
-    const questions = analytics.questions || [];
-    const generations = analytics.generations || [];
+    let questions = analytics.questions || [];
+    let generations = analytics.generations || [];
+
+    // Filter by Time Range
+    if (timeRange !== "all") {
+      const range = TIME_RANGES.find((r) => r.id === timeRange);
+      if (range && range.days) {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - range.days);
+
+        questions = questions.filter((q) => new Date(q.created) >= cutoff);
+        generations = generations.filter(
+          (g) => new Date(g.timestamp) >= cutoff
+        );
+      }
+    }
+
+    // New: Calculate summary for the filtered view
+    const filteredSummary = {
+      totalQuestions: questions.length,
+      totalGenerations: generations.length,
+      acceptanceRate: 0,
+      averageQuality: 0,
+      estimatedCost: generations.reduce(
+        (sum, g) => sum + (g.estimatedCost || 0),
+        0
+      ),
+    };
+
+    // Recalculate Acceptance Rate
+    const decidedQuestions = questions.filter(
+      (q) => q.status === "accepted" || q.status === "rejected"
+    );
+    if (decidedQuestions.length > 0) {
+      const accepted = decidedQuestions.filter(
+        (q) => q.status === "accepted"
+      ).length;
+      filteredSummary.acceptanceRate = Math.round(
+        (accepted / decidedQuestions.length) * 100
+      );
+    }
+
+    // Recalculate Average Quality
+    const questionsWithQuality = questions.filter(
+      (q) => q.qualityScore != null
+    );
+    if (questionsWithQuality.length > 0) {
+      const totalQuality = questionsWithQuality.reduce(
+        (sum, q) => sum + q.qualityScore,
+        0
+      );
+      filteredSummary.averageQuality = Math.round(
+        totalQuality / questionsWithQuality.length
+      );
+    }
 
     // Discipline breakdown
     const disciplineCounts = DISCIPLINES.reduce((acc, disc) => {
@@ -184,17 +248,18 @@ const AnalyticsView = ({
       statusData,
       qualityDistribution,
       recentGenerations,
+      filteredSummary,
     };
-  }, [analytics]);
+  }, [analytics, timeRange]);
 
-  const summary = analytics.summary || {};
+  const summary = filteredSummary || analytics.summary || {};
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Header */}
       <div className="bg-slate-900 border-b border-slate-800 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4 w-full md:w-auto">
             <button
               onClick={onBack}
               className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
@@ -202,7 +267,7 @@ const AnalyticsView = ({
               <Icon name="arrow-left" size={16} />
               Back
             </button>
-            <div className="w-px h-6 bg-slate-700" />
+            <div className="w-px h-6 bg-slate-700 hidden md:block" />
             <div className="flex items-center gap-3">
               <div className="p-2 bg-emerald-900/30 rounded-lg">
                 <Icon
@@ -213,30 +278,49 @@ const AnalyticsView = ({
               </div>
               <div>
                 <h1 className="text-xl font-bold">Analytics Dashboard</h1>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 hidden sm:block">
                   Generation metrics • Quality trends • Discipline breakdown
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                data-tour={tab.dataTour}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                  activeTab === tab.id
-                    ? "bg-emerald-600 text-white shadow-lg"
-                    : "text-slate-400 hover:text-white hover:bg-slate-700"
-                }`}
-              >
-                <Icon name={tab.icon} size={14} />
-                {tab.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+            {/* Time Range Selector */}
+            <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700 overflow-x-auto">
+              {TIME_RANGES.map((range) => (
+                <button
+                  key={range.id}
+                  onClick={() => setTimeRange(range.id)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors ${
+                    timeRange === range.id
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-white hover:bg-slate-700"
+                  }`}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
+                    activeTab === tab.id
+                      ? "bg-emerald-600 text-white shadow-lg"
+                      : "text-slate-400 hover:text-white hover:bg-slate-700"
+                  }`}
+                  title={tab.label}
+                >
+                  <Icon name={tab.icon} size={14} />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

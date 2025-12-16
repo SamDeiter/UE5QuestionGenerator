@@ -363,6 +363,11 @@ const App = () => {
     handleClearPending,
     handleBulkAcceptHighScores,
     handleBulkCritiqueAll,
+    handleTrimExcess,
+    handleBulkMove,
+    handleAutoClassify,
+    handleAutoTag,
+    handleAutoTagAll,
   } = useReviewActions({
     uniqueFilteredQuestions,
     setQuestions,
@@ -624,6 +629,14 @@ const App = () => {
             appMode === "review" ? handleBulkAcceptHighScores : undefined,
           onBulkCritiqueAll:
             appMode === "review" ? handleBulkCritiqueAll : undefined,
+          onTrimExcess: handleTrimExcess,
+          onBulkMove: handleBulkMove,
+          onAutoClassify: handleAutoClassify, // Added
+          onAutoTag: handleAutoTag, // Added
+          onAutoTagAll: (discipline) =>
+            handleAutoTagAll(discipline, effectiveApiKey), // Added
+          effectiveApiKey: effectiveApiKey, // Added
+          selectedIds: selectedIds, // Added
           handleChange, // Pass config handler for Discipline selector
         }}
         showHistory={showHistory}
@@ -652,6 +665,8 @@ const App = () => {
           clearSelection,
           bulkUpdateStatus,
           toggleSelection,
+          handleTrimExcess, // Added
+          handleBulkMove, // Added
         }}
         viewRouterState={{
           currentReviewIndex,

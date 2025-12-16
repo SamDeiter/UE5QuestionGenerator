@@ -44,11 +44,60 @@ export const generateContent = vi.fn(async (apiKey, systemPrompt, userPrompt) =>
 });
 
 /**
+ * Mock generateCritique function
+ */
+export const generateCritique = vi.fn(async (apiKey, question) => {
+    apiCallHistory.push({ type: 'critique', apiKey, question, timestamp: Date.now() });
+    await new Promise(resolve => setTimeout(resolve, 50));
+    return {
+        score: 85,
+        text: mockGeminiResponses.critique.text(),
+        rewrite: null,
+        changes: null
+    };
+});
+
+/**
+ * Mock rewriteQuestion function
+ */
+export const rewriteQuestion = vi.fn(async (apiKey, question, critique) => {
+    apiCallHistory.push({ type: 'rewrite', apiKey, question, critique, timestamp: Date.now() });
+    await new Promise(resolve => setTimeout(resolve, 50));
+    return mockGeminiResponses.singleQuestion.text();
+});
+
+/**
+ * Mock listModels function
+ */
+export const listModels = vi.fn(async (apiKey) => {
+    return ['gemini-2.0-flash', 'gemini-1.5-pro'];
+});
+
+/**
+ * Mock classifyQuestionDiscipline
+ */
+export const classifyQuestionDiscipline = vi.fn(async (apiKey, text) => {
+    return "Programming";
+});
+
+/**
+ * Mock generateTagsForQuestion
+ */
+export const generateTagsForQuestion = vi.fn(async (apiKey, text) => {
+    return ["Blueprints", "C++", "Editor"];
+});
+
+/**
  * Reset mock state
  */
 export const resetMock = () => {
     apiCallHistory.length = 0;
     generateContent.mockClear();
+    generateCritique.mockClear();
+    rewriteQuestion.mockClear();
+    listModels.mockClear();
+    classifyQuestionDiscipline.mockClear();
+    generateTagsForQuestion.mockClear();
 };
 
 /**
@@ -56,6 +105,7 @@ export const resetMock = () => {
  */
 export const simulateError = (errorMessage = 'API Error') => {
     generateContent.mockRejectedValueOnce(new Error(errorMessage));
+    generateCritique.mockRejectedValueOnce(new Error(errorMessage));
 };
 
 /**
