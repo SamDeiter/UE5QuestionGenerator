@@ -271,7 +271,7 @@ const QuestionActions = ({
             </button>
 
             {rejectMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-slate-800 border-2 border-red-700/50 rounded-lg shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="absolute right-0 top-full mt-2 w-64 bg-slate-800 border-2 border-red-700/50 rounded-lg shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 -translate-x-0 md:-translate-x-48">
                 <div className="px-3 py-2 bg-red-900/40 border-b border-red-700/50">
                   <span className="text-sm font-bold text-red-300 flex items-center gap-2">
                     <Icon name="alert-octagon" size={16} />
