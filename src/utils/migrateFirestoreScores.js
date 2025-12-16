@@ -2,7 +2,7 @@
  * Firestore Migration: Add improvedScore to existing critique data
  */
 
-import { db } from "./firebase";
+import { db } from "../services/firebase";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 
 /**
