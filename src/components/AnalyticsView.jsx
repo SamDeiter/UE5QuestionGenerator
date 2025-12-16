@@ -123,7 +123,8 @@ const AnalyticsView = ({
     recentGenerations,
     filteredSummary, // New: Summary stats for the selected period
   } = useMemo(() => {
-    let questions = analytics.questions || [];
+    // Use allQuestions from allQuestionsMap instead of analytics.questions from localStorage
+    let questions = allQuestions; // Changed from analytics.questions
     let generations = analytics.generations || [];
 
     // Filter by Time Range
@@ -250,7 +251,7 @@ const AnalyticsView = ({
       recentGenerations,
       filteredSummary,
     };
-  }, [analytics, timeRange]);
+  }, [analytics, timeRange, allQuestions]);
 
   const summary = filteredSummary || analytics.summary || {};
 
