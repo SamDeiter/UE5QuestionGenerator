@@ -10,6 +10,8 @@ import CritiqueSection from "./QuestionItem/CritiqueSection";
 import ValidationWarnings from "./QuestionItem/ValidationWarnings";
 import ExplanationDisplay from "./QuestionItem/ExplanationDisplay";
 import SourceContextCard from "./QuestionItem/SourceContextCard";
+import ImprovementModal from "./ImprovementModal";
+import Icon from "./Icon";
 import { getSecureItem } from "../utils/secureStorage";
 
 const QuestionItem = ({
@@ -32,6 +34,7 @@ const QuestionItem = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(q.question);
+  const [showImprovementModal, setShowImprovementModal] = useState(false);
 
   const getStatusStyle = (status) => {
     switch (status) {
