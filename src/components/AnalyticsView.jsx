@@ -502,6 +502,7 @@ const AnalyticsView = ({
             <TagCloudAnalytics
               questions={allQuestions}
               selectedDiscipline={selectedDiscipline}
+              showAllDisciplines={!selectedDiscipline}
             />
 
             {/* Discipline Cards Grid */}
