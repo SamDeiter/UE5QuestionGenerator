@@ -30,14 +30,11 @@ const ContextToolbar = ({
   isAdmin = false, // Admin-only features
   handleChange, // Added prop for config updates
   onTrimExcess,
-  onAutoTagAll,
-  effectiveApiKey,
 }) => {
   const [dataMenuOpen, setDataMenuOpen] = useState(false);
   const dataMenuRef = useRef(null);
   const [tagMenuOpen, setTagMenuOpen] = useState(false);
   const tagMenuRef = useRef(null);
-  const [confirmTagAll, setConfirmTagAll] = useState(false);
 
   // Click outside handler for Data menu
   useEffect(() => {
@@ -242,35 +239,6 @@ const ContextToolbar = ({
               title={`Trim ${config.discipline} questions to lowest common count`}
             >
               <Icon name="scissors" size={12} /> Trim
-            </button>
-          )}
-
-          {/* Tag All Pending - Show if discipline selected and has pending */}
-          {config.discipline && counts.pending > 0 && (
-            <button
-              onClick={() => {
-                if (confirmTagAll) {
-                  onAutoTagAll(config.discipline, effectiveApiKey);
-                  setConfirmTagAll(false);
-                } else {
-                  setConfirmTagAll(true);
-                  // Auto-reset after 3 seconds if not confirmed
-                  setTimeout(() => setConfirmTagAll(false), 3000);
-                }
-              }}
-              className={`px-3 py-1.5 text-xs font-bold rounded border transition-colors flex items-center gap-1.5 ${
-                confirmTagAll
-                  ? "border-red-500 bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-900/50"
-                  : "border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20"
-              }`}
-              title={
-                confirmTagAll
-                  ? "Click again to confirm tagging all questions"
-                  : `Auto-generate tags for all ${counts.pending} pending questions in ${config.discipline}`
-              }
-            >
-              <Icon name={confirmTagAll ? "alert-triangle" : "tag"} size={12} />
-              {confirmTagAll ? "Are you sure?" : "Tag All Pending"}
             </button>
           )}
         </>

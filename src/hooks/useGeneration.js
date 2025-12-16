@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   generateContentSecure as generateContent,
   generateCritiqueSecure as generateCritique,
+  generateTagsSecure,
 } from "../services/geminiSecure";
 import { constructSystemPrompt } from "../services/promptBuilder";
 import { parseQuestions } from "../utils/questionHelpers";
@@ -575,11 +576,48 @@ export const useGeneration = (
               effectiveApiKey,
               question
             );
+
+            // Generate tags if question has fewer than 3
+            let suggestedTags = question.tags || [];
+            if (suggestedTags.length < 3 && rewrite) {
+              try {
+                const improvedQuestion = {
+                  question: rewrite.question || question.question,
+                  optionA: rewrite.optionA || question.options?.A,
+                  optionB: rewrite.optionB || question.options?.B,
+                  optionC: rewrite.optionC || question.options?.C,
+                  optionD: rewrite.optionD || question.options?.D,
+                };
+                const newTags = await generateTagsSecure(
+                  effectiveApiKey,
+                  improvedQuestion
+                );
+                if (newTags && newTags.length > 0) {
+                  suggestedTags = [
+                    ...new Set([
+                      ...suggestedTags,
+                      ...newTags.map((t) => t.replace(/^#/, "")),
+                    ]),
+                  ];
+                }
+              } catch (error) {
+                console.error(
+                  "Tag generation failed during auto-critique:",
+                  error
+                );
+              }
+            }
+
+            // Update rewrite object to include suggested tags
+            const updatedRewrite = rewrite
+              ? { ...rewrite, tags: suggestedTags }
+              : null;
+
             updateQuestionInState(question.id, (item) => ({
               ...item,
               critique: text,
               critiqueScore: score,
-              suggestedRewrite: rewrite,
+              suggestedRewrite: updatedRewrite,
               rewriteChanges: changes,
             }));
             return score;
@@ -884,6 +922,39 @@ export const useGeneration = (
         q
       );
 
+      // Generate tags if question has fewer than 3
+      let suggestedTags = q.tags || [];
+      if (suggestedTags.length < 3 && rewrite) {
+        try {
+          const improvedQuestion = {
+            question: rewrite.question || q.question,
+            optionA: rewrite.optionA || q.options?.A,
+            optionB: rewrite.optionB || q.options?.B,
+            optionC: rewrite.optionC || q.options?.C,
+            optionD: rewrite.optionD || q.options?.D,
+          };
+          const newTags = await generateTagsSecure(
+            effectiveApiKey,
+            improvedQuestion
+          );
+          if (newTags && newTags.length > 0) {
+            suggestedTags = [
+              ...new Set([
+                ...suggestedTags,
+                ...newTags.map((t) => t.replace(/^#/, "")),
+              ]),
+            ];
+          }
+        } catch (error) {
+          console.error("Tag generation failed during critique:", error);
+        }
+      }
+
+      // Update rewrite object to include suggested tags
+      const updatedRewrite = rewrite
+        ? { ...rewrite, tags: suggestedTags }
+        : null;
+
       // Track critique attempts
       const previousAttempts = q.critiqueAttempts || 0;
       const newAttemptCount = previousAttempts + 1;
@@ -899,7 +970,7 @@ export const useGeneration = (
           ...item,
           critique: text,
           critiqueScore: score,
-          suggestedRewrite: rewrite,
+          suggestedRewrite: updatedRewrite,
           rewriteChanges: changes,
           critiqueAttempts: newAttemptCount,
           status: "rejected",
@@ -916,7 +987,7 @@ export const useGeneration = (
           ...item,
           critique: text,
           critiqueScore: score,
-          suggestedRewrite: rewrite,
+          suggestedRewrite: updatedRewrite,
           rewriteChanges: changes,
           critiqueAttempts: newAttemptCount,
         }));

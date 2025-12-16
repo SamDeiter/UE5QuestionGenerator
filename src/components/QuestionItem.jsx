@@ -104,6 +104,23 @@ const QuestionItem = ({
               showMessage={showMessage}
             />
           </div>
+
+          {/* AI Improvement Badge */}
+          {q.suggestedRewrite && (
+            <button
+              onClick={() => setShowImprovementModal(true)}
+              className="px-3 py-2 rounded-lg font-bold text-sm bg-green-600/20 text-green-300 hover:bg-green-600/30 border-2 border-green-500/50 hover:border-green-400 transition-all flex items-center gap-2 animate-pulse hover:animate-none"
+              title="AI improvement available"
+            >
+              <Icon name="sparkles" size={16} />
+              <span>
+                +
+                {(q.suggestedRewrite.critiqueScore || 0) -
+                  (q.critiqueScore || 0)}{" "}
+                pts
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Review Progress Bar - Only in Review Mode */}
@@ -186,6 +203,36 @@ const QuestionItem = ({
         <ExplanationDisplay explanation={q.explanation} />
 
         <QuestionMetadata q={q} />
+
+        {/* AI Improvement Modal */}
+        {showImprovementModal && q.suggestedRewrite && (
+          <ImprovementModal
+            originalQuestion={q}
+            improvedQuestion={{ ...q, ...q.suggestedRewrite }}
+            onApply={async (improved) => {
+              // Apply improvements to question
+              await onUpdateQuestion(q.id, {
+                question: improved.question,
+                options: improved.options,
+                optionA: improved.optionA,
+                optionB: improved.optionB,
+                optionC: improved.optionC,
+                optionD: improved.optionD,
+                tags: improved.tags,
+                critiqueScore: improved.critiqueScore,
+                suggestedRewrite: null, // Clear suggestion after apply
+              });
+              setShowImprovementModal(false);
+              if (showMessage) {
+                showMessage(
+                  "✅ Improvement applied! Now verify and accept.",
+                  3000
+                );
+              }
+            }}
+            onDismiss={() => setShowImprovementModal(false)}
+          />
+        )}
       </div>
     </div>
   );

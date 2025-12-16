@@ -4,7 +4,6 @@ import {
   TOAST_DURATION,
   TARGET_PER_CATEGORY,
 } from "../utils/constants";
-import { generateTagsSecure as generateTagsForQuestion } from "../services/geminiSecure";
 
 /**
  * Hook for managing review mode bulk actions.
@@ -23,7 +22,6 @@ export const useReviewActions = ({
   allQuestions, // Added: Full dataset for global operations
   setQuestions,
   handleUpdateStatus,
-  handleUpdateQuestion, // Added persisted update handler
   handleCritique,
   showMessage,
 }) => {
@@ -194,82 +192,10 @@ export const useReviewActions = ({
     [uniqueFilteredQuestions, allQuestions, showMessage, setQuestions]
   );
 
-  /**
-   * Auto-tags all pending questions in a given discipline.
-   */
-  const handleAutoTagAll = useCallback(
-    async (discipline, apiKey) => {
-      const pendingQuestions = uniqueFilteredQuestions.filter(
-        (q) => q.discipline === discipline && q.status === "pending"
-      );
-
-      if (pendingQuestions.length === 0) {
-        showMessage("No pending questions found.", 3000);
-        return;
-      }
-
-      let processed = 0;
-      let errors = 0;
-      let lastErrorMessage = "";
-
-      showMessage(
-        `Starting rate-limited tagging for ${pendingQuestions.length} questions. This will take time (approx 8.5s per item) to respect Cloud limits.`,
-        TOAST_DURATION.LONG
-      );
-
-      for (const [index, q] of pendingQuestions.entries()) {
-        // Enforce Cloud Function Rate Limit (Strict 10 per minute = 1 request every 6s)
-        // Using 8.5s to be safe and account for network latency/server clock variance
-        if (index > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 8500));
-        }
-
-        try {
-          const newTags = await generateTagsForQuestion(apiKey, q.question);
-          if (newTags && newTags.length > 0) {
-            // Merge with existing tags (avoid duplicates)
-            const existingTags = q.tags || [];
-            const mergedTags = [
-              ...new Set([
-                ...existingTags,
-                ...newTags.map((t) => t.replace(/^#/, "")),
-              ]),
-            ];
-            handleUpdateQuestion(q.id, { tags: mergedTags }); // Use persisted handler
-            processed++;
-          }
-        } catch (error) {
-          console.error("Tag generation failed for:", q.id, error);
-          errors++;
-          lastErrorMessage = error.message;
-        }
-      }
-
-      if (errors > 0 && processed === 0) {
-        showMessage(
-          `Failed to tag questions. Error: ${lastErrorMessage || "Unknown"}`,
-          TOAST_DURATION.EXTENDED
-        );
-      } else if (errors > 0) {
-        showMessage(
-          `✓ Tagged ${processed} questions, but ${errors} failed. Check console for details.`,
-          TOAST_DURATION.LONG
-        );
-      } else {
-        showMessage(
-          `✓ Successfully added tags to ${processed} questions!`,
-          TOAST_DURATION.LONG
-        );
-      }
-    },
-    [uniqueFilteredQuestions, handleUpdateQuestion, showMessage]
-  );
-
   return {
     handleClearPending,
     handleBulkAcceptHighScores,
     handleBulkCritiqueAll,
     handleTrimExcess,
-    handleAutoTagAll,
   };
 };
