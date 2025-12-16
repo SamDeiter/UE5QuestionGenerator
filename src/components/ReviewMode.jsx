@@ -19,15 +19,24 @@ const ReviewMode = ({
   isProcessing,
   showMessage,
   onStartTutorial,
+  // Selection props for bulk actions
+  selectedIds,
+  toggleSelection,
 }) => {
   // Auto-start tutorial if not completed (and compliance modals are done)
   useEffect(() => {
     const isCompleted = localStorage.getItem("ue5_tutorial_review_completed");
     const ageVerified = localStorage.getItem("ue5_age_verified");
     const termsAccepted = localStorage.getItem("ue5_terms_accepted");
-    
+
     // Only start tutorial if compliance modals are complete
-    if (!isCompleted && onStartTutorial && questions.length > 0 && ageVerified && termsAccepted) {
+    if (
+      !isCompleted &&
+      onStartTutorial &&
+      questions.length > 0 &&
+      ageVerified &&
+      termsAccepted
+    ) {
       // Small delay to ensure view is rendered
       setTimeout(() => onStartTutorial("review"), 500);
     }
@@ -110,6 +119,10 @@ const ReviewMode = ({
           isProcessing={isProcessing}
           appMode="review"
           showMessage={showMessage}
+          // Selection props
+          isSelected={selectedIds?.has(currentQuestion.id) || false}
+          onToggleSelect={() => toggleSelection?.(currentQuestion.id)}
+          showCheckbox={true}
         />
       </div>
     </div>

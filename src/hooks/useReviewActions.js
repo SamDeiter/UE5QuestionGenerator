@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { QUALITY_PASS_THRESHOLD, TOAST_DURATION } from "../utils/constants";
-import { getSecureItem } from "../utils/secureStorage";
 import {
   generateTagsSecure as generateTagsForQuestion,
   classifyQuestionDiscipline,
@@ -130,7 +129,7 @@ export const useReviewActions = ({
       });
 
       // 2. Determine which pending questions to delete
-      Object.entries(groups).forEach(([key, group]) => {
+      Object.entries(groups).forEach(([_key, group]) => {
         const currentTotal = group.accepted.length + group.pending.length;
         const target = 40; // Hardcoded default for now
 
@@ -199,7 +198,7 @@ export const useReviewActions = ({
 
       showMessage(`Moved ${count} questions to ${newDiscipline}`, 3000);
     },
-    [setQuestions, showMessage]
+    [uniqueFilteredQuestions, handleUpdateQuestion, showMessage]
   );
 
   /**
@@ -244,7 +243,7 @@ export const useReviewActions = ({
 
       showMessage(`Auto-classified ${processed} questions.`, 4000);
     },
-    [uniqueFilteredQuestions, handleUpdateStatus, showMessage]
+    [uniqueFilteredQuestions, handleUpdateQuestion, showMessage]
   );
 
   /**
@@ -315,7 +314,7 @@ export const useReviewActions = ({
         );
       }
     },
-    [uniqueFilteredQuestions, handleUpdateStatus, showMessage]
+    [uniqueFilteredQuestions, handleUpdateQuestion, showMessage]
   );
 
   /**
@@ -354,7 +353,7 @@ export const useReviewActions = ({
 
       showMessage(`Auto-tagged ${processed} questions.`, 4000);
     },
-    [uniqueFilteredQuestions, handleUpdateStatus, showMessage]
+    [uniqueFilteredQuestions, handleUpdateQuestion, showMessage]
   );
 
   return {

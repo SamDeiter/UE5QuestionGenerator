@@ -184,6 +184,9 @@ const ViewRouter = ({
           isProcessing={isProcessing}
           showMessage={showMessage}
           onStartTutorial={() => onStartTutorial("review")}
+          // Selection props for bulk actions
+          selectedIds={state.selectedIds}
+          toggleSelection={handlers.toggleSelection}
         />
       ) : appMode === "review" && uniqueFilteredQuestions.length === 0 ? (
         /* NEW: Empty state for Review mode with CTA */

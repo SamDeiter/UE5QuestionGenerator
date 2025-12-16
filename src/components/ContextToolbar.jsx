@@ -21,7 +21,7 @@ const ContextToolbar = ({
   onLoadSheets,
   onLoadFirestore,
   onBulkExport,
-  onClearPending,
+  _onClearPending,
   _onBulkAcceptHighScores,
   _onBulkCritiqueAll,
   filterTags = [],

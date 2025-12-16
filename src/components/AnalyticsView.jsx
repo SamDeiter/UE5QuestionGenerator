@@ -29,6 +29,15 @@ import TagConnectionGraph from "./analytics/TagConnectionGraph";
 // Define discipline list from tagTaxonomy
 const DISCIPLINES = Object.keys(TAGS_BY_DISCIPLINE);
 
+const TIME_RANGES = [
+  { id: "24h", label: "24h", days: 1 },
+  { id: "7d", label: "7d", days: 7 },
+  { id: "15d", label: "15d", days: 15 },
+  { id: "30d", label: "30d", days: 30 },
+  { id: "90d", label: "90d", days: 90 },
+  { id: "all", label: "All", days: null },
+];
+
 // Color palettes
 const DISCIPLINE_COLORS = {
   "Technical Art": "#f97316",
@@ -66,15 +75,6 @@ const AnalyticsView = ({
   const [timeRange, setTimeRange] = useState("all");
   const analytics = getAnalytics();
   const tokenStats = getTokenStats();
-
-  const TIME_RANGES = [
-    { id: "24h", label: "24h", days: 1 },
-    { id: "7d", label: "7d", days: 7 },
-    { id: "15d", label: "15d", days: 15 },
-    { id: "30d", label: "30d", days: 30 },
-    { id: "90d", label: "90d", days: 90 },
-    { id: "all", label: "All", days: null },
-  ];
 
   // Convert allQuestionsMap to flat array for TagCloudAnalytics
   const allQuestions = useMemo(() => {
