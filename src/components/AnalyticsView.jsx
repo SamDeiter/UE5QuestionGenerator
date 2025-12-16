@@ -40,6 +40,7 @@ const TIME_RANGES = [
 
 // Color palettes
 const DISCIPLINE_COLORS = {
+  // Full names
   "Technical Art": "#f97316",
   "Lighting & Rendering": "#eab308",
   "Look Development (Materials)": "#84cc16",
@@ -50,6 +51,15 @@ const DISCIPLINE_COLORS = {
   "Game Logic & Systems": "#ec4899",
   "C++ Programming": "#f43f5e",
   Networking: "#6366f1",
+
+  // Abbreviated names (for compatibility with question data)
+  "Tech Art": "#f97316",
+  "Look Dev": "#84cc16",
+  Animation: "#22c55e",
+  VFX: "#06b6d4",
+  Worldbuilding: "#3b82f6",
+  "Game Dev": "#ec4899",
+  Programming: "#f43f5e",
 };
 
 const DIFFICULTY_COLORS = {
@@ -571,7 +581,7 @@ const AnalyticsView = ({
                         }}
                         formatter={(value) => [value, "Questions"]}
                       />
-                      <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                      <Bar dataKey="value" radius={[0, 4, 4, 0]} fill="none">
                         {disciplineData.map((entry, idx) => (
                           <Cell key={idx} fill={entry.fill} />
                         ))}
