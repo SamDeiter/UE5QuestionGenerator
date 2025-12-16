@@ -22,7 +22,7 @@ export const useAppConfig = () => {
   const [config, setConfig] = useState(() => {
     const saved = getSecureItem("ue5_gen_config");
     const defaults = {
-      discipline: "Technical Art",
+      discipline: "Tech Art",
       batchSize: "6",
       difficulty: "Beginner",
       type: "Multiple Choice", // Explicit type selection (no Balanced mode)

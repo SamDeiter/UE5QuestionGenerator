@@ -159,24 +159,13 @@ const GenerationSettings = ({
                 onChange={handleChange}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500"
               >
-                <option value="Technical Art">Technical Art</option>
-                <option value="Animation & Rigging">Animation & Rigging</option>
-                <option value="Game Logic & Systems">
-                  Game Logic & Systems
-                </option>
-                <option value="Look Development (Materials)">
-                  Look Development (Materials)
-                </option>
-                <option value="Networking">Networking</option>
-                <option value="C++ Programming">C++ Programming</option>
-                <option value="VFX (Niagara)">VFX (Niagara)</option>
-                <option value="World Building & Level Design">
-                  World Building & Level Design
-                </option>
-                <option value="Blueprints">Blueprints</option>
-                <option value="Lighting & Rendering">
-                  Lighting & Rendering
-                </option>
+                <option value="Worldbuilding">Worldbuilding</option>
+                <option value="Game Dev">Game Dev</option>
+                <option value="Look Dev">Look Dev</option>
+                <option value="Tech Art">Tech Art</option>
+                <option value="VFX">VFX</option>
+                <option value="Animation">Animation</option>
+                <option value="Programming">Programming</option>
               </select>
             </div>
 

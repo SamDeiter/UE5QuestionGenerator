@@ -6,7 +6,7 @@
  */
 
 export const TAGS_BY_DISCIPLINE = {
-  "Technical Art": [
+  "Tech Art": [
     "#Nanite",
     "#LODs",
     "#MeshOptimization",
@@ -23,7 +23,8 @@ export const TAGS_BY_DISCIPLINE = {
     "#Streaming",
     "#TextureOptimization",
   ],
-  "Lighting & Rendering": [
+  "Look Dev": [
+    // Merged Lighting & Rendering + Look Development
     "#Lumen",
     "#LumenGI",
     "#LumenReflections",
@@ -39,8 +40,6 @@ export const TAGS_BY_DISCIPLINE = {
     "#ColorGrading",
     "#PathTracing",
     "#LightBaking",
-  ],
-  "Look Development (Materials)": [
     "#Materials",
     "#MaterialEditor",
     "#Substrate",
@@ -57,7 +56,8 @@ export const TAGS_BY_DISCIPLINE = {
     "#VirtualTextures",
     "#Transparency",
   ],
-  "Animation & Rigging": [
+  Animation: [
+    // Renamed from Animation & Rigging
     "#ControlRig",
     "#AnimationBlueprint",
     "#StateMachines",
@@ -74,7 +74,8 @@ export const TAGS_BY_DISCIPLINE = {
     "#AnimNotifies",
     "#FullBodyIK",
   ],
-  "VFX (Niagara)": [
+  VFX: [
+    // Renamed from VFX (Niagara)
     "#Niagara",
     "#NiagaraSystems",
     "#NiagaraModules",
@@ -91,7 +92,8 @@ export const TAGS_BY_DISCIPLINE = {
     "#EventHandlers",
     "#AttributeReader",
   ],
-  "World Building & Level Design": [
+  Worldbuilding: [
+    // Renamed from World Building & Level Design
     "#WorldPartition",
     "#PCG",
     "#Landscape",
@@ -108,7 +110,23 @@ export const TAGS_BY_DISCIPLINE = {
     "#GeometryCollection",
     "#NavMesh",
   ],
-  Blueprints: [
+  "Game Dev": [
+    // Merged Game Logic & Systems + Blueprints
+    "#GameplayAbilitySystem",
+    "#GameMode",
+    "#GameState",
+    "#PlayerController",
+    "#Character",
+    "#EnhancedInput",
+    "#SaveSystem",
+    "#AIController",
+    "#BehaviorTrees",
+    "#EQS",
+    "#Subsystems",
+    "#DataAssets",
+    "#GameFeatures",
+    "#SmartObjects",
+    "#StateTree",
     "#Blueprint",
     "#EventGraph",
     "#ConstructionScript",
@@ -125,24 +143,8 @@ export const TAGS_BY_DISCIPLINE = {
     "#BlueprintNativization",
     "#Casting",
   ],
-  "Game Logic & Systems": [
-    "#GameplayAbilitySystem",
-    "#GameMode",
-    "#GameState",
-    "#PlayerController",
-    "#Character",
-    "#EnhancedInput",
-    "#SaveSystem",
-    "#AIController",
-    "#BehaviorTrees",
-    "#EQS",
-    "#Subsystems",
-    "#DataAssets",
-    "#GameFeatures",
-    "#SmartObjects",
-    "#StateTree",
-  ],
-  "C++ Programming": [
+  Programming: [
+    // Merged C++ Programming + Networking
     "#Cpp",
     "#UObject",
     "#AActor",
@@ -158,8 +160,6 @@ export const TAGS_BY_DISCIPLINE = {
     "#UFUNCTION",
     "#UPROPERTY",
     "#BlueprintExposure",
-  ],
-  Networking: [
     "#Replication",
     "#RPCs",
     "#NetRelevancy",
