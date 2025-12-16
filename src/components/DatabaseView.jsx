@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Icon from "./Icon";
 import MetricsDashboard from "./MetricsDashboard";
 import QuestionItem from "./QuestionItem";
+import { migrateFirestoreScores } from "../utils/migrateFirestoreScores";
 
 // PERFORMANCE: Number of items to render initially and load per batch
 const INITIAL_RENDER_COUNT = 50;
@@ -29,7 +30,27 @@ const DatabaseView = ({
 
   // PERFORMANCE: Track how many items to render (windowed rendering)
   const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
+  const [isMigrating, setIsMigrating] = useState(false);
   const loaderRef = useRef(null);
+  
+  // Migration handler
+  const handleMigrateScores = async () => {
+    if (!window.confirm('This will estimate improved scores for all questions with critiques. Continue?')) {
+      return;
+    }
+    setIsMigrating(true);
+    try {
+      const result = await migrateFirestoreScores(showMessage);
+      if (result.success) {
+        // Reload questions to see updated data
+        window.location.reload();
+      }
+    } catch (error) {
+      showMessage(`Migration error: ${error.message}`, 5000);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
 
   // Auto-start tutorial if not completed (and compliance modals are done)
   useEffect(() => {
@@ -216,7 +237,7 @@ const DatabaseView = ({
         className="flex justify-between items-center bg-blue-900/20 p-4 rounded border border-blue-800/50"
         data-tour="database-search"
       >
-        <div className="flex items-center gap-4" data-tour="database-actions">
+        <div className="flex items-center gap-4 w-full justify-between" data-tour="database-actions">
           <div>
             <h2 className="text-lg font-bold text-blue-400 flex items-center gap-2">
               <Icon name="database" /> Database View
@@ -227,6 +248,16 @@ const DatabaseView = ({
               {hasMore && ` (scroll for more)`}
             </p>
           </div>
+          
+          <button
+            onClick={handleMigrateScores}
+            disabled={isMigrating}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg transition-all disabled:opacity-50 flex items-center gap-2"
+            title="Add estimated improved scores to all questions with critiques"
+          >
+            <Icon name="zap" size={14} />
+            {isMigrating ? "Migrating..." : "Migrate Scores"}
+          </button>
         </div>
       </div>
 
