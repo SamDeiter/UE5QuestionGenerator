@@ -208,7 +208,20 @@ const QuestionItem = ({
         {showImprovementModal && q.suggestedRewrite && (
           <ImprovementModal
             originalQuestion={q}
-            improvedQuestion={{ ...q, ...q.suggestedRewrite }}
+            improvedQuestion={{
+              ...q,
+              question: q.suggestedRewrite.question || q.question,
+              options: q.suggestedRewrite.options || q.options,
+              optionA: q.suggestedRewrite.options?.A || q.options?.A,
+              optionB: q.suggestedRewrite.options?.B || q.options?.B,
+              optionC: q.suggestedRewrite.options?.C || q.options?.C,
+              optionD: q.suggestedRewrite.options?.D || q.options?.D,
+              correct: q.suggestedRewrite.correct || q.correct,
+              correctLetter: q.suggestedRewrite.correct || q.correctLetter,
+              tags: q.suggestedRewrite.tags || q.tags,
+              critiqueScore:
+                q.suggestedRewrite.critiqueScore || q.critiqueScore,
+            }}
             onApply={async (improved) => {
               // Apply improvements to question
               await onUpdateQuestion(q.id, {
