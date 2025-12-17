@@ -237,9 +237,10 @@ export const resetPassword = async (email) => {
 // --- Firestore Helpers ---
 
 // PERFORMANCE: In-memory cache for getAllQuestionsFromFirestore
+// REDUCED TTL: Changed from 5 minutes to 30 seconds for better multi-user sync
 let _questionsCache = null;
 let _questionsCacheTimestamp = 0;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 30 * 1000; // 30 seconds (reduced from 5 minutes)
 
 /**
  * Helper to recursively remove undefined values from an object
