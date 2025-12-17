@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { generateContentSecure as generateContent } from '../../services/geminiSecure';
-import { parseQuestions } from '../../utils/questionHelpers';
+import { useState } from "react";
+import { generateContentSecure as generateContent } from "../../services/geminiSecure";
+import { parseQuestions } from "../../utils/questionHelpers";
 
 /**
  * Custom hook for question translation operations.
  * Handles both single question translation and bulk translation of missing languages.
- * 
+ *
  * @param {Object} params - Hook parameters
  * @param {string} params.effectiveApiKey - The API key to use
  * @param {boolean} params.isApiReady - Whether the API is ready
@@ -20,219 +20,305 @@ import { parseQuestions } from '../../utils/questionHelpers';
  * @returns {Object} Translation handlers and state
  */
 export const useTranslation = ({
-    effectiveApiKey,
-    isApiReady,
-    checkAndStoreQuestions,
-    addQuestionsToState,
-    handleLanguageSwitch,
-    showMessage,
-    setStatus,
-    setShowHistory,
-    translationMap,
-    allQuestionsMap
+  effectiveApiKey,
+  isApiReady,
+  checkAndStoreQuestions,
+  addQuestionsToState,
+  handleLanguageSwitch,
+  showMessage,
+  setStatus,
+  setShowHistory,
+  translationMap,
+  allQuestionsMap,
 }) => {
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [translationProgress, setTranslationProgress] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [translationProgress, setTranslationProgress] = useState(0);
 
-    /**
-     * Translates a single question to a target language
-     * @param {Object} q - The question object to translate
-     * @param {string} targetLang - Target language (e.g., 'Chinese (Simplified)')
-     */
-    const handleTranslateSingle = async (q, targetLang) => {
-        if (!isApiReady) {
-            showMessage("API key is required for translation. Please enter it in the settings panel.", 5000);
-            return;
-        }
+  /**
+   * Translates a single question to a target language
+   * @param {Object} q - The question object to translate
+   * @param {string} targetLang - Target language (e.g., 'Chinese (Simplified)')
+   */
+  const handleTranslateSingle = async (q, targetLang) => {
+    if (!isApiReady) {
+      showMessage(
+        "API key is required for translation. Please enter it in the settings panel.",
+        5000
+      );
+      return;
+    }
 
-        setIsProcessing(true);
-        setStatus(`Translating question to ${targetLang}...`);
+    setIsProcessing(true);
+    setStatus(`Translating question to ${targetLang}...`);
 
-        // JSON Prompt for reliability
-        const systemPrompt = `You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided JSON object from ${q.language || 'English'} to ${targetLang}. 
+    // JSON Prompt for reliability
+    const systemPrompt = `You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided JSON object from ${
+      q.language || "English"
+    } to ${targetLang}. 
         CRITICAL RULES:
         1. Return ONLY valid JSON. No markdown formatting, no explanations.
         2. Translate ONLY: "Question", "OptionA", "OptionB", "OptionC", "OptionD", and "SourceExcerpt".
         3. DO NOT translate: "ID", "Discipline", "Type", "Difficulty", "Answer", "CorrectLetter", and "SourceURL".
         4. Maintain exact JSON structure.`;
 
-        const userPrompt = `Translate this object:\n${JSON.stringify({
-            Discipline: q.discipline,
-            Type: q.type,
-            Difficulty: q.difficulty,
-            Question: q.question,
-            OptionA: q.options.A,
-            OptionB: q.options.B,
-            OptionC: q.options.C || '',
-            OptionD: q.options.D || '',
-            CorrectLetter: q.correct,
-            SourceURL: q.sourceUrl,
-            SourceExcerpt: q.sourceExcerpt
-        }, null, 2)}`;
+    const userPrompt = `Translate this object:\n${JSON.stringify(
+      {
+        Discipline: q.discipline,
+        Type: q.type,
+        Difficulty: q.difficulty,
+        Question: q.question,
+        OptionA: q.options.A,
+        OptionB: q.options.B,
+        OptionC: q.options.C || "",
+        OptionD: q.options.D || "",
+        CorrectLetter: q.correct,
+        SourceURL: q.sourceUrl,
+        SourceExcerpt: q.sourceExcerpt,
+      },
+      null,
+      2
+    )}`;
 
-        try {
-            const text = await generateContent(effectiveApiKey, systemPrompt, userPrompt, setStatus);
+    try {
+      const text = await generateContent(
+        effectiveApiKey,
+        systemPrompt,
+        userPrompt,
+        setStatus
+      );
 
-            // Attempt to parse JSON response
-            let translatedData = null;
-            try {
-                // Strip code fence if present
-                const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
-                translatedData = JSON.parse(cleanText);
-            } catch (e) {
-                console.warn("JSON parse failed, trying parseQuestions fallback", e);
-            }
+      // Attempt to parse JSON response
+      let translatedData = null;
+      try {
+        // Strip code fence if present
+        const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
+        translatedData = JSON.parse(cleanText);
+      } catch (e) {
+        console.warn("JSON parse failed, trying parseQuestions fallback", e);
+      }
 
-            // Fallback to helper parser or use parsed JSON
-            const translatedQs = translatedData ? parseQuestions(JSON.stringify(translatedData)) : parseQuestions(text);
+      // Fallback to helper parser or use parsed JSON
+      const translatedQs = translatedData
+        ? parseQuestions(JSON.stringify(translatedData))
+        : parseQuestions(text);
 
-            if (translatedQs.length > 0) {
-                const tq = translatedQs[0];
-                const newQuestion = {
-                    ...tq,
-                    id: Date.now(),
-                    uniqueId: q.uniqueId,
-                    discipline: q.discipline,
-                    type: q.type,
-                    difficulty: q.difficulty,
-                    language: targetLang,
-                    status: 'accepted',
-                    dateAdded: new Date().toISOString()
-                };
+      if (translatedQs.length > 0) {
+        const tq = translatedQs[0];
 
-                await checkAndStoreQuestions([newQuestion]);
-                addQuestionsToState([newQuestion], false);
-                handleLanguageSwitch(targetLang);
+        // CRITICAL FIX: Ensure original has uniqueId before translation
+        let sharedUniqueId = q.uniqueId;
+        if (!sharedUniqueId) {
+          sharedUniqueId = crypto.randomUUID();
+          console.log(
+            `🔗 Generated new uniqueId for original question: ${sharedUniqueId}`
+          );
 
-                showMessage(`Translated to ${targetLang} and saved.`, 3000);
-            } else {
-                throw new Error("Parser returned no questions from translation.");
-            }
-        } catch (e) {
-            console.error("Translation error:", e);
-            setStatus('Translation Failed');
-            showMessage(`Translation Failed: ${e.message}`, 5000);
-        } finally {
-            setIsProcessing(false);
-        }
-    };
+          // Update the original English question with uniqueId
+          const updatedOriginal = {
+            ...q,
+            uniqueId: sharedUniqueId,
+            language: q.language || "English", // Ensure language is set
+          };
 
-    /**
-     * Bulk translates all missing translations for accepted questions
-     * Targets Chinese (Simplified), Japanese, and Korean
-     */
-    const handleBulkTranslateMissing = async () => {
-        if (isProcessing) return;
-        if (!isApiReady) {
-            showMessage("API key is required for bulk translation. Please enter it in the settings panel.", 5000);
-            return;
+          // Save original to database with uniqueId
+          await checkAndStoreQuestions([updatedOriginal]);
+
+          // Update in state
+          addQuestionsToState([updatedOriginal], false);
+
+          console.log(`✅ Saved English original with uniqueId to database`);
         }
 
-        setIsProcessing(true);
-        setShowHistory(false);
+        // Create translation with shared uniqueId
+        const newQuestion = {
+          ...tq,
+          id: Date.now(),
+          uniqueId: sharedUniqueId, // Use shared uniqueId
+          discipline: q.discipline,
+          type: q.type,
+          difficulty: q.difficulty,
+          language: targetLang,
+          status: "accepted",
+          dateAdded: new Date().toISOString(),
+        };
 
-        const targetLangs = ['Chinese (Simplified)', 'Japanese', 'Korean'];
-        const translationQueue = [];
+        // Save translation to database
+        await checkAndStoreQuestions([newQuestion]);
 
-        const baseQuestions = Array.from(allQuestionsMap.values()).map(variants =>
-            variants.find(v => (v.language || 'English') === 'English') || variants[0]
+        // Add to state
+        addQuestionsToState([newQuestion], false);
+
+        // Switch to translated language
+        handleLanguageSwitch(targetLang);
+
+        console.log(
+          `✅ Created ${targetLang} translation with uniqueId: ${sharedUniqueId}`
         );
+        showMessage(
+          `Translated to ${targetLang} and saved. Both versions linked.`,
+          3000
+        );
+      } else {
+        throw new Error("Parser returned no questions from translation.");
+      }
+    } catch (e) {
+      console.error("Translation error:", e);
+      setStatus("Translation Failed");
+      showMessage(`Translation Failed: ${e.message}`, 5000);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
-        baseQuestions.forEach(q => {
-            const existingLangs = translationMap.get(q.uniqueId) || new Set();
+  /**
+   * Bulk translates all missing translations for accepted questions
+   * Targets Chinese (Simplified), Japanese, and Korean
+   */
+  const handleBulkTranslateMissing = async () => {
+    if (isProcessing) return;
+    if (!isApiReady) {
+      showMessage(
+        "API key is required for bulk translation. Please enter it in the settings panel.",
+        5000
+      );
+      return;
+    }
 
-            targetLangs.forEach(targetLang => {
-                // Only translate accepted English questions with valid sources
-                if (q.status === 'accepted' &&
-                    (q.language || 'English') === 'English' &&
-                    q.sourceUrl &&
-                    !q.invalidUrl &&
-                    !existingLangs.has(targetLang)) {
-                    translationQueue.push({ question: q, targetLang });
-                }
-            });
-        });
+    setIsProcessing(true);
+    setShowHistory(false);
 
-        if (translationQueue.length === 0) {
-            showMessage("All CN, JP, and KR translations already exist for all accepted questions.", 5000);
-            setIsProcessing(false);
-            return;
+    const targetLangs = ["Chinese (Simplified)", "Japanese", "Korean"];
+    const translationQueue = [];
+
+    const baseQuestions = Array.from(allQuestionsMap.values()).map(
+      (variants) =>
+        variants.find((v) => (v.language || "English") === "English") ||
+        variants[0]
+    );
+
+    baseQuestions.forEach((q) => {
+      const existingLangs = translationMap.get(q.uniqueId) || new Set();
+
+      targetLangs.forEach((targetLang) => {
+        // Only translate accepted English questions with valid sources
+        if (
+          q.status === "accepted" &&
+          (q.language || "English") === "English" &&
+          q.sourceUrl &&
+          !q.invalidUrl &&
+          !existingLangs.has(targetLang)
+        ) {
+          translationQueue.push({ question: q, targetLang });
         }
+      });
+    });
 
-        showMessage(`Found ${translationQueue.length} missing translations. Starting bulk generation...`);
-        let generatedCount = 0;
-        const totalQueueSize = translationQueue.length;
+    if (translationQueue.length === 0) {
+      showMessage(
+        "All CN, JP, and KR translations already exist for all accepted questions.",
+        5000
+      );
+      setIsProcessing(false);
+      return;
+    }
 
-        for (const { question: q, targetLang } of translationQueue) {
-            const systemPrompt = `You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided JSON object from ${q.language || 'English'} to ${targetLang}. 
+    showMessage(
+      `Found ${translationQueue.length} missing translations. Starting bulk generation...`
+    );
+    let generatedCount = 0;
+    const totalQueueSize = translationQueue.length;
+
+    for (const { question: q, targetLang } of translationQueue) {
+      const systemPrompt = `You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided JSON object from ${
+        q.language || "English"
+      } to ${targetLang}. 
             CRITICAL RULES:
             1. Return ONLY valid JSON. No markdown formatting.
             2. Translate ONLY: "Question", "OptionA", "OptionB", "OptionC", "OptionD", and "SourceExcerpt".
             3. DO NOT translate: "ID", "Discipline", "Type", "Difficulty", "Answer", "CorrectLetter", and "SourceURL".
             4. Maintain exact JSON structure.`;
 
-            const userPrompt = `Translate this object:\n${JSON.stringify({
-                Discipline: q.discipline,
-                Type: q.type,
-                Difficulty: q.difficulty,
-                Question: q.question,
-                OptionA: q.options.A,
-                OptionB: q.options.B,
-                OptionC: q.options.C || '',
-                OptionD: q.options.D || '',
-                CorrectLetter: q.correct,
-                SourceURL: q.sourceUrl,
-                SourceExcerpt: q.sourceExcerpt
-            }, null, 2)}`;
+      const userPrompt = `Translate this object:\n${JSON.stringify(
+        {
+          Discipline: q.discipline,
+          Type: q.type,
+          Difficulty: q.difficulty,
+          Question: q.question,
+          OptionA: q.options.A,
+          OptionB: q.options.B,
+          OptionC: q.options.C || "",
+          OptionD: q.options.D || "",
+          CorrectLetter: q.correct,
+          SourceURL: q.sourceUrl,
+          SourceExcerpt: q.sourceExcerpt,
+        },
+        null,
+        2
+      )}`;
 
-            try {
-                setStatus(`Translating: ${q.uniqueId.substring(0, 4)} -> ${targetLang}...`);
-                const text = await generateContent(effectiveApiKey, systemPrompt, userPrompt, setStatus);
+      try {
+        setStatus(
+          `Translating: ${q.uniqueId.substring(0, 4)} -> ${targetLang}...`
+        );
+        const text = await generateContent(
+          effectiveApiKey,
+          systemPrompt,
+          userPrompt,
+          setStatus
+        );
 
-                let translatedData = null;
-                try {
-                    const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
-                    translatedData = JSON.parse(cleanText);
-                } catch {
-                    // ignore JSON parse error, let parseQuestions handle it
-                }
-
-                const translatedQs = translatedData ? parseQuestions(JSON.stringify(translatedData)) : parseQuestions(text);
-
-                if (translatedQs.length > 0) {
-                    const tq = translatedQs[0];
-                    const newQuestion = {
-                        ...tq,
-                        id: Date.now() + Math.random(),
-                        uniqueId: q.uniqueId,
-                        discipline: q.discipline,
-                        type: q.type,
-                        difficulty: q.difficulty,
-                        language: targetLang,
-                        status: 'accepted',
-                        dateAdded: new Date().toISOString()
-                    };
-
-                    await checkAndStoreQuestions([newQuestion]);
-                    addQuestionsToState([newQuestion], false);
-                    generatedCount++;
-                }
-            } catch (e) {
-                console.error(`Failed to generate translation for ${q.uniqueId} to ${targetLang}:`, e);
-            }
-
-            const totalProgress = Math.floor((generatedCount / totalQueueSize) * 100);
-            setTranslationProgress(totalProgress);
+        let translatedData = null;
+        try {
+          const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
+          translatedData = JSON.parse(cleanText);
+        } catch {
+          // ignore JSON parse error, let parseQuestions handle it
         }
 
-        showMessage(`Bulk translation complete! Generated ${generatedCount} new translations.`, 7000);
-        setIsProcessing(false);
-    };
+        const translatedQs = translatedData
+          ? parseQuestions(JSON.stringify(translatedData))
+          : parseQuestions(text);
 
-    return {
-        isProcessing,
-        translationProgress,
-        handleTranslateSingle,
-        handleBulkTranslateMissing
-    };
+        if (translatedQs.length > 0) {
+          const tq = translatedQs[0];
+          const newQuestion = {
+            ...tq,
+            id: Date.now() + Math.random(),
+            uniqueId: q.uniqueId,
+            discipline: q.discipline,
+            type: q.type,
+            difficulty: q.difficulty,
+            language: targetLang,
+            status: "accepted",
+            dateAdded: new Date().toISOString(),
+          };
+
+          await checkAndStoreQuestions([newQuestion]);
+          addQuestionsToState([newQuestion], false);
+          generatedCount++;
+        }
+      } catch (e) {
+        console.error(
+          `Failed to generate translation for ${q.uniqueId} to ${targetLang}:`,
+          e
+        );
+      }
+
+      const totalProgress = Math.floor((generatedCount / totalQueueSize) * 100);
+      setTranslationProgress(totalProgress);
+    }
+
+    showMessage(
+      `Bulk translation complete! Generated ${generatedCount} new translations.`,
+      7000
+    );
+    setIsProcessing(false);
+  };
+
+  return {
+    isProcessing,
+    translationProgress,
+    handleTranslateSingle,
+    handleBulkTranslateMissing,
+  };
 };
