@@ -766,10 +766,20 @@ export const useGeneration = (
         if (translatedQs.length > 0) {
           const tq = translatedQs[0];
 
+          console.log("📝 [Translation] Parsed translation data:", {
+            question: tq.question?.substring(0, 50) + "...",
+            optionA: tq.options?.A?.substring(0, 30) + "...",
+            sourceExcerpt: tq.sourceExcerpt?.substring(0, 50) + "...",
+            hasQuestion: !!tq.question,
+            hasOptions: !!tq.options,
+          });
+
           // ✅ FIX: Preserve original card identity and metadata
           // Update the existing question in place instead of creating a new one
           const translatedVariant = {
-            ...q, // Start with ALL original properties
+            ...tq,
+            id: Date.now(), // New ID for this language variant
+            uniqueId: q.uniqueId, // Same uniqueId to link versions
             question: tq.question,
             options: tq.options,
             sourceExcerpt: tq.sourceExcerpt || q.sourceExcerpt,
@@ -780,12 +790,23 @@ export const useGeneration = (
             // humanVerified, reviewCompletedAt, etc.
           };
 
+          console.log("✅ [Translation] Updating card in place:", {
+            id: q.id,
+            preservedMetadata: {
+              status: translatedVariant.status,
+              tags: translatedVariant.tags,
+              critiqueScore: translatedVariant.critiqueScore,
+            },
+            translatedQuestion:
+              translatedVariant.question?.substring(0, 50) + "...",
+          });
+
           // ✅ FIX: Update existing question, don't create new one
-          updateQuestionInState(q.id, translatedVariant);
+          addQuestionsToState([translatedVariant], false);
           await checkAndStoreQuestions([translatedVariant]); // Persist to Firebase
 
-          // ✅ FIX: Do NOT call handleLanguageSwitch - keep user on same card
-          // The global language filter should remain unchanged
+          // Switch to the new language
+          handleLanguageSwitch(targetLang);
 
           showMessage(`✅ Translated to ${targetLang}`, TOAST_DURATION.MEDIUM);
         } else {
