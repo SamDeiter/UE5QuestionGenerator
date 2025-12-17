@@ -15,6 +15,7 @@ import {
   orderBy,
   limit,
   startAfter,
+  onSnapshot,
 } from "firebase/firestore";
 import {
   getAuth,
@@ -443,6 +444,65 @@ export const invalidateQuestionsCache = () => {
   _questionsCache = null;
   _questionsCacheTimestamp = 0;
   console.log("🗑️ Questions cache invalidated");
+};
+
+/**
+ * Subscribe to real-time updates for all questions from Firestore.
+ * This replaces the cache-based approach with live synchronization.
+ * All authenticated users will see changes instantly across all devices.
+ *
+ * SCALABILITY: Firebase supports thousands of concurrent listeners.
+ * Free tier: 50K reads/day, 20K writes/day, 1GB storage
+ * Blaze (pay-as-you-go): Unlimited with per-operation pricing
+ *
+ * @param {Function} callback - Called with updated questions array whenever data changes
+ * @param {number} maxResults - Maximum number of questions to retrieve (default 5000)
+ * @returns {Function} Unsubscribe function to stop listening
+ */
+export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
+  // Require authentication
+  if (!auth.currentUser) {
+    console.log("⚠️ No user signed in, cannot subscribe to questions");
+    callback([]);
+    return () => {}; // Return no-op unsubscribe
+  }
+
+  console.log("🔄 Setting up real-time question listener...");
+
+  // Create query for all questions
+  const q = query(
+    collection(db, "questions"),
+    orderBy("firestoreUpdatedAt", "desc"),
+    limit(maxResults)
+  );
+
+  // Set up real-time listener
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const questions = [];
+      snapshot.forEach((doc) => {
+        questions.push(doc.data());
+      });
+
+      console.log(
+        `✅ Real-time update: ${questions.length} questions (${
+          snapshot.docChanges().length
+        } changes)`
+      );
+
+      // Notify callback with updated data
+      callback(questions);
+    },
+    (error) => {
+      console.error("❌ Error in real-time listener:", error);
+      // On error, fall back to empty array
+      callback([]);
+    }
+  );
+
+  console.log("✓ Real-time listener active");
+  return unsubscribe;
 };
 
 // PERFORMANCE: Paginated question loading
