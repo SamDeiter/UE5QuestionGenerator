@@ -76,14 +76,18 @@ export const generateContentSecure = async (
  * Secure critique wrapper
  * Automatically chooses the most secure method available
  */
-export const generateCritiqueSecure = async (apiKey, question) => {
+export const generateCritiqueSecure = async (
+  apiKey,
+  question,
+  model = "gemini-1.5-flash"
+) => {
   // Try Cloud Functions first (most secure)
   if (isUserAuthenticated()) {
     try {
       console.log(
         "🔒 [CritiqueSecure DEBUG] Using Cloud Function for critique"
       );
-      const result = await generateCritiqueViaCloudFunction(question);
+      const result = await generateCritiqueViaCloudFunction(question, model);
       console.log(
         "🔒 [CritiqueSecure DEBUG] Cloud Function returned score:",
         result.score

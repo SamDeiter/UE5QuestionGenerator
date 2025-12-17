@@ -37,6 +37,8 @@ const generateDisciplineQuestions = (discipline, count, startId) => {
 
   const disciplineTopics = topics[discipline] || ["General"];
 
+  let lastCorrectSlot = -1;
+
   for (let i = 0; i < count; i++) {
     const isMC = Math.random() > 0.3; // 70% Multiple Choice
     // Cycle through difficulties to ensure a mix (Easy -> Medium -> Hard -> Easy...)
@@ -51,20 +53,37 @@ const generateDisciplineQuestions = (discipline, count, startId) => {
 
     if (isMC) {
       // 1. Define raw options
-      const rawOptions = [
-        "Correct Answer",
+      const wrongOptions = [
         "Wrong Option A",
         "Wrong Option B",
         "Wrong Option C",
       ];
-      // 2. Shuffle raw options
-      const shuffled = rawOptions
-        .map((value) => ({ value, sort: Math.random() }))
-        .sort((a, b) => a.sort - b.sort)
-        .map(({ value }) => value);
+      // Shuffle wrong options so they don't always appear in same order relative to each other
+      wrongOptions.sort(() => Math.random() - 0.5);
 
-      // 3. Assign to letters
-      shuffled.forEach((opt, idx) => {
+      // 2. Determine Correct Slot (Ensure no immediate repeats)
+      // If this is the first question, pick any slot. Otherwise, ensure distinct from last.
+      let correctSlot;
+      do {
+        correctSlot = Math.floor(Math.random() * 4);
+      } while (correctSlot === lastCorrectSlot);
+
+      lastCorrectSlot = correctSlot; // Update tracker for next iteration
+
+      // 3. Build Final Array
+      const finalOptionsArr = new Array(4);
+      finalOptionsArr[correctSlot] = "Correct Answer";
+
+      // Fill empty slots with wrong options
+      let wrongIdx = 0;
+      for (let j = 0; j < 4; j++) {
+        if (j !== correctSlot) {
+          finalOptionsArr[j] = wrongOptions[wrongIdx++];
+        }
+      }
+
+      // 4. Assign to letters
+      finalOptionsArr.forEach((opt, idx) => {
         const key = letters[idx];
         optionsObj[key] = opt;
         if (opt === "Correct Answer") correctKey = key;

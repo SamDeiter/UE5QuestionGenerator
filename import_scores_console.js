@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * STANDALONE IMPORT SCRIPT
  * Run this in browser console to import scores from ChatGPT/Gemini

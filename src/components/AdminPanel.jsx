@@ -36,7 +36,11 @@ const AdminPanel = ({
   isApiReady,
   customTags,
   onSaveCustomTags,
+  currentUser, // Add currentUser prop
 }) => {
+  // Super Admin check - only sam.deiter@epicgames.com
+  const isSuperAdmin = currentUser?.email === "sam.deiter@epicgames.com";
+
   const [users, setUsers] = useState([]);
   const [invites, setInvites] = useState([]);
 
@@ -327,70 +331,6 @@ const AdminPanel = ({
         </button>
       </div>
 
-      {/* Registered Users */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-green-500/30">
-        <h2 className="text-lg font-bold text-green-400 mb-3 flex items-center gap-2">
-          <Icon name="users" size={18} />
-          Registered Users ({users.length})
-        </h2>
-
-        <div className="space-y-2">
-          {users.length === 0 ? (
-            <p className="text-slate-500 text-sm">No users registered yet</p>
-          ) : (
-            users.map((user) => (
-              <div
-                key={user.uid}
-                className="bg-slate-700/50 p-3 rounded flex items-center justify-between"
-              >
-                <div>
-                  <div className="text-white font-medium">{user.email}</div>
-                  <div className="text-xs text-slate-400">
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded mr-2 ${
-                        user.role === "admin"
-                          ? "bg-purple-600 text-white"
-                          : "bg-slate-600 text-slate-300"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
-                    Joined: {new Date(user.registeredAt).toLocaleDateString()}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() =>
-                      handleChangeRole(user.uid, user.role, user.email)
-                    }
-                    className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded transition-all"
-                    title={
-                      user.role === "admin"
-                        ? "Demote to User"
-                        : "Promote to Admin"
-                    }
-                  >
-                    <Icon
-                      name={user.role === "admin" ? "arrow-down" : "arrow-up"}
-                      size={12}
-                    />
-                  </button>
-
-                  <button
-                    onClick={() => handleRevokeUser(user.uid, user.email)}
-                    className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-all"
-                    title="Revoke Access"
-                  >
-                    <Icon name="x" size={12} />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
       {/* Active Invites */}
       <div className="bg-slate-800 rounded-lg p-4 border border-yellow-500/30">
         <h2 className="text-lg font-bold text-yellow-400 mb-3 flex items-center gap-2">
@@ -513,7 +453,8 @@ const AdminPanel = ({
         </div>
       </div>
 
-      {/* Source Files */}
+      {/* Source Files - Super Admin Only */}
+      {isSuperAdmin && (
       <div className="bg-slate-800 rounded-lg p-4 border border-blue-500/30">
         <h2 className="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
           <Icon name="file-text" size={18} />
@@ -566,6 +507,7 @@ const AdminPanel = ({
             ))}
         </div>
       </div>
+      )}
 
       {/* Custom Tags */}
       <div className="bg-slate-800 rounded-lg p-4 border border-orange-500/30">
@@ -584,7 +526,8 @@ const AdminPanel = ({
         />
       </div>
 
-      {/* Training Data Export */}
+      {/* Training Data Export - Super Admin Only */}
+      {isSuperAdmin && (
       <div className="bg-slate-800 rounded-lg p-4 border border-purple-500/30">
         <h2 className="text-lg font-bold text-purple-400 mb-3 flex items-center gap-2">
           <Icon name="database" size={18} />
@@ -622,6 +565,7 @@ const AdminPanel = ({
           Exports JSONL format for Vertex AI fine-tuning.
         </p>
       </div>
+      )}
 
       {/* Environment Info */}
       <div className="bg-slate-800 rounded-lg p-4 border border-cyan-500/30">
@@ -685,7 +629,72 @@ const AdminPanel = ({
         </div>
       </div>
 
-      {/* Database Management */}
+      {/* Registered Users */}
+      <div className="bg-slate-800 rounded-lg p-4 border border-green-500/30">
+        <h2 className="text-lg font-bold text-green-400 mb-3 flex items-center gap-2">
+          <Icon name="users" size={18} />
+          Registered Users ({users.length})
+        </h2>
+
+        <div className="space-y-2">
+          {users.length === 0 ? (
+            <p className="text-slate-500 text-sm">No users registered yet</p>
+          ) : (
+            users.map((user) => (
+              <div
+                key={user.uid}
+                className="bg-slate-700/50 p-3 rounded flex items-center justify-between"
+              >
+                <div>
+                  <div className="text-white font-medium">{user.email}</div>
+                  <div className="text-xs text-slate-400">
+                    <span
+                      className={`inline-block px-2 py-0.5 rounded mr-2 ${
+                        user.role === "admin"
+                          ? "bg-purple-600 text-white"
+                          : "bg-slate-600 text-slate-300"
+                      }`}
+                    >
+                      {user.role}
+                    </span>
+                    Joined: {new Date(user.registeredAt).toLocaleDateString()}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      handleChangeRole(user.uid, user.role, user.email)
+                    }
+                    className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded transition-all"
+                    title={
+                      user.role === "admin"
+                        ? "Demote to User"
+                        : "Promote to Admin"
+                    }
+                  >
+                    <Icon
+                      name={user.role === "admin" ? "arrow-down" : "arrow-up"}
+                      size={12}
+                    />
+                  </button>
+
+                  <button
+                    onClick={() => handleRevokeUser(user.uid, user.email)}
+                    className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-all"
+                    title="Revoke Access"
+                  >
+                    <Icon name="x" size={12} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Database Management - Super Admin Only */}
+      {isSuperAdmin && (
       <div className="bg-slate-800 rounded-lg p-4 border border-red-500/30">
         <h2 className="text-lg font-bold text-red-400 mb-3 flex items-center gap-2">
           <Icon name="database" size={18} />
@@ -757,6 +766,7 @@ const AdminPanel = ({
           </button>
         </div>
       </div>
+      )}
     </div>
   );
 };

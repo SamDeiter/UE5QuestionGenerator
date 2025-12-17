@@ -1,7 +1,11 @@
+/* eslint-disable */
 /**
  * Additional Cloud Functions for Admin Panel
  *
  * Add these to your existing functions/index.js file
+ *
+ * NOTE: This file is for reference and copy-pasting into functions/index.js.
+ * It is not used directly by the application.
  */
 
 const functions = require("firebase-functions");
