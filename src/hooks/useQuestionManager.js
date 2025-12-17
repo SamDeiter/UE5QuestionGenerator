@@ -375,7 +375,13 @@ export const useQuestionManager = (config, showMessage) => {
   // Unified List (Source of Truth for Counts)
   const unifiedQuestions = useMemo(() => {
     const all = [];
-    allQuestionsMap.forEach((variants) => {
+
+    // FIX: Sort uniqueIds to ensure stable iteration order
+    // Map.forEach() can have unstable order when Map is mutated
+    const sortedUniqueIds = Array.from(allQuestionsMap.keys()).sort();
+
+    sortedUniqueIds.forEach((uniqueId) => {
+      const variants = allQuestionsMap.get(uniqueId);
       // Use the first variant or English version as the canonical entry
       const canonical =
         variants.find((v) => (v.language || "English") === "English") ||
