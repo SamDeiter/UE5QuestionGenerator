@@ -169,7 +169,7 @@ const ImprovementModal = ({
                   <div
                     className="text-sm text-white leading-relaxed"
                     dangerouslySetInnerHTML={sanitizeText(
-                      improvedQuestion.question
+                      improvedQuestion?.question || originalQuestion.question
                     )}
                   />
                 </div>
