@@ -38,7 +38,7 @@ const AdminPanel = ({
   onSaveCustomTags,
   currentUser, // Add currentUser prop
 }) => {
-  // Super Admin check - only sam.deiter@epicgames.com
+  // Super Admin check - configured via VITE_SUPER_ADMIN_EMAIL
   const isSuperAdmin =
     currentUser?.email === import.meta.env.VITE_SUPER_ADMIN_EMAIL;
 
