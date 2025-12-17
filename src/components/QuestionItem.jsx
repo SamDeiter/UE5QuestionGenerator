@@ -42,15 +42,24 @@ const QuestionItem = ({
     console.log("[QuestionItem DEBUG] useEffect triggered:", {
       critiqueScore: q.critiqueScore,
       suggestedRewrite: !!q.suggestedRewrite,
+      improvementsApplied: q.improvementsApplied,
       questionId: q.id,
       alreadyShowing: showImprovementModal,
     });
+
+    // Skip if improvements were already applied (prevents re-opening after apply)
+    if (q.improvementsApplied) {
+      console.log(
+        "[QuestionItem DEBUG] Skipping - improvements already applied"
+      );
+      return;
+    }
 
     // Only open if we have a new critique score that we haven't processed
     if (q.critiqueScore !== undefined && q.critiqueScore !== null) {
       const critiqueKey = `${q.id}-${q.critiqueScore}`;
 
-      // Skip if we've already processed this exact critique OR modal is already open
+      // Skip if we've already processed this exact critique
       if (lastProcessedCritiqueRef.current === critiqueKey) {
         console.log(
           "[QuestionItem DEBUG] Skipping - already processed this critique"
@@ -65,7 +74,7 @@ const QuestionItem = ({
       lastProcessedCritiqueRef.current = critiqueKey;
       setShowImprovementModal(true);
     }
-  }, [q.critiqueScore, q.suggestedRewrite, q.id]);
+  }, [q.critiqueScore, q.suggestedRewrite, q.id, q.improvementsApplied]);
 
   // Reset ref when modal is closed so we can show the same critique again if needed
   const handleModalDismiss = useCallback(() => {
@@ -256,7 +265,7 @@ const QuestionItem = ({
             critiqueScore={q.critiqueScore || 0} // Original question's score
             improvedScore={q.improvedScore || 0} // Score AFTER applying improvements
             onApply={async (improved) => {
-              // Apply improvements to question
+              // Apply improvements to question - keep critiqueScore for display
               await onUpdateQuestion(q.id, {
                 question: improved?.question || q.question,
                 options: improved?.options || q.options,
@@ -265,11 +274,10 @@ const QuestionItem = ({
                 optionC: improved?.optionC || q.optionC,
                 optionD: improved?.optionD || q.optionD,
                 tags: improved?.tags || q.tags,
-                critiqueScore: null, // Clear score after apply to prevent modal re-open
+                // Keep critiqueScore intact for display (e.g., "Score: 75/100")
                 suggestedRewrite: null, // Clear suggestion after apply
                 improvedScore: null, // Clear after applying
-                critique: null, // Clear critique text
-                improvementsApplied: true, // Mark that improvements were applied (enables Verify)
+                improvementsApplied: true, // Mark that improvements were applied (enables Verify, prevents modal re-open)
               });
               // Prevent modal from re-opening by marking as processed
               lastProcessedCritiqueRef.current = "applied";
