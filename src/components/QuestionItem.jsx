@@ -31,6 +31,7 @@ const QuestionItem = ({
   appMode,
   showMessage,
   isAdmin = false,
+  userRole, // NEW
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(q.question);
@@ -193,7 +194,7 @@ const QuestionItem = ({
           onSwitchLanguage={onSwitchLanguage}
           onTranslateSingle={onTranslateSingle}
           isProcessing={isProcessing}
-          appMode={appMode}
+          userRole={userRole} // NEW
         />
       </div>
 

@@ -850,7 +850,7 @@ exports.createInvite = functions
         maxUses: maxUses === -1 ? -1 : Math.max(1, maxUses),
         currentUses: 0,
         usedBy: [],
-        role: role === "admin" ? "admin" : "user",
+        role: ["admin", "reviewer"].includes(role) ? role : "user",
         isActive: true,
         note: (note || "").substring(0, 200), // Limit note length
         forEmail: sanitizedEmail, // NEW: Store the target email
@@ -1292,7 +1292,7 @@ exports.changeUserRole = functions
       );
     }
 
-    if (!["user", "admin"].includes(role)) {
+    if (!["user", "admin", "reviewer"].includes(role)) {
       throw new functions.https.HttpsError("invalid-argument", "Invalid role");
     }
 

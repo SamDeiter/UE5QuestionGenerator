@@ -37,6 +37,7 @@ export function useAuth(showMessage) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState("user");
   const [isRegistered, setIsRegistered] = useState(false);
   const [registrationLoading, setRegistrationLoading] = useState(true);
   const [customTags, setCustomTags] = useState({});
@@ -82,6 +83,7 @@ export function useAuth(showMessage) {
           }
 
           setIsRegistered(regStatus.registered);
+          setUserRole(regStatus.role || "user");
 
           // Admin status comes from the registration check
           if (regStatus.role === "admin") {
@@ -96,7 +98,8 @@ export function useAuth(showMessage) {
             currentUser.email?.toLowerCase()
           );
           setIsAdmin(isWhitelisted);
-          setIsRegistered(isWhitelisted); // Whitelisted admins are registered
+          setIsRegistered(isWhitelisted);
+          if (isWhitelisted) setUserRole("admin"); // Whitelisted admins are registered
         } finally {
           setRegistrationLoading(false);
         }
@@ -111,6 +114,7 @@ export function useAuth(showMessage) {
       } else {
         setIsAdmin(false);
         setIsRegistered(false);
+        setUserRole("user");
         setRegistrationLoading(false);
       }
     });
@@ -162,6 +166,7 @@ export function useAuth(showMessage) {
    */
   const markAsRegistered = (role = "user") => {
     setIsRegistered(true);
+    setUserRole(role);
     if (role === "admin") {
       setIsAdmin(true);
     }
@@ -175,6 +180,7 @@ export function useAuth(showMessage) {
     user,
     authLoading,
     isAdmin,
+    userRole,
 
     // Registration state (invite system)
     isRegistered,

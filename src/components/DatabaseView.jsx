@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Icon from "./Icon";
 import MetricsDashboard from "./MetricsDashboard";
-import QuestionItem from "./QuestionItem";
+import QuestionItem from "./QuestionItem.jsx";
 import { exportQuestionsForCritique } from "../utils/externalCritique";
 
 // PERFORMANCE: Number of items to render initially and load per batch
@@ -23,6 +23,7 @@ const DatabaseView = ({
   sortBy = "default", // Default to 'default' if not provided
   onStartTutorial, // Callback to trigger database tutorial
   isAdmin = false, // Whether current user is admin
+  userRole = "user", // NEW
 }) => {
   const [_isSyncing, _setIsSyncing] = useState(false);
   const [_syncProgress, _setSyncProgress] = useState(0);
@@ -337,6 +338,7 @@ const DatabaseView = ({
                   isProcessing={false}
                   appMode="database"
                   showMessage={showMessage}
+                  userRole={userRole} // NEW
                 />
               </div>
             ))}

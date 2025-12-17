@@ -19,6 +19,7 @@ const ReviewMode = ({
   isProcessing,
   showMessage,
   onStartTutorial,
+  userRole, // NEW
 }) => {
   // Auto-start tutorial if not completed (and compliance modals are done)
   useEffect(() => {
@@ -145,6 +146,7 @@ const ReviewMode = ({
           isProcessing={isProcessing}
           appMode="review"
           showMessage={showMessage}
+          userRole={userRole} // NEW
         />
       </div>
     </div>

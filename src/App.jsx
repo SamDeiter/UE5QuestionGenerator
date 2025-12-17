@@ -63,6 +63,7 @@ const App = () => {
     user,
     authLoading,
     isAdmin,
+    userRole,
     isRegistered: _isRegistered,
     registrationLoading,
     markAsRegistered,
@@ -92,7 +93,12 @@ const App = () => {
     handleTutorialComplete,
     handleRestartTutorial,
     handleStartTutorial,
-  } = useTutorial(showMessage);
+  } = useTutorial(showMessage, undefined, {
+    // TODO: Wire up actual panel/modal setters when implementing tutorial actions
+    // setShowAdvancedConfig: (open) => { /* implement */ },
+    // setShowCritiqueModal: (open) => { /* implement */ },
+    // setActiveAnalyticsTab: (tab) => { /* implement */ },
+  });
 
   // ========================================================================
   // HOOKS - State Management
@@ -571,6 +577,7 @@ const App = () => {
       handleManualUpdate,
       handleTrimExcess,
       handleUpdateQuestion,
+      userRole,
     }),
     [
       handleLoadFromSheets,
@@ -612,7 +619,17 @@ const App = () => {
     return <SignIn />;
   }
 
-  // User is authenticated - proceed to app (no registration check needed)
+  // User is authenticated - enforce registration check
+  if (!_isRegistered) {
+    // If not registered and not on an invite URL, show invite-only message or redirect to sign in
+    return (
+      <InviteSignUp
+        onSuccess={(role) => {
+          markAsRegistered(role);
+        }}
+      />
+    );
+  }
 
   if (appMode === "landing") {
     return (
@@ -820,7 +837,8 @@ const App = () => {
             filterMode,
             sortBy,
             showHistory,
-            currentUser: user, // Add user for super admin check
+            currentUser: user,
+            userRole, // Add role for component restrictions
           }}
           viewRouterSetters={{
             setDatabaseQuestions,

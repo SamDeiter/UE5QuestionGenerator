@@ -17,6 +17,7 @@ const QuestionList = ({
   onDelete,
   onUpdateQuestion,
   showMessage,
+  userRole, // NEW
 }) => {
   return (
     <Virtuoso
@@ -40,6 +41,7 @@ const QuestionList = ({
             isProcessing={isProcessing}
             appMode={appMode}
             showMessage={showMessage}
+            userRole={userRole} // NEW
           />
         </div>
       )}

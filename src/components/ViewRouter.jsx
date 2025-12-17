@@ -116,6 +116,7 @@ const ViewRouter = ({
     filteredQuestions,
     questions,
     status,
+    userRole, // NEW
   } = state;
   const {
     setDatabaseQuestions,
@@ -148,6 +149,7 @@ const ViewRouter = ({
           sortBy={state.sortBy}
           onStartTutorial={() => onStartTutorial("database")}
           isAdmin={isAdmin}
+          userRole={userRole}
         />
       ) : appMode === "test" && isAdmin ? (
         <TestView
@@ -195,9 +197,8 @@ const ViewRouter = ({
           onDelete={handleDelete}
           onUpdateQuestion={handleManualUpdate}
           translationMap={translationMap}
-          isProcessing={isProcessing}
-          showMessage={showMessage}
           onStartTutorial={() => onStartTutorial("review")}
+          userRole={userRole} // NEW
         />
       ) : appMode === "review" && uniqueFilteredQuestions.length === 0 ? (
         /* NEW: Empty state for Review mode with CTA */
@@ -225,6 +226,7 @@ const ViewRouter = ({
             onDelete={handleDelete}
             onUpdateQuestion={handleManualUpdate}
             showMessage={showMessage}
+            userRole={userRole} // NEW
           />
         </>
       )}

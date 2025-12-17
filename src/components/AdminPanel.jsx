@@ -13,9 +13,7 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { app } from "../services/firebase";
 import Icon from "./Icon";
 import { createInvite, revokeInvite } from "../services/inviteService";
-import TokenUsageDisplay from "./TokenUsageDisplay";
-import TagManager from "./TagManager";
-import { getTokenUsage, downloadTrainingData } from "../utils/analyticsStore";
+import { downloadTrainingData } from "../utils/analyticsStore";
 import { UI_LABELS } from "../utils/constants";
 import { clearAllQuestionsFromFirestore } from "../services/firebase";
 
@@ -27,12 +25,6 @@ const AdminPanel = ({
   handleChange,
   showApiKey,
   setShowApiKey,
-  files,
-  handleDetectTopics,
-  isDetecting,
-  fileInputRef,
-  handleFileChange,
-  removeFile,
   isApiReady,
   customTags,
   onSaveCustomTags,
@@ -81,15 +73,16 @@ const AdminPanel = ({
   const loadData = async () => {
     setLoading(true);
     try {
-      // TODO: Implement these Cloud Functions when needed
-      // Get all registered users
+      // Load users and invites in parallel for better performance
       const listUsersFn = httpsCallable(functions, "listRegisteredUsers");
-      const usersResult = await listUsersFn({});
-      setUsers(usersResult.data.users || []);
-
-      // Get active invites
       const listInvitesFn = httpsCallable(functions, "listInvites");
-      const invitesResult = await listInvitesFn({});
+
+      const [usersResult, invitesResult] = await Promise.all([
+        listUsersFn({}),
+        listInvitesFn({}),
+      ]);
+
+      setUsers(usersResult.data.users || []);
       setInvites(invitesResult.data.invites || []);
     } catch (error) {
       console.error("Failed to load admin data:", error);
@@ -169,7 +162,12 @@ const AdminPanel = ({
   };
 
   const handleChangeRole = async (userId, currentRole, email) => {
-    const newRole = currentRole === "admin" ? "user" : "admin";
+    const getNextRole = (role) => {
+      if (role === "admin") return "user";
+      if (role === "reviewer") return "admin";
+      return "reviewer";
+    };
+    const newRole = getNextRole(currentRole);
     if (!confirm(`Change ${email} from ${currentRole} to ${newRole}?`)) return;
 
     try {
@@ -226,7 +224,7 @@ const AdminPanel = ({
           />
         </h2>
         {!collapsed.featureAccess && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-slate-800/50 p-4 rounded border border-green-500/30">
               <h3 className="text-sm font-bold text-green-400 mb-3">
                 👤 Regular Users (Non-Admin)
@@ -265,6 +263,30 @@ const AdminPanel = ({
                 <li className="flex items-center gap-2 text-slate-500">
                   <Icon name="x" size={12} className="text-red-400" />
                   <span className="line-through">Admin Panel (Admin Only)</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-slate-800/50 p-4 rounded border border-blue-500/30">
+              <h3 className="text-sm font-bold text-blue-400 mb-3">
+                🔍 Reviewers (Limited Access)
+              </h3>
+              <ul className="space-y-2 text-xs text-slate-300">
+                <li className="flex items-center gap-2">
+                  <Icon name="check" size={12} className="text-blue-400" />
+                  All Regular User Features
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="database" size={12} className="text-blue-400" />
+                  Database View (Extended Access)
+                </li>
+                <li className="flex items-center gap-2 text-slate-500">
+                  <Icon name="x" size={12} className="text-red-400" />
+                  <span className="line-through">Create Questions</span>
+                </li>
+                <li className="flex items-center gap-2 text-slate-500">
+                  <Icon name="x" size={12} className="text-red-400" />
+                  <span className="line-through">Admin Panel</span>
                 </li>
               </ul>
             </div>
@@ -345,6 +367,7 @@ const AdminPanel = ({
                   className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
                 >
                   <option value="user">User</option>
+                  <option value="reviewer">Reviewer</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
@@ -453,6 +476,8 @@ const AdminPanel = ({
                         className={`inline-block px-2 py-0.5 rounded mr-2 ${
                           user.role === "admin"
                             ? "bg-purple-600 text-white"
+                            : user.role === "reviewer"
+                            ? "bg-indigo-600 text-white"
                             : "bg-slate-600 text-slate-300"
                         }`}
                       >

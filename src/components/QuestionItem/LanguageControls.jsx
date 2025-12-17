@@ -9,15 +9,19 @@ const LanguageControls = ({
   onSwitchLanguage,
   onTranslateSingle,
   isProcessing,
+  userRole, // NEW: Check role for restrictions
 }) => {
   const [loadingLang, setLoadingLang] = useState(null);
   const [_translateMenuOpen, setTranslateMenuOpen] = useState(false);
   const translateMenuRef = useRef(null);
 
-  // Translation requirements: Must have valid source URL
+  // Translation requirements: Must have valid source URL and NOT be a reviewer
   // Removed status === 'accepted' requirement - pending questions should be translatable too
   const canTranslate =
-    (q.language || "English") === "English" && q.sourceUrl && !q.invalidUrl;
+    (q.language || "English") === "English" &&
+    q.sourceUrl &&
+    !q.invalidUrl &&
+    userRole !== "reviewer"; // NEW: Reviewers cannot generate new translations
 
   // Close translate menu on click outside
   useEffect(() => {

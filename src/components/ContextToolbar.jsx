@@ -449,10 +449,40 @@ const ContextToolbar = ({
     </div>
   );
 
+  const renderAdminToolbar = () => (
+    <div className="flex justify-between items-center w-full">
+      <div className="flex items-center gap-2">
+        <Icon name="shield" size={16} className="text-red-400" />
+        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+          Admin Control Panel
+        </span>
+      </div>
+    </div>
+  );
+
+  const renderPlaygroundToolbar = () => (
+    <div className="flex justify-between items-center w-full">
+      <div className="flex items-center gap-2">
+        <Icon name="terminal" size={16} className="text-purple-400" />
+        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+          Prompt Playground
+        </span>
+      </div>
+    </div>
+  );
+
   // ------------------------------------------------------------------------
   // MAIN RENDER
   // ------------------------------------------------------------------------
-  const knownModes = ["create", "review", "database", "analytics", "test"];
+  const knownModes = [
+    "create",
+    "review",
+    "database",
+    "analytics",
+    "test",
+    "admin",
+    "playground",
+  ];
 
   return (
     <div className="h-12 px-4 border-b border-slate-800 bg-slate-900/50 flex items-center">
@@ -461,6 +491,8 @@ const ContextToolbar = ({
       {mode === "database" && renderDatabaseToolbar()}
       {mode === "analytics" && renderAnalyticsToolbar()}
       {mode === "test" && renderTestToolbar()}
+      {mode === "admin" && renderAdminToolbar()}
+      {mode === "playground" && renderPlaygroundToolbar()}
       {!knownModes.includes(mode) && (
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <Icon name="alert-triangle" size={14} className="text-yellow-500" />
