@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import Icon from "../Icon";
 
 /**
@@ -51,9 +51,11 @@ const TagConnectionGraph = ({
               800,
               Math.max(400, Math.floor(containerWidth * 0.55))
             );
-            setDimensions({
-              width: size,
-              height: size, // Make it square
+
+            setDimensions((prev) => {
+              // Only update if changed to prevent re-renders
+              if (prev.width === size && prev.height === size) return prev;
+              return { width: size, height: size };
             });
           }
         }
@@ -63,24 +65,20 @@ const TagConnectionGraph = ({
     // Use ResizeObserver for more reliable dimension updates
     let resizeObserver = null;
     if (containerRef.current) {
-      resizeObserver = new ResizeObserver(() => {
-        updateDimensions();
+      resizeObserver = new ResizeObserver((_) => {
+        // Use requestAnimationFrame to avoid "ResizeObserver loop limit exceeded"
+        requestAnimationFrame(() => {
+          updateDimensions();
+        });
       });
       resizeObserver.observe(containerRef.current);
     }
 
-    // Initial delays to let layout settle (try multiple times)
-    const timer1 = setTimeout(updateDimensions, 100);
-    const timer2 = setTimeout(updateDimensions, 300);
-    const timer3 = setTimeout(updateDimensions, 600);
+    // Initial update
+    updateDimensions();
 
-    window.addEventListener("resize", updateDimensions);
     return () => {
-      window.removeEventListener("resize", updateDimensions);
       if (resizeObserver) resizeObserver.disconnect();
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
     };
   }, []);
 
