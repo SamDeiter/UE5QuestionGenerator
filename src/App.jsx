@@ -125,10 +125,18 @@ const App = () => {
     setPendingNavigationUniqueId,
   } = useAppConfig();
 
-  // Force language to English on mount to prevent language variant issues
+  // One-time migration: Force language to English and clear any cached preferences
   useEffect(() => {
-    if (config.language !== "English") {
+    const migrationKey = "language_reset_v1";
+    const hasReset = localStorage.getItem(migrationKey);
+
+    if (!hasReset) {
+      console.log("🔄 Running language reset migration...");
+      // Force config to English
       setConfig((prev) => ({ ...prev, language: "English" }));
+      // Mark migration as complete
+      localStorage.setItem(migrationKey, "true");
+      console.log("✅ Language reset to English");
     }
   }, []); // Only run once on mount
 
