@@ -48,9 +48,11 @@ const LanguageControls = ({
           LANGUAGE_CODES[lang] || lang.substring(0, 2).toUpperCase();
 
         // Check if translation exists for THIS specific language
-        // ✅ FIX: Don't assume English always exists - check if it's actually the current language
+        // English always exists (it's the original), other languages check availableLanguages
         const exists =
-          isCurrent || (availableLanguages && availableLanguages.has(lang));
+          isCurrent ||
+          lang === "English" ||
+          (availableLanguages && availableLanguages.has(lang));
 
         const isLoading = loadingLang === lang;
 
