@@ -1027,18 +1027,11 @@ export const useGeneration = (
             critiqueAttempts: newAttemptCount,
           }));
 
-          if (score < PASSING_SCORE) {
-            const attemptsLeft = MAX_ATTEMPTS - newAttemptCount;
-            showMessage(
-              `Score: ${score}/100. ${attemptsLeft} attempt(s) left before auto-reject. Apply suggestions to improve!`,
-              TOAST_DURATION.LONG
-            );
-          } else {
-            showMessage(
-              `Critique Ready! Score: ${score}/100`,
-              TOAST_DURATION.MEDIUM
-            );
-          }
+          // Simple score notification - no verbose warnings
+          showMessage(
+            `Critique Ready! Score: ${score}/100`,
+            TOAST_DURATION.MEDIUM
+          );
         }
       } catch (e) {
         console.error("Critique failed:", e);

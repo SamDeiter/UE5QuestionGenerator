@@ -77,6 +77,7 @@ export const generateCritiqueViaCloudFunction = async (
       question: question.question,
       options: question.options,
       correct: question.correct,
+      type: question.type || "Multiple Choice", // Preserve question type
       modeLabel: question.modeLabel,
       model: model,
     });

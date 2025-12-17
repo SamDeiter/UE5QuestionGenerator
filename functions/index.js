@@ -176,6 +176,7 @@ exports.generateCritique = functions
       question,
       options,
       correct,
+      type = "Multiple Choice", // Question type: "True/False" or "Multiple Choice"
       modeLabel,
       model = "gemini-2.0-flash",
     } = data;
@@ -263,8 +264,14 @@ exports.generateCritique = functions
             "changes": "string" // Brief explanation of what was changed and why
         }
         
+        CRITICAL CONSTRAINT: The rewritten question MUST maintain the same question TYPE.
+        - If this is a True/False question (only A=TRUE, B=FALSE options), the rewrite MUST also be True/False.
+        - If this is a Multiple Choice question (A, B, C, D options), the rewrite MUST also have 4 options.
+        - DO NOT convert True/False questions to Multiple Choice or vice versa.
+        
         IMPORTANT: Both "score" AND "improvedScore" are REQUIRED. The improvedScore should reflect the quality of your rewritten version.
 
+        Question Type: ${type}
         Question: ${question}
         Options: ${JSON.stringify(options)}
         Correct: ${correct}`;
