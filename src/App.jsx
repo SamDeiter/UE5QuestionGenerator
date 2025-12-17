@@ -375,6 +375,74 @@ const App = () => {
     runMigration();
   }, [user, authLoading, showMessage, handleLoadFromFirestore]);
 
+  // ONE-TIME MIGRATION: Add firestoreUpdatedAt to questions missing it
+  const hasFirestoreMigratedRef = useRef(false);
+  useEffect(() => {
+    const runFirestoreMigration = async () => {
+      const migrationKey = "ue5_migration_firestore_updated_at";
+      if (localStorage.getItem(migrationKey) === "completed") return;
+
+      if (user && !authLoading && !hasFirestoreMigratedRef.current) {
+        hasFirestoreMigratedRef.current = true;
+        try {
+          console.log(
+            "🔄 Running migration: adding firestoreUpdatedAt to questions..."
+          );
+
+          const { db } = await import("./services/firebase");
+          const { collection, getDocs, doc, updateDoc, Timestamp } =
+            await import("firebase/firestore");
+
+          const questionsRef = collection(db, "questions");
+          const snapshot = await getDocs(questionsRef);
+
+          let updatedCount = 0;
+          const batch = [];
+
+          snapshot.forEach((docSnap) => {
+            const question = docSnap.data();
+
+            // Check if firestoreUpdatedAt is missing or null
+            if (!question.firestoreUpdatedAt) {
+              // Use dateAdded as fallback, or current time if that's also missing
+              const fallbackDate = question.dateAdded
+                ? new Date(question.dateAdded)
+                : new Date();
+
+              batch.push(
+                updateDoc(doc(db, "questions", docSnap.id), {
+                  firestoreUpdatedAt: Timestamp.fromDate(fallbackDate),
+                })
+              );
+              updatedCount++;
+            }
+          });
+
+          if (batch.length > 0) {
+            await Promise.all(batch);
+            console.log(
+              `✅ Migration: Added firestoreUpdatedAt to ${updatedCount} of ${snapshot.size} questions`
+            );
+            showMessage(
+              `✅ Fixed ${updatedCount} questions - reloading database...`,
+              5000
+            );
+            setTimeout(() => handleLoadFromFirestore(), 1000);
+          } else {
+            console.log(
+              `✅ No migration needed: All ${snapshot.size} questions have firestoreUpdatedAt`
+            );
+          }
+
+          localStorage.setItem(migrationKey, "completed");
+        } catch (error) {
+          console.error("❌ Firestore migration error:", error);
+        }
+      }
+    };
+    runFirestoreMigration();
+  }, [user, authLoading, showMessage, handleLoadFromFirestore]);
+
   // 9. Review Actions (bulk operations)
   const {
     handleClearPending,
