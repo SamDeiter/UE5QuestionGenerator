@@ -409,6 +409,7 @@ export const getAllQuestionsFromFirestore = async (
     }
 
     console.log("🔄 Fetching questions from Firestore...");
+    console.log(`📍 Firebase Project: ${firebaseConfig.projectId}`);
     const startTime = performance.now();
 
     // Load ALL questions (not filtered by creatorId)
@@ -420,14 +421,21 @@ export const getAllQuestionsFromFirestore = async (
     const snapshot = await getDocs(allQuery);
 
     const questions = [];
+    const disciplineCounts = {};
     snapshot.forEach((doc) => {
-      questions.push(doc.data());
+      const q = doc.data();
+      questions.push(q);
+
+      // Track discipline counts for debugging
+      const discipline = q.discipline || "Unknown";
+      disciplineCounts[discipline] = (disciplineCounts[discipline] || 0) + 1;
     });
 
     const duration = Math.round(performance.now() - startTime);
     console.log(
       `✅ Loaded ${questions.length} questions from Firestore in ${duration}ms`
     );
+    console.log("📊 Discipline Breakdown:", disciplineCounts);
 
     // Update cache
     _questionsCache = questions;
