@@ -40,7 +40,7 @@ const AdminPanel = ({
 }) => {
   // Super Admin check - only sam.deiter@epicgames.com
   const isSuperAdmin = currentUser?.email === "sam.deiter@epicgames.com";
-  
+
   // Debug logging
   console.log("AdminPanel - currentUser:", currentUser);
   console.log("AdminPanel - currentUser email:", currentUser?.email);
@@ -105,10 +105,20 @@ const AdminPanel = ({
 
     try {
       await revokeInvite(code);
+
+      // Immediately remove invite from UI (optimistic update)
+      setInvites((prevInvites) =>
+        prevInvites.filter((inv) => inv.code !== code)
+      );
+
       showMessage("✅ Invite revoked", 3000);
+
+      // Refresh data from server to ensure consistency
       await loadData();
     } catch (error) {
       showMessage(`❌ Failed to revoke: ${error.message}`, 5000);
+      // Reload data to restore UI state if revocation failed
+      await loadData();
     }
   };
 
@@ -123,10 +133,18 @@ const AdminPanel = ({
     try {
       const revokeUserFn = httpsCallable(functions, "revokeUserAccess");
       await revokeUserFn({ userId });
+
+      // Immediately remove user from UI (optimistic update)
+      setUsers((prevUsers) => prevUsers.filter((u) => u.uid !== userId));
+
       showMessage(`✅ Access revoked for ${email}`, 3000);
+
+      // Refresh data from server to ensure consistency
       await loadData();
     } catch (error) {
       showMessage(`❌ Failed to revoke user: ${error.message}`, 5000);
+      // Reload data to restore UI state if revocation failed
+      await loadData();
     }
   };
 
@@ -137,10 +155,20 @@ const AdminPanel = ({
     try {
       const changeRoleFn = httpsCallable(functions, "changeUserRole");
       await changeRoleFn({ userId, role: newRole });
+
+      // Immediately update user role in UI (optimistic update)
+      setUsers((prevUsers) =>
+        prevUsers.map((u) => (u.uid === userId ? { ...u, role: newRole } : u))
+      );
+
       showMessage(`✅ ${email} is now ${newRole}`, 3000);
+
+      // Refresh data from server to ensure consistency
       await loadData();
     } catch (error) {
       showMessage(`❌ Failed to change role: ${error.message}`, 5000);
+      // Reload data to restore UI state if role change failed
+      await loadData();
     }
   };
 
@@ -168,10 +196,12 @@ const AdminPanel = ({
           <Icon name="eye" size={18} />
           Feature Access Overview
         </h2>
-        
+
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-slate-800/50 p-4 rounded border border-green-500/30">
-            <h3 className="text-sm font-bold text-green-400 mb-3">👤 Regular Users (Non-Admin)</h3>
+            <h3 className="text-sm font-bold text-green-400 mb-3">
+              👤 Regular Users (Non-Admin)
+            </h3>
             <ul className="space-y-2 text-xs text-slate-300">
               <li className="flex items-center gap-2">
                 <Icon name="list-checks" size={12} className="text-green-400" />
@@ -187,7 +217,9 @@ const AdminPanel = ({
               </li>
               <li className="flex items-center gap-2 text-slate-500">
                 <Icon name="x" size={12} className="text-red-400" />
-                <span className="line-through">Create Questions (Admin Only)</span>
+                <span className="line-through">
+                  Create Questions (Admin Only)
+                </span>
               </li>
               <li className="flex items-center gap-2 text-slate-500">
                 <Icon name="x" size={12} className="text-red-400" />
@@ -199,20 +231,30 @@ const AdminPanel = ({
               </li>
             </ul>
           </div>
-          
+
           <div className="bg-slate-800/50 p-4 rounded border border-purple-500/30">
-            <h3 className="text-sm font-bold text-purple-400 mb-3">👑 Admins (Full Access)</h3>
+            <h3 className="text-sm font-bold text-purple-400 mb-3">
+              👑 Admins (Full Access)
+            </h3>
             <ul className="space-y-2 text-xs text-slate-300">
               <li className="flex items-center gap-2">
                 <Icon name="check" size={12} className="text-purple-400" />
                 All Regular User Features
               </li>
               <li className="flex items-center gap-2">
-                <Icon name="plus-circle" size={12} className="text-purple-400" />
+                <Icon
+                  name="plus-circle"
+                  size={12}
+                  className="text-purple-400"
+                />
                 Create Mode (generate questions)
               </li>
               <li className="flex items-center gap-2">
-                <Icon name="clipboard-list" size={12} className="text-purple-400" />
+                <Icon
+                  name="clipboard-list"
+                  size={12}
+                  className="text-purple-400"
+                />
                 Test View (experimental features)
               </li>
               <li className="flex items-center gap-2">
@@ -231,7 +273,6 @@ const AdminPanel = ({
           </div>
         </div>
       </div>
-
 
       {/* Create Invite Section */}
       <div className="bg-slate-800 rounded-lg p-4 border border-blue-500/30">
@@ -447,58 +488,58 @@ const AdminPanel = ({
 
       {/* Source Files - Super Admin Only */}
       {isSuperAdmin && (
-      <div className="bg-slate-800 rounded-lg p-4 border border-blue-500/30">
-        <h2 className="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
-          <Icon name="file-text" size={18} />
-          Source Material
-        </h2>
+        <div className="bg-slate-800 rounded-lg p-4 border border-blue-500/30">
+          <h2 className="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
+            <Icon name="file-text" size={18} />
+            Source Material
+          </h2>
 
-        <div className="space-y-3">
-          <div className="flex justify-between items-end">
-            <label className="text-xs font-bold uppercase text-slate-400">
-              Source Files (CSV)
-            </label>
-            {files && files.length > 0 && (
-              <button
-                onClick={handleDetectTopics}
-                disabled={isDetecting || !isApiReady}
-                className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50 disabled:opacity-50"
-              >
-                {isDetecting ? "..." : "Detect Topics"}
-              </button>
-            )}
-          </div>
-          <div
-            onClick={() => fileInputRef?.current?.click()}
-            className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-700 cursor-pointer text-center transition-colors"
-          >
-            <Icon name="upload" className="mx-auto text-slate-600 mb-2" />
-            <p className="text-xs text-slate-500">Click to upload .csv</p>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              multiple
-              className="hidden"
-            />
-          </div>
-          {files &&
-            files.map((f, i) => (
-              <div
-                key={i}
-                className="flex justify-between bg-slate-700 p-2 rounded border border-slate-600 text-xs text-slate-400"
-              >
-                <span className="truncate">{f.name}</span>
+          <div className="space-y-3">
+            <div className="flex justify-between items-end">
+              <label className="text-xs font-bold uppercase text-slate-400">
+                Source Files (CSV)
+              </label>
+              {files && files.length > 0 && (
                 <button
-                  onClick={() => removeFile(i)}
-                  className="text-red-500 hover:text-red-400"
+                  onClick={handleDetectTopics}
+                  disabled={isDetecting || !isApiReady}
+                  className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50 disabled:opacity-50"
                 >
-                  <Icon name="x" size={14} />
+                  {isDetecting ? "..." : "Detect Topics"}
                 </button>
-              </div>
-            ))}
+              )}
+            </div>
+            <div
+              onClick={() => fileInputRef?.current?.click()}
+              className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-700 cursor-pointer text-center transition-colors"
+            >
+              <Icon name="upload" className="mx-auto text-slate-600 mb-2" />
+              <p className="text-xs text-slate-500">Click to upload .csv</p>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                multiple
+                className="hidden"
+              />
+            </div>
+            {files &&
+              files.map((f, i) => (
+                <div
+                  key={i}
+                  className="flex justify-between bg-slate-700 p-2 rounded border border-slate-600 text-xs text-slate-400"
+                >
+                  <span className="truncate">{f.name}</span>
+                  <button
+                    onClick={() => removeFile(i)}
+                    className="text-red-500 hover:text-red-400"
+                  >
+                    <Icon name="x" size={14} />
+                  </button>
+                </div>
+              ))}
+          </div>
         </div>
-      </div>
       )}
 
       {/* Custom Tags */}
@@ -520,43 +561,46 @@ const AdminPanel = ({
 
       {/* Training Data Export - Super Admin Only */}
       {isSuperAdmin && (
-      <div className="bg-slate-800 rounded-lg p-4 border border-purple-500/30">
-        <h2 className="text-lg font-bold text-purple-400 mb-3 flex items-center gap-2">
-          <Icon name="database" size={18} />
-          Vertex AI Training Data
-        </h2>
-        <div className="flex gap-3 mb-2">
+        <div className="bg-slate-800 rounded-lg p-4 border border-purple-500/30">
+          <h2 className="text-lg font-bold text-purple-400 mb-3 flex items-center gap-2">
+            <Icon name="database" size={18} />
+            Vertex AI Training Data
+          </h2>
+          <div className="flex gap-3 mb-2">
+            <button
+              onClick={() => downloadTrainingData(true)}
+              className="flex-1 px-3 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-200 text-xs font-bold rounded border border-purple-700/50 transition-colors flex items-center justify-center gap-2"
+              title="Download questions with >75% score"
+            >
+              <Icon name="download" size={14} />
+              Download Good Data
+            </button>
+            <button
+              onClick={() => downloadTrainingData(false)}
+              className="flex-1 px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 text-slate-400 text-xs font-bold rounded border border-slate-600/50 transition-colors flex items-center justify-center gap-2"
+              title="Download questions with <75% score"
+            >
+              <Icon name="download" size={14} />
+              Download Bad Data
+            </button>
+          </div>
           <button
-            onClick={() => downloadTrainingData(true)}
-            className="flex-1 px-3 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-200 text-xs font-bold rounded border border-purple-700/50 transition-colors flex items-center justify-center gap-2"
-            title="Download questions with >75% score"
+            onClick={() => {
+              const count = downloadTrainingData("all");
+              showMessage(
+                `Exported ${count} total questions for training`,
+                3000
+              );
+            }}
+            className="w-full px-3 py-2 bg-blue-900/20 hover:bg-blue-900/30 text-blue-400 rounded flex items-center justify-center gap-2 transition-colors text-xs font-bold border border-blue-900/30"
           >
             <Icon name="download" size={14} />
-            Download Good Data
+            Export All Training Data
           </button>
-          <button
-            onClick={() => downloadTrainingData(false)}
-            className="flex-1 px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 text-slate-400 text-xs font-bold rounded border border-slate-600/50 transition-colors flex items-center justify-center gap-2"
-            title="Download questions with <75% score"
-          >
-            <Icon name="download" size={14} />
-            Download Bad Data
-          </button>
+          <p className="text-[10px] text-slate-500 mt-2 text-center">
+            Exports JSONL format for Vertex AI fine-tuning.
+          </p>
         </div>
-        <button
-          onClick={() => {
-            const count = downloadTrainingData("all");
-            showMessage(`Exported ${count} total questions for training`, 3000);
-          }}
-          className="w-full px-3 py-2 bg-blue-900/20 hover:bg-blue-900/30 text-blue-400 rounded flex items-center justify-center gap-2 transition-colors text-xs font-bold border border-blue-900/30"
-        >
-          <Icon name="download" size={14} />
-          Export All Training Data
-        </button>
-        <p className="text-[10px] text-slate-500 mt-2 text-center">
-          Exports JSONL format for Vertex AI fine-tuning.
-        </p>
-      </div>
       )}
 
       {/* Environment Info */}
@@ -687,77 +731,77 @@ const AdminPanel = ({
 
       {/* Database Management - Super Admin Only */}
       {isSuperAdmin && (
-      <div className="bg-slate-800 rounded-lg p-4 border border-red-500/30">
-        <h2 className="text-lg font-bold text-red-400 mb-3 flex items-center gap-2">
-          <Icon name="database" size={18} />
-          Database Management
-        </h2>
-        <p className="text-xs text-slate-400 mb-4">
-          ⚠️ Danger Zone: These operations permanently delete data and cannot be
-          undone.
-        </p>
+        <div className="bg-slate-800 rounded-lg p-4 border border-red-500/30">
+          <h2 className="text-lg font-bold text-red-400 mb-3 flex items-center gap-2">
+            <Icon name="database" size={18} />
+            Database Management
+          </h2>
+          <p className="text-xs text-slate-400 mb-4">
+            ⚠️ Danger Zone: These operations permanently delete data and cannot
+            be undone.
+          </p>
 
-        <div className="space-y-3">
-          <button
-            onClick={async () => {
-              if (
-                !confirm(
-                  "⚠️ DELETE ALL QUESTIONS?\n\nThis will permanently delete ALL questions from the database for ALL users.\n\nThis action CANNOT be undone!\n\nType 'DELETE' to confirm."
+          <div className="space-y-3">
+            <button
+              onClick={async () => {
+                if (
+                  !confirm(
+                    "⚠️ DELETE ALL QUESTIONS?\n\nThis will permanently delete ALL questions from the database for ALL users.\n\nThis action CANNOT be undone!\n\nType 'DELETE' to confirm."
+                  )
                 )
-              )
-                return;
+                  return;
 
-              const confirmText = prompt("Type DELETE to confirm:");
-              if (confirmText !== "DELETE") {
-                showMessage("❌ Deletion cancelled", 3000);
-                return;
-              }
+                const confirmText = prompt("Type DELETE to confirm:");
+                if (confirmText !== "DELETE") {
+                  showMessage("❌ Deletion cancelled", 3000);
+                  return;
+                }
 
-              try {
-                showMessage("🗑️ Deleting all questions...", 10000);
-                const count = await clearAllQuestionsFromFirestore();
-                showMessage(
-                  `✅ Deleted ${count} questions from database`,
-                  5000
-                );
-              } catch (error) {
-                showMessage(`❌ Delete failed: ${error.message}`, 5000);
-                console.error(error);
-              }
-            }}
-            className="w-full px-4 py-3 bg-red-900/30 hover:bg-red-900/50 text-red-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-red-700/50"
-          >
-            <Icon name="trash-2" size={16} />
-            Delete All Questions (ALL USERS)
-          </button>
+                try {
+                  showMessage("🗑️ Deleting all questions...", 10000);
+                  const count = await clearAllQuestionsFromFirestore();
+                  showMessage(
+                    `✅ Deleted ${count} questions from database`,
+                    5000
+                  );
+                } catch (error) {
+                  showMessage(`❌ Delete failed: ${error.message}`, 5000);
+                  console.error(error);
+                }
+              }}
+              className="w-full px-4 py-3 bg-red-900/30 hover:bg-red-900/50 text-red-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-red-700/50"
+            >
+              <Icon name="trash-2" size={16} />
+              Delete All Questions (ALL USERS)
+            </button>
 
-          <button
-            onClick={async () => {
-              if (
-                !confirm(
-                  "Clear all rejected questions from the database?\n\nThis will only delete questions with status='rejected'."
+            <button
+              onClick={async () => {
+                if (
+                  !confirm(
+                    "Clear all rejected questions from the database?\n\nThis will only delete questions with status='rejected'."
+                  )
                 )
-              )
-                return;
+                  return;
 
-              try {
-                showMessage("🗑️ Clearing rejected questions...", 10000);
-                // This would need a Cloud Function - for now just show message
-                showMessage(
-                  "⚠️ Feature not yet implemented - needs Cloud Function",
-                  5000
-                );
-              } catch (error) {
-                showMessage(`❌ Clear failed: ${error.message}`, 5000);
-              }
-            }}
-            className="w-full px-4 py-3 bg-orange-900/30 hover:bg-orange-900/50 text-orange-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-orange-700/50"
-          >
-            <Icon name="filter" size={16} />
-            Clear Rejected Questions
-          </button>
+                try {
+                  showMessage("🗑️ Clearing rejected questions...", 10000);
+                  // This would need a Cloud Function - for now just show message
+                  showMessage(
+                    "⚠️ Feature not yet implemented - needs Cloud Function",
+                    5000
+                  );
+                } catch (error) {
+                  showMessage(`❌ Clear failed: ${error.message}`, 5000);
+                }
+              }}
+              className="w-full px-4 py-3 bg-orange-900/30 hover:bg-orange-900/50 text-orange-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-orange-700/50"
+            >
+              <Icon name="filter" size={16} />
+              Clear Rejected Questions
+            </button>
+          </div>
         </div>
-      </div>
       )}
     </div>
   );

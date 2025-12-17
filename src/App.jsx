@@ -576,6 +576,7 @@ const App = () => {
         onRestartTutorial={handleRestartTutorial}
         onStartTutorial={handleStartTutorial}
         isAdmin={isAdmin}
+        user={user}
       />
 
       <Suspense fallback={<LoadingSpinner />}>
@@ -680,6 +681,7 @@ const App = () => {
             filterMode,
             sortBy,
             showHistory,
+            currentUser: user, // Add user for super admin check
           }}
           viewRouterSetters={{
             setDatabaseQuestions,
