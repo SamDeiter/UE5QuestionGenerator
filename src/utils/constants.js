@@ -49,12 +49,12 @@ export const QUALITY_THRESHOLDS = {
 // Shorthand for common usage
 export const QUALITY_PASS_THRESHOLD = QUALITY_THRESHOLDS.PASS;
 
-// Toast Notification Durations (ms)
+// Toast Notification Durations (ms) - Kept short to prevent stacking
 export const TOAST_DURATION = {
-  SHORT: 2000, // Quick confirmations
-  MEDIUM: 3000, // Standard messages
-  LONG: 5000, // Important info
-  EXTENDED: 7000, // Errors & warnings requiring attention
+  SHORT: 1000, // Quick confirmations
+  MEDIUM: 1500, // Standard messages
+  LONG: 2500, // Important info
+  EXTENDED: 4000, // Errors & warnings requiring attention
 };
 
 // UI Constants
