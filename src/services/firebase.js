@@ -23,6 +23,7 @@ import {
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 
 // SECURITY NOTE: CSRF Protection
@@ -218,6 +219,16 @@ export const signInWithEmail = async (email, password) => {
     ) {
       console.error("Error signing in with email:", error);
     }
+    throw error;
+  }
+};
+
+// Password Reset
+export const resetPassword = async (email) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error) {
+    console.error("Error sending password reset email:", error);
     throw error;
   }
 };

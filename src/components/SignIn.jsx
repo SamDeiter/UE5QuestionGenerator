@@ -3,6 +3,7 @@ import {
   signInWithGoogle,
   signUpWithEmail,
   signInWithEmail,
+  resetPassword,
 } from "../services/firebase";
 import Icon from "./Icon";
 
@@ -10,9 +11,11 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showEmailAuth, setShowEmailAuth] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isNewUser, setIsNewUser] = useState(true);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -77,6 +80,31 @@ const SignIn = () => {
     }
   };
 
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    setResetSuccess(false);
+
+    try {
+      await resetPassword(email);
+      setResetSuccess(true);
+    } catch (err) {
+      console.error(err);
+      let message = err.message || "Failed to send reset email";
+      if (err.code === "auth/user-not-found") {
+        message = "No account found with this email address.";
+      } else if (err.code === "auth/invalid-email") {
+        message = "Invalid email address format.";
+      } else if (err.code === "auth/too-many-requests") {
+        message = "Too many requests. Please try again later.";
+      }
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center space-y-6">
@@ -101,7 +129,52 @@ const SignIn = () => {
           </div>
         )}
 
-        {!showEmailAuth ? (
+        {resetSuccess && (
+          <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-3 rounded-lg text-sm">
+            Password reset email sent! Check your inbox and spam folder.
+          </div>
+        )}
+
+        {showPasswordReset ? (
+          // Password Reset Form
+          <form onSubmit={handlePasswordReset} className="space-y-3 text-left">
+            <div>
+              <label
+                htmlFor="reset-email"
+                className="block text-sm font-medium text-slate-300 mb-2"
+              >
+                Email Address
+              </label>
+              <input
+                id="reset-email"
+                type="email"
+                placeholder="your.email@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
+            >
+              {isLoading ? "Sending..." : "Send Reset Email"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowPasswordReset(false);
+                setResetSuccess(false);
+                setError(null);
+              }}
+              className="w-full text-sm text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              ← Back to sign in
+            </button>
+          </form>
+        ) : !showEmailAuth ? (
           // Auth Options
           <div className="space-y-3">
             <button
@@ -193,6 +266,18 @@ const SignIn = () => {
                 ? "Already have an account? Sign in"
                 : "New user? Create account"}
             </button>
+            {!isNewUser && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPasswordReset(true);
+                  setShowEmailAuth(false);
+                }}
+                className="w-full text-sm text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                Forgot password?
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setShowEmailAuth(false)}
