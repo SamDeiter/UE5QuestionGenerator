@@ -161,7 +161,22 @@ const ViewRouter = ({
           effectiveApiKey={effectiveApiKey}
         />
       ) : appMode === "admin" && isAdmin ? (
-        <AdminPanel showMessage={showMessage} />
+        <AdminPanel
+          showMessage={showMessage}
+          config={config}
+          handleChange={handlers.handleConfigChange}
+          showApiKey={state.showApiKey}
+          setShowApiKey={setters.setShowApiKey}
+          files={state.files}
+          handleDetectTopics={handlers.handleDetectTopics}
+          isDetecting={state.isDetecting}
+          fileInputRef={state.fileInputRef}
+          handleFileChange={handlers.handleFileChange}
+          removeFile={handlers.removeFile}
+          isApiReady={!!effectiveApiKey}
+          customTags={state.customTags}
+          onSaveCustomTags={handlers.handleSaveCustomTags}
+        />
       ) : appMode === "review" && uniqueFilteredQuestions.length > 0 ? (
         <ReviewMode
           questions={uniqueFilteredQuestions}

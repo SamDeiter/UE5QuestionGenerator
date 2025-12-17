@@ -23,7 +23,7 @@ const Sidebar = ({
   isApiReady,
   handleBulkTranslateMissing,
   isProcessing,
-  setShowSettings,
+  // setShowSettings, // REMOVED - settings moved to Admin Panel
   handleSelectCategory: _handleSelectCategory,
   customTags = {},
   status = "", // Live generation status text
@@ -80,6 +80,8 @@ const Sidebar = ({
         <TokenUsageDisplay showDetailed={true} />
       </div>
 
+      {/* Settings button removed - now in Admin Panel for admins only */}
+      {/*
       <div className="mt-4 pt-4 border-slate-800">
         <button
           onClick={() => setShowSettings(true)}
@@ -89,6 +91,7 @@ const Sidebar = ({
           <Icon name="settings" size={14} /> Open Settings
         </button>
       </div>
+      */}
     </aside>
   );
 };

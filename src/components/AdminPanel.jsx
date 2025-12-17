@@ -13,10 +13,29 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { app } from "../services/firebase";
 import Icon from "./Icon";
 import { createInvite, revokeInvite } from "../services/inviteService";
+import TokenUsageDisplay from "./TokenUsageDisplay";
+import TagManager from "./TagManager";
+import { getTokenUsage, downloadTrainingData } from "../utils/analyticsStore";
+import { UI_LABELS } from "../utils/constants";
 
 const functions = getFunctions(app, "us-central1");
 
-const AdminPanel = ({ showMessage }) => {
+const AdminPanel = ({
+  showMessage,
+  config,
+  handleChange,
+  showApiKey,
+  setShowApiKey,
+  files,
+  handleDetectTopics,
+  isDetecting,
+  fileInputRef,
+  handleFileChange,
+  removeFile,
+  isApiReady,
+  customTags,
+  onSaveCustomTags,
+}) => {
   const [users, setUsers] = useState([]);
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,6 +147,349 @@ const AdminPanel = ({ showMessage }) => {
           <Icon name="shield" size={24} />
           Admin Panel
         </h1>
+      </div>
+      {/* Feature Access Overview */}
+      <div className="bg-blue-900/20 rounded-lg p-6 border border-blue-500/30">
+        <h2 className="text-lg font-bold text-blue-400 mb-4 flex items-center gap-2">
+          <Icon name="eye" size={18} />
+          Feature Access Overview
+        </h2>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-slate-800/50 p-4 rounded border border-green-500/30">
+            <h3 className="text-sm font-bold text-green-400 mb-3">
+              👤 Regular Users (Non-Admin)
+            </h3>
+            <ul className="space-y-2 text-xs text-slate-300">
+              <li className="flex items-center gap-2">
+                <Icon name="list-checks" size={12} className="text-green-400" />
+                Review Mode (view & approve questions)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon name="database" size={12} className="text-green-400" />
+                Database View (read-only)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon name="bar-chart-2" size={12} className="text-green-400" />
+                Analytics Dashboard
+              </li>
+              <li className="flex items-center gap-2 text-slate-500">
+                <Icon name="x" size={12} className="text-red-400" />
+                <span className="line-through">
+                  Create Questions (Admin Only)
+                </span>
+              </li>
+              <li className="flex items-center gap-2 text-slate-500">
+                <Icon name="x" size={12} className="text-red-400" />
+                <span className="line-through">Prompt Lab (Admin Only)</span>
+              </li>
+              <li className="flex items-center gap-2 text-slate-500">
+                <Icon name="x" size={12} className="text-red-400" />
+                <span className="line-through">Admin Panel (Admin Only)</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-slate-800/50 p-4 rounded border border-purple-500/30">
+            <h3 className="text-sm font-bold text-purple-400 mb-3">
+              👑 Admins (Full Access)
+            </h3>
+            <ul className="space-y-2 text-xs text-slate-300">
+              <li className="flex items-center gap-2">
+                <Icon name="check" size={12} className="text-purple-400" />
+                All Regular User Features
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon
+                  name="plus-circle"
+                  size={12}
+                  className="text-purple-400"
+                />
+                Create Mode (generate questions)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon
+                  name="clipboard-list"
+                  size={12}
+                  className="text-purple-400"
+                />
+                Test View (experimental features)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon name="terminal" size={12} className="text-purple-400" />
+                Prompt Lab (AI testing)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon name="shield" size={12} className="text-purple-400" />
+                Admin Panel (user management)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon name="database" size={12} className="text-purple-400" />
+                Database Editing (full CRUD)
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Token Usage */}
+      <div className="bg-slate-800 rounded-lg p-6 border border-slate-500/30">
+        <h2 className="text-lg font-bold text-slate-300 mb-4 flex items-center gap-2">
+          <Icon name="activity" size={18} />
+          Token Usage
+        </h2>
+        <TokenUsageDisplay tokenUsage={getTokenUsage()} />
+      </div>
+
+      {/* API Configuration */}
+      <div className="bg-slate-800 rounded-lg p-6 border border-indigo-500/30">
+        <h2 className="text-lg font-bold text-indigo-400 mb-4 flex items-center gap-2">
+          <Icon name="key" size={18} />
+          API Configuration
+        </h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
+              {UI_LABELS.API_KEY_LABEL}
+            </label>
+            <div className="relative">
+              <input
+                type={showApiKey ? "text" : "password"}
+                name="apiKey"
+                value={config.apiKey}
+                onChange={handleChange}
+                placeholder="AIzaSy..."
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none pr-10"
+              />
+              <button
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+              >
+                <Icon name={showApiKey ? "eye-off" : "eye"} size={16} />
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-500 mt-1">
+              Required for generating questions. Stored locally.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
+              {UI_LABELS.SHEET_URL_LABEL}
+            </label>
+            <input
+              type="text"
+              name="sheetUrl"
+              value={config.sheetUrl}
+              onChange={handleChange}
+              placeholder="https://script.google.com/..."
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 outline-none"
+            />
+            <p className="text-[10px] text-slate-500 mt-1">
+              Required for Load/Export to Sheets.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
+                Creator Name
+              </label>
+              <input
+                type="text"
+                name="creatorName"
+                value={config.creatorName}
+                onChange={handleChange}
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
+                Reviewer Name
+              </label>
+              <input
+                type="text"
+                name="reviewerName"
+                value={config.reviewerName}
+                onChange={handleChange}
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Source Files */}
+      <div className="bg-slate-800 rounded-lg p-6 border border-blue-500/30">
+        <h2 className="text-lg font-bold text-blue-400 mb-4 flex items-center gap-2">
+          <Icon name="file-text" size={18} />
+          Source Material
+        </h2>
+
+        <div className="space-y-3">
+          <div className="flex justify-between items-end">
+            <label className="text-xs font-bold uppercase text-slate-400">
+              Source Files (CSV)
+            </label>
+            {files && files.length > 0 && (
+              <button
+                onClick={handleDetectTopics}
+                disabled={isDetecting || !isApiReady}
+                className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50 disabled:opacity-50"
+              >
+                {isDetecting ? "..." : "Detect Topics"}
+              </button>
+            )}
+          </div>
+          <div
+            onClick={() => fileInputRef?.current?.click()}
+            className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-700 cursor-pointer text-center transition-colors"
+          >
+            <Icon name="upload" className="mx-auto text-slate-600 mb-2" />
+            <p className="text-xs text-slate-500">Click to upload .csv</p>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              multiple
+              className="hidden"
+            />
+          </div>
+          {files &&
+            files.map((f, i) => (
+              <div
+                key={i}
+                className="flex justify-between bg-slate-700 p-2 rounded border border-slate-600 text-xs text-slate-400"
+              >
+                <span className="truncate">{f.name}</span>
+                <button
+                  onClick={() => removeFile(i)}
+                  className="text-red-500 hover:text-red-400"
+                >
+                  <Icon name="x" size={14} />
+                </button>
+              </div>
+            ))}
+        </div>
+      </div>
+
+      {/* Custom Tags */}
+      <div className="bg-slate-800 rounded-lg p-6 border border-orange-500/30">
+        <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
+          <Icon name="tag" size={18} />
+          Custom Tags
+        </h2>
+        <p className="text-xs text-slate-500 mb-3">
+          Create custom tags to focus question generation on specific topics
+          within each discipline.
+        </p>
+        <TagManager
+          discipline={config.discipline}
+          customTags={customTags || {}}
+          onSaveCustomTags={onSaveCustomTags}
+        />
+      </div>
+
+      {/* Training Data Export */}
+      <div className="bg-slate-800 rounded-lg p-6 border border-purple-500/30">
+        <h2 className="text-lg font-bold text-purple-400 mb-4 flex items-center gap-2">
+          <Icon name="database" size={18} />
+          Vertex AI Training Data
+        </h2>
+        <div className="flex gap-3 mb-2">
+          <button
+            onClick={() => downloadTrainingData(true)}
+            className="flex-1 px-3 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-200 text-xs font-bold rounded border border-purple-700/50 transition-colors flex items-center justify-center gap-2"
+            title="Download questions with >75% score"
+          >
+            <Icon name="download" size={14} />
+            Download Good Data
+          </button>
+          <button
+            onClick={() => downloadTrainingData(false)}
+            className="flex-1 px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 text-slate-400 text-xs font-bold rounded border border-slate-600/50 transition-colors flex items-center justify-center gap-2"
+            title="Download questions with <75% score"
+          >
+            <Icon name="download" size={14} />
+            Download Bad Data
+          </button>
+        </div>
+        <button
+          onClick={() => {
+            const count = downloadTrainingData("all");
+            showMessage(`Exported ${count} total questions for training`, 3000);
+          }}
+          className="w-full px-3 py-2 bg-blue-900/20 hover:bg-blue-900/30 text-blue-400 rounded flex items-center justify-center gap-2 transition-colors text-xs font-bold border border-blue-900/30"
+        >
+          <Icon name="download" size={14} />
+          Export All Training Data
+        </button>
+        <p className="text-[10px] text-slate-500 mt-2 text-center">
+          Exports JSONL format for Vertex AI fine-tuning.
+        </p>
+      </div>
+
+      {/* Environment Info */}
+      <div className="bg-slate-800 rounded-lg p-6 border border-cyan-500/30">
+        <h2 className="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2">
+          <Icon name="server" size={18} />
+          Environment Info
+        </h2>
+        <div className="space-y-2 text-xs">
+          <div className="flex justify-between">
+            <span className="text-slate-500">Firebase Project:</span>
+            <span className="text-slate-300 font-mono">
+              {import.meta.env.VITE_FIREBASE_PROJECT_ID || "Not Set"}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Environment:</span>
+            <span
+              className={`font-bold ${
+                import.meta.env.VITE_FIREBASE_PROJECT_ID?.includes("prod")
+                  ? "text-red-400"
+                  : "text-green-400"
+              }`}
+            >
+              {import.meta.env.VITE_FIREBASE_PROJECT_ID?.includes("prod")
+                ? "🔴 PRODUCTION"
+                : "🟢 DEVELOPMENT"}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">API Mode:</span>
+            <span className="text-cyan-400">Cloud Functions</span>
+          </div>
+        </div>
+        <div className="flex gap-2 mt-3 pt-3 border-t border-slate-700">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText("npm run dev:dev");
+              showMessage(
+                "Copied! Paste in terminal to switch to DEV environment.",
+                3000
+              );
+            }}
+            className="flex-1 px-2 py-1.5 bg-green-900/30 hover:bg-green-900/50 text-green-300 text-xs font-bold rounded border border-green-700/50 transition-colors flex items-center justify-center gap-1"
+          >
+            <Icon name="clipboard" size={12} />
+            Switch to DEV
+          </button>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText("npm run dev:prod");
+              showMessage(
+                "Copied! Paste in terminal to switch to PROD environment.",
+                3000
+              );
+            }}
+            className="flex-1 px-2 py-1.5 bg-red-900/30 hover:bg-red-900/50 text-red-300 text-xs font-bold rounded border border-red-700/50 transition-colors flex items-center justify-center gap-1"
+          >
+            <Icon name="clipboard" size={12} />
+            Switch to PROD
+          </button>
+        </div>
       </div>
 
       {/* Create Invite Section */}
