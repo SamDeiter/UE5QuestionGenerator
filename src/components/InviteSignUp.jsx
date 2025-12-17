@@ -75,7 +75,12 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
       clearInviteFromUrl();
       onSuccess?.(result.role);
     } catch (error) {
-      setAuthError(error.message || "Authentication failed");
+      let message = error.message || "Authentication failed";
+      if (error.code === "auth/user-disabled") {
+        message =
+          "Your account has been disabled by an administrator. Please contact support if you believe this is an error.";
+      }
+      setAuthError(message);
       setIsAuthenticating(false);
     }
   };
@@ -102,6 +107,9 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
         message = "Password should be at least 6 characters.";
       } else if (error.code === "auth/wrong-password") {
         message = "Incorrect password. Try again.";
+      } else if (error.code === "auth/user-disabled") {
+        message =
+          "Your account has been disabled by an administrator. Please contact support if you believe this is an error.";
       }
       setAuthError(message);
       setIsAuthenticating(false);

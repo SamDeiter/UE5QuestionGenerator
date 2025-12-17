@@ -27,6 +27,10 @@ const SignIn = () => {
         );
       } else if (err.code === "auth/popup-closed-by-user") {
         setError("Sign-in cancelled.");
+      } else if (err.code === "auth/user-disabled") {
+        setError(
+          "Your account has been disabled by an administrator. Please contact support if you believe this is an error."
+        );
       } else {
         setError("Failed to sign in. Please try again.");
       }
@@ -63,6 +67,9 @@ const SignIn = () => {
         setIsNewUser(true);
       } else if (err.code === "auth/invalid-email") {
         message = "Invalid email address format.";
+      } else if (err.code === "auth/user-disabled") {
+        message =
+          "Your account has been disabled by an administrator. Please contact support if you believe this is an error.";
       }
       setError(message);
     } finally {
