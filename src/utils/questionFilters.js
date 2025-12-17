@@ -149,17 +149,10 @@ export const createUniqueFilteredQuestions = (
 
     let selected = null;
 
-    // 1. PRIORITY: Prefer variant with critique data (prevents swapping after critique)
-    selected = variants.find(
-      (v) => v.critiqueScore !== null && v.critiqueScore !== undefined
-    );
+    // 1. Try to find exact language match
+    selected = variants.find((v) => (v.language || "English") === language);
 
-    // 2. Try to find exact language match
-    if (!selected) {
-      selected = variants.find((v) => (v.language || "English") === language);
-    }
-
-    // 3. Fall back to English
+    // 2. Fall back to English
     if (!selected) {
       selected = variants.find((v) => (v.language || "English") === "English");
     }
