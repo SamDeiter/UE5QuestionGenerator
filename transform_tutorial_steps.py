@@ -1,4 +1,49 @@
-/**
+"""
+AGENT T3 - Transform tutorialSteps.js to add metadata and normalize schema
+"""
+import json
+import re
+
+# Read the current file
+with open(r'c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\tutorialSteps.js', 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# Define scenario metadata
+scenarios_metadata = {
+    'welcome': {
+        'id': 'welcome',
+        'label': 'Welcome Tour',
+        'description': 'Quick overview of the main layout and features',
+        'tags': ['beginner', 'overview']
+    },
+    'create': {
+        'id': 'create',
+        'label': 'Creation Mode',
+        'description': 'Learn how to generate questions with AI',
+        'tags': ['beginner', 'create-flow']
+    },
+    'review': {
+        'id': 'review',
+        'label': 'Review Mode',
+        'description': 'Master the question verification process',
+        'tags': ['beginner', 'review-flow']
+    },
+    'database': {
+        'id': 'database',
+        'label': 'Database Mode',
+        'description': 'Manage your question bank effectively',
+        'tags': ['intermediate', 'database']
+    },
+    'analytics': {
+        'id': 'analytics',
+        'label': 'Analytics Mode',
+        'description': 'Track metrics and optimize your workflow',
+        'tags': ['intermediate', 'analytics']
+    }
+}
+
+# New file content with metadata structure
+new_content = '''/**
  * Tutorial scenarios with metadata
  * @typedef {import('./tutorial/tutorialTypes').TutorialScenario} TutorialScenario
  * @typedef {import('./tutorial/tutorialTypes').TutorialStep} TutorialStep
@@ -285,3 +330,10 @@ export const getScenarioIds = () => {
 
 // Legacy export for backward compatibility
 export const TUTORIAL_STEPS = TUTORIAL_SCENARIOS.welcome.steps;
+'''
+
+# Write the new file
+with open(r'c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\tutorialSteps.js', 'w', encoding='utf-8') as f:
+    f.write(new_content)
+
+print("✅ AGENT T3 Complete: tutorialSteps.js transformed with metadata and normalized schema")
