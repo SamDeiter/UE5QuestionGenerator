@@ -38,6 +38,9 @@ const AdminPanel = ({
 }) => {
   const [users, setUsers] = useState([]);
   const [invites, setInvites] = useState([]);
+
+  // Safe wrapper for handleChange to prevent React warnings
+  const safeHandleChange = handleChange || (() => {});
   const [loading, setLoading] = useState(true);
   const [newInviteSettings, setNewInviteSettings] = useState({
     role: "user",
@@ -263,7 +266,7 @@ const AdminPanel = ({
                 type={showApiKey ? "text" : "password"}
                 name="apiKey"
                 value={config.apiKey}
-                onChange={handleChange}
+                onChange={safeHandleChange}
                 placeholder="AIzaSy..."
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none pr-10"
               />
@@ -287,7 +290,7 @@ const AdminPanel = ({
               type="text"
               name="sheetUrl"
               value={config.sheetUrl}
-              onChange={handleChange}
+              onChange={safeHandleChange}
               placeholder="https://script.google.com/..."
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 outline-none"
             />
@@ -305,7 +308,7 @@ const AdminPanel = ({
                 type="text"
                 name="creatorName"
                 value={config.creatorName}
-                onChange={handleChange}
+                onChange={safeHandleChange}
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 outline-none"
               />
             </div>
@@ -317,7 +320,7 @@ const AdminPanel = ({
                 type="text"
                 name="reviewerName"
                 value={config.reviewerName}
-                onChange={handleChange}
+                onChange={safeHandleChange}
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 outline-none"
               />
             </div>
