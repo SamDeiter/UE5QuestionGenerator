@@ -1143,11 +1143,15 @@ exports.listRegisteredUsers = functions
     try {
       const usersSnapshot = await db
         .collection("registeredUsers")
+        .where("isRevoked", "!=", true) // Filter out revoked users
+        .orderBy("isRevoked") // Required for != query
         .orderBy("registeredAt", "desc")
         .limit(100) // Safety limit
         .get();
 
-      const users = usersSnapshot.docs.map((doc) => doc.data());
+      const users = usersSnapshot.docs
+        .map((doc) => doc.data())
+        .filter((user) => !user.isRevoked); // Extra safety filter
 
       return { users };
     } catch (error) {
