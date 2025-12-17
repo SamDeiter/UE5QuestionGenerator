@@ -11,6 +11,10 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
     
+    function isAdmin() {
+      return request.auth.token.role == 'admin';
+    }
+    
     // Questions collection - all authenticated users can READ, but only owners can WRITE
     match /questions/{questionId} {
       // All authenticated users can read questions (for shared review workflow)
@@ -20,9 +24,15 @@ service cloud.firestore {
         && request.resource.data.creatorId == request.auth.uid
         && request.resource.data.creatorEmail == request.auth.token.email;
       
-      allow update: if isSignedIn()
-        && resource.data.creatorId == request.auth.uid
-        && request.resource.data.creatorId == request.auth.uid;
+      // Allow owners to update their questions
+      // Allow admins to update ONLY the aiScore, scoredAt, and scoreSource fields
+      allow update: if isSignedIn() && (
+        (resource.data.creatorId == request.auth.uid 
+         && request.resource.data.creatorId == request.auth.uid)
+        ||
+        (isAdmin() 
+         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['aiScore', 'scoredAt', 'scoreSource']))
+      );
       
       allow delete: if isSignedIn()
         && (resource.data.creatorId == request.auth.uid || request.auth.token.email == 'sam.deiter@epicgames.com');
