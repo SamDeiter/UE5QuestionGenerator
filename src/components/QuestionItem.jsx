@@ -219,12 +219,14 @@ const QuestionItem = ({
                 : null
             }
             changesExplanation={
-              q.suggestedRewrite
-                ? q.rewriteChanges || "AI improvements applied"
-                : null
+              q.suggestedRewrite?.changesExplanation ||
+              q.rewriteChanges ||
+              "AI improvements applied"
             }
-            critiqueText={q.critique}
-            critiqueScore={q.critiqueScore || 0}
+            critiqueText={q.suggestedRewrite?.critiqueText || q.critique || ""}
+            critiqueScore={
+              q.suggestedRewrite?.critiqueScore || q.critiqueScore || 0
+            }
             onApply={async (improved) => {
               // Apply improvements to question - use improved score or fall back to original
               const newScore =
