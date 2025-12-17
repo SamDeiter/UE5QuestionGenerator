@@ -1,5 +1,4 @@
 import Icon from "../Icon";
-import ScoreBadge from "../ScoreBadge";
 
 /**
  * Normalize difficulty value - handles legacy "BALANCED ALL" and other invalid values
@@ -51,11 +50,6 @@ const QuestionHeader = ({
           <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">
             {q.type === "True/False" ? "T/F" : "MC"}
           </span>
-
-          {/* AI Quality Score Badge */}
-          {q.aiScore !== undefined && q.aiScore !== null && (
-            <ScoreBadge score={q.aiScore} />
-          )}
 
           {/* Variation Badge */}
           {q.isVariation && (

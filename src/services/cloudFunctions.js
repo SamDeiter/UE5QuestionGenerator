@@ -90,6 +90,10 @@ export const generateCritiqueViaCloudFunction = async (
       JSON.stringify(result.data).substring(0, 200)
     );
     console.log("[CloudFunction DEBUG] Extracted score:", result.data.score);
+    console.log(
+      "[CloudFunction DEBUG] Extracted improvedScore:",
+      result.data.improvedScore
+    );
 
     return {
       score: result.data.score,

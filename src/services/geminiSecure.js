@@ -90,7 +90,9 @@ export const generateCritiqueSecure = async (
       const result = await generateCritiqueViaCloudFunction(question, model);
       console.log(
         "🔒 [CritiqueSecure DEBUG] Cloud Function returned score:",
-        result.score
+        result.score,
+        "improvedScore:",
+        result.improvedScore
       );
       return result;
     } catch (error) {

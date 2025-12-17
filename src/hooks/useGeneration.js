@@ -945,9 +945,14 @@ export const useGeneration = (
       setStatus("Critiquing...");
 
       try {
-        const { score, text, rewrite, changes } = await generateCritique(
-          effectiveApiKey,
-          q
+        const { score, text, rewrite, improvedScore, changes } =
+          await generateCritique(effectiveApiKey, q);
+
+        console.log(
+          "[useGeneration DEBUG] Critique response - score:",
+          score,
+          "improvedScore:",
+          improvedScore
         );
 
         // Generate tags if question has fewer than 3
@@ -998,6 +1003,7 @@ export const useGeneration = (
             ...item,
             critique: text,
             critiqueScore: score,
+            improvedScore: improvedScore,
             suggestedRewrite: updatedRewrite,
             rewriteChanges: changes,
             critiqueAttempts: newAttemptCount,
@@ -1015,6 +1021,7 @@ export const useGeneration = (
             ...item,
             critique: text,
             critiqueScore: score,
+            improvedScore: improvedScore,
             suggestedRewrite: updatedRewrite,
             rewriteChanges: changes,
             critiqueAttempts: newAttemptCount,

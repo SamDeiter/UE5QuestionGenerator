@@ -226,7 +226,9 @@ const QuestionItem = ({
             critiqueText={q.critique}
             critiqueScore={q.critiqueScore || 0}
             onApply={async (improved) => {
-              // Apply improvements to question
+              // Apply improvements to question - use improved score or fall back to original
+              const newScore =
+                q.improvedScore || improved.critiqueScore || q.critiqueScore;
               await onUpdateQuestion(q.id, {
                 question: improved.question,
                 options: improved.options,
@@ -235,8 +237,9 @@ const QuestionItem = ({
                 optionC: improved.optionC,
                 optionD: improved.optionD,
                 tags: improved.tags,
-                critiqueScore: improved.critiqueScore,
+                critiqueScore: newScore,
                 suggestedRewrite: null, // Clear suggestion after apply
+                improvedScore: null, // Clear after applying
               });
               setShowImprovementModal(false);
               if (showMessage) {
