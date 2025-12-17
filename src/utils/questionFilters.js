@@ -120,28 +120,21 @@ export const createUniqueFilteredQuestions = (
   language = "English",
   allQuestionsMap = null
 ) => {
-  // Group by uniqueId
-  // If allQuestionsMap is provided, use it to access ALL variants for the filtered questions
-  // This ensures that even if a variant was filtered out (e.g. English version in history),
-  // we can still switch to it if the user requests it.
+  // FIX: Collect all unique IDs first, sort them, then process in stable order
+  // This prevents dependency on the iteration order of filteredQuestions
+  const uniqueIds = new Set();
+  filteredQuestions.forEach((q) => uniqueIds.add(q.uniqueId));
 
+  const sortedUniqueIds = Array.from(uniqueIds).sort();
   const uniqueQuestions = [];
-  const processedIds = new Set();
 
-  filteredQuestions.forEach((q) => {
-    const id = q.uniqueId;
-
-    // Skip if we already processed this uniqueId group
-    if (processedIds.has(id)) return;
-    processedIds.add(id);
-
-    // Get all variants: either from map (preferred) or just from the filtered list
+  sortedUniqueIds.forEach((id) => {
+    // Get all variants: either from map (preferred) or from the filtered list
     let variants = [];
     if (allQuestionsMap && allQuestionsMap.has(id)) {
       variants = allQuestionsMap.get(id);
     } else {
-      // Fallback: finding matching uniqueIds in the filtered list itself
-      // (Less robust if variants were filtered out)
+      // Fallback: find matching uniqueIds in the filtered list itself
       variants = filteredQuestions.filter((fq) => fq.uniqueId === id);
     }
 

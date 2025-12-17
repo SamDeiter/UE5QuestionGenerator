@@ -389,12 +389,19 @@ export const useQuestionManager = (config, showMessage) => {
       if (canonical) all.push(canonical);
     });
 
-    // Sort by date (newest first)
-    return all.sort(
-      (a, b) =>
-        new Date(b.created || b.dateAdded || 0) -
-        new Date(a.created || a.dateAdded || 0)
-    );
+    // Sort by date (newest first), with uniqueId as tiebreaker for stability
+    return all.sort((a, b) => {
+      const dateA = new Date(a.created || a.dateAdded || 0).getTime();
+      const dateB = new Date(b.created || b.dateAdded || 0).getTime();
+
+      // Primary sort: date (newest first)
+      if (dateB !== dateA) {
+        return dateB - dateA;
+      }
+
+      // Tiebreaker: uniqueId (alphabetical) for fully stable sort
+      return (a.uniqueId || "").localeCompare(b.uniqueId || "");
+    });
   }, [allQuestionsMap]);
 
   const approvedCount = useMemo(

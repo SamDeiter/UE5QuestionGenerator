@@ -182,12 +182,18 @@ export function useFiltering({
     result.forEach((q) => dateMap.set(q.uniqueId, getCanonicalDate(q)));
 
     // Sort: Newest Original First (Standard Blog/Feed sort)
-    // If you prefer Oldest First, swap a and b.
-    // unifiedQuestions previously used Newest First.
+    // Add uniqueId as tiebreaker for fully stable sort
     return result.sort((a, b) => {
       const dateA = dateMap.get(a.uniqueId);
       const dateB = dateMap.get(b.uniqueId);
-      return dateB - dateA;
+
+      // Primary sort: canonical date (newest first)
+      if (dateB !== dateA) {
+        return dateB - dateA;
+      }
+
+      // Tiebreaker: uniqueId (alphabetical) for stability
+      return (a.uniqueId || "").localeCompare(b.uniqueId || "");
     });
   }, [filteredQuestions, language, allQuestionsMap]);
 
