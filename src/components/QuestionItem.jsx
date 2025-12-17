@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReviewProgressBar from "./ReviewProgressBar";
 import QuestionHeader from "./QuestionItem/QuestionHeader";
 import QuestionContent from "./QuestionItem/QuestionContent";
@@ -35,6 +35,7 @@ const QuestionItem = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(q.question);
   const [showImprovementModal, setShowImprovementModal] = useState(false);
+  const shownCritiqueRef = useRef(null); // Track which critique we've shown
 
   // Auto-open modal when critique data arrives (score, feedback, or improvements)
   useEffect(() => {
@@ -44,11 +45,16 @@ const QuestionItem = ({
       questionId: q.id,
     });
     if (q.critiqueScore !== undefined && q.critiqueScore !== null) {
-      console.log(
-        "[QuestionItem DEBUG] Opening modal for score:",
-        q.critiqueScore
-      );
-      setShowImprovementModal(true);
+      // Only open if we haven't shown this critique yet
+      const critiqueKey = `${q.id}-${q.critiqueScore}`;
+      if (shownCritiqueRef.current !== critiqueKey) {
+        console.log(
+          "[QuestionItem DEBUG] Opening modal for score:",
+          q.critiqueScore
+        );
+        shownCritiqueRef.current = critiqueKey;
+        setShowImprovementModal(true);
+      }
     }
   }, [q.critiqueScore, q.suggestedRewrite, q.id]);
 
