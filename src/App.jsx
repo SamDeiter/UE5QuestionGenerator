@@ -3,7 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { runLocalStorageMigration } from "./utils/migrateScores";
 
 // Critical components - keep eager loading (needed immediately)
@@ -436,6 +436,44 @@ const App = () => {
       setShowApiKeyModal,
     });
 
+  // Memoize viewRouterHandlers to prevent unnecessary re-renders
+  const viewRouterHandlers = useMemo(
+    () => ({
+      handleLoadFromSheets,
+      handleLoadFromFirestore,
+      handleUpdateDatabaseQuestion,
+      handleKickBackToReview,
+      handleUpdateStatus,
+      handleExplain,
+      handleVariate,
+      handleCritique,
+      handleApplyRewrite,
+      handleTranslateSingle,
+      handleLanguageSwitch,
+      handleDelete,
+      handleManualUpdate,
+      handleTrimExcess,
+      handleUpdateQuestion,
+    }),
+    [
+      handleLoadFromSheets,
+      handleLoadFromFirestore,
+      handleUpdateDatabaseQuestion,
+      handleKickBackToReview,
+      handleUpdateStatus,
+      handleExplain,
+      handleVariate,
+      handleCritique,
+      handleApplyRewrite,
+      handleTranslateSingle,
+      handleLanguageSwitch,
+      handleDelete,
+      handleManualUpdate,
+      handleTrimExcess,
+      handleUpdateQuestion,
+    ]
+  );
+
   // Render - Loading state
   if (authLoading || registrationLoading) {
     return <LoadingSpinner />;
@@ -653,24 +691,7 @@ const App = () => {
           config={config}
           isProcessing={isProcessing}
           allQuestionsMap={allQuestionsMap}
-          viewRouterHandlers={{
-            handleLoadFromSheets,
-            handleLoadFromFirestore,
-            handleUpdateDatabaseQuestion,
-            handleKickBackToReview,
-            handleUpdateStatus,
-            handleExplain,
-            handleVariate,
-            handleCritique,
-            handleApplyRewrite,
-            handleTranslateSingle,
-            handleLanguageSwitch,
-            handleDelete,
-            handleManualUpdate,
-
-            handleTrimExcess, // Added
-            handleUpdateQuestion, // Added persistent handler
-          }}
+          viewRouterHandlers={viewRouterHandlers}
           viewRouterState={{
             currentReviewIndex,
             translationMap,
