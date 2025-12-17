@@ -314,39 +314,6 @@ const ContextToolbar = ({
           )}
         </div>
 
-        {/* AI Score Filter */}
-        <div className="flex items-center gap-1 px-2 py-1 bg-slate-800 rounded border border-slate-700 shadow-sm">
-          <span className="text-[10px] uppercase font-bold text-slate-500 select-none">
-            Score:
-          </span>
-          <select
-            value={filterScoreTier}
-            onChange={(e) => setFilterScoreTier(e.target.value)}
-            className="bg-slate-800 text-xs text-slate-200 font-medium outline-none border-none cursor-pointer focus:ring-0 hover:text-white transition-colors"
-          >
-            <option value="" className="bg-slate-800 text-slate-200">
-              All Scores
-            </option>
-            <option value="exceptional" className="bg-slate-800 text-green-400">
-              ⭐ Exceptional (90+)
-            </option>
-            <option value="very-good" className="bg-slate-800 text-blue-400">
-              ✨ Very Good (80-89)
-            </option>
-            <option value="good" className="bg-slate-800 text-yellow-400">
-              👍 Good (70-79)
-            </option>
-            <option value="adequate" className="bg-slate-800 text-orange-400">
-              ⚠️ Adequate (60-69)
-            </option>
-            <option value="needs-work" className="bg-slate-800 text-red-400">
-              ❌ Needs Work (&lt;60)
-            </option>
-          </select>
-        </div>
-
-        <div className="h-4 w-px bg-slate-700"></div>
-
         <div className="relative">
           <Icon
             name="search"
