@@ -177,7 +177,7 @@ exports.generateCritique = functions
       options,
       correct,
       modeLabel,
-      model = "gemini-1.5-flash",
+      model = "gemini-2.0-flash-exp",
     } = data;
 
     // Input validation
@@ -266,24 +266,61 @@ exports.generateCritique = functions
         Options: ${JSON.stringify(options)}
         Correct: ${correct}`;
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      // Model fallback list: try experimental first, then stable versions
+      const modelFallbacks = [
+        model, // User-specified or default (gemini-2.0-flash-exp)
+        "gemini-1.5-flash", // Stable GA version (no version suffix for v1beta)
+        "gemini-1.5-pro", // Stable GA fallback (no version suffix for v1beta)
+      ];
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: userPrompt }] }],
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 8192,
-            responseMimeType: "application/json",
-          },
-        }),
-      });
+      let response;
+      let lastError;
+      let usedModel = model;
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
+      // Try each model in order until one works
+      for (const fallbackModel of modelFallbacks) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent?key=${apiKey}`;
+
+          response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: userPrompt }] }],
+              systemInstruction: { parts: [{ text: systemPrompt }] },
+              generationConfig: {
+                temperature: 0.2,
+                maxOutputTokens: 8192,
+                responseMimeType: "application/json",
+              },
+            }),
+          });
+
+          if (response.ok) {
+            usedModel = fallbackModel;
+            console.log(`✅ Successfully used model: ${fallbackModel}`);
+            break; // Success! Exit the loop
+          }
+
+          // If 404, try next model
+          if (response.status === 404) {
+            console.log(`⚠️ Model ${fallbackModel} not found, trying next...`);
+            lastError = new Error(`Model ${fallbackModel} not found (404)`);
+            continue;
+          }
+
+          // For other errors, throw immediately
+          throw new Error(`API error: ${response.statusText}`);
+        } catch (error) {
+          lastError = error;
+          console.error(`❌ Error with model ${fallbackModel}:`, error.message);
+          // Continue to next model
+        }
+      }
+
+      // If all models failed, throw the last error
+      if (!response || !response.ok) {
+        throw lastError || new Error("All model fallbacks failed");
       }
 
       const responseData = await response.json();
@@ -328,7 +365,8 @@ exports.generateCritique = functions
 
       // Log usage
       await logApiUsage(userId, {
-        model: "gemini-1.5-flash",
+        model: usedModel,
+
         type: "critique",
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });

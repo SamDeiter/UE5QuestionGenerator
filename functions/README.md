@@ -1,11 +1,13 @@
 # Firebase Cloud Functions - Deployment Guide
 
 ## Overview
+
 These Cloud Functions provide secure, server-side API key management for the UE5 Question Generator. Instead of exposing the Gemini API key in the client, all API calls are routed through these authenticated functions.
 
 ## Functions
 
 ### 1. `generateQuestions`
+
 - **Purpose**: Securely calls Gemini API for question generation
 - **Authentication**: Required (Firebase Auth)
 - **Rate Limit**: 10 requests/minute per user
@@ -16,30 +18,40 @@ These Cloud Functions provide secure, server-side API key management for the UE5
   - `model` (string, optional): Gemini model name
 
 ### 2. `generateCritique`
+
 - **Purpose**: Securely calls Gemini API for question critique
 - **Authentication**: Required (Firebase Auth)
 - **Rate Limit**: 20 requests/minute per user
+- **Model Fallback**: Automatically tries multiple models in order:
+  1. `gemini-2.0-flash-exp` (experimental, fastest)
+  2. `gemini-1.5-flash` (stable GA version)
+  3. `gemini-1.5-pro` (stable GA fallback)
 - **Parameters**:
   - `question` (string): Question text
   - `options` (object): Answer options {A, B, C, D}
   - `correct` (string): Correct answer letter
   - `modeLabel` (string, optional): 'Strict' or 'Wild'
+  - `model` (string, optional): Override default model (still uses fallback if unavailable)
 
 ## Setup Instructions
 
 ### 1. Install Dependencies
+
 ```bash
 cd functions
 npm install
 ```
 
 ### 2. Configure API Key
+
 Set your Gemini API key in Firebase config:
+
 ```bash
 firebase functions:config:set gemini.api_key="YOUR_GEMINI_API_KEY_HERE"
 ```
 
 ### 3. Deploy Functions
+
 ```bash
 # Deploy all functions
 firebase deploy --only functions
@@ -50,6 +62,7 @@ firebase deploy --only functions:generateCritique
 ```
 
 ### 4. Test Locally (Optional)
+
 ```bash
 # Start emulator
 npm run serve
@@ -62,20 +75,24 @@ npm run serve
 ## Security Features
 
 ### ✅ Authentication
+
 - All functions require Firebase Authentication
 - Unauthenticated requests are rejected with `unauthenticated` error
 
 ### ✅ Rate Limiting
+
 - Per-user rate limits prevent abuse
 - Limits stored in Firestore `apiUsage` collection
 - Generation: 10 requests/minute
 - Critique: 20 requests/minute
 
 ### ✅ Input Validation
+
 - All parameters are validated before API calls
 - Invalid requests return `invalid-argument` error
 
 ### ✅ API Key Protection
+
 - Gemini API key stored server-side only
 - Never exposed to client
 - Accessed via Firebase config
@@ -83,7 +100,9 @@ npm run serve
 ## Firestore Collections
 
 ### `apiUsage`
+
 Tracks API usage for rate limiting and analytics:
+
 ```javascript
 {
   userId: string,
@@ -123,6 +142,7 @@ const critiqueResult = await generateCritique({
 ## Monitoring
 
 ### View Logs
+
 ```bash
 # Real-time logs
 firebase functions:log
@@ -132,7 +152,9 @@ firebase functions:log --only generateQuestions
 ```
 
 ### Check Usage
+
 Query the `apiUsage` collection in Firestore to see:
+
 - Total API calls per user
 - Token usage
 - Rate limit violations
@@ -140,7 +162,9 @@ Query the `apiUsage` collection in Firestore to see:
 ## Cost Optimization
 
 ### Rate Limits
+
 Adjust rate limits in `index.js`:
+
 ```javascript
 const RATE_LIMITS = {
     generation: 10,  // Increase/decrease as needed
@@ -149,19 +173,24 @@ const RATE_LIMITS = {
 ```
 
 ### Caching (Future Enhancement)
+
 Consider caching common requests to reduce API calls:
+
 - Cache critique results for identical questions
 - Cache generation results for common prompts
 
 ## Troubleshooting
 
 ### Error: "Gemini API key not configured"
+
 Run: `firebase functions:config:set gemini.api_key="YOUR_KEY"`
 
 ### Error: "Rate limit exceeded"
+
 User has made too many requests. Wait 1 minute or increase rate limits.
 
 ### Error: "unauthenticated"
+
 Ensure user is signed in with Firebase Auth before calling functions.
 
 ## Next Steps
