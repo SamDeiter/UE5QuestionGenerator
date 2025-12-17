@@ -177,6 +177,7 @@ const ViewRouter = ({
           isApiReady={!!effectiveApiKey}
           customTags={state.customTags}
           onSaveCustomTags={handlers.handleSaveCustomTags}
+          currentUser={state.currentUser}
         />
       ) : appMode === "review" && uniqueFilteredQuestions.length > 0 ? (
         <ReviewMode
