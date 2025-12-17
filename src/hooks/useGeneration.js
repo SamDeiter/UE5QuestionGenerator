@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useCallback } from "react";
 import {
   generateContentSecure as generateContent,
@@ -804,6 +805,8 @@ export const useGeneration = (
       checkAndStoreQuestions,
       addQuestionsToState,
       handleLanguageSwitch,
+      translationMap,
+      allQuestionsMap,
     ]
   );
 
@@ -837,7 +840,14 @@ export const useGeneration = (
         setIsProcessing(false);
       }
     },
-    [isApiReady, showMessage, effectiveApiKey, updateQuestionInState, setStatus]
+    [
+      isApiReady,
+      showMessage,
+      effectiveApiKey,
+      updateQuestionInState,
+      setStatus,
+      setIsProcessing,
+    ]
   );
 
   const handleVariate = useCallback(
@@ -927,6 +937,7 @@ export const useGeneration = (
       effectiveApiKey,
       updateQuestionInState,
       setStatus,
+      setIsProcessing,
     ]
   );
 
@@ -1041,7 +1052,14 @@ export const useGeneration = (
         setIsProcessing(false);
       }
     },
-    [isApiReady, showMessage, effectiveApiKey, updateQuestionInState, setStatus]
+    [
+      isApiReady,
+      showMessage,
+      effectiveApiKey,
+      updateQuestionInState,
+      setStatus,
+      setIsProcessing,
+    ]
   );
 
   const handleBulkTranslateMissing = useCallback(async () => {
@@ -1199,6 +1217,8 @@ export const useGeneration = (
     addQuestionsToState,
     setStatus,
     setShowHistory,
+    setIsProcessing,
+    setTranslationProgress,
   ]);
 
   const handleApplyRewrite = useCallback(
