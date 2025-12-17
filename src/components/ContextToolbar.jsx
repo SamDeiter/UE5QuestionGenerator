@@ -455,6 +455,8 @@ const ContextToolbar = ({
   // ------------------------------------------------------------------------
   // MAIN RENDER
   // ------------------------------------------------------------------------
+  const knownModes = ["create", "review", "database", "analytics", "test"];
+
   return (
     <div className="h-12 px-4 border-b border-slate-800 bg-slate-900/50 flex items-center">
       {mode === "create" && renderCreateToolbar()}
@@ -462,6 +464,12 @@ const ContextToolbar = ({
       {mode === "database" && renderDatabaseToolbar()}
       {mode === "analytics" && renderAnalyticsToolbar()}
       {mode === "test" && renderTestToolbar()}
+      {!knownModes.includes(mode) && (
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <Icon name="alert-triangle" size={14} className="text-yellow-500" />
+          Unknown mode: <span className="font-mono text-slate-400">{mode}</span>
+        </div>
+      )}
     </div>
   );
 };
