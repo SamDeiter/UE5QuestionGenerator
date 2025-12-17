@@ -1020,7 +1020,7 @@ export const useGeneration = (
                 : [],
 
               // Estimated score after improvements
-              critiqueScore: improvedScore || score,
+              critiqueScore: improvedScore, // Estimated score after improvements
 
               // Critique reasoning
               critiqueText: text,
