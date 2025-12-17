@@ -29,8 +29,6 @@ const TestView = ({
   // Filter state
   const [filters, setFilters] = useState({
     discipline: "",
-    difficulty: "",
-    type: "",
   });
 
   // UI state
@@ -64,18 +62,6 @@ const TestView = ({
     return approvedQuestions.filter((q) => {
       if (filters.discipline && q.discipline !== filters.discipline)
         return false;
-      if (filters.difficulty) {
-        const qDiff = (q.difficulty || "").toLowerCase();
-        const filterDiff = filters.difficulty.toLowerCase();
-        if (!qDiff.includes(filterDiff)) return false;
-      }
-      if (filters.type) {
-        const qType = (q.type || "").toLowerCase();
-        const filterType = filters.type.toLowerCase();
-        if (qType === "multiple choice" && filterType !== "mc") return false;
-        if ((qType === "true/false" || qType === "t/f") && filterType !== "tf")
-          return false;
-      }
       return true;
     });
   }, [approvedQuestions, filters]);
@@ -353,43 +339,6 @@ const TestView = ({
                 ))}
               </select>
             </div>
-
-            {/* Difficulty */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-300 mb-1">
-                Difficulty
-              </label>
-              <select
-                value={filters.difficulty}
-                onChange={(e) =>
-                  setFilters({ ...filters, difficulty: e.target.value })
-                }
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white"
-              >
-                <option value="">All Difficulties</option>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-            </div>
-
-            {/* Type */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-300 mb-1">
-                Question Type
-              </label>
-              <select
-                value={filters.type}
-                onChange={(e) =>
-                  setFilters({ ...filters, type: e.target.value })
-                }
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white"
-              >
-                <option value="">All Types</option>
-                <option value="mc">Multiple Choice</option>
-                <option value="tf">True/False</option>
-              </select>
-            </div>
           </div>
 
           {/* Action Buttons */}
@@ -440,17 +389,15 @@ const TestView = ({
                     className="mx-auto mb-4 opacity-50"
                   />
                   <p>No approved questions match your filters</p>
-                  {filters.discipline === "" &&
-                    filters.difficulty === "" &&
-                    filters.type === "" && (
-                      <button
-                        onClick={handleGenerateMockData}
-                        className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-bold transition-all flex items-center gap-2 mx-auto"
-                      >
-                        <Icon name="wand" size={16} />
-                        Generate Mock Data
-                      </button>
-                    )}
+                  {filters.discipline === "" && (
+                    <button
+                      onClick={handleGenerateMockData}
+                      className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-bold transition-all flex items-center gap-2 mx-auto"
+                    >
+                      <Icon name="wand" size={16} />
+                      Generate Mock Data
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="divide-y divide-slate-700">

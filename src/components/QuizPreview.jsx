@@ -193,11 +193,8 @@ const QuizPreview = ({ questions, config, onClose }) => {
     // Show immediate feedback if enabled
     if (config.showFeedback === "immediate") {
       setFeedbackShown(true);
-    } else {
-      // Auto-advance after brief delay
-      const newAnswers = { ...answers, [questionId]: answer };
-      setTimeout(() => handleNext(newRecent, newAnswers), 300);
     }
+    // No auto-advance: User must click "Next"
   };
 
   // Handle next question
