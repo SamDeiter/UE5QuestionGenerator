@@ -1005,13 +1005,18 @@ exports.importAIScores = functions
 
         for (const entry of chunk) {
           try {
-            const questionId = String(entry.id);
+            const questionTimestampId = Number(entry.id);
             const score = entry.originalScore;
-            const docRef = db.collection("questions").doc(questionId);
 
-            // Check if document exists
-            const doc = await docRef.get();
-            if (doc.exists) {
+            // Query for the question by its id field (not Firestore doc ID)
+            const querySnapshot = await db
+              .collection("questions")
+              .where("id", "==", questionTimestampId)
+              .limit(1)
+              .get();
+
+            if (!querySnapshot.empty) {
+              const docRef = querySnapshot.docs[0].ref;
               batchOp.update(docRef, {
                 aiScore: score,
                 scoredAt: timestamp,
