@@ -129,13 +129,22 @@ export const createUniqueFilteredQuestions = (
   const uniqueQuestions = [];
 
   sortedUniqueIds.forEach((id) => {
-    // Get all variants: either from map (preferred) or from the filtered list
-    let variants = [];
-    if (allQuestionsMap && allQuestionsMap.has(id)) {
-      variants = allQuestionsMap.get(id);
-    } else {
-      // Fallback: find matching uniqueIds in the filtered list itself
-      variants = filteredQuestions.filter((fq) => fq.uniqueId === id);
+    // FIX: Always get variants from the filtered list first to respect discipline filter
+    // This prevents questions from other disciplines appearing when "All Disciplines" is selected
+    let variants = filteredQuestions.filter((fq) => fq.uniqueId === id);
+
+    // If allQuestionsMap exists and we found variants in filtered list,
+    // we can use the map to find additional language variants of the SAME question
+    // but ONLY if they would have passed the same filters (same discipline)
+    if (allQuestionsMap && allQuestionsMap.has(id) && variants.length > 0) {
+      // Use the first variant to check discipline
+      const referenceDiscipline = variants[0].discipline;
+
+      // Get all variants from map and filter to match the reference discipline
+      const mapVariants = allQuestionsMap.get(id);
+      variants = mapVariants.filter(
+        (v) => v.discipline === referenceDiscipline
+      );
     }
 
     let selected = null;

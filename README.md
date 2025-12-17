@@ -75,6 +75,31 @@ All AI operations use secure Firebase Cloud Function endpoints:
 
 3. Client-side code automatically uses Cloud Functions (no configuration needed)
 
+#### Portkey.ai Integration (Optional)
+
+For enhanced observability and Vertex AI access, you can optionally use Portkey.ai as your AI gateway:
+
+1. **Get Portkey Credentials**:
+   - Sign up at [portkey.ai](https://portkey.ai)
+   - Get your API key from the dashboard
+   - (Optional) Create a Virtual Key for Vertex AI authentication
+
+2. **Configure Environment Variables**:
+   Add to your `.env` file:
+
+   ```bash
+   VITE_PORTKEY_API_KEY=your_portkey_api_key
+   VITE_PORTKEY_VIRTUAL_KEY=your_portkey_virtual_key  # Optional
+   VITE_AI_SERVICE=portkey  # Set to "portkey" to use Portkey Gateway
+   ```
+
+3. **Service Selection**:
+   - `VITE_AI_SERVICE=direct` - Direct Gemini API (default)
+   - `VITE_AI_SERVICE=cloud` - Firebase Cloud Functions (recommended for production)
+   - `VITE_AI_SERVICE=portkey` - Portkey Gateway (for Vertex AI or enhanced observability)
+
+**Note**: Portkey integration is completely optional and does not replace existing authentication methods. All three service options work independently.
+
 ### Content Security
 
 This application implements:
