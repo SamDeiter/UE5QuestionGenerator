@@ -194,6 +194,52 @@ export const useQuestionManager = (config, showMessage) => {
     }
   }, []);
 
+  // Update ALL variants of a question (same uniqueId) with critique/metadata
+  const updateAllVariantsInState = useCallback((uniqueId, updateFn) => {
+    if (!uniqueId) {
+      console.warn("[updateAllVariantsInState] No uniqueId provided");
+      return;
+    }
+
+    console.log(
+      `[updateAllVariantsInState] Updating all variants for uniqueId: ${uniqueId}`
+    );
+
+    // Update in questions array
+    setQuestions((prev) => {
+      let updatedCount = 0;
+      const newArr = prev.map((q) => {
+        if (q.uniqueId === uniqueId) {
+          updatedCount++;
+          return updateFn(q);
+        }
+        return q;
+      });
+      console.log(
+        `[updateAllVariantsInState] Updated ${updatedCount} variants in questions`
+      );
+      return newArr;
+    });
+
+    // Also update in historicalQuestions
+    setHistoricalQuestions((prev) => {
+      let updatedCount = 0;
+      const newArr = prev.map((q) => {
+        if (q.uniqueId === uniqueId) {
+          updatedCount++;
+          return updateFn(q);
+        }
+        return q;
+      });
+      if (updatedCount > 0) {
+        console.log(
+          `[updateAllVariantsInState] Updated ${updatedCount} variants in historicalQuestions`
+        );
+      }
+      return newArr;
+    });
+  }, []);
+
   // Status update handler - now accepts optional rejection reason and tracks review time
   const handleUpdateStatus = useCallback(
     async (id, newStatus, rejectionReason = null) => {
@@ -570,6 +616,7 @@ export const useQuestionManager = (config, showMessage) => {
     translationMap,
     addQuestionsToState,
     updateQuestionInState,
+    updateAllVariantsInState,
     handleUpdateStatus,
     approvedCounts,
     approvedCount,
