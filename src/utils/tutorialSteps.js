@@ -5,52 +5,72 @@
  */
 
 export const TUTORIAL_SCENARIOS = {
-  // 1. Welcome Tour (Landing Page) - Simplified to 3 steps
+  // 1. Welcome Tour (Landing Page) - Enhanced to 5 steps
   welcome: {
-    id: 'welcome',
-    label: 'Welcome Tour',
-    description: 'Quick overview of the main layout and features',
-    tags: ['beginner', 'overview'],
+    id: "welcome",
+    label: "Welcome Tour",
+    description: "Complete onboarding guide to the main layout and features",
+    tags: ["beginner", "overview"],
     steps: [
       {
         id: "welcome",
         title: "Welcome to UE5 Question Generator",
         content:
-          "This tool helps you generate high-quality Unreal Engine 5 assessment questions using AI. Let's take a quick tour!",
+          "This AI-powered tool helps you create, review, and manage high-quality Unreal Engine 5 assessment questions. Features include **multi-language translation**, **AI quality scoring**, and **Google Sheets integration**. Let's explore!",
         target: null,
         position: "center",
-        scenarioId: 'welcome',
-        order: 0
+        scenarioId: "welcome",
+        order: 0,
       },
       {
         id: "modes",
-        title: "Choose Your Mode",
+        title: "Step 1: Choose Your Workflow Mode",
         content:
-          'Select **Creation** to generate new questions with AI, **Review** to verify and improve questions, or **Database** to view your question bank.',
+          "The sidebar shows four main modes: **Creation** (generate new questions with AI), **Review** (verify and improve questions), **Database** (manage your question bank), and **Analytics** (track metrics and costs).",
         target: '[data-tour="create-mode"]',
+        position: "right",
+        scenarioId: "welcome",
+        order: 1,
+      },
+      {
+        id: "sidebar-nav",
+        title: "Step 2: Navigation & Settings",
+        content:
+          "Use the sidebar to switch between modes. Access **Settings** for API configuration and **Admin Panel** (if you have admin rights) for user management and invite codes.",
+        target: '[data-tour="sidebar"]',
+        position: "right",
+        scenarioId: "welcome",
+        order: 2,
+      },
+      {
+        id: "tutorial-system",
+        title: "Step 3: Tutorial System",
+        content:
+          "Click the **Tutorial** button (📚) in the header anytime to access guided tours for each mode. Press **Esc** to exit any tutorial. Your progress is automatically saved.",
+        target: '[data-tour="tutorial-button"]',
         position: "bottom",
-        scenarioId: 'welcome',
-        order: 1
+        scenarioId: "welcome",
+        order: 3,
       },
       {
         id: "get-started",
-        title: "Ready to Start!",
+        title: "Step 4: Ready to Start!",
         content:
-          'Click **Creation** to start generating questions. Use the **Tutorial** button in the header anytime you need help.',
-        target: null,
-        position: "center",
-        scenarioId: 'welcome',
-        order: 2
+          "Click **Creation Mode** in the sidebar to start generating questions. The Creation Mode tutorial will guide you through your first question batch. Good luck!",
+        target: '[data-tour="create-mode"]',
+        position: "right",
+        scenarioId: "welcome",
+        order: 4,
       },
-    ]
+    ],
   },
 
   // 2. Creation Mode Tour - Simplified to 5 steps
   create: {
-    id: 'create',
-    label: 'Creation Mode',
-    description: 'Learn how to generate questions with AI',
-    tags: ['beginner', 'create-flow'],
+    id: "create",
+    label: "Creation Mode",
+    description: "Learn how to generate questions with AI",
+    tags: ["beginner", "create-flow"],
     steps: [
       {
         id: "settings",
@@ -59,8 +79,8 @@ export const TUTORIAL_SCENARIOS = {
           "Choose **Discipline** (e.g., Blueprints, C++), **Difficulty** (Beginner/Expert), and **Type** (Multiple Choice or True/False).",
         target: '[data-tour="discipline-selector"]',
         position: "right",
-        scenarioId: 'create',
-        order: 0
+        scenarioId: "create",
+        order: 0,
       },
       {
         id: "inventory",
@@ -69,28 +89,28 @@ export const TUTORIAL_SCENARIOS = {
           "This chart shows your current question bank by difficulty and type. Use it to identify gaps.",
         target: '[data-tour="inventory-chart"]',
         position: "right",
-        scenarioId: 'create',
-        order: 1
+        scenarioId: "create",
+        order: 1,
       },
       {
         id: "advanced",
         title: "Step 3: Advanced Options (Optional)",
         content:
-          'Expand **Focus & Model** to narrow topics with tags or select different AI models.',
+          "Expand **Focus & Model** to narrow topics with tags or select different AI models.",
         target: '[data-tour="advanced-settings"]',
         position: "right",
-        scenarioId: 'create',
-        order: 2
+        scenarioId: "create",
+        order: 2,
       },
       {
         id: "generate",
         title: "Step 4: Generate Questions",
         content:
-          'Click **Generate Questions** to start. The AI will create questions based on your settings.',
+          "Click **Generate Questions** to start. The AI will create questions based on your settings.",
         target: '[data-tour="generate-button"]',
         position: "top",
-        scenarioId: 'create',
-        order: 3
+        scenarioId: "create",
+        order: 3,
       },
       {
         id: "results",
@@ -99,170 +119,220 @@ export const TUTORIAL_SCENARIOS = {
           "Generated questions appear here. Click any question to see details. Move to **Review Mode** to verify them.",
         target: '[data-tour="review-area"]',
         position: "left",
-        scenarioId: 'create',
-        order: 4
+        scenarioId: "create",
+        order: 4,
       },
-    ]
+    ],
   },
 
-  // 3. Review Mode Tour - Simplified to 5 steps
+  // 3. Review Mode Tour - Enhanced to 6 steps
   review: {
-    id: 'review',
-    label: 'Review Mode',
-    description: 'Master the question verification process',
-    tags: ['beginner', 'review-flow'],
+    id: "review",
+    label: "Review Mode",
+    description: "Master the question verification and improvement process",
+    tags: ["beginner", "review-flow"],
     steps: [
       {
-        id: "review-card",
-        title: "Step 1: Question Card",
+        id: "discipline-filter",
+        title: "Step 1: Select Discipline to Review",
         content:
-          "This shows the current question with all details: text, options, correct answer, difficulty, and source URL.",
+          "Use the **Discipline** dropdown to filter questions by topic (e.g., Blueprints, C++, Lighting, Materials). This focuses your review session on one subject area at a time.",
+        target: '[data-tour="discipline-selector"]',
+        position: "right",
+        scenarioId: "review",
+        order: 0,
+      },
+      {
+        id: "review-card",
+        title: "Step 2: Question Card Details",
+        content:
+          "The card displays the question text, all answer options (with the correct one marked), difficulty level, question type, and source URL. Review each element carefully for accuracy.",
         target: '[data-tour="review-card"]',
         position: "right",
-        scenarioId: 'review',
-        order: 0
+        scenarioId: "review",
+        order: 1,
       },
       {
         id: "navigation",
-        title: "Step 2: Navigate Questions",
+        title: "Step 3: Navigate Questions",
         content:
-          "Use **Prev/Next** buttons or keyboard arrows (← →) to move between questions. Press **Esc** to close this tutorial.",
+          "Use **Prev/Next** buttons or keyboard arrows (**←** **→**) to move between questions. Press **Space** to expand details. Press **Esc** to exit the tutorial anytime.",
         target: '[data-tour="next-button"]',
         position: "bottom",
-        scenarioId: 'review',
-        order: 1
+        scenarioId: "review",
+        order: 2,
       },
       {
         id: "critique",
-        title: "Step 3: AI Quality Check",
+        title: "Step 4: AI Quality Check",
         content:
-          'Click **Critique** to have AI analyze the question. It provides a score (0-100) and improvement suggestions.',
+          "Click **Critique** to analyze question quality. AI provides a score (0-100): **75+** = Excellent, **50-74** = Good, **Below 50** = Needs improvement. Review suggestions for enhancements.",
         target: '[data-tour="critique-button"]',
         position: "bottom",
-        scenarioId: 'review',
-        order: 2
+        scenarioId: "review",
+        order: 3,
       },
       {
-        id: "reject",
-        title: "Step 4: Reject Poor Questions",
+        id: "edit-improve",
+        title: "Step 5: Edit or Apply AI Improvements",
         content:
-          "Click **REJECT** for low-quality questions. Choose a reason (Too Easy, Incorrect, etc.) to improve future AI generation.",
-        target: '[data-tour="review-actions"]',
-        position: "top",
-        scenarioId: 'review',
-        order: 3
+          "Click **Edit** to manually modify the question, or **Apply Improvements** to accept AI suggestions. You can also translate, explain, or create variations using the action buttons.",
+        target: '[data-tour="edit-button"]',
+        position: "bottom",
+        scenarioId: "review",
+        order: 4,
       },
       {
-        id: "accept",
-        title: "Step 5: Accept Verified Questions",
+        id: "accept-reject",
+        title: "Step 6: Accept or Reject",
         content:
-          "Click **ACCEPT** for questions that pass verification. Accepted questions move to your Database.",
+          "Click **ACCEPT** to approve quality questions or **REJECT** for poor ones. When rejecting, choose a reason (e.g., Inaccurate, Too Easy, Ambiguous) to help improve future AI generation.",
         target: '[data-tour="review-actions"]',
         position: "top",
-        scenarioId: 'review',
-        order: 4
+        scenarioId: "review",
+        order: 5,
       },
-    ]
+    ],
   },
 
-  // 4. Database Mode Tour - Simplified to 4 steps
+  // 4. Database Mode Tour - Enhanced to 6 steps
   database: {
-    id: 'database',
-    label: 'Database Mode',
-    description: 'Manage your question bank effectively',
-    tags: ['intermediate', 'database'],
+    id: "database",
+    label: "Database Mode",
+    description: "Manage and organize your question bank effectively",
+    tags: ["intermediate", "database"],
     steps: [
       {
         id: "db-grid",
         title: "Step 1: Your Question Bank",
         content:
-          "This grid shows all approved questions. Each row displays question text, type, difficulty, and status.",
+          "This grid displays all approved questions. Each row shows question text, type (Multiple Choice/True-False), difficulty (Beginner/Intermediate/Expert), discipline, and AI score.",
         target: '[data-tour="database-grid"]',
         position: "center",
-        scenarioId: 'database',
-        order: 0
+        scenarioId: "database",
+        order: 0,
       },
       {
         id: "search",
-        title: "Step 2: Search & Filter",
+        title: "Step 2: Search Questions",
         content:
-          "Use the search box to find specific questions. Filter by discipline, difficulty, or status.",
+          "Use the **Search** box to find questions by keyword. Search looks through question text, answer options, and tags for matches.",
         target: '[data-tour="database-search"]',
         position: "bottom",
-        scenarioId: 'database',
-        order: 1
+        scenarioId: "database",
+        order: 1,
+      },
+      {
+        id: "filters",
+        title: "Step 3: Filter & Sort",
+        content:
+          "Filter by **Discipline** (e.g., Blueprints, C++), **Difficulty**, **Type**, or **AI Score Range**. Click column headers to sort by any field.",
+        target: '[data-tour="database-filters"]',
+        position: "bottom",
+        scenarioId: "database",
+        order: 2,
       },
       {
         id: "details",
-        title: "Step 3: View Details",
+        title: "Step 4: View & Edit Details",
         content:
-          "Click any row to expand and see full details including all options and metadata.",
+          "Click any row to expand and see full details including all answer options, tags, source URL, and creation date. Click **Edit** to modify the question.",
         target: '[data-tour="database-grid"]',
         position: "center",
-        scenarioId: 'database',
-        order: 2
+        scenarioId: "database",
+        order: 3,
+      },
+      {
+        id: "bulk-actions",
+        title: "Step 5: Bulk Actions",
+        content:
+          "Select multiple questions using checkboxes, then use **Bulk Actions** to delete, export, or change status for all selected items at once.",
+        target: '[data-tour="bulk-actions"]',
+        position: "bottom",
+        scenarioId: "database",
+        order: 4,
       },
       {
         id: "export",
-        title: "Step 4: Export Your Questions",
+        title: "Step 6: Export Your Questions",
         content:
-          'Click **Export** to download as CSV, sync to Google Sheets, or export for your LMS.',
+          "Click **Export** to download as **CSV** (spreadsheet), sync to **Google Sheets**, or export as **SCORM 1.2** package for your LMS (Moodle, Canvas, etc.).",
         target: '[data-tour="export-menu"]',
         position: "bottom",
-        scenarioId: 'database',
-        order: 3
+        scenarioId: "database",
+        order: 5,
       },
-    ]
+    ],
   },
 
-  // 5. Analytics Mode Tour - Simplified to 4 steps
+  // 5. Analytics Mode Tour - Enhanced to 6 steps
   analytics: {
-    id: 'analytics',
-    label: 'Analytics Mode',
-    description: 'Track metrics and optimize your workflow',
-    tags: ['intermediate', 'analytics'],
+    id: "analytics",
+    label: "Analytics Mode",
+    description: "Track metrics, analyze quality, and optimize your workflow",
+    tags: ["intermediate", "analytics"],
     steps: [
       {
         id: "analytics-dashboard",
         title: "Step 1: Dashboard Overview",
         content:
-          "View insights into your generation activity, quality metrics, and cost tracking.",
-        target: null,
+          "The dashboard shows key metrics: **Total Questions** (accepted/rejected), **Average AI Score**, **Token Usage**, and **Estimated Costs**. Use these to track your progress.",
+        target: '[data-tour="analytics-overview"]',
         position: "center",
-        scenarioId: 'analytics',
-        order: 0
+        scenarioId: "analytics",
+        order: 0,
       },
       {
         id: "disciplines-tab",
         title: "Step 2: Discipline Breakdown",
         content:
-          "See question counts by discipline. Click any card to drill down into detailed statistics.",
+          "See question counts by discipline (e.g., Blueprints: 45, C++: 32, Lighting: 18). Click any card to drill down into detailed statistics for that topic.",
         target: '[data-tour="disciplines-tab"]',
         position: "bottom",
-        scenarioId: 'analytics',
-        order: 1
+        scenarioId: "analytics",
+        order: 1,
       },
       {
-        id: "quality-tab",
-        title: "Step 3: Quality & Cost Tracking",
+        id: "quality-metrics",
+        title: "Step 3: Quality Score Analysis",
         content:
-          "View score distributions from AI critiques and monitor API costs. Use this to optimize your workflow.",
-        target: '[data-tour="quality-tab"]',
+          "View AI score distributions: **Excellent (75-100)**, **Good (50-74)**, **Needs Work (<50)**. High scores indicate quality questions ready for export.",
+        target: '[data-tour="quality-chart"]',
         position: "bottom",
-        scenarioId: 'analytics',
-        order: 2
+        scenarioId: "analytics",
+        order: 2,
+      },
+      {
+        id: "cost-tracking",
+        title: "Step 4: API Cost Monitoring",
+        content:
+          "Track token usage and costs by operation (Generation, Critique, Translation). Monitor daily/weekly spending to stay within budget.",
+        target: '[data-tour="cost-chart"]',
+        position: "bottom",
+        scenarioId: "analytics",
+        order: 3,
+      },
+      {
+        id: "optimization-tips",
+        title: "Step 5: Cost Optimization Strategies",
+        content:
+          "**Reduce costs** by: Using Flash models for simple tasks, batching translations, limiting critique runs, and trimming source context. Check the **Settings** for model selection.",
+        target: '[data-tour="optimization-panel"]',
+        position: "bottom",
+        scenarioId: "analytics",
+        order: 4,
       },
       {
         id: "trends",
-        title: "Step 4: Generation Trends",
+        title: "Step 6: Generation Trends & Insights",
         content:
-          "Charts show your generation activity over time. Identify patterns and optimize your strategy.",
-        target: null,
+          "Charts show generation activity over time (daily/weekly/monthly). Identify peak productivity periods and adjust your workflow for maximum efficiency.",
+        target: '[data-tour="trends-chart"]',
         position: "center",
-        scenarioId: 'analytics',
-        order: 3
+        scenarioId: "analytics",
+        order: 5,
       },
-    ]
+    ],
   },
 };
 
