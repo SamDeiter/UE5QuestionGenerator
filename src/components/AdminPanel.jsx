@@ -59,11 +59,6 @@ const AdminPanel = ({
     setCollapsed((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  // Debug logging
-  console.log("AdminPanel - currentUser:", currentUser);
-  console.log("AdminPanel - currentUser email:", currentUser?.email);
-  console.log("AdminPanel - isSuperAdmin:", isSuperAdmin);
-
   const [users, setUsers] = useState([]);
   const [invites, setInvites] = useState([]);
 
@@ -123,24 +118,17 @@ const AdminPanel = ({
     if (!confirm(`Revoke invite code: ${code}?`)) return;
 
     try {
-      console.log(`🗑️ Revoking invite code: ${code}`);
       const result = await revokeInvite(code);
-      console.log("✅ Revoke result:", result);
 
       // Immediately remove invite from UI (optimistic update)
-      setInvites((prevInvites) => {
-        const filtered = prevInvites.filter((inv) => inv.code !== code);
-        console.log(
-          `📊 Invites before: ${prevInvites.length}, after: ${filtered.length}`
-        );
-        return filtered;
-      });
+      setInvites((prevInvites) =>
+        prevInvites.filter((inv) => inv.code !== code)
+      );
 
       showMessage("✅ Invite revoked", 3000);
 
       // Wait a moment for server-side deletion to complete before refreshing
       setTimeout(async () => {
-        console.log("🔄 Refreshing invite list from server...");
         await loadData();
       }, 500);
     } catch (error) {
@@ -160,25 +148,16 @@ const AdminPanel = ({
       return;
 
     try {
-      console.log(`🗑️ Revoking user: ${email} (${userId})`);
       const revokeUserFn = httpsCallable(functions, "revokeUserAccess");
       const result = await revokeUserFn({ userId });
-      console.log("✅ Revoke user result:", result);
 
       // Immediately remove user from UI (optimistic update)
-      setUsers((prevUsers) => {
-        const filtered = prevUsers.filter((u) => u.uid !== userId);
-        console.log(
-          `📊 Users before: ${prevUsers.length}, after: ${filtered.length}`
-        );
-        return filtered;
-      });
+      setUsers((prevUsers) => prevUsers.filter((u) => u.uid !== userId));
 
       showMessage(`✅ Access revoked for ${email}`, 3000);
 
       // Wait a moment for server-side deletion to complete before refreshing
       setTimeout(async () => {
-        console.log("🔄 Refreshing user list from server...");
         await loadData();
       }, 500);
     } catch (error) {
