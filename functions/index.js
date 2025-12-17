@@ -967,7 +967,7 @@ exports.setupInitialAdmin = functions
 
     // Only allow specific emails to become initial admin
     const ALLOWED_INITIAL_ADMINS = [
-      process.env.SUPER_ADMIN_EMAIL || \"\",
+      process.env.SUPER_ADMIN_EMAIL || "",
       // [personal email] removed - regular user (non-admin)
     ];
 
