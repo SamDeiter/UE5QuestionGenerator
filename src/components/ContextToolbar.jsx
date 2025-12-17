@@ -167,6 +167,7 @@ const ContextToolbar = ({
             name="discipline" // Required for handleChange
             value={config.discipline}
             onChange={handleChange}
+            data-tour="discipline-selector"
             className="bg-slate-800 text-xs text-slate-200 font-medium outline-none border-none cursor-pointer focus:ring-0 hover:text-white transition-colors"
           >
             <option
