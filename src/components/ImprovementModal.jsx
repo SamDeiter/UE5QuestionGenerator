@@ -185,16 +185,18 @@ const ImprovementModal = ({
                     originalQuestion.options?.[letter] ||
                     originalQuestion[`option${letter}`] ||
                     "";
-                  const improvedOpt =
-                    improvedQuestion.options?.[letter] ||
-                    improvedQuestion[`option${letter}`] ||
-                    "";
+                  const improvedOpt = improvedQuestion
+                    ? improvedQuestion.options?.[letter] ||
+                      improvedQuestion[`option${letter}`] ||
+                      ""
+                    : originalOpt; // Fall back to original if no improvement
                   const originalCorrect =
                     originalQuestion.correctLetter === letter ||
                     originalQuestion.correct === letter;
-                  const improvedCorrect =
-                    improvedQuestion.correctLetter === letter ||
-                    improvedQuestion.correct === letter;
+                  const improvedCorrect = improvedQuestion
+                    ? improvedQuestion.correctLetter === letter ||
+                      improvedQuestion.correct === letter
+                    : originalCorrect; // Fall back to original if no improvement
 
                   return (
                     <div key={letter} className="grid grid-cols-2 gap-4">
