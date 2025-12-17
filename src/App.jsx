@@ -85,6 +85,7 @@ const App = () => {
     tutorialActive,
     currentStep,
     tutorialSteps,
+    activeScenario,
     handleTutorialNext,
     handleTutorialPrev,
     handleTutorialSkip,
@@ -558,6 +559,7 @@ const App = () => {
             appMode,
             currentStep,
             tutorialSteps,
+            activeScenario,
             metrics: {
               totalApproved: approvedCount,
               totalQuestions: questions.length,

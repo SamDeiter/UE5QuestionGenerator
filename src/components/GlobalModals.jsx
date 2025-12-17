@@ -41,6 +41,7 @@ const GlobalModals = ({ visibility, state, handlers }) => {
     allQuestionsMap,
     currentStep,
     tutorialSteps,
+    activeScenario,
 
     isAdmin, // passed for SettingsModal
   } = state;
@@ -161,6 +162,7 @@ const GlobalModals = ({ visibility, state, handlers }) => {
           onPrev={handleTutorialPrev}
           onSkip={handleTutorialSkip}
           onComplete={handleTutorialComplete}
+          activeScenario={activeScenario}
         />
       )}
     </>
