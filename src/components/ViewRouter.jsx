@@ -147,6 +147,7 @@ const ViewRouter = ({
           filterMode={state.filterMode}
           sortBy={state.sortBy}
           onStartTutorial={() => onStartTutorial("database")}
+          isAdmin={isAdmin}
         />
       ) : appMode === "test" && isAdmin ? (
         <TestView

@@ -2,12 +2,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Icon from "./Icon";
 import MetricsDashboard from "./MetricsDashboard";
 import QuestionItem from "./QuestionItem";
-import { db } from "../services/firebase";
-import { migrateFirestoreScores } from "../utils/migrateFirestoreScores";
-import {
-  exportQuestionsForCritique,
-  importCritiqueScores,
-} from "../utils/externalCritique";
+import { exportQuestionsForCritique } from "../utils/externalCritique";
 
 // PERFORMANCE: Number of items to render initially and load per batch
 const INITIAL_RENDER_COUNT = 50;
@@ -27,6 +22,7 @@ const DatabaseView = ({
   filterMode = "all", // Default to 'all' if not provided
   sortBy = "default", // Default to 'default' if not provided
   onStartTutorial, // Callback to trigger database tutorial
+  isAdmin = false, // Whether current user is admin
 }) => {
   const [_isSyncing, _setIsSyncing] = useState(false);
   const [_syncProgress, _setSyncProgress] = useState(0);
@@ -35,37 +31,9 @@ const DatabaseView = ({
 
   // PERFORMANCE: Track how many items to render (windowed rendering)
   const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
-  const [isMigrating, setIsMigrating] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
   const loaderRef = useRef(null);
 
-  // Migration handler
-  const handleMigrateScores = async () => {
-    console.log("🔘 Migrate button clicked!");
-    if (
-      !window.confirm(
-        "This will estimate improved scores for all questions with critiques. Continue?"
-      )
-    ) {
-      console.log("❌ User cancelled migration");
-      return;
-    }
-    console.log("✅ User confirmed, starting migration...");
-    setIsMigrating(true);
-    try {
-      const result = await migrateFirestoreScores(showMessage);
-      if (result.success) {
-        // Reload questions to see updated data
-        window.location.reload();
-      }
-    } catch (error) {
-      showMessage(`Migration error: ${error.message}`, 5000);
-    } finally {
-      setIsMigrating(false);
-    }
-  };
-
-  // Export for external critique
+  // Export for external critique (Admin only)
   const handleExport = () => {
     console.log("📤 Exporting questions for external critique...");
     const result = exportQuestionsForCritique(questions);
@@ -73,29 +41,6 @@ const DatabaseView = ({
       `✅ Exported ${result.count} questions! Prompt copied to clipboard.`,
       5000
     );
-  };
-
-  // Import scores from external AI
-  const handleImport = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json";
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      setIsImporting(true);
-      try {
-        const text = await file.text();
-        const _result = await importCritiqueScores(text, db, showMessage);
-        setTimeout(() => window.location.reload(), 2000);
-      } catch (error) {
-        showMessage(`❌ Import failed: ${error.message}`, 5000);
-      } finally {
-        setIsImporting(false);
-      }
-    };
-    input.click();
   };
 
   // OLD Batch Critique handler (disabled)
@@ -344,36 +289,19 @@ const DatabaseView = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleExport}
-              className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-2"
-              title="Export questions for ChatGPT/Gemini Business critique (FREE!)"
-            >
-              <Icon name="download" size={14} />
-              Export for AI
-            </button>
-
-            <button
-              onClick={handleImport}
-              disabled={isImporting}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-all disabled:opacity-50 flex items-center gap-2"
-              title="Import scores from ChatGPT/Gemini response"
-            >
-              <Icon name="upload" size={14} />
-              {isImporting ? "Importing..." : "Import Scores"}
-            </button>
-
-            <button
-              onClick={handleMigrateScores}
-              disabled={isMigrating}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg transition-all disabled:opacity-50 flex items-center gap-2"
-              title="Add estimated improved scores to all questions with critiques"
-            >
-              <Icon name="zap" size={14} />
-              {isMigrating ? "Migrating..." : "Migrate Scores"}
-            </button>
-          </div>
+          {/* Admin-only actions */}
+          {isAdmin && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExport}
+                className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-2"
+                title="Export questions for ChatGPT/Gemini Business critique (FREE!)"
+              >
+                <Icon name="download" size={14} />
+                Export for AI
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
