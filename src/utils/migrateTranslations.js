@@ -7,7 +7,7 @@
  * 3. Both can be found by createUniqueFilteredQuestions for language switching
  */
 
-import { db } from "../firebase.js";
+import { db } from "../services/firebase.js";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 
 async function migrateTranslations() {
