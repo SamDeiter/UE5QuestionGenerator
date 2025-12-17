@@ -290,13 +290,7 @@ const ImprovementModal = ({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-slate-700 bg-slate-900/90 px-5 py-3 flex flex-col items-center justify-center gap-2">
-          <div className="text-xs text-slate-400 flex items-center gap-1.5">
-            <Icon name="info" size={14} />
-            Must <strong className="text-white">Verify</strong> +{" "}
-            <strong className="text-white">Accept</strong> after applying
-          </div>
+        <div className="border-t border-slate-700 bg-slate-900/90 px-5 py-3 flex items-center justify-center gap-2.5">
           <div className="flex gap-2.5">
             <button
               onClick={onDismiss}
