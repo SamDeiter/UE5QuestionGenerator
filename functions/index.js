@@ -177,7 +177,7 @@ exports.generateCritique = functions
       options,
       correct,
       modeLabel,
-      model = "gemini-2.0-flash-exp",
+      model = "gemini-1.5-flash",
     } = data;
 
     // Input validation
@@ -266,11 +266,10 @@ exports.generateCritique = functions
         Options: ${JSON.stringify(options)}
         Correct: ${correct}`;
 
-      // Model fallback list: try experimental first, then stable versions
+      // Model fallback list: stable models only
       const modelFallbacks = [
-        model, // User-specified or default (gemini-2.0-flash-exp)
-        "gemini-1.5-flash", // Stable GA version (no version suffix for v1beta)
-        "gemini-1.5-pro", // Stable GA fallback (no version suffix for v1beta)
+        model, // User-specified or default (gemini-1.5-flash)
+        "gemini-1.5-pro", // Stable GA fallback
       ];
 
       let response;
@@ -280,7 +279,7 @@ exports.generateCritique = functions
       // Try each model in order until one works
       for (const fallbackModel of modelFallbacks) {
         try {
-          const url = `https://generativelanguage.googleapis.com/v1/models/${fallbackModel}:generateContent?key=${apiKey}`;
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent?key=${apiKey}`;
 
           response = await fetch(url, {
             method: "POST",
