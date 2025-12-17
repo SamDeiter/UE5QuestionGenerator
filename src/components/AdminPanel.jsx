@@ -40,6 +40,11 @@ const AdminPanel = ({
 }) => {
   // Super Admin check - only sam.deiter@epicgames.com
   const isSuperAdmin = currentUser?.email === "sam.deiter@epicgames.com";
+  
+  // Debug logging
+  console.log("AdminPanel - currentUser:", currentUser);
+  console.log("AdminPanel - currentUser email:", currentUser?.email);
+  console.log("AdminPanel - isSuperAdmin:", isSuperAdmin);
 
   const [users, setUsers] = useState([]);
   const [invites, setInvites] = useState([]);
@@ -158,17 +163,15 @@ const AdminPanel = ({
         </h1>
       </div>
       {/* Feature Access Overview */}
-      <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/30">
-        <h2 className="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
+      <div className="bg-blue-900/20 rounded-lg p-6 border border-blue-500/30">
+        <h2 className="text-lg font-bold text-blue-400 mb-4 flex items-center gap-2">
           <Icon name="eye" size={18} />
           Feature Access Overview
         </h2>
-
-        <div className="grid grid-cols-2 gap-3">
+        
+        <div className="grid grid-cols-2 gap-4">
           <div className="bg-slate-800/50 p-4 rounded border border-green-500/30">
-            <h3 className="text-sm font-bold text-green-400 mb-3">
-              👤 Regular Users (Non-Admin)
-            </h3>
+            <h3 className="text-sm font-bold text-green-400 mb-3">👤 Regular Users (Non-Admin)</h3>
             <ul className="space-y-2 text-xs text-slate-300">
               <li className="flex items-center gap-2">
                 <Icon name="list-checks" size={12} className="text-green-400" />
@@ -184,9 +187,7 @@ const AdminPanel = ({
               </li>
               <li className="flex items-center gap-2 text-slate-500">
                 <Icon name="x" size={12} className="text-red-400" />
-                <span className="line-through">
-                  Create Questions (Admin Only)
-                </span>
+                <span className="line-through">Create Questions (Admin Only)</span>
               </li>
               <li className="flex items-center gap-2 text-slate-500">
                 <Icon name="x" size={12} className="text-red-400" />
@@ -198,30 +199,20 @@ const AdminPanel = ({
               </li>
             </ul>
           </div>
-
+          
           <div className="bg-slate-800/50 p-4 rounded border border-purple-500/30">
-            <h3 className="text-sm font-bold text-purple-400 mb-3">
-              👑 Admins (Full Access)
-            </h3>
+            <h3 className="text-sm font-bold text-purple-400 mb-3">👑 Admins (Full Access)</h3>
             <ul className="space-y-2 text-xs text-slate-300">
               <li className="flex items-center gap-2">
                 <Icon name="check" size={12} className="text-purple-400" />
                 All Regular User Features
               </li>
               <li className="flex items-center gap-2">
-                <Icon
-                  name="plus-circle"
-                  size={12}
-                  className="text-purple-400"
-                />
+                <Icon name="plus-circle" size={12} className="text-purple-400" />
                 Create Mode (generate questions)
               </li>
               <li className="flex items-center gap-2">
-                <Icon
-                  name="clipboard-list"
-                  size={12}
-                  className="text-purple-400"
-                />
+                <Icon name="clipboard-list" size={12} className="text-purple-400" />
                 Test View (experimental features)
               </li>
               <li className="flex items-center gap-2">
@@ -240,6 +231,7 @@ const AdminPanel = ({
           </div>
         </div>
       </div>
+
 
       {/* Create Invite Section */}
       <div className="bg-slate-800 rounded-lg p-4 border border-blue-500/30">
