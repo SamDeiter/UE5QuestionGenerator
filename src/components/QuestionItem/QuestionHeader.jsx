@@ -82,6 +82,18 @@ const QuestionHeader = ({
             </button>
           )}
 
+          {/* AI Improvement Badge - Shows when improvements are available */}
+          {q.suggestedRewrite && (
+            <button
+              onClick={() => onOpenCritiqueModal?.()}
+              className="px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105 bg-green-600/20 text-green-300 border border-green-500/50 hover:bg-green-600/30"
+              title="AI Improvements Available - Click to review"
+            >
+              <Icon name="sparkles" size={12} />
+              AI IMPROVEMENT
+            </button>
+          )}
+
           {/* Human Verified Badge */}
           {q.humanVerified && (
             <span
