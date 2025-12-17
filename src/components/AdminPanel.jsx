@@ -39,7 +39,8 @@ const AdminPanel = ({
   currentUser, // Add currentUser prop
 }) => {
   // Super Admin check - only sam.deiter@epicgames.com
-  const isSuperAdmin = currentUser?.email === "sam.deiter@epicgames.com";
+  const isSuperAdmin =
+    currentUser?.email === import.meta.env.VITE_SUPER_ADMIN_EMAIL;
 
   // Collapsible sections state
   const [collapsed, setCollapsed] = useState({

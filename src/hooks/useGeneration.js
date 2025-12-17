@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   generateContentSecure as generateContent,
   generateCritiqueSecure as generateCritique,
@@ -698,323 +698,353 @@ export const useGeneration = (
     }
   };
 
-  const handleTranslateSingle = async (q, targetLang) => {
-    if (!isApiReady) {
-      showMessage(
-        "API key is required for translation. Please enter it in the settings panel.",
-        TOAST_DURATION.LONG
-      );
-      return;
-    }
+  const handleTranslateSingle = useCallback(
+    async (q, targetLang) => {
+      if (!isApiReady) {
+        showMessage(
+          "API key is required for translation. Please enter it in the settings panel.",
+          TOAST_DURATION.LONG
+        );
+        return;
+      }
 
-    setIsProcessing(true);
-    setStatus(`Translating question to ${targetLang}...`);
+      setIsProcessing(true);
+      setStatus(`Translating question to ${targetLang}...`);
 
-    // JSON Prompt for reliability
-    const systemPrompt = `You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided JSON object from ${
-      q.language || "English"
-    } to ${targetLang}. 
+      // JSON Prompt for reliability
+      const systemPrompt = `You are a professional technical translator for Unreal Engine 5 documentation. Translate the provided JSON object from ${
+        q.language || "English"
+      } to ${targetLang}. 
         CRITICAL RULES:
         1. Return ONLY valid JSON. No markdown formatting, no explanations.
         2. Translate ONLY: "Question", "OptionA", "OptionB", "OptionC", "OptionD", and "SourceExcerpt".
         3. DO NOT translate: "ID", "Discipline", "Type", "Difficulty", "Answer", "CorrectLetter", and "SourceURL".
         4. Maintain exact JSON structure.`;
 
-    const userPrompt = `Translate this object:\n${JSON.stringify(
-      {
-        Discipline: q.discipline,
-        Type: q.type,
-        Difficulty: q.difficulty,
-        Question: q.question,
-        OptionA: q.options.A,
-        OptionB: q.options.B,
-        OptionC: q.options.C || "",
-        OptionD: q.options.D || "",
-        CorrectLetter: q.correct,
-        SourceURL: q.sourceUrl,
-        SourceExcerpt: q.sourceExcerpt,
-      },
-      null,
-      2
-    )}`;
+      const userPrompt = `Translate this object:\n${JSON.stringify(
+        {
+          Discipline: q.discipline,
+          Type: q.type,
+          Difficulty: q.difficulty,
+          Question: q.question,
+          OptionA: q.options.A,
+          OptionB: q.options.B,
+          OptionC: q.options.C || "",
+          OptionD: q.options.D || "",
+          CorrectLetter: q.correct,
+          SourceURL: q.sourceUrl,
+          SourceExcerpt: q.sourceExcerpt,
+        },
+        null,
+        2
+      )}`;
 
-    try {
-      const text = await generateContent(
-        effectiveApiKey,
-        systemPrompt,
-        userPrompt,
-        setStatus
-      );
-
-      // Attempt to parse JSON response
-      let translatedData = null;
       try {
-        // Strip code fence if present
-        const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
-        translatedData = JSON.parse(cleanText);
-      } catch (e) {
-        console.warn("JSON parse failed, trying parseQuestions fallback", e);
-      }
-
-      // Fallback to helper parser or use parsed JSON
-      const translatedQs = translatedData
-        ? parseQuestions(JSON.stringify(translatedData))
-        : parseQuestions(text);
-
-      if (translatedQs.length > 0) {
-        const tq = translatedQs[0];
-        const newQuestion = {
-          ...tq,
-          id: Date.now(),
-          uniqueId: q.uniqueId,
-          discipline: q.discipline,
-          type: q.type,
-          difficulty: q.difficulty,
-          language: targetLang,
-          status: "pending", // CRITICAL: Force pending - ALL questions must be reviewed
-          dateAdded: new Date().toISOString(),
-        };
-
-        await checkAndStoreQuestions([newQuestion]);
-        addQuestionsToState([newQuestion], false);
-        handleLanguageSwitch(targetLang);
-
-        showMessage(
-          `Translated to ${targetLang} and saved.`,
-          TOAST_DURATION.MEDIUM
+        const text = await generateContent(
+          effectiveApiKey,
+          systemPrompt,
+          userPrompt,
+          setStatus
         );
-      } else {
-        throw new Error("Parser returned no questions from translation.");
-      }
-    } catch (e) {
-      console.error("Translation error:", e);
-      setStatus("Translation Failed");
-      showMessage(`Translation Failed: ${e.message}`, TOAST_DURATION.LONG);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
-  const handleExplain = async (q) => {
-    if (!isApiReady) {
-      showMessage(
-        "API key is required for explanation. Please enter it in the settings panel.",
-        TOAST_DURATION.LONG
-      );
-      return;
-    }
-
-    setIsProcessing(true);
-    setStatus("Explaining...");
-    const prompt = `Explain WHY the answer is correct in simple terms: "${
-      q.question
-    }" Answer: "${q.correct === "A" ? q.options.A : q.options.B}"`;
-    try {
-      const exp = await generateContent(
-        effectiveApiKey,
-        "Technical Assistant",
-        prompt,
-        setStatus
-      );
-      updateQuestionInState(q.id, (item) => ({ ...item, explanation: exp }));
-      setStatus("");
-    } catch {
-      setStatus("Fail");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleVariate = async (q) => {
-    console.log("🐛 [DEBUG] handleVariate called. isApiReady:", isApiReady);
-    if (!isApiReady) {
-      showMessage(
-        "API key is required for creation. Please enter it in the settings panel.",
-        TOAST_DURATION.LONG
-      );
-      return;
-    }
-
-    setIsProcessing(true);
-    setStatus("Creating improved variations...");
-
-    // Build context-aware prompt that leverages critique feedback
-    const hasCritique = q.critique && q.critiqueScore !== undefined;
-    const critiqueContext = hasCritique
-      ? `\n\nCRITIQUE FEEDBACK (Score: ${q.critiqueScore}/100):\n${q.critique}\n\nYour task: Generate 2 IMPROVED variations that ADDRESS the critique feedback above.`
-      : `\n\nYour task: Generate 2 IMPROVED variations that are MORE CHALLENGING and PROFESSIONAL than the original.`;
-
-    const sys = constructSystemPrompt(config, getFileContext());
-    const prompt = `ORIGINAL QUESTION TO IMPROVE:\rDiscipline: ${
-      q.discipline
-    }\rDifficulty: ${q.difficulty}\rType: ${q.type}\rQuestion: "${
-      q.question
-    }"\rOptions:\r  A) ${q.options.A}\r  B) ${q.options.B}\r  ${
-      q.options.C ? `C) ${q.options.C}` : ""
-    }\r  ${q.options.D ? `D) ${q.options.D}` : ""}\rCorrect Answer: ${
-      q.correct
-    }\r${critiqueContext}\r\rREQUIREMENTS FOR VARIATIONS:\r1. Address any weaknesses mentioned in the critique (if provided)\r2. Increase depth and professional relevance\r3. Use scenario-based or application-focused phrasing\r4. Avoid trivial or overly simple questions\r5. Maintain the same difficulty level: ${
-      q.difficulty
-    }\r6. Keep the same type: ${q.type}\r\rOutput in Markdown Table format.`;
-
-    try {
-      const text = await generateContent(
-        effectiveApiKey,
-        sys,
-        prompt,
-        setStatus
-      );
-      const newQs = parseQuestions(text);
-      console.log(
-        "🐛 [DEBUG] handleVariate text:",
-        text,
-        "newQs length:",
-        newQs.length
-      );
-      if (newQs.length > 0) {
-        // Attach variations directly to the original question
-        const updatedOriginal = {
-          ...q,
-          alternatives: newQs, // Store alternatives array
-          hasAlternatives: true,
-        };
-
-        // Update the original question with alternatives
-        updateQuestionInState(q.id, () => updatedOriginal);
-
-        showMessage(
-          `🔄 ${newQs.length} variations ready! Use ← → arrows.`,
-          TOAST_DURATION.MEDIUM
-        );
-      } else {
-        showMessage(
-          "⚠️ No variations generated. Try again.",
-          TOAST_DURATION.MEDIUM
-        );
-      }
-    } catch (e) {
-      console.error("Variation generation failed:", e);
-      setStatus("Fail");
-      showMessage(
-        `Failed to generate variations: ${e.message}`,
-        TOAST_DURATION.LONG
-      );
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleCritique = async (q) => {
-    if (!isApiReady) {
-      showMessage(
-        "API key is required for critique. Please enter it in the settings panel.",
-        TOAST_DURATION.LONG
-      );
-      return;
-    }
-
-    setIsProcessing(true);
-    setStatus("Critiquing...");
-
-    try {
-      const { score, text, rewrite, changes } = await generateCritique(
-        effectiveApiKey,
-        q
-      );
-
-      // Generate tags if question has fewer than 3
-      let suggestedTags = q.tags || [];
-      if (suggestedTags.length < 3 && rewrite) {
+        // Attempt to parse JSON response
+        let translatedData = null;
         try {
-          const improvedQuestion = {
-            question: rewrite.question || q.question,
-            optionA: rewrite.optionA || q.options?.A,
-            optionB: rewrite.optionB || q.options?.B,
-            optionC: rewrite.optionC || q.options?.C,
-            optionD: rewrite.optionD || q.options?.D,
-          };
-          const newTags = await generateTagsSecure(
-            effectiveApiKey,
-            improvedQuestion
-          );
-          if (newTags && newTags.length > 0) {
-            suggestedTags = [
-              ...new Set([
-                ...suggestedTags,
-                ...newTags.map((t) => t.replace(/^#/, "")),
-              ]),
-            ];
-          }
-        } catch (error) {
-          console.error("Tag generation failed during critique:", error);
+          // Strip code fence if present
+          const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
+          translatedData = JSON.parse(cleanText);
+        } catch (e) {
+          console.warn("JSON parse failed, trying parseQuestions fallback", e);
         }
+
+        // Fallback to helper parser or use parsed JSON
+        const translatedQs = translatedData
+          ? parseQuestions(JSON.stringify(translatedData))
+          : parseQuestions(text);
+
+        if (translatedQs.length > 0) {
+          const tq = translatedQs[0];
+          const newQuestion = {
+            ...tq,
+            id: Date.now(),
+            uniqueId: q.uniqueId,
+            discipline: q.discipline,
+            type: q.type,
+            difficulty: q.difficulty,
+            language: targetLang,
+            status: "pending", // CRITICAL: Force pending - ALL questions must be reviewed
+            dateAdded: new Date().toISOString(),
+          };
+
+          await checkAndStoreQuestions([newQuestion]);
+          addQuestionsToState([newQuestion], false);
+          handleLanguageSwitch(targetLang);
+
+          showMessage(
+            `Translated to ${targetLang} and saved.`,
+            TOAST_DURATION.MEDIUM
+          );
+        } else {
+          throw new Error("Parser returned no questions from translation.");
+        }
+      } catch (e) {
+        console.error("Translation error:", e);
+        setStatus("Translation Failed");
+        showMessage(`Translation Failed: ${e.message}`, TOAST_DURATION.LONG);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [
+      isApiReady,
+      showMessage,
+      effectiveApiKey,
+      setStatus,
+      setIsProcessing,
+      checkAndStoreQuestions,
+      addQuestionsToState,
+      handleLanguageSwitch,
+    ]
+  );
+
+  const handleExplain = useCallback(
+    async (q) => {
+      if (!isApiReady) {
+        showMessage(
+          "API key is required for explanation. Please enter it in the settings panel.",
+          TOAST_DURATION.LONG
+        );
+        return;
       }
 
-      // Update rewrite object to include suggested tags
-      const updatedRewrite = rewrite
-        ? { ...rewrite, tags: suggestedTags }
-        : null;
-
-      // Track critique attempts
-      const previousAttempts = q.critiqueAttempts || 0;
-      const newAttemptCount = previousAttempts + 1;
-
-      // Check if this is the 3rd failed attempt (score < PASS)
-      const MAX_ATTEMPTS = 3;
-      // PASSING_SCORE uses constant
-      const PASSING_SCORE = QUALITY_THRESHOLDS.PASS;
-
-      if (score < PASSING_SCORE && newAttemptCount >= MAX_ATTEMPTS) {
-        // Auto-reject after 3 failed attempts
-        updateQuestionInState(q.id, (item) => ({
-          ...item,
-          critique: text,
-          critiqueScore: score,
-          suggestedRewrite: updatedRewrite,
-          rewriteChanges: changes,
-          critiqueAttempts: newAttemptCount,
-          status: "rejected",
-          rejectionReason: "low_score_after_retries",
-          rejectedAt: new Date().toISOString(),
-        }));
-        showMessage(
-          `⛔ Auto-rejected: Score ${score}/100 after ${newAttemptCount} attempts. Quality too low.`,
-          TOAST_DURATION.EXTENDED
+      setIsProcessing(true);
+      setStatus("Explaining...");
+      const prompt = `Explain WHY the answer is correct in simple terms: "${
+        q.question
+      }" Answer: "${q.correct === "A" ? q.options.A : q.options.B}"`;
+      try {
+        const exp = await generateContent(
+          effectiveApiKey,
+          "Technical Assistant",
+          prompt,
+          setStatus
         );
-      } else {
-        // Normal update
-        updateQuestionInState(q.id, (item) => ({
-          ...item,
-          critique: text,
-          critiqueScore: score,
-          suggestedRewrite: updatedRewrite,
-          rewriteChanges: changes,
-          critiqueAttempts: newAttemptCount,
-        }));
+        updateQuestionInState(q.id, (item) => ({ ...item, explanation: exp }));
+        setStatus("");
+      } catch {
+        setStatus("Fail");
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [isApiReady, showMessage, effectiveApiKey, updateQuestionInState, setStatus]
+  );
 
-        if (score < PASSING_SCORE) {
-          const attemptsLeft = MAX_ATTEMPTS - newAttemptCount;
+  const handleVariate = useCallback(
+    async (q) => {
+      console.log("🐛 [DEBUG] handleVariate called. isApiReady:", isApiReady);
+      if (!isApiReady) {
+        showMessage(
+          "API key is required for creation. Please enter it in the settings panel.",
+          TOAST_DURATION.LONG
+        );
+        return;
+      }
+
+      setIsProcessing(true);
+      setStatus("Creating improved variations...");
+
+      // Build context-aware prompt that leverages critique feedback
+      const hasCritique = q.critique && q.critiqueScore !== undefined;
+      const critiqueContext = hasCritique
+        ? `\n\nCRITIQUE FEEDBACK (Score: ${q.critiqueScore}/100):\n${q.critique}\n\nYour task: Generate 2 IMPROVED variations that ADDRESS the critique feedback above.`
+        : `\n\nYour task: Generate 2 IMPROVED variations that are MORE CHALLENGING and PROFESSIONAL than the original.`;
+
+      const sys = constructSystemPrompt(config, getFileContext());
+      const prompt = `ORIGINAL QUESTION TO IMPROVE:\rDiscipline: ${
+        q.discipline
+      }\rDifficulty: ${q.difficulty}\rType: ${q.type}\rQuestion: "${
+        q.question
+      }"\rOptions:\r  A) ${q.options.A}\r  B) ${q.options.B}\r  ${
+        q.options.C ? `C) ${q.options.C}` : ""
+      }\r  ${q.options.D ? `D) ${q.options.D}` : ""}\rCorrect Answer: ${
+        q.correct
+      }\r${critiqueContext}\r\rREQUIREMENTS FOR VARIATIONS:\r1. Address any weaknesses mentioned in the critique (if provided)\r2. Increase depth and professional relevance\r3. Use scenario-based or application-focused phrasing\r4. Avoid trivial or overly simple questions\r5. Maintain the same difficulty level: ${
+        q.difficulty
+      }\r6. Keep the same type: ${q.type}\r\rOutput in Markdown Table format.`;
+
+      try {
+        const text = await generateContent(
+          effectiveApiKey,
+          sys,
+          prompt,
+          setStatus
+        );
+        const newQs = parseQuestions(text);
+        console.log(
+          "🐛 [DEBUG] handleVariate text:",
+          text,
+          "newQs length:",
+          newQs.length
+        );
+        if (newQs.length > 0) {
+          // Attach variations directly to the original question
+          const updatedOriginal = {
+            ...q,
+            alternatives: newQs, // Store alternatives array
+            hasAlternatives: true,
+          };
+
+          // Update the original question with alternatives
+          updateQuestionInState(q.id, () => updatedOriginal);
+
           showMessage(
-            `Score: ${score}/100. ${attemptsLeft} attempt(s) left before auto-reject. Apply suggestions to improve!`,
-            TOAST_DURATION.LONG
+            `🔄 ${newQs.length} variations ready! Use ← → arrows.`,
+            TOAST_DURATION.MEDIUM
           );
         } else {
           showMessage(
-            `Critique Ready! Score: ${score}/100`,
+            "⚠️ No variations generated. Try again.",
             TOAST_DURATION.MEDIUM
           );
         }
+      } catch (e) {
+        console.error("Variation generation failed:", e);
+        setStatus("Fail");
+        showMessage(
+          `Failed to generate variations: ${e.message}`,
+          TOAST_DURATION.LONG
+        );
+      } finally {
+        setIsProcessing(false);
       }
-    } catch (e) {
-      console.error("Critique failed:", e);
-      setStatus("Fail");
-      showMessage(`Critique Failed: ${e.message}`, TOAST_DURATION.LONG);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+    },
+    [
+      isApiReady,
+      showMessage,
+      config,
+      getFileContext,
+      effectiveApiKey,
+      updateQuestionInState,
+      setStatus,
+    ]
+  );
 
-  const handleBulkTranslateMissing = async () => {
+  // Define handleCritique first so handles that depend on it can include it in dependency array
+  const handleCritique = useCallback(
+    async (q) => {
+      if (!isApiReady) {
+        showMessage(
+          "API key is required for critique. Please enter it in the settings panel.",
+          TOAST_DURATION.LONG
+        );
+        return;
+      }
+
+      setIsProcessing(true);
+      setStatus("Critiquing...");
+
+      try {
+        const { score, text, rewrite, changes } = await generateCritique(
+          effectiveApiKey,
+          q
+        );
+
+        // Generate tags if question has fewer than 3
+        let suggestedTags = q.tags || [];
+        if (suggestedTags.length < 3 && rewrite) {
+          try {
+            const improvedQuestion = {
+              question: rewrite.question || q.question,
+              optionA: rewrite.optionA || q.options?.A,
+              optionB: rewrite.optionB || q.options?.B,
+              optionC: rewrite.optionC || q.options?.C,
+              optionD: rewrite.optionD || q.options?.D,
+            };
+            const newTags = await generateTagsSecure(
+              effectiveApiKey,
+              improvedQuestion
+            );
+            if (newTags && newTags.length > 0) {
+              suggestedTags = [
+                ...new Set([
+                  ...suggestedTags,
+                  ...newTags.map((t) => t.replace(/^#/, "")),
+                ]),
+              ];
+            }
+          } catch (error) {
+            console.error("Tag generation failed during critique:", error);
+          }
+        }
+
+        // Update rewrite object to include suggested tags
+        const updatedRewrite = rewrite
+          ? { ...rewrite, tags: suggestedTags }
+          : null;
+
+        // Track critique attempts
+        const previousAttempts = q.critiqueAttempts || 0;
+        const newAttemptCount = previousAttempts + 1;
+
+        // Check if this is the 3rd failed attempt (score < PASS)
+        const MAX_ATTEMPTS = 3;
+        // PASSING_SCORE uses constant
+        const PASSING_SCORE = QUALITY_THRESHOLDS.PASS;
+
+        if (score < PASSING_SCORE && newAttemptCount >= MAX_ATTEMPTS) {
+          // Auto-reject after 3 failed attempts
+          updateQuestionInState(q.id, (item) => ({
+            ...item,
+            critique: text,
+            critiqueScore: score,
+            suggestedRewrite: updatedRewrite,
+            rewriteChanges: changes,
+            critiqueAttempts: newAttemptCount,
+            status: "rejected",
+            rejectionReason: "low_score_after_retries",
+            rejectedAt: new Date().toISOString(),
+          }));
+          showMessage(
+            `⛔ Auto-rejected: Score ${score}/100 after ${newAttemptCount} attempts. Quality too low.`,
+            TOAST_DURATION.EXTENDED
+          );
+        } else {
+          // Normal update
+          updateQuestionInState(q.id, (item) => ({
+            ...item,
+            critique: text,
+            critiqueScore: score,
+            suggestedRewrite: updatedRewrite,
+            rewriteChanges: changes,
+            critiqueAttempts: newAttemptCount,
+          }));
+
+          if (score < PASSING_SCORE) {
+            const attemptsLeft = MAX_ATTEMPTS - newAttemptCount;
+            showMessage(
+              `Score: ${score}/100. ${attemptsLeft} attempt(s) left before auto-reject. Apply suggestions to improve!`,
+              TOAST_DURATION.LONG
+            );
+          } else {
+            showMessage(
+              `Critique Ready! Score: ${score}/100`,
+              TOAST_DURATION.MEDIUM
+            );
+          }
+        }
+      } catch (e) {
+        console.error("Critique failed:", e);
+        setStatus("Fail");
+        showMessage(`Critique Failed: ${e.message}`, TOAST_DURATION.LONG);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [isApiReady, showMessage, effectiveApiKey, updateQuestionInState, setStatus]
+  );
+
+  const handleBulkTranslateMissing = useCallback(async () => {
     if (isProcessing) return;
     if (!isApiReady) {
       showMessage(
@@ -1158,43 +1188,65 @@ export const useGeneration = (
       TOAST_DURATION.EXTENDED
     );
     setIsProcessing(false);
-  };
+  }, [
+    isProcessing,
+    isApiReady,
+    showMessage,
+    allQuestionsMap,
+    translationMap,
+    effectiveApiKey,
+    checkAndStoreQuestions,
+    addQuestionsToState,
+    setStatus,
+    setShowHistory,
+  ]);
 
-  const handleApplyRewrite = (q) => {
-    if (!q.suggestedRewrite) return;
+  const handleApplyRewrite = useCallback(
+    (q) => {
+      if (!q.suggestedRewrite) return;
 
-    const updatedQ = {
-      ...q,
-      question: q.suggestedRewrite.question,
-      options: q.suggestedRewrite.options,
-      correct: q.suggestedRewrite.correct,
-      suggestedRewrite: null,
-      rewriteChanges: null,
-      critique: null,
-      critiqueScore: null,
-      humanVerified: false, // Reset - human must verify
-    };
+      const updatedQ = {
+        ...q,
+        question: q.suggestedRewrite.question,
+        options: q.suggestedRewrite.options,
+        correct: q.suggestedRewrite.correct,
+        suggestedRewrite: null,
+        rewriteChanges: null,
+        critique: null,
+        critiqueScore: null,
+        humanVerified: false, // Reset - human must verify
+      };
 
-    // Update state
-    updateQuestionInState(q.id, () => updatedQ);
+      // Update state
+      updateQuestionInState(q.id, () => updatedQ);
 
-    showMessage(
-      "✓ Applied! Re-critiquing to get new score...",
-      TOAST_DURATION.SHORT
-    );
+      showMessage(
+        "✓ Applied! Re-critiquing to get new score...",
+        TOAST_DURATION.SHORT
+      );
 
-    // Auto-run critique on the NEW version
-    setTimeout(() => {
-      handleCritique({ ...updatedQ, id: q.id });
-    }, 300);
-  };
+      // Auto-run critique on the NEW version
+      setTimeout(() => {
+        handleCritique({ ...updatedQ, id: q.id });
+      }, 300);
+    },
+    [updateQuestionInState, showMessage, handleCritique]
+  );
 
   return {
     isGenerating,
     isProcessing,
     translationProgress,
     handleGenerate,
-    handleTranslateSingle,
+    handleTranslateSingle, // Already memoized earlier? Need to verify file content but I'll assume I should just keep it as is if I didn't verify it, but since I am editing the block, I should check.
+    // Wait, I saw handleTranslateSingle in step 59 and it WAS defined there. I need to make sure I didn't overwrite it or miss it.
+    // The previous view_file (step 66) started at line 798, which was `const handleExplain = ...`
+    // `handleTranslateSingle` was BEFORE that (lines 701-796).
+    // I NEED TO MEMOIZE handleTranslateSingle as well!
+    // My ReplaceFileContent started at line 798.
+    // So handleTranslateSingle is NOT included in my replacement.
+    // I should add handleTranslateSingle to the replacement if it wasn't memoized.
+    // It was NOT memoized in Step 59.
     handleExplain,
     handleVariate,
     handleCritique,

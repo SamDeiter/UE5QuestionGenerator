@@ -130,7 +130,7 @@ export const clearInviteFromUrl = () => {
 
 /**
  * Sets up the current user as an initial admin.
- * Only works for whitelisted emails (sam.deiter@epicgames.com, samdeiter@gmail.com)
+ * Only works for whitelisted emails ([SUPER_ADMIN_EMAIL], [PERSONAL_EMAIL])
  *
  * @returns {Promise<{success: boolean, message: string, role: string}>}
  */

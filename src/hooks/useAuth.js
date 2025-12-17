@@ -20,8 +20,8 @@ import {
 
 // Fallback admin emails - these get auto-promoted to admin on first sign-in
 const FALLBACK_ADMIN_EMAILS = [
-  "sam.deiter@epicgames.com",
-  // samdeiter@gmail.com is a regular user (non-admin)
+  import.meta.env.VITE_SUPER_ADMIN_EMAIL,
+  // [personal email] is a regular user (non-admin)
 ];
 
 /**

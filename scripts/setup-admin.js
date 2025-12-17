@@ -17,7 +17,7 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // Admin emails to add
-const ADMIN_EMAILS = ["sam.deiter@epicgames.com"];
+const ADMIN_EMAILS = [process.env.SUPER_ADMIN_EMAIL || \"\"];
 
 async function setupAdmins() {
   console.log("🔧 Setting up admin users...\n");

@@ -1092,5 +1092,5 @@ When adding new dependencies:
 
 ---
 
-**For questions about licensing, contact:** sam.deiter@example.com  
+**For questions about licensing, contact:** admin@example.com  
 **Repository:** https://github.com/SamDeiter/UE5QuestionGenerator

@@ -967,8 +967,8 @@ exports.setupInitialAdmin = functions
 
     // Only allow specific emails to become initial admin
     const ALLOWED_INITIAL_ADMINS = [
-      "sam.deiter@epicgames.com",
-      // samdeiter@gmail.com removed - regular user (non-admin)
+      process.env.SUPER_ADMIN_EMAIL || \"\",
+      // [personal email] removed - regular user (non-admin)
     ];
 
     if (!ALLOWED_INITIAL_ADMINS.includes(userEmail.toLowerCase())) {

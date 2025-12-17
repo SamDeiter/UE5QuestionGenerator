@@ -36,7 +36,7 @@ const Header = ({
   user, // Add user prop for super admin check
 }) => {
   // Super Admin check
-  const isSuperAdmin = user?.email === "sam.deiter@epicgames.com";
+  const isSuperAdmin = user?.email === import.meta.env.VITE_SUPER_ADMIN_EMAIL;
   const connectionStatus = useConnectionStatus();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);

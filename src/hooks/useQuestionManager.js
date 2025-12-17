@@ -427,57 +427,68 @@ export const useQuestionManager = (config, showMessage) => {
   }, [config.difficulty, config.type, approvedCounts]);
 
   // Delete Handlers
-  const handleDelete = (id) => setDeleteConfirmId(id);
+  // Delete Handlers
+  const handleDelete = useCallback((id) => setDeleteConfirmId(id), []);
 
-  const confirmDelete = async (reason = "Unknown") => {
-    if (deleteConfirmId) {
-      // Find the question before deleting to log it
-      const questionToDelete =
-        allQuestionsMap.get(deleteConfirmId)?.[0] ||
-        questions.find((q) => q.id === deleteConfirmId) ||
-        historicalQuestions.find((q) => q.id === deleteConfirmId);
+  const confirmDelete = useCallback(
+    async (reason = "Unknown") => {
+      if (deleteConfirmId) {
+        // Find the question before deleting to log it
+        const questionToDelete =
+          allQuestionsMap.get(deleteConfirmId)?.[0] ||
+          questions.find((q) => q.id === deleteConfirmId) ||
+          historicalQuestions.find((q) => q.id === deleteConfirmId);
 
-      if (questionToDelete) {
-        logQuestion({
-          ...questionToDelete,
-          status: "deleted",
-          deletionReason: reason,
-          deletedAt: new Date().toISOString(),
-        });
+        if (questionToDelete) {
+          logQuestion({
+            ...questionToDelete,
+            status: "deleted",
+            deletionReason: reason,
+            deletedAt: new Date().toISOString(),
+          });
 
-        // Perform Hard Delete from Firestore
-        try {
-          await deleteQuestionFromFirestore(
-            questionToDelete.uniqueId || questionToDelete.id
-          );
-        } catch (err) {
-          console.error(
-            "Failed to delete from Firestore during confirmDelete:",
-            err
-          );
+          // Perform Hard Delete from Firestore
+          try {
+            await deleteQuestionFromFirestore(
+              questionToDelete.uniqueId || questionToDelete.id
+            );
+          } catch (err) {
+            // Safe to ignore re-renders here as it's an async error handling
+            console.error(
+              "Failed to delete from Firestore during confirmDelete:",
+              err
+            );
+          }
         }
+
+        console.log(`Deleting question ${deleteConfirmId}. Reason: ${reason}`);
+        setQuestions((prev) => prev.filter((q) => q.id !== deleteConfirmId));
+        setHistoricalQuestions((prev) =>
+          prev.filter((q) => q.id !== deleteConfirmId)
+        );
+        if (showMessage) showMessage(`Question deleted: ${reason}`, 2000);
+        setDeleteConfirmId(null);
       }
+    },
+    [
+      deleteConfirmId,
+      allQuestionsMap,
+      questions,
+      historicalQuestions,
+      showMessage,
+    ]
+  );
 
-      console.log(`Deleting question ${deleteConfirmId}. Reason: ${reason}`);
-      setQuestions((prev) => prev.filter((q) => q.id !== deleteConfirmId));
-      setHistoricalQuestions((prev) =>
-        prev.filter((q) => q.id !== deleteConfirmId)
-      );
-      if (showMessage) showMessage(`Question deleted: ${reason}`, 2000);
-      setDeleteConfirmId(null);
-    }
-  };
-
-  const handleDeleteAllQuestions = () => {
+  const handleDeleteAllQuestions = useCallback(() => {
     setShowClearModal(false);
     setQuestions([]);
     setHistoricalQuestions([]);
     if (showMessage) showMessage("Local session cleared.", 3000);
-  };
+  }, [showMessage]);
 
-  const checkAndStoreQuestions = async (newQuestions) => {
+  const checkAndStoreQuestions = useCallback(async (newQuestions) => {
     return newQuestions;
-  };
+  }, []);
 
   // PERFORMANCE: Load more questions
   const _loadMoreQuestions = useCallback(

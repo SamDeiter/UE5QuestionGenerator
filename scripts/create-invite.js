@@ -41,7 +41,7 @@ async function createInvite() {
   const inviteData = {
     code,
     createdBy: "system",
-    createdByEmail: "sam.deiter@epicgames.com",
+    createdByEmail: process.env.SUPER_ADMIN_EMAIL || \"\",
     createdAt: admin.firestore.Timestamp.now(),
     expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
     maxUses: -1, // Unlimited
