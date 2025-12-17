@@ -145,6 +145,8 @@ export const useTranslation = ({
           critique: tq.Critique || q.critique, // Use translated or original
           explanation: tq.Explanation || q.explanation, // Use translated or original
           critiqueScore: q.critiqueScore, // Preserve score
+          improvedScore: q.improvedScore, // Preserve improved score
+          suggestedRewrite: q.suggestedRewrite, // Preserve improvement suggestions
         };
 
         // Save translation to database
