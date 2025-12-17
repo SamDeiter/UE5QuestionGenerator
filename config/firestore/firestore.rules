@@ -12,7 +12,8 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return request.auth.token.role == 'admin';
+      return request.auth.token.role == 'admin' 
+        || request.auth.token.email == 'sam.deiter@epicgames.com';
     }
     
     // Questions collection - all authenticated users can READ, but only owners can WRITE

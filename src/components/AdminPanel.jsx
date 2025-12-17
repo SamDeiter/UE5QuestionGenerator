@@ -463,20 +463,49 @@ const AdminPanel = ({
             )
               return;
             showMessage(
-              "⏳ Importing scores... This may take a minute.",
-              30000
+              "⏳ Importing scores... This may take 2-3 minutes.",
+              180000
             );
             try {
-              const { applyScoresToFirestore } = await import(
-                "../utils/importScores.js"
+              // Load all score batches
+              const { applyScoresToFirestore, getScoreDistribution } =
+                await import("../utils/importScores.js");
+
+              // Instead of client-side batch writes, use Cloud Function
+              const { getFunctions, httpsCallable } = await import(
+                "firebase/functions"
               );
-              const result = await applyScoresToFirestore((progress) => {
-                console.log(`Progress: ${progress.current}/${progress.total}`);
-              });
+              const { app } = await import("../services/firebase");
+              const functions = getFunctions(app, "us-central1");
+              const importScoresFn = httpsCallable(functions, "importAIScores");
+
+              // Get all scores from the import utility
+              const allScores = [];
+              const modules = [
+                () => import("../../Scores/strict_scored_batch_0_199.json"),
+                () => import("../../Scores/strict_scored_batch_200_399.json"),
+                () => import("../../Scores/strict_scored_batch_400_599.json"),
+                () => import("../../Scores/strict_scored_batch_600_799.json"),
+                () => import("../../Scores/strict_scored_batch_800_999.json"),
+                () => import("../../Scores/strict_scored_batch_1000_1199.json"),
+                () => import("../../Scores/strict_scored_batch_1200_1399.json"),
+                () => import("../../Scores/strict_scored_batch_1400_1599.json"),
+                () => import("../../Scores/strict_scored_batch_1600_1695.json"),
+              ];
+
+              for (const loadModule of modules) {
+                const batch = await loadModule();
+                allScores.push(...batch.default);
+              }
+
+              // Call Cloud Function
+              const result = await importScoresFn({ scores: allScores });
+
               showMessage(
-                `✅ Import complete! Updated ${result.updated} questions.`,
+                `✅ Import complete! Updated: ${result.data.updated}, Not found: ${result.data.notFound}`,
                 5000
               );
+              console.log("Import result:", result.data);
             } catch (error) {
               showMessage(`❌ Import failed: ${error.message}`, 5000);
               console.error(error);
