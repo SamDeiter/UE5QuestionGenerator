@@ -58,19 +58,15 @@ const AdminPanel = ({
     setLoading(true);
     try {
       // TODO: Implement these Cloud Functions when needed
-      // For now, set empty arrays to avoid CORS errors
-      setUsers([]);
-      setInvites([]);
+      // Get all registered users
+      const listUsersFn = httpsCallable(functions, "listRegisteredUsers");
+      const usersResult = await listUsersFn({});
+      setUsers(usersResult.data.users || []);
 
-      // // Get all registered users
-      // const listUsersFn = httpsCallable(functions, "listRegisteredUsers");
-      // const usersResult = await listUsersFn({});
-      // setUsers(usersResult.data.users || []);
-
-      // // Get active invites
-      // const listInvitesFn = httpsCallable(functions, "listInvites");
-      // const invitesResult = await listInvitesFn({});
-      // setInvites(invitesResult.data.invites || []);
+      // Get active invites
+      const listInvitesFn = httpsCallable(functions, "listInvites");
+      const invitesResult = await listInvitesFn({});
+      setInvites(invitesResult.data.invites || []);
     } catch (error) {
       console.error("Failed to load admin data:", error);
       showMessage(`❌ Failed to load data: ${error.message}`, 5000);

@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import Icon from "./Icon";
 import QuizPreview from "./QuizPreview";
 import ScormExportModal from "./ScormExportModal";
+import { generateMockQuestions } from "../utils/mockQuestionGenerator";
 
 /**
  * TestView - Admin view for configuring, previewing, and exporting quizzes
@@ -31,11 +32,23 @@ const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState(new Set());
+  const [mockQuestions, setMockQuestions] = useState([]);
 
-  // Get only approved questions
+  const handleGenerateMockData = () => {
+    const mocks = generateMockQuestions();
+    setMockQuestions(mocks);
+  };
+
+  const handleClearMockData = () => {
+    setMockQuestions([]);
+    setSelectedQuestionIds(new Set());
+  };
+
+  // Get only approved questions (real + mock)
   const approvedQuestions = useMemo(() => {
-    return questions.filter((q) => q.status === "accepted");
-  }, [questions]);
+    const realApproved = questions.filter((q) => q.status === "accepted");
+    return [...realApproved, ...mockQuestions];
+  }, [questions, mockQuestions]);
 
   // Filter approved questions based on criteria
   const filteredQuestions = useMemo(() => {
@@ -51,10 +64,7 @@ const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
         const qType = (q.type || "").toLowerCase();
         const filterType = filters.type.toLowerCase();
         if (qType === "multiple choice" && filterType !== "mc") return false;
-        if (
-          (qType === "true/false" || qType === "t/f") &&
-          filterType !== "tf"
-        )
+        if ((qType === "true/false" || qType === "t/f") && filterType !== "tf")
           return false;
       }
       return true;
@@ -125,9 +135,30 @@ const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
           <Icon name="clipboard-list" size={28} />
           Test Configuration
         </h1>
-        <p className="text-slate-400 mt-2">
-          Configure and preview quizzes from approved questions
-        </p>
+        <div className="flex justify-between items-center mt-2">
+          <p className="text-slate-400">
+            Configure and preview quizzes from approved questions
+          </p>
+          <div className="flex gap-2">
+            {mockQuestions.length === 0 && (
+              <button
+                onClick={handleGenerateMockData}
+                className="text-xs text-indigo-400 hover:text-indigo-300 border border-indigo-900/50 bg-indigo-900/20 px-3 py-1 rounded flex items-center gap-1"
+              >
+                <Icon name="wand" size={12} />
+                Generate Mock Data
+              </button>
+            )}
+            {mockQuestions.length > 0 && (
+              <button
+                onClick={handleClearMockData}
+                className="text-xs text-red-400 hover:text-red-300 border border-red-900/50 bg-red-900/20 px-3 py-1 rounded"
+              >
+                Clear Mock Data ({mockQuestions.length})
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -394,6 +425,17 @@ const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
                     className="mx-auto mb-4 opacity-50"
                   />
                   <p>No approved questions match your filters</p>
+                  {filters.discipline === "" &&
+                    filters.difficulty === "" &&
+                    filters.type === "" && (
+                      <button
+                        onClick={handleGenerateMockData}
+                        className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-bold transition-all flex items-center gap-2 mx-auto"
+                      >
+                        <Icon name="wand" size={16} />
+                        Generate Mock Data
+                      </button>
+                    )}
                 </div>
               ) : (
                 <div className="divide-y divide-slate-700">

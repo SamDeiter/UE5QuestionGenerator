@@ -8,7 +8,7 @@ import CookieConsentBanner from "./CookieConsentBanner";
 import AgeGateModal from "./AgeGateModal";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import TutorialOverlay from "./TutorialOverlay";
-import SettingsModal from "./SettingsModal";
+
 import BulkExportModal from "./BulkExportModal";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 import DangerZoneModal from "./DangerZoneModal";
@@ -24,7 +24,6 @@ const GlobalModals = ({ visibility, state, handlers }) => {
     showNameModal,
     showClearModal,
     showBulkExportModal,
-    showSettings,
     showAnalytics,
     showDangerZone,
     showApiKeyModal,
@@ -53,11 +52,9 @@ const GlobalModals = ({ visibility, state, handlers }) => {
     confirmDelete,
     setDeleteConfirmId,
     onCloseBulkExport,
-    onCloseSettings,
     onCloseAnalytics,
     onCloseDangerZone,
     onCloseApiKey,
-    handleChange,
     handleSaveApiKey,
     setShowTerms,
     setTermsAccepted,
@@ -138,27 +135,6 @@ const GlobalModals = ({ visibility, state, handlers }) => {
             onClose={onCloseBulkExport}
             onExport={handleBulkExport}
             questionCount={allQuestionsMap?.size || 0}
-          />
-        )}
-
-        {showSettings && (
-          <SettingsModal
-            showSettings={showSettings}
-            setShowSettings={onCloseSettings}
-            config={config}
-            handleChange={handleChange}
-            showApiKey={visibility.showApiKey || false}
-            setShowApiKey={handlers.setShowApiKey || (() => {})}
-            files={handlers.files}
-            handleDetectTopics={handlers.handleDetectTopics}
-            isDetecting={handlers.isDetecting}
-            fileInputRef={handlers.fileInputRef}
-            handleFileChange={handlers.handleFileChange}
-            removeFile={handlers.removeFile}
-            isApiReady={state.isApiReady}
-            customTags={state.customTags}
-            onSaveCustomTags={handlers.onSaveCustomTags}
-            isAdmin={isAdmin}
           />
         )}
 

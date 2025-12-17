@@ -216,15 +216,39 @@ export const useExport = (
     try {
       // Use getAllQuestionsFromFirestore for shared database view (all authenticated users can see all questions)
       const data = await getAllQuestionsFromFirestore();
-      // Firestore data is already in the correct format, but we ensure essential fields
+
+      // PERFORMANCE: Load in chunks to prevent browser freeze
+      const CHUNK_SIZE = 100;
       const loadedQuestions = data.map((q, index) => ({
         ...q,
         id: q.id || Date.now() + index + Math.random(), // Ensure React key
         status: q.status || "pending", // CRITICAL: Preserve actual status
       }));
 
-      setDatabaseQuestions(loadedQuestions);
-      if (setHistoricalQuestions) setHistoricalQuestions(loadedQuestions);
+      // Clear state first
+      setDatabaseQuestions([]);
+      if (setHistoricalQuestions) setHistoricalQuestions([]);
+
+      // Load in chunks for better performance
+      for (let i = 0; i < loadedQuestions.length; i += CHUNK_SIZE) {
+        const chunk = loadedQuestions.slice(i, i + CHUNK_SIZE);
+
+        setDatabaseQuestions((prev) => [...prev, ...chunk]);
+        if (setHistoricalQuestions) {
+          setHistoricalQuestions((prev) => [...prev, ...chunk]);
+        }
+
+        // Show progress
+        if (!silent) {
+          const progress = Math.min(i + CHUNK_SIZE, loadedQuestions.length);
+          setStatus(
+            `Loading questions... ${progress}/${loadedQuestions.length}`
+          );
+        }
+
+        // Yield to browser between chunks
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
 
       // Don't auto-switch to database view - let user navigate manually
       // setAppMode("database"); // REMOVED - only switch when user clicks Database button

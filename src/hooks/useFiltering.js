@@ -98,7 +98,8 @@ export function useFiltering({
         appMode === "review" ? null : difficulty, // Review mode: ignore difficulty filter
         appMode === "review" ? null : type, // Review mode: ignore type filter
         language,
-        filterTags
+        filterTags,
+        filterScoreTier
       ),
     [
       questions,
@@ -113,6 +114,7 @@ export function useFiltering({
       type,
       language,
       filterTags,
+      filterScoreTier,
     ]
   );
 
@@ -165,6 +167,8 @@ export function useFiltering({
     setCurrentReviewIndex,
     sortBy,
     setSortBy,
+    filterScoreTier,
+    setFilterScoreTier,
 
     // Computed values
     contextFilteredQuestions,

@@ -1056,3 +1056,254 @@ exports.importAIScores = functions
       );
     }
   });
+
+// ============================================================================
+// USER MANAGEMENT - Admin Only Functions
+// ============================================================================
+
+/**
+ * Cloud Function: listRegisteredUsers
+ * Returns list of all registered users (ADMIN ONLY)
+ */
+exports.listRegisteredUsers = functions
+  .runWith({ timeoutSeconds: 30, memory: "256MB" })
+  .https.onCall(async (data, context) => {
+    // ADMIN CHECK
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Must be signed in"
+      );
+    }
+
+    const isAdmin = await isAdminUser(context.auth.uid);
+    if (!isAdmin) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Admin access required"
+      );
+    }
+
+    const db = admin.firestore();
+
+    try {
+      const usersSnapshot = await db
+        .collection("registeredUsers")
+        .orderBy("registeredAt", "desc")
+        .limit(100) // Safety limit
+        .get();
+
+      const users = usersSnapshot.docs.map((doc) => doc.data());
+
+      return { users };
+    } catch (error) {
+      console.error("Error listing users:", error);
+      throw new functions.https.HttpsError("internal", "Failed to list users");
+    }
+  });
+
+/**
+ * Cloud Function: listInvites
+ * Returns list of all invites (ADMIN ONLY)
+ */
+exports.listInvites = functions
+  .runWith({ timeoutSeconds: 30, memory: "256MB" })
+  .https.onCall(async (data, context) => {
+    // ADMIN CHECK
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Must be signed in"
+      );
+    }
+
+    const isAdmin = await isAdminUser(context.auth.uid);
+    if (!isAdmin) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Admin access required"
+      );
+    }
+
+    const db = admin.firestore();
+
+    try {
+      // Get active invites (simplified query to avoid composite index)
+      const invitesSnapshot = await db
+        .collection("invites")
+        .where("isActive", "==", true)
+        .limit(100)
+        .get();
+
+      // Sort in memory instead of using Firestore orderBy (avoids composite index)
+      const invites = invitesSnapshot.docs
+        .map((doc) => doc.data())
+        .sort((a, b) => {
+          const aTime = a.createdAt?.toMillis() || 0;
+          const bTime = b.createdAt?.toMillis() || 0;
+          return bTime - aTime; // Descending order (newest first)
+        });
+
+      return { invites };
+    } catch (error) {
+      console.error("Error listing invites:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to list invites"
+      );
+    }
+  });
+
+/**
+ * Cloud Function: changeUserRole
+ * Changes a user's role (ADMIN ONLY)
+ */
+exports.changeUserRole = functions
+  .runWith({ timeoutSeconds: 30, memory: "256MB" })
+  .https.onCall(async (data, context) => {
+    // ADMIN CHECK
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Must be signed in"
+      );
+    }
+
+    const isAdmin = await isAdminUser(context.auth.uid);
+    if (!isAdmin) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Admin access required"
+      );
+    }
+
+    const { userId, role } = data;
+    if (!userId || !role) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "User ID and Role are required"
+      );
+    }
+
+    if (!["user", "admin"].includes(role)) {
+      throw new functions.https.HttpsError("invalid-argument", "Invalid role");
+    }
+
+    // Prevent changing own role (safety check)
+    if (userId === context.auth.uid) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "Cannot change your own role"
+      );
+    }
+
+    const db = admin.firestore();
+
+    try {
+      // Update registeredUsers collection
+      await db.collection("registeredUsers").doc(userId).update({
+        role: role,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedBy: context.auth.uid,
+      });
+
+      // Update admins collection
+      if (role === "admin") {
+        await db.collection("admins").doc(userId).set(
+          {
+            email: "unknown", // We might need to fetch this if critical, but usually ID is enough
+            isAdmin: true,
+            promotedAt: admin.firestore.FieldValue.serverTimestamp(),
+            promotedBy: context.auth.uid,
+          },
+          { merge: true }
+        );
+      } else {
+        // Demote
+        await db.collection("admins").doc(userId).delete();
+      }
+
+      console.log(
+        `User ${userId} role changed to ${role} by ${context.auth.uid}`
+      );
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error changing user role:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to change user role"
+      );
+    }
+  });
+
+/**
+ * Cloud Function: revokeUserAccess
+ * Revokes a user's access (ADMIN ONLY)
+ */
+exports.revokeUserAccess = functions
+  .runWith({ timeoutSeconds: 30, memory: "256MB" })
+  .https.onCall(async (data, context) => {
+    // ADMIN CHECK
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Must be signed in"
+      );
+    }
+
+    const isAdmin = await isAdminUser(context.auth.uid);
+    if (!isAdmin) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Admin access required"
+      );
+    }
+
+    const { userId } = data;
+    if (!userId) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "User ID is required"
+      );
+    }
+
+    if (userId === context.auth.uid) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "Cannot revoke your own access"
+      );
+    }
+
+    const db = admin.firestore();
+
+    try {
+      // 1. Disable in Firebase Auth
+      await admin.auth().updateUser(userId, {
+        disabled: true,
+      });
+
+      // 2. Remove from admins if present
+      await db.collection("admins").doc(userId).delete();
+
+      // 3. Mark as revoked in registeredUsers
+      await db.collection("registeredUsers").doc(userId).update({
+        isRevoked: true,
+        revokedAt: admin.firestore.FieldValue.serverTimestamp(),
+        revokedBy: context.auth.uid,
+      });
+
+      // 4. Revoke refresh tokens
+      await admin.auth().revokeRefreshTokens(userId);
+
+      console.log(`User ${userId} access revoked by ${context.auth.uid}`);
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error revoking user access:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to revoke user access"
+      );
+    }
+  });
