@@ -27,13 +27,29 @@ __pycache__/
 
 # Logs
 *.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+firebase-debug.log*
 tools/deploy/logs/
 
+# User data and sensitive information (NEVER commit these!)
+*users*.json
+*emails*.json
+*emails*.csv
+*users*.csv
+user-data/
+user-exports/
+*.sqlite
+*.db
+*.sql
+
 # Temp development files (kept locally, not in git)
-temp_*.csv
-temp_*.txt
-temp_*.py
+temp_*.*
 test-output.txt
+*-test-data.*
+*-sample-data.*
 
 # Lint fixing scripts (temporary utilities)
 fix_*.py
@@ -42,6 +58,9 @@ lint_report.txt
 # Backups (kept locally for safety)
 tools/security_backups/
 tools/backups/
+backups/
+*.backup
+*.bak
 
 # IDE
 .vscode/
