@@ -765,26 +765,29 @@ export const useGeneration = (
 
         if (translatedQs.length > 0) {
           const tq = translatedQs[0];
-          const newQuestion = {
-            ...tq,
-            id: Date.now(),
-            uniqueId: q.uniqueId,
-            discipline: q.discipline,
-            type: q.type,
-            difficulty: q.difficulty,
+
+          // ✅ FIX: Preserve original card identity and metadata
+          // Update the existing question in place instead of creating a new one
+          const translatedVariant = {
+            ...q, // Start with ALL original properties
+            question: tq.question,
+            options: tq.options,
+            sourceExcerpt: tq.sourceExcerpt || q.sourceExcerpt,
             language: targetLang,
-            status: "pending", // CRITICAL: Force pending - ALL questions must be reviewed
-            dateAdded: new Date().toISOString(),
+            translatedAt: new Date().toISOString(),
+            translatedFrom: q.language || "English",
+            // DO NOT change: id, uniqueId, status, dateAdded, tags, critiqueScore,
+            // humanVerified, reviewCompletedAt, etc.
           };
 
-          await checkAndStoreQuestions([newQuestion]);
-          addQuestionsToState([newQuestion], false);
-          handleLanguageSwitch(targetLang);
+          // ✅ FIX: Update existing question, don't create new one
+          updateQuestionInState(q.id, translatedVariant);
+          await checkAndStoreQuestions([translatedVariant]); // Persist to Firebase
 
-          showMessage(
-            `Translated to ${targetLang} and saved.`,
-            TOAST_DURATION.MEDIUM
-          );
+          // ✅ FIX: Do NOT call handleLanguageSwitch - keep user on same card
+          // The global language filter should remain unchanged
+
+          showMessage(`✅ Translated to ${targetLang}`, TOAST_DURATION.MEDIUM);
         } else {
           throw new Error("Parser returned no questions from translation.");
         }
