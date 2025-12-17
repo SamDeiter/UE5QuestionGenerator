@@ -38,10 +38,19 @@ const QuestionItem = ({
 
   // Auto-open modal when critique data arrives (score, feedback, or improvements)
   useEffect(() => {
+    console.log("[QuestionItem DEBUG] useEffect triggered:", {
+      critiqueScore: q.critiqueScore,
+      suggestedRewrite: !!q.suggestedRewrite,
+      questionId: q.id,
+    });
     if (q.critiqueScore !== undefined && q.critiqueScore !== null) {
+      console.log(
+        "[QuestionItem DEBUG] Opening modal for score:",
+        q.critiqueScore
+      );
       setShowImprovementModal(true);
     }
-  }, [q.critiqueScore, q.suggestedRewrite]);
+  }, [q.critiqueScore, q.suggestedRewrite, q.id]);
 
   const getStatusStyle = (status) => {
     switch (status) {
