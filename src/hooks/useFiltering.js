@@ -132,7 +132,7 @@ export function useFiltering({
         (q) =>
           `${q.id}:${q.critiqueScore}:${q.status}:${q.humanVerified}:${
             q.suggestedRewrite ? "yes" : "no"
-          }`
+          }:${q.suggestedRewrite?.critiqueScore || 0}:${q.improvedScore || 0}`
       )
       .join("|");
     const prevHash = prevContextFilteredRef.current
@@ -140,7 +140,7 @@ export function useFiltering({
         (q) =>
           `${q.id}:${q.critiqueScore}:${q.status}:${q.humanVerified}:${
             q.suggestedRewrite ? "yes" : "no"
-          }`
+          }:${q.suggestedRewrite?.critiqueScore || 0}:${q.improvedScore || 0}`
       )
       .join("|");
 
