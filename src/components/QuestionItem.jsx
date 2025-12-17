@@ -36,8 +36,13 @@ const QuestionItem = ({
   const [editedText, setEditedText] = useState(q.question);
   const [showImprovementModal, setShowImprovementModal] = useState(false);
 
-  // Modal now only opens when user explicitly clicks to view critique
-  // (removed auto-open behavior to streamline acceptance workflow)
+  // Auto-open modal ONLY when there are improvements to apply
+  // (skips the modal for critique-only results with no improvements)
+  useEffect(() => {
+    if (q.suggestedRewrite && q.critiqueScore !== undefined) {
+      setShowImprovementModal(true);
+    }
+  }, [q.suggestedRewrite, q.critiqueScore]);
 
   const getStatusStyle = (status) => {
     switch (status) {
