@@ -24,6 +24,7 @@ export const useGeneration = (
   checkAndStoreQuestions,
   addQuestionsToState,
   updateQuestionInState,
+  updateAllVariantsInState,
   handleLanguageSwitch,
   showMessage,
   setStatus,
@@ -1092,7 +1093,8 @@ export const useGeneration = (
 
         if (score < PASSING_SCORE && newAttemptCount >= MAX_ATTEMPTS) {
           // Auto-reject after 3 failed attempts
-          updateQuestionInState(q.id, (item) => ({
+          // Update ALL language variants with critique data
+          const critiqueUpdate = (item) => ({
             ...item,
             critique: text,
             critiqueScore: score,
@@ -1103,14 +1105,25 @@ export const useGeneration = (
             status: "rejected",
             rejectionReason: "low_score_after_retries",
             rejectedAt: new Date().toISOString(),
-          }));
+          });
+
+          // Try to update all variants, fall back to single update
+          if (q.uniqueId) {
+            console.log(
+              `[Critique] Updating ALL variants for uniqueId: ${q.uniqueId}`
+            );
+            updateAllVariantsInState(q.uniqueId, critiqueUpdate);
+          } else {
+            updateQuestionInState(q.id, critiqueUpdate);
+          }
+
           showMessage(
             `⛔ Auto-rejected: Score ${score}/100 after ${newAttemptCount} attempts. Quality too low.`,
             TOAST_DURATION.EXTENDED
           );
         } else {
-          // Normal update
-          updateQuestionInState(q.id, (item) => ({
+          // Normal update - apply to ALL language variants
+          const critiqueUpdate = (item) => ({
             ...item,
             critique: text,
             critiqueScore: score,
@@ -1118,7 +1131,17 @@ export const useGeneration = (
             suggestedRewrite: updatedRewrite,
             rewriteChanges: changes,
             critiqueAttempts: newAttemptCount,
-          }));
+          });
+
+          // Try to update all variants, fall back to single update
+          if (q.uniqueId) {
+            console.log(
+              `[Critique] Updating ALL variants for uniqueId: ${q.uniqueId}`
+            );
+            updateAllVariantsInState(q.uniqueId, critiqueUpdate);
+          } else {
+            updateQuestionInState(q.id, critiqueUpdate);
+          }
 
           // Simple score notification - no verbose warnings
           showMessage(
