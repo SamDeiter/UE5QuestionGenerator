@@ -195,72 +195,52 @@ export const TUTORIAL_SCENARIOS = {
     ],
   },
 
-  // 4. Database Mode Tour - Enhanced to 6 steps
+  // 4. Database Mode Tour - Simplified to match actual features (4 steps)
   database: {
     id: "database",
     label: "Database Mode",
-    description: "Manage and organize your question bank effectively",
+    description: "View and manage your question bank",
     tags: ["intermediate", "database"],
     steps: [
       {
-        id: "db-grid",
-        title: "Step 1: Your Question Bank",
+        id: "db-overview",
+        title: "Step 1: Database Overview",
         content:
-          "This grid displays all approved questions. Each row shows question text, type (Multiple Choice/True-False), difficulty (Beginner/Intermediate/Expert), discipline, and AI score.",
+          "This view displays all questions from Firestore. You'll see question text, type (Multiple Choice/True-False), difficulty, discipline, and AI score for each question.",
         target: '[data-tour="database-grid"]',
         position: "center",
         scenarioId: "database",
         order: 0,
       },
       {
-        id: "search",
-        title: "Step 2: Search Questions",
+        id: "metrics",
+        title: "Step 2: Metrics Dashboard",
         content:
-          "Use the **Search** box to find questions by keyword. Search looks through question text, answer options, and tags for matches.",
-        target: '[data-tour="database-search"]',
-        position: "bottom",
+          "The **Metrics Dashboard** shows statistics about your question bank: total questions, breakdown by discipline, difficulty distribution, and average AI scores.",
+        target: null,
+        position: "center",
         scenarioId: "database",
         order: 1,
       },
       {
-        id: "filters",
-        title: "Step 3: Filter & Sort",
+        id: "view-details",
+        title: "Step 3: View Question Details",
         content:
-          "Filter by **Discipline** (e.g., Blueprints, C++), **Difficulty**, **Type**, or **AI Score Range**. Click column headers to sort by any field.",
-        target: '[data-tour="database-filters"]',
-        position: "bottom",
+          "Click any question card to expand and see full details including all answer options, explanation, tags, source URL, and creation date.",
+        target: '[data-tour="database-grid"]',
+        position: "center",
         scenarioId: "database",
         order: 2,
       },
       {
-        id: "details",
-        title: "Step 4: View & Edit Details",
+        id: "edit-kickback",
+        title: "Step 4: Edit or Kick Back to Review",
         content:
-          "Click any row to expand and see full details including all answer options, tags, source URL, and creation date. Click **Edit** to modify the question.",
+          "Use **Edit** to modify question details, or **Kick Back to Review** to send a question back to pending status for re-evaluation.",
         target: '[data-tour="database-grid"]',
         position: "center",
         scenarioId: "database",
         order: 3,
-      },
-      {
-        id: "bulk-actions",
-        title: "Step 5: Bulk Actions",
-        content:
-          "Select multiple questions using checkboxes, then use **Bulk Actions** to delete, export, or change status for all selected items at once.",
-        target: '[data-tour="bulk-actions"]',
-        position: "bottom",
-        scenarioId: "database",
-        order: 4,
-      },
-      {
-        id: "export",
-        title: "Step 6: Export Your Questions",
-        content:
-          "Click **Export** to download as **CSV** (spreadsheet), sync to **Google Sheets**, or export as **SCORM 1.2** package for your LMS (Moodle, Canvas, etc.).",
-        target: '[data-tour="export-menu"]',
-        position: "bottom",
-        scenarioId: "database",
-        order: 5,
       },
     ],
   },
