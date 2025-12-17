@@ -262,9 +262,26 @@ export const useQuestionManager = (config, showMessage) => {
 
         // Then update local state
         updateQuestionInState(id, () => updatedQ);
+
+        // Notify user of successful save for important status changes
+        if (
+          showMessage &&
+          (newStatus === "accepted" || newStatus === "rejected")
+        ) {
+          const statusLabel =
+            newStatus === "accepted" ? "accepted" : "rejected";
+          showMessage(`✓ Question ${statusLabel} and saved to cloud`, 2000);
+        }
       } catch (err) {
         console.error("Firestore sync failed:", err);
-        // Optionally show toast?
+        if (showMessage) {
+          showMessage(
+            `⚠️ Failed to save to cloud: ${err.message}. Question saved locally only.`,
+            5000
+          );
+        }
+        // Still update local state so user can continue working
+        updateQuestionInState(id, () => updatedQ);
       }
     },
     [
@@ -301,9 +318,23 @@ export const useQuestionManager = (config, showMessage) => {
         updateQuestionInState(id, () => updatedQ);
       } catch (err) {
         console.error("Firestore sync failed:", err);
+        if (showMessage) {
+          showMessage(
+            `⚠️ Failed to save changes to cloud: ${err.message}`,
+            4000
+          );
+        }
+        // Still update local state so user can continue working
+        updateQuestionInState(id, () => updatedQ);
       }
     },
-    [updateQuestionInState, allQuestionsMap, questions, historicalQuestions]
+    [
+      updateQuestionInState,
+      allQuestionsMap,
+      questions,
+      historicalQuestions,
+      showMessage,
+    ]
   );
 
   // Statistics - count both pending and accepted questions for generation target
