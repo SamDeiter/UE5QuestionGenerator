@@ -252,7 +252,8 @@ exports.generateCritique = functions
         
         MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this structure:
         {
-            "score": number, // 0-100 (Integer only) - Use the FULL range appropriately
+            "score": number, // 0-100 (Integer only) - Original question score
+            "improvedScore": number, // 0-100 (Integer only) - Score for your IMPROVED rewrite (should be higher)
             "critique": "string", // Detailed feedback with specific suggestions
             "rewrite": {
                 "question": "string", // Improved question text
@@ -261,6 +262,8 @@ exports.generateCritique = functions
             },
             "changes": "string" // Brief explanation of what was changed and why
         }
+        
+        IMPORTANT: Both "score" AND "improvedScore" are REQUIRED. The improvedScore should reflect the quality of your rewritten version.
 
         Question: ${question}
         Options: ${JSON.stringify(options)}
@@ -378,6 +381,7 @@ exports.generateCritique = functions
       return {
         success: true,
         score: result.score,
+        improvedScore: result.improvedScore || null,
         text: result.critique || result.text,
         rewrite: result.rewrite,
         changes: result.changes,

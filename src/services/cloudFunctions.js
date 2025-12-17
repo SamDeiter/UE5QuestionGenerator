@@ -93,6 +93,7 @@ export const generateCritiqueViaCloudFunction = async (
 
     return {
       score: result.data.score,
+      improvedScore: result.data.improvedScore || null,
       text: result.data.text,
       rewrite: result.data.rewrite,
       changes: result.data.changes,
