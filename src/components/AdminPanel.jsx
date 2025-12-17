@@ -430,6 +430,69 @@ const AdminPanel = ({
         </p>
       </div>
 
+      {/* AI Score Import */}
+      <div className="bg-slate-800 rounded-lg p-6 border border-yellow-500/30">
+        <h2 className="text-lg font-bold text-yellow-400 mb-4 flex items-center gap-2">
+          <Icon name="zap" size={18} />
+          AI Score Import
+        </h2>
+        <p className="text-xs text-slate-400 mb-4">
+          Import AI quality scores from strict scoring batch files (1,696
+          questions scored using the certification rubric).
+        </p>
+        <div className="bg-slate-700/50 p-3 rounded mb-3 text-xs space-y-1">
+          <div className="flex justify-between">
+            <span className="text-slate-400">Total Scored:</span>
+            <span className="text-white font-bold">1,696 questions</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">90-100 (Exceptional):</span>
+            <span className="text-green-400 font-bold">840 (49.5%)</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">70-79 (Good):</span>
+            <span className="text-yellow-400 font-bold">831 (49.0%)</span>
+          </div>
+        </div>
+        <button
+          onClick={async () => {
+            if (
+              !confirm(
+                "This will update 1,696 questions with AI scores. Continue?"
+              )
+            )
+              return;
+            showMessage(
+              "⏳ Importing scores... This may take a minute.",
+              30000
+            );
+            try {
+              const { applyScoresToFirestore } = await import(
+                "../utils/importScores.js"
+              );
+              const result = await applyScoresToFirestore((progress) => {
+                console.log(`Progress: ${progress.current}/${progress.total}`);
+              });
+              showMessage(
+                `✅ Import complete! Updated ${result.updated} questions.`,
+                5000
+              );
+            } catch (error) {
+              showMessage(`❌ Import failed: ${error.message}`, 5000);
+              console.error(error);
+            }
+          }}
+          className="w-full px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded font-bold transition-all flex items-center justify-center gap-2"
+        >
+          <Icon name="download" size={16} />
+          Import AI Scores to Database
+        </button>
+        <p className="text-[10px] text-slate-500 mt-2">
+          ⚠️ This is a one-time import. Scores will be permanently stored in
+          Firebase.
+        </p>
+      </div>
+
       {/* Environment Info */}
       <div className="bg-slate-800 rounded-lg p-6 border border-cyan-500/30">
         <h2 className="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2">
