@@ -280,7 +280,7 @@ exports.generateCritique = functions
       // Try each model in order until one works
       for (const fallbackModel of modelFallbacks) {
         try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent?key=${apiKey}`;
+          const url = `https://generativelanguage.googleapis.com/v1/models/${fallbackModel}:generateContent?key=${apiKey}`;
 
           response = await fetch(url, {
             method: "POST",
