@@ -195,7 +195,11 @@ export function useFiltering({
       // Tiebreaker: uniqueId (alphabetical) for stability
       return (a.uniqueId || "").localeCompare(b.uniqueId || "");
     });
-  }, [filteredQuestions, language, allQuestionsMap]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredQuestions, language]);
+  // NOTE: allQuestionsMap is intentionally NOT in dependencies
+  // It's only used for stable sorting and changes reference frequently
+  // Adding it would cause excessive recalculations and question jumping
 
   // ========================================================================
   // RETURN
