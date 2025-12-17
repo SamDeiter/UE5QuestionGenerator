@@ -12,7 +12,7 @@
  * - Computed filtered question lists
  * - LocalStorage persistence
  */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   createFilteredQuestions,
   createUniqueFilteredQuestions,
@@ -64,17 +64,31 @@ export function useFiltering({
     localStorage.setItem("ue5_pref_history", showHistory);
   }, [searchTerm, filterMode, showHistory]);
 
+  // DISABLED: Old reset logic that was causing questions to jump
+  // We now handle this more intelligently below
+  /*
   // Reset review index when filters change
+  // NOTE: discipline, difficulty, and language are intentionally excluded
+  // Changing these filters should maintain the current question position when possible
   useEffect(() => {
+    console.log(
+      "🔄 [useFiltering] Resetting review index to 0. Triggered by:",
+      {
+        appMode,
+        filterMode,
+        searchTerm,
+      }
+    );
     setCurrentReviewIndex(0);
   }, [
     appMode,
-    config.discipline,
-    config.difficulty,
-    config.language,
+    // config.discipline, // REMOVED: Don't reset index when discipline changes
+    // config.difficulty, // REMOVED: Don't reset index when difficulty changes
+    // config.language,   // REMOVED: Don't reset index when language changes
     filterMode,
     searchTerm,
   ]);
+  */
 
   // ========================================================================
   // COMPUTED VALUES - Filtered Questions
@@ -84,40 +98,59 @@ export function useFiltering({
   // when config object reference changes but values don't
   const { creatorName, discipline, difficulty, type, language } = config;
 
+  // STABILITY: Track previous contextFilteredQuestions to avoid unnecessary re-renders
+  const prevContextFilteredRef = useRef([]);
+
   // 1. First, get questions that match all filters EXCEPT status (for counts)
-  const contextFilteredQuestions = useMemo(
-    () =>
-      createFilteredQuestions(
-        questions,
-        historicalQuestions,
-        showHistory || appMode === "review" || appMode === "create", // Show history in Create & Review modes
-        "all", // Ignore status for this intermediate list
-        filterByCreator,
-        searchTerm,
-        creatorName,
-        discipline,
-        appMode === "review" ? null : difficulty, // Review mode: ignore difficulty filter
-        appMode === "review" ? null : type, // Review mode: ignore type filter
-        language,
-        filterTags,
-        filterScoreTier
-      ),
-    [
+  const contextFilteredQuestions = useMemo(() => {
+    const newResult = createFilteredQuestions(
       questions,
       historicalQuestions,
-      showHistory,
-      appMode,
+      showHistory || appMode === "review" || appMode === "create", // Show history in Create & Review modes
+      "all", // Ignore status for this intermediate list
       filterByCreator,
       searchTerm,
       creatorName,
       discipline,
-      difficulty,
-      type,
+      appMode === "review" ? null : difficulty, // Review mode: ignore difficulty filter
+      appMode === "review" ? null : type, // Review mode: ignore type filter
       language,
       filterTags,
-      filterScoreTier,
-    ]
-  );
+      filterScoreTier
+    );
+
+    // STABILITY: Only return new array if the question IDs actually changed
+    // This prevents infinite recalculation loops
+    const newIds = newResult.map((q) => q.id || q.uniqueId).join(",");
+    const prevIds = prevContextFilteredRef.current
+      .map((q) => q.id || q.uniqueId)
+      .join(",");
+
+    if (newIds === prevIds && prevContextFilteredRef.current.length > 0) {
+      console.log(
+        "🔒 [useFiltering] contextFilteredQuestions STABLE (same IDs)"
+      );
+      return prevContextFilteredRef.current;
+    }
+
+    console.log("🔄 [useFiltering] contextFilteredQuestions CHANGED (new IDs)");
+    prevContextFilteredRef.current = newResult;
+    return newResult;
+  }, [
+    questions,
+    historicalQuestions,
+    showHistory,
+    appMode,
+    filterByCreator,
+    searchTerm,
+    creatorName,
+    discipline,
+    difficulty,
+    type,
+    language,
+    filterTags,
+    filterScoreTier,
+  ]);
 
   // 2. Calculate counts based on the context
   const contextCounts = useMemo(() => {
@@ -136,6 +169,13 @@ export function useFiltering({
 
   // 3. Now apply the status filter for the actual view
   const filteredQuestions = useMemo(() => {
+    console.log(
+      "🔍 [useFiltering] filteredQuestions recalculating. Triggered by:",
+      {
+        contextFilteredQuestionsCount: contextFilteredQuestions.length,
+        filterMode,
+      }
+    );
     if (filterMode === "all") return contextFilteredQuestions;
     return contextFilteredQuestions.filter((q) => {
       if (filterMode === "pending") return !q.status || q.status === "pending";
@@ -199,6 +239,30 @@ export function useFiltering({
   }, [filteredQuestions, language]);
   // NOTE: allQuestionsMap is intentionally NOT in dependencies
   // It's only used for stable sorting and changes reference frequently
+
+  // Preserve current question position when filters change
+  useEffect(() => {
+    if (uniqueFilteredQuestions.length === 0) return;
+    
+    // Get the current question
+    const currentQ = uniqueFilteredQuestions[currentReviewIndex];
+    if (!currentQ) return;
+    
+    // Store the current uniqueId
+    const currentUniqueId = currentQ.uniqueId;
+    
+    // When discipline/difficulty/language changes, try to find the same question in the new list
+    if (currentUniqueId) {
+      const newIndex = uniqueFilteredQuestions.findIndex(q => q.uniqueId === currentUniqueId);
+      if (newIndex !== -1 && newIndex !== currentReviewIndex) {
+        console.log(`📍 [useFiltering] Preserving question position: ${currentUniqueId} moved from index ${currentReviewIndex} to ${newIndex}`);
+        setCurrentReviewIndex(newIndex);
+      }
+    }
+  }, [discipline, difficulty, language]); // Only run when these filters change
+   
+  // NOTE: uniqueFilteredQuestions and currentReviewIndex intentionally excluded to avoid loops
+
   // Adding it would cause excessive recalculations and question jumping
 
   // ========================================================================
