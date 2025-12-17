@@ -95,6 +95,11 @@ export const useCrashRecovery = (
     if (!recoveryData) return;
 
     setIsRecovering(true);
+
+    // Start time for minimum display duration
+    const startTime = Date.now();
+    const MIN_DISPLAY_MS = 1500; // Show progress for at least 1.5 seconds
+
     try {
       // Merge Firestore questions into local state
       const existingIds = new Set(localQuestions.map((q) => q.uniqueId));
@@ -144,6 +149,14 @@ export const useCrashRecovery = (
         } else {
           setTimeout(logInBackground, 100);
         }
+      }
+
+      // Ensure progress bar is visible for at least MIN_DISPLAY_MS
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_DISPLAY_MS) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, MIN_DISPLAY_MS - elapsed)
+        );
       }
 
       setShowRecoveryPrompt(false);
