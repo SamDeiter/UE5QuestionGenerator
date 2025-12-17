@@ -790,7 +790,7 @@ export const useGeneration = (
             };
 
             // Update the original in state and database
-            updateQuestionInState(q.id, updatedOriginal);
+            updateQuestionInState(q.id, () => updatedOriginal);
             await checkAndStoreQuestions([updatedOriginal]);
 
             // Use the updated question for translation
