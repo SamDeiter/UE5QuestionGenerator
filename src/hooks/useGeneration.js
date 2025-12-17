@@ -994,9 +994,45 @@ export const useGeneration = (
           }
         }
 
-        // Update rewrite object to include suggested tags
+        // Build standardized suggestedRewrite object matching type definition
+        // @see src/types/question.js - SuggestedRewrite typedef
         const updatedRewrite = rewrite
-          ? { ...rewrite, tags: suggestedTags }
+          ? {
+              // Improved question text
+              question: rewrite.question || q.question,
+
+              // Improved answer options
+              options: {
+                A: rewrite.optionA || q.options?.A || "",
+                B: rewrite.optionB || q.options?.B || "",
+                C: rewrite.optionC || q.options?.C || "",
+                D: rewrite.optionD || q.options?.D || "",
+              },
+
+              // Correct answer letter
+              correct: rewrite.correctLetter || q.correct || "A",
+
+              // List of improvements made
+              improvements: Array.isArray(changes)
+                ? changes
+                : changes
+                ? [changes]
+                : [],
+
+              // Estimated score after improvements
+              critiqueScore: improvedScore || score,
+
+              // Critique reasoning
+              critiqueText: text,
+
+              // Updated tags (includes generated tags if < 3)
+              tags: suggestedTags,
+
+              // Explanation of why changes were made
+              changesExplanation:
+                rewrite.explanation ||
+                "AI-suggested improvements to enhance question quality",
+            }
           : null;
 
         // Track critique attempts
