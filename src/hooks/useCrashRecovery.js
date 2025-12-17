@@ -22,6 +22,19 @@ export const useCrashRecovery = (
   useEffect(() => {
     const checkForCrash = async () => {
       try {
+        // Skip if user already dismissed or recovered this session
+        const alreadyHandled = sessionStorage.getItem("ue5_recovery_handled");
+        const permanentlyDismissed = localStorage.getItem(
+          "ue5_recovery_dismissed"
+        );
+
+        if (alreadyHandled === "true" || permanentlyDismissed === "true") {
+          console.log(
+            "🔇 Skipping recovery check (already handled this session)"
+          );
+          return;
+        }
+
         // Get session info
         const lastSessionCount = parseInt(
           localStorage.getItem("ue5_last_session_count") || "0"
@@ -49,7 +62,13 @@ export const useCrashRecovery = (
               questions: firestoreQuestions,
             });
             setShowRecoveryPrompt(true);
+          } else {
+            // No recovery needed, mark as handled
+            sessionStorage.setItem("ue5_recovery_handled", "true");
           }
+        } else {
+          // No recovery needed, mark as handled
+          sessionStorage.setItem("ue5_recovery_handled", "true");
         }
 
         // Mark session as active
@@ -158,6 +177,8 @@ export const useCrashRecovery = (
           setTimeout(resolve, MIN_DISPLAY_MS - elapsed)
         );
       }
+      // Mark as handled for this session
+      sessionStorage.setItem("ue5_recovery_handled", "true");
 
       setShowRecoveryPrompt(false);
       setRecoveryData(null);
@@ -176,6 +197,7 @@ export const useCrashRecovery = (
     setShowRecoveryPrompt(false);
     setRecoveryData(null);
     // Mark that user dismissed, don't prompt again this session
+    sessionStorage.setItem("ue5_recovery_handled", "true");
     localStorage.setItem("ue5_recovery_dismissed", "true");
   }, []);
 
