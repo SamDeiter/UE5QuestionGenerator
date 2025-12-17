@@ -241,6 +241,24 @@ let _questionsCacheTimestamp = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
+ * Helper to recursively remove undefined values from an object
+ * Firestore doesn't accept undefined values
+ */
+const removeUndefined = (obj) => {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(removeUndefined);
+
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = removeUndefined(value);
+    }
+  }
+  return cleaned;
+};
+
+/**
  * Internal save function (used by queue processor)
  */
 const saveQuestionToFirestoreInternal = async (question) => {
@@ -253,10 +271,11 @@ const saveQuestionToFirestoreInternal = async (question) => {
   const docRef = doc(db, "questions", question.uniqueId);
 
   // Add a timestamp for when it was saved/updated in Firestore
-  const payload = {
+  // Remove any undefined values that Firestore rejects
+  const payload = removeUndefined({
     ...question,
     firestoreUpdatedAt: Timestamp.now(),
-  };
+  });
 
   // Add creatorId if user is signed in
   if (auth.currentUser) {
