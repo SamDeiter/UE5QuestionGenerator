@@ -36,13 +36,12 @@ const QuestionItem = ({
   const [editedText, setEditedText] = useState(q.question);
   const [showImprovementModal, setShowImprovementModal] = useState(false);
 
-  // Auto-open modal ONLY when there are improvements to apply
-  // (skips the modal for critique-only results with no improvements)
+  // Auto-open modal when critique data arrives (score, feedback, or improvements)
   useEffect(() => {
-    if (q.suggestedRewrite && q.critiqueScore !== undefined) {
+    if (q.critiqueScore !== undefined && q.critiqueScore !== null) {
       setShowImprovementModal(true);
     }
-  }, [q.suggestedRewrite, q.critiqueScore]);
+  }, [q.critiqueScore, q.suggestedRewrite]);
 
   const getStatusStyle = (status) => {
     switch (status) {
