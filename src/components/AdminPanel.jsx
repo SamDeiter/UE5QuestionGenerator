@@ -823,6 +823,48 @@ const AdminPanel = ({
               </p>
 
               <div className="space-y-3">
+                {/* Translation Migration Button */}
+                <button
+                  onClick={async () => {
+                    if (
+                      !confirm(
+                        "🔗 Link Existing Translations?\n\nThis will:\n1. Find all translated questions (Chinese, Japanese, Korean, etc.)\n2. Match them with their English originals\n3. Ensure both share the same uniqueId\n4. Enable language switching\n\nThis is SAFE and won't delete any data.\n\nProceed?"
+                      )
+                    )
+                      return;
+
+                    try {
+                      showMessage(
+                        "🔄 Starting translation migration...",
+                        10000
+                      );
+
+                      // Import the migration function
+                      const { migrateTranslations } = await import(
+                        "../utils/migrateTranslations.js"
+                      );
+
+                      // Run migration
+                      await migrateTranslations();
+
+                      showMessage(
+                        "✅ Translation migration complete! Refresh the page to see results.",
+                        5000
+                      );
+                    } catch (error) {
+                      showMessage(
+                        `❌ Migration failed: ${error.message}`,
+                        5000
+                      );
+                      console.error(error);
+                    }
+                  }}
+                  className="w-full px-4 py-3 bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-blue-700/50"
+                >
+                  <Icon name="link" size={16} />
+                  Link Existing Translations (Enable Language Switching)
+                </button>
+
                 <button
                   onClick={async () => {
                     if (
