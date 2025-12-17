@@ -1143,15 +1143,11 @@ exports.listRegisteredUsers = functions
     try {
       const usersSnapshot = await db
         .collection("registeredUsers")
-        .where("isRevoked", "!=", true) // Filter out revoked users
-        .orderBy("isRevoked") // Required for != query
         .orderBy("registeredAt", "desc")
         .limit(100) // Safety limit
         .get();
 
-      const users = usersSnapshot.docs
-        .map((doc) => doc.data())
-        .filter((user) => !user.isRevoked); // Extra safety filter
+      const users = usersSnapshot.docs.map((doc) => doc.data());
 
       return { users };
     } catch (error) {
@@ -1344,17 +1340,15 @@ exports.revokeUserAccess = functions
       // 2. Remove from admins if present
       await db.collection("admins").doc(userId).delete();
 
-      // 3. Mark as revoked in registeredUsers
-      await db.collection("registeredUsers").doc(userId).update({
-        isRevoked: true,
-        revokedAt: admin.firestore.FieldValue.serverTimestamp(),
-        revokedBy: context.auth.uid,
-      });
+      // 3. DELETE from registeredUsers (permanently remove)
+      await db.collection("registeredUsers").doc(userId).delete();
 
       // 4. Revoke refresh tokens
       await admin.auth().revokeRefreshTokens(userId);
 
-      console.log(`User ${userId} access revoked by ${context.auth.uid}`);
+      console.log(
+        `User ${userId} access revoked and deleted by ${context.auth.uid}`
+      );
 
       return { success: true };
     } catch (error) {
