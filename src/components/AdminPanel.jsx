@@ -326,8 +326,7 @@ const AdminPanel = ({
             <label className="block text-xs text-slate-400 mb-1">
               Max Uses
             </label>
-            <input
-              type="number"
+            <select
               value={newInviteSettings.maxUses}
               onChange={(e) =>
                 setNewInviteSettings({
@@ -336,16 +335,19 @@ const AdminPanel = ({
                 })
               }
               className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
-              min="1"
-            />
+            >
+              <option value="1">1 use (Single invite)</option>
+              <option value="5">5 uses (Small team)</option>
+              <option value="10">10 uses (Team invite)</option>
+              <option value="-1">Unlimited (Public link)</option>
+            </select>
           </div>
 
           <div>
             <label className="block text-xs text-slate-400 mb-1">
-              Expires In (Days)
+              Expires In
             </label>
-            <input
-              type="number"
+            <select
               value={newInviteSettings.expiresInDays}
               onChange={(e) =>
                 setNewInviteSettings({
@@ -354,9 +356,12 @@ const AdminPanel = ({
                 })
               }
               className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
-              min="1"
-              max="30"
-            />
+            >
+              <option value="1">1 day (Urgent)</option>
+              <option value="7">7 days (Standard)</option>
+              <option value="14">14 days (Extended)</option>
+              <option value="30">30 days (Maximum)</option>
+            </select>
           </div>
 
           <div>
