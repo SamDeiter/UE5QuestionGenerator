@@ -1317,6 +1317,8 @@ export const useGeneration = (
         critique: null,
         critiqueScore: null,
         humanVerified: false, // Reset - human must verify
+        status: "pending", // Force re-verification
+        rejectionReason: null, // Clear previous rejection/acceptance metadata
       };
 
       // Update state

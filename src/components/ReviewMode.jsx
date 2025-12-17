@@ -46,6 +46,35 @@ const ReviewMode = ({
     }
   }, [questions, currentIndex, setCurrentIndex]);
 
+  // Create a wrapper that handles navigation after language switch
+  // This finds the translated variant by uniqueId and navigates to its index
+  const handleLanguageSwitchWithNavigation = React.useCallback(
+    (targetLang, uniqueId) => {
+      console.log("🔄 [ReviewMode] Language switch with navigation:", {
+        targetLang,
+        uniqueId,
+      });
+
+      // First, call the global language switch to re-filter questions
+      onSwitchLanguage(targetLang, uniqueId);
+
+      // Schedule navigation after the re-render with new language filter
+      // We use setTimeout to ensure the questions array is updated
+      if (uniqueId) {
+        setTimeout(() => {
+          // Find the question with this uniqueId in the new filtered list
+          // Note: questions prop will be updated after re-render, so we need to query the DOM or use a ref
+          // For now, we'll trust the filter and just stay at the same position
+          // The parent needs to handle the navigation after filter update
+          console.log(
+            "🔄 [ReviewMode] Navigation scheduled - parent should handle index update via pendingNavigationUniqueId"
+          );
+        }, 100);
+      }
+    },
+    [onSwitchLanguage]
+  );
+
   if (!questions || questions.length === 0) return null;
 
   const currentQuestion = questions[currentIndex];
@@ -109,7 +138,7 @@ const ReviewMode = ({
           onCritique={onCritique}
           onApplyRewrite={onApplyRewrite}
           onTranslateSingle={onTranslateSingle}
-          onSwitchLanguage={onSwitchLanguage}
+          onSwitchLanguage={handleLanguageSwitchWithNavigation}
           onDelete={onDelete}
           onUpdateQuestion={onUpdateQuestion}
           availableLanguages={translationMap.get(currentQuestion.uniqueId)}

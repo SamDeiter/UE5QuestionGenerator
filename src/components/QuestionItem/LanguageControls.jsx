@@ -68,6 +68,7 @@ const LanguageControls = ({
             questionLanguage: q.language,
             hasSourceUrl: !!q.sourceUrl,
             invalidUrl: q.invalidUrl,
+            questionUniqueId: q.uniqueId,
           });
 
           if (isCurrent) {
@@ -81,7 +82,8 @@ const LanguageControls = ({
             console.log(
               "🔄 [LanguageControls] Switching to existing translation"
             );
-            onSwitchLanguage(lang);
+            // Pass both language AND uniqueId so parent can find the translated variant
+            onSwitchLanguage(lang, q.uniqueId);
           } else if (canTranslate) {
             console.log("🌐 [LanguageControls] Generating new translation");
             setLoadingLang(lang);

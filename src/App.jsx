@@ -121,6 +121,8 @@ const App = () => {
     handleChange,
     handleNameSave,
     handleLanguageSwitch,
+    pendingNavigationUniqueId,
+    setPendingNavigationUniqueId,
   } = useAppConfig();
 
   // 2. Question Data Management
@@ -215,7 +217,36 @@ const App = () => {
     historicalQuestions: [], // We are using the unified list as source of truth
     config,
     appMode,
+    allQuestionsMap,
   });
+
+  // Language switch navigation: navigate to the correct question after language filter changes
+  useEffect(() => {
+    if (pendingNavigationUniqueId && uniqueFilteredQuestions.length > 0) {
+      // Find the index of the question with this uniqueId
+      const targetIndex = uniqueFilteredQuestions.findIndex(
+        (q) => q.uniqueId === pendingNavigationUniqueId
+      );
+
+      console.log("🔄 [App] Navigating after language switch:", {
+        pendingNavigationUniqueId,
+        targetIndex,
+        totalQuestions: uniqueFilteredQuestions.length,
+      });
+
+      if (targetIndex >= 0) {
+        setCurrentReviewIndex(targetIndex);
+      }
+
+      // Clear the pending navigation
+      setPendingNavigationUniqueId(null);
+    }
+  }, [
+    pendingNavigationUniqueId,
+    uniqueFilteredQuestions,
+    setCurrentReviewIndex,
+    setPendingNavigationUniqueId,
+  ]);
 
   // 6. Generation & Translation Logic
   const {

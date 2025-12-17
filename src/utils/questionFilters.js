@@ -117,59 +117,52 @@ export const createFilteredQuestions = (
  */
 export const createUniqueFilteredQuestions = (
   filteredQuestions,
-  language = "English"
+  language = "English",
+  allQuestionsMap = null
 ) => {
   // Group by uniqueId
-  const grouped = new Map();
+  // If allQuestionsMap is provided, use it to access ALL variants for the filtered questions
+  // This ensures that even if a variant was filtered out (e.g. English version in history),
+  // we can still switch to it if the user requests it.
+
+  const uniqueQuestions = [];
+  const processedIds = new Set();
+
   filteredQuestions.forEach((q) => {
     const id = q.uniqueId;
-    if (!grouped.has(id)) grouped.set(id, []);
-    grouped.get(id).push(q);
-  });
 
-  // Select one variant per group (prefer current language, then English, then first available)
-  const uniqueQuestions = [];
-  let debugCount = 0;
-  grouped.forEach((variants, uniqueId) => {
-    let selected = null;
+    // Skip if we already processed this uniqueId group
+    if (processedIds.has(id)) return;
+    processedIds.add(id);
 
-    // Debug first question only
-    if (debugCount === 0) {
-      console.log(
-        "🔍 [createUniqueFilteredQuestions] First question variants:",
-        {
-          uniqueId,
-          requestedLanguage: language,
-          variantCount: variants.length,
-          variantLanguages: variants.map((v) => v.language || "English"),
-        }
-      );
+    // Get all variants: either from map (preferred) or just from the filtered list
+    let variants = [];
+    if (allQuestionsMap && allQuestionsMap.has(id)) {
+      variants = allQuestionsMap.get(id);
+    } else {
+      // Fallback: finding matching uniqueIds in the filtered list itself
+      // (Less robust if variants were filtered out)
+      variants = filteredQuestions.filter((fq) => fq.uniqueId === id);
     }
 
-    // Try to find variant in selected language
+    let selected = null;
+
+    // 1. Try to find exact language match
     selected = variants.find((v) => (v.language || "English") === language);
 
-    // Fall back to English if selected language not found
+    // 2. Fall back to English
     if (!selected) {
       selected = variants.find((v) => (v.language || "English") === "English");
     }
 
-    // Fall back to first variant if neither selected language nor English found
-    if (!selected) {
+    // 3. Last resort: First available variant
+    if (!selected && variants.length > 0) {
       selected = variants[0];
-    }
-
-    if (debugCount === 0) {
-      console.log("🎯 [createUniqueFilteredQuestions] Selected variant:", {
-        selectedLanguage: selected?.language || "English",
-        questionText: selected?.question?.substring(0, 50) + "...",
-      });
     }
 
     if (selected) {
       uniqueQuestions.push(selected);
     }
-    debugCount++;
   });
 
   return uniqueQuestions;

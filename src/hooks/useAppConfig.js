@@ -106,11 +106,21 @@ export const useAppConfig = () => {
   }, [config]);
 
   // Handlers
-  const handleLanguageSwitch = (lang) => {
+  // pendingNavigationUniqueId tracks the uniqueId to navigate to after language switch
+  const [pendingNavigationUniqueId, setPendingNavigationUniqueId] =
+    useState(null);
+
+  const handleLanguageSwitch = (lang, uniqueId = null) => {
     console.log(
       "🌍 [handleLanguageSwitch] Switching global language filter to:",
-      lang
+      lang,
+      "| Navigate to uniqueId:",
+      uniqueId
     );
+    // Store the uniqueId for navigation after re-filter
+    if (uniqueId) {
+      setPendingNavigationUniqueId(uniqueId);
+    }
     setConfig((prev) => ({ ...prev, language: lang }));
   };
 
@@ -162,5 +172,7 @@ export const useAppConfig = () => {
     handleChange,
     handleNameSave,
     handleLanguageSwitch,
+    pendingNavigationUniqueId,
+    setPendingNavigationUniqueId,
   };
 };

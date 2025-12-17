@@ -33,6 +33,7 @@ export function useFiltering({
   historicalQuestions,
   config,
   appMode,
+  allQuestionsMap,
 }) {
   // ========================================================================
   // STATE - Filter & Search
@@ -142,17 +143,53 @@ export function useFiltering({
     });
   }, [contextFilteredQuestions, filterMode]);
 
-  // 4. Get unique questions for the current language
+  // 4. Get unique questions for the current language, sorted consistently
   const uniqueFilteredQuestions = useMemo(() => {
-    const result = createUniqueFilteredQuestions(filteredQuestions, language);
+    // A. Group and Select Variants
+    const result = createUniqueFilteredQuestions(
+      filteredQuestions,
+      language,
+      allQuestionsMap
+    );
+
+    // B. Log selection
     console.log("🔍 [useFiltering] uniqueFilteredQuestions updated:", {
       language,
       count: result.length,
       firstQuestionLanguage: result[0]?.language,
       firstQuestionText: result[0]?.question?.substring(0, 50) + "...",
     });
-    return result;
-  }, [filteredQuestions, language]);
+
+    // C. Apply Stable Sort (Canonical Date = Earliest creation time of any variant in the group)
+    // This ensures that translating a question (creating a newer variant)
+    // does not cause the question card to jump to the top of the list.
+    const getCanonicalDate = (q) => {
+      if (!allQuestionsMap || !allQuestionsMap.has(q.uniqueId)) {
+        // Fallback if map missing
+        return q.created || q.dateAdded || 0;
+      }
+      const variants = allQuestionsMap.get(q.uniqueId);
+      // Find the earliest date among all variants to anchor the group's position
+      return Math.min(
+        ...variants.map((v) =>
+          new Date(v.created || v.dateAdded || Date.now()).getTime()
+        )
+      );
+    };
+
+    // Pre-calculate dates to avoid finding variants during sort
+    const dateMap = new Map();
+    result.forEach((q) => dateMap.set(q.uniqueId, getCanonicalDate(q)));
+
+    // Sort: Newest Original First (Standard Blog/Feed sort)
+    // If you prefer Oldest First, swap a and b.
+    // unifiedQuestions previously used Newest First.
+    return result.sort((a, b) => {
+      const dateA = dateMap.get(a.uniqueId);
+      const dateB = dateMap.get(b.uniqueId);
+      return dateB - dateA;
+    });
+  }, [filteredQuestions, language, allQuestionsMap]);
 
   // ========================================================================
   // RETURN

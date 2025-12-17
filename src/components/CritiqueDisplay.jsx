@@ -201,21 +201,6 @@ const CritiqueDisplay = ({
           AI Critique
         </div>
         <div className="flex items-center gap-3">
-          {score !== null && (
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1 ${
-                score >= QUALITY_THRESHOLDS.EXCELLENT
-                  ? "bg-green-900/50 border-green-500 text-green-200"
-                  : score >= QUALITY_THRESHOLDS.PASS
-                  ? "bg-yellow-900/50 border-yellow-500 text-yellow-200"
-                  : score >= QUALITY_THRESHOLDS.MEDIOCRE
-                  ? "bg-orange-900/50 border-orange-500 text-orange-200"
-                  : "bg-red-900/50 border-red-500 text-red-200"
-              }`}
-            >
-              <span className="text-sm font-bold">SCORE: {score}/100</span>
-            </span>
-          )}
           {onRewrite && !suggestedRewrite && (
             <button
               onClick={onRewrite}

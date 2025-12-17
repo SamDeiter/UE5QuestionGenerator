@@ -62,26 +62,6 @@ const QuestionHeader = ({
             </span>
           )}
 
-          {/* AI Critique Score Badge - Clickable to view details */}
-          {q.critiqueScore !== undefined && q.critiqueScore !== null && (
-            <button
-              onClick={() => onOpenCritiqueModal?.()}
-              className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105 ${
-                q.critiqueScore >= 80
-                  ? "bg-green-900/50 text-green-400 border border-green-700/50 hover:bg-green-800/60"
-                  : q.critiqueScore >= 60
-                  ? "bg-yellow-900/50 text-yellow-400 border border-yellow-700/50 hover:bg-yellow-800/60"
-                  : q.critiqueScore >= 40
-                  ? "bg-orange-900/50 text-orange-400 border border-orange-700/50 hover:bg-orange-800/60"
-                  : "bg-red-900/50 text-red-400 border border-red-700/50 hover:bg-red-800/60"
-              }`}
-              title={`AI Critique Score: ${q.critiqueScore}/100 - Click to view details`}
-            >
-              <Icon name="brain" size={12} />
-              {q.critiqueScore}
-            </button>
-          )}
-
           {/* AI Improvement Badge - Shows when improvements are available */}
           {q.suggestedRewrite && (
             <button
