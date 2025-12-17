@@ -22,6 +22,7 @@ vi.mock("../../services/firebase", () => ({
   auth: { currentUser: null },
   db: {},
   analytics: {},
+  app: {},
 }));
 
 // Mock Firebase SDKs to allow service logic to run without initialization errors

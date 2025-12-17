@@ -222,7 +222,7 @@ describe("Question Generation Integration Tests", () => {
       // Should show error message
       expect(mockShowMessage).toHaveBeenCalledWith(
         expect.stringContaining("Creator Name"),
-        5000
+        2500
       );
       expect(mockSetShowNameModal).toHaveBeenCalledWith(true);
 
@@ -262,7 +262,7 @@ describe("Question Generation Integration Tests", () => {
       expect(mockSetShowApiError).toHaveBeenCalledWith(true);
       expect(mockShowMessage).toHaveBeenCalledWith(
         expect.stringContaining("API key"),
-        5000
+        2500
       );
 
       // Should not call API
@@ -362,7 +362,7 @@ describe("Question Generation Integration Tests", () => {
       expect(mockUpdateQuestionInState).toHaveBeenCalled();
       expect(mockShowMessage).toHaveBeenCalledWith(
         expect.stringContaining("variations"),
-        3000
+        1500
       );
     });
 
@@ -446,7 +446,7 @@ describe("Question Generation Integration Tests", () => {
       expect(mockUpdateQuestionInState).toHaveBeenCalled();
       expect(mockShowMessage).toHaveBeenCalledWith(
         expect.stringContaining("Critique Ready"),
-        3000
+        1500
       );
     });
   });

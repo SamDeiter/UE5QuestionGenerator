@@ -145,6 +145,22 @@ const LandingPage = ({
             View generation metrics, quality trends, and URL validation stats.
           </p>
         </button>
+
+        {/* Admin Panel - Only shown to admins */}
+        {isAdmin && (
+          <button
+            onClick={() => onSelectMode("admin")}
+            className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-purple-900/20"
+          >
+            <div className="p-3 bg-purple-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
+              <Icon name="shield" size={32} className="text-purple-500" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Admin Panel</h3>
+            <p className="text-xs text-slate-400 text-center">
+              Manage users, invites, system settings, and API configuration.
+            </p>
+          </button>
+        )}
       </div>
 
       <div className="flex items-center justify-center gap-6 text-xs text-slate-500 font-mono pt-8">

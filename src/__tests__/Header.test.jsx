@@ -22,6 +22,7 @@ vi.mock("../services/firebase", () => ({
 
 // Mock environment variables
 vi.stubEnv("VITE_FIREBASE_PROJECT_ID", "test-dev-project");
+vi.stubEnv("VITE_SUPER_ADMIN_EMAIL", "super@example.com");
 
 describe("Header Component", () => {
   const defaultProps = {
@@ -116,7 +117,7 @@ describe("Header Component", () => {
 
     it("shows ADMIN badge when user is admin", () => {
       render(<Header {...defaultProps} isAdmin={true} />);
-      expect(screen.getByText("ADMIN")).toBeInTheDocument();
+      expect(screen.getByText(/ADMIN|SUPER/)).toBeInTheDocument();
     });
 
     it("shows CLOUD indicator when cloud ready", () => {

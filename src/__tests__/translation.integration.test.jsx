@@ -7,7 +7,7 @@
 
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import useGeneration from "../hooks/useGeneration";
+import { useGeneration } from "../hooks/useGeneration";
 import * as geminiMock from "./mocks/gemini.mock";
 
 // Mock the gemini service to use our manual mock
@@ -130,9 +130,8 @@ describe("Translation Integration Tests", () => {
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
-          vi.fn(), // setIsProcessing
-          vi.fn(), // setProgress
-          vi.fn(), // setTranslationProgress
+          vi.fn(), // setShowNameModal
+          vi.fn(), // setShowApiError
           vi.fn(), // setShowHistory
           translationMap,
           allQuestionsMap
