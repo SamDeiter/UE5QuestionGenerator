@@ -14,12 +14,10 @@ const LanguageControls = ({
   const [_translateMenuOpen, setTranslateMenuOpen] = useState(false);
   const translateMenuRef = useRef(null);
 
-  // Only show translation controls for accepted English questions with valid sources
+  // Translation requirements: Must have valid source URL
+  // Removed status === 'accepted' requirement - pending questions should be translatable too
   const canTranslate =
-    q.status === "accepted" &&
-    (q.language || "English") === "English" &&
-    q.sourceUrl &&
-    !q.invalidUrl;
+    (q.language || "English") === "English" && q.sourceUrl && !q.invalidUrl;
 
   // Close translate menu on click outside
   useEffect(() => {
@@ -49,11 +47,10 @@ const LanguageControls = ({
         const langCode =
           LANGUAGE_CODES[lang] || lang.substring(0, 2).toUpperCase();
 
-        // Check if translation exists
-        // English always "exists" if we are viewing it or if it's the source
+        // Check if translation exists for THIS specific language
+        // ✅ FIX: Don't assume English always exists - check if it's actually the current language
         const exists =
-          (availableLanguages && availableLanguages.has(lang)) ||
-          lang === "English";
+          isCurrent || (availableLanguages && availableLanguages.has(lang));
 
         const isLoading = loadingLang === lang;
 
