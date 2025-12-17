@@ -177,7 +177,7 @@ exports.generateCritique = functions
       options,
       correct,
       modeLabel,
-      model = "gemini-1.5-flash",
+      model = "gemini-2.0-flash",
     } = data;
 
     // Input validation
@@ -266,10 +266,15 @@ exports.generateCritique = functions
         Options: ${JSON.stringify(options)}
         Correct: ${correct}`;
 
-      // Model fallback list: stable models only
+      // Model fallback list: ALL available text-out models prioritized by quota
       const modelFallbacks = [
-        model, // User-specified or default (gemini-1.5-flash)
-        "gemini-1.5-pro", // Stable GA fallback
+        model, // User-specified or default (gemini-2.0-flash)
+        "gemini-2.0-flash-lite", // 0/4K RPM - huge quota
+        "gemini-2.5-flash-lite", // 0/4K RPM - huge quota
+        "gemini-2.5-flash", // 0/1K RPM - good quota
+        "gemini-2.0-flash-exp", // 8/10 RPM - backup when rate limited
+        "gemini-2.5-pro", // 0/150 RPM - slower but available
+        "gemini-3-pro", // 0/25 RPM - last resort
       ];
 
       let response;
