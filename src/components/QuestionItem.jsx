@@ -259,4 +259,30 @@ const QuestionItem = ({
   );
 };
 
-export default React.memo(QuestionItem);
+// Custom comparison for memoization that detects critique changes
+const arePropsEqual = (prevProps, nextProps) => {
+  // Always re-render if critique data changed
+  if (prevProps.q?.critiqueScore !== nextProps.q?.critiqueScore) return false;
+  if (prevProps.q?.critique !== nextProps.q?.critique) return false;
+  if (prevProps.q?.suggestedRewrite !== nextProps.q?.suggestedRewrite)
+    return false;
+  if (prevProps.q?.status !== nextProps.q?.status) return false;
+
+  // Standard shallow comparison for other props
+  const prevKeys = Object.keys(prevProps);
+  const nextKeys = Object.keys(nextProps);
+  if (prevKeys.length !== nextKeys.length) return false;
+
+  return prevKeys.every((key) => {
+    if (key === "q") {
+      // For 'q' prop, compare by id/uniqueId only (content already checked above)
+      return (
+        prevProps.q?.id === nextProps.q?.id &&
+        prevProps.q?.uniqueId === nextProps.q?.uniqueId
+      );
+    }
+    return prevProps[key] === nextProps[key];
+  });
+};
+
+export default React.memo(QuestionItem, arePropsEqual);
