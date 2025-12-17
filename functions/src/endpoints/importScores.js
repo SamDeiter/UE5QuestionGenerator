@@ -26,7 +26,6 @@ exports.importAIScores = onCall(
     }
 
     const db = admin.firestore();
-    const batch = db.batch();
     const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
     let updated = 0;

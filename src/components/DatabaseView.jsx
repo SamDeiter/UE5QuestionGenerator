@@ -87,7 +87,7 @@ const DatabaseView = ({
       setIsImporting(true);
       try {
         const text = await file.text();
-        const result = await importCritiqueScores(text, db, showMessage);
+        const _result = await importCritiqueScores(text, db, showMessage);
         setTimeout(() => window.location.reload(), 2000);
       } catch (error) {
         showMessage(`❌ Import failed: ${error.message}`, 5000);
