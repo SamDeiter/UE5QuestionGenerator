@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import ReviewProgressBar from "./ReviewProgressBar";
 import QuestionHeader from "./QuestionItem/QuestionHeader";
 import QuestionContent from "./QuestionItem/QuestionContent";
@@ -35,22 +35,43 @@ const QuestionItem = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(q.question);
   const [showImprovementModal, setShowImprovementModal] = useState(false);
+  const lastProcessedCritiqueRef = useRef(null);
 
-  // Auto-open modal when critique data arrives (score, feedback, or improvements)
+  // Auto-open modal when NEW critique data arrives
   useEffect(() => {
     console.log("[QuestionItem DEBUG] useEffect triggered:", {
       critiqueScore: q.critiqueScore,
       suggestedRewrite: !!q.suggestedRewrite,
       questionId: q.id,
+      alreadyShowing: showImprovementModal,
     });
+
+    // Only open if we have a new critique score that we haven't processed
     if (q.critiqueScore !== undefined && q.critiqueScore !== null) {
+      const critiqueKey = `${q.id}-${q.critiqueScore}`;
+
+      // Skip if we've already processed this exact critique OR modal is already open
+      if (lastProcessedCritiqueRef.current === critiqueKey) {
+        console.log(
+          "[QuestionItem DEBUG] Skipping - already processed this critique"
+        );
+        return;
+      }
+
       console.log(
         "[QuestionItem DEBUG] Opening modal for score:",
         q.critiqueScore
       );
+      lastProcessedCritiqueRef.current = critiqueKey;
       setShowImprovementModal(true);
     }
   }, [q.critiqueScore, q.suggestedRewrite, q.id]);
+
+  // Reset ref when modal is closed so we can show the same critique again if needed
+  const handleModalDismiss = useCallback(() => {
+    lastProcessedCritiqueRef.current = null;
+    setShowImprovementModal(false);
+  }, []);
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -258,7 +279,7 @@ const QuestionItem = ({
                 );
               }
             }}
-            onDismiss={() => setShowImprovementModal(false)}
+            onDismiss={handleModalDismiss}
           />
         )}
       </div>
