@@ -169,9 +169,6 @@ const ContextToolbar = ({
             onChange={handleChange}
             className="bg-slate-800 text-xs text-slate-200 font-medium outline-none border-none cursor-pointer focus:ring-0 hover:text-white transition-colors"
           >
-            <option value="" className="bg-slate-800 text-slate-200">
-              All Disciplines
-            </option>
             <option
               value="Worldbuilding"
               className="bg-slate-800 text-slate-200"
