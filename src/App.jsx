@@ -4,7 +4,7 @@
 
 // React core hooks
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
-import { runLocalStorageMigration } from './utils/migrateScores';
+import { runLocalStorageMigration } from "./utils/migrateScores";
 
 // Critical components - keep eager loading (needed immediately)
 import Header from "./components/Header";
@@ -199,6 +199,8 @@ const App = () => {
     setFilterByCreator,
     filterTags,
     setFilterTags,
+    filterScoreTier,
+    setFilterScoreTier,
     currentReviewIndex,
     setCurrentReviewIndex,
     sortBy,
@@ -293,12 +295,14 @@ const App = () => {
   const hasAutoLoadedRef = useRef(false);
   useEffect(() => {
     if (user && !authLoading && !hasAutoLoadedRef.current) {
-    // One-time migration: Add improvedScore to existing critiques
-    const migrated = runLocalStorageMigration();
-    if (migrated.updated > 0) {
-      console.log(`🔄 Migrated ${migrated.updated} questions with estimated improved scores`);
-    }
-    
+      // One-time migration: Add improvedScore to existing critiques
+      const migrated = runLocalStorageMigration();
+      if (migrated.updated > 0) {
+        console.log(
+          `🔄 Migrated ${migrated.updated} questions with estimated improved scores`
+        );
+      }
+
       hasAutoLoadedRef.current = true;
       console.log("📊 Auto-loading database for difficulty chart...");
       handleLoadFromFirestore(true); // Silent auto-recovery
@@ -616,6 +620,8 @@ const App = () => {
             setFilterByCreator,
             filterTags,
             setFilterTags,
+            filterScoreTier,
+            setFilterScoreTier,
             customTags,
             searchTerm,
             setSearchTerm,

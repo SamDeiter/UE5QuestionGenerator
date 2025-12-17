@@ -48,6 +48,7 @@ export function useFiltering({
   );
   const [filterByCreator, setFilterByCreator] = useState(false);
   const [filterTags, setFilterTags] = useState([]);
+  const [filterScoreTier, setFilterScoreTier] = useState(""); // '', 'exceptional', 'very-good', 'good', 'adequate', 'needs-work'
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [sortBy, setSortBy] = useState("default");
 
