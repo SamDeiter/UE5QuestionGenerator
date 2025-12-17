@@ -237,15 +237,15 @@ const QuestionItem = ({
             onApply={async (improved) => {
               // Apply improvements to question - use improved score or fall back to original
               const newScore =
-                q.improvedScore || improved.critiqueScore || q.critiqueScore;
+                q.improvedScore || improved?.critiqueScore || q.critiqueScore;
               await onUpdateQuestion(q.id, {
-                question: improved.question,
-                options: improved.options,
-                optionA: improved.optionA,
-                optionB: improved.optionB,
-                optionC: improved.optionC,
-                optionD: improved.optionD,
-                tags: improved.tags,
+                question: improved?.question || q.question,
+                options: improved?.options || q.options,
+                optionA: improved?.optionA || q.optionA,
+                optionB: improved?.optionB || q.optionB,
+                optionC: improved?.optionC || q.optionC,
+                optionD: improved?.optionD || q.optionD,
+                tags: improved?.tags || q.tags,
                 critiqueScore: newScore,
                 suggestedRewrite: null, // Clear suggestion after apply
                 improvedScore: null, // Clear after applying
