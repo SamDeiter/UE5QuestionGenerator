@@ -370,15 +370,6 @@ const AdminPanel = ({
         </div>
       </div>
 
-      {/* Token Usage */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-slate-500/30">
-        <h2 className="text-lg font-bold text-slate-300 mb-3 flex items-center gap-2">
-          <Icon name="activity" size={18} />
-          Token Usage
-        </h2>
-        <TokenUsageDisplay tokenUsage={getTokenUsage()} />
-      </div>
-
       {/* API Configuration */}
       <div className="bg-slate-800 rounded-lg p-4 border border-indigo-500/30">
         <h2 className="text-lg font-bold text-indigo-400 mb-3 flex items-center gap-2">
@@ -565,98 +556,6 @@ const AdminPanel = ({
         </button>
         <p className="text-[10px] text-slate-500 mt-2 text-center">
           Exports JSONL format for Vertex AI fine-tuning.
-        </p>
-      </div>
-
-      {/* AI Score Import */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-yellow-500/30">
-        <h2 className="text-lg font-bold text-yellow-400 mb-3 flex items-center gap-2">
-          <Icon name="zap" size={18} />
-          AI Score Import
-        </h2>
-        <p className="text-xs text-slate-400 mb-4">
-          Import AI quality scores from strict scoring batch files (1,696
-          questions scored using the certification rubric).
-        </p>
-        <div className="bg-slate-700/50 p-3 rounded mb-3 text-xs space-y-1">
-          <div className="flex justify-between">
-            <span className="text-slate-400">Total Scored:</span>
-            <span className="text-white font-bold">1,696 questions</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-400">90-100 (Exceptional):</span>
-            <span className="text-green-400 font-bold">840 (49.5%)</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-400">70-79 (Good):</span>
-            <span className="text-yellow-400 font-bold">831 (49.0%)</span>
-          </div>
-        </div>
-        <button
-          onClick={async () => {
-            if (
-              !confirm(
-                "This will update 1,696 questions with AI scores. Continue?"
-              )
-            )
-              return;
-            showMessage(
-              "⏳ Importing scores... This may take 2-3 minutes.",
-              180000
-            );
-            try {
-              // Load all score batches
-              const { applyScoresToFirestore, getScoreDistribution } =
-                await import("../utils/importScores.js");
-
-              // Instead of client-side batch writes, use Cloud Function
-              const { getFunctions, httpsCallable } = await import(
-                "firebase/functions"
-              );
-              const { app } = await import("../services/firebase");
-              const functions = getFunctions(app, "us-central1");
-              const importScoresFn = httpsCallable(functions, "importAIScores");
-
-              // Get all scores from the import utility
-              const allScores = [];
-              const modules = [
-                () => import("../../Scores/strict_scored_batch_0_199.json"),
-                () => import("../../Scores/strict_scored_batch_200_399.json"),
-                () => import("../../Scores/strict_scored_batch_400_599.json"),
-                () => import("../../Scores/strict_scored_batch_600_799.json"),
-                () => import("../../Scores/strict_scored_batch_800_999.json"),
-                () => import("../../Scores/strict_scored_batch_1000_1199.json"),
-                () => import("../../Scores/strict_scored_batch_1200_1399.json"),
-                () => import("../../Scores/strict_scored_batch_1400_1599.json"),
-                () => import("../../Scores/strict_scored_batch_1600_1695.json"),
-              ];
-
-              for (const loadModule of modules) {
-                const batch = await loadModule();
-                allScores.push(...batch.default);
-              }
-
-              // Call Cloud Function
-              const result = await importScoresFn({ scores: allScores });
-
-              showMessage(
-                `✅ Import complete! Updated: ${result.data.updated}, Not found: ${result.data.notFound}`,
-                5000
-              );
-              console.log("Import result:", result.data);
-            } catch (error) {
-              showMessage(`❌ Import failed: ${error.message}`, 5000);
-              console.error(error);
-            }
-          }}
-          className="w-full px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded font-bold transition-all flex items-center justify-center gap-2"
-        >
-          <Icon name="download" size={16} />
-          Import AI Scores to Database
-        </button>
-        <p className="text-[10px] text-slate-500 mt-2">
-          ⚠️ This is a one-time import. Scores will be permanently stored in
-          Firebase.
         </p>
       </div>
 

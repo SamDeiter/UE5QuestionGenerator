@@ -126,8 +126,8 @@ const QuizPreview = ({ questions, config, onClose }) => {
    * If doing well (> 80% on last 3), give harder question
    */
   const getNextAdaptiveQuestion = useCallback(
-    (recentAnswers) => {
-      const answeredIds = new Set(Object.keys(answers));
+    (recentAnswers, currentAnswers = answers) => {
+      const answeredIds = new Set(Object.keys(currentAnswers));
       const correctCount = recentAnswers.filter(Boolean).length;
       const recentPerformance =
         recentAnswers.length > 0 ? correctCount / recentAnswers.length : 0.5;
@@ -195,13 +195,14 @@ const QuizPreview = ({ questions, config, onClose }) => {
       setFeedbackShown(true);
     } else {
       // Auto-advance after brief delay
-      setTimeout(() => handleNext(newRecent), 300);
+      const newAnswers = { ...answers, [questionId]: answer };
+      setTimeout(() => handleNext(newRecent, newAnswers), 300);
     }
   };
 
   // Handle next question
   const handleNext = useCallback(
-    (updatedRecent = recentCorrect) => {
+    (updatedRecent = recentCorrect, currentAnswers = answers) => {
       setFeedbackShown(false);
 
       if (currentIndex + 1 >= totalQuestions) {
@@ -210,7 +211,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
       }
 
       if (config.adaptiveDifficulty) {
-        const nextQ = getNextAdaptiveQuestion(updatedRecent);
+        const nextQ = getNextAdaptiveQuestion(updatedRecent, currentAnswers);
         if (nextQ) {
           setAdaptiveQueue((prev) => [...prev, nextQ]);
         }
@@ -224,6 +225,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
       config.adaptiveDifficulty,
       getNextAdaptiveQuestion,
       recentCorrect,
+      answers,
     ]
   );
 
@@ -400,21 +402,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
             <span className="text-white font-semibold">
               Question {currentIndex + 1} of {totalQuestions}
             </span>
-            <span
-              className={`text-xs px-2 py-1 rounded ${
-                (currentQuestion.difficulty || "")
-                  .toLowerCase()
-                  .includes("easy")
-                  ? "bg-green-900 text-green-400"
-                  : (currentQuestion.difficulty || "")
-                      .toLowerCase()
-                      .includes("hard")
-                  ? "bg-red-900 text-red-400"
-                  : "bg-yellow-900 text-yellow-400"
-              }`}
-            >
-              {currentQuestion.difficulty}
-            </span>
+            {/* Difficulty Badge Removed per user request */}
           </div>
 
           <div className="flex items-center gap-4">
@@ -505,8 +493,8 @@ const QuizPreview = ({ questions, config, onClose }) => {
             )}
           </div>
 
-          {/* Feedback / Next button */}
-          {feedbackShown && (
+          {/* Feedback / Next button - Show if feedback is enabled OR if question is answered (fallback) */}
+          {(feedbackShown || isAnswered) && (
             <div className="mt-8 text-center">
               <button
                 onClick={() => handleNext()}
