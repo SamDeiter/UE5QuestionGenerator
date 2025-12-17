@@ -143,10 +143,16 @@ export function useFiltering({
   }, [contextFilteredQuestions, filterMode]);
 
   // 4. Get unique questions for the current language
-  const uniqueFilteredQuestions = useMemo(
-    () => createUniqueFilteredQuestions(filteredQuestions, language),
-    [filteredQuestions, language]
-  );
+  const uniqueFilteredQuestions = useMemo(() => {
+    const result = createUniqueFilteredQuestions(filteredQuestions, language);
+    console.log("🔍 [useFiltering] uniqueFilteredQuestions updated:", {
+      language,
+      count: result.length,
+      firstQuestionLanguage: result[0]?.language,
+      firstQuestionText: result[0]?.question?.substring(0, 50) + "...",
+    });
+    return result;
+  }, [filteredQuestions, language]);
 
   // ========================================================================
   // RETURN

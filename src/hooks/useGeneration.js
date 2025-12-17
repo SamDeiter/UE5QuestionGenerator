@@ -774,36 +774,58 @@ export const useGeneration = (
             hasOptions: !!tq.options,
           });
 
-          // ✅ FIX: Preserve original card identity and metadata
-          // Update the existing question in place instead of creating a new one
+          // ✅ CRITICAL FIX: Ensure original has uniqueId before creating translation
+          // If the original question doesn't have a uniqueId, generate one and update it
+          if (!q.uniqueId) {
+            const newUniqueId = crypto.randomUUID();
+            console.log(
+              "⚠️ [Translation] Original question missing uniqueId, generating:",
+              newUniqueId
+            );
+
+            const updatedOriginal = {
+              ...q,
+              uniqueId: newUniqueId,
+              language: q.language || "English", // Ensure language is set
+            };
+
+            // Update the original in state and database
+            updateQuestionInState(q.id, updatedOriginal);
+            await checkAndStoreQuestions([updatedOriginal]);
+
+            // Use the updated question for translation
+            q = updatedOriginal;
+          }
+
+          // Now create the translation variant with the same uniqueId
           const translatedVariant = {
             ...tq,
             id: Date.now(), // New ID for this language variant
             uniqueId: q.uniqueId, // Same uniqueId to link versions
-            question: tq.question,
-            options: tq.options,
-            sourceExcerpt: tq.sourceExcerpt || q.sourceExcerpt,
+            discipline: q.discipline,
+            type: q.type,
+            difficulty: q.difficulty,
             language: targetLang,
+            status: q.status, // Preserve status
+            dateAdded: new Date().toISOString(),
+            tags: q.tags, // Preserve tags
+            critiqueScore: q.critiqueScore, // Preserve score
+            sourceUrl: q.sourceUrl, // Keep same source
             translatedAt: new Date().toISOString(),
             translatedFrom: q.language || "English",
-            // DO NOT change: id, uniqueId, status, dateAdded, tags, critiqueScore,
-            // humanVerified, reviewCompletedAt, etc.
           };
 
-          console.log("✅ [Translation] Updating card in place:", {
-            id: q.id,
-            preservedMetadata: {
-              status: translatedVariant.status,
-              tags: translatedVariant.tags,
-              critiqueScore: translatedVariant.critiqueScore,
-            },
-            translatedQuestion:
-              translatedVariant.question?.substring(0, 50) + "...",
+          console.log("✅ [Translation] Creating translation variant:", {
+            originalId: q.id,
+            translationId: translatedVariant.id,
+            sharedUniqueId: q.uniqueId,
+            originalLanguage: q.language || "English",
+            translationLanguage: targetLang,
           });
 
-          // ✅ FIX: Update existing question, don't create new one
+          // Store translation as new document
           addQuestionsToState([translatedVariant], false);
-          await checkAndStoreQuestions([translatedVariant]); // Persist to Firebase
+          await checkAndStoreQuestions([translatedVariant]);
 
           // Switch to the new language
           handleLanguageSwitch(targetLang);

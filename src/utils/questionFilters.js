@@ -17,92 +17,95 @@
  * @returns {Array} Filtered questions
  */
 const normalizeDiff = (d) => {
-    if (!d) return '';
-    const lower = d.toString().trim().toLowerCase();
-    
-    // Map all variants to canonical lowercase values (case-insensitive)
-    if (lower === 'easy' || lower === 'beginner') return 'easy';
-    if (lower === 'medium' || lower === 'intermediate') return 'medium';
-    if (lower === 'hard' || lower === 'expert') return 'hard';
-    
-    return lower; // Return lowercase version for consistent comparison
+  if (!d) return "";
+  const lower = d.toString().trim().toLowerCase();
+
+  // Map all variants to canonical lowercase values (case-insensitive)
+  if (lower === "easy" || lower === "beginner") return "easy";
+  if (lower === "medium" || lower === "intermediate") return "medium";
+  if (lower === "hard" || lower === "expert") return "hard";
+
+  return lower; // Return lowercase version for consistent comparison
 };
 
 const normalizeType = (t) => {
-    if (!t) return '';
-    const lower = t.toLowerCase();
-    if (lower === 't/f' || lower === 'true/false') return 'True/False';
-    if (lower === 'mc' || lower === 'multiple choice') return 'Multiple Choice';
-    return t; // Fallback
+  if (!t) return "";
+  const lower = t.toLowerCase();
+  if (lower === "t/f" || lower === "true/false") return "True/False";
+  if (lower === "mc" || lower === "multiple choice") return "Multiple Choice";
+  return t; // Fallback
 };
 
 export const createFilteredQuestions = (
-    questions,
-    historicalQuestions,
-    showHistory,
-    filterMode,
-    filterByCreator,
-    searchTerm,
-    creatorName,
-    discipline,
-    difficulty,
-    type,
-    language,
-    selectedTags = []
+  questions,
+  historicalQuestions,
+  showHistory,
+  filterMode,
+  filterByCreator,
+  searchTerm,
+  creatorName,
+  discipline,
+  difficulty,
+  type,
+  language,
+  selectedTags = []
 ) => {
-    // Determine source: either current session or all history
-    const sourceQuestions = showHistory ? [...questions, ...historicalQuestions] : questions;
+  // Determine source: either current session or all history
+  const sourceQuestions = showHistory
+    ? [...questions, ...historicalQuestions]
+    : questions;
 
-    return sourceQuestions.filter(q => {
-        // 1. Status Filter
-        if (filterMode === 'pending' && q.status !== 'pending') return false;
-        if (filterMode === 'accepted' && q.status !== 'accepted') return false;
-        if (filterMode === 'rejected' && q.status !== 'rejected') return false;
+  return sourceQuestions.filter((q) => {
+    // 1. Status Filter
+    if (filterMode === "pending" && q.status !== "pending") return false;
+    if (filterMode === "accepted" && q.status !== "accepted") return false;
+    if (filterMode === "rejected" && q.status !== "rejected") return false;
 
-        // 2. Creator Filter
-        if (filterByCreator && q.creatorName !== creatorName) return false;
+    // 2. Creator Filter
+    if (filterByCreator && q.creatorName !== creatorName) return false;
 
-        // 3. Discipline Filter
-        if (discipline && q.discipline !== discipline) return false;
+    // 3. Discipline Filter
+    if (discipline && q.discipline !== discipline) return false;
 
-        // 4. Tags Filter
-        if (selectedTags && selectedTags.length > 0) {
-            if (!q.tags || q.tags.length === 0) return false;
-            // OR Logic: must have at least one of the selected tags
-            if (!selectedTags.some(tag => q.tags.includes(tag))) return false;
-        }
+    // 4. Tags Filter
+    if (selectedTags && selectedTags.length > 0) {
+      if (!q.tags || q.tags.length === 0) return false;
+      // OR Logic: must have at least one of the selected tags
+      if (!selectedTags.some((tag) => q.tags.includes(tag))) return false;
+    }
 
-        // 5. Difficulty & Type Filter
-        if (difficulty) {
-            // Check Difficulty (both normalized to lowercase for comparison)
-            if (normalizeDiff(q.difficulty) !== normalizeDiff(difficulty)) return false;
+    // 5. Difficulty & Type Filter
+    if (difficulty) {
+      // Check Difficulty (both normalized to lowercase for comparison)
+      if (normalizeDiff(q.difficulty) !== normalizeDiff(difficulty))
+        return false;
 
-            // Check Type (only if specified)
-            if (type && normalizeType(q.type) !== normalizeType(type)) return false;
-        }
+      // Check Type (only if specified)
+      if (type && normalizeType(q.type) !== normalizeType(type)) return false;
+    }
 
-        // 6. Search Term Filter
-        if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            const searchFields = [
-                q.uniqueId,
-                q.question,
-                q.discipline,
-                q.difficulty,
-                // Search within options
-                ...(q.options ? Object.values(q.options) : [])
-            ];
-            
-            // Check if any field contains the term
-            const matches = searchFields.some(field => 
-                field && field.toString().toLowerCase().includes(term)
-            );
-            
-            if (!matches) return false;
-        }
+    // 6. Search Term Filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const searchFields = [
+        q.uniqueId,
+        q.question,
+        q.discipline,
+        q.difficulty,
+        // Search within options
+        ...(q.options ? Object.values(q.options) : []),
+      ];
 
-        return true;
-    });
+      // Check if any field contains the term
+      const matches = searchFields.some(
+        (field) => field && field.toString().toLowerCase().includes(term)
+      );
+
+      if (!matches) return false;
+    }
+
+    return true;
+  });
 };
 
 /**
@@ -112,38 +115,62 @@ export const createFilteredQuestions = (
  * @param {string} language - Preferred language to display
  * @returns {Array} Unique questions (one per uniqueId) in preferred language
  */
-export const createUniqueFilteredQuestions = (filteredQuestions, language = 'English') => {
-    // Group by uniqueId
-    const grouped = new Map();
-    filteredQuestions.forEach(q => {
-        const id = q.uniqueId;
-        if (!grouped.has(id)) grouped.set(id, []);
-        grouped.get(id).push(q);
-    });
+export const createUniqueFilteredQuestions = (
+  filteredQuestions,
+  language = "English"
+) => {
+  // Group by uniqueId
+  const grouped = new Map();
+  filteredQuestions.forEach((q) => {
+    const id = q.uniqueId;
+    if (!grouped.has(id)) grouped.set(id, []);
+    grouped.get(id).push(q);
+  });
 
-    // Select one variant per group (prefer current language, then English, then first available)
-    const uniqueQuestions = [];
-    grouped.forEach((variants) => {
-        let selected = null;
+  // Select one variant per group (prefer current language, then English, then first available)
+  const uniqueQuestions = [];
+  let debugCount = 0;
+  grouped.forEach((variants, uniqueId) => {
+    let selected = null;
 
-        // Try to find variant in selected language
-        selected = variants.find(v => (v.language || 'English') === language);
-
-        // Fall back to English if selected language not found
-        if (!selected) {
-            selected = variants.find(v => (v.language || 'English') === 'English');
+    // Debug first question only
+    if (debugCount === 0) {
+      console.log(
+        "🔍 [createUniqueFilteredQuestions] First question variants:",
+        {
+          uniqueId,
+          requestedLanguage: language,
+          variantCount: variants.length,
+          variantLanguages: variants.map((v) => v.language || "English"),
         }
+      );
+    }
 
-        // Fall back to first variant if neither selected language nor English found
-        if (!selected) {
-            selected = variants[0];
-        }
+    // Try to find variant in selected language
+    selected = variants.find((v) => (v.language || "English") === language);
 
-        if (selected) {
-            uniqueQuestions.push(selected);
-        }
-    });
+    // Fall back to English if selected language not found
+    if (!selected) {
+      selected = variants.find((v) => (v.language || "English") === "English");
+    }
 
-    return uniqueQuestions;
+    // Fall back to first variant if neither selected language nor English found
+    if (!selected) {
+      selected = variants[0];
+    }
+
+    if (debugCount === 0) {
+      console.log("🎯 [createUniqueFilteredQuestions] Selected variant:", {
+        selectedLanguage: selected?.language || "English",
+        questionText: selected?.question?.substring(0, 50) + "...",
+      });
+    }
+
+    if (selected) {
+      uniqueQuestions.push(selected);
+    }
+    debugCount++;
+  });
+
+  return uniqueQuestions;
 };
-

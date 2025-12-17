@@ -107,6 +107,10 @@ export const useAppConfig = () => {
 
   // Handlers
   const handleLanguageSwitch = (lang) => {
+    console.log(
+      "🌍 [handleLanguageSwitch] Switching global language filter to:",
+      lang
+    );
     setConfig((prev) => ({ ...prev, language: lang }));
   };
 
