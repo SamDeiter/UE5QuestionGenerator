@@ -839,18 +839,27 @@ const AdminPanel = ({
                         10000
                       );
 
-                      // Import the migration function
-                      const { migrateTranslations } = await import(
-                        "../utils/migrateTranslations.js"
-                      );
+                      // Call the Cloud Function
+                      const { migrateTranslationsViaCloudFunction } =
+                        await import("../services/cloudFunctions.js");
 
-                      // Run migration
-                      await migrateTranslations();
+                      const result =
+                        await migrateTranslationsViaCloudFunction();
 
-                      showMessage(
-                        "✅ Translation migration complete! Refresh the page to see results.",
-                        5000
-                      );
+                      if (result.success) {
+                        const { stats } = result;
+                        showMessage(
+                          `✅ Migration complete!\n\n` +
+                            `📊 Statistics:\n` +
+                            `- Total questions: ${stats.totalQuestions}\n` +
+                            `- Total translations: ${stats.totalTranslations}\n` +
+                            `- Already linked: ${stats.alreadyLinked}\n` +
+                            `- Newly linked: ${stats.newlyLinked}\n` +
+                            `- Orphaned: ${stats.orphaned}\n\n` +
+                            `Refresh the page to see results.`,
+                          10000
+                        );
+                      }
                     } catch (error) {
                       showMessage(
                         `❌ Migration failed: ${error.message}`,

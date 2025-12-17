@@ -116,3 +116,29 @@ export const generateCritiqueViaCloudFunction = async (
 export const isUserAuthenticated = () => {
   return !!auth.currentUser;
 };
+
+/**
+ * Calls the migrateTranslations Cloud Function
+ * Links existing translated questions with their English originals via uniqueId
+ * SUPER ADMIN ONLY
+ * @returns {Promise<{success: boolean, stats: object}>}
+ */
+export const migrateTranslationsViaCloudFunction = async () => {
+  try {
+    const migrateTranslations = httpsCallable(functions, "migrateTranslations");
+
+    const result = await migrateTranslations();
+
+    if (!result.data.success) {
+      throw new Error(result.data.error || "Migration failed");
+    }
+
+    return {
+      success: true,
+      stats: result.data.stats,
+    };
+  } catch (error) {
+    console.error("Migration Cloud Function error:", error);
+    throw error;
+  }
+};
