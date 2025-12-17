@@ -7,6 +7,7 @@ const DatabaseView = React.lazy(() => import("./DatabaseView"));
 const ReviewMode = React.lazy(() => import("./ReviewMode"));
 const TestView = React.lazy(() => import("./TestView"));
 const PromptPlayground = React.lazy(() => import("./PromptPlayground"));
+const AdminPanel = React.lazy(() => import("./AdminPanel"));
 import QuestionList from "./QuestionList";
 
 const LoadingSpinner = () => (
@@ -159,6 +160,8 @@ const ViewRouter = ({
           apiKeyReady={!!effectiveApiKey}
           effectiveApiKey={effectiveApiKey}
         />
+      ) : appMode === "admin" && isAdmin ? (
+        <AdminPanel showMessage={showMessage} />
       ) : appMode === "review" && uniqueFilteredQuestions.length > 0 ? (
         <ReviewMode
           questions={uniqueFilteredQuestions}

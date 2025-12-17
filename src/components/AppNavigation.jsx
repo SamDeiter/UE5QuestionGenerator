@@ -37,6 +37,13 @@ const AppNavigation = ({ activeMode, onNavigate, counts = {}, isAdmin }) => {
       color: "purple",
       adminOnly: true,
     },
+    {
+      id: "admin",
+      label: "Admin",
+      icon: "shield",
+      color: "red",
+      adminOnly: true,
+    },
   ].filter((item) => !item.adminOnly || isAdmin);
 
   // Note: Analytics in App.jsx was a modal (setShowAnalytics).
