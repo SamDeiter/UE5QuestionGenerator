@@ -12,6 +12,7 @@ const ImprovementModal = ({
   changesExplanation,
   critiqueText,
   critiqueScore,
+  improvedScore, // Score the question would get AFTER applying improvements
   onApply,
   onDismiss,
 }) => {
@@ -24,9 +25,7 @@ const ImprovementModal = ({
   };
 
   const scoreDelta =
-    improvedQuestion?.critiqueScore && originalQuestion?.critiqueScore
-      ? improvedQuestion.critiqueScore - originalQuestion.critiqueScore
-      : 0;
+    improvedScore && critiqueScore ? improvedScore - critiqueScore : 0;
 
   const originalTags = originalQuestion?.tags || [];
   const improvedTags = improvedQuestion?.tags || [];
@@ -137,17 +136,17 @@ const ImprovementModal = ({
                     <Icon name="check-circle" size={14} />
                     Improved
                   </h3>
-                  {improvedQuestion?.critiqueScore ? (
+                  {improvedScore ? (
                     <span
                       className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                        improvedQuestion.critiqueScore >= 90
+                        improvedScore >= 90
                           ? "bg-green-900/50 border-green-500 text-green-300"
-                          : improvedQuestion.critiqueScore >= 70
+                          : improvedScore >= 70
                           ? "bg-yellow-900/50 border-yellow-500 text-yellow-300"
                           : "bg-orange-900/50 border-orange-500 text-orange-300"
                       }`}
                     >
-                      {improvedQuestion.critiqueScore}/100
+                      {improvedScore}/100
                       {scoreDelta > 0 && (
                         <span className="ml-1 text-green-400">
                           (+{scoreDelta})

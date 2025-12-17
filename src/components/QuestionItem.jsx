@@ -235,6 +235,7 @@ const QuestionItem = ({
             critiqueScore={
               q.suggestedRewrite?.critiqueScore || q.critiqueScore || 0
             }
+            improvedScore={q.improvedScore || 0} // Score AFTER applying improvements
             onApply={async (improved) => {
               // Apply improvements to question - use improved score or fall back to original
               const newScore =
