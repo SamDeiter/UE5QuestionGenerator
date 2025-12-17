@@ -654,6 +654,19 @@ exports.consumeInvite = functions
         return { success: true, alreadyUsed: true, role: invite.role };
       }
 
+      // NEW: Validate email if this is an email-specific invite
+      if (invite.forEmail) {
+        const normalizedUserEmail = userEmail.toLowerCase().trim();
+        const normalizedInviteEmail = invite.forEmail.toLowerCase().trim();
+
+        if (normalizedUserEmail !== normalizedInviteEmail) {
+          throw new functions.https.HttpsError(
+            "permission-denied",
+            `This invite is for ${invite.forEmail} only. You are signed in as ${userEmail}.`
+          );
+        }
+      }
+
       // Validate invite is still valid
       if (!invite.isActive) {
         throw new functions.https.HttpsError(
@@ -717,6 +730,7 @@ exports.consumeInvite = functions
 /**
  * Cloud Function: createInvite
  * Creates a new invite code (ADMIN ONLY)
+ * Supports email-specific invites for targeted registration
  */
 exports.createInvite = functions
   .runWith({ timeoutSeconds: 30, memory: "256MB" })
@@ -737,10 +751,29 @@ exports.createInvite = functions
       );
     }
 
-    const { maxUses = 1, expiresInDays = 7, role = "user", note = "" } = data;
+    const {
+      maxUses = 1,
+      expiresInDays = 7,
+      role = "user",
+      note = "",
+      forEmail = null, // NEW: Optional email address for targeted invite
+    } = data;
     const db = admin.firestore();
 
     try {
+      // Validate and sanitize email if provided
+      let sanitizedEmail = null;
+      if (forEmail) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(forEmail)) {
+          throw new functions.https.HttpsError(
+            "invalid-argument",
+            "Invalid email address format"
+          );
+        }
+        sanitizedEmail = forEmail.toLowerCase().trim();
+      }
+
       // Generate cryptographically secure code
       const code = crypto
         .randomBytes(9)
@@ -767,20 +800,35 @@ exports.createInvite = functions
         role: role === "admin" ? "admin" : "user",
         isActive: true,
         note: (note || "").substring(0, 200), // Limit note length
+        forEmail: sanitizedEmail, // NEW: Store the target email
       };
 
       await db.collection("invites").doc(code).set(inviteData);
 
-      console.log(`Invite ${code} created by ${context.auth.token.email}`);
+      console.log(
+        `Invite ${code} created by ${context.auth.token.email}${
+          sanitizedEmail ? ` for ${sanitizedEmail}` : ""
+        }`
+      );
+
+      // Build invite URL with optional email parameter
+      let inviteUrl = `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${code}`;
+      if (sanitizedEmail) {
+        inviteUrl += `&email=${encodeURIComponent(sanitizedEmail)}`;
+      }
 
       return {
         success: true,
         code,
-        inviteUrl: `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${code}`,
+        inviteUrl,
         expiresAt: expiresAt.toISOString(),
         maxUses: inviteData.maxUses,
+        forEmail: sanitizedEmail, // Return the email so UI can display it
       };
     } catch (error) {
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
       console.error("Error creating invite:", error);
       throw new functions.https.HttpsError(
         "internal",

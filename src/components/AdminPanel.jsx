@@ -57,6 +57,7 @@ const AdminPanel = ({
     maxUses: 1,
     expiresInDays: 7,
     note: "",
+    forEmail: "", // NEW: Email address for targeted invite
   });
 
   // Load users and invites
@@ -571,62 +572,6 @@ const AdminPanel = ({
           </div>
         </div>
       </div>
-
-      {/* Source Files - Super Admin Only */}
-      {isSuperAdmin && (
-        <div className="bg-slate-800 rounded-lg p-4 border border-blue-500/30">
-          <h2 className="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
-            <Icon name="file-text" size={18} />
-            Source Material
-          </h2>
-
-          <div className="space-y-3">
-            <div className="flex justify-between items-end">
-              <label className="text-xs font-bold uppercase text-slate-400">
-                Source Files (CSV)
-              </label>
-              {files && files.length > 0 && (
-                <button
-                  onClick={handleDetectTopics}
-                  disabled={isDetecting || !isApiReady}
-                  className="text-[10px] flex items-center gap-1 text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded border border-indigo-700/50 disabled:opacity-50"
-                >
-                  {isDetecting ? "..." : "Detect Topics"}
-                </button>
-              )}
-            </div>
-            <div
-              onClick={() => fileInputRef?.current?.click()}
-              className="border-2 border-dashed border-slate-700 rounded p-4 hover:bg-slate-700 cursor-pointer text-center transition-colors"
-            >
-              <Icon name="upload" className="mx-auto text-slate-600 mb-2" />
-              <p className="text-xs text-slate-500">Click to upload .csv</p>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                multiple
-                className="hidden"
-              />
-            </div>
-            {files &&
-              files.map((f, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between bg-slate-700 p-2 rounded border border-slate-600 text-xs text-slate-400"
-                >
-                  <span className="truncate">{f.name}</span>
-                  <button
-                    onClick={() => removeFile(i)}
-                    className="text-red-500 hover:text-red-400"
-                  >
-                    <Icon name="x" size={14} />
-                  </button>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
 
       {/* Custom Tags */}
       <div className="bg-slate-800 rounded-lg p-4 border border-orange-500/30">
