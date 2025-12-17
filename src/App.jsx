@@ -125,6 +125,13 @@ const App = () => {
     setPendingNavigationUniqueId,
   } = useAppConfig();
 
+  // Force language to English on mount to prevent language variant issues
+  useEffect(() => {
+    if (config.language !== "English") {
+      setConfig((prev) => ({ ...prev, language: "English" }));
+    }
+  }, []); // Only run once on mount
+
   // 2. Question Data Management
   const {
     questions,
