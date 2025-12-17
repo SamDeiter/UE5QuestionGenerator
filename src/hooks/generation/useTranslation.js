@@ -57,8 +57,8 @@ export const useTranslation = ({
     } to ${targetLang}. 
         CRITICAL RULES:
         1. Return ONLY valid JSON. No markdown formatting, no explanations.
-        2. Translate ONLY: "Question", "OptionA", "OptionB", "OptionC", "OptionD", and "SourceExcerpt".
-        3. DO NOT translate: "ID", "Discipline", "Type", "Difficulty", "Answer", "CorrectLetter", and "SourceURL".
+        2. Translate ONLY: "Question", "OptionA", "OptionB", "OptionC", "OptionD", "SourceExcerpt", "Critique", and "Explanation".
+        3. DO NOT translate: "ID", "Discipline", "Type", "Difficulty", "Answer", "CorrectLetter", "SourceURL", and "CritiqueScore".
         4. Maintain exact JSON structure.`;
 
     const userPrompt = `Translate this object:\n${JSON.stringify(
@@ -74,6 +74,8 @@ export const useTranslation = ({
         CorrectLetter: q.correct,
         SourceURL: q.sourceUrl,
         SourceExcerpt: q.sourceExcerpt,
+        Critique: q.critique || "",
+        Explanation: q.explanation || "",
       },
       null,
       2
@@ -140,6 +142,9 @@ export const useTranslation = ({
           language: targetLang,
           status: "accepted",
           dateAdded: new Date().toISOString(),
+          critique: tq.Critique || q.critique, // Use translated or original
+          explanation: tq.Explanation || q.explanation, // Use translated or original
+          critiqueScore: q.critiqueScore, // Preserve score
         };
 
         // Save translation to database
@@ -234,8 +239,8 @@ export const useTranslation = ({
       } to ${targetLang}. 
             CRITICAL RULES:
             1. Return ONLY valid JSON. No markdown formatting.
-            2. Translate ONLY: "Question", "OptionA", "OptionB", "OptionC", "OptionD", and "SourceExcerpt".
-            3. DO NOT translate: "ID", "Discipline", "Type", "Difficulty", "Answer", "CorrectLetter", and "SourceURL".
+            2. Translate ONLY: "Question", "OptionA", "OptionB", "OptionC", "OptionD", "SourceExcerpt", "Critique", and "Explanation".
+            3. DO NOT translate: "ID", "Discipline", "Type", "Difficulty", "Answer", "CorrectLetter", "SourceURL", and "CritiqueScore".
             4. Maintain exact JSON structure.`;
 
       const userPrompt = `Translate this object:\n${JSON.stringify(
@@ -251,6 +256,8 @@ export const useTranslation = ({
           CorrectLetter: q.correct,
           SourceURL: q.sourceUrl,
           SourceExcerpt: q.sourceExcerpt,
+          Critique: q.critique || "",
+          Explanation: q.explanation || "",
         },
         null,
         2
@@ -291,6 +298,9 @@ export const useTranslation = ({
             language: targetLang,
             status: "accepted",
             dateAdded: new Date().toISOString(),
+            critique: tq.Critique || q.critique,
+            explanation: tq.Explanation || q.explanation,
+            critiqueScore: q.critiqueScore,
           };
 
           await checkAndStoreQuestions([newQuestion]);

@@ -126,12 +126,22 @@ export function useFiltering({
       .map((q) => q.id || q.uniqueId)
       .join(",");
 
-    // Also check if critique scores or status changed (important UI updates)
+    // Also check if critique scores, status, OR verification/rewrites changed
     const newHash = newResult
-      .map((q) => `${q.id}:${q.critiqueScore}:${q.status}`)
+      .map(
+        (q) =>
+          `${q.id}:${q.critiqueScore}:${q.status}:${q.humanVerified}:${
+            q.suggestedRewrite ? "yes" : "no"
+          }`
+      )
       .join("|");
     const prevHash = prevContextFilteredRef.current
-      .map((q) => `${q.id}:${q.critiqueScore}:${q.status}`)
+      .map(
+        (q) =>
+          `${q.id}:${q.critiqueScore}:${q.status}:${q.humanVerified}:${
+            q.suggestedRewrite ? "yes" : "no"
+          }`
+      )
       .join("|");
 
     if (
