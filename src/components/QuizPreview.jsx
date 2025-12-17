@@ -329,7 +329,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
               className="mx-auto mb-4"
             />
             <h1 className="text-3xl font-bold mb-2">
-              {results.passed ? "Congratulations!" : "Keep Practicing!"}
+              {results.passed ? "Congratulations!" : "Assessment Failed"}
             </h1>
             <p className="text-slate-400">
               {results.passed

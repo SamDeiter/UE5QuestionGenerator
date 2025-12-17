@@ -380,7 +380,7 @@ const TestView = ({
               </button>
             </div>
 
-            <div className="max-h-[600px] overflow-y-auto">
+            <div className="h-[calc(100vh-280px)] min-h-[600px] overflow-y-auto">
               {filteredQuestions.length === 0 ? (
                 <div className="p-8 text-center text-slate-400">
                   <Icon
