@@ -59,12 +59,6 @@ const ImprovementModal = ({
                 </span>
               )}
             </div>
-            <button
-              onClick={onDismiss}
-              className="p-1.5 hover:bg-slate-800 rounded transition-colors text-slate-400 hover:text-white"
-            >
-              <Icon name="x" size={18} />
-            </button>
           </div>
         </div>
 
