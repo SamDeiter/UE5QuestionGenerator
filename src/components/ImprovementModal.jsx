@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Icon from "./Icon";
+import { sanitizeText } from "../utils/sanitize";
 
 /**
  * Comprehensive Critique Modal - Shows critique + side-by-side improvements
@@ -164,14 +165,20 @@ const ImprovementModal = ({
               {/* Question Text */}
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="bg-slate-800/40 p-3 rounded">
-                  <div className="text-sm text-white leading-relaxed">
-                    {originalQuestion.question}
-                  </div>
+                  <div
+                    className="text-sm text-white leading-relaxed"
+                    dangerouslySetInnerHTML={sanitizeText(
+                      originalQuestion.question
+                    )}
+                  />
                 </div>
                 <div className="bg-green-900/20 p-3 rounded border border-green-700/30">
-                  <div className="text-sm text-white leading-relaxed">
-                    {improvedQuestion.question}
-                  </div>
+                  <div
+                    className="text-sm text-white leading-relaxed"
+                    dangerouslySetInnerHTML={sanitizeText(
+                      improvedQuestion.question
+                    )}
+                  />
                 </div>
               </div>
 
