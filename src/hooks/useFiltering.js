@@ -119,21 +119,36 @@ export function useFiltering({
       filterScoreTier
     );
 
-    // STABILITY: Only return new array if the question IDs actually changed
-    // This prevents infinite recalculation loops
+    // STABILITY: Only return new array if the question IDs or important content changed
+    // This prevents infinite recalculation loops while still detecting real changes
     const newIds = newResult.map((q) => q.id || q.uniqueId).join(",");
     const prevIds = prevContextFilteredRef.current
       .map((q) => q.id || q.uniqueId)
       .join(",");
 
-    if (newIds === prevIds && prevContextFilteredRef.current.length > 0) {
+    // Also check if critique scores or status changed (important UI updates)
+    const newHash = newResult
+      .map((q) => `${q.id}:${q.critiqueScore}:${q.status}`)
+      .join("|");
+    const prevHash = prevContextFilteredRef.current
+      .map((q) => `${q.id}:${q.critiqueScore}:${q.status}`)
+      .join("|");
+
+    if (
+      newIds === prevIds &&
+      newHash === prevHash &&
+      prevContextFilteredRef.current.length > 0
+    ) {
       console.log(
-        "🔒 [useFiltering] contextFilteredQuestions STABLE (same IDs)"
+        "🔒 [useFiltering] contextFilteredQuestions STABLE (same IDs and content)"
       );
       return prevContextFilteredRef.current;
     }
 
-    console.log("🔄 [useFiltering] contextFilteredQuestions CHANGED (new IDs)");
+    console.log("🔄 [useFiltering] contextFilteredQuestions CHANGED", {
+      idsChanged: newIds !== prevIds,
+      contentChanged: newHash !== prevHash,
+    });
     prevContextFilteredRef.current = newResult;
     return newResult;
   }, [
@@ -243,24 +258,28 @@ export function useFiltering({
   // Preserve current question position when filters change
   useEffect(() => {
     if (uniqueFilteredQuestions.length === 0) return;
-    
+
     // Get the current question
     const currentQ = uniqueFilteredQuestions[currentReviewIndex];
     if (!currentQ) return;
-    
+
     // Store the current uniqueId
     const currentUniqueId = currentQ.uniqueId;
-    
+
     // When discipline/difficulty/language changes, try to find the same question in the new list
     if (currentUniqueId) {
-      const newIndex = uniqueFilteredQuestions.findIndex(q => q.uniqueId === currentUniqueId);
+      const newIndex = uniqueFilteredQuestions.findIndex(
+        (q) => q.uniqueId === currentUniqueId
+      );
       if (newIndex !== -1 && newIndex !== currentReviewIndex) {
-        console.log(`📍 [useFiltering] Preserving question position: ${currentUniqueId} moved from index ${currentReviewIndex} to ${newIndex}`);
+        console.log(
+          `📍 [useFiltering] Preserving question position: ${currentUniqueId} moved from index ${currentReviewIndex} to ${newIndex}`
+        );
         setCurrentReviewIndex(newIndex);
       }
     }
   }, [discipline, difficulty, language]); // Only run when these filters change
-   
+
   // NOTE: uniqueFilteredQuestions and currentReviewIndex intentionally excluded to avoid loops
 
   // Adding it would cause excessive recalculations and question jumping
