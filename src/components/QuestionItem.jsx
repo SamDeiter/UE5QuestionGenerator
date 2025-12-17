@@ -269,6 +269,7 @@ const QuestionItem = ({
                 suggestedRewrite: null, // Clear suggestion after apply
                 improvedScore: null, // Clear after applying
                 critique: null, // Clear critique text
+                improvementsApplied: true, // Mark that improvements were applied (enables Verify)
               });
               // Prevent modal from re-opening by marking as processed
               lastProcessedCritiqueRef.current = "applied";

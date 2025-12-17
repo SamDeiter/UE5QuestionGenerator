@@ -16,9 +16,19 @@ const ReviewProgressBar = ({
   const q = question;
 
   // Determine step states
-  const hasCritique = q.critiqueScore !== undefined && q.critiqueScore !== null;
-  const critiquePass = hasCritique && q.critiqueScore >= QUALITY_PASS_THRESHOLD;
-  const critiqueFail = hasCritique && q.critiqueScore < QUALITY_PASS_THRESHOLD;
+  // Check if critique was done (either score exists OR improvements were applied)
+  const hasCritique =
+    (q.critiqueScore !== undefined && q.critiqueScore !== null) ||
+    q.improvementsApplied === true;
+  // Pass if score >= threshold OR if improvements were applied (which means they passed review)
+  const critiquePass =
+    (hasCritique && q.critiqueScore >= QUALITY_PASS_THRESHOLD) ||
+    q.improvementsApplied === true;
+  const critiqueFail =
+    q.critiqueScore !== null &&
+    q.critiqueScore !== undefined &&
+    q.critiqueScore < QUALITY_PASS_THRESHOLD &&
+    !q.improvementsApplied;
   const isVerified = q.humanVerified === true;
   const isAccepted = q.status === "accepted";
   const isRejected = q.status === "rejected";
