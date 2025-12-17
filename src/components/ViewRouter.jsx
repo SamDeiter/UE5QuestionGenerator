@@ -153,6 +153,7 @@ const ViewRouter = ({
           questions={[...questions, ...databaseQuestions]}
           config={config}
           isAdmin={isAdmin}
+          showMessage={showMessage}
         />
       ) : appMode === "playground" && isAdmin ? (
         <PromptPlayground

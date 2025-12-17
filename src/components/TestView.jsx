@@ -8,7 +8,12 @@ import { generateMockQuestions } from "../utils/mockQuestionGenerator";
  * TestView - Admin view for configuring, previewing, and exporting quizzes
  * Allows admins to select approved questions and create assessments
  */
-const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
+const TestView = ({
+  questions = [],
+  config: _appConfig,
+  isAdmin,
+  showMessage,
+}) => {
   // Quiz configuration state
   const [quizConfig, setQuizConfig] = useState({
     title: "UE5 Knowledge Assessment",
@@ -33,15 +38,19 @@ const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
   const [showExport, setShowExport] = useState(false);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState(new Set());
   const [mockQuestions, setMockQuestions] = useState([]);
+  const [activeQuizQuestions, setActiveQuizQuestions] = useState([]); // Stabilized questions for preview
 
   const handleGenerateMockData = () => {
     const mocks = generateMockQuestions();
     setMockQuestions(mocks);
+    if (showMessage)
+      showMessage(`Generated ${mocks.length} mock questions`, 3000);
   };
 
   const handleClearMockData = () => {
     setMockQuestions([]);
     setSelectedQuestionIds(new Set());
+    if (showMessage) showMessage("Mock data cleared", 2000);
   };
 
   // Get only approved questions (real + mock)
@@ -114,6 +123,12 @@ const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
         new Set(filteredQuestions.map((q) => q.id || q.uniqueId))
       );
     }
+  };
+
+  // Snapshot questions when starting preview to prevent re-shuffling during quiz
+  const handleStartPreview = () => {
+    setActiveQuizQuestions([...selectedQuestions]);
+    setShowPreview(true);
   };
 
   if (!isAdmin) {
@@ -380,7 +395,7 @@ const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
           {/* Action Buttons */}
           <div className="space-y-3">
             <button
-              onClick={() => setShowPreview(true)}
+              onClick={handleStartPreview}
               disabled={selectedQuestions.length === 0}
               className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
             >
@@ -487,9 +502,12 @@ const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
       {/* Quiz Preview Modal */}
       {showPreview && (
         <QuizPreview
-          questions={selectedQuestions}
+          questions={activeQuizQuestions}
           config={quizConfig}
-          onClose={() => setShowPreview(false)}
+          onClose={() => {
+            setShowPreview(false);
+            setActiveQuizQuestions([]);
+          }}
         />
       )}
 

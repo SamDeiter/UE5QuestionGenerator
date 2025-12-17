@@ -474,6 +474,17 @@ const ContextToolbar = ({
     </div>
   );
 
+  const renderTestToolbar = () => (
+    <div className="flex justify-between items-center w-full">
+      <div className="flex items-center gap-2">
+        <Icon name="clipboard-check" size={16} className="text-indigo-400" />
+        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+          Test Configuration
+        </span>
+      </div>
+    </div>
+  );
+
   // ------------------------------------------------------------------------
   // MAIN RENDER
   // ------------------------------------------------------------------------
@@ -483,6 +494,7 @@ const ContextToolbar = ({
       {mode === "review" && renderReviewToolbar()}
       {mode === "database" && renderDatabaseToolbar()}
       {mode === "analytics" && renderAnalyticsToolbar()}
+      {mode === "test" && renderTestToolbar()}
     </div>
   );
 };

@@ -17,6 +17,7 @@ import TokenUsageDisplay from "./TokenUsageDisplay";
 import TagManager from "./TagManager";
 import { getTokenUsage, downloadTrainingData } from "../utils/analyticsStore";
 import { UI_LABELS } from "../utils/constants";
+import { clearAllQuestionsFromFirestore } from "../services/firebase";
 
 const functions = getFunctions(app, "us-central1");
 
@@ -144,7 +145,7 @@ const AdminPanel = ({
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-2 p-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -152,14 +153,147 @@ const AdminPanel = ({
           Admin Panel
         </h1>
       </div>
+      {/* Create Invite Section */}
+      <div className="bg-slate-800 rounded-lg p-4 border border-blue-500/30">
+        <h2 className="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
+          <Icon name="mail" size={18} />
+          Generate Invite Code
+        </h2>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Role</label>
+            <select
+              value={newInviteSettings.role}
+              onChange={(e) =>
+                setNewInviteSettings({
+                  ...newInviteSettings,
+                  role: e.target.value,
+                })
+              }
+              className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
+            >
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              Max Uses
+            </label>
+            <input
+              type="number"
+              value={newInviteSettings.maxUses}
+              onChange={(e) =>
+                setNewInviteSettings({
+                  ...newInviteSettings,
+                  maxUses: parseInt(e.target.value),
+                })
+              }
+              className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
+              min="1"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              Expires In (Days)
+            </label>
+            <input
+              type="number"
+              value={newInviteSettings.expiresInDays}
+              onChange={(e) =>
+                setNewInviteSettings({
+                  ...newInviteSettings,
+                  expiresInDays: parseInt(e.target.value),
+                })
+              }
+              className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
+              min="1"
+              max="30"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">
+              Note (Optional)
+            </label>
+            <input
+              type="text"
+              value={newInviteSettings.note}
+              onChange={(e) =>
+                setNewInviteSettings({
+                  ...newInviteSettings,
+                  note: e.target.value,
+                })
+              }
+              placeholder="e.g., For John Doe"
+              className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={handleCreateInvite}
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold transition-all flex items-center justify-center gap-2"
+        >
+          <Icon name="plus" size={16} />
+          Create Invite
+        </button>
+      </div>
+
+      {/* Active Invites */}
+      <div className="bg-slate-800 rounded-lg p-4 border border-yellow-500/30">
+        <h2 className="text-lg font-bold text-yellow-400 mb-3 flex items-center gap-2">
+          <Icon name="key" size={18} />
+          Active Invites ({invites.length})
+        </h2>
+
+        <div className="space-y-2">
+          {invites.length === 0 ? (
+            <p className="text-slate-500 text-sm">No active invites</p>
+          ) : (
+            invites.map((invite) => (
+              <div
+                key={invite.code}
+                className="bg-slate-700/50 p-3 rounded flex items-center justify-between"
+              >
+                <div className="flex-1">
+                  <div className="text-white font-mono text-sm">
+                    {invite.code}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    <span className="inline-block px-2 py-0.5 rounded bg-slate-600 mr-2">
+                      {invite.role}
+                    </span>
+                    Uses: {invite.used}/
+                    {invite.maxUses === -1 ? "∞" : invite.maxUses} | Expires:{" "}
+                    {new Date(invite.expiresAt).toLocaleDateString()}
+                    {invite.note && ` | ${invite.note}`}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleRevokeInvite(invite.code)}
+                  className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-all"
+                >
+                  Revoke
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* Feature Access Overview */}
-      <div className="bg-blue-900/20 rounded-lg p-6 border border-blue-500/30">
-        <h2 className="text-lg font-bold text-blue-400 mb-4 flex items-center gap-2">
+      <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/30">
+        <h2 className="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
           <Icon name="eye" size={18} />
           Feature Access Overview
         </h2>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div className="bg-slate-800/50 p-4 rounded border border-green-500/30">
             <h3 className="text-sm font-bold text-green-400 mb-3">
               👤 Regular Users (Non-Admin)
@@ -237,8 +371,8 @@ const AdminPanel = ({
       </div>
 
       {/* Token Usage */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-slate-500/30">
-        <h2 className="text-lg font-bold text-slate-300 mb-4 flex items-center gap-2">
+      <div className="bg-slate-800 rounded-lg p-4 border border-slate-500/30">
+        <h2 className="text-lg font-bold text-slate-300 mb-3 flex items-center gap-2">
           <Icon name="activity" size={18} />
           Token Usage
         </h2>
@@ -246,13 +380,13 @@ const AdminPanel = ({
       </div>
 
       {/* API Configuration */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-indigo-500/30">
-        <h2 className="text-lg font-bold text-indigo-400 mb-4 flex items-center gap-2">
+      <div className="bg-slate-800 rounded-lg p-4 border border-indigo-500/30">
+        <h2 className="text-lg font-bold text-indigo-400 mb-3 flex items-center gap-2">
           <Icon name="key" size={18} />
           API Configuration
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div>
             <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
               {UI_LABELS.API_KEY_LABEL}
@@ -295,7 +429,7 @@ const AdminPanel = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
                 Creator Name
@@ -325,8 +459,8 @@ const AdminPanel = ({
       </div>
 
       {/* Source Files */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-blue-500/30">
-        <h2 className="text-lg font-bold text-blue-400 mb-4 flex items-center gap-2">
+      <div className="bg-slate-800 rounded-lg p-4 border border-blue-500/30">
+        <h2 className="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
           <Icon name="file-text" size={18} />
           Source Material
         </h2>
@@ -379,8 +513,8 @@ const AdminPanel = ({
       </div>
 
       {/* Custom Tags */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-orange-500/30">
-        <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
+      <div className="bg-slate-800 rounded-lg p-4 border border-orange-500/30">
+        <h2 className="text-lg font-bold text-orange-400 mb-3 flex items-center gap-2">
           <Icon name="tag" size={18} />
           Custom Tags
         </h2>
@@ -396,8 +530,8 @@ const AdminPanel = ({
       </div>
 
       {/* Training Data Export */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-purple-500/30">
-        <h2 className="text-lg font-bold text-purple-400 mb-4 flex items-center gap-2">
+      <div className="bg-slate-800 rounded-lg p-4 border border-purple-500/30">
+        <h2 className="text-lg font-bold text-purple-400 mb-3 flex items-center gap-2">
           <Icon name="database" size={18} />
           Vertex AI Training Data
         </h2>
@@ -435,8 +569,8 @@ const AdminPanel = ({
       </div>
 
       {/* AI Score Import */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-yellow-500/30">
-        <h2 className="text-lg font-bold text-yellow-400 mb-4 flex items-center gap-2">
+      <div className="bg-slate-800 rounded-lg p-4 border border-yellow-500/30">
+        <h2 className="text-lg font-bold text-yellow-400 mb-3 flex items-center gap-2">
           <Icon name="zap" size={18} />
           AI Score Import
         </h2>
@@ -527,8 +661,8 @@ const AdminPanel = ({
       </div>
 
       {/* Environment Info */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-cyan-500/30">
-        <h2 className="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2">
+      <div className="bg-slate-800 rounded-lg p-4 border border-cyan-500/30">
+        <h2 className="text-lg font-bold text-cyan-400 mb-3 flex items-center gap-2">
           <Icon name="server" size={18} />
           Environment Info
         </h2>
@@ -588,99 +722,9 @@ const AdminPanel = ({
         </div>
       </div>
 
-      {/* Create Invite Section */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-blue-500/30">
-        <h2 className="text-lg font-bold text-blue-400 mb-4 flex items-center gap-2">
-          <Icon name="mail" size={18} />
-          Generate Invite Code
-        </h2>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-xs text-slate-400 mb-1">Role</label>
-            <select
-              value={newInviteSettings.role}
-              onChange={(e) =>
-                setNewInviteSettings({
-                  ...newInviteSettings,
-                  role: e.target.value,
-                })
-              }
-              className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
-            >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-400 mb-1">
-              Max Uses
-            </label>
-            <input
-              type="number"
-              value={newInviteSettings.maxUses}
-              onChange={(e) =>
-                setNewInviteSettings({
-                  ...newInviteSettings,
-                  maxUses: parseInt(e.target.value),
-                })
-              }
-              className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
-              min="1"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-400 mb-1">
-              Expires In (Days)
-            </label>
-            <input
-              type="number"
-              value={newInviteSettings.expiresInDays}
-              onChange={(e) =>
-                setNewInviteSettings({
-                  ...newInviteSettings,
-                  expiresInDays: parseInt(e.target.value),
-                })
-              }
-              className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
-              min="1"
-              max="30"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-400 mb-1">
-              Note (Optional)
-            </label>
-            <input
-              type="text"
-              value={newInviteSettings.note}
-              onChange={(e) =>
-                setNewInviteSettings({
-                  ...newInviteSettings,
-                  note: e.target.value,
-                })
-              }
-              placeholder="e.g., For John Doe"
-              className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
-            />
-          </div>
-        </div>
-
-        <button
-          onClick={handleCreateInvite}
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold transition-all flex items-center justify-center gap-2"
-        >
-          <Icon name="plus" size={16} />
-          Create Invite
-        </button>
-      </div>
-
       {/* Registered Users */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-green-500/30">
-        <h2 className="text-lg font-bold text-green-400 mb-4 flex items-center gap-2">
+      <div className="bg-slate-800 rounded-lg p-4 border border-green-500/30">
+        <h2 className="text-lg font-bold text-green-400 mb-3 flex items-center gap-2">
           <Icon name="users" size={18} />
           Registered Users ({users.length})
         </h2>
@@ -742,46 +786,76 @@ const AdminPanel = ({
         </div>
       </div>
 
-      {/* Active Invites */}
-      <div className="bg-slate-800 rounded-lg p-6 border border-yellow-500/30">
-        <h2 className="text-lg font-bold text-yellow-400 mb-4 flex items-center gap-2">
-          <Icon name="key" size={18} />
-          Active Invites ({invites.length})
+      {/* Database Management */}
+      <div className="bg-slate-800 rounded-lg p-4 border border-red-500/30">
+        <h2 className="text-lg font-bold text-red-400 mb-3 flex items-center gap-2">
+          <Icon name="database" size={18} />
+          Database Management
         </h2>
+        <p className="text-xs text-slate-400 mb-4">
+          ⚠️ Danger Zone: These operations permanently delete data and cannot be
+          undone.
+        </p>
 
-        <div className="space-y-2">
-          {invites.length === 0 ? (
-            <p className="text-slate-500 text-sm">No active invites</p>
-          ) : (
-            invites.map((invite) => (
-              <div
-                key={invite.code}
-                className="bg-slate-700/50 p-3 rounded flex items-center justify-between"
-              >
-                <div className="flex-1">
-                  <div className="text-white font-mono text-sm">
-                    {invite.code}
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    <span className="inline-block px-2 py-0.5 rounded bg-slate-600 mr-2">
-                      {invite.role}
-                    </span>
-                    Uses: {invite.used}/
-                    {invite.maxUses === -1 ? "∞" : invite.maxUses} | Expires:{" "}
-                    {new Date(invite.expiresAt).toLocaleDateString()}
-                    {invite.note && ` | ${invite.note}`}
-                  </div>
-                </div>
+        <div className="space-y-3">
+          <button
+            onClick={async () => {
+              if (
+                !confirm(
+                  "⚠️ DELETE ALL QUESTIONS?\n\nThis will permanently delete ALL questions from the database for ALL users.\n\nThis action CANNOT be undone!\n\nType 'DELETE' to confirm."
+                )
+              )
+                return;
 
-                <button
-                  onClick={() => handleRevokeInvite(invite.code)}
-                  className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-all"
-                >
-                  Revoke
-                </button>
-              </div>
-            ))
-          )}
+              const confirmText = prompt("Type DELETE to confirm:");
+              if (confirmText !== "DELETE") {
+                showMessage("❌ Deletion cancelled", 3000);
+                return;
+              }
+
+              try {
+                showMessage("🗑️ Deleting all questions...", 10000);
+                const count = await clearAllQuestionsFromFirestore();
+                showMessage(
+                  `✅ Deleted ${count} questions from database`,
+                  5000
+                );
+              } catch (error) {
+                showMessage(`❌ Delete failed: ${error.message}`, 5000);
+                console.error(error);
+              }
+            }}
+            className="w-full px-4 py-3 bg-red-900/30 hover:bg-red-900/50 text-red-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-red-700/50"
+          >
+            <Icon name="trash-2" size={16} />
+            Delete All Questions (ALL USERS)
+          </button>
+
+          <button
+            onClick={async () => {
+              if (
+                !confirm(
+                  "Clear all rejected questions from the database?\n\nThis will only delete questions with status='rejected'."
+                )
+              )
+                return;
+
+              try {
+                showMessage("🗑️ Clearing rejected questions...", 10000);
+                // This would need a Cloud Function - for now just show message
+                showMessage(
+                  "⚠️ Feature not yet implemented - needs Cloud Function",
+                  5000
+                );
+              } catch (error) {
+                showMessage(`❌ Clear failed: ${error.message}`, 5000);
+              }
+            }}
+            className="w-full px-4 py-3 bg-orange-900/30 hover:bg-orange-900/50 text-orange-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-orange-700/50"
+          >
+            <Icon name="filter" size={16} />
+            Clear Rejected Questions
+          </button>
         </div>
       </div>
     </div>

@@ -39,10 +39,41 @@ const generateDisciplineQuestions = (discipline, count, startId) => {
 
   for (let i = 0; i < count; i++) {
     const isMC = Math.random() > 0.3; // 70% Multiple Choice
-    const difficulty =
-      difficulties[Math.floor(Math.random() * difficulties.length)];
+    // Cycle through difficulties to ensure a mix (Easy -> Medium -> Hard -> Easy...)
+    const difficulty = difficulties[i % difficulties.length];
     const topic =
       disciplineTopics[Math.floor(Math.random() * disciplineTopics.length)];
+
+    // Options Logic
+    const letters = ["a", "b", "c", "d"];
+    let optionsObj = {};
+    let correctKey = "";
+
+    if (isMC) {
+      // 1. Define raw options
+      const rawOptions = [
+        "Correct Answer",
+        "Wrong Option A",
+        "Wrong Option B",
+        "Wrong Option C",
+      ];
+      // 2. Shuffle raw options
+      const shuffled = rawOptions
+        .map((value) => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value);
+
+      // 3. Assign to letters
+      shuffled.forEach((opt, idx) => {
+        const key = letters[idx];
+        optionsObj[key] = opt;
+        if (opt === "Correct Answer") correctKey = key;
+      });
+    } else {
+      // Boolean logic
+      optionsObj = { true: "True", false: "False" };
+      correctKey = Math.random() > 0.5 ? "true" : "false";
+    }
 
     questions.push({
       id: `mock-${startId + i}`,
@@ -51,23 +82,13 @@ const generateDisciplineQuestions = (discipline, count, startId) => {
       question: `[MOCK] ${discipline} Question about ${topic} #${
         i + 1
       }: How would you implement this feature in UE5?`,
-      answer: "Correct Answer",
-      options: isMC
-        ? [
-            "Correct Answer",
-            "Wrong Option A",
-            "Wrong Option B",
-            "Wrong Option C",
-          ]
-        : ["True", "False"],
-      correctAnswer: isMC
-        ? "Correct Answer"
-        : Math.random() > 0.5
-        ? "True"
-        : "False",
+      answer: "Correct Answer", // Plain text answer
+      options: optionsObj,
+      correct: correctKey, // Stores the KEY ('a', 'b', 'true', etc)
+      correctAnswer: correctKey, // Legacy field sync
       difficulty: difficulty,
       type: isMC ? "Multiple Choice" : "True/False",
-      status: "accepted", // Crucial for passing the filter
+      status: "accepted",
       tags: [topic, discipline, "Mock Data"],
       aiScore: Math.floor(Math.random() * 30) + 70, // 70-100
       createdAt: new Date().toISOString(),
