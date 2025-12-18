@@ -1200,7 +1200,14 @@ exports.listRegisteredUsers = functions
         .limit(100) // Safety limit
         .get();
 
-      const users = usersSnapshot.docs.map((doc) => doc.data());
+      const users = usersSnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          ...data,
+          registeredAt:
+            data.registeredAt?.toDate?.()?.toISOString() || data.registeredAt,
+        };
+      });
 
       return { users };
     } catch (error) {
@@ -1244,10 +1251,19 @@ exports.listInvites = functions
 
       // Sort in memory instead of using Firestore orderBy (avoids composite index)
       const invites = invitesSnapshot.docs
-        .map((doc) => doc.data())
+        .map((doc) => {
+          const data = doc.data();
+          return {
+            ...data,
+            createdAt:
+              data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+            expiresAt:
+              data.expiresAt?.toDate?.()?.toISOString() || data.expiresAt,
+          };
+        })
         .sort((a, b) => {
-          const aTime = a.createdAt?.toMillis() || 0;
-          const bTime = b.createdAt?.toMillis() || 0;
+          const aTime = new Date(a.createdAt).getTime() || 0;
+          const bTime = new Date(b.createdAt).getTime() || 0;
           return bTime - aTime; // Descending order (newest first)
         });
 

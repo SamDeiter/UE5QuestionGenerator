@@ -30,9 +30,11 @@ const AdminPanel = ({
   onSaveCustomTags,
   currentUser, // Add currentUser prop
 }) => {
-  // Super Admin check - configured via VITE_SUPER_ADMIN_EMAIL
-  const isSuperAdmin =
-    currentUser?.email === import.meta.env.VITE_SUPER_ADMIN_EMAIL;
+  // Super Admin check - case-insensitive with trim
+  const userEmail = currentUser?.email?.toLowerCase();
+  const envSuperAdmin =
+    import.meta.env.VITE_SUPER_ADMIN_EMAIL?.trim()?.toLowerCase();
+  const isSuperAdmin = userEmail === envSuperAdmin && envSuperAdmin;
 
   // Collapsible sections state
   const [collapsed, setCollapsed] = useState({
@@ -187,6 +189,21 @@ const AdminPanel = ({
       showMessage(`❌ Failed to change role: ${error.message}`, 5000);
       // Reload data to restore UI state if role change failed
       await loadData();
+    }
+  };
+  // Robust date formatter
+  const formatDate = (dateVal) => {
+    if (!dateVal) return "N/A";
+    try {
+      // Handle Firestore Timestamp objects if they still arrive as such
+      const date =
+        dateVal.toDate instanceof Function
+          ? dateVal.toDate()
+          : new Date(dateVal);
+      return isNaN(date.getTime()) ? "Invalid Date" : date.toLocaleDateString();
+    } catch (e) {
+      console.error("Date formatting error:", e);
+      return "Invalid Date";
     }
   };
 
@@ -483,7 +500,7 @@ const AdminPanel = ({
                       >
                         {user.role}
                       </span>
-                      Joined: {new Date(user.registeredAt).toLocaleDateString()}
+                      Joined: {formatDate(user.registeredAt)}
                     </div>
                   </div>
 
@@ -555,7 +572,7 @@ const AdminPanel = ({
                       </span>
                       Uses: {invite.used}/
                       {invite.maxUses === -1 ? "∞" : invite.maxUses} | Expires:{" "}
-                      {new Date(invite.expiresAt).toLocaleDateString()}
+                      {formatDate(invite.expiresAt)}
                       {invite.note && ` | ${invite.note}`}
                     </div>
                   </div>

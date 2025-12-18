@@ -38,8 +38,11 @@ const Header = ({
 }) => {
   const [showTutorialCenter, setShowTutorialCenter] = useState(false);
 
-  // Super Admin check
-  const isSuperAdmin = user?.email === import.meta.env.VITE_SUPER_ADMIN_EMAIL;
+  // Super Admin check - case-insensitive with trim
+  const userEmail = user?.email?.toLowerCase();
+  const envSuperAdmin =
+    import.meta.env.VITE_SUPER_ADMIN_EMAIL?.trim()?.toLowerCase();
+  const isSuperAdmin = userEmail === envSuperAdmin && envSuperAdmin;
   const connectionStatus = useConnectionStatus();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -174,11 +177,13 @@ const Header = ({
               />
               <span>{creatorName}</span>
               {isAdmin && (
-                <span className={`text-[9px] font-semibold px-1 py-0.5 rounded border ml-0.5 ${
-                  isSuperAdmin 
-                    ? "bg-purple-900/50 text-purple-400 border-purple-800" 
-                    : "bg-orange-900/50 text-orange-400 border-orange-800"
-                }`}>
+                <span
+                  className={`text-[9px] font-semibold px-1 py-0.5 rounded border ml-0.5 ${
+                    isSuperAdmin
+                      ? "bg-purple-900/50 text-purple-400 border-purple-800"
+                      : "bg-orange-900/50 text-orange-400 border-orange-800"
+                  }`}
+                >
                   {isSuperAdmin ? "SUPER" : "ADMIN"}
                 </span>
               )}
@@ -347,11 +352,13 @@ const Header = ({
                   />
                   <span>{creatorName}</span>
                   {isAdmin && (
-                    <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded border ${
-                      isSuperAdmin 
-                        ? "bg-purple-900/50 text-purple-400 border-purple-800" 
-                        : "bg-orange-900/50 text-orange-400 border-orange-800"
-                    }`}>
+                    <span
+                      className={`text-[11px] font-semibold px-1.5 py-0.5 rounded border ${
+                        isSuperAdmin
+                          ? "bg-purple-900/50 text-purple-400 border-purple-800"
+                          : "bg-orange-900/50 text-orange-400 border-orange-800"
+                      }`}
+                    >
                       {isSuperAdmin ? "SUPER" : "ADMIN"}
                     </span>
                   )}

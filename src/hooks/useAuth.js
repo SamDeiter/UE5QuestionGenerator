@@ -19,10 +19,10 @@ import {
 } from "../services/inviteService";
 
 // Fallback admin emails - these get auto-promoted to admin on first sign-in
+// We normalize these to lowercase for safe comparisons
 const FALLBACK_ADMIN_EMAILS = [
-  import.meta.env.VITE_SUPER_ADMIN_EMAIL,
-  // [personal email] is a regular user (non-admin)
-];
+  (import.meta.env.VITE_SUPER_ADMIN_EMAIL || "").trim().toLowerCase(),
+].filter((email) => email !== "");
 
 /**
  * Custom hook for managing authentication and compliance state.
@@ -59,10 +59,28 @@ export function useAuth(showMessage) {
       setAuthLoading(false);
 
       if (currentUser) {
+        const userEmail = (currentUser.email || "").toLowerCase();
+        const superAdminEmailFromEnv = (
+          import.meta.env.VITE_SUPER_ADMIN_EMAIL || ""
+        )
+          .trim()
+          .toLowerCase();
+
+        const isSuperAdmin =
+          userEmail === superAdminEmailFromEnv && superAdminEmailFromEnv !== "";
+
         // Check registration status via Cloud Function
         setRegistrationLoading(true);
         try {
           let regStatus = await checkUserRegistration();
+
+          // FORCE ADMIN STATUS FOR SUPER ADMIN
+          // This ensures the project owner always has access regardless of Firestore state
+          if (isSuperAdmin) {
+            console.log("👑 Super Admin detected - enforcing admin status");
+            regStatus.registered = true;
+            regStatus.role = "admin";
+          }
 
           // Auto-promote whitelisted emails to admin if not yet registered
           if (
