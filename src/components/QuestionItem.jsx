@@ -115,9 +115,11 @@ const QuestionItem = ({
 
   // Reset ref when modal is closed so we can show the same critique again if needed
   const handleModalDismiss = useCallback(() => {
-    lastProcessedCritiqueRef.current = null;
+    // Mark as dismissed instead of null to prevent auto-reopen
+    const critiqueKey = `${q.id}-${q.critiqueScore}`;
+    lastProcessedCritiqueRef.current = `dismissed-${critiqueKey}`;
     setShowImprovementModal(false);
-  }, []);
+  }, [q.id, q.critiqueScore]);
 
   const getStatusStyle = (status) => {
     switch (status) {
