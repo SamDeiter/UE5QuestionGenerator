@@ -215,6 +215,7 @@ export const useTutorial = (showMessage, onError, appContext = {}) => {
 
   /**
    * Skip/cancel the tutorial
+   * Also marks as completed so it doesn't re-trigger on next visit
    */
   const handleTutorialSkip = () => {
     if (tutorialState !== TUTORIAL_STATES.ACTIVE) {
@@ -226,6 +227,12 @@ export const useTutorial = (showMessage, onError, appContext = {}) => {
       atStep: currentStep,
       stepId: tutorialSteps[currentStep]?.id,
     });
+
+    // Mark as completed so it doesn't auto-trigger again
+    // Users can restart manually from the tutorial button if needed
+    if (activeScenario) {
+      setScenarioCompleted(activeScenario);
+    }
 
     setTutorialState(TUTORIAL_STATES.IDLE);
     setActiveScenario(null);
