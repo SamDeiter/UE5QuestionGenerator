@@ -91,7 +91,7 @@ exports.sendReviewerInvites = functions
     // Send emails sequentially to avoid rate limits
     for (const invite of invites) {
       try {
-        const { email, inviteUrl, code, note } = invite;
+        const { email, inviteUrl, code, note, expiresAt, maxUses } = invite;
 
         if (!email || !inviteUrl) {
           results.failed.push({
@@ -104,6 +104,25 @@ exports.sendReviewerInvites = functions
         // Extract reviewer name from note (e.g., "Targeted REVIEWER invite for John Doe")
         const reviewerName =
           note?.match(/for (.+)$/)?.[1] || email.split("@")[0];
+
+        // Calculate days until expiration
+        let expirationText = "30 days";
+        if (expiresAt) {
+          const expireDate = expiresAt.toDate
+            ? expiresAt.toDate()
+            : new Date(expiresAt);
+          const daysUntilExpiry = Math.ceil(
+            (expireDate - new Date()) / (1000 * 60 * 60 * 24)
+          );
+          expirationText =
+            daysUntilExpiry > 0 ? `${daysUntilExpiry} days` : "soon";
+        }
+
+        // Format max uses
+        const usesText =
+          maxUses === -1
+            ? "unlimited uses"
+            : `${maxUses} use${maxUses !== 1 ? "s" : ""}`;
 
         const msg = {
           to: email,
@@ -147,7 +166,8 @@ exports.sendReviewerInvites = functions
     
     <p style="font-size: 12px; color: #666;">Or copy this link: <code>${inviteUrl}</code></p>
     
-    <p>This link is personalized for <strong>${email}</strong> and will expire in <strong>30 days</strong>.</p>
+    <p>This link is personalized for <strong>${email}</strong>.</p>
+    <p><strong>⏰ Expires in:</strong> ${expirationText} | <strong>🎫 Can be used:</strong> ${usesText}</p>
     
     <h3>📚 How It Works</h3>
     <p>For a complete guide on how to review questions, please read the documentation:</p>

@@ -221,6 +221,8 @@ const AdminPanel = ({
         note:
           inv.note ||
           `Targeted REVIEWER invite for ${inv.forEmail || "reviewer"}`,
+        expiresAt: inv.expiresAt,
+        maxUses: inv.maxUses,
       }));
 
       showMessage("📧 Sending emails...", 3000);
@@ -266,6 +268,8 @@ const AdminPanel = ({
           note:
             invite.note ||
             `Targeted REVIEWER invite for ${invite.forEmail || "reviewer"}`,
+          expiresAt: invite.expiresAt,
+          maxUses: invite.maxUses,
         },
       ];
 
@@ -332,61 +336,31 @@ const AdminPanel = ({
           />
         </h2>
         {!collapsed.featureAccess && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-slate-800/50 p-4 rounded border border-green-500/30">
-              <h3 className="text-sm font-bold text-green-400 mb-3">
-                👤 Regular Users (Non-Admin)
-              </h3>
-              <ul className="space-y-2 text-xs text-slate-300">
-                <li className="flex items-center gap-2">
-                  <Icon
-                    name="list-checks"
-                    size={12}
-                    className="text-green-400"
-                  />
-                  Review Mode (view & approve questions)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="database" size={12} className="text-green-400" />
-                  Database View (read-only)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon
-                    name="bar-chart-2"
-                    size={12}
-                    className="text-green-400"
-                  />
-                  Analytics Dashboard
-                </li>
-                <li className="flex items-center gap-2 text-slate-500">
-                  <Icon name="x" size={12} className="text-red-400" />
-                  <span className="line-through">
-                    Create Questions (Admin Only)
-                  </span>
-                </li>
-                <li className="flex items-center gap-2 text-slate-500">
-                  <Icon name="x" size={12} className="text-red-400" />
-                  <span className="line-through">Prompt Lab (Admin Only)</span>
-                </li>
-                <li className="flex items-center gap-2 text-slate-500">
-                  <Icon name="x" size={12} className="text-red-400" />
-                  <span className="line-through">Admin Panel (Admin Only)</span>
-                </li>
-              </ul>
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-slate-800/50 p-4 rounded border border-blue-500/30">
               <h3 className="text-sm font-bold text-blue-400 mb-3">
                 🔍 Reviewers (Limited Access)
               </h3>
               <ul className="space-y-2 text-xs text-slate-300">
                 <li className="flex items-center gap-2">
-                  <Icon name="check" size={12} className="text-blue-400" />
-                  All Regular User Features
+                  <Icon
+                    name="list-checks"
+                    size={12}
+                    className="text-blue-400"
+                  />
+                  Review Mode (view & approve questions)
                 </li>
                 <li className="flex items-center gap-2">
                   <Icon name="database" size={12} className="text-blue-400" />
                   Database View (Extended Access)
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon
+                    name="bar-chart-2"
+                    size={12}
+                    className="text-blue-400"
+                  />
+                  Analytics Dashboard
                 </li>
                 <li className="flex items-center gap-2 text-slate-500">
                   <Icon name="x" size={12} className="text-red-400" />
@@ -406,7 +380,7 @@ const AdminPanel = ({
               <ul className="space-y-2 text-xs text-slate-300">
                 <li className="flex items-center gap-2">
                   <Icon name="check" size={12} className="text-purple-400" />
-                  All Regular User Features
+                  All Reviewer Features
                 </li>
                 <li className="flex items-center gap-2">
                   <Icon
