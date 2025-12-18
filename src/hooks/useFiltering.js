@@ -149,16 +149,9 @@ export function useFiltering({
       newHash === prevHash &&
       prevContextFilteredRef.current.length > 0
     ) {
-      console.log(
-        "🔒 [useFiltering] contextFilteredQuestions STABLE (same IDs and content)"
-      );
       return prevContextFilteredRef.current;
     }
 
-    console.log("🔄 [useFiltering] contextFilteredQuestions CHANGED", {
-      idsChanged: newIds !== prevIds,
-      contentChanged: newHash !== prevHash,
-    });
     prevContextFilteredRef.current = newResult;
     return newResult;
   }, [
