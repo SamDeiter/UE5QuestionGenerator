@@ -107,7 +107,7 @@ exports.sendReviewerInvites = functions
 
         const msg = {
           to: email,
-          from: "samdeiter@gmail.com", // Must be verified sender in SendGrid
+          from: "sam.deiter@epicgames.com", // Must be verified sender in SendGrid
           subject: "Invitation: UE5 Question Generator Reviewer Access",
           html: `
 <!DOCTYPE html>
