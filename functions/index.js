@@ -631,7 +631,7 @@ exports.validateInvite = functions
 
       return {
         valid: true,
-        role: invite.role || "user",
+        role: invite.role || "reviewer",
         expiresAt: invite.expiresAt
           ? invite.expiresAt.toDate().toISOString()
           : null,
@@ -759,7 +759,7 @@ exports.consumeInvite = functions
             email: userEmail,
             uid: userId,
             inviteCode: sanitizedCode,
-            role: invite.role || "user",
+            role: invite.role || "reviewer",
             registeredAt: admin.firestore.Timestamp.now(),
           },
           { merge: true }
@@ -767,7 +767,7 @@ exports.consumeInvite = functions
 
       console.log(`Invite ${sanitizedCode} consumed by ${userEmail}`);
 
-      return { success: true, role: invite.role || "user" };
+      return { success: true, role: invite.role || "reviewer" };
     } catch (error) {
       if (error instanceof functions.https.HttpsError) {
         throw error;
@@ -850,7 +850,7 @@ exports.createInvite = functions
         maxUses: maxUses === -1 ? -1 : Math.max(1, maxUses),
         currentUses: 0,
         usedBy: [],
-        role: ["admin", "reviewer"].includes(role) ? role : "user",
+        role: ["admin", "reviewer"].includes(role) ? role : "reviewer",
         isActive: true,
         note: (note || "").substring(0, 200), // Limit note length
         forEmail: sanitizedEmail, // NEW: Store the target email
@@ -980,7 +980,7 @@ exports.checkUserRegistration = functions
         const userData = userDoc.data();
         return {
           registered: true,
-          role: userData.role || "user",
+          role: userData.role || "reviewer",
           registeredAt: userData.registeredAt?.toDate()?.toISOString(),
         };
       }

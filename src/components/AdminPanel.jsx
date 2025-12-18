@@ -60,7 +60,7 @@ const AdminPanel = ({
   const safeHandleChange = handleChange || (() => {});
   const [loading, setLoading] = useState(true);
   const [newInviteSettings, setNewInviteSettings] = useState({
-    role: "user",
+    role: "reviewer",
     maxUses: 1,
     expiresInDays: 7,
     note: "",
@@ -165,12 +165,8 @@ const AdminPanel = ({
   };
 
   const handleChangeRole = async (userId, currentRole, email) => {
-    const getNextRole = (role) => {
-      if (role === "admin") return "user";
-      if (role === "reviewer") return "admin";
-      return "reviewer";
-    };
-    const newRole = getNextRole(currentRole);
+    // Simple toggle between admin and reviewer (no user role)
+    const newRole = currentRole === "admin" ? "reviewer" : "admin";
     if (!confirm(`Change ${email} from ${currentRole} to ${newRole}?`)) return;
 
     try {
@@ -483,7 +479,6 @@ const AdminPanel = ({
                     }
                     className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm"
                   >
-                    <option value="user">User</option>
                     <option value="reviewer">Reviewer</option>
                     <option value="admin">Admin</option>
                   </select>
