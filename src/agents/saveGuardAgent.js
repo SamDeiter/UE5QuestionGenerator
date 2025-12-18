@@ -113,8 +113,17 @@ export class SaveGuardAgent {
     } catch (error) {
       console.error("[SaveGuard] Save failed:", error);
 
-      // Parse error type
-      const errorMessage = error.message || error.toString();
+      // Parse error type - ensure errorMessage is always a string
+      let errorMessage;
+      if (error && typeof error === "object" && error.message) {
+        errorMessage = String(error.message);
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error) {
+        errorMessage = JSON.stringify(error);
+      } else {
+        errorMessage = "Unknown error occurred";
+      }
 
       if (errorMessage.includes("VERSION_CONFLICT")) {
         return {
@@ -251,7 +260,18 @@ export class SaveGuardAgent {
       return result;
     } catch (error) {
       console.error("[SaveGuard] Unsafe save failed:", error);
-      const errorMessage = error.message || error.toString();
+
+      // Parse error type - ensure errorMessage is always a string
+      let errorMessage;
+      if (error && typeof error === "object" && error.message) {
+        errorMessage = String(error.message);
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error) {
+        errorMessage = JSON.stringify(error);
+      } else {
+        errorMessage = "Unknown error occurred";
+      }
 
       if (errorMessage.includes("VERSION_CONFLICT")) {
         return {
