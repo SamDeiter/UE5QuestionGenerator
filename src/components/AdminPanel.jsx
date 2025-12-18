@@ -624,8 +624,8 @@ const AdminPanel = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* Resend Email Button - Only for reviewer invites with an email */}
-                      {invite.role === "reviewer" && invite.forEmail && (
+                      {/* Resend Email Button - Only for invites with an email */}
+                      {invite.forEmail && (
                         <button
                           onClick={() => handleResendSingleInvite(invite)}
                           className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded transition-all flex items-center gap-1"
