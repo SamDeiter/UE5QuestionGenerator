@@ -98,6 +98,14 @@ const QuestionItem = ({
         return;
       }
 
+      // Skip if user dismissed this specific critique
+      if (lastProcessedCritiqueRef.current === `dismissed-${critiqueKey}`) {
+        console.log(
+          "[QuestionItem DEBUG] Skipping - user dismissed this critique"
+        );
+        return;
+      }
+
       console.log(
         "[QuestionItem DEBUG] Opening modal for score:",
         q.critiqueScore
