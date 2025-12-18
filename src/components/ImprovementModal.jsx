@@ -35,7 +35,10 @@ const ImprovementModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 rounded-xl border-2 border-green-500/50 shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div
+        className="bg-slate-900 rounded-xl border-2 border-green-500/50 shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 border-b border-green-600/30 px-5 py-3">
           <div className="flex items-center justify-between">
