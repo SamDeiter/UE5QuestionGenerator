@@ -1600,3 +1600,8 @@ exports.migrateTranslations = functions
       );
     }
   });
+
+// ============================================================================
+// EMAIL SENDING - SendGrid Integration
+// ============================================================================
+Object.assign(exports, require("./sendReviewerInvites"));

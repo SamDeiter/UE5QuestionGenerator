@@ -16,6 +16,7 @@ import { createInvite, revokeInvite } from "../services/inviteService";
 import { downloadTrainingData } from "../utils/analyticsStore";
 import { UI_LABELS } from "../utils/constants";
 import { clearAllQuestionsFromFirestore } from "../services/firebase";
+import { sendReviewerInvitesViaEmail } from "../services/cloudFunctions";
 
 const functions = getFunctions(app, "us-central1");
 
@@ -191,6 +192,65 @@ const AdminPanel = ({
       await loadData();
     }
   };
+
+  // Handle sending reviewer invite emails via SendGrid
+  const handleSendEmailInvites = async () => {
+    // Filter for reviewer invites that haven't been used
+    const reviewerInvites = invites.filter(
+      (inv) =>
+        inv.role === "reviewer" &&
+        inv.currentUses < (inv.maxUses === -1 ? Infinity : inv.maxUses)
+    );
+
+    if (reviewerInvites.length === 0) {
+      showMessage("⚠️ No pending reviewer invites to send", 3000);
+      return;
+    }
+
+    if (
+      !confirm(
+        `Send ${reviewerInvites.length} reviewer invite email(s) via SendGrid?`
+      )
+    )
+      return;
+
+    try {
+      // Map invites to email payload format
+      const emailPayload = reviewerInvites.map((inv) => ({
+        email: inv.forEmail || "unknown@example.com",
+        inviteUrl: `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${
+          inv.code
+        }${inv.forEmail ? `&email=${encodeURIComponent(inv.forEmail)}` : ""}`,
+        code: inv.code,
+        note:
+          inv.note ||
+          `Targeted REVIEWER invite for ${inv.forEmail || "reviewer"}`,
+      }));
+
+      showMessage("📧 Sending emails...", 3000);
+
+      const result = await sendReviewerInvitesViaEmail(emailPayload);
+
+      if (result.sent.length > 0) {
+        showMessage(
+          `✅ Sent ${result.sent.length} email(s) successfully!`,
+          5000
+        );
+      }
+
+      if (result.failed.length > 0) {
+        showMessage(
+          `⚠️ ${result.failed.length} email(s) failed. Check console for details.`,
+          5000
+        );
+        console.error("Failed emails:", result.failed);
+      }
+    } catch (error) {
+      console.error("❌ Email send error:", error);
+      showMessage(`❌ Failed to send emails: ${error.message}`, 5000);
+    }
+  };
+
   // Robust date formatter
   const formatDate = (dateVal) => {
     if (!dateVal) return "N/A";
@@ -586,7 +646,24 @@ const AdminPanel = ({
                 </div>
               ))
             )}
+        }
+        
+        {/* Send Email Invites Button */}
+        {!collapsed.activeInvites && invites.some((inv) => inv.role === "reviewer") && (
+          <div className="mt-3 pt-3 border-t border-yellow-500/20">
+            <button
+              onClick={handleSendEmailInvites}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
+            >
+              <Icon name="mail" size={18} />
+              Send Reviewer Invite Emails
+            </button>
+            <p className="text-xs text-slate-500 mt-2 text-center">
+              Sends personalized emails via SendGrid to all pending reviewer invites
+            </p>
           </div>
+        )}
+      </div>
         )}
       </div>
 

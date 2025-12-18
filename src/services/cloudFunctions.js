@@ -142,3 +142,32 @@ export const migrateTranslationsViaCloudFunction = async () => {
     throw error;
   }
 };
+
+/**
+ * Calls the sendReviewerInvites Cloud Function
+ * Sends personalized invite emails to reviewers via SendGrid
+ * ADMIN ONLY
+ * @param {Array} invites - Array of invite objects { email, inviteUrl, code, note }
+ * @returns {Promise<{success: boolean, sent: string[], failed: object[], total: number}>}
+ */
+export const sendReviewerInvitesViaEmail = async (invites) => {
+  try {
+    const sendReviewerInvites = httpsCallable(functions, "sendReviewerInvites");
+
+    const result = await sendReviewerInvites({ invites });
+
+    if (!result.data.success) {
+      throw new Error(result.data.error || "Email send failed");
+    }
+
+    return {
+      success: true,
+      sent: result.data.sent,
+      failed: result.data.failed,
+      total: result.data.total,
+    };
+  } catch (error) {
+    console.error("SendReviewerInvites Cloud Function error:", error);
+    throw error;
+  }
+};
