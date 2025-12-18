@@ -187,13 +187,6 @@ export function useFiltering({
 
   // 3. Now apply the status filter for the actual view
   const filteredQuestions = useMemo(() => {
-    console.log(
-      "🔍 [useFiltering] filteredQuestions recalculating. Triggered by:",
-      {
-        contextFilteredQuestionsCount: contextFilteredQuestions.length,
-        filterMode,
-      }
-    );
     if (filterMode === "all") return contextFilteredQuestions;
     return contextFilteredQuestions.filter((q) => {
       if (filterMode === "pending") return !q.status || q.status === "pending";
@@ -209,14 +202,6 @@ export function useFiltering({
       language,
       allQuestionsMap
     );
-
-    // B. Log selection
-    console.log("🔍 [useFiltering] uniqueFilteredQuestions updated:", {
-      language,
-      count: result.length,
-      firstQuestionLanguage: result[0]?.language,
-      firstQuestionText: result[0]?.question?.substring(0, 50) + "...",
-    });
 
     // C. Apply Stable Sort (Canonical Date = Earliest creation time of any variant in the group)
     // This ensures that translating a question (creating a newer variant)
