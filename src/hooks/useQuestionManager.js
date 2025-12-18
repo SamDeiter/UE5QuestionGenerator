@@ -266,6 +266,19 @@ export const useQuestionManager = (config, showMessage) => {
         return;
       }
 
+      // Validate that we have a valid document ID
+      const docId = currentQ.id || currentQ.uniqueId;
+      if (!docId || typeof docId !== "string") {
+        console.error("Invalid question ID:", { currentQ, id, docId });
+        if (showMessage) {
+          showMessage(
+            "⚠️ Cannot save: Question has invalid ID. Please refresh the page.",
+            5000
+          );
+        }
+        return;
+      }
+
       // SPECIAL CASE: Hard Delete if status is 'deleted'
       if (newStatus === "deleted") {
         try {
@@ -312,7 +325,7 @@ export const useQuestionManager = (config, showMessage) => {
         if (agents?.saveGuardAgent) {
           const baseVersion = questionVersions.get(id) || currentQ.version || 1;
           const result = await agents.saveGuardAgent.saveQuestionStatus(
-            currentQ.id,
+            docId, // Use validated document ID
             newStatus,
             baseVersion,
             config.userId || "unknown",
@@ -403,6 +416,19 @@ export const useQuestionManager = (config, showMessage) => {
         return;
       }
 
+      // Validate that we have a valid document ID
+      const docId = currentQ.id || currentQ.uniqueId;
+      if (!docId || typeof docId !== "string") {
+        console.error("Invalid question ID:", { currentQ, id, docId });
+        if (showMessage) {
+          showMessage(
+            "⚠️ Cannot save: Question has invalid ID. Please refresh the page.",
+            5000
+          );
+        }
+        return;
+      }
+
       const updatedQ = { ...currentQ, ...updates };
 
       try {
@@ -410,7 +436,7 @@ export const useQuestionManager = (config, showMessage) => {
         if (agents?.saveGuardAgent) {
           const baseVersion = questionVersions.get(id) || currentQ.version || 1;
           const result = await agents.saveGuardAgent.saveQuestion(
-            currentQ.id,
+            docId, // Use validated document ID
             updates,
             baseVersion,
             config.userId || "unknown",
