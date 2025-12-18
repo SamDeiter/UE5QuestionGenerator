@@ -251,6 +251,41 @@ const AdminPanel = ({
     }
   };
 
+  // Handle sending a single reviewer invite email
+  const handleResendSingleInvite = async (invite) => {
+    if (!confirm(`Resend invite email to ${invite.forEmail}?`)) return;
+
+    try {
+      const emailPayload = [
+        {
+          email: invite.forEmail,
+          inviteUrl: `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${
+            invite.code
+          }${
+            invite.forEmail
+              ? `&email=${encodeURIComponent(invite.forEmail)}`
+              : ""
+          }`,
+          code: invite.code,
+          note:
+            invite.note ||
+            `Targeted REVIEWER invite for ${invite.forEmail || "reviewer"}`,
+        },
+      ];
+
+      const result = await sendReviewerInvitesViaEmail(emailPayload);
+
+      if (result.sent.length > 0) {
+        showMessage(`✅ Resent email to ${invite.forEmail}`, 3000);
+      } else {
+        showMessage(`⚠️ Failed to send email`, 3000);
+      }
+    } catch (error) {
+      console.error("❌ Resend error:", error);
+      showMessage(`❌ Failed: ${error.message}`, 5000);
+    }
+  };
+
   // Robust date formatter
   const formatDate = (dateVal) => {
     if (!dateVal) return "N/A";
@@ -588,12 +623,26 @@ const AdminPanel = ({
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleRevokeInvite(invite.code)}
-                      className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-all"
-                    >
-                      Revoke
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {/* Resend Email Button - Only for reviewer invites with an email */}
+                      {invite.role === "reviewer" && invite.forEmail && (
+                        <button
+                          onClick={() => handleResendSingleInvite(invite)}
+                          className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded transition-all flex items-center gap-1"
+                          title={`Resend email to ${invite.forEmail}`}
+                        >
+                          <Icon name="mail" size={12} />
+                          Resend
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => handleRevokeInvite(invite.code)}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-all"
+                      >
+                        Revoke
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
