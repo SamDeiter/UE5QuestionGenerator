@@ -290,6 +290,8 @@ const QuestionItem = ({
         <LanguageControls
           q={q}
           availableLanguages={availableLanguages}
+          isLocked={isLocked}
+          lockedBy={lockedBy}
           onSwitchLanguage={onSwitchLanguage}
           onTranslateSingle={onTranslateSingle}
           isProcessing={isProcessing}

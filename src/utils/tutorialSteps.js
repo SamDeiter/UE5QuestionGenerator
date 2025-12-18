@@ -188,7 +188,7 @@ export const TUTORIAL_SCENARIOS = {
         content:
           "Click **ACCEPT** to approve quality questions or **REJECT** for poor ones. When rejecting, choose a reason (e.g., Inaccurate, Too Easy, Ambiguous) to help improve future AI generation.",
         target: '[data-tour="review-actions"]',
-        position: "top",
+        position: "left",
         scenarioId: "review",
         order: 5,
       },
