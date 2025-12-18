@@ -172,7 +172,7 @@ exports.sendReviewerInvites = functions
     </div>
     
     <h3>💬 Need Help?</h3>
-    <p>Contact: <a href="mailto:samdeiter@gmail.com">samdeiter@gmail.com</a></p>
+    <p>Contact: <a href="mailto:sam.deiter@epicgames.com">sam.deiter@epicgames.com</a></p>
   </div>
   
   <div class="footer">
