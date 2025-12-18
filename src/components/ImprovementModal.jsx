@@ -34,7 +34,7 @@ const ImprovementModal = ({
     : [];
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-start justify-center pt-8 p-4 overflow-y-auto">
       <div
         className="bg-slate-900 rounded-xl border-2 border-green-500/50 shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -252,7 +252,7 @@ const ImprovementModal = ({
                         originalTags.map((tag, idx) => (
                           <span
                             key={idx}
-                            className="px-2 py-0.5 bg-slate-700/50 border border-slate-600/50 rounded text-xs text-slate-300"
+                            className="px-2 py-1 bg-slate-700/50 border border-slate-600/50 rounded text-xs text-slate-300"
                           >
                             #{tag}
                           </span>
@@ -272,7 +272,7 @@ const ImprovementModal = ({
                           return (
                             <span
                               key={idx}
-                              className={`px-2 py-0.5 rounded text-xs ${
+                              className={`px-2 py-1 rounded text-xs ${
                                 isNew
                                   ? "bg-green-600/30 border border-green-500/50 text-green-200"
                                   : "bg-slate-700/50 border border-slate-600/50 text-slate-300"

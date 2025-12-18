@@ -89,6 +89,7 @@ const QuestionItem = ({
     // Only open if we have a new critique score that we haven't processed
     if (q.critiqueScore !== undefined && q.critiqueScore !== null) {
       const critiqueKey = `${q.id}-${q.critiqueScore}`;
+      const dismissedKey = `dismissed-${critiqueKey}`;
 
       // Skip if we've already processed this exact critique
       if (lastProcessedCritiqueRef.current === critiqueKey) {
@@ -98,12 +99,21 @@ const QuestionItem = ({
         return;
       }
 
-      // Skip if user dismissed this specific critique
-      if (lastProcessedCritiqueRef.current === `dismissed-${critiqueKey}`) {
-        console.log(
-          "[QuestionItem DEBUG] Skipping - user dismissed this critique"
-        );
-        return;
+      // Skip if user dismissed this specific critique AND the critique text hasn't changed
+      // (If critique text changed, it's a new critique even with same score)
+      if (lastProcessedCritiqueRef.current === dismissedKey) {
+        // Check if critique content is different (new critique generated)
+        const currentCritiqueText = q.critique || "";
+        const critiqueRef = lastProcessedCritiqueRef.current;
+
+        // If we have stored critique text and it matches, skip
+        if (critiqueRef.includes(currentCritiqueText.substring(0, 50))) {
+          console.log(
+            "[QuestionItem DEBUG] Skipping - user dismissed this critique"
+          );
+          return;
+        }
+        // Otherwise, it's a new critique, allow it to show
       }
 
       console.log(
@@ -115,6 +125,7 @@ const QuestionItem = ({
     }
   }, [
     q.critiqueScore,
+    q.critique, // ADDED: Trigger on new critique text
     q.suggestedRewrite,
     q.id,
     q.improvementsApplied,
@@ -123,11 +134,12 @@ const QuestionItem = ({
 
   // Reset ref when modal is closed so we can show the same critique again if needed
   const handleModalDismiss = useCallback(() => {
-    // Mark as dismissed instead of null to prevent auto-reopen
-    const critiqueKey = `${q.id}-${q.critiqueScore}`;
+    // Mark as dismissed with full key including critique hash
+    const critiqueHash = q.critique ? q.critique.substring(0, 100) : "";
+    const critiqueKey = `${q.id}-${q.critiqueScore}-${critiqueHash}`;
     lastProcessedCritiqueRef.current = `dismissed-${critiqueKey}`;
     setShowImprovementModal(false);
-  }, [q.id, q.critiqueScore]);
+  }, [q.id, q.critiqueScore, q.critique]);
 
   const getStatusStyle = (status) => {
     switch (status) {
