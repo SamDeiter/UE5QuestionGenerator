@@ -2,7 +2,40 @@
 // EMAIL SENDING - SendGrid Integration
 // ============================================================================
 
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
 const sgMail = require("@sendgrid/mail");
+
+/**
+ * Helper: Check if user is admin
+ * (duplicated from main index.js to make this module independent)
+ */
+async function isAdminUser(uid) {
+  try {
+    const db = admin.firestore();
+    const adminDoc = await db.collection("admins").doc(uid).get();
+
+    if (adminDoc.exists) {
+      return true;
+    }
+
+    // Also check Super Admin email
+    const userRecord = await admin.auth().getUser(uid);
+    const userEmail = userRecord.email?.toLowerCase().trim();
+    const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || "")
+      .toLowerCase()
+      .trim();
+
+    if (userEmail && superAdminEmail && userEmail === superAdminEmail) {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    return false;
+  }
+}
 
 /**
  * Cloud Function: sendReviewerInvites

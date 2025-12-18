@@ -498,7 +498,7 @@ const AdminPanel = ({
 
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">
-                    Recipient Name (Optional)
+                    Recipient Name
                   </label>
                   <input
                     type="text"
@@ -516,7 +516,7 @@ const AdminPanel = ({
 
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">
-                    Recipient Email (Optional)
+                    Recipient Email
                   </label>
                   <input
                     type="email"
@@ -691,76 +691,6 @@ const AdminPanel = ({
                 </div>
               ))
             )}
-          </div>
-        )}
-      </div>
-
-      {/* Active Invites */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-yellow-500/30">
-        <h2
-          onClick={() => toggleSection("activeInvites")}
-          className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-yellow-400 mb-3 flex items-center gap-2"
-        >
-          <div className="flex items-center gap-2">
-            <Icon name="key" size={18} /> Active Invites ({invites.length})
-          </div>
-          <Icon
-            name={collapsed.activeInvites ? "chevron-down" : "chevron-up"}
-            size={16}
-            className="ml-auto opacity-50"
-          />
-        </h2>
-        {!collapsed.activeInvites && (
-          <div className="space-y-2">
-            {invites.length === 0 ? (
-              <p className="text-slate-500 text-sm">No active invites</p>
-            ) : (
-              invites.map((invite) => (
-                <div
-                  key={invite.code}
-                  className="bg-slate-700/50 p-3 rounded flex items-center justify-between"
-                >
-                  <div className="flex-1">
-                    <div className="text-white font-mono text-sm">
-                      {invite.code}
-                    </div>
-                    <div className="text-xs text-slate-400">
-                      <span className="inline-block px-2 py-0.5 rounded bg-slate-600 mr-2">
-                        {invite.role}
-                      </span>
-                      Uses: {invite.used}/
-                      {invite.maxUses === -1 ? "∞" : invite.maxUses} | Expires:{" "}
-                      {formatDate(invite.expiresAt)}
-                      {invite.note && ` | ${invite.note}`}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleRevokeInvite(invite.code)}
-                    className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-all"
-                  >
-                    Revoke
-                  </button>
-                </div>
-              ))
-            )}
-            }{/* Send Email Invites Button */}
-            {!collapsed.activeInvites &&
-              invites.some((inv) => inv.role === "reviewer") && (
-                <div className="mt-3 pt-3 border-t border-yellow-500/20">
-                  <button
-                    onClick={handleSendEmailInvites}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
-                  >
-                    <Icon name="mail" size={18} />
-                    Send Reviewer Invite Emails
-                  </button>
-                  <p className="text-xs text-slate-500 mt-2 text-center">
-                    Sends personalized emails via SendGrid to all pending
-                    reviewer invites
-                  </p>
-                </div>
-              )}
           </div>
         )}
       </div>
