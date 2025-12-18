@@ -12,6 +12,7 @@ import ExplanationDisplay from "./QuestionItem/ExplanationDisplay";
 import SourceContextCard from "./QuestionItem/SourceContextCard";
 import ImprovementModal from "./ImprovementModal";
 import Icon from "./Icon";
+import QuestionNotesField from "./QuestionItem/QuestionNotesField";
 import { getSecureItem } from "../utils/secureStorage";
 import { useEditLock } from "../hooks/useEditLock";
 import { useAuth } from "../hooks/useAuth";
@@ -306,6 +307,13 @@ const QuestionItem = ({
         <ExplanationDisplay explanation={q.explanation} />
 
         <QuestionMetadata q={q} />
+
+        {/* Internal Notes Field */}
+        <QuestionNotesField
+          question={q}
+          onUpdateQuestion={onUpdateQuestion}
+          showMessage={showMessage}
+        />
 
         {/* AI Improvement Modal - Shows critique + improvements (if any) */}
         {showImprovementModal && q.critique && (
