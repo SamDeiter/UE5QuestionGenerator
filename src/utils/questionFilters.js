@@ -57,9 +57,17 @@ export const createFilteredQuestions = (
 
   return sourceQuestions.filter((q) => {
     // 1. Status Filter
-    if (filterMode === "pending" && q.status !== "pending") return false;
-    if (filterMode === "accepted" && q.status !== "accepted") return false;
-    if (filterMode === "rejected" && q.status !== "rejected") return false;
+    // CRITICAL FIX: Handle 'all' mode explicitly
+    if (filterMode !== "all") {
+      if (filterMode === "pending") {
+        // Pending: show questions with no status or explicit "pending" status
+        if (q.status && q.status !== "pending") return false;
+      } else if (filterMode === "accepted") {
+        if (q.status !== "accepted") return false;
+      } else if (filterMode === "rejected") {
+        if (q.status !== "rejected") return false;
+      }
+    }
 
     // 2. Creator Filter
     if (filterByCreator && q.creatorName !== creatorName) return false;
