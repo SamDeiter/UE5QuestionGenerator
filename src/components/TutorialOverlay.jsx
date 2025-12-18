@@ -219,19 +219,41 @@ const TutorialOverlay = ({
             </button>
           </div>
 
-          {/* Parse content for **highlighted** keywords */}
-          <p id="tutorial-content" className="text-slate-300 text-sm leading-relaxed">
-            {step.content.split(/(\*\*[^*]+\*\*)/).map((part, i) => {
-              if (part.startsWith("**") && part.endsWith("**")) {
+          {/* Parse content for **highlighted** keywords and ![images](url) */}
+          <div id="tutorial-content" className="text-slate-300 text-sm leading-relaxed space-y-2">
+            {step.content.split('\n').map((line, lineIdx) => {
+              // Check if this line contains an image
+              const imgMatch = line.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+              
+              if (imgMatch) {
+                const [, alt, src] = imgMatch;
                 return (
-                  <span key={i} className="text-orange-400 font-semibold">
-                    {part.slice(2, -2)}
-                  </span>
+                  <img 
+                    key={lineIdx}
+                    src={src} 
+                    alt={alt} 
+                    className="w-full rounded-lg border border-slate-700 mt-2"
+                  />
                 );
               }
-              return part;
+              
+              // Otherwise, parse for bold text
+              return (
+                <p key={lineIdx}>
+                  {line.split(/(\*\*[^*]+\*\*)/).map((part, i) => {
+                    if (part.startsWith("**") && part.endsWith("**")) {
+                      return (
+                        <span key={i} className="text-orange-400 font-semibold">
+                          {part.slice(2, -2)}
+                        </span>
+                      );
+                    }
+                    return part;
+                  })}
+                </p>
+              );
             })}
-          </p>
+          </div>
 
           {/* Warning when element cannot be found */}
           {elementNotFound && step.target && (
