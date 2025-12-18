@@ -323,7 +323,8 @@ const QuestionActions = ({
                 </div>
                 <div className="px-3 py-2 bg-slate-900/50 border-t border-slate-700">
                   <span className="text-xs text-slate-400">
-                    💡 Tip: Rejecting helps the AI learn what to avoid
+                    💡 Tip: Use Internal Notes below for detailed feedback. Keep
+                    it brief!
                   </span>
                 </div>
               </div>

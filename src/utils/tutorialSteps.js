@@ -137,7 +137,7 @@ export const TUTORIAL_SCENARIOS = {
         title: "Step 1: Select Discipline to Review",
         content:
           "Use the **Discipline** dropdown to filter questions by topic (e.g., Blueprints, C++, Lighting, Materials). This focuses your review session on one subject area at a time.",
-        target: '[data-tour="discipline-selector"]',
+        target: '[data-tour="discipline-selector-container"]',
         position: "right",
         scenarioId: "review",
         order: 0,
@@ -176,7 +176,7 @@ export const TUTORIAL_SCENARIOS = {
         id: "edit-improve",
         title: "Step 5: Edit or Apply AI Improvements",
         content:
-          "Click **Edit** to manually modify the question, or **Apply Improvements** to accept AI suggestions. You can also translate, explain, or create variations using the action buttons.",
+          "Click **Edit** to manually modify the question, or **Apply Improvements** to accept AI suggestions. You can also translate, explain, or create variations using the action buttons.\n\n![Critique Modal Example](/images/critique-modal-screenshot.png)",
         target: '[data-tour="edit-button"]',
         position: "bottom",
         scenarioId: "review",
@@ -207,7 +207,7 @@ export const TUTORIAL_SCENARIOS = {
         title: "Step 1: Database Overview",
         content:
           "This view displays all questions from Firestore. You'll see question text, type (Multiple Choice/True-False), difficulty, discipline, and AI score for each question.",
-        target: '[data-tour="database-grid"]',
+        target: null,
         position: "center",
         scenarioId: "database",
         order: 0,
@@ -227,7 +227,7 @@ export const TUTORIAL_SCENARIOS = {
         title: "Step 3: View Question Details",
         content:
           "Click any question card to expand and see full details including all answer options, explanation, tags, source URL, and creation date.",
-        target: '[data-tour="database-grid"]',
+        target: null,
         position: "center",
         scenarioId: "database",
         order: 2,
@@ -237,7 +237,7 @@ export const TUTORIAL_SCENARIOS = {
         title: "Step 4: Edit or Kick Back to Review",
         content:
           "Use **Edit** to modify question details, or **Kick Back to Review** to send a question back to pending status for re-evaluation.",
-        target: '[data-tour="database-grid"]',
+        target: null,
         position: "center",
         scenarioId: "database",
         order: 3,

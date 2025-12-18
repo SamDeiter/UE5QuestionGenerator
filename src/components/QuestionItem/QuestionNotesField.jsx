@@ -44,8 +44,23 @@ const QuestionNotesField = ({ question, onUpdateQuestion, showMessage }) => {
         placeholder="Add notes about this question (internal use only)..."
         className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-300 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all resize-y min-h-[60px]"
         disabled={isSaving}
+        maxLength={500}
       />
-      {isSaving && <p className="text-xs text-slate-500 mt-1">Saving...</p>}
+      <div className="flex justify-between items-center mt-1">
+        {isSaving && <p className="text-xs text-slate-500">Saving...</p>}
+        <div className="flex-1"></div>
+        <span
+          className={`text-xs text-right ${
+            notes.length >= 500
+              ? "text-red-400"
+              : notes.length >= 450
+              ? "text-orange-400"
+              : "text-slate-500"
+          }`}
+        >
+          {notes.length} / 500 characters
+        </span>
+      </div>
     </div>
   );
 };

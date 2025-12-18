@@ -159,7 +159,10 @@ const ContextToolbar = ({
     <div className="flex justify-between items-center w-full">
       <div className="flex items-center gap-2">
         {/* Discipline Selector in Toolbar */}
-        <div className="flex items-center gap-1 mr-2 px-2 py-1 bg-slate-800 rounded border border-slate-700 shadow-sm">
+        <div
+          className="flex items-center gap-1 mr-2 px-2 py-1 bg-slate-800 rounded border border-slate-700 shadow-sm"
+          data-tour="discipline-selector-container"
+        >
           <span className="text-[10px] uppercase font-bold text-slate-500 select-none">
             Discipline:
           </span>

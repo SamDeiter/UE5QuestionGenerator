@@ -10,6 +10,8 @@ const LanguageControls = ({
   onTranslateSingle,
   isProcessing,
   userRole, // NEW: Check role for restrictions
+  isLocked = false, // NEW: Lock state from concurrent editing
+  lockedBy = null, // NEW: Lock owner info
 }) => {
   const [loadingLang, setLoadingLang] = useState(null);
   const [_translateMenuOpen, setTranslateMenuOpen] = useState(false);
@@ -63,6 +65,15 @@ const LanguageControls = ({
         // Interaction logic
         const handleClick = (e) => {
           e.stopPropagation();
+
+          // LOCK ENFORCEMENT: Exit immediately if locked by another user
+          if (isLocked) {
+            console.log(
+              "🔒 [LanguageControls] Translation blocked - question is locked"
+            );
+            return;
+          }
+
           console.log("🎯 [LanguageControls] Flag clicked:", {
             lang,
             isCurrent,
@@ -111,7 +122,11 @@ const LanguageControls = ({
         let containerClass =
           "relative group flex items-center justify-center p-0.5 rounded transition-all duration-200 ";
 
-        if (isCurrent) {
+        if (isLocked) {
+          // Locked state - grayed out regardless of other conditions
+          containerClass +=
+            "border border-slate-800 opacity-30 grayscale cursor-not-allowed";
+        } else if (isCurrent) {
           containerClass +=
             "border-2 border-indigo-500 bg-indigo-500/20 shadow-[0_0_10px_rgba(99,102,241,0.5)] scale-110 z-10";
         } else if (exists) {
@@ -129,10 +144,17 @@ const LanguageControls = ({
           <button
             key={lang}
             onClick={handleClick}
-            disabled={isProcessing || isLoading || (!exists && !canTranslate)}
+            disabled={
+              isProcessing ||
+              isLoading ||
+              isLocked ||
+              (!exists && !canTranslate)
+            }
             className={containerClass}
             title={
-              isCurrent
+              isLocked
+                ? `Locked by ${lockedBy?.userEmail || "another user"}`
+                : isCurrent
                 ? `Current: ${lang}`
                 : exists
                 ? `Switch to ${lang}`
