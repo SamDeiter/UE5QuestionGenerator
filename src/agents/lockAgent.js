@@ -16,7 +16,6 @@ import {
   doc,
   runTransaction,
   serverTimestamp,
-  deleteDoc,
   getDoc,
 } from "firebase/firestore";
 

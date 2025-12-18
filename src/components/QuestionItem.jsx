@@ -235,6 +235,8 @@ const QuestionItem = ({
           <div className="flex items-center gap-2">
             <QuestionActions
               q={q}
+              isLocked={isLocked}
+              lockedBy={lockedBy}
               onUpdateStatus={onUpdateStatus}
               onCritique={onCritique}
               onExplain={onExplain}
@@ -252,6 +254,8 @@ const QuestionItem = ({
         {appMode === "review" && (
           <ReviewProgressBar
             question={q}
+            isLocked={isLocked}
+            lockedBy={lockedBy}
             onCritique={() => onCritique?.(q)}
             onFix={() => onApplyRewrite && onApplyRewrite(q)}
             onVerify={() => {

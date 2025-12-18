@@ -7,6 +7,8 @@ import { QUALITY_PASS_THRESHOLD } from "../utils/constants";
  */
 const ReviewProgressBar = ({
   question,
+  isLocked = false,
+  lockedBy = null,
   onCritique,
   onVerify,
   onAccept,
@@ -133,27 +135,34 @@ const ReviewProgressBar = ({
             {/* Step Circle + Content */}
             <button
               onClick={() =>
+                !isLocked &&
                 !step.locked &&
                 !step.completed &&
                 !isProcessing &&
                 step.onClick?.()
               }
-              disabled={step.locked || step.completed || isProcessing}
+              disabled={
+                isLocked || step.locked || step.completed || isProcessing
+              }
               className={`
                                 flex items-center gap-3 transition-all
                                 ${
-                                  step.active && !isProcessing
+                                  step.active && !isProcessing && !isLocked
                                     ? "cursor-pointer group"
                                     : ""
                                 }
                                 ${
-                                  step.locked
+                                  step.locked || isLocked
                                     ? "opacity-40 cursor-not-allowed"
                                     : ""
                                 }
                             `}
               title={
-                step.locked ? "Complete previous step first" : step.sublabel
+                isLocked
+                  ? `Locked by ${lockedBy?.userEmail || "another user"}`
+                  : step.locked
+                  ? "Complete previous step first"
+                  : step.sublabel
               }
               data-tour={step.num === 1 ? "critique-button" : undefined}
             >
