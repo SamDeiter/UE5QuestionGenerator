@@ -13,6 +13,7 @@ import {
 } from "../services/firebase";
 import { logQuestion } from "../utils/analyticsStore";
 import { completeReviewTracking } from "../utils/normalizeQuestion";
+import { getAgents } from "../agents";
 
 export const useQuestionManager = (config, showMessage) => {
   // Current session questions
@@ -35,9 +36,19 @@ export const useQuestionManager = (config, showMessage) => {
   // Central question storage map
   const [allQuestionsMap, setAllQuestionsMap] = useState(new Map());
 
+  // Version tracking for concurrent editing (maps question ID -> version)
+  const [questionVersions, setQuestionVersions] = useState(new Map());
+
+  // Conflict resolution state
+  const [conflictData, setConflictData] = useState(null);
+  const [showConflictModal, setShowConflictModal] = useState(false);
+
   // Delete confirmation state
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [showClearModal, setShowClearModal] = useState(false);
+
+  // Get concurrent editing agents
+  const agents = getAgents();
 
   // Persist session questions
   useEffect(() => setSecureItem("ue5_gen_questions", questions), [questions]);
@@ -240,11 +251,10 @@ export const useQuestionManager = (config, showMessage) => {
     });
   }, []);
 
-  // Status update handler - now accepts optional rejection reason and tracks review time
+  // Status update handler - now with version control and conflict resolution
   const handleUpdateStatus = useCallback(
     async (id, newStatus, rejectionReason = null) => {
-      // Find the question using the map to avoid 'questions' dependency causing expensive rerenders
-      // (allQuestionsMap is updated whenever questions changes)
+      // Find the question
       const variants = allQuestionsMap.get(id) || [];
       const currentQ =
         variants.find((v) => v.id === id) ||
@@ -259,14 +269,9 @@ export const useQuestionManager = (config, showMessage) => {
       // SPECIAL CASE: Hard Delete if status is 'deleted'
       if (newStatus === "deleted") {
         try {
-          // Delete from Firestore
           await deleteQuestionFromFirestore(currentQ.uniqueId || currentQ.id);
-
-          // Remove from local state
           setQuestions((prev) => prev.filter((q) => q.id !== id));
           setHistoricalQuestions((prev) => prev.filter((q) => q.id !== id));
-
-          // Log analytics
           logQuestion({
             ...currentQ,
             status: "deleted",
@@ -303,13 +308,53 @@ export const useQuestionManager = (config, showMessage) => {
       };
 
       try {
-        // Sync to Firestore FIRST
-        await saveQuestionToFirestore(updatedQ);
+        // Use SaveGuard Agent if available, otherwise fall back to direct save
+        if (agents?.saveGuardAgent) {
+          const baseVersion = questionVersions.get(id) || currentQ.version || 1;
+          const result = await agents.saveGuardAgent.saveQuestionStatus(
+            currentQ.id,
+            newStatus,
+            baseVersion,
+            config.userId || "unknown",
+            config.userEmail || "unknown@example.com",
+            {
+              rejectionReason,
+              reviewedBy: config.creatorName,
+              reviewedAt: new Date().toISOString(),
+            }
+          );
 
-        // Then update local state
-        updateQuestionInState(id, () => updatedQ);
+          if (!result.success) {
+            if (result.errorType === "VERSION_CONFLICT") {
+              console.warn("Version conflict detected during status update");
+              setConflictData({
+                serverQuestion: result.serverQuestion,
+                serverVersion: result.serverVersion,
+                localChanges: updatedQ,
+                expectedVersion: baseVersion,
+              });
+              setShowConflictModal(true);
+              return;
+            }
+            throw new Error(result.error || "Save failed");
+          }
 
-        // Notify user of successful save for important status changes
+          // Update version tracking
+          setQuestionVersions((prev) =>
+            new Map(prev).set(id, result.newVersion)
+          );
+
+          // Update local state with new version
+          updateQuestionInState(id, () => ({
+            ...updatedQ,
+            version: result.newVersion,
+          }));
+        } else {
+          // Fallback: Direct save (no version control)
+          await saveQuestionToFirestore(updatedQ);
+          updateQuestionInState(id, () => updatedQ);
+        }
+
         if (
           showMessage &&
           (newStatus === "accepted" || newStatus === "rejected")
@@ -326,20 +371,24 @@ export const useQuestionManager = (config, showMessage) => {
             5000
           );
         }
-        // Still update local state so user can continue working
         updateQuestionInState(id, () => updatedQ);
       }
     },
     [
       updateQuestionInState,
       config.creatorName,
+      config.userId,
+      config.userEmail,
       allQuestionsMap,
       questions,
       historicalQuestions,
+      agents,
+      questionVersions,
+      showMessage,
     ]
   );
 
-  // Generic persisted update handler
+  // Generic persisted update handler - now with version control
   const handleUpdateQuestion = useCallback(
     async (id, updates) => {
       // Find the question
@@ -357,11 +406,47 @@ export const useQuestionManager = (config, showMessage) => {
       const updatedQ = { ...currentQ, ...updates };
 
       try {
-        // Sync to Firestore
-        await saveQuestionToFirestore(updatedQ);
+        // Use SaveGuard Agent if available
+        if (agents?.saveGuardAgent) {
+          const baseVersion = questionVersions.get(id) || currentQ.version || 1;
+          const result = await agents.saveGuardAgent.saveQuestion(
+            currentQ.id,
+            updates,
+            baseVersion,
+            config.userId || "unknown",
+            config.userEmail || "unknown@example.com"
+          );
 
-        // Update local state
-        updateQuestionInState(id, () => updatedQ);
+          if (!result.success) {
+            if (result.errorType === "VERSION_CONFLICT") {
+              console.warn("Version conflict detected during question update");
+              setConflictData({
+                serverQuestion: result.serverQuestion,
+                serverVersion: result.serverVersion,
+                localChanges: updates,
+                expectedVersion: baseVersion,
+              });
+              setShowConflictModal(true);
+              return;
+            }
+            throw new Error(result.error || "Save failed");
+          }
+
+          // Update version tracking
+          setQuestionVersions((prev) =>
+            new Map(prev).set(id, result.newVersion)
+          );
+
+          // Update local state with new version
+          updateQuestionInState(id, () => ({
+            ...updatedQ,
+            version: result.newVersion,
+          }));
+        } else {
+          // Fallback: Direct save
+          await saveQuestionToFirestore(updatedQ);
+          updateQuestionInState(id, () => updatedQ);
+        }
       } catch (err) {
         console.error("Firestore sync failed:", err);
         if (showMessage) {
@@ -370,7 +455,6 @@ export const useQuestionManager = (config, showMessage) => {
             4000
           );
         }
-        // Still update local state so user can continue working
         updateQuestionInState(id, () => updatedQ);
       }
     },
@@ -379,6 +463,10 @@ export const useQuestionManager = (config, showMessage) => {
       allQuestionsMap,
       questions,
       historicalQuestions,
+      config.userId,
+      config.userEmail,
+      agents,
+      questionVersions,
       showMessage,
     ]
   );
@@ -636,5 +724,9 @@ export const useQuestionManager = (config, showMessage) => {
     checkAndStoreQuestions,
     unifiedQuestions,
     handleUpdateQuestion, // Added persistent update handler
+    // Concurrent editing conflict resolution
+    conflictData,
+    showConflictModal,
+    setShowConflictModal,
   };
 };

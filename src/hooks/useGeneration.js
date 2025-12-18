@@ -1113,6 +1113,8 @@ export const useGeneration = (
               `[Critique] Updating ALL variants for uniqueId: ${q.uniqueId}`
             );
             updateAllVariantsInState(q.uniqueId, critiqueUpdate);
+            // CRITICAL: Also update the current question directly to trigger modal
+            updateQuestionInState(q.id, critiqueUpdate);
           } else {
             updateQuestionInState(q.id, critiqueUpdate);
           }
@@ -1139,6 +1141,8 @@ export const useGeneration = (
               `[Critique] Updating ALL variants for uniqueId: ${q.uniqueId}`
             );
             updateAllVariantsInState(q.uniqueId, critiqueUpdate);
+            // CRITICAL: Also update the current question directly to trigger modal
+            updateQuestionInState(q.id, critiqueUpdate);
           } else {
             updateQuestionInState(q.id, critiqueUpdate);
           }

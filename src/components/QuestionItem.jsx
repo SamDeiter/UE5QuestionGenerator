@@ -13,6 +13,8 @@ import SourceContextCard from "./QuestionItem/SourceContextCard";
 import ImprovementModal from "./ImprovementModal";
 import Icon from "./Icon";
 import { getSecureItem } from "../utils/secureStorage";
+import { useEditLock } from "../hooks/useEditLock";
+import { useAuth } from "../hooks/useAuth";
 
 const QuestionItem = ({
   q,
@@ -37,6 +39,33 @@ const QuestionItem = ({
   const [editedText, setEditedText] = useState(q.question);
   const [showImprovementModal, setShowImprovementModal] = useState(false);
   const lastProcessedCritiqueRef = useRef(null);
+
+  // Get current user info for lock management
+  const { user } = useAuth(() => {});
+  const userId = user?.uid;
+  const userEmail = user?.email;
+
+  // Track if question was modified (Accept/Reject actions mark it as modified)
+  const [wasModified, setWasModified] = useState(false);
+
+  // Auto-lock on view (review mode)
+  const {
+    lockStatus: _lockStatus,
+    lockedBy,
+    isLocked,
+    hasLock,
+    isAcquiring,
+  } = useEditLock(
+    q.id,
+    userId,
+    userEmail,
+    appMode === "review", // Always viewing in review mode
+    wasModified, // Don't release lock if modified
+    () => {
+      // onLockExpired callback
+      showMessage?.("⚠️ Your review lock expired.", 5000);
+    }
+  );
 
   // Auto-open modal when NEW critique data arrives
   useEffect(() => {
@@ -75,7 +104,13 @@ const QuestionItem = ({
       lastProcessedCritiqueRef.current = critiqueKey;
       setShowImprovementModal(true);
     }
-  }, [q.critiqueScore, q.suggestedRewrite, q.id, q.improvementsApplied]);
+  }, [
+    q.critiqueScore,
+    q.suggestedRewrite,
+    q.id,
+    q.improvementsApplied,
+    showImprovementModal,
+  ]);
 
   // Reset ref when modal is closed so we can show the same critique again if needed
   const handleModalDismiss = useCallback(() => {
@@ -126,6 +161,42 @@ const QuestionItem = ({
         q.difficulty
       )} ${getStatusStyle(q.status)}`}
     >
+      {/* Lock Status Banner - Only show if locked by ANOTHER user */}
+      {isLocked && appMode === "review" && (
+        <div className="mb-3 bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-3 flex items-center gap-3">
+          <Icon name="lock" size={20} className="text-yellow-400" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-yellow-300">
+              Currently being reviewed by{" "}
+              {lockedBy?.userEmail || "another user"}
+            </p>
+            <p className="text-xs text-yellow-400/80">
+              You can view this question but cannot take action until they
+              finish.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Acquiring Lock Indicator */}
+      {isAcquiring && appMode === "review" && (
+        <div className="mb-3 bg-cyan-900/30 border border-cyan-500/50 rounded-lg p-2 flex items-center gap-2">
+          <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-cyan-300">Acquiring review lock...</p>
+        </div>
+      )}
+
+      {/* Active Lock Indicator (you have the lock) */}
+      {hasLock && appMode === "review" && !isLocked && (
+        <div
+          className="mb-2 inline-flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-500/50 rounded text-xs text-green-400"
+          title="You have the review lock - others cannot modify this question"
+        >
+          <Icon name="lock" size={14} />
+          <span>Reviewing</span>
+        </div>
+      )}
+
       <div className="flex flex-col gap-2 mb-3 pl-6">
         <div className="flex justify-between items-start">
           <div className="flex-1">
@@ -182,6 +253,7 @@ const QuestionItem = ({
                 if (showMessage) showMessage("⚠️ Please verify first", 3000);
                 return;
               }
+              setWasModified(true); // Mark as modified to keep lock
               onUpdateStatus(q.id, "accepted");
             }}
             isProcessing={isProcessing}

@@ -13,6 +13,7 @@ import Footer from "./components/Footer";
 import SignIn from "./components/SignIn";
 import InviteSignUp from "./components/InviteSignUp";
 import ApiKeyModal from "./components/ApiKeyModal";
+import ConflictModal from "./components/ConflictModal";
 import { getInviteFromUrl } from "./services/inviteService";
 
 // Lazy load heavy components (loaded on-demand)
@@ -41,6 +42,9 @@ import { useToast } from "./hooks/useToast";
 import { useAuth } from "./hooks/useAuth";
 import { useModalState } from "./hooks/useModalState";
 import { useAppHandlers } from "./hooks/useAppHandlers";
+
+// Concurrent Editing Agents
+import { initializeAgents } from "./agents";
 // Utilities
 
 // Simple loading spinner component for auth loading state
@@ -99,6 +103,25 @@ const App = () => {
     // setShowCritiqueModal: (open) => { /* implement */ },
     // setActiveAnalyticsTab: (tab) => { /* implement */ },
   });
+
+  // ========================================================================
+  // CONCURRENT EDITING AGENTS - Initialize once when user is authenticated
+  // ========================================================================
+  useEffect(() => {
+    if (user && !authLoading) {
+      // Initialize agents with Firestore instance
+      const initAgents = async () => {
+        try {
+          const { db } = await import("./services/firebase");
+          initializeAgents(db);
+          console.log("✅ Concurrent editing agents initialized");
+        } catch (error) {
+          console.error("❌ Failed to initialize agents:", error);
+        }
+      };
+      initAgents();
+    }
+  }, [user, authLoading]);
 
   // ========================================================================
   // HOOKS - State Management
@@ -178,6 +201,10 @@ const App = () => {
     checkAndStoreQuestions,
     unifiedQuestions,
     handleUpdateQuestion, // Persistent update handler
+    // Concurrent editing conflict resolution
+    conflictData,
+    showConflictModal,
+    setShowConflictModal,
   } = useQuestionManager(config, showMessage);
 
   // 2.5. Crash Recovery - detect and restore from cloud backup
@@ -858,6 +885,48 @@ const App = () => {
 
       {/* TOAST NOTIFICATIONS */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+      {/* CONCURRENT EDITING CONFLICT MODAL */}
+      {showConflictModal && conflictData && (
+        <ConflictModal
+          isOpen={showConflictModal}
+          onClose={() => setShowConflictModal(false)}
+          conflictData={conflictData}
+          onResolve={async (action) => {
+            if (action === "DISCARD") {
+              // Reload the latest version from server
+              const { loadAgent } = await import("./agents").then((m) =>
+                m.getAgents()
+              );
+              if (loadAgent) {
+                const result = await loadAgent.loadQuestion(
+                  conflictData.serverQuestion.id
+                );
+                if (result.success) {
+                  handleUpdateQuestion(result.question.id, result.question);
+                  showMessage("✓ Reloaded latest version", 2000);
+                }
+              }
+            } else if (action === "OVERWRITE") {
+              // Force save local changes
+              const { saveGuardAgent } = await import("./agents").then((m) =>
+                m.getAgents()
+              );
+              if (saveGuardAgent) {
+                await saveGuardAgent.saveQuestion(
+                  conflictData.serverQuestion.id,
+                  conflictData.localChanges,
+                  conflictData.serverVersion, // Use server version to force overwrite
+                  user?.uid || "unknown",
+                  user?.email || "unknown@example.com"
+                );
+                showMessage("✓ Overwrote server changes", 2000);
+              }
+            }
+            setShowConflictModal(false);
+          }}
+        />
+      )}
 
       {/* TUTORIAL OVERLAY */}
 
