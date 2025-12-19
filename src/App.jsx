@@ -297,6 +297,12 @@ const App = () => {
     setPendingNavigationUniqueId,
   ]);
 
+  // Calculate total unique questions in database (ignoring all filters)
+  // This is used for the Review tab badge to show the full database size
+  const totalUniqueQuestions = useMemo(() => {
+    return allQuestionsMap.size; // Map size = number of unique questions
+  }, [allQuestionsMap]);
+
   // 6. Generation & Translation Logic
   const {
     isGenerating,
@@ -812,7 +818,7 @@ const App = () => {
           }}
           handleModeSelect={handleModeSelect}
           handleViewDatabase={handleViewDatabase}
-          pendingCount={contextCounts.pending} // Use deduplicated count from useFiltering
+          pendingCount={totalUniqueQuestions} // Show total unique questions in database (all disciplines)
           toolbarProps={{
             mode: appMode,
             counts: contextCounts,
