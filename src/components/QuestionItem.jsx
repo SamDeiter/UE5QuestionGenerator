@@ -122,8 +122,6 @@ const QuestionItem = ({
     q.suggestedRewrite,
     q.id,
     q.improvementsApplied,
-    // NOTE: showImprovementModal removed to prevent re-opening when manually closed
-     
   ]);
 
   // Reset ref when modal is closed so we can show the same critique again if needed
