@@ -297,15 +297,24 @@ const App = () => {
     setPendingNavigationUniqueId,
   ]);
 
-  // Calculate total unique questions in database (ignoring all filters)
-  // This is used for the Review tab badge to show the full database size
-  const totalUniqueQuestions = useMemo(() => {
-    const count = allQuestionsMap.size;
-    console.log("🔍 [DEBUG] Review Badge Count:", {
-      allQuestionsMapSize: count,
-      mapKeys: Array.from(allQuestionsMap.keys()).slice(0, 5),
+  // Calculate total PENDING questions for the Review badge
+  // This count increases when questions are kicked back to review
+  const totalPendingQuestions = useMemo(() => {
+    let pending = 0;
+    allQuestionsMap.forEach((variants) => {
+      // Use the English version or first variant to determine status
+      const canonical =
+        variants.find((v) => (v.language || "English") === "English") ||
+        variants[0];
+      if (canonical && (!canonical.status || canonical.status === "pending")) {
+        pending++;
+      }
     });
-    return count;
+    console.log("🔍 [DEBUG] Review Badge Count:", {
+      allQuestionsMapSize: allQuestionsMap.size,
+      pendingCount: pending,
+    });
+    return pending;
   }, [allQuestionsMap]);
 
   // 6. Generation & Translation Logic
@@ -824,7 +833,7 @@ const App = () => {
           }}
           handleModeSelect={handleModeSelect}
           handleViewDatabase={handleViewDatabase}
-          pendingCount={totalUniqueQuestions} // Show total unique questions in database (all disciplines)
+          pendingCount={totalPendingQuestions} // Show pending questions needing review
           toolbarProps={{
             mode: appMode,
             counts: contextCounts,
