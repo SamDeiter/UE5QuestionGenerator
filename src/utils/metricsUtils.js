@@ -20,18 +20,25 @@ export const calculateMetrics = (questions) => {
   if (!questions || questions.length === 0) {
     return {
       total: 0,
+      uniqueQuestions: 0,
       byDifficulty: { Easy: 0, Medium: 0, Hard: 0 },
       byType: { "Multiple Choice": 0, "True/False": 0 },
       byDiscipline: {},
+      byLanguage: {},
       avgQuality: 0,
     };
   }
 
+  // Calculate unique questions by uniqueId
+  const uniqueIds = new Set(questions.map((q) => q.uniqueId).filter(Boolean));
+
   const metrics = {
     total: questions.length,
+    uniqueQuestions: uniqueIds.size,
     byDifficulty: { Easy: 0, Medium: 0, Hard: 0 },
     byType: { "Multiple Choice": 0, "True/False": 0 },
     byDiscipline: {},
+    byLanguage: {},
     totalQuality: 0,
     ratedCount: 0,
   };
@@ -53,6 +60,13 @@ export const calculateMetrics = (questions) => {
       metrics.byDiscipline[q.discipline] = 0;
     }
     metrics.byDiscipline[q.discipline]++;
+
+    // Language
+    const lang = q.language || "English";
+    if (!metrics.byLanguage[lang]) {
+      metrics.byLanguage[lang] = 0;
+    }
+    metrics.byLanguage[lang]++;
 
     // Quality Score (if available)
     const score = parseFloat(q.critiqueScore || q.initialQuality);

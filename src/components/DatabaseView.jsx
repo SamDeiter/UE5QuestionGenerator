@@ -120,6 +120,13 @@ const DatabaseView = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Calculate unique question count (by uniqueId)
+  const uniqueQuestionCount = useMemo(() => {
+    if (!questions) return 0;
+    const uniqueIds = new Set(questions.map((q) => q.uniqueId).filter(Boolean));
+    return uniqueIds.size;
+  }, [questions]);
+
   const sortedQuestions = useMemo(() => {
     if (!questions) return [];
 
@@ -284,9 +291,9 @@ const DatabaseView = ({
               <Icon name="database" /> Database View
             </h2>
             <p className="text-xs text-blue-300/70">
-              Showing {visibleQuestions.length} of {sortedQuestions.length}{" "}
-              records
-              {hasMore && ` (scroll for more)`}
+              Showing {visibleQuestions.length} of {uniqueQuestionCount}{" "}
+              questions
+              {hasMore && ` • scroll for more`}
             </p>
           </div>
 

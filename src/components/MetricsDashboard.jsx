@@ -67,11 +67,16 @@ const MetricsDashboard = ({ questions }) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div className="bg-slate-800 p-3 rounded border border-slate-700">
                 <div className="text-2xl font-bold text-white">
-                  {metrics.total}
+                  {metrics.uniqueQuestions}
                 </div>
                 <div className="text-[10px] text-slate-400 uppercase">
-                  Total Questions
+                  Unique Questions
                 </div>
+                {metrics.total !== metrics.uniqueQuestions && (
+                  <div className="text-[9px] text-slate-500 mt-1">
+                    {metrics.total - metrics.uniqueQuestions} translations
+                  </div>
+                )}
               </div>
               <div className="bg-slate-800 p-3 rounded border border-slate-700">
                 <div className="text-2xl font-bold text-indigo-400">
