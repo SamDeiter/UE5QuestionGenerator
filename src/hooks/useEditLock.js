@@ -47,6 +47,7 @@ export function useEditLock(
   const isProcessingRef = useRef(isProcessing);
   const renewLockRef = useRef(null); // For stable heartbeat access
   const releaseLockRef = useRef(null); // For stable cleanup access
+  const acquireLockRef = useRef(null); // For stable auto-acquire access
 
   useEffect(() => {
     lockStatusRef.current = lockStatus;
@@ -59,8 +60,8 @@ export function useEditLock(
    * Acquire an edit lock
    */
   const acquireLock = useCallback(async () => {
-    // If we already have the lock, don't re-acquire
-    if (lockStatus === "acquired") {
+    // Use ref to check current status (avoids stale closure)
+    if (lockStatusRef.current === "acquired") {
       return { success: true };
     }
 
@@ -110,7 +111,9 @@ export function useEditLock(
       setLockStatus("none");
       return { success: false, error: error.message };
     }
-  }, [questionId, userId, userEmail, lockStatus, agents]);
+    // CRITICAL: Removed lockStatus - use lockStatusRef.current instead
+     
+  }, [questionId, userId, userEmail, agents]);
 
   /**
    * Renew the lock (heartbeat)
@@ -144,6 +147,7 @@ export function useEditLock(
   useEffect(() => {
     renewLockRef.current = renewLock;
     releaseLockRef.current = releaseLock;
+    acquireLockRef.current = acquireLock;
   });
 
   /**
@@ -221,7 +225,6 @@ export function useEditLock(
         heartbeatRef.current = null;
       }
     };
-     
   }, [lockStatus, questionId]); // CRITICAL: No function deps - use refs instead
 
   // Release lock on unmount OR when question actually changes - STABLE
@@ -239,10 +242,9 @@ export function useEditLock(
         );
       }
     };
-     
   }, [questionId]); // CRITICAL: No function deps - use refs instead
 
-  // Auto-acquire lock after 1s view
+  // Auto-acquire lock after 1s view - STABLE
   useEffect(() => {
     if (
       !isViewing ||
@@ -261,7 +263,8 @@ export function useEditLock(
     console.log("[useEditLock] Starting 1s view timer");
     viewTimerRef.current = setTimeout(() => {
       console.log("[useEditLock] Auto-acquiring lock");
-      acquireLock();
+      // Use ref for stable access
+      if (acquireLockRef.current) acquireLockRef.current();
     }, 1000);
 
     return () => {
@@ -270,7 +273,8 @@ export function useEditLock(
         viewTimerRef.current = null;
       }
     };
-  }, [isViewing, questionId, userId, userEmail, acquireLock]);
+     
+  }, [isViewing, questionId, userId, userEmail]); // CRITICAL: No function deps - use refs instead
 
   // Reset attempt flag when questionId changes
   useEffect(() => {
