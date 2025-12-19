@@ -34,7 +34,7 @@ const ImprovementModal = ({
     : [];
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-start justify-center pt-8 p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 z-[100] flex items-start justify-center pt-8 p-4 overflow-y-auto">
       <div
         className="bg-slate-900 rounded-xl border-2 border-green-500/50 shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
