@@ -14,6 +14,59 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getAgents } from "../agents";
 
+// =========================================================================
+// GLOBAL LOCK STATE - Persists across component remounts
+// =========================================================================
+// When components remount (e.g., due to parent re-renders), internal refs reset.
+// This module-level state tracks active locks so we don't release on unmount
+// and immediately re-acquire on remount.
+const globalLockState = {
+  activeLocks: new Map(), // questionId -> { userId, timeoutId }
+};
+
+// Mark lock as active and cancel any pending release
+function markLockActive(questionId, userId) {
+  const existing = globalLockState.activeLocks.get(questionId);
+  if (existing?.timeoutId) {
+    clearTimeout(existing.timeoutId);
+  }
+  globalLockState.activeLocks.set(questionId, { userId, timeoutId: null });
+}
+
+// Schedule delayed release - allows time for remount to cancel it
+function scheduleLockRelease(questionId, releaseCallback) {
+  const existing = globalLockState.activeLocks.get(questionId);
+  if (existing?.timeoutId) {
+    clearTimeout(existing.timeoutId);
+  }
+  
+  const timeoutId = setTimeout(() => {
+    console.log(`[useEditLock] Executing delayed release for: ${questionId}`);
+    globalLockState.activeLocks.delete(questionId);
+    releaseCallback();
+  }, 2000); // 2 second delay allows component to remount and cancel
+  
+  globalLockState.activeLocks.set(questionId, { 
+    ...existing, 
+    timeoutId 
+  });
+}
+
+// Check if user already has an active lock
+function hasActiveLock(questionId, userId) {
+  const lock = globalLockState.activeLocks.get(questionId);
+  return lock && lock.userId === userId;
+}
+
+// Clear lock state (on explicit release or navigation)
+function clearLockState(questionId) {
+  const existing = globalLockState.activeLocks.get(questionId);
+  if (existing?.timeoutId) {
+    clearTimeout(existing.timeoutId);
+  }
+  globalLockState.activeLocks.delete(questionId);
+}
+
 /**
  * Hook for managing edit locks
  * @param {string} questionId - Question document ID
@@ -88,6 +141,9 @@ export function useEditLock(
         setLockStatus("acquired");
         setLockInfo(result.lock);
         setLockedBy(null);
+        
+        // Mark lock active in global state to survive remounts
+        markLockActive(questionId, userId);
 
         await auditAgent.logLockAcquired(
           String(questionId),
@@ -231,26 +287,41 @@ export function useEditLock(
   }, [acquireLock]);
 
   // Release lock on unmount OR when questionId changes
-  // Uses ref to avoid cleanup running when callback identity changes
+  // Uses delayed release to allow remounts to cancel and keep the lock
   useEffect(() => {
     const qId = String(questionId);
+    
+    // On mount/update: cancel any pending release for this question
+    markLockActive(qId, userId);
 
     return () => {
       // Use refs to check latest values in cleanup (closures can be stale)
       if (lockStatusRef.current === "acquired" && !isProcessingRef.current) {
-        console.log(`[useEditLock] Releasing lock on exit for: ${qId}`);
-        releaseLockRef.current();
+        console.log(`[useEditLock] Scheduling delayed release for: ${qId}`);
+        // Use delayed release - if component remounts quickly, it will be cancelled
+        scheduleLockRelease(qId, () => {
+          console.log(`[useEditLock] Releasing lock on exit for: ${qId}`);
+          releaseLockRef.current();
+        });
       } else if (isProcessingRef.current) {
         console.log(
           `[useEditLock] Delaying lock release for ${qId} - save in progress`
         );
       }
     };
-  }, [questionId]); // Removed releaseLock dependency
+  }, [questionId, userId]); // Removed releaseLock dependency
 
   // Auto-acquire lock after 1s view
   // Uses ref to avoid effect restart when callback identity changes
   useEffect(() => {
+    // Skip if already have active lock in global state (survived remount)
+    if (hasActiveLock(questionId, userId)) {
+      console.log("[useEditLock] Reusing existing lock from global state");
+      setLockStatus("acquired");
+      lockAttemptedRef.current = true;
+      return;
+    }
+    
     if (
       !isViewing ||
       lockAttemptedRef.current ||
