@@ -231,8 +231,8 @@ export function useEditLock(
 
   // Auto-acquire lock after 1 second of viewing
   useEffect(() => {
+    // Don't start timer if already attempted or not viewing
     if (!isViewing || lockAttemptedRef.current) {
-      // Clear any pending timer if we stop viewing
       if (viewTimerRef.current) {
         clearTimeout(viewTimerRef.current);
         viewTimerRef.current = null;
@@ -240,7 +240,7 @@ export function useEditLock(
       return;
     }
 
-    // Start a 1-second timer to acquire lock
+    // Only log once per question
     console.log("[useEditLock] User viewing question - starting 1s timer");
     viewTimerRef.current = setTimeout(() => {
       console.log("[useEditLock] Auto-acquiring lock after 1s view");
@@ -253,14 +253,21 @@ export function useEditLock(
         viewTimerRef.current = null;
       }
     };
-  }, [isViewing, acquireLock]);
+    // CRITICAL: Only depend on isViewing and questionId, NOT acquireLock
+    // This prevents re-running when parent components re-render
+  }, [isViewing, questionId, agents]);
 
-  // Reset attempt flag when no longer viewing
+  // Reset attempt flag when question changes (not just when viewing stops)
   useEffect(() => {
-    if (!isViewing) {
-      lockAttemptedRef.current = false;
+    // Reset the flag when we navigate to a new question
+    lockAttemptedRef.current = false;
+    
+    // Also release any existing lock if we had one
+    if (lockStatus === "acquired") {
+      console.log("[useEditLock] Question changed - releasing previous lock");
+      releaseLock();
     }
-  }, [isViewing]);
+  }, [questionId]); // Only when questionId changes, not isViewing
 
   return {
     lockStatus,
