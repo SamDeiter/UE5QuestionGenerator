@@ -266,8 +266,17 @@ export const useQuestionManager = (config, showMessage) => {
         return;
       }
 
-      // Validate that we have a valid document ID
-      const docId = currentQ.id || currentQ.uniqueId;
+      // Validate and normalize the document ID
+      // - Firestore expects string IDs
+      // - Legacy questions may have numeric IDs, so convert them
+      let docId = currentQ.id || currentQ.uniqueId;
+
+      // Handle legacy numeric IDs by converting to string
+      if (typeof docId === "number") {
+        console.warn(`Converting numeric ID to string: ${docId}`);
+        docId = String(docId);
+      }
+
       if (!docId || typeof docId !== "string") {
         console.error("Invalid question ID:", { currentQ, id, docId });
         if (showMessage) {
@@ -416,8 +425,17 @@ export const useQuestionManager = (config, showMessage) => {
         return;
       }
 
-      // Validate that we have a valid document ID
-      const docId = currentQ.id || currentQ.uniqueId;
+      // Validate and normalize the document ID
+      // - Firestore expects string IDs
+      // - Legacy questions may have numeric IDs, so convert them
+      let docId = currentQ.id || currentQ.uniqueId;
+
+      // Handle legacy numeric IDs by converting to string
+      if (typeof docId === "number") {
+        console.warn(`Converting numeric ID to string: ${docId}`);
+        docId = String(docId);
+      }
+
       if (!docId || typeof docId !== "string") {
         console.error("Invalid question ID:", { currentQ, id, docId });
         if (showMessage) {

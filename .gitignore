@@ -45,6 +45,7 @@ user-exports/
 *.db
 *.sql
 INVITE_LINKS.txt
+REVIEWER_CONTACTS.md
 
 # Temp development files (kept locally, not in git)
 temp_*.*
