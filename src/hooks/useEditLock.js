@@ -37,6 +37,7 @@ export function useEditLock(
   const heartbeatRef = useRef(null);
   const lockAttemptedRef = useRef(false);
   const viewTimerRef = useRef(null);
+  const currentQuestionIdRef = useRef(questionId);
 
   const agents = getAgents();
 
@@ -215,7 +216,10 @@ export function useEditLock(
         heartbeatRef.current = null;
       }
     };
-  }, [lockStatus, questionId, renewLock]);
+    // CRITICAL FIX: Don't include renewLock in dependencies (it's stable via useCallback)
+    // Including it causes the heartbeat to restart on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockStatus, questionId]);
 
   // Release lock on unmount ONLY if question wasn't modified
   useEffect(() => {
@@ -240,6 +244,11 @@ export function useEditLock(
       return;
     }
 
+    // CRITICAL: Don't start timer if questionId is not available yet
+    if (!questionId || !userId || !userEmail) {
+      return;
+    }
+
     // Only log once per question
     console.log("[useEditLock] User viewing question - starting 1s timer");
     viewTimerRef.current = setTimeout(() => {
@@ -255,19 +264,26 @@ export function useEditLock(
     };
     // CRITICAL: Only depend on isViewing and questionId, NOT acquireLock
     // This prevents re-running when parent components re-render
-  }, [isViewing, questionId, agents]);
+  }, [isViewing, questionId, userId, userEmail, agents]);
 
   // Reset attempt flag when question changes (not just when viewing stops)
   useEffect(() => {
-    // Reset the flag when we navigate to a new question
-    lockAttemptedRef.current = false;
-    
-    // Also release any existing lock if we had one
+    // If questionId hasn't actually changed, skip
+    if (currentQuestionIdRef.current === questionId) {
+      return;
+    }
+
+    // Question changed - release lock if we had one
     if (lockStatus === "acquired") {
       console.log("[useEditLock] Question changed - releasing previous lock");
       releaseLock();
     }
-  }, [questionId]); // Only when questionId changes, not isViewing
+
+    // Update the ref and reset the attempt flag
+    currentQuestionIdRef.current = questionId;
+    lockAttemptedRef.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionId]); // Only depend on questionId to avoid re-running on lockStatus changes
 
   return {
     lockStatus,

@@ -49,8 +49,7 @@ const QuestionItem = ({
   // Track if question was modified (Accept/Reject actions mark it as modified)
   const [wasModified, setWasModified] = useState(false);
 
-  // DISABLED: Auto-lock for review mode - causes too many lock/unlock cycles
-  // Lock system is only needed when actively EDITING content, not reviewing
+  // Auto-lock on view (review mode) - prevents concurrent reviews
   const {
     lockStatus: _lockStatus,
     lockedBy,
@@ -61,7 +60,7 @@ const QuestionItem = ({
     q.id,
     userId,
     userEmail,
-    false, // DISABLED: Don't auto-acquire locks in review mode
+    appMode === "review", // Auto-acquire locks to prevent concurrent reviews
     wasModified, // Don't release lock if modified
     () => {
       // onLockExpired callback
