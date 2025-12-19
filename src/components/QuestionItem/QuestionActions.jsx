@@ -85,14 +85,6 @@ const REJECTION_REASONS = [
     icon: "type",
     category: "quality",
   },
-
-  // Other
-  {
-    id: "other",
-    label: "Other",
-    icon: "more-horizontal",
-    category: "other",
-  },
 ];
 
 const QuestionActions = ({
