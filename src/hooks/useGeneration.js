@@ -1013,20 +1013,30 @@ export const useGeneration = (
           improvedScore
         );
 
-        // Generate tags if question has fewer than 3
-        let suggestedTags = q.tags || [];
-        if (suggestedTags.length < 3 && rewrite) {
+        // Generate tags if question has fewer than 3 (regardless of rewrite)
+        let suggestedTags = Array.isArray(q.tags) ? q.tags : [];
+        if (suggestedTags.length < 3) {
           try {
-            const improvedQuestion = {
-              question: rewrite.question || q.question,
-              optionA: rewrite.optionA || q.options?.A,
-              optionB: rewrite.optionB || q.options?.B,
-              optionC: rewrite.optionC || q.options?.C,
-              optionD: rewrite.optionD || q.options?.D,
-            };
+            // Use improved question if available, otherwise use original
+            const questionForTags = rewrite
+              ? {
+                  question: rewrite.question || q.question,
+                  optionA: rewrite.optionA || q.options?.A,
+                  optionB: rewrite.optionB || q.options?.B,
+                  optionC: rewrite.optionC || q.options?.C,
+                  optionD: rewrite.optionD || q.options?.D,
+                }
+              : {
+                  question: q.question,
+                  optionA: q.options?.A,
+                  optionB: q.options?.B,
+                  optionC: q.options?.C,
+                  optionD: q.options?.D,
+                };
+
             const newTags = await generateTagsSecure(
               effectiveApiKey,
-              improvedQuestion
+              questionForTags
             );
             if (newTags && newTags.length > 0) {
               suggestedTags = [
@@ -1034,7 +1044,7 @@ export const useGeneration = (
                   ...suggestedTags,
                   ...newTags.map((t) => t.replace(/^#/, "")),
                 ]),
-              ];
+              ].slice(0, 5); // Cap at 5 tags
             }
           } catch (error) {
             console.error("Tag generation failed during critique:", error);

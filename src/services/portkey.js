@@ -153,6 +153,7 @@ export const generateCritique = async (
     3. Distractors: Are wrong answers plausible but definitively incorrect?
     4. Professional Tone: Is it suitable for certification/interview use?
     5. Source Quality: Can the answer be verified from official documentation?
+    6. Formatting: Use **markdown bold** for key technical terms (e.g., **NavMesh**, **Lumen**, **Blueprint**)
     
     CRITICAL: You MUST provide TWO scores in your response:
     1. originalScore: Score for the question AS PROVIDED (the current version)
@@ -163,7 +164,7 @@ export const generateCritique = async (
         "originalScore": 75,  // REQUIRED: Score (0-100) for ORIGINAL question
         "critique": "string", // Detailed feedback with specific suggestions
         "rewrite": {
-            "question": "string", // Improved question text
+            "question": "string", // Improved question text with **bold** markdown for key technical terms
             "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
             "correct": "string" // Correct letter (A, B, C, or D)
         },
@@ -314,10 +315,11 @@ export const classifyQuestionDiscipline = async (apiKey, questionText) => {
  */
 export const generateTagsForQuestion = async (apiKey, questionText) => {
   const systemPrompt = `You are an expert UE5 tagger.
-    Generate 3-5 relevant technical tags for the provided question.
-    - Tags should be specific (e.g., "Blueprints", "Lumen", "Niagara").
-    - Return ONLY a valid JSON array of strings.
-    - Example: ["Blueprints", "Actors", "Level Design"]`;
+    Generate EXACTLY 3-5 relevant technical tags for the provided question.
+    - Tags MUST be specific UE5 features/concepts (e.g., "Blueprints", "Lumen", "Niagara")
+    - Return ONLY a valid JSON array of strings with AT LEAST 3 tags
+    - Example: ["Blueprints", "Actors", "Level Design"]
+    - CRITICAL: Always return minimum 3 tags, maximum 5 tags`;
 
   const userPrompt = `Tags for: "${questionText}"`;
 
