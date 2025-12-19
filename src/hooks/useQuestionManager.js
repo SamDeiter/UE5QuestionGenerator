@@ -310,10 +310,10 @@ export const useQuestionManager = (config, showMessage) => {
 
       // Calculate new state
       let updatedQ = { ...currentQ };
-      if (
-        (newStatus === "accepted" || newStatus === "rejected") &&
-        currentQ.reviewStartedAt
-      ) {
+
+      // Always complete review tracking when accepting or rejecting
+      // This ensures analytics capture all reviews, even if reviewStartedAt is missing
+      if (newStatus === "accepted" || newStatus === "rejected") {
         updatedQ = completeReviewTracking(updatedQ, config.creatorName);
       }
 

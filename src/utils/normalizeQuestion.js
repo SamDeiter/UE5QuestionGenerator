@@ -386,21 +386,27 @@ export const startReviewTracking = (question) => {
  * Completes review tracking and calculates duration
  * @param {Object} question - The question that was reviewed
  * @param {string} reviewerName - Name of the reviewer
- * @returns {Object} Question with reviewDuration calculated
+ * @returns {Object} Question with reviewDuration calculated (if possible) and reviewCompletedAt set
  */
 export const completeReviewTracking = (question, reviewerName = null) => {
-  if (!question || !question.reviewStartedAt) {
+  if (!question) {
     return question;
   }
 
-  const startTime = new Date(question.reviewStartedAt).getTime();
-  const endTime = Date.now();
-  const durationSeconds = Math.round((endTime - startTime) / 1000);
+  // Calculate duration if we have a start time
+  let durationSeconds = null;
+  if (question.reviewStartedAt) {
+    const startTime = new Date(question.reviewStartedAt).getTime();
+    const endTime = Date.now();
+    durationSeconds = Math.round((endTime - startTime) / 1000);
+  }
 
+  // Always set completion timestamp and reviewer name for analytics
+  // Duration will be null if reviewStartedAt was missing
   return {
     ...question,
     reviewDuration: durationSeconds,
-    reviewerName: reviewerName || question.reviewerName,
+    reviewerName: reviewerName || question.reviewerName || "Unknown",
     reviewCompletedAt: new Date().toISOString(),
   };
 };
