@@ -372,20 +372,21 @@ const ContextToolbar = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        {/* Load Data Buttons */}
+      <div className="flex items-center gap-2 md:gap-3">
+        {/* Load Data Buttons - icons only on small screens */}
         <button
           onClick={onLoadFirestore}
           disabled={isProcessing}
-          className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50"
+          className="px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 md:gap-2 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50"
+          title="Load from Firestore"
         >
           <Icon name="cloud-lightning" size={14} />
-          Load from Firestore
+          <span className="hidden sm:inline">Firestore</span>
         </button>
         <button
           onClick={onLoadSheets}
           disabled={isProcessing || !config.sheetUrl}
-          className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+          className="px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 md:gap-2 bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
           title={
             !config.sheetUrl
               ? "Configure Sheet URL in Settings first"
@@ -393,17 +394,18 @@ const ContextToolbar = ({
           }
         >
           <Icon name="table" size={14} />
-          Load from Sheets
+          <span className="hidden sm:inline">Sheets</span>
         </button>
 
         {isAdmin && (
           <button
             onClick={onBulkExport}
-            className="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white"
+            className="px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 md:gap-2 bg-green-600 hover:bg-green-500 text-white"
             data-tour="export-menu"
+            title="Export Questions"
           >
             <Icon name="download" size={14} />
-            Export
+            <span className="hidden sm:inline">Export</span>
           </button>
         )}
 
