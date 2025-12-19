@@ -89,7 +89,7 @@ const REJECTION_REASONS = [
   // Other
   {
     id: "other",
-    label: "Other (Add Notes)",
+    label: "Other",
     icon: "more-horizontal",
     category: "other",
   },

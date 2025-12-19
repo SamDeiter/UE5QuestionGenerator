@@ -21,6 +21,7 @@ const DatabaseView = ({
   showMessage,
   filterMode = "all", // Default to 'all' if not provided
   sortBy = "default", // Default to 'default' if not provided
+  searchTerm = "", // Search filter from toolbar
   onStartTutorial, // Callback to trigger database tutorial
   isAdmin = false, // Whether current user is admin
   userRole = "user", // NEW
@@ -130,8 +131,32 @@ const DatabaseView = ({
   const sortedQuestions = useMemo(() => {
     if (!questions) return [];
 
-    // Database mode shows ALL questions - no status filtering
-    const filtered = questions;
+    // Filter by search term if provided
+    let filtered = questions;
+    if (searchTerm && searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      filtered = questions.filter((q) => {
+        const searchableText = [
+          q.question,
+          q.discipline,
+          q.difficulty,
+          q.type,
+          q.language,
+          q.creatorName,
+          q.sourceUrl,
+          q.sourceExcerpt,
+          ...(q.tags || []),
+          q.options?.A,
+          q.options?.B,
+          q.options?.C,
+          q.options?.D,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return searchableText.includes(term);
+      });
+    }
 
     // Then Sort
     const sorted = [...filtered];
@@ -168,7 +193,7 @@ const DatabaseView = ({
         return sorted; // Keep original sheet order
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questions, sortBy, filterMode]);
+  }, [questions, sortBy, filterMode, searchTerm]);
 
   // PERFORMANCE: Only render visible items
   const visibleQuestions = useMemo(() => {

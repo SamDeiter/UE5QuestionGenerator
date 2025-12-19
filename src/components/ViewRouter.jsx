@@ -148,6 +148,7 @@ const ViewRouter = ({
           showMessage={showMessage}
           filterMode={state.filterMode}
           sortBy={state.sortBy}
+          searchTerm={state.searchTerm}
           onStartTutorial={() => onStartTutorial("database")}
           isAdmin={isAdmin}
           userRole={userRole}
