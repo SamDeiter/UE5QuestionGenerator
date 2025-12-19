@@ -330,52 +330,11 @@ export const useQuestionManager = (config, showMessage) => {
       };
 
       try {
-        // Use SaveGuard Agent if available, otherwise fall back to direct save
-        if (agents?.saveGuardAgent) {
-          const baseVersion = questionVersions.get(id) || currentQ.version || 1;
-          const result = await agents.saveGuardAgent.saveQuestionStatus(
-            docId, // Use validated document ID
-            newStatus,
-            baseVersion,
-            config.userId || "unknown",
-            config.userEmail || "unknown@example.com",
-            {
-              rejectionReason,
-              reviewedBy: config.creatorName,
-              reviewedAt: new Date().toISOString(),
-            }
-          );
-
-          if (!result.success) {
-            if (result.errorType === "VERSION_CONFLICT") {
-              console.warn("Version conflict detected during status update");
-              setConflictData({
-                serverQuestion: result.serverQuestion,
-                serverVersion: result.serverVersion,
-                localChanges: updatedQ,
-                expectedVersion: baseVersion,
-              });
-              setShowConflictModal(true);
-              return;
-            }
-            throw new Error(result.error || "Save failed");
-          }
-
-          // Update version tracking
-          setQuestionVersions((prev) =>
-            new Map(prev).set(id, result.newVersion)
-          );
-
-          // Update local state with new version
-          updateQuestionInState(id, () => ({
-            ...updatedQ,
-            version: result.newVersion,
-          }));
-        } else {
-          // Fallback: Direct save (no version control)
-          await saveQuestionToFirestore(updatedQ);
-          updateQuestionInState(id, () => updatedQ);
-        }
+        // CRITICAL FIX: Accept/Reject operations don't acquire edit locks
+        // so they can't use SaveGuardAgent (which requires locks).
+        // Use direct Firestore save for status changes instead.
+        await saveQuestionToFirestore(updatedQ);
+        updateQuestionInState(id, () => updatedQ);
 
         if (
           showMessage &&
