@@ -41,27 +41,52 @@ export const useDatabaseActions = ({
     const handleKickBackToReview = useCallback(async (question) => {
         try {
             // Update status to pending in Firestore (preserve the question)
-            await saveQuestionToFirestore({
-                ...question,
-                status: 'pending',
-                kickedBackAt: new Date().toISOString(),
-                kickedBackBy: 'user',
-                kickedBackReason: 'Moved from Database to Review'
-            });
+            const updatedQuestion = {
+              ...question,
+              status: "pending",
+              kickedBackAt: new Date().toISOString(),
+              kickedBackBy: "user",
+              kickedBackReason: "Moved from Database to Review",
+            };
 
-            // Remove from database view
-            setDatabaseQuestions(prev => prev.filter(q => q.uniqueId !== question.uniqueId));
+            console.log(
+              "🔄 [Kick Back] Saving to Firestore:",
+              updatedQuestion.uniqueId
+            );
+            await saveQuestionToFirestore(updatedQuestion);
+
+            // Update status in database view (keep it visible, just change status)
+            console.log("🔄 [Kick Back] Updating status in databaseQuestions");
+            setDatabaseQuestions((prev) =>
+              prev.map((q) =>
+                q.uniqueId === question.uniqueId ? updatedQuestion : q
+              )
+            );
 
             // Add to historical questions with 'pending' status so it appears in Review Mode
-            setHistoricalQuestions(prev => {
-                // Check if already exists to prevent duplicates
-                if (prev.some(q => q.uniqueId === question.uniqueId)) {
-                    return prev.map(q => q.uniqueId === question.uniqueId ? { ...question, status: 'pending' } : q);
-                }
-                return [...prev, { ...question, status: 'pending' }];
+            console.log("🔄 [Kick Back] Adding to historicalQuestions");
+            setHistoricalQuestions((prev) => {
+              // Check if already exists to prevent duplicates
+              if (prev.some((q) => q.uniqueId === question.uniqueId)) {
+                console.log(
+                  "🔄 [Kick Back] Updating existing in historicalQuestions"
+                );
+                return prev.map((q) =>
+                  q.uniqueId === question.uniqueId ? updatedQuestion : q
+                );
+              }
+              console.log(
+                `🔄 [Kick Back] Historical: ${prev.length} -> ${
+                  prev.length + 1
+                }`
+              );
+              return [...prev, updatedQuestion];
             });
 
-            showMessage("Question removed from database and sent to Review Mode.", 3000);
+            showMessage(
+              "Question kicked back to Review. Check Review tab.",
+              3000
+            );
         } catch (error) {
             console.error("Error kicking back question:", error);
             showMessage("Failed to kick back question. Please try again.", 3000);
