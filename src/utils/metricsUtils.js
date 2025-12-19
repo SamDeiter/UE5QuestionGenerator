@@ -29,12 +29,29 @@ export const calculateMetrics = (questions) => {
     };
   }
 
-  // Calculate unique questions by uniqueId
-  const uniqueIds = new Set(questions.map((q) => q.uniqueId).filter(Boolean));
+  // CRITICAL: Deduplicate by uniqueId FIRST, keeping only English versions
+  // This ensures charts show unique question counts, not total documents
+  const uniqueQuestionsMap = new Map();
+  questions.forEach((q) => {
+    if (!q.uniqueId) return;
+
+    // Keep the first occurrence (usually English) or the one we already have
+    if (!uniqueQuestionsMap.has(q.uniqueId)) {
+      uniqueQuestionsMap.set(q.uniqueId, q);
+    } else {
+      // Prefer English version if available
+      const existing = uniqueQuestionsMap.get(q.uniqueId);
+      if (q.language === "English" && existing.language !== "English") {
+        uniqueQuestionsMap.set(q.uniqueId, q);
+      }
+    }
+  });
+
+  const uniqueQuestions = Array.from(uniqueQuestionsMap.values());
 
   const metrics = {
-    total: questions.length,
-    uniqueQuestions: uniqueIds.size,
+    total: questions.length, // Total documents (including translations)
+    uniqueQuestions: uniqueQuestions.length,
     byDifficulty: { Easy: 0, Medium: 0, Hard: 0 },
     byType: { "Multiple Choice": 0, "True/False": 0 },
     byDiscipline: {},
@@ -43,7 +60,8 @@ export const calculateMetrics = (questions) => {
     ratedCount: 0,
   };
 
-  questions.forEach((q) => {
+  // Count unique questions only (for accurate charts)
+  uniqueQuestions.forEach((q) => {
     // Difficulty - normalize before counting
     const normalizedDiff = normalizeDifficulty(q.difficulty);
     if (normalizedDiff && metrics.byDifficulty[normalizedDiff] !== undefined) {
@@ -61,19 +79,21 @@ export const calculateMetrics = (questions) => {
     }
     metrics.byDiscipline[q.discipline]++;
 
-    // Language
-    const lang = q.language || "English";
-    if (!metrics.byLanguage[lang]) {
-      metrics.byLanguage[lang] = 0;
-    }
-    metrics.byLanguage[lang]++;
-
     // Quality Score (if available)
     const score = parseFloat(q.critiqueScore || q.initialQuality);
     if (!isNaN(score)) {
       metrics.totalQuality += score;
       metrics.ratedCount++;
     }
+  });
+
+  // Count ALL questions for language breakdown (to show translation stats)
+  questions.forEach((q) => {
+    const lang = q.language || "English";
+    if (!metrics.byLanguage[lang]) {
+      metrics.byLanguage[lang] = 0;
+    }
+    metrics.byLanguage[lang]++;
   });
 
   metrics.avgQuality =
