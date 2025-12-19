@@ -131,11 +131,14 @@ const DatabaseView = ({
   const sortedQuestions = useMemo(() => {
     if (!questions) return [];
 
-    // Filter by search term if provided
-    let filtered = questions;
+    // FIRST: Filter to only show ACCEPTED questions in Database view
+    // Pending and rejected questions should only appear in Review mode
+    let filtered = questions.filter((q) => q.status === "accepted");
+
+    // Then filter by search term if provided
     if (searchTerm && searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
-      filtered = questions.filter((q) => {
+      filtered = filtered.filter((q) => {
         const searchableText = [
           q.question,
           q.discipline,
