@@ -42,9 +42,14 @@ const QuestionItem = ({
   const lastProcessedCritiqueRef = useRef(null);
 
   // Get current user info for lock management
-  const { user } = useAuth(() => {});
+  const { user } = useAuth();
   const userId = user?.uid;
   const userEmail = user?.email;
+
+  // Memoize lock expired callback to prevent heartbeat effect restarts
+  const handleLockExpired = useCallback(() => {
+    showMessage?.("⚠️ Your review lock expired.", 5000);
+  }, [showMessage]);
 
   // Auto-lock on view (review mode) - prevents concurrent reviews
   const {
@@ -58,10 +63,7 @@ const QuestionItem = ({
     userId,
     userEmail,
     appMode === "review", // Auto-acquire locks to prevent concurrent reviews
-    () => {
-      // onLockExpired callback
-      showMessage?.("⚠️ Your review lock expired.", 5000);
-    },
+    handleLockExpired,
     isProcessing // Ensure no lock release during active save
   );
 
