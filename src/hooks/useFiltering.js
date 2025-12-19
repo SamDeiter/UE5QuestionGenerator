@@ -176,8 +176,11 @@ export function useFiltering({
       newHash === prevHash &&
       prevContextFilteredRef.current.length > 0
     ) {
-      // Return cached result if content hasn't changed
-      return prevContextFilteredRef.current;
+      // STABILITY: When caching, check if any accepted questions need to be filtered
+      // This prevents index jumps when status changes during heartbeat cycles
+      if (newResult.length === prevContextFilteredRef.current.length) {
+        return prevContextFilteredRef.current;
+      }
     }
 
     // NOTE: We no longer pre-filter accepted questions in review mode.

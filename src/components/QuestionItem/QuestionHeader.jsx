@@ -116,7 +116,7 @@ const QuestionHeader = ({
       </div>
 
       <div className="flex items-center gap-2">
-        {/* DATABASE MODE: Only show Kick Back to Review button */}
+        {/* DATABASE MODE: Show Kick Back to Review button */}
         {appMode === "database" && (
           <button
             onClick={() => onKickBack(q)}
@@ -126,6 +126,19 @@ const QuestionHeader = ({
           >
             <Icon name="corner-up-left" size={14} />
             Kick Back to Review
+          </button>
+        )}
+
+        {/* REVIEW MODE: Show Restore button for rejected questions */}
+        {appMode === "review" && q.status === "rejected" && onKickBack && (
+          <button
+            onClick={() => onKickBack(q)}
+            className="px-4 py-2 mr-4 rounded-lg transition-all bg-amber-900/40 text-amber-300 hover:bg-amber-800/60 hover:text-amber-200 border-2 border-amber-700/50 hover:border-amber-500 flex items-center gap-2 text-sm font-bold"
+            title="Restore to Pending for re-review"
+            aria-label="Restore to pending"
+          >
+            <Icon name="refresh-cw" size={18} />
+            Restore to Pending
           </button>
         )}
       </div>

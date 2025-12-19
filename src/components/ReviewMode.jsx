@@ -19,6 +19,7 @@ const ReviewMode = ({
   isProcessing,
   showMessage,
   onStartTutorial,
+  onKickBack, // For restoring rejected questions
   userRole, // NEW
 }) => {
   // Auto-start tutorial if not completed (and compliance modals are done)
@@ -146,6 +147,7 @@ const ReviewMode = ({
           isProcessing={isProcessing}
           appMode="review"
           showMessage={showMessage}
+          onKickBack={onKickBack}
           userRole={userRole} // NEW
         />
       </div>

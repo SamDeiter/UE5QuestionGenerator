@@ -199,6 +199,7 @@ const ViewRouter = ({
           onUpdateQuestion={handleManualUpdate}
           translationMap={translationMap}
           onStartTutorial={() => onStartTutorial("review")}
+          onKickBack={handleKickBackToReview}
           userRole={userRole} // NEW
         />
       ) : appMode === "review" && uniqueFilteredQuestions.length === 0 ? (
