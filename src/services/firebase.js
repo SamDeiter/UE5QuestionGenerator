@@ -353,8 +353,8 @@ export const getQuestionsFromFirestore = async () => {
     const userSnapshot = await getDocs(userQuery);
 
     const questions = [];
-    userSnapshot.forEach((doc) => {
-      questions.push(doc.data());
+    userSnapshot.forEach((docSnapshot) => {
+      questions.push({ id: docSnapshot.id, ...docSnapshot.data() });
     });
 
     if (questions.length === 0) {
@@ -422,8 +422,8 @@ export const getAllQuestionsFromFirestore = async (
 
     const questions = [];
     const disciplineCounts = {};
-    snapshot.forEach((doc) => {
-      const q = doc.data();
+    snapshot.forEach((docSnapshot) => {
+      const q = { id: docSnapshot.id, ...docSnapshot.data() };
       questions.push(q);
 
       // Track discipline counts for debugging
@@ -490,8 +490,8 @@ export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
     q,
     (snapshot) => {
       const questions = [];
-      snapshot.forEach((doc) => {
-        questions.push(doc.data());
+      snapshot.forEach((docSnapshot) => {
+        questions.push({ id: docSnapshot.id, ...docSnapshot.data() });
       });
 
       console.log(
