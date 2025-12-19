@@ -387,9 +387,13 @@ export const useQuestionManager = (config, showMessage) => {
         }
       } catch (err) {
         console.error("Firestore sync failed:", err);
+        // DEBUG: Log detailed error information to diagnose false positives
+        console.log("[DEBUG] Error type:", typeof err);
+        console.log("[DEBUG] Error message:", err.message);
+        console.log("[DEBUG] Full error:", err);
 
         // Handle QUESTION_DELETED: Remove from local state automatically
-        if (err.message?.includes("QUESTION_DELETED")) {
+        if (err.message?.startsWith("QUESTION_DELETED:")) {
           console.warn(
             `Question ${id} was deleted from Firestore - removing from local state`
           );
@@ -513,7 +517,7 @@ export const useQuestionManager = (config, showMessage) => {
         console.error("Firestore sync failed:", err);
 
         // Handle QUESTION_DELETED: Remove from local state automatically
-        if (err.message?.includes("QUESTION_DELETED")) {
+        if (err.message?.startsWith("QUESTION_DELETED:")) {
           console.warn(
             `Question ${id} was deleted from Firestore - removing from local state`
           );
