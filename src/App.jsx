@@ -300,7 +300,12 @@ const App = () => {
   // Calculate total unique questions in database (ignoring all filters)
   // This is used for the Review tab badge to show the full database size
   const totalUniqueQuestions = useMemo(() => {
-    return allQuestionsMap.size; // Map size = number of unique questions
+    const count = allQuestionsMap.size;
+    console.log("🔍 [DEBUG] Review Badge Count:", {
+      allQuestionsMapSize: count,
+      mapKeys: Array.from(allQuestionsMap.keys()).slice(0, 5),
+    });
+    return count;
   }, [allQuestionsMap]);
 
   // 6. Generation & Translation Logic
