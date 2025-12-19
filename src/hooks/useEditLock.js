@@ -45,6 +45,8 @@ export function useEditLock(
   // Refs to track latest state for cleanup/heartbeat without triggering re-renders
   const lockStatusRef = useRef(lockStatus);
   const isProcessingRef = useRef(isProcessing);
+  const renewLockRef = useRef(null); // For stable heartbeat access
+  const releaseLockRef = useRef(null); // For stable cleanup access
 
   useEffect(() => {
     lockStatusRef.current = lockStatus;
@@ -78,14 +80,23 @@ export function useEditLock(
     const { lockAgent, auditAgent } = agents;
 
     try {
-      const result = await lockAgent.acquireLock(String(questionId), userId, userEmail);
+      const result = await lockAgent.acquireLock(
+        String(questionId),
+        userId,
+        userEmail
+      );
 
       if (result.success) {
         setLockStatus("acquired");
         setLockInfo(result.lock);
         setLockedBy(null);
 
-        await auditAgent.logLockAcquired(String(questionId), userId, userEmail, result.action === "stolen");
+        await auditAgent.logLockAcquired(
+          String(questionId),
+          userId,
+          userEmail,
+          result.action === "stolen"
+        );
         console.log(`[useEditLock] Lock acquired for question ${questionId}`);
         return { success: true };
       } else {
@@ -128,6 +139,12 @@ export function useEditLock(
       return { success: false, error: error.message };
     }
   }, [agents, questionId, onLockExpired]);
+
+  // Keep refs updated for stable access in effects
+  useEffect(() => {
+    renewLockRef.current = renewLock;
+    releaseLockRef.current = releaseLock;
+  });
 
   /**
    * Release the lock
@@ -179,17 +196,20 @@ export function useEditLock(
     }
   }, [agents, questionId]);
 
-  // Heartbeat Effect
+  // Heartbeat Effect - STABLE: no function dependencies, use refs
   useEffect(() => {
     if (lockStatus !== "acquired") return;
 
     console.log("[useEditLock] Starting heartbeat for", questionId);
     heartbeatRef.current = setInterval(async () => {
-      const result = await renewLock();
-      if (!result.success) {
-        if (heartbeatRef.current) {
-          clearInterval(heartbeatRef.current);
-          heartbeatRef.current = null;
+      // Use ref for stable access
+      if (renewLockRef.current) {
+        const result = await renewLockRef.current();
+        if (!result.success) {
+          if (heartbeatRef.current) {
+            clearInterval(heartbeatRef.current);
+            heartbeatRef.current = null;
+          }
         }
       }
     }, 30000);
@@ -201,9 +221,10 @@ export function useEditLock(
         heartbeatRef.current = null;
       }
     };
-  }, [lockStatus, questionId, renewLock]);
+     
+  }, [lockStatus, questionId]); // CRITICAL: No function deps - use refs instead
 
-  // Release lock on unmount OR when question actually changes
+  // Release lock on unmount OR when question actually changes - STABLE
   useEffect(() => {
     const qId = String(questionId);
 
@@ -211,16 +232,25 @@ export function useEditLock(
       // Use refs to check latest values in cleanup
       if (lockStatusRef.current === "acquired" && !isProcessingRef.current) {
         console.log(`[useEditLock] Releasing lock on exit for: ${qId}`);
-        releaseLock();
+        if (releaseLockRef.current) releaseLockRef.current();
       } else if (isProcessingRef.current) {
-        console.log(`[useEditLock] Delaying lock release for ${qId} - save in progress`);
+        console.log(
+          `[useEditLock] Delaying lock release for ${qId} - save in progress`
+        );
       }
     };
-  }, [questionId, releaseLock]);
+     
+  }, [questionId]); // CRITICAL: No function deps - use refs instead
 
   // Auto-acquire lock after 1s view
   useEffect(() => {
-    if (!isViewing || lockAttemptedRef.current || !questionId || !userId || !userEmail) {
+    if (
+      !isViewing ||
+      lockAttemptedRef.current ||
+      !questionId ||
+      !userId ||
+      !userEmail
+    ) {
       if (!isViewing && viewTimerRef.current) {
         clearTimeout(viewTimerRef.current);
         viewTimerRef.current = null;
