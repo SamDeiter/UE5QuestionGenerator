@@ -812,7 +812,7 @@ const App = () => {
           }}
           handleModeSelect={handleModeSelect}
           handleViewDatabase={handleViewDatabase}
-          pendingCount={pendingCount}
+          pendingCount={contextCounts.pending} // Use deduplicated count from useFiltering
           toolbarProps={{
             mode: appMode,
             counts: contextCounts,
