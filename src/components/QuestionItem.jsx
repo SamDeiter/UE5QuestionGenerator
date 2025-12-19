@@ -193,10 +193,17 @@ const QuestionItem = ({
       )}
 
       {/* Active Lock Indicator (you have the lock) */}
-      {hasLock && appMode === "review" && !isLocked && (
+      {/* ALWAYS render to prevent layout shift - use opacity to hide */}
+      {appMode === "review" && !isLocked && (
         <div
-          className="mb-2 inline-flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-500/50 rounded text-xs text-green-400 transition-all duration-300"
-          title="You have the review lock - others cannot modify this question"
+          className={`mb-2 inline-flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-500/50 rounded text-xs text-green-400 transition-all duration-300 ${
+            hasLock ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          title={
+            hasLock
+              ? "You have the review lock - others cannot modify this question"
+              : ""
+          }
         >
           <Icon
             name="lock"
