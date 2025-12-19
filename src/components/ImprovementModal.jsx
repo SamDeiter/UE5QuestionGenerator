@@ -38,13 +38,13 @@ const ImprovementModal = ({
     : [];
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-[10000] flex items-start justify-center pt-8 p-4 overflow-y-auto pointer-events-auto">
+    <div className="fixed inset-0 bg-black/80 z-[10000] flex items-start justify-center pt-4 p-4 overflow-y-auto pointer-events-auto">
       <div
         className="bg-slate-900 rounded-xl border-2 border-green-500/50 shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 border-b border-green-600/30 px-5 py-3">
+        <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 border-b border-green-600/30 px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Icon name="sparkles" size={20} className="text-green-400" />
@@ -70,9 +70,9 @@ const ImprovementModal = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent hover:scrollbar-thumb-slate-500">
           {/* AI Critique Feedback */}
-          <div className="bg-orange-900/20 border border-orange-700/30 rounded-lg p-4">
+          <div className="bg-orange-900/20 border border-orange-700/30 rounded-lg p-3">
             <div className="flex items-start gap-2 mb-2">
               <Icon
                 name="message-square"
@@ -99,7 +99,7 @@ const ImprovementModal = ({
               </div>
 
               {/* Why Explanation */}
-              <div className="bg-blue-900/15 border border-blue-700/30 rounded-lg p-3 mb-4">
+              <div className="bg-blue-900/15 border border-blue-700/30 rounded-lg p-2.5 mb-3">
                 <div className="flex items-start gap-2">
                   <Icon
                     name="lightbulb"
@@ -299,7 +299,7 @@ const ImprovementModal = ({
           )}
         </div>
 
-        <div className="border-t border-slate-700 bg-slate-900/90 px-5 py-3 flex items-center justify-center gap-2.5 relative z-10 pointer-events-auto">
+        <div className="border-t border-slate-700 bg-slate-900/90 px-4 py-2 flex items-center justify-center gap-2.5 relative z-10 pointer-events-auto">
           <div className="flex gap-2.5">
             <button
               onClick={(e) => {
