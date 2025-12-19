@@ -875,6 +875,7 @@ const App = () => {
             status,
             filterMode,
             sortBy,
+            searchTerm,
             showHistory,
             currentUser: user,
             userRole, // Add role for component restrictions
