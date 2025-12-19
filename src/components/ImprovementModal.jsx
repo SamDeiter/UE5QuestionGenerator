@@ -19,8 +19,15 @@ const ImprovementModal = ({
   const [isApplying, setIsApplying] = useState(false);
 
   const handleApply = async () => {
+    console.log("[ImprovementModal] handleApply called");
+    console.log("[ImprovementModal] improvedQuestion:", improvedQuestion);
     setIsApplying(true);
-    await onApply(improvedQuestion);
+    try {
+      await onApply(improvedQuestion);
+      console.log("[ImprovementModal] onApply completed successfully");
+    } catch (err) {
+      console.error("[ImprovementModal] onApply error:", err);
+    }
     setIsApplying(false);
   };
 
@@ -34,9 +41,9 @@ const ImprovementModal = ({
     : [];
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-[100] flex items-start justify-center pt-8 p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 z-[100] flex items-start justify-center pt-8 p-4 overflow-y-auto pointer-events-auto">
       <div
-        className="bg-slate-900 rounded-xl border-2 border-green-500/50 shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-slate-900 rounded-xl border-2 border-green-500/50 shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -295,25 +302,27 @@ const ImprovementModal = ({
           )}
         </div>
 
-        <div className="border-t border-slate-700 bg-slate-900/90 px-5 py-3 flex items-center justify-center gap-2.5">
+        <div className="border-t border-slate-700 bg-slate-900/90 px-5 py-3 flex items-center justify-center gap-2.5 relative z-10 pointer-events-auto">
           <div className="flex gap-2.5">
             <button
               onClick={(e) => {
+                console.log("[ImprovementModal] Keep Original CLICKED");
                 e.stopPropagation();
                 onDismiss();
               }}
-              className="px-4 py-1.5 rounded-lg font-bold text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition-all"
+              className="px-4 py-1.5 rounded-lg font-bold text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition-all pointer-events-auto cursor-pointer"
             >
               {changesExplanation ? "Keep Original" : "Close"}
             </button>
             {changesExplanation && (
               <button
                 onClick={(e) => {
+                  console.log("[ImprovementModal] Apply button CLICKED");
                   e.stopPropagation();
                   handleApply();
                 }}
                 disabled={isApplying}
-                className="px-4 py-1.5 rounded-lg font-bold text-xs bg-green-600 text-white hover:bg-green-500 shadow-lg shadow-green-900/50 transition-all disabled:opacity-50"
+                className="px-4 py-1.5 rounded-lg font-bold text-xs bg-green-600 text-white hover:bg-green-500 shadow-lg shadow-green-900/50 transition-all disabled:opacity-50 pointer-events-auto cursor-pointer"
               >
                 {isApplying ? "Applying..." : "Apply Improvements"}
               </button>
