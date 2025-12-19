@@ -209,7 +209,9 @@ const QuestionItem = ({
           <Icon
             name="lock"
             size={14}
-            className={isRefreshing ? "text-cyan-400 animate-pulse" : ""}
+            className={`transition-colors duration-300 ${
+              isRefreshing ? "text-cyan-300" : "text-green-400"
+            }`}
           />
           <span>Reviewing</span>
         </div>
