@@ -60,6 +60,13 @@ export function useFiltering({
     setCurrentReviewIndex(0);
   }, []); // Empty deps = run once on mount
 
+  // ALSO reset when entering Review mode (navigation or page refresh)
+  useEffect(() => {
+    if (appMode === "review") {
+      setCurrentReviewIndex(0);
+    }
+  }, [appMode]); // Reset whenever we enter Review mode
+
   // ========================================================================
   // EFFECTS - Persistence
   // ========================================================================
