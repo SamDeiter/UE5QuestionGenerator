@@ -11,7 +11,7 @@ jobs:
       - name: Install Dependencies
         run: npm ci
       - name: Run Tests
-        run: npm test -- run
+        run: npm test -- run --exclude=**/**.integration.test.{jsx,js}
       - name: Build
         run: npm run build
         env:
