@@ -196,7 +196,7 @@ const QuestionItem = ({
       {/* Active Lock Indicator - Always visible in review mode, color shows status */}
       {appMode === "review" && (
         <div
-          className={`mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all duration-500 ${
+          className={`ml-6 mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all duration-500 ${
             hasLock && !isLocked
               ? "bg-green-900/30 border border-green-500/50 text-green-400"
               : isLocked
