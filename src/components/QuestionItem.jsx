@@ -192,14 +192,6 @@ const QuestionItem = ({
         </div>
       )}
 
-      {/* Acquiring Lock Indicator */}
-      {isAcquiring && appMode === "review" && (
-        <div className="mb-3 bg-cyan-900/30 border border-cyan-500/50 rounded-lg p-2 flex items-center gap-2">
-          <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs text-cyan-300">Acquiring review lock...</p>
-        </div>
-      )}
-
       {/* Active Lock Indicator (you have the lock) */}
       {hasLock && appMode === "review" && !isLocked && (
         <div
