@@ -218,7 +218,20 @@ export function useEditLock(
     };
   }, [lockStatus, questionId]);
 
+  // Keep releaseLock in a ref so cleanup effect doesn't restart when callback changes
+  const releaseLockRef = useRef(releaseLock);
+  useEffect(() => {
+    releaseLockRef.current = releaseLock;
+  }, [releaseLock]);
+
+  // Keep acquireLock in a ref so auto-acquire effect doesn't restart
+  const acquireLockRef = useRef(acquireLock);
+  useEffect(() => {
+    acquireLockRef.current = acquireLock;
+  }, [acquireLock]);
+
   // Release lock on unmount OR when questionId changes
+  // Uses ref to avoid cleanup running when callback identity changes
   useEffect(() => {
     const qId = String(questionId);
 
@@ -226,16 +239,17 @@ export function useEditLock(
       // Use refs to check latest values in cleanup (closures can be stale)
       if (lockStatusRef.current === "acquired" && !isProcessingRef.current) {
         console.log(`[useEditLock] Releasing lock on exit for: ${qId}`);
-        releaseLock();
+        releaseLockRef.current();
       } else if (isProcessingRef.current) {
         console.log(
           `[useEditLock] Delaying lock release for ${qId} - save in progress`
         );
       }
     };
-  }, [questionId, releaseLock]);
+  }, [questionId]); // Removed releaseLock dependency
 
   // Auto-acquire lock after 1s view
+  // Uses ref to avoid effect restart when callback identity changes
   useEffect(() => {
     if (
       !isViewing ||
@@ -254,7 +268,7 @@ export function useEditLock(
     console.log("[useEditLock] Starting 1s view timer");
     viewTimerRef.current = setTimeout(() => {
       console.log("[useEditLock] Auto-acquiring lock");
-      acquireLock();
+      acquireLockRef.current();
     }, 1000);
 
     return () => {
@@ -263,7 +277,7 @@ export function useEditLock(
         viewTimerRef.current = null;
       }
     };
-  }, [isViewing, questionId, userId, userEmail, acquireLock]);
+  }, [isViewing, questionId, userId, userEmail]); // Removed acquireLock dependency
 
   // Reset lock attempt flag when questionId changes
   useEffect(() => {
