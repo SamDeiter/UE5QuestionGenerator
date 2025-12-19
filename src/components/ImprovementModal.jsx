@@ -298,14 +298,20 @@ const ImprovementModal = ({
         <div className="border-t border-slate-700 bg-slate-900/90 px-5 py-3 flex items-center justify-center gap-2.5">
           <div className="flex gap-2.5">
             <button
-              onClick={onDismiss}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDismiss();
+              }}
               className="px-4 py-1.5 rounded-lg font-bold text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition-all"
             >
               {changesExplanation ? "Keep Original" : "Close"}
             </button>
             {changesExplanation && (
               <button
-                onClick={handleApply}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleApply();
+                }}
                 disabled={isApplying}
                 className="px-4 py-1.5 rounded-lg font-bold text-xs bg-green-600 text-white hover:bg-green-500 shadow-lg shadow-green-900/50 transition-all disabled:opacity-50"
               >
