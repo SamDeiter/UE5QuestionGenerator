@@ -98,7 +98,9 @@ export function useEditLock(
       setLockStatus("none");
       return { success: false, error: error.message };
     }
-  }, [questionId, userId, userEmail, agents]);
+    // CRITICAL: Don't include 'agents' - it changes on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionId, userId, userEmail]);
 
   /**
    * Renew the lock (heartbeat)
@@ -126,7 +128,9 @@ export function useEditLock(
       console.error("[useEditLock] Lock renewal error:", error);
       return { success: false, error: error.message };
     }
-  }, [questionId, agents, onLockExpired]);
+    // CRITICAL: Don't include 'agents' - it changes on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionId, onLockExpired]);
 
   /**
    * Release the lock
@@ -156,7 +160,9 @@ export function useEditLock(
       console.error("[useEditLock] Lock release error:", error);
       return { success: false, error: error.message };
     }
-  }, [questionId, userId, userEmail, agents]);
+    // CRITICAL: Don't include 'agents' - it changes on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionId, userId, userEmail]);
 
   /**
    * Check current lock status
@@ -183,7 +189,9 @@ export function useEditLock(
       console.error("[useEditLock] Lock status check error:", error);
       return { locked: false, error: error.message };
     }
-  }, [questionId, agents]);
+    // CRITICAL: Don't include 'agents' - it changes on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionId]);
 
   // Start heartbeat when lock acquired
   useEffect(() => {
@@ -262,9 +270,10 @@ export function useEditLock(
         viewTimerRef.current = null;
       }
     };
-    // CRITICAL: Only depend on isViewing and questionId, NOT acquireLock
-    // This prevents re-running when parent components re-render
-  }, [isViewing, questionId, userId, userEmail, agents]);
+    // CRITICAL: Include acquireLock but NOT agents (agents changes on every render)
+    // acquireLock is stable because we control its dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isViewing, questionId, acquireLock]);
 
   // Reset attempt flag when question changes (not just when viewing stops)
   useEffect(() => {
