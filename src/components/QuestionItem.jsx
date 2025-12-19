@@ -193,28 +193,38 @@ const QuestionItem = ({
         </div>
       )}
 
-      {/* Active Lock Indicator (you have the lock) */}
-      {/* ALWAYS render to prevent layout shift - use opacity to hide */}
+      {/* Active Lock Indicator - Always visible in review mode, color shows status */}
       {appMode === "review" && (
         <div
-          className={`mb-2 inline-flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-500/50 rounded text-xs text-green-400 transition-opacity duration-300 ${
+          className={`mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all duration-500 ${
             hasLock && !isLocked
-              ? "opacity-100"
-              : "opacity-0 pointer-events-none"
+              ? "bg-green-900/30 border border-green-500/50 text-green-400"
+              : isLocked
+              ? "bg-red-900/30 border border-red-500/50 text-red-400"
+              : "bg-amber-900/30 border border-amber-500/50 text-amber-400"
           }`}
           title={
             hasLock
               ? "You have the review lock - others cannot modify this question"
-              : ""
+              : isLocked
+              ? `Locked by ${lockedBy?.email || "another user"}`
+              : "Acquiring lock..."
           }
         >
           <Icon
-            name="lock"
+            name={hasLock ? "lock" : isLocked ? "lock" : "loader"}
             size={14}
-            className="text-green-400 animate-pulse"
-            style={{ animationDuration: "3s" }}
+            className={
+              hasLock
+                ? "text-green-400"
+                : isLocked
+                ? "text-red-400"
+                : "text-amber-400 animate-spin"
+            }
           />
-          <span>Reviewing</span>
+          <span>
+            {hasLock ? "Reviewing" : isLocked ? "Locked" : "Connecting..."}
+          </span>
         </div>
       )}
 
