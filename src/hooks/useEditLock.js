@@ -35,7 +35,6 @@ export function useEditLock(
   const [lockStatus, setLockStatus] = useState("none"); // 'none' | 'acquiring' | 'acquired' | 'locked_by_other' | 'expired'
   const [lockInfo, setLockInfo] = useState(null);
   const [lockedBy, setLockedBy] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Refs for interval/timer management
   const heartbeatRef = useRef(null);
@@ -120,7 +119,6 @@ export function useEditLock(
 
     const { lockAgent } = agents;
 
-    setIsRefreshing(true);
     try {
       const result = await lockAgent.renewLock(String(questionId));
 
@@ -135,9 +133,6 @@ export function useEditLock(
       console.error("[useEditLock] Lock renewal error:", error);
       setLockStatus("expired");
       return { success: false, error: error.message };
-    } finally {
-      // Brief delay for visual feedback, then reset
-      setTimeout(() => setIsRefreshing(false), 500);
     }
   }, [agents, questionId, onLockExpired]);
 
@@ -294,7 +289,6 @@ export function useEditLock(
     hasLock: lockStatus === "acquired",
     isAcquiring: lockStatus === "acquiring",
     isExpired: lockStatus === "expired",
-    isRefreshing,
     acquireLock,
     renewLock,
     releaseLock,
