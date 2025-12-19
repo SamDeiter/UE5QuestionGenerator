@@ -5,7 +5,7 @@
  *
  * Features:
  * - Acquire lock on edit start
- * - Automatic heartbeat renewal every 20 seconds
+ * - Automatic heartbeat renewal every 3 seconds
  * - Release lock on save/cancel/unmount
  * - Track lock status and ownership
  */
@@ -103,7 +103,8 @@ export function useEditLock(
   }, [questionId, userId, userEmail]);
 
   /**
-   * Renew the lock (heartbeat)
+   * Renew the lock (heartbeat) - SILENT operation
+   * Only updates UI state if renewal fails
    * @returns {Promise<{success: boolean}>}
    */
   const renewLock = useCallback(async () => {
@@ -114,6 +115,8 @@ export function useEditLock(
     try {
       const result = await lockAgent.renewLock(String(questionId));
 
+      // CRITICAL: Only update state if renewal FAILS
+      // Successful renewals should be silent to avoid UI flashing
       if (!result.success) {
         console.warn("[useEditLock] Lock renewal failed:", result.error);
         setLockStatus("expired");
@@ -122,10 +125,12 @@ export function useEditLock(
           onLockExpired();
         }
       }
+      // If successful, don't update any state - keep UI stable
 
       return result;
     } catch (error) {
       console.error("[useEditLock] Lock renewal error:", error);
+      setLockStatus("expired"); // Only update on error
       return { success: false, error: error.message };
     }
     // CRITICAL: Don't include 'agents' - it changes on every render
@@ -199,9 +204,9 @@ export function useEditLock(
       return;
     }
 
-    console.log("[useEditLock] Starting heartbeat for question", questionId);
+    console.log("[ useEditLock] Starting heartbeat for question", questionId);
 
-    // Renew lock every 20 seconds
+    // Renew lock every 3 seconds
     heartbeatRef.current = setInterval(async () => {
       const result = await renewLock();
 
@@ -212,7 +217,7 @@ export function useEditLock(
           heartbeatRef.current = null;
         }
       }
-    }, 20000); // 20 seconds
+    }, 3000); // 3 seconds
 
     return () => {
       if (heartbeatRef.current) {
