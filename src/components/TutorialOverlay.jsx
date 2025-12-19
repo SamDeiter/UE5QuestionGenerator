@@ -43,12 +43,12 @@ const TutorialOverlay = ({
           if (attemptCount >= MAX_ATTEMPTS) {
             setElementNotFound(true);
             if (pollInterval) clearInterval(pollInterval);
-            
+
             // Log element not found
             logTutorialEvent(TUTORIAL_EVENTS.ELEMENT_NOT_FOUND, {
               scenarioId: activeScenario,
               stepId: step.id,
-              target: step.target
+              target: step.target,
             });
           }
           return;
@@ -79,12 +79,12 @@ const TutorialOverlay = ({
           setElementNotFound(true);
           setTargetRect(null);
           if (pollInterval) clearInterval(pollInterval);
-          
+
           // Log element not found
           logTutorialEvent(TUTORIAL_EVENTS.ELEMENT_NOT_FOUND, {
             scenarioId: activeScenario,
             stepId: step.id,
-            target: step.target
+            target: step.target,
           });
         } else {
           setTargetRect(null);
@@ -128,7 +128,7 @@ const TutorialOverlay = ({
   // Focus trapping
   useEffect(() => {
     if (!overlayRef.current) return;
-    
+
     const cleanup = trapFocus(overlayRef.current);
     return cleanup;
   }, [currentStepIndex]);
@@ -148,7 +148,7 @@ const TutorialOverlay = ({
     logTutorialEvent(TUTORIAL_EVENTS.STEP_SKIPPED, {
       scenarioId: activeScenario,
       stepId: step.id,
-      reason: 'element_not_found'
+      reason: "element_not_found",
     });
     onNext();
   };
@@ -199,7 +199,7 @@ const TutorialOverlay = ({
 
       {/* Tooltip Card - always centered using flex wrapper */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[10000]">
-        <div 
+        <div
           ref={overlayRef}
           role="dialog"
           aria-labelledby="tutorial-title"
@@ -209,7 +209,9 @@ const TutorialOverlay = ({
           className="w-80 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-6 flex flex-col gap-4 transition-all duration-300 ease-in-out animate-in zoom-in-95 pointer-events-auto"
         >
           <div className="flex justify-between items-start">
-            <h3 id="tutorial-title" className="text-lg font-bold text-white">{step.title}</h3>
+            <h3 id="tutorial-title" className="text-lg font-bold text-white">
+              {step.title}
+            </h3>
             <button
               onClick={onSkip}
               className="text-slate-500 hover:text-slate-300"
@@ -220,37 +222,93 @@ const TutorialOverlay = ({
           </div>
 
           {/* Parse content for **highlighted** keywords and ![images](url) */}
-          <div id="tutorial-content" className="text-slate-300 text-sm leading-relaxed space-y-2">
-            {step.content.split('\n').map((line, lineIdx) => {
-              // Check if this line contains an image
-              const imgMatch = line.match(/!\[([^\]]*)\]\(([^)]+)\)/);
-              
-              if (imgMatch) {
-                const [, alt, src] = imgMatch;
-                return (
-                  <img 
-                    key={lineIdx}
-                    src={src} 
-                    alt={alt} 
-                    className="w-full rounded-lg border border-slate-700 mt-2"
-                  />
-                );
+          <div
+            id="tutorial-content"
+            className="text-slate-300 text-sm leading-relaxed space-y-2"
+          >
+            {step.content.split("\n").map((line, lineIdx) => {
+              if (!line.trim()) return <div key={lineIdx} className="h-2" />;
+
+              // Robust Image Parsing
+              const imgRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+              const lineParts = [];
+              let lastIndex = 0;
+              let match;
+
+              while ((match = imgRegex.exec(line)) !== null) {
+                // Push text before image
+                if (match.index > lastIndex) {
+                  lineParts.push({
+                    type: "text",
+                    content: line.substring(lastIndex, match.index),
+                  });
+                }
+
+                // Push image
+                const src = match[2];
+                // Ensure BASE_URL ends with / and src doesn't start with / to avoid //
+                const base = import.meta.env.BASE_URL || "/";
+                const cleanBase = base.endsWith("/") ? base : `${base}/`;
+                const cleanSrc = src.startsWith("/") ? src.substring(1) : src;
+                const processedSrc = src.startsWith("http")
+                  ? src
+                  : `${cleanBase}${cleanSrc}`;
+
+                lineParts.push({
+                  type: "image",
+                  alt: match[1],
+                  src: processedSrc,
+                });
+                lastIndex = match.index + match[0].length;
               }
-              
-              // Otherwise, parse for bold text
+
+              // Push remaining text
+              if (lastIndex < line.length) {
+                lineParts.push({
+                  type: "text",
+                  content: line.substring(lastIndex),
+                });
+              }
+
               return (
-                <p key={lineIdx}>
-                  {line.split(/(\*\*[^*]+\*\*)/).map((part, i) => {
-                    if (part.startsWith("**") && part.endsWith("**")) {
+                <div key={lineIdx} className="flex flex-col gap-2">
+                  {lineParts.map((part, partIdx) => {
+                    if (part.type === "image") {
                       return (
-                        <span key={i} className="text-orange-400 font-semibold">
-                          {part.slice(2, -2)}
-                        </span>
+                        <img
+                          key={partIdx}
+                          src={part.src}
+                          alt={part.alt}
+                          className="w-full rounded-lg border border-slate-700 mt-1 shadow-md"
+                        />
                       );
                     }
-                    return part;
+
+                    // Parse text for bold markers
+                    return (
+                      <p key={partIdx}>
+                        {part.content
+                          .split(/(\*\*[^*]+\*\*)/)
+                          .map((subPart, subIdx) => {
+                            if (
+                              subPart.startsWith("**") &&
+                              subPart.endsWith("**")
+                            ) {
+                              return (
+                                <span
+                                  key={subIdx}
+                                  className="text-orange-400 font-semibold"
+                                >
+                                  {subPart.slice(2, -2)}
+                                </span>
+                              );
+                            }
+                            return subPart;
+                          })}
+                      </p>
+                    );
                   })}
-                </p>
+                </div>
               );
             })}
           </div>
@@ -277,7 +335,13 @@ const TutorialOverlay = ({
 
           <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-800">
             <div className="flex items-center gap-2">
-              <div className="flex gap-1" role="progressbar" aria-valuenow={currentStepIndex + 1} aria-valuemin="1" aria-valuemax={steps.length}>
+              <div
+                className="flex gap-1"
+                role="progressbar"
+                aria-valuenow={currentStepIndex + 1}
+                aria-valuemin="1"
+                aria-valuemax={steps.length}
+              >
                 {steps.map((_, idx) => (
                   <div
                     key={idx}
@@ -286,7 +350,9 @@ const TutorialOverlay = ({
                         ? "bg-indigo-500"
                         : "bg-slate-700"
                     }`}
-                    aria-label={`Step ${idx + 1}${idx === currentStepIndex ? ' (current)' : ''}`}
+                    aria-label={`Step ${idx + 1}${
+                      idx === currentStepIndex ? " (current)" : ""
+                    }`}
                   />
                 ))}
               </div>

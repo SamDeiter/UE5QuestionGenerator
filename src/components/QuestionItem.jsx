@@ -99,21 +99,12 @@ const QuestionItem = ({
         return;
       }
 
-      // Skip if user dismissed this specific critique AND the critique text hasn't changed
-      // (If critique text changed, it's a new critique even with same score)
+      // Skip if user dismissed this specific critique
       if (lastProcessedCritiqueRef.current === dismissedKey) {
-        // Check if critique content is different (new critique generated)
-        const currentCritiqueText = q.critique || "";
-        const critiqueRef = lastProcessedCritiqueRef.current;
-
-        // If we have stored critique text and it matches, skip
-        if (critiqueRef.includes(currentCritiqueText.substring(0, 50))) {
-          console.log(
-            "[QuestionItem DEBUG] Skipping - user dismissed this critique"
-          );
-          return;
-        }
-        // Otherwise, it's a new critique, allow it to show
+        console.log(
+          "[QuestionItem DEBUG] Skipping - user dismissed this critique"
+        );
+        return;
       }
 
       console.log(
@@ -129,17 +120,16 @@ const QuestionItem = ({
     q.suggestedRewrite,
     q.id,
     q.improvementsApplied,
-    showImprovementModal,
+    // NOTE: showImprovementModal removed to prevent re-opening when manually closed
   ]);
 
   // Reset ref when modal is closed so we can show the same critique again if needed
   const handleModalDismiss = useCallback(() => {
-    // Mark as dismissed with full key including critique hash
-    const critiqueHash = q.critique ? q.critique.substring(0, 100) : "";
-    const critiqueKey = `${q.id}-${q.critiqueScore}-${critiqueHash}`;
+    // Mark as dismissed - use a simple unique marker
+    const critiqueKey = `${q.id}-${q.critiqueScore}`;
     lastProcessedCritiqueRef.current = `dismissed-${critiqueKey}`;
     setShowImprovementModal(false);
-  }, [q.id, q.critiqueScore, q.critique]);
+  }, [q.id, q.critiqueScore]);
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -374,6 +364,11 @@ const QuestionItem = ({
             critiqueScore={q.critiqueScore || 0} // Original question's score
             improvedScore={q.improvedScore || 0} // Score AFTER applying improvements
             onApply={async (improved) => {
+              // FIRST: Mark as processed to prevent useEffect from re-opening
+              lastProcessedCritiqueRef.current = `applied-${
+                q.id
+              }-${Date.now()}`;
+
               // Apply improvements to question - keep critiqueScore for display
               await onUpdateQuestion(q.id, {
                 question: improved?.question || q.question,
@@ -388,8 +383,8 @@ const QuestionItem = ({
                 improvedScore: null, // Clear after applying
                 improvementsApplied: true, // Mark that improvements were applied (enables Verify, prevents modal re-open)
               });
-              // Prevent modal from re-opening by marking as processed
-              lastProcessedCritiqueRef.current = "applied";
+
+              // THEN: Close modal after update completes
               setShowImprovementModal(false);
               if (showMessage) {
                 showMessage(

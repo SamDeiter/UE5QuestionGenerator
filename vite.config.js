@@ -30,6 +30,9 @@ export default defineConfig({
     setupFiles: "./src/setupTests.js",
     css: true,
   },
+  esbuild: {
+    drop: ["console", "debugger"],
+  },
   build: {
     rollupOptions: {
       output: {
@@ -54,12 +57,5 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 600, // Adjust threshold to avoid warnings for vendor chunks
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove all console.* statements
-        drop_debugger: true, // Remove debugger statements
-      },
-    },
   },
 });

@@ -156,7 +156,7 @@ export const TUTORIAL_SCENARIOS = {
         id: "navigation",
         title: "Step 3: Navigate Questions",
         content:
-          "Use **Prev/Next** buttons or keyboard arrows (**←** **→**) to move between questions. Press **Space** to expand details. Press **Esc** to exit the tutorial anytime.",
+          "Use the **Prev/Next** buttons or **Left/Right arrow keys** to move between questions. Press **Esc** to exit the tutorial anytime.",
         target: '[data-tour="next-button"]',
         position: "bottom",
         scenarioId: "review",
@@ -173,12 +173,12 @@ export const TUTORIAL_SCENARIOS = {
         order: 3,
       },
       {
-        id: "edit-improve",
-        title: "Step 5: Edit or Apply AI Improvements",
+        id: "verify-workflow",
+        title: "Step 5: Verify & Provide Feedback",
         content:
-          "Click **Edit** to manually modify the question, or **Apply Improvements** to accept AI suggestions. You can also translate, explain, or create variations using the action buttons.\n\n![Critique Modal Example](/images/critique-modal-screenshot.png)",
-        target: '[data-tour="edit-button"]',
-        position: "bottom",
+          "After critiquing, click **Verify** to confirm the source is accurate. Use the **Internal Notes** field below to leave feedback for admins.",
+        target: null,
+        position: "center",
         scenarioId: "review",
         order: 4,
       },
