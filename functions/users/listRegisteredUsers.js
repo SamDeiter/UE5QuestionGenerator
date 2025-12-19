@@ -513,7 +513,7 @@ exports.validateInvite = functions
 
     // === RATE LIMITING ===
     // TESTING: Set to true to enable rate limiting
-    const ENABLE_RATE_LIMIT = false;
+    const ENABLE_RATE_LIMIT = true; // Security: enabled per audit V-001
 
     // Use a hash of the request IP or a session identifier
     const clientId =

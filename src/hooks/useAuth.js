@@ -4,7 +4,7 @@
  * Manages authentication state, registration, custom tags, and compliance modals:
  * - Firebase authentication state
  * - User registration status (invite system)
- * - Admin status from Firestore
+ * - Admin status from Firestore (server-side only - security fix V-002)
  * - Custom tags from Firestore
  * - Token usage tracking
  * - Age verification and terms acceptance modals
@@ -18,11 +18,9 @@ import {
   setupInitialAdmin,
 } from "../services/inviteService";
 
-// Fallback admin emails - these get auto-promoted to admin on first sign-in
-// We normalize these to lowercase for safe comparisons
-const FALLBACK_ADMIN_EMAILS = [
-  (import.meta.env.VITE_SUPER_ADMIN_EMAIL || "").trim().toLowerCase(),
-].filter((email) => email !== "");
+// SECURITY FIX V-002: Removed client-side FALLBACK_ADMIN_EMAILS
+// Admin detection now happens entirely server-side via checkUserRegistration()
+// and setupInitialAdmin() Cloud Functions
 
 /**
  * Custom hook for managing authentication and compliance state.
@@ -59,65 +57,38 @@ export function useAuth(showMessage) {
       setAuthLoading(false);
 
       if (currentUser) {
-        const userEmail = (currentUser.email || "").toLowerCase();
-        const superAdminEmailFromEnv = (
-          import.meta.env.VITE_SUPER_ADMIN_EMAIL || ""
-        )
-          .trim()
-          .toLowerCase();
-
-        const isSuperAdmin =
-          userEmail === superAdminEmailFromEnv && superAdminEmailFromEnv !== "";
-
-        // Check registration status via Cloud Function
+        // Check registration status via Cloud Function (server-side admin detection)
         setRegistrationLoading(true);
         try {
           let regStatus = await checkUserRegistration();
 
-          // FORCE ADMIN STATUS FOR SUPER ADMIN
-          // This ensures the project owner always has access regardless of Firestore state
-          if (isSuperAdmin) {
-            console.log("👑 Super Admin detected - enforcing admin status");
-            regStatus.registered = true;
-            regStatus.role = "admin";
-          }
-
-          // Auto-promote whitelisted emails to admin if not yet registered
-          if (
-            !regStatus.registered &&
-            FALLBACK_ADMIN_EMAILS.includes(currentUser.email?.toLowerCase())
-          ) {
-            console.log("Auto-promoting whitelisted admin:", currentUser.email);
+          // If not registered, attempt server-side admin setup
+          // Server validates email whitelist - client never sees the whitelist
+          if (!regStatus.registered) {
             try {
               const adminResult = await setupInitialAdmin();
-              console.log("Admin setup result:", adminResult);
-              // Re-check registration after setup
-              regStatus = { registered: true, role: "admin" };
+              if (adminResult.success) {
+                console.log("✅ Server-side admin setup successful");
+                regStatus = {
+                  registered: true,
+                  role: adminResult.role || "admin",
+                };
+              }
             } catch (setupError) {
-              console.error("Auto-admin setup failed:", setupError);
-              // Still treat as registered admin via fallback
-              regStatus = { registered: true, role: "admin" };
+              // setupInitialAdmin throws if email not whitelisted - this is expected
+              console.log("ℹ️ Not a whitelisted admin email");
             }
           }
 
           setIsRegistered(regStatus.registered);
           setUserRole(regStatus.role || "user");
-
-          // Admin status comes from the registration check
-          if (regStatus.role === "admin") {
-            setIsAdmin(true);
-          } else {
-            setIsAdmin(false);
-          }
+          setIsAdmin(regStatus.role === "admin");
         } catch (error) {
           console.error("Failed to check registration:", error);
-          // Fallback to email whitelist
-          const isWhitelisted = FALLBACK_ADMIN_EMAILS.includes(
-            currentUser.email?.toLowerCase()
-          );
-          setIsAdmin(isWhitelisted);
-          setIsRegistered(isWhitelisted);
-          if (isWhitelisted) setUserRole("admin"); // Whitelisted admins are registered
+          // SECURITY: On error, default to no access (fail closed)
+          setIsAdmin(false);
+          setIsRegistered(false);
+          setUserRole("user");
         } finally {
           setRegistrationLoading(false);
         }
