@@ -132,7 +132,9 @@ export function useFiltering({
         (q) =>
           `${q.id}:${q.critiqueScore}:${q.status}:${q.humanVerified}:${
             q.suggestedRewrite ? "yes" : "no"
-          }:${q.suggestedRewrite?.critiqueScore || 0}:${q.improvedScore || 0}`
+          }:${q.suggestedRewrite?.critiqueScore || 0}:${q.improvedScore || 0}:${
+            q.language
+          }`
       )
       .join("|");
     const prevHash = prevContextFilteredRef.current
@@ -140,7 +142,9 @@ export function useFiltering({
         (q) =>
           `${q.id}:${q.critiqueScore}:${q.status}:${q.humanVerified}:${
             q.suggestedRewrite ? "yes" : "no"
-          }:${q.suggestedRewrite?.critiqueScore || 0}:${q.improvedScore || 0}`
+          }:${q.suggestedRewrite?.critiqueScore || 0}:${q.improvedScore || 0}:${
+            q.language
+          }`
       )
       .join("|");
 
@@ -151,11 +155,16 @@ export function useFiltering({
     ) {
       // REVIEW MODE FIX: Even if hash matches, filter out accepted questions for review mode
       if (appMode === "review") {
-        return prevContextFilteredRef.current.filter(
+        const stillInReview = prevContextFilteredRef.current.filter(
           (q) => q.status !== "accepted"
         );
+        // Only return previous if the length hasn't changed (to avoid index jumps)
+        if (stillInReview.length === prevContextFilteredRef.current.length) {
+          return prevContextFilteredRef.current;
+        }
+      } else {
+        return prevContextFilteredRef.current;
       }
-      return prevContextFilteredRef.current;
     }
 
     // REVIEW MODE FIX: Exclude accepted questions from Review mode
@@ -253,33 +262,64 @@ export function useFiltering({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredQuestions, language]);
-  // NOTE: allQuestionsMap is intentionally NOT in dependencies
-  // It's only used for stable sorting and changes reference frequently
+  // NOTE: allQuestionsMap removed from dependencies to ensure reference stability.
+  // We accept that sorting might not update immediately until filteredQuestions or language changes.
 
-  // Preserve current question position when filters change
+  // STABILITY: Preserve current question position when the question list updates
+  // This handles AI critiques, language switches, and remote syncs
+  const lastKnownUniqueIdRef = useRef(null);
+  const lastKnownIndexRef = useRef(currentReviewIndex);
+  const lastKnownListRef = useRef(uniqueFilteredQuestions);
+
   useEffect(() => {
-    if (uniqueFilteredQuestions.length === 0) return;
+    const listRefChanged = uniqueFilteredQuestions !== lastKnownListRef.current;
+    const indexChanged = currentReviewIndex !== lastKnownIndexRef.current;
 
-    // Get the current question
+    if (uniqueFilteredQuestions.length === 0) {
+      lastKnownUniqueIdRef.current = null;
+      lastKnownIndexRef.current = currentReviewIndex;
+      lastKnownListRef.current = uniqueFilteredQuestions;
+      return;
+    }
+
+    // A. Detect the current question's uniqueId
     const currentQ = uniqueFilteredQuestions[currentReviewIndex];
-    if (!currentQ) return;
+    const currentUniqueId = currentQ?.uniqueId;
 
-    // Store the current uniqueId
-    const currentUniqueId = currentQ.uniqueId;
+    // B. If the user intentionally navigated, update our tracking and STOP
+    if (indexChanged) {
+      lastKnownUniqueIdRef.current = currentUniqueId;
+      lastKnownIndexRef.current = currentReviewIndex;
+      lastKnownListRef.current = uniqueFilteredQuestions;
+      return;
+    }
 
-    // When discipline/difficulty/language changes, try to find the same question in the new list
-    if (currentUniqueId) {
-      const newIndex = uniqueFilteredQuestions.findIndex(
-        (q) => q.uniqueId === currentUniqueId
+    // C. If the list changed reference but the index stayed the same,
+    // we check if the question at that index moved somewhere else.
+    if (
+      listRefChanged &&
+      lastKnownUniqueIdRef.current &&
+      lastKnownUniqueIdRef.current !== currentUniqueId
+    ) {
+      const preservedIndex = uniqueFilteredQuestions.findIndex(
+        (q) => q.uniqueId === lastKnownUniqueIdRef.current
       );
-      if (newIndex !== -1 && newIndex !== currentReviewIndex) {
-        console.log(
-          `📍 [useFiltering] Preserving question position: ${currentUniqueId} moved from index ${currentReviewIndex} to ${newIndex}`
-        );
-        setCurrentReviewIndex(newIndex);
+
+      if (preservedIndex !== -1 && preservedIndex !== currentReviewIndex) {
+        setCurrentReviewIndex(preservedIndex);
+        lastKnownIndexRef.current = preservedIndex; // Update this so we don't trigger "indexChanged" on next run
+        lastKnownListRef.current = uniqueFilteredQuestions;
+        return;
       }
     }
-  }, [discipline, difficulty, language]); // Only run when these filters change
+
+    // D. Update tracking for next run
+    if (currentUniqueId) {
+      lastKnownUniqueIdRef.current = currentUniqueId;
+    }
+    lastKnownIndexRef.current = currentReviewIndex;
+    lastKnownListRef.current = uniqueFilteredQuestions;
+  }, [uniqueFilteredQuestions, currentReviewIndex, setCurrentReviewIndex]);
 
   // NOTE: uniqueFilteredQuestions and currentReviewIndex intentionally excluded to avoid loops
 
