@@ -46,9 +46,6 @@ const QuestionItem = ({
   const userId = user?.uid;
   const userEmail = user?.email;
 
-  // Track if question was modified (Accept/Reject actions mark it as modified)
-  const [wasModified, setWasModified] = useState(false);
-
   // Auto-lock on view (review mode) - prevents concurrent reviews
   const {
     lockStatus: _lockStatus,
@@ -56,18 +53,17 @@ const QuestionItem = ({
     isLocked,
     hasLock,
     isAcquiring,
-    isRefreshing, // NEW: For visual heartbeat
+    isRefreshing, // For visual heartbeat
   } = useEditLock(
     q.id,
     userId,
     userEmail,
     appMode === "review", // Auto-acquire locks to prevent concurrent reviews
-    wasModified, // Don't release lock if modified
     () => {
       // onLockExpired callback
       showMessage?.("⚠️ Your review lock expired.", 5000);
     },
-    isProcessing // NEW: Ensure no lock release during active save
+    isProcessing // Ensure no lock release during active save
   );
 
   // Auto-open modal when NEW critique data arrives
@@ -279,7 +275,6 @@ const QuestionItem = ({
                 if (showMessage) showMessage("⚠️ Please verify first", 3000);
                 return;
               }
-              setWasModified(true); // Mark as modified to keep lock
               onUpdateStatus(q.id, "accepted");
             }}
             isProcessing={isProcessing}

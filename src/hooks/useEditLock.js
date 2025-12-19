@@ -4,10 +4,11 @@
  * Manages edit locks for concurrent editing protection.
  *
  * Features:
- * - Acquire lock on edit start
+ * - Acquire lock on edit start (or after 1s viewing)
  * - Automatic heartbeat renewal every 30 seconds
  * - Release lock on save/cancel/unmount
  * - Track lock status and ownership
+ * - Re-attempt lock acquisition when tab regains focus (if previously blocked)
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -19,7 +20,6 @@ import { getAgents } from "../agents";
  * @param {string} userId - Firebase Auth UID
  * @param {string} userEmail - User's email
  * @param {boolean} isViewing - Whether user is currently viewing this question
- * @param {boolean} wasModified - Whether the question was modified (prevents auto-unlock)
  * @param {Function} onLockExpired - Callback when lock expires
  * @param {boolean} isProcessing - Guard to prevent lock release during active save
  * @returns {object} Lock state and control functions
@@ -29,7 +29,6 @@ export function useEditLock(
   userId,
   userEmail,
   isViewing,
-  wasModified,
   onLockExpired,
   isProcessing = false
 ) {
@@ -37,18 +36,17 @@ export function useEditLock(
   const [lockInfo, setLockInfo] = useState(null);
   const [lockedBy, setLockedBy] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Refs for interval/timer management
   const heartbeatRef = useRef(null);
   const lockAttemptedRef = useRef(false);
   const viewTimerRef = useRef(null);
-  const currentQuestionIdRef = useRef(questionId);
 
-  // Refs to track latest state for cleanup/heartbeat without triggering re-renders
+  // Refs ONLY for cleanup/unmount logic (closures can be stale)
   const lockStatusRef = useRef(lockStatus);
   const isProcessingRef = useRef(isProcessing);
-  const renewLockRef = useRef(null); // For stable heartbeat access
-  const releaseLockRef = useRef(null); // For stable cleanup access
-  const acquireLockRef = useRef(null); // For stable auto-acquire access
 
+  // Keep cleanup refs updated
   useEffect(() => {
     lockStatusRef.current = lockStatus;
     isProcessingRef.current = isProcessing;
@@ -102,6 +100,7 @@ export function useEditLock(
         return { success: true };
       } else {
         setLockStatus("locked_by_other");
+        // LockAgent.acquireLock returns { lockedBy: existingLock } on rejection
         setLockedBy(result.lockedBy);
         console.warn(`[useEditLock] Lock acquisition failed:`, result.error);
         return { success: false, error: result.error };
@@ -111,8 +110,6 @@ export function useEditLock(
       setLockStatus("none");
       return { success: false, error: error.message };
     }
-    // CRITICAL: Removed lockStatus - use lockStatusRef.current instead
-     
   }, [questionId, userId, userEmail, agents]);
 
   /**
@@ -123,8 +120,8 @@ export function useEditLock(
 
     const { lockAgent } = agents;
 
+    setIsRefreshing(true);
     try {
-      setIsRefreshing(true);
       const result = await lockAgent.renewLock(String(questionId));
 
       if (!result.success) {
@@ -133,22 +130,16 @@ export function useEditLock(
         if (onLockExpired) onLockExpired();
       }
 
-      setTimeout(() => setIsRefreshing(false), 500);
       return result;
     } catch (error) {
       console.error("[useEditLock] Lock renewal error:", error);
       setLockStatus("expired");
-      setIsRefreshing(false);
       return { success: false, error: error.message };
+    } finally {
+      // Brief delay for visual feedback, then reset
+      setTimeout(() => setIsRefreshing(false), 500);
     }
   }, [agents, questionId, onLockExpired]);
-
-  // Keep refs updated for stable access in effects
-  useEffect(() => {
-    renewLockRef.current = renewLock;
-    releaseLockRef.current = releaseLock;
-    acquireLockRef.current = acquireLock;
-  });
 
   /**
    * Release the lock
@@ -187,6 +178,7 @@ export function useEditLock(
     try {
       const result = await lockAgent.checkLockStatus(String(questionId));
       if (result.locked) {
+        // LockAgent.checkLockStatus returns { lock: lockData } - this IS the lockedBy info
         setLockedBy(result.lock);
         setLockStatus("locked_by_other");
       } else {
@@ -200,20 +192,17 @@ export function useEditLock(
     }
   }, [agents, questionId]);
 
-  // Heartbeat Effect - STABLE: no function dependencies, use refs
+  // Heartbeat Effect - Renew lock every 30s when acquired
   useEffect(() => {
     if (lockStatus !== "acquired") return;
 
     console.log("[useEditLock] Starting heartbeat for", questionId);
     heartbeatRef.current = setInterval(async () => {
-      // Use ref for stable access
-      if (renewLockRef.current) {
-        const result = await renewLockRef.current();
-        if (!result.success) {
-          if (heartbeatRef.current) {
-            clearInterval(heartbeatRef.current);
-            heartbeatRef.current = null;
-          }
+      const result = await renewLock();
+      if (!result.success) {
+        if (heartbeatRef.current) {
+          clearInterval(heartbeatRef.current);
+          heartbeatRef.current = null;
         }
       }
     }, 30000);
@@ -225,26 +214,26 @@ export function useEditLock(
         heartbeatRef.current = null;
       }
     };
-  }, [lockStatus, questionId]); // CRITICAL: No function deps - use refs instead
+  }, [lockStatus, questionId, renewLock]);
 
-  // Release lock on unmount OR when question actually changes - STABLE
+  // Release lock on unmount OR when questionId changes
   useEffect(() => {
     const qId = String(questionId);
 
     return () => {
-      // Use refs to check latest values in cleanup
+      // Use refs to check latest values in cleanup (closures can be stale)
       if (lockStatusRef.current === "acquired" && !isProcessingRef.current) {
         console.log(`[useEditLock] Releasing lock on exit for: ${qId}`);
-        if (releaseLockRef.current) releaseLockRef.current();
+        releaseLock();
       } else if (isProcessingRef.current) {
         console.log(
           `[useEditLock] Delaying lock release for ${qId} - save in progress`
         );
       }
     };
-  }, [questionId]); // CRITICAL: No function deps - use refs instead
+  }, [questionId, releaseLock]);
 
-  // Auto-acquire lock after 1s view - STABLE
+  // Auto-acquire lock after 1s view
   useEffect(() => {
     if (
       !isViewing ||
@@ -263,8 +252,7 @@ export function useEditLock(
     console.log("[useEditLock] Starting 1s view timer");
     viewTimerRef.current = setTimeout(() => {
       console.log("[useEditLock] Auto-acquiring lock");
-      // Use ref for stable access
-      if (acquireLockRef.current) acquireLockRef.current();
+      acquireLock();
     }, 1000);
 
     return () => {
@@ -273,16 +261,30 @@ export function useEditLock(
         viewTimerRef.current = null;
       }
     };
-     
-  }, [isViewing, questionId, userId, userEmail]); // CRITICAL: No function deps - use refs instead
+  }, [isViewing, questionId, userId, userEmail, acquireLock]);
 
-  // Reset attempt flag when questionId changes
+  // Reset lock attempt flag when questionId changes
   useEffect(() => {
-    if (currentQuestionIdRef.current !== questionId) {
-      currentQuestionIdRef.current = questionId;
-      lockAttemptedRef.current = false;
-    }
+    lockAttemptedRef.current = false;
   }, [questionId]);
+
+  // Visibility-based retry: Re-attempt when tab regains focus if locked by other
+  useEffect(() => {
+    if (lockStatus !== "locked_by_other" || !isViewing) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        console.log("[useEditLock] Tab visible - retrying lock acquisition");
+        lockAttemptedRef.current = false; // Allow retry
+        acquireLock();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [lockStatus, isViewing, acquireLock]);
 
   return {
     lockStatus,
