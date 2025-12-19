@@ -136,6 +136,12 @@ export function useEditLock(
     }
   }, [agents, questionId, onLockExpired]);
 
+  // Keep renewLock in a ref so heartbeat effect doesn't restart when callback changes
+  const renewLockRef = useRef(renewLock);
+  useEffect(() => {
+    renewLockRef.current = renewLock;
+  }, [renewLock]);
+
   /**
    * Release the lock
    */
@@ -188,12 +194,13 @@ export function useEditLock(
   }, [agents, questionId]);
 
   // Heartbeat Effect - Renew lock every 30s when acquired
+  // Uses ref to avoid restarting when renewLock changes
   useEffect(() => {
     if (lockStatus !== "acquired") return;
 
     console.log("[useEditLock] Starting heartbeat for", questionId);
     heartbeatRef.current = setInterval(async () => {
-      const result = await renewLock();
+      const result = await renewLockRef.current();
       if (!result.success) {
         if (heartbeatRef.current) {
           clearInterval(heartbeatRef.current);
@@ -209,7 +216,7 @@ export function useEditLock(
         heartbeatRef.current = null;
       }
     };
-  }, [lockStatus, questionId, renewLock]);
+  }, [lockStatus, questionId]);
 
   // Release lock on unmount OR when questionId changes
   useEffect(() => {
