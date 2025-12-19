@@ -314,6 +314,15 @@ export const useQuestionManager = (config, showMessage) => {
       // Always complete review tracking when accepting or rejecting
       // This ensures analytics capture all reviews, even if reviewStartedAt is missing
       if (newStatus === "accepted" || newStatus === "rejected") {
+        // If review wasn't started yet, retroactively set a start time
+        // Use a reasonable estimate (30 seconds ago) for duration calculation
+        if (!updatedQ.reviewStartedAt) {
+          const estimatedStartTime = new Date(Date.now() - 30000); // 30 seconds ago
+          updatedQ = {
+            ...updatedQ,
+            reviewStartedAt: estimatedStartTime.toISOString(),
+          };
+        }
         updatedQ = completeReviewTracking(updatedQ, config.creatorName);
       }
 
