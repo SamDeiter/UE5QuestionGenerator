@@ -1,6 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { execSync } from "child_process";
+import { readFileSync } from "fs";
+import { resolve } from "path";
+
+// Read package.json version
+const packageJson = JSON.parse(
+  readFileSync(resolve(__dirname, "./package.json"), "utf-8")
+);
+const APP_VERSION = packageJson.version;
 
 // Get git commit hash for version tracking
 const getGitCommitHash = () => {
@@ -17,6 +25,7 @@ export default defineConfig({
   base: "/UE5QuestionGenerator/",
   define: {
     __GIT_COMMIT__: JSON.stringify(getGitCommitHash()),
+    __APP_VERSION__: JSON.stringify(APP_VERSION),
   },
   server: {
     headers: {
@@ -48,14 +57,32 @@ export default defineConfig({
             "firebase/analytics",
           ],
 
+          // Icons vendor chunk (~150 KB)
+          "vendor-icons": ["lucide-react"],
+
           // Charts vendor chunk (~200 KB) - only loaded in Analytics view
           "vendor-charts": ["recharts"],
 
           // Export utilities (~100 KB) - only loaded when exporting
           "vendor-export": ["jszip"],
+
+          // Agents and Logic (~100 KB)
+          "agents-logic": [
+            "./src/agents/index.js",
+            "./src/agents/lockAgent.js",
+            "./src/agents/auditAgent.js",
+            "./src/agents/sessionAgent.js",
+          ],
+
+          // UI Components (~150 KB)
+          "ui-components": [
+            "./src/components/QuestionItem.jsx",
+            "./src/components/QuestionList.jsx",
+            "./src/components/ViewRouter.jsx",
+          ],
         },
       },
     },
-    chunkSizeWarningLimit: 600, // Adjust threshold to avoid warnings for vendor chunks
+    chunkSizeWarningLimit: 1000, // Modern apps often exceed 500kb in vendor chunks
   },
 });

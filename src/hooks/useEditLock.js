@@ -5,7 +5,7 @@
  *
  * Features:
  * - Acquire lock on edit start
- * - Automatic heartbeat renewal every 3 seconds
+ * - Automatic heartbeat renewal every 30 seconds
  * - Release lock on save/cancel/unmount
  * - Track lock status and ownership
  */
@@ -21,6 +21,7 @@ import { getAgents } from "../agents";
  * @param {boolean} isViewing - Whether user is currently viewing this question
  * @param {boolean} wasModified - Whether the question was modified (prevents auto-unlock)
  * @param {Function} onLockExpired - Callback when lock expires
+ * @param {boolean} isProcessing - Guard to prevent lock release during active save
  * @returns {object} Lock state and control functions
  */
 export function useEditLock(
@@ -29,33 +30,45 @@ export function useEditLock(
   userEmail,
   isViewing,
   wasModified,
-  onLockExpired
+  onLockExpired,
+  isProcessing = false
 ) {
   const [lockStatus, setLockStatus] = useState("none"); // 'none' | 'acquiring' | 'acquired' | 'locked_by_other' | 'expired'
   const [lockInfo, setLockInfo] = useState(null);
   const [lockedBy, setLockedBy] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const heartbeatRef = useRef(null);
   const lockAttemptedRef = useRef(false);
   const viewTimerRef = useRef(null);
   const currentQuestionIdRef = useRef(questionId);
 
+  // Refs to track latest state for cleanup/heartbeat without triggering re-renders
+  const lockStatusRef = useRef(lockStatus);
+  const isProcessingRef = useRef(isProcessing);
+
+  useEffect(() => {
+    lockStatusRef.current = lockStatus;
+    isProcessingRef.current = isProcessing;
+  }, [lockStatus, isProcessing]);
+
   const agents = getAgents();
 
   /**
    * Acquire an edit lock
-   * @returns {Promise<{success: boolean, error?: string}>}
    */
   const acquireLock = useCallback(async () => {
-    // Check if agents are initialized
+    // If we already have the lock, don't re-acquire
+    if (lockStatus === "acquired") {
+      return { success: true };
+    }
+
     if (!agents) {
       console.warn("[useEditLock] Agents not initialized yet");
       return { success: false, error: "Agents not initialized" };
     }
 
     if (!questionId || !userId || !userEmail) {
-      console.warn(
-        "[useEditLock] Missing required parameters for lock acquisition"
-      );
+      console.warn("[useEditLock] Missing required parameters");
       return { success: false, error: "Missing required parameters" };
     }
 
@@ -65,31 +78,19 @@ export function useEditLock(
     const { lockAgent, auditAgent } = agents;
 
     try {
-      const result = await lockAgent.acquireLock(
-        String(questionId),
-        userId,
-        userEmail
-      );
+      const result = await lockAgent.acquireLock(String(questionId), userId, userEmail);
 
       if (result.success) {
         setLockStatus("acquired");
         setLockInfo(result.lock);
         setLockedBy(null);
 
-        // Log acquisition
-        await auditAgent.logLockAcquired(
-          String(questionId),
-          userId,
-          userEmail,
-          result.action === "stolen"
-        );
-
+        await auditAgent.logLockAcquired(String(questionId), userId, userEmail, result.action === "stolen");
         console.log(`[useEditLock] Lock acquired for question ${questionId}`);
         return { success: true };
       } else {
         setLockStatus("locked_by_other");
         setLockedBy(result.lockedBy);
-
         console.warn(`[useEditLock] Lock acquisition failed:`, result.error);
         return { success: false, error: result.error };
       }
@@ -98,14 +99,10 @@ export function useEditLock(
       setLockStatus("none");
       return { success: false, error: error.message };
     }
-    // CRITICAL: Don't include 'agents' - it changes on every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionId, userId, userEmail]);
+  }, [questionId, userId, userEmail, lockStatus, agents]);
 
   /**
-   * Renew the lock (heartbeat) - SILENT operation
-   * Only updates UI state if renewal fails
-   * @returns {Promise<{success: boolean}>}
+   * Renew the lock (heartbeat)
    */
   const renewLock = useCallback(async () => {
     if (!agents || !questionId) return { success: false };
@@ -113,33 +110,27 @@ export function useEditLock(
     const { lockAgent } = agents;
 
     try {
+      setIsRefreshing(true);
       const result = await lockAgent.renewLock(String(questionId));
 
-      // CRITICAL: Only update state if renewal FAILS
-      // Successful renewals should be silent to avoid UI flashing
       if (!result.success) {
         console.warn("[useEditLock] Lock renewal failed:", result.error);
         setLockStatus("expired");
-
-        if (onLockExpired) {
-          onLockExpired();
-        }
+        if (onLockExpired) onLockExpired();
       }
-      // If successful, don't update any state - keep UI stable
 
+      setTimeout(() => setIsRefreshing(false), 500);
       return result;
     } catch (error) {
       console.error("[useEditLock] Lock renewal error:", error);
-      setLockStatus("expired"); // Only update on error
+      setLockStatus("expired");
+      setIsRefreshing(false);
       return { success: false, error: error.message };
     }
-    // CRITICAL: Don't include 'agents' - it changes on every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionId, onLockExpired]);
+  }, [agents, questionId, onLockExpired]);
 
   /**
    * Release the lock
-   * @returns {Promise<{success: boolean}>}
    */
   const releaseLock = useCallback(async () => {
     if (!agents || !questionId) return { success: false };
@@ -153,10 +144,7 @@ export function useEditLock(
         setLockStatus("none");
         setLockInfo(null);
         setLockedBy(null);
-
-        // Log release
         await auditAgent.logLockReleased(String(questionId), userId, userEmail);
-
         console.log(`[useEditLock] Lock released for question ${questionId}`);
       }
 
@@ -165,13 +153,10 @@ export function useEditLock(
       console.error("[useEditLock] Lock release error:", error);
       return { success: false, error: error.message };
     }
-    // CRITICAL: Don't include 'agents' - it changes on every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionId, userId, userEmail]);
+  }, [agents, questionId, userId, userEmail]);
 
   /**
    * Check current lock status
-   * @returns {Promise<{locked: boolean, lock?: object}>}
    */
   const checkLockStatus = useCallback(async () => {
     if (!agents || !questionId) return { locked: false };
@@ -180,7 +165,6 @@ export function useEditLock(
 
     try {
       const result = await lockAgent.checkLockStatus(String(questionId));
-
       if (result.locked) {
         setLockedBy(result.lock);
         setLockStatus("locked_by_other");
@@ -188,84 +172,65 @@ export function useEditLock(
         setLockStatus("none");
         setLockedBy(null);
       }
-
       return result;
     } catch (error) {
       console.error("[useEditLock] Lock status check error:", error);
       return { locked: false, error: error.message };
     }
-    // CRITICAL: Don't include 'agents' - it changes on every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionId]);
+  }, [agents, questionId]);
 
-  // Start heartbeat when lock acquired
+  // Heartbeat Effect
   useEffect(() => {
-    if (lockStatus !== "acquired") {
-      return;
-    }
+    if (lockStatus !== "acquired") return;
 
-    console.log("[ useEditLock] Starting heartbeat for question", questionId);
-
-    // Renew lock every 3 seconds
+    console.log("[useEditLock] Starting heartbeat for", questionId);
     heartbeatRef.current = setInterval(async () => {
       const result = await renewLock();
-
       if (!result.success) {
-        console.warn("[useEditLock] Heartbeat failed - clearing interval");
         if (heartbeatRef.current) {
           clearInterval(heartbeatRef.current);
           heartbeatRef.current = null;
         }
       }
-    }, 3000); // 3 seconds
+    }, 30000);
 
     return () => {
       if (heartbeatRef.current) {
-        console.log(
-          "[useEditLock] Stopping heartbeat for question",
-          questionId
-        );
+        console.log("[useEditLock] Stopping heartbeat for", questionId);
         clearInterval(heartbeatRef.current);
         heartbeatRef.current = null;
       }
     };
-    // CRITICAL FIX: Don't include renewLock in dependencies (it's stable via useCallback)
-    // Including it causes the heartbeat to restart on every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lockStatus, questionId]);
+  }, [lockStatus, questionId, renewLock]);
 
-  // Release lock on unmount ONLY if question wasn't modified
+  // Release lock on unmount OR when question actually changes
   useEffect(() => {
+    const qId = String(questionId);
+
     return () => {
-      if (lockStatus === "acquired" && !wasModified) {
-        console.log("[useEditLock] Releasing lock on unmount (no changes)");
+      // Use refs to check latest values in cleanup
+      if (lockStatusRef.current === "acquired" && !isProcessingRef.current) {
+        console.log(`[useEditLock] Releasing lock on exit for: ${qId}`);
         releaseLock();
-      } else if (wasModified) {
-        console.log("[useEditLock] Keeping lock - question was modified");
+      } else if (isProcessingRef.current) {
+        console.log(`[useEditLock] Delaying lock release for ${qId} - save in progress`);
       }
     };
-  }, [lockStatus, wasModified, releaseLock]);
+  }, [questionId, releaseLock]);
 
-  // Auto-acquire lock after 1 second of viewing
+  // Auto-acquire lock after 1s view
   useEffect(() => {
-    // Don't start timer if already attempted or not viewing
-    if (!isViewing || lockAttemptedRef.current) {
-      if (viewTimerRef.current) {
+    if (!isViewing || lockAttemptedRef.current || !questionId || !userId || !userEmail) {
+      if (!isViewing && viewTimerRef.current) {
         clearTimeout(viewTimerRef.current);
         viewTimerRef.current = null;
       }
       return;
     }
 
-    // CRITICAL: Don't start timer if questionId is not available yet
-    if (!questionId || !userId || !userEmail) {
-      return;
-    }
-
-    // Only log once per question
-    console.log("[useEditLock] User viewing question - starting 1s timer");
+    console.log("[useEditLock] Starting 1s view timer");
     viewTimerRef.current = setTimeout(() => {
-      console.log("[useEditLock] Auto-acquiring lock after 1s view");
+      console.log("[useEditLock] Auto-acquiring lock");
       acquireLock();
     }, 1000);
 
@@ -275,29 +240,15 @@ export function useEditLock(
         viewTimerRef.current = null;
       }
     };
-    // CRITICAL: Include acquireLock but NOT agents (agents changes on every render)
-    // acquireLock is stable because we control its dependencies
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isViewing, questionId, acquireLock]);
+  }, [isViewing, questionId, userId, userEmail, acquireLock]);
 
-  // Reset attempt flag when question changes (not just when viewing stops)
+  // Reset attempt flag when questionId changes
   useEffect(() => {
-    // If questionId hasn't actually changed, skip
-    if (currentQuestionIdRef.current === questionId) {
-      return;
+    if (currentQuestionIdRef.current !== questionId) {
+      currentQuestionIdRef.current = questionId;
+      lockAttemptedRef.current = false;
     }
-
-    // Question changed - release lock if we had one
-    if (lockStatus === "acquired") {
-      console.log("[useEditLock] Question changed - releasing previous lock");
-      releaseLock();
-    }
-
-    // Update the ref and reset the attempt flag
-    currentQuestionIdRef.current = questionId;
-    lockAttemptedRef.current = false;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionId]); // Only depend on questionId to avoid re-running on lockStatus changes
+  }, [questionId]);
 
   return {
     lockStatus,
@@ -307,6 +258,7 @@ export function useEditLock(
     hasLock: lockStatus === "acquired",
     isAcquiring: lockStatus === "acquiring",
     isExpired: lockStatus === "expired",
+    isRefreshing,
     acquireLock,
     renewLock,
     releaseLock,

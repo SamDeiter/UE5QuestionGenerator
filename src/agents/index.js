@@ -60,7 +60,7 @@ export function initializeAgents(db) {
  */
 export function getAgents() {
   if (!agentInstances) {
-    console.error(
+    console.warn(
       "[AgentFactory] Agents not initialized. Call initializeAgents(db) first."
     );
     return null;

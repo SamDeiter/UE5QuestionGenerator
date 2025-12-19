@@ -1,4 +1,6 @@
-export const APP_VERSION = "v2.2.7";
+// APP_VERSION is automatically synced from package.json via vite.config.js
+export const APP_VERSION =
+  typeof __APP_VERSION__ !== "undefined" ? `v${__APP_VERSION__}` : "v2.2.7";
 
 export const LANGUAGE_FLAGS = {
   English: "🇺🇸",

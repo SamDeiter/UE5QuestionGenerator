@@ -35,6 +35,7 @@ export default [
         ...globals.browser,
         ...globals.es2021,
         __GIT_COMMIT__: "readonly", // Defined by Vite at build time
+        __APP_VERSION__: "readonly", // Defined by Vite at build time
       },
       parserOptions: {
         ecmaFeatures: {

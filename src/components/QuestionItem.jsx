@@ -56,6 +56,7 @@ const QuestionItem = ({
     isLocked,
     hasLock,
     isAcquiring,
+    isRefreshing, // NEW: For visual heartbeat
   } = useEditLock(
     q.id,
     userId,
@@ -65,7 +66,8 @@ const QuestionItem = ({
     () => {
       // onLockExpired callback
       showMessage?.("⚠️ Your review lock expired.", 5000);
-    }
+    },
+    isProcessing // NEW: Ensure no lock release during active save
   );
 
   // Auto-open modal when NEW critique data arrives
@@ -121,6 +123,7 @@ const QuestionItem = ({
     q.id,
     q.improvementsApplied,
     // NOTE: showImprovementModal removed to prevent re-opening when manually closed
+     
   ]);
 
   // Reset ref when modal is closed so we can show the same critique again if needed
@@ -206,10 +209,14 @@ const QuestionItem = ({
       {/* Active Lock Indicator (you have the lock) */}
       {hasLock && appMode === "review" && !isLocked && (
         <div
-          className="mb-2 inline-flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-500/50 rounded text-xs text-green-400"
+          className="mb-2 inline-flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-500/50 rounded text-xs text-green-400 transition-all duration-300"
           title="You have the review lock - others cannot modify this question"
         >
-          <Icon name="lock" size={14} />
+          <Icon
+            name={isRefreshing ? "refresh-cw" : "lock"}
+            size={14}
+            className={isRefreshing ? "animate-spin text-cyan-400" : ""}
+          />
           <span>Reviewing</span>
         </div>
       )}
