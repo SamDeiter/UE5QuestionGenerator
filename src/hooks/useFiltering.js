@@ -67,6 +67,15 @@ export function useFiltering({
     }
   }, [appMode]); // Reset whenever we enter Review mode
 
+  // Reset review index when discipline changes (in review mode)
+  // Changing disciplines loads a completely different question set,
+  // so we should always start at the first question
+  useEffect(() => {
+    if (appMode === "review") {
+      setCurrentReviewIndex(0);
+    }
+  }, [config.discipline, appMode]); // Reset when discipline changes in review mode
+
   // ========================================================================
   // EFFECTS - Persistence
   // ========================================================================
