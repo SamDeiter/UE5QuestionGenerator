@@ -108,41 +108,21 @@ export const useQuestionManager = (config, showMessage) => {
       ...historicalQuestions,
       ...databaseQuestions,
     ];
-    console.log(
-      "🔍 [useQuestionManager] Building allQuestionsMap from",
-      combined.length,
-      "total documents"
-    );
 
     const newMap = new Map();
-    let missingUniqueId = 0;
-    let duplicatesSkipped = 0;
 
     combined.forEach((q) => {
       const id = q.uniqueId;
-      if (!id) {
-        missingUniqueId++;
-        return;
-      }
+      if (!id) return;
       if (!newMap.has(id)) newMap.set(id, []);
       // Dedupe by language within each uniqueId bucket to prevent double-counting
       const variants = newMap.get(id);
       const lang = q.language || "English";
       if (!variants.some((v) => (v.language || "English") === lang)) {
         variants.push(q);
-      } else {
-        duplicatesSkipped++;
       }
     });
 
-    console.log("🔍 [useQuestionManager] allQuestionsMap built:", {
-      totalDocuments: combined.length,
-      uniqueQuestions: newMap.size,
-      missingUniqueId,
-      duplicatesSkipped,
-      sampleKeys: Array.from(newMap.keys()).slice(0, 3),
-    });
-    
     setAllQuestionsMap(newMap);
   }, [questions, historicalQuestions, databaseQuestions]);
 
