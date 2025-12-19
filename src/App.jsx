@@ -558,6 +558,7 @@ const App = () => {
       setDatabaseQuestions,
       setHistoricalQuestions,
       showMessage,
+      handleLoadFromFirestore,
     });
 
   // 11. Navigation (depends on handleLoadFromFirestore from useExport)
