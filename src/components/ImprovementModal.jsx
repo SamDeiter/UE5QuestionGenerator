@@ -19,12 +19,9 @@ const ImprovementModal = ({
   const [isApplying, setIsApplying] = useState(false);
 
   const handleApply = async () => {
-    console.log("[ImprovementModal] handleApply called");
-    console.log("[ImprovementModal] improvedQuestion:", improvedQuestion);
     setIsApplying(true);
     try {
       await onApply(improvedQuestion);
-      console.log("[ImprovementModal] onApply completed successfully");
     } catch (err) {
       console.error("[ImprovementModal] onApply error:", err);
     }
@@ -41,9 +38,9 @@ const ImprovementModal = ({
     : [];
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-[100] flex items-start justify-center pt-8 p-4 overflow-y-auto pointer-events-auto">
+    <div className="fixed inset-0 bg-black/80 z-[10000] flex items-start justify-center pt-8 p-4 overflow-y-auto pointer-events-auto">
       <div
-        className="bg-slate-900 rounded-xl border-2 border-green-500/50 shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto"
+        className="bg-slate-900 rounded-xl border-2 border-green-500/50 shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -306,7 +303,6 @@ const ImprovementModal = ({
           <div className="flex gap-2.5">
             <button
               onClick={(e) => {
-                console.log("[ImprovementModal] Keep Original CLICKED");
                 e.stopPropagation();
                 onDismiss();
               }}
@@ -317,7 +313,6 @@ const ImprovementModal = ({
             {changesExplanation && (
               <button
                 onClick={(e) => {
-                  console.log("[ImprovementModal] Apply button CLICKED");
                   e.stopPropagation();
                   handleApply();
                 }}
