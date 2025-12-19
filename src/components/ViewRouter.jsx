@@ -1,10 +1,11 @@
 import React from "react";
 import { Suspense } from "react";
 import Icon from "./Icon";
-// Lazy load heavy views - all views are now lazy for better navigation perf
+// Lazy load heavy views - most views are lazy for better navigation perf
 const AnalyticsView = React.lazy(() => import("./AnalyticsView"));
 const DatabaseView = React.lazy(() => import("./DatabaseView"));
-const ReviewMode = React.lazy(() => import("./ReviewMode"));
+// ReviewMode is eagerly loaded to prevent remount issues with edit locks
+import ReviewMode from "./ReviewMode";
 const TestView = React.lazy(() => import("./TestView"));
 const PromptPlayground = React.lazy(() => import("./PromptPlayground"));
 const AdminPanel = React.lazy(() => import("./AdminPanel"));
