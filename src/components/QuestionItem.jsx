@@ -52,8 +52,7 @@ const QuestionItem = ({
     lockedBy,
     isLocked,
     hasLock,
-    isAcquiring,
-    isRefreshing, // For visual heartbeat
+    isAcquiring: _isAcquiring, // Unused but kept for potential future use
   } = useEditLock(
     q.id,
     userId,
@@ -194,10 +193,12 @@ const QuestionItem = ({
 
       {/* Active Lock Indicator (you have the lock) */}
       {/* ALWAYS render to prevent layout shift - use opacity to hide */}
-      {appMode === "review" && !isLocked && (
+      {appMode === "review" && (
         <div
-          className={`mb-2 inline-flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-500/50 rounded text-xs text-green-400 transition-all duration-300 ${
-            hasLock ? "opacity-100" : "opacity-0 pointer-events-none"
+          className={`mb-2 inline-flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-500/50 rounded text-xs text-green-400 transition-opacity duration-300 ${
+            hasLock && !isLocked
+              ? "opacity-100"
+              : "opacity-0 pointer-events-none"
           }`}
           title={
             hasLock
@@ -208,9 +209,8 @@ const QuestionItem = ({
           <Icon
             name="lock"
             size={14}
-            className={`transition-colors duration-300 ${
-              isRefreshing ? "text-cyan-300" : "text-green-400"
-            }`}
+            className="text-green-400 animate-pulse"
+            style={{ animationDuration: "3s" }}
           />
           <span>Reviewing</span>
         </div>
