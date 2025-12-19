@@ -50,8 +50,15 @@ export function useFiltering({
   const [filterByCreator, setFilterByCreator] = useState(false);
   const [filterTags, setFilterTags] = useState([]);
   const [filterScoreTier, setFilterScoreTier] = useState(""); // '', 'exceptional', 'very-good', 'good', 'adequate', 'needs-work'
+  // ALWAYS start at index 0 on page load/refresh
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [sortBy, setSortBy] = useState("default");
+
+  // Reset to first question on mount (page refresh)
+  // This ensures users always start at the beginning instead of being stuck on a random question
+  useEffect(() => {
+    setCurrentReviewIndex(0);
+  }, []); // Empty deps = run once on mount
 
   // ========================================================================
   // EFFECTS - Persistence
