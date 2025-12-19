@@ -1,5 +1,5 @@
 const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const _admin = require("firebase-admin");
 
 // Import utility functions
 const { checkRateLimit } = require("../utils/rateLimit");

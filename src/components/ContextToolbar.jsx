@@ -26,8 +26,8 @@ const ContextToolbar = ({
   _onBulkCritiqueAll,
   filterTags = [],
   setFilterTags,
-  filterScoreTier = "",
-  setFilterScoreTier,
+  filterScoreTier: _filterScoreTier = "",
+  setFilterScoreTier: _setFilterScoreTier,
   customTags = {},
   isAdmin = false, // Admin-only features
   handleChange, // Added prop for config updates

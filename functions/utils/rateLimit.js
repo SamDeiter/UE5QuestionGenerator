@@ -42,4 +42,4 @@ async function checkRateLimit(userId, type = "generation") {
 }
 
 
-module.exports = { rateLimit };
+module.exports = { checkRateLimit };

@@ -1,0 +1,103 @@
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\ai\generateQuestions.js
+  2:7  warning  'admin' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\index.js
+  1:7  warning  'functions' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\invites\consumeInvite.js
+  484:16  error  Parsing error: Identifier 'isAdminUser' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\invites\createInvite.js
+  484:16  error  Parsing error: Identifier 'isAdminUser' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\invites\revokeInvite.js
+  484:16  error  Parsing error: Identifier 'isAdminUser' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\invites\validateInvite.js
+  484:16  error  Parsing error: Identifier 'isAdminUser' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\migrations\importAIScores.js
+  485:16  error  Parsing error: Identifier 'isAdminUser' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\migrations\migrateTranslations.js
+  485:16  error  Parsing error: Identifier 'isAdminUser' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\users\changeUserRole.js
+  485:16  error  Parsing error: Identifier 'isAdminUser' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\users\checkUserRegistration.js
+  485:16  error  Parsing error: Identifier 'isAdminUser' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\users\listRegisteredUsers.js
+  485:16  error  Parsing error: Identifier 'isAdminUser' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\users\revokeUserAccess.js
+  485:16  error  Parsing error: Identifier 'isAdminUser' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\users\setupInitialAdmin.js
+  485:16  error  Parsing error: Identifier 'isAdminUser' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\utils\apiUsage.js
+  11:16  warning  'logApiUsage' is defined but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  21:20  error    'apiUsage' is not defined                                                      no-undef
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\utils\grounding.js
+   6:7   warning  'admin' is assigned a value but never used. Allowed unused vars must match /^_/u           no-unused-vars
+   8:10  warning  'extractGroundingSources' is defined but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  32:20  error    'grounding' is not defined                                                                 no-undef
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\utils\isAdminUser.js
+  8:1  error  Parsing error: Unterminated comment
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\utils\rateLimit.js
+  12:16  warning  'checkRateLimit' is defined but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  45:20  error    'rateLimit' is not defined                                                        no-undef
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\App.jsx
+  170:6  warning  React Hook useEffect has a missing dependency: 'setConfig'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  189:5  warning  'pendingCount' is assigned a value but never used. Allowed unused vars must match /^_/u                       no-unused-vars
+  631:5  warning  React Hook useMemo has a missing dependency: 'userRole'. Either include it or remove the dependency array     react-hooks/exhaustive-deps
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\agents\saveGuardAgent.js
+  223:5  warning  'userEmail' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AdminPanel.jsx
+   35:3   warning  'isApiReady' is defined but never used. Allowed unused args must match /^_/u                                 no-unused-vars
+   83:6   warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  126:13  warning  'result' is assigned a value but never used. Allowed unused vars must match /^_/u                            no-unused-vars
+  157:13  warning  'result' is assigned a value but never used. Allowed unused vars must match /^_/u                            no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AnalyticsView.jsx
+  21:10  warning  'CATEGORY_KEYS' is defined but never used. Allowed unused vars must match /^_/u               no-unused-vars
+  66:7   warning  'DIFFICULTY_COLORS' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ContextToolbar.jsx
+  29:3  warning  'filterScoreTier' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+  30:3  warning  'setFilterScoreTier' is defined but never used. Allowed unused args must match /^_/u        no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Header.jsx
+   3:8   warning  'TutorialCenter' is defined but never used. Allowed unused vars must match /^_/u                  no-unused-vars
+  39:10  warning  'showTutorialCenter' is assigned a value but never used. Allowed unused vars must match /^_/u     no-unused-vars
+  39:30  warning  'setShowTutorialCenter' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem.jsx
+  116:6  warning  React Hook useEffect has a missing dependency: 'showImprovementModal'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\CritiqueSection.jsx
+  1:8  warning  'React' is defined but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TutorialCenter.jsx
+  1:10  warning  'useState' is defined but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useEditLock.js
+  62:10  warning  'clearLockState' is defined but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useQuestionManager.js
+  393:5  warning  React Hook useCallback has unnecessary dependencies: 'agents', 'config.userEmail', 'config.userId', and 'questionVersions'. Either exclude them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateTranslations.js
+  28:11  warning  'translationGroups' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+Γ£û 42 problems (15 errors, 27 warnings)
+

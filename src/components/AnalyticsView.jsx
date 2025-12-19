@@ -18,7 +18,7 @@ import SafeResponsiveContainer from "./analytics/SafeResponsiveContainer";
 import { format } from "date-fns";
 import { getAnalytics, getTokenStats } from "../utils/analyticsStore";
 import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
-import { CATEGORY_KEYS } from "../utils/constants";
+import { CATEGORY_KEYS as _CATEGORY_KEYS } from "../utils/constants";
 
 // Import extracted components
 import StatCard from "./analytics/StatCard";
@@ -63,7 +63,7 @@ const DISCIPLINE_COLORS = {
   Programming: "#dc2626", // Crimson red
 };
 
-const DIFFICULTY_COLORS = {
+const _DIFFICULTY_COLORS = {
   "Beginner MC": "#22c55e",
   "Beginner T/F": "#4ade80",
   "Intermediate MC": "#eab308",

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Icon from "./Icon";
 import { TUTORIAL_SCENARIOS } from "../utils/tutorialSteps";
 import { isScenarioCompleted } from "../utils/tutorial/tutorialHelpers";

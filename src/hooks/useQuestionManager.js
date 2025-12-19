@@ -390,6 +390,7 @@ export const useQuestionManager = (config, showMessage) => {
         updateQuestionInState(id, () => updatedQ);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       updateQuestionInState,
       config.creatorName,

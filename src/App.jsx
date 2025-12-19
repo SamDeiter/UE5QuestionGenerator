@@ -167,6 +167,7 @@ const App = () => {
       localStorage.setItem(migrationKey, "true");
       console.log("✅ Language reset to English");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
   // 2. Question Data Management
@@ -186,7 +187,7 @@ const App = () => {
     approvedCounts,
     approvedCount,
 
-    pendingCount,
+    pendingCount: _pendingCount,
     totalApproved,
     overallPercentage,
     isTargetMet,
@@ -644,6 +645,7 @@ const App = () => {
       handleManualUpdate,
       handleTrimExcess,
       handleUpdateQuestion,
+      userRole,
     ]
   );
 

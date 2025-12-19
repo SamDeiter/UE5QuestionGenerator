@@ -32,7 +32,7 @@ const AdminPanel = ({
   handleChange,
   showApiKey,
   setShowApiKey,
-  isApiReady,
+  _isApiReady,
   customTags,
   onSaveCustomTags,
   currentUser, // Add currentUser prop
@@ -80,6 +80,7 @@ const AdminPanel = ({
   // Load users and invites
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -123,7 +124,7 @@ const AdminPanel = ({
     if (!confirm(`Revoke invite code: ${code}?`)) return;
 
     try {
-      const result = await revokeInvite(code);
+      const _result = await revokeInvite(code);
 
       // Immediately remove invite from UI (optimistic update)
       setInvites((prevInvites) =>
@@ -154,7 +155,7 @@ const AdminPanel = ({
 
     try {
       const revokeUserFn = httpsCallable(functions, "revokeUserAccess");
-      const result = await revokeUserFn({ userId });
+      const _result = await revokeUserFn({ userId });
 
       // Immediately remove user from UI (optimistic update)
       setUsers((prevUsers) => prevUsers.filter((u) => u.uid !== userId));

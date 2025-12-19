@@ -477,25 +477,7 @@ function extractGroundingSources(responseData) {
 
 const crypto = require("crypto");
 
-/**
- * Check if a user is an admin (from Firestore admins collection)
- * @param {string} uid - User ID
- * @returns {Promise<boolean>}
- */
-async function isAdminUser(uid) {
-  if (!uid) return false;
-  try {
-    const adminDoc = await admin
-      .firestore()
-      .collection("admins")
-      .doc(uid)
-      .get();
-    return adminDoc.exists && adminDoc.data()?.isAdmin === true;
-  } catch (error) {
-    console.error("Error checking admin status:", error);
-    return false;
-  }
-}
+// isAdminUser is imported from ../utils/isAdminUser
 
 /**
  * Cloud Function: validateInvite

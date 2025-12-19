@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import Icon from "./Icon";
-import TutorialCenter from "./TutorialCenter";
 import useConnectionStatus from "../hooks/useConnectionStatus";
 import { signOutUser } from "../services/firebase";
 import { APP_VERSION } from "../utils/constants";
@@ -36,7 +35,7 @@ const Header = ({
   onSignOut,
   user, // Add user prop for super admin check
 }) => {
-  const [showTutorialCenter, setShowTutorialCenter] = useState(false);
+  const _showTutorialCenter = useState(false);
 
   // Super Admin check - case-insensitive with trim
   const userEmail = user?.email?.toLowerCase();

@@ -18,4 +18,4 @@ async function logApiUsage(userId, data) {
 }
 
 
-module.exports = { apiUsage };
+module.exports = { logApiUsage };

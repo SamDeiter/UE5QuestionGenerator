@@ -1,9 +1,9 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const crypto = require("crypto");
+const _crypto = require("crypto");
 
 // Import utility functions
-const { isAdminUser } = require("../utils/isAdminUser");
+const { isAdminUser: _isAdminUser } = require("../utils/isAdminUser");
 
 /**
  * Cloud Function: generateQuestions
@@ -476,25 +476,7 @@ function extractGroundingSources(responseData) {
 // INVITE SYSTEM - Secure Registration with Invite Codes
 // ============================================================================
 
-/**
- * Check if a user is an admin (from Firestore admins collection)
- * @param {string} uid - User ID
- * @returns {Promise<boolean>}
- */
-async function isAdminUser(uid) {
-  if (!uid) return false;
-  try {
-    const adminDoc = await admin
-      .firestore()
-      .collection("admins")
-      .doc(uid)
-      .get();
-    return adminDoc.exists && adminDoc.data()?.isAdmin === true;
-  } catch (error) {
-    console.error("Error checking admin status:", error);
-    return false;
-  }
-}
+// isAdminUser is imported from ../utils/isAdminUser at line 6
 
 /**
  * Cloud Function: validateInvite

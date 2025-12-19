@@ -3,8 +3,6 @@
  * Extracted from index.js during modularization
  */
 
-const admin = require("firebase-admin");
-
 function extractGroundingSources(responseData) {
   const groundingMetadata = responseData.candidates?.[0]?.groundingMetadata;
   const sources = [];
@@ -29,4 +27,4 @@ function extractGroundingSources(responseData) {
 }
 
 
-module.exports = { grounding };
+module.exports = { extractGroundingSources };

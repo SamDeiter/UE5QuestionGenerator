@@ -59,7 +59,7 @@ function hasActiveLock(questionId, userId) {
 }
 
 // Clear lock state (on explicit release or navigation)
-function clearLockState(questionId) {
+function _clearLockState(questionId) {
   const existing = globalLockState.activeLocks.get(questionId);
   if (existing?.timeoutId) {
     clearTimeout(existing.timeoutId);

@@ -119,6 +119,7 @@ const QuestionItem = ({
     q.suggestedRewrite,
     q.id,
     q.improvementsApplied,
+    // showImprovementModal intentionally omitted - we only open on NEW data
   ]);
 
   // Reset ref when modal is closed so we can show the same critique again if needed
