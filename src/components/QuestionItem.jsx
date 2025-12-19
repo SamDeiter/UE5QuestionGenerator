@@ -207,9 +207,9 @@ const QuestionItem = ({
           title="You have the review lock - others cannot modify this question"
         >
           <Icon
-            name={isRefreshing ? "refresh-cw" : "lock"}
+            name="lock"
             size={14}
-            className={isRefreshing ? "animate-spin text-cyan-400" : ""}
+            className={isRefreshing ? "text-cyan-400 animate-pulse" : ""}
           />
           <span>Reviewing</span>
         </div>
