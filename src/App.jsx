@@ -555,6 +555,7 @@ const App = () => {
     setShowExportMenu,
     setShowHistory,
     setFilterMode,
+    setCurrentReviewIndex,
     handleLoadFromFirestore,
   });
 
