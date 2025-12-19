@@ -143,12 +143,16 @@ const QuestionItem = ({
   };
 
   const getGradient = (d) => {
-    switch (d?.toLowerCase()) {
+    const difficulty = d?.toLowerCase();
+    switch (difficulty) {
       case "easy":
+      case "beginner":
         return "bg-gradient-to-br from-slate-900/50 to-green-950 border-green-700 shadow-[0_0_15px_-5px_rgba(34,197,94,0.3)]";
       case "medium":
+      case "intermediate":
         return "bg-gradient-to-br from-slate-900/50 to-yellow-950 border-yellow-700 shadow-[0_0_15px_-5px_rgba(234,179,8,0.3)]";
       case "hard":
+      case "expert":
         return "bg-gradient-to-br from-slate-900/50 to-red-950 border-red-700 shadow-[0_0_15px_-5px_rgba(239,68,68,0.3)]";
       default:
         return "bg-slate-900 border-slate-800";

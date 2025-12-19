@@ -149,11 +149,24 @@ export function useFiltering({
       newHash === prevHash &&
       prevContextFilteredRef.current.length > 0
     ) {
+      // REVIEW MODE FIX: Even if hash matches, filter out accepted questions for review mode
+      if (appMode === "review") {
+        return prevContextFilteredRef.current.filter(
+          (q) => q.status !== "accepted"
+        );
+      }
       return prevContextFilteredRef.current;
     }
 
-    prevContextFilteredRef.current = newResult;
-    return newResult;
+    // REVIEW MODE FIX: Exclude accepted questions from Review mode
+    // Reviewers should only see pending and rejected questions
+    const finalResult =
+      appMode === "review"
+        ? newResult.filter((q) => q.status !== "accepted")
+        : newResult;
+
+    prevContextFilteredRef.current = finalResult;
+    return finalResult;
   }, [
     questions,
     historicalQuestions,

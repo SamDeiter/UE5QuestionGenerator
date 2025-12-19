@@ -387,6 +387,24 @@ export const useQuestionManager = (config, showMessage) => {
         }
       } catch (err) {
         console.error("Firestore sync failed:", err);
+
+        // Handle QUESTION_DELETED: Remove from local state automatically
+        if (err.message?.includes("QUESTION_DELETED")) {
+          console.warn(
+            `Question ${id} was deleted from Firestore - removing from local state`
+          );
+          setQuestions((prev) => prev.filter((q) => q.id !== id));
+          setHistoricalQuestions((prev) => prev.filter((q) => q.id !== id));
+          if (showMessage) {
+            showMessage(
+              "⚠️ This question was deleted from the database. Removed from your queue.",
+              4000
+            );
+          }
+          return; // Exit early - question is now removed
+        }
+
+        // For other errors, show generic error and save locally
         if (showMessage) {
           showMessage(
             `⚠️ Failed to save to cloud: ${err.message}. Question saved locally only.`,
@@ -493,6 +511,24 @@ export const useQuestionManager = (config, showMessage) => {
         }
       } catch (err) {
         console.error("Firestore sync failed:", err);
+
+        // Handle QUESTION_DELETED: Remove from local state automatically
+        if (err.message?.includes("QUESTION_DELETED")) {
+          console.warn(
+            `Question ${id} was deleted from Firestore - removing from local state`
+          );
+          setQuestions((prev) => prev.filter((q) => q.id !== id));
+          setHistoricalQuestions((prev) => prev.filter((q) => q.id !== id));
+          if (showMessage) {
+            showMessage(
+              "⚠️ This question was deleted from the database. Removed from your queue.",
+              4000
+            );
+          }
+          return; // Exit early - question is now removed
+        }
+
+        // For other errors, show generic error and save locally
         if (showMessage) {
           showMessage(
             `⚠️ Failed to save changes to cloud: ${err.message}`,
