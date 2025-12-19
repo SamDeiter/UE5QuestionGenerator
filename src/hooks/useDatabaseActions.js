@@ -65,12 +65,10 @@ export const useDatabaseActions = ({
         );
         await saveQuestionToFirestore(updatedQuestion);
 
-        // Update status in database view (keep it visible, just change status)
-        console.log("🔄 [Kick Back] Updating status in databaseQuestions");
+        // Remove from database view (so it no longer shows)
+        console.log("🔄 [Kick Back] Removing from databaseQuestions");
         setDatabaseQuestions((prev) =>
-          prev.map((q) =>
-            q.uniqueId === question.uniqueId ? updatedQuestion : q
-          )
+          prev.filter((q) => q.uniqueId !== question.uniqueId)
         );
 
         // Add to historical questions with 'pending' status so it appears in Review Mode
