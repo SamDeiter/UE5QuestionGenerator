@@ -65,70 +65,15 @@ export function useFiltering({
     () => localStorage.getItem("ue5_pref_last_id") || null
   );
 
+  // Reset review index when entering Review mode FROM another mode (not refresh)
+  const lastModeRef = useRef(appMode);
+
   // Persistence for review index
   useEffect(() => {
     if (appMode === "review") {
       localStorage.setItem("ue5_pref_review_index", currentReviewIndex);
     }
   }, [currentReviewIndex, appMode]);
-
-  // Handle restoration on mount or mode change
-  const hasRestoredRef = useRef(false);
-  useEffect(() => {
-    if (
-      appMode === "review" &&
-      !hasRestoredRef.current &&
-      uniqueFilteredQuestions.length > 0
-    ) {
-      const savedId = localStorage.getItem("ue5_pref_last_id");
-      const savedIndex = parseInt(
-        localStorage.getItem("ue5_pref_review_index") || "0",
-        10
-      );
-
-      if (savedId) {
-        const idx = uniqueFilteredQuestions.findIndex(
-          (q) => q.uniqueId === savedId
-        );
-        if (idx !== -1) {
-          console.log(
-            `🎯 Restored navigation to question ${savedId} at index ${idx}`
-          );
-          setCurrentReviewIndex(idx);
-          hasRestoredRef.current = true;
-          return;
-        }
-      }
-
-      if (savedIndex > 0 && savedIndex < uniqueFilteredQuestions.length) {
-        console.log(`🎯 Restored navigation to index ${savedIndex}`);
-        setCurrentReviewIndex(savedIndex);
-      }
-      hasRestoredRef.current = true;
-    }
-  }, [appMode, uniqueFilteredQuestions.length]); // Re-run when list is first populated
-
-  // Reset review index when entering Review mode FROM another mode (not refresh)
-  const lastModeRef = useRef(appMode);
-  useEffect(() => {
-    if (
-      appMode === "review" &&
-      lastModeRef.current !== "review" &&
-      lastModeRef.current !== "database"
-    ) {
-      // If we are coming from create/landing, reset to 0
-      // But if we just refreshed (lastModeRef used to be review), we don't reset
-      setCurrentReviewIndex(0);
-    }
-    lastModeRef.current = appMode;
-  }, [appMode]);
-
-  // Reset review index when discipline changes (in review mode)
-  useEffect(() => {
-    if (appMode === "review") {
-      setCurrentReviewIndex(0);
-    }
-  }, [config.discipline]); // Reset when discipline changes in review mode
 
   // ========================================================================
   // EFFECTS - Persistence
@@ -396,9 +341,72 @@ export function useFiltering({
     lastKnownListRef.current = uniqueFilteredQuestions;
   }, [uniqueFilteredQuestions, currentReviewIndex, setCurrentReviewIndex]);
 
-  // NOTE: uniqueFilteredQuestions and currentReviewIndex intentionally excluded to avoid loops
+  // ========================================================================
+  // NAVIGATION RESTORATION & RESET
+  // ========================================================================
 
-  // Adding it would cause excessive recalculations and question jumping
+  // Handle restoration on mount or mode change
+  const hasRestoredRef = useRef(false);
+  useEffect(() => {
+    if (
+      appMode === "review" &&
+      !hasRestoredRef.current &&
+      uniqueFilteredQuestions.length > 0
+    ) {
+      const savedId = localStorage.getItem("ue5_pref_last_id");
+      const savedIndex = parseInt(
+        localStorage.getItem("ue5_pref_review_index") || "0",
+        10
+      );
+
+      if (savedId) {
+        const idx = uniqueFilteredQuestions.findIndex(
+          (q) => q.uniqueId === savedId
+        );
+        if (idx !== -1) {
+          console.log(
+            `🎯 [Restoration] Found saved question ${savedId} at index ${idx}`
+          );
+          setCurrentReviewIndex(idx);
+          hasRestoredRef.current = true;
+          return;
+        }
+      }
+
+      if (savedIndex > 0 && savedIndex < uniqueFilteredQuestions.length) {
+        console.log(
+          `🎯 [Restoration] Falling back to saved index ${savedIndex}`
+        );
+        setCurrentReviewIndex(savedIndex);
+      }
+      hasRestoredRef.current = true;
+    }
+  }, [appMode, uniqueFilteredQuestions.length]);
+
+  // Reset review index when entering Review mode FROM another mode (not refresh)
+  useEffect(() => {
+    if (
+      appMode === "review" &&
+      lastModeRef.current !== "review" &&
+      lastModeRef.current !== "database"
+    ) {
+      console.log(
+        "🔄 [useFiltering] Resetting review index: Entered Review mode"
+      );
+      setCurrentReviewIndex(0);
+    }
+    lastModeRef.current = appMode;
+  }, [appMode]);
+
+  // Reset review index when discipline changes (in review mode)
+  useEffect(() => {
+    if (appMode === "review") {
+      console.log(
+        "🔄 [useFiltering] Resetting review index: Discipline changed"
+      );
+      setCurrentReviewIndex(0);
+    }
+  }, [discipline, appMode]);
 
   // ========================================================================
   // RETURN
