@@ -169,6 +169,11 @@ const notifyConnectionListeners = () => {
 if (typeof window !== "undefined") {
   window.addEventListener("online", notifyConnectionListeners);
   window.addEventListener("offline", notifyConnectionListeners);
+
+  // Proactive sync on startup
+  setTimeout(() => {
+    if (isOnline) processOfflineQueue();
+  }, 3000);
 }
 
 export const signInWithGoogle = async () => {
