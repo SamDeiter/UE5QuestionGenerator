@@ -132,7 +132,7 @@ export const useGeneration = (
     };
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = useCallback(async () => {
     console.log(
       "🐛 [DEBUG] handleGenerate called. isApiReady:",
       isApiReady,
@@ -698,7 +698,28 @@ export const useGeneration = (
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [
+    config,
+    isApiReady,
+    isTargetMet,
+    allQuestionsMap,
+    validateGeneration,
+    showMessage,
+    setShowNameModal,
+    setShowApiError,
+    effectiveApiKey,
+    setStatus,
+    estimateTokens,
+    logGeneration,
+    logQuestion,
+    addQuestionsToState,
+    generateCritique,
+    generateTagsSecure,
+    updateQuestionInState,
+    updateAllVariantsInState,
+    checkAndStoreQuestions,
+    setIsProcessing,
+  ]);
 
   const handleTranslateSingle = useCallback(
     async (q, targetLang) => {

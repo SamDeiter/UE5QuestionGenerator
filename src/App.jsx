@@ -461,7 +461,7 @@ const App = () => {
               `✅ Fixed ${fixedCount} auto-accepted questions - now pending`,
               5000
             );
-            setTimeout(() => handleLoadFromFirestore(), 1000);
+            setTimeout(() => handleLoadFromFirestore(true), 1000);
           } else {
             console.log(
               `✅ No questions needed fixing (checked ${snapshot.size} questions)`
@@ -529,7 +529,7 @@ const App = () => {
               `✅ Fixed ${updatedCount} questions - reloading database...`,
               5000
             );
-            setTimeout(() => handleLoadFromFirestore(), 1000);
+            setTimeout(() => handleLoadFromFirestore(true), 1000);
           } else {
             console.log(
               `✅ No migration needed: All ${snapshot.size} questions have firestoreUpdatedAt`

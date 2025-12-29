@@ -50,31 +50,85 @@ export function useFiltering({
   const [filterByCreator, setFilterByCreator] = useState(false);
   const [filterTags, setFilterTags] = useState([]);
   const [filterScoreTier, setFilterScoreTier] = useState(""); // '', 'exceptional', 'very-good', 'good', 'adequate', 'needs-work'
-  // ALWAYS start at index 0 on page load/refresh
-  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+
+  // PERSISTED NAVIGATION: Survive page refreshes
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(() => {
+    if (appMode !== "review") return 0;
+    const saved = localStorage.getItem("ue5_pref_review_index");
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
   const [sortBy, setSortBy] = useState("default");
 
-  // Reset to first question on mount (page refresh)
-  // This ensures users always start at the beginning instead of being stuck on a random question
-  useEffect(() => {
-    setCurrentReviewIndex(0);
-  }, []); // Empty deps = run once on mount
+  // Track the uniqueId of the current question for better cross-refresh restoration
+  const [lastUniqueId, setLastUniqueId] = useState(
+    () => localStorage.getItem("ue5_pref_last_id") || null
+  );
 
-  // ALSO reset when entering Review mode (navigation or page refresh)
+  // Persistence for review index
   useEffect(() => {
     if (appMode === "review") {
+      localStorage.setItem("ue5_pref_review_index", currentReviewIndex);
+    }
+  }, [currentReviewIndex, appMode]);
+
+  // Handle restoration on mount or mode change
+  const hasRestoredRef = useRef(false);
+  useEffect(() => {
+    if (
+      appMode === "review" &&
+      !hasRestoredRef.current &&
+      uniqueFilteredQuestions.length > 0
+    ) {
+      const savedId = localStorage.getItem("ue5_pref_last_id");
+      const savedIndex = parseInt(
+        localStorage.getItem("ue5_pref_review_index") || "0",
+        10
+      );
+
+      if (savedId) {
+        const idx = uniqueFilteredQuestions.findIndex(
+          (q) => q.uniqueId === savedId
+        );
+        if (idx !== -1) {
+          console.log(
+            `🎯 Restored navigation to question ${savedId} at index ${idx}`
+          );
+          setCurrentReviewIndex(idx);
+          hasRestoredRef.current = true;
+          return;
+        }
+      }
+
+      if (savedIndex > 0 && savedIndex < uniqueFilteredQuestions.length) {
+        console.log(`🎯 Restored navigation to index ${savedIndex}`);
+        setCurrentReviewIndex(savedIndex);
+      }
+      hasRestoredRef.current = true;
+    }
+  }, [appMode, uniqueFilteredQuestions.length]); // Re-run when list is first populated
+
+  // Reset review index when entering Review mode FROM another mode (not refresh)
+  const lastModeRef = useRef(appMode);
+  useEffect(() => {
+    if (
+      appMode === "review" &&
+      lastModeRef.current !== "review" &&
+      lastModeRef.current !== "database"
+    ) {
+      // If we are coming from create/landing, reset to 0
+      // But if we just refreshed (lastModeRef used to be review), we don't reset
       setCurrentReviewIndex(0);
     }
-  }, [appMode]); // Reset whenever we enter Review mode
+    lastModeRef.current = appMode;
+  }, [appMode]);
 
   // Reset review index when discipline changes (in review mode)
-  // Changing disciplines loads a completely different question set,
-  // so we should always start at the first question
   useEffect(() => {
     if (appMode === "review") {
       setCurrentReviewIndex(0);
     }
-  }, [config.discipline, appMode]); // Reset when discipline changes in review mode
+  }, [config.discipline]); // Reset when discipline changes in review mode
 
   // ========================================================================
   // EFFECTS - Persistence
@@ -243,15 +297,18 @@ export function useFiltering({
     // does not cause the question card to jump to the top of the list.
     const getCanonicalDate = (q) => {
       if (!allQuestionsMap || !allQuestionsMap.has(q.uniqueId)) {
-        // Fallback if map missing
-        return q.created || q.dateAdded || 0;
+        // Fallback if map missing - use a static anchor (0) for stability
+        const dateStr = q.created || q.dateAdded;
+        return dateStr ? new Date(dateStr).getTime() : 0;
       }
       const variants = allQuestionsMap.get(q.uniqueId);
       // Find the earliest date among all variants to anchor the group's position
+      // Use epoch 0 as absolute fallback for stability during hydration
       return Math.min(
-        ...variants.map((v) =>
-          new Date(v.created || v.dateAdded || Date.now()).getTime()
-        )
+        ...variants.map((v) => {
+          const dateStr = v.created || v.dateAdded;
+          return dateStr ? new Date(dateStr).getTime() : 0;
+        })
       );
     };
 
@@ -273,10 +330,8 @@ export function useFiltering({
       // Tiebreaker: uniqueId (alphabetical) for stability
       return (a.uniqueId || "").localeCompare(b.uniqueId || "");
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredQuestions, language]);
-  // NOTE: allQuestionsMap removed from dependencies to ensure reference stability.
-  // We accept that sorting might not update immediately until filteredQuestions or language changes.
+  }, [filteredQuestions, language, allQuestionsMap]);
+  // STABILITY: allQuestionsMap IS included now, but we've stabilized the date fallback.
 
   // STABILITY: Preserve current question position when the question list updates
   // This handles AI critiques, language switches, and remote syncs
@@ -304,6 +359,11 @@ export function useFiltering({
       lastKnownUniqueIdRef.current = currentUniqueId;
       lastKnownIndexRef.current = currentReviewIndex;
       lastKnownListRef.current = uniqueFilteredQuestions;
+
+      if (currentUniqueId) {
+        localStorage.setItem("ue5_pref_last_id", currentUniqueId);
+        setLastUniqueId(currentUniqueId);
+      }
       return;
     }
 
@@ -329,6 +389,8 @@ export function useFiltering({
     // D. Update tracking for next run
     if (currentUniqueId) {
       lastKnownUniqueIdRef.current = currentUniqueId;
+      localStorage.setItem("ue5_pref_last_id", currentUniqueId);
+      setLastUniqueId(currentUniqueId);
     }
     lastKnownIndexRef.current = currentReviewIndex;
     lastKnownListRef.current = uniqueFilteredQuestions;
@@ -359,6 +421,8 @@ export function useFiltering({
     setSortBy,
     filterScoreTier,
     setFilterScoreTier,
+    lastUniqueId,
+    setLastUniqueId,
 
     // Computed values
     contextFilteredQuestions,

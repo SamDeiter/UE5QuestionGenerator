@@ -33,9 +33,6 @@ export const useQuestionManager = (config, showMessage) => {
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] = useState(null);
 
-  // Central question storage map
-  const [allQuestionsMap, setAllQuestionsMap] = useState(new Map());
-
   // Version tracking for concurrent editing (maps question ID -> version)
   const [questionVersions, setQuestionVersions] = useState(new Map());
 
@@ -101,8 +98,8 @@ export const useQuestionManager = (config, showMessage) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.creatorName]); // Only run when creatorName changes
 
-  // Recompute allQuestionsMap - include databaseQuestions for inventory tracking
-  useEffect(() => {
+  // Central question storage map - memoized for performance and stability
+  const allQuestionsMap = useMemo(() => {
     const combined = [
       ...questions,
       ...historicalQuestions,
@@ -112,21 +109,23 @@ export const useQuestionManager = (config, showMessage) => {
     const newMap = new Map();
 
     combined.forEach((q) => {
-      const id = q.uniqueId;
+      const id = q.uniqueId || q.id;
       if (!id) return;
       if (!newMap.has(id)) newMap.set(id, []);
-      // Dedupe by language within each uniqueId bucket to prevent double-counting
+
       const variants = newMap.get(id);
       const lang = q.language || "English";
+
+      // Dedupe by language within each uniqueId bucket to prevent double-counting
       if (!variants.some((v) => (v.language || "English") === lang)) {
         variants.push(q);
       }
     });
 
-    setAllQuestionsMap(newMap);
+    return newMap;
   }, [questions, historicalQuestions, databaseQuestions]);
 
-  // Translation Map
+  // Translation Map - derived from the stable allQuestionsMap
   const translationMap = useMemo(() => {
     const map = new Map();
     Array.from(allQuestionsMap.keys()).forEach((uniqueId) => {
@@ -188,18 +187,30 @@ export const useQuestionManager = (config, showMessage) => {
 
   // Helper to update question
   const updateQuestionInState = useCallback((id, updateFn) => {
-    let foundInQuestions = false;
+    let found = false;
+
     setQuestions((prev) => {
       const idx = prev.findIndex((q) => q.id === id);
       if (idx === -1) return prev;
-      foundInQuestions = true;
+      found = true;
       const newArr = [...prev];
       newArr[idx] = updateFn(newArr[idx]);
       return newArr;
     });
 
-    if (!foundInQuestions) {
+    if (!found) {
       setHistoricalQuestions((prev) => {
+        const idx = prev.findIndex((q) => q.id === id);
+        if (idx === -1) return prev;
+        found = true;
+        const newArr = [...prev];
+        newArr[idx] = updateFn(newArr[idx]);
+        return newArr;
+      });
+    }
+
+    if (!found) {
+      setDatabaseQuestions((prev) => {
         const idx = prev.findIndex((q) => q.id === id);
         if (idx === -1) return prev;
         const newArr = [...prev];
@@ -216,43 +227,20 @@ export const useQuestionManager = (config, showMessage) => {
       return;
     }
 
-    console.log(
-      `[updateAllVariantsInState] Updating all variants for uniqueId: ${uniqueId}`
+    // Update in questions array
+    setQuestions((prev) =>
+      prev.map((q) => (q.uniqueId === uniqueId ? updateFn(q) : q))
     );
 
-    // Update in questions array
-    setQuestions((prev) => {
-      let updatedCount = 0;
-      const newArr = prev.map((q) => {
-        if (q.uniqueId === uniqueId) {
-          updatedCount++;
-          return updateFn(q);
-        }
-        return q;
-      });
-      console.log(
-        `[updateAllVariantsInState] Updated ${updatedCount} variants in questions`
-      );
-      return newArr;
-    });
+    // Update in historicalQuestions
+    setHistoricalQuestions((prev) =>
+      prev.map((q) => (q.uniqueId === uniqueId ? updateFn(q) : q))
+    );
 
-    // Also update in historicalQuestions
-    setHistoricalQuestions((prev) => {
-      let updatedCount = 0;
-      const newArr = prev.map((q) => {
-        if (q.uniqueId === uniqueId) {
-          updatedCount++;
-          return updateFn(q);
-        }
-        return q;
-      });
-      if (updatedCount > 0) {
-        console.log(
-          `[updateAllVariantsInState] Updated ${updatedCount} variants in historicalQuestions`
-        );
-      }
-      return newArr;
-    });
+    // CRITICAL: Also update in databaseQuestions so the Database View reflects the changes
+    setDatabaseQuestions((prev) =>
+      prev.map((q) => (q.uniqueId === uniqueId ? updateFn(q) : q))
+    );
   }, []);
 
   // Status update handler - now with version control and conflict resolution
