@@ -396,7 +396,8 @@ const QuestionItem = ({
                 optionC: improved?.optionC || q.optionC,
                 optionD: improved?.optionD || q.optionD,
                 tags: improved?.tags || q.tags,
-                // Keep critiqueScore intact for display (e.g., "Score: 75/100")
+                // Update score to the improved version immediately
+                critiqueScore: q.improvedScore || q.critiqueScore,
                 suggestedRewrite: null, // Clear suggestion after apply
                 improvedScore: null, // Clear after applying
                 improvementsApplied: true, // Mark that improvements were applied (enables Verify, prevents modal re-open)

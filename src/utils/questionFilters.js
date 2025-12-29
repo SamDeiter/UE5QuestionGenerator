@@ -165,9 +165,23 @@ export const createUniqueFilteredQuestions = (
       selected = variants.find((v) => (v.language || "English") === "English");
     }
 
-    // 4. Last resort: First available variant
-    if (!selected && variants.length > 0) {
-      selected = variants[0];
+    // 4. Last resort fallback removed to prevent language leakage (e.g. Chinese questions appearing in English queue)
+    // If no variant exists for the preferred language or English, this question group is hidden from the current view.
+    // ADDED: Text-based sanity check for English fallbacks
+    if (!selected) {
+      const isEnglishView = language === "English";
+      selected = variants.find((v) => {
+        const itemLang = v.language || "English";
+        if (itemLang !== "English") return false;
+
+        // If specifically viewing English, check for Chinese characters in text
+        // (This catches Chinese questions that are incorrectly tagged as English)
+        if (isEnglishView) {
+          const text = v.question || v.text || "";
+          if (/[\u4e00-\u9fa5]/.test(text)) return false;
+        }
+        return true;
+      });
     }
 
     if (selected) {

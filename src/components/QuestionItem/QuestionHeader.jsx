@@ -1,4 +1,6 @@
 import Icon from "../Icon";
+import ScoreBadge from "../ScoreBadge";
+import { getDisplayUrl } from "../../utils/questionHelpers";
 
 /**
  * Normalize difficulty value - handles legacy "BALANCED ALL" and other invalid values
@@ -62,6 +64,11 @@ const QuestionHeader = ({
             </span>
           )}
 
+          {/* AI Score Badge - Restore visibility */}
+          {q.critiqueScore !== undefined && q.critiqueScore !== null && (
+            <ScoreBadge score={q.critiqueScore} />
+          )}
+
           {/* AI Improvement Badge - Shows when improvements are available */}
           {q.suggestedRewrite && (
             <button
@@ -112,6 +119,12 @@ const QuestionHeader = ({
               </div>
             )}
           </div>
+          {/* AI Score as a Tag (as user requested) */}
+          {q.critiqueScore !== undefined && q.critiqueScore !== null && (
+            <span className="px-1.5 py-0.5 rounded bg-indigo-950/40 text-indigo-300 border border-indigo-700/50 font-bold">
+              AI Score: {q.critiqueScore}
+            </span>
+          )}
         </div>
       </div>
 

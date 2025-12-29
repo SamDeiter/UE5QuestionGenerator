@@ -242,7 +242,8 @@ Output in Markdown Table format.`;
       suggestedRewrite: null,
       rewriteChanges: null,
       critique: null,
-      critiqueScore: null,
+      critiqueScore: q.improvedScore || null, // Preserve the improved score as the new baseline
+      improvementsApplied: true, // Mark for UI consistency
       humanVerified: false, // Reset - human must verify
     };
 

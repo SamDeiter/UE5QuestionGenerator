@@ -3,7 +3,12 @@ import { getSecureItem, setSecureItem } from "../utils/secureStorage";
 
 export const useAppConfig = () => {
   // Application mode: 'landing' (home screen), 'create' (generation mode), 'review' (review mode), 'database' (view all)
-  const [appMode, setAppMode] = useState("landing");
+  // Application mode: 'landing' (home screen), 'create' (generation mode), 'review' (review mode), 'database' (view all)
+  const [appMode, setAppMode] = useState(() => {
+    // SECURITY: Get mode from localStorage if available to prevent flash-resets on hydrate
+    if (typeof window === "undefined") return "landing";
+    return localStorage.getItem("ue5_app_mode") || "landing";
+  });
 
   // Check if running in internal Canvas environment (has auto-injected API key)
   const isInternalEnvironment =
@@ -104,6 +109,13 @@ export const useAppConfig = () => {
   useEffect(() => {
     setSecureItem("ue5_gen_config", config);
   }, [config]);
+
+  // Persist appMode to localStorage independently for faster restoration
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ue5_app_mode", appMode);
+    }
+  }, [appMode]);
 
   // Handlers
   // pendingNavigationUniqueId tracks the uniqueId to navigate to after language switch

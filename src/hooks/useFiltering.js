@@ -149,26 +149,27 @@ export function useFiltering({
       .join(",");
 
     // Also check if critique scores, status, OR verification/rewrites changed
-    const newHash = newResult
-      .map(
-        (q) =>
-          `${q.id}:${q.critiqueScore}:${q.status}:${q.humanVerified}:${
-            q.suggestedRewrite ? "yes" : "no"
-          }:${q.suggestedRewrite?.critiqueScore || 0}:${q.improvedScore || 0}:${
-            q.language
-          }`
-      )
-      .join("|");
-    const prevHash = prevContextFilteredRef.current
-      .map(
-        (q) =>
-          `${q.id}:${q.critiqueScore}:${q.status}:${q.humanVerified}:${
-            q.suggestedRewrite ? "yes" : "no"
-          }:${q.suggestedRewrite?.critiqueScore || 0}:${q.improvedScore || 0}:${
-            q.language
-          }`
-      )
-      .join("|");
+    const generateHash = (list) =>
+      list
+        .map((q) => {
+          // STABILITY: Include as many relevant fields as possible to detect changes
+          // Use q.id or q.uniqueId for stable identification
+          const id = q.id || q.uniqueId;
+          const score = q.critiqueScore ?? "none";
+          const improved = q.improvedScore ?? "none";
+          const rewriteScore = q.suggestedRewrite?.critiqueScore ?? "none";
+          const status = q.status || "pending";
+          const verified = q.humanVerified ? "yes" : "no";
+          const rewrite = q.suggestedRewrite ? "yes" : "no";
+          const lang = q.language || "English";
+          const lastModified = q.lastModified || q.updatedAt || "0";
+
+          return `${id}:${score}:${status}:${verified}:${rewrite}:${rewriteScore}:${improved}:${lang}:${lastModified}`;
+        })
+        .join("|");
+
+    const newHash = generateHash(newResult);
+    const prevHash = generateHash(prevContextFilteredRef.current);
 
     if (
       newIds === prevIds &&
@@ -345,19 +346,57 @@ export function useFiltering({
   // NAVIGATION RESTORATION & RESET
   // ========================================================================
 
-  // Handle restoration on mount or mode change
   const hasRestoredRef = useRef(false);
+
+  // 1. Reset review index when entering Review mode FROM another mode (not refresh)
+  useEffect(() => {
+    // skip reset if we are currently restoring from refresh
+    if (hasRestoredRef.current) {
+      if (
+        appMode === "review" &&
+        lastModeRef.current !== "review" &&
+        lastModeRef.current !== "database"
+      ) {
+        console.log(
+          "🔄 [useFiltering] Resetting review index: Entered Review mode"
+        );
+        setCurrentReviewIndex(0);
+      }
+    }
+    lastModeRef.current = appMode;
+  }, [appMode]);
+
+  // 2. Reset review index when discipline changes (in review mode)
+  useEffect(() => {
+    // Only reset if we've already finished the initial restoration
+    if (hasRestoredRef.current && appMode === "review") {
+      console.log(
+        "🔄 [useFiltering] Resetting review index: Discipline changed"
+      );
+      setCurrentReviewIndex(0);
+    }
+  }, [discipline, appMode]);
+
+  // 3. Handle restoration on mount or mode change
+  // TRIGGER: Now runs AFTER potential resets in the same render cycle
   useEffect(() => {
     if (
       appMode === "review" &&
       !hasRestoredRef.current &&
       uniqueFilteredQuestions.length > 0
     ) {
+      // Small delay to ensure all questions from initial fetch are processed
       const savedId = localStorage.getItem("ue5_pref_last_id");
       const savedIndex = parseInt(
         localStorage.getItem("ue5_pref_review_index") || "0",
         10
       );
+
+      console.log("🎯 [Restoration] Attempting restoration...", {
+        savedId,
+        savedIndex,
+        listSize: uniqueFilteredQuestions.length,
+      });
 
       if (savedId) {
         const idx = uniqueFilteredQuestions.findIndex(
@@ -382,31 +421,6 @@ export function useFiltering({
       hasRestoredRef.current = true;
     }
   }, [appMode, uniqueFilteredQuestions.length]);
-
-  // Reset review index when entering Review mode FROM another mode (not refresh)
-  useEffect(() => {
-    if (
-      appMode === "review" &&
-      lastModeRef.current !== "review" &&
-      lastModeRef.current !== "database"
-    ) {
-      console.log(
-        "🔄 [useFiltering] Resetting review index: Entered Review mode"
-      );
-      setCurrentReviewIndex(0);
-    }
-    lastModeRef.current = appMode;
-  }, [appMode]);
-
-  // Reset review index when discipline changes (in review mode)
-  useEffect(() => {
-    if (appMode === "review") {
-      console.log(
-        "🔄 [useFiltering] Resetting review index: Discipline changed"
-      );
-      setCurrentReviewIndex(0);
-    }
-  }, [discipline, appMode]);
 
   // ========================================================================
   // RETURN

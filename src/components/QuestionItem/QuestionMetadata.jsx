@@ -90,6 +90,12 @@ const QuestionMetadata = ({ q, onAutoTag, isProcessing }) => {
                 {tag}
               </span>
             ))}
+            {/* AI Score as a Tag (as user requested) */}
+            {q.critiqueScore !== undefined && q.critiqueScore !== null && (
+              <span className="px-1.5 py-0.5 rounded bg-indigo-950/40 text-indigo-300 border border-indigo-700/50 font-bold">
+                AI Score: {q.critiqueScore}
+              </span>
+            )}
           </div>
         )}
 
