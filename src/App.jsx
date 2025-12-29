@@ -419,7 +419,7 @@ const App = () => {
       const migrationKey = "ue5_migration_auto_accept_fix";
       if (localStorage.getItem(migrationKey) === "completed") return;
 
-      if (user && !authLoading && !hasMigratedRef.current) {
+      if (user && !authLoading && isAdmin && !hasMigratedRef.current) {
         hasMigratedRef.current = true;
         try {
           console.log(
@@ -475,7 +475,7 @@ const App = () => {
       }
     };
     runMigration();
-  }, [user, authLoading, showMessage, handleLoadFromFirestore]);
+  }, [user, authLoading, isAdmin, showMessage, handleLoadFromFirestore]);
 
   // ONE-TIME MIGRATION: Add firestoreUpdatedAt to questions missing it
   const hasFirestoreMigratedRef = useRef(false);
@@ -484,7 +484,7 @@ const App = () => {
       const migrationKey = "ue5_migration_firestore_updated_at";
       if (localStorage.getItem(migrationKey) === "completed") return;
 
-      if (user && !authLoading && !hasFirestoreMigratedRef.current) {
+      if (user && !authLoading && isAdmin && !hasFirestoreMigratedRef.current) {
         hasFirestoreMigratedRef.current = true;
         try {
           console.log(
@@ -543,7 +543,7 @@ const App = () => {
       }
     };
     runFirestoreMigration();
-  }, [user, authLoading, showMessage, handleLoadFromFirestore]);
+  }, [user, authLoading, isAdmin, showMessage, handleLoadFromFirestore]);
 
   // 9. Review Actions (bulk operations)
   const {

@@ -225,29 +225,14 @@ export const useExport = (
         status: q.status || "pending", // CRITICAL: Preserve actual status
       }));
 
-      // Clear state first
-      setDatabaseQuestions([]);
-      if (setHistoricalQuestions) setHistoricalQuestions([]);
+      setDatabaseQuestions(loadedQuestions);
+      if (setHistoricalQuestions) setHistoricalQuestions(loadedQuestions);
 
-      // Load in chunks for better performance
-      for (let i = 0; i < loadedQuestions.length; i += CHUNK_SIZE) {
-        const chunk = loadedQuestions.slice(i, i + CHUNK_SIZE);
-
-        setDatabaseQuestions((prev) => [...prev, ...chunk]);
-        if (setHistoricalQuestions) {
-          setHistoricalQuestions((prev) => [...prev, ...chunk]);
-        }
-
-        // Show progress
-        if (!silent) {
-          const progress = Math.min(i + CHUNK_SIZE, loadedQuestions.length);
-          setStatus(
-            `Loading questions... ${progress}/${loadedQuestions.length}`
-          );
-        }
-
-        // Yield to browser between chunks
-        await new Promise((resolve) => setTimeout(resolve, 0));
+      if (!silent) {
+        showMessage(
+          `Loaded ${loadedQuestions.length} questions from Firestore!`,
+          3000
+        );
       }
 
       // Don't auto-switch to database view - let user navigate manually
