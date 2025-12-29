@@ -279,8 +279,8 @@ const saveQuestionToFirestoreInternal = async (question) => {
     firestoreUpdatedAt: Timestamp.now(),
   });
 
-  // Add creatorId if user is signed in
-  if (auth.currentUser) {
+  // Add creatorId if missing and user is signed in
+  if (auth.currentUser && !payload.creatorId) {
     payload.creatorId = auth.currentUser.uid;
     payload.creatorEmail = auth.currentUser.email;
   }
