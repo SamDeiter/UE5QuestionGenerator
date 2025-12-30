@@ -253,6 +253,15 @@ export function useFiltering({
     if (filterMode === "all") return contextFilteredQuestions;
     return contextFilteredQuestions.filter((q) => {
       if (filterMode === "pending") return !q.status || q.status === "pending";
+      if (filterMode === "other") {
+        // "other" is a computed category - questions with non-standard statuses
+        return (
+          q.status &&
+          q.status !== "pending" &&
+          q.status !== "accepted" &&
+          q.status !== "rejected"
+        );
+      }
       return q.status === filterMode;
     });
   }, [contextFilteredQuestions, filterMode]);
