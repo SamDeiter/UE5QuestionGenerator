@@ -86,18 +86,8 @@ export function useFiltering({
     localStorage.setItem("ue5_pref_history", showHistory);
   }, [searchTerm, filterMode, showHistory]);
 
-  // Reset review index when filter mode changes (Pending/Accepted/All/etc)
-  // This ensures clicking a different filter pill starts at position 1
-  const prevFilterModeRef = useRef(filterMode);
-  useEffect(() => {
-    if (prevFilterModeRef.current !== filterMode) {
-      console.log(
-        `🔄 [useFiltering] Filter changed: ${prevFilterModeRef.current} → ${filterMode}, resetting to index 0`
-      );
-      setCurrentReviewIndex(0);
-      prevFilterModeRef.current = filterMode;
-    }
-  }, [filterMode]);
+  // NOTE: Position is preserved when switching filters - no reset needed
+  // The existing restoration logic handles keeping the user on the same question
 
   // DISABLED: Old reset logic that was causing questions to jump
   // We now handle this more intelligently below
@@ -379,24 +369,24 @@ export function useFiltering({
       return;
     }
 
-    // C. If the list changed reference but the index stayed the same,
-    // we check if the question at that index moved somewhere else.
-    if (
-      listRefChanged &&
-      lastKnownUniqueIdRef.current &&
-      lastKnownUniqueIdRef.current !== currentUniqueId
-    ) {
-      const preservedIndex = uniqueFilteredQuestions.findIndex(
-        (q) => q.uniqueId === lastKnownUniqueIdRef.current
-      );
-
-      if (preservedIndex !== -1 && preservedIndex !== currentReviewIndex) {
-        setCurrentReviewIndex(preservedIndex);
-        lastKnownIndexRef.current = preservedIndex; // Update this so we don't trigger "indexChanged" on next run
-        lastKnownListRef.current = uniqueFilteredQuestions;
-        return;
-      }
-    }
+    // DISABLED: This was causing position jumps when switching filters
+    // The "same question" may be at a different index in a different filter's list
+    // if (
+    //   listRefChanged &&
+    //   lastKnownUniqueIdRef.current &&
+    //   lastKnownUniqueIdRef.current !== currentUniqueId
+    // ) {
+    //   const preservedIndex = uniqueFilteredQuestions.findIndex(
+    //     (q) => q.uniqueId === lastKnownUniqueIdRef.current
+    //   );
+    //
+    //   if (preservedIndex !== -1 && preservedIndex !== currentReviewIndex) {
+    //     setCurrentReviewIndex(preservedIndex);
+    //     lastKnownIndexRef.current = preservedIndex;
+    //     lastKnownListRef.current = uniqueFilteredQuestions;
+    //     return;
+    //   }
+    // }
 
     // D. Update tracking for next run
     if (currentUniqueId) {
