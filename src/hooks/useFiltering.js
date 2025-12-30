@@ -218,25 +218,41 @@ export function useFiltering({
     filterScoreTier,
   ]);
 
-  // 2. Calculate counts based on the context
+  // 2. Calculate counts based on UNIQUE questions per status
+  // This ensures pill counts match what the user actually sees in the list
   const contextCounts = useMemo(() => {
-    const pending = contextFilteredQuestions.filter(
-      (q) => !q.status || q.status === "pending"
-    ).length;
-    const accepted = contextFilteredQuestions.filter(
-      (q) => q.status === "accepted"
-    ).length;
-    const rejected = contextFilteredQuestions.filter(
-      (q) => q.status === "rejected"
-    ).length;
-    const other = contextFilteredQuestions.filter(
-      (q) =>
-        q.status &&
-        q.status !== "pending" &&
-        q.status !== "accepted" &&
-        q.status !== "rejected"
-    ).length;
-    const all = contextFilteredQuestions.length;
+    // Helper to get unique count for a specific status filter
+    const getUniqueCountForStatus = (statusFilter) => {
+      let filtered;
+      if (statusFilter === "all") {
+        filtered = contextFilteredQuestions;
+      } else if (statusFilter === "pending") {
+        filtered = contextFilteredQuestions.filter(
+          (q) => !q.status || q.status === "pending"
+        );
+      } else if (statusFilter === "other") {
+        filtered = contextFilteredQuestions.filter(
+          (q) =>
+            q.status &&
+            q.status !== "pending" &&
+            q.status !== "accepted" &&
+            q.status !== "rejected"
+        );
+      } else {
+        filtered = contextFilteredQuestions.filter(
+          (q) => q.status === statusFilter
+        );
+      }
+      // Apply same uniqueness logic as uniqueFilteredQuestions
+      return createUniqueFilteredQuestions(filtered, language, allQuestionsMap)
+        .length;
+    };
+
+    const pending = getUniqueCountForStatus("pending");
+    const accepted = getUniqueCountForStatus("accepted");
+    const rejected = getUniqueCountForStatus("rejected");
+    const other = getUniqueCountForStatus("other");
+    const all = getUniqueCountForStatus("all");
 
     // DIAGNOSTIC LOGGING: Identify mysterious statuses
     if (other > 0) {
@@ -259,7 +275,7 @@ export function useFiltering({
     }
 
     return { pending, accepted, rejected, other, all };
-  }, [contextFilteredQuestions]);
+  }, [contextFilteredQuestions, language, allQuestionsMap]);
 
   // 3. Now apply the status filter for the actual view
   const filteredQuestions = useMemo(() => {
