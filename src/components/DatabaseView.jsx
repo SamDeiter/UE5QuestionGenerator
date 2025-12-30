@@ -10,14 +10,8 @@ const LOAD_MORE_COUNT = 50;
 
 const DatabaseView = ({
   questions,
-  _sheetUrl,
-  _onLoad,
-  _onLoadFirestore,
-  _onClearView,
-  _onHardReset,
   onUpdateQuestion,
   onKickBack,
-  _isProcessing,
   showMessage,
   filterMode = "all", // Default to 'all' if not provided
   sortBy = "default", // Default to 'default' if not provided
@@ -26,7 +20,7 @@ const DatabaseView = ({
   isAdmin = false, // Whether current user is admin
   userRole = "user", // NEW
 }) => {
-      const [, setLoadMenuOpen] = useState(false);
+  const [, setLoadMenuOpen] = useState(false);
   const loadMenuRef = useRef(null);
 
   // PERFORMANCE: Track how many items to render (windowed rendering)

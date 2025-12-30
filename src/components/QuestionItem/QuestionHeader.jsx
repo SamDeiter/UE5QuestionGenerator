@@ -1,6 +1,5 @@
 import Icon from "../Icon";
 import ScoreBadge from "../ScoreBadge";
-import { getDisplayUrl } from "../../utils/questionHelpers";
 
 /**
  * Normalize difficulty value - handles legacy "BALANCED ALL" and other invalid values

@@ -15,17 +15,19 @@ import Icon from "./Icon";
 import { createInvite, revokeInvite } from "../services/inviteService";
 import { downloadTrainingData } from "../utils/analyticsStore";
 import { UI_LABELS } from "../utils/constants";
-import {
-  clearAllQuestionsFromFirestore,
-  deleteSoftDeletedQuestionsFromFirestore,
-} from "../services/firebase";
+
 import { sendReviewerInvitesViaEmail } from "../services/cloudFunctions";
 import {
   getReviewerAnalytics,
   formatDuration,
   formatDate as formatAnalyticsDate,
 } from "../utils/reviewerAnalytics";
-import ReviewerAnalytics from "./Admin/ReviewerAnalytics";
+const ReviewerAnalytics = React.lazy(() => import("./Admin/ReviewerAnalytics"));
+const DatabaseManagement = React.lazy(() =>
+  import("./Admin/DatabaseManagement")
+);
+const ApiConfig = React.lazy(() => import("./Admin/ApiConfig"));
+const UserList = React.lazy(() => import("./Admin/UserList"));
 
 const functions = getFunctions(app, "us-central1");
 
@@ -225,18 +227,21 @@ const AdminPanel = ({
 
     try {
       // Map invites to email payload format
-      const emailPayload = reviewerInvites.map((inv) => ({
-        email: inv.forEmail || "unknown@example.com",
-        inviteUrl: `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${
-          inv.code
-        }${inv.forEmail ? `&email=${encodeURIComponent(inv.forEmail)}` : ""}`,
-        code: inv.code,
-        note:
-          inv.note ||
-          `Targeted REVIEWER invite for ${inv.forEmail || "reviewer"}`,
-        expiresAt: inv.expiresAt,
-        maxUses: inv.maxUses,
-      }));
+      const emailPayload = reviewerInvites.map((inv) => {
+        const emailParam = inv.forEmail
+          ? `&email=${encodeURIComponent(inv.forEmail)}`
+          : "";
+        return {
+          email: inv.forEmail || "unknown@example.com",
+          inviteUrl: `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${inv.code}${emailParam}`,
+          code: inv.code,
+          note:
+            inv.note ||
+            `Targeted REVIEWER invite for ${inv.forEmail || "reviewer"}`,
+          expiresAt: inv.expiresAt,
+          maxUses: inv.maxUses,
+        };
+      });
 
       showMessage("📧 Sending emails...", 3000);
 
@@ -296,22 +301,6 @@ const AdminPanel = ({
     } catch (error) {
       console.error("❌ Resend error:", error);
       showMessage(`❌ Failed: ${error.message}`, 5000);
-    }
-  };
-
-  // Robust date formatter
-  const formatDate = (dateVal) => {
-    if (!dateVal) return "N/A";
-    try {
-      // Handle Firestore Timestamp objects if they still arrive as such
-      const date =
-        dateVal.toDate instanceof Function
-          ? dateVal.toDate()
-          : new Date(dateVal);
-      return isNaN(date.getTime()) ? "Invalid Date" : date.toLocaleDateString();
-    } catch (e) {
-      console.error("Date formatting error:", e);
-      return "Invalid Date";
     }
   };
 
@@ -442,7 +431,6 @@ const AdminPanel = ({
           </div>
         )}
       </div>
-
       {/* Invite Management - Merged Section */}
       <div className="bg-slate-800 rounded-lg p-4 border border-blue-500/30">
         <h2
@@ -663,82 +651,23 @@ const AdminPanel = ({
           </>
         )}
       </div>
-
-      {/* Registered Users */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-green-500/30">
-        <h2
-          onClick={() => toggleSection("registeredUsers")}
-          className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-green-400 mb-3 flex items-center gap-2"
-        >
-          <div className="flex items-center gap-2">
-            <Icon name="users" size={18} /> Registered Users ({users.length})
+      {/* Registered Users List */}
+      <React.Suspense
+        fallback={
+          <div className="p-4 text-center text-slate-500">
+            <Icon name="loader" className="animate-spin mb-2" />
+            <p>Loading Users...</p>
           </div>
-          <Icon
-            name={collapsed.registeredUsers ? "chevron-down" : "chevron-up"}
-            size={16}
-            className="ml-auto opacity-50"
-          />
-        </h2>
-        {!collapsed.registeredUsers && (
-          <div className="space-y-2">
-            {users.length === 0 ? (
-              <p className="text-slate-500 text-sm">No users registered yet</p>
-            ) : (
-              users.map((user) => (
-                <div
-                  key={user.uid}
-                  className="bg-slate-700/50 p-3 rounded flex items-center justify-between"
-                >
-                  <div>
-                    <div className="text-white font-medium">{user.email}</div>
-                    <div className="text-xs text-slate-400">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded mr-2 ${
-                          user.role === "admin"
-                            ? "bg-purple-600 text-white"
-                            : user.role === "reviewer"
-                            ? "bg-indigo-600 text-white"
-                            : "bg-slate-600 text-slate-300"
-                        }`}
-                      >
-                        {user.role}
-                      </span>
-                      Joined: {formatDate(user.registeredAt)}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        handleChangeRole(user.uid, user.role, user.email)
-                      }
-                      className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded transition-all"
-                      title={
-                        user.role === "admin"
-                          ? "Demote to User"
-                          : "Promote to Admin"
-                      }
-                    >
-                      <Icon
-                        name={user.role === "admin" ? "arrow-down" : "arrow-up"}
-                        size={12}
-                      />
-                    </button>
-
-                    <button
-                      onClick={() => handleRevokeUser(user.uid, user.email)}
-                      className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-all"
-                      title="Revoke Access"
-                    >
-                      <Icon name="x" size={12} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-      </div>
+        }
+      >
+        <UserList
+          users={users}
+          isCollapsed={collapsed.registeredUsers}
+          onToggle={() => toggleSection("registeredUsers")}
+          handleChangeRole={handleChangeRole}
+          handleRevokeUser={handleRevokeUser}
+        />
+      </React.Suspense>
 
       {/* Reviewer Activity Analytics */}
       <div className="bg-slate-800 rounded-lg p-4 border border-cyan-500/30">
@@ -747,7 +676,7 @@ const AdminPanel = ({
           className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-cyan-400 mb-3 flex items-center gap-2"
         >
           <div className="flex items-center gap-2">
-            <Icon name="activity" size={18} /> Reviewer Activity Analytics
+            <Icon name="bar-chart-2" size={18} /> Reviewer Analytics
           </div>
           <Icon
             name={collapsed.reviewerActivity ? "chevron-down" : "chevron-up"}
@@ -756,104 +685,44 @@ const AdminPanel = ({
           />
         </h2>
         {!collapsed.reviewerActivity && (
-          <ReviewerAnalytics
-            reviewerAnalytics={reviewerAnalytics}
-            analyticsLoading={analyticsLoading}
-            loadReviewerAnalytics={loadReviewerAnalytics}
-            formatDuration={formatDuration}
-            formatAnalyticsDate={formatAnalyticsDate}
-          />
+          <React.Suspense
+            fallback={
+              <div className="p-8 text-center text-slate-400">
+                <Icon name="loader" className="animate-spin mb-2 mx-auto" />
+                Loading Analytics...
+              </div>
+            }
+          >
+            <ReviewerAnalytics
+              reviewerAnalytics={reviewerAnalytics}
+              analyticsLoading={analyticsLoading}
+              loadReviewerAnalytics={loadReviewerAnalytics}
+              formatDuration={formatDuration}
+              formatAnalyticsDate={formatAnalyticsDate}
+              formatDate={formatAnalyticsDate}
+            />
+          </React.Suspense>
         )}
       </div>
 
       {/* API Configuration */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-indigo-500/30">
-        <h2
-          onClick={() => toggleSection("apiConfig")}
-          className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-indigo-400 mb-3 flex items-center gap-2"
-        >
-          <div className="flex items-center gap-2">
-            <Icon name="key" size={18} /> API Configuration
+      <React.Suspense
+        fallback={
+          <div className="p-4 text-center text-slate-500">
+            Loading Config...
           </div>
-          <Icon
-            name={collapsed.apiConfig ? "chevron-down" : "chevron-up"}
-            size={16}
-            className="ml-auto opacity-50"
-          />
-        </h2>
-        {!collapsed.apiConfig && (
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
-                {UI_LABELS.API_KEY_LABEL}
-              </label>
-              <div className="relative">
-                <input
-                  type={showApiKey ? "text" : "password"}
-                  name="apiKey"
-                  value={config.apiKey}
-                  onChange={safeHandleChange}
-                  placeholder="AIzaSy..."
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none pr-10"
-                />
-                <button
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-                >
-                  <Icon name={showApiKey ? "eye-off" : "eye"} size={16} />
-                </button>
-              </div>
-              <p className="text-[10px] text-slate-500 mt-1">
-                Required for generating questions. Stored locally.
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
-                {UI_LABELS.SHEET_URL_LABEL}
-              </label>
-              <input
-                type="text"
-                name="sheetUrl"
-                value={config.sheetUrl}
-                onChange={safeHandleChange}
-                placeholder="https://script.google.com/..."
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 outline-none"
-              />
-              <p className="text-[10px] text-slate-500 mt-1">
-                Required for Load/Export to Sheets.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
-                  Creator Name
-                </label>
-                <input
-                  type="text"
-                  name="creatorName"
-                  value={config.creatorName}
-                  onChange={safeHandleChange}
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
-                  Reviewer Name
-                </label>
-                <input
-                  type="text"
-                  name="reviewerName"
-                  value={config.reviewerName}
-                  onChange={safeHandleChange}
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-indigo-500 outline-none"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        }
+      >
+        <ApiConfig
+          config={config}
+          onChange={safeHandleChange}
+          showApiKey={showApiKey}
+          setShowApiKey={setShowApiKey}
+          isCollapsed={collapsed.apiConfig}
+          onToggle={() => toggleSection("apiConfig")}
+          uiLabels={UI_LABELS}
+        />
+      </React.Suspense>
 
       {/* Custom Tags */}
       <div className="bg-slate-800 rounded-lg p-4 border border-orange-500/30">
@@ -871,20 +740,27 @@ const AdminPanel = ({
           />
         </h2>
         {!collapsed.customTags && (
-          <>
-            <p className="text-xs text-slate-500 mb-3">
-              Create custom tags to focus question generation on specific topics
-              within each discipline.
-            </p>
-            <TagManager
-              discipline={config.discipline}
-              customTags={customTags || {}}
-              onSaveCustomTags={onSaveCustomTags}
-            />
-          </>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
+                Custom Tags (comma separated)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customTags}
+                  onChange={(e) => onSaveCustomTags(e.target.value)}
+                  placeholder="e.g. priority, v2_audit, check_contrast"
+                  className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-orange-500 outline-none"
+                />
+              </div>
+              <p className="text-[10px] text-slate-500 mt-1">
+                Tags available in the simplified tag selector
+              </p>
+            </div>
+          </div>
         )}
       </div>
-
       {/* Training Data Export - Super Admin Only */}
       {isSuperAdmin && (
         <div className="bg-slate-800 rounded-lg p-4 border border-purple-500/30">
@@ -893,7 +769,7 @@ const AdminPanel = ({
             className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-purple-400 mb-3 flex items-center gap-2"
           >
             <div className="flex items-center gap-2">
-              <Icon name="database" size={18} /> Vertex AI Training Data
+              <Icon name="download" size={18} /> Training Data
             </div>
             <Icon
               name={collapsed.trainingData ? "chevron-down" : "chevron-up"}
@@ -902,51 +778,27 @@ const AdminPanel = ({
             />
           </h2>
           {!collapsed.trainingData && (
-            <>
-              <div className="flex gap-3 mb-2">
-                <button
-                  onClick={() => downloadTrainingData(true)}
-                  className="flex-1 px-3 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-200 text-xs font-bold rounded border border-purple-700/50 transition-colors flex items-center justify-center gap-2"
-                  title="Download questions with >75% score"
-                >
-                  <Icon name="download" size={14} />
-                  Download Good Data
-                </button>
-                <button
-                  onClick={() => downloadTrainingData(false)}
-                  className="flex-1 px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 text-slate-400 text-xs font-bold rounded border border-slate-600/50 transition-colors flex items-center justify-center gap-2"
-                  title="Download questions with <75% score"
-                >
-                  <Icon name="download" size={14} />
-                  Download Bad Data
-                </button>
-              </div>
+            <div className="space-y-3">
               <button
-                onClick={() => {
-                  const count = downloadTrainingData("all");
-                  showMessage(
-                    `Exported ${count} total questions for training`,
-                    3000
-                  );
-                }}
-                className="w-full px-3 py-2 bg-blue-900/20 hover:bg-blue-900/30 text-blue-400 rounded flex items-center justify-center gap-2 transition-colors text-xs font-bold border border-blue-900/30"
+                onClick={() => downloadTrainingData()}
+                className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold transition-all flex items-center justify-center gap-2"
               >
-                <Icon name="download" size={14} />
-                Export All Training Data
+                <Icon name="download" size={16} />
+                Download Full Training Dataset (JSON)
               </button>
-              <p className="text-[10px] text-slate-500 mt-2 text-center">
-                Exports JSONL format for Vertex AI fine-tuning.
+              <p className="text-xs text-slate-500 text-center">
+                exports all accepted questions in a format suitable for Gemini
+                fine-tuning
               </p>
-            </>
+            </div>
           )}
         </div>
       )}
-
       {/* Environment Info */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-cyan-500/30">
+      <div className="bg-slate-800 rounded-lg p-4 border border-slate-600/30">
         <h2
           onClick={() => toggleSection("envInfo")}
-          className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-cyan-400 mb-3 flex items-center gap-2"
+          className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-slate-400 mb-3 flex items-center gap-2"
         >
           <div className="flex items-center gap-2">
             <Icon name="server" size={18} /> Environment Info
@@ -1016,174 +868,13 @@ const AdminPanel = ({
           </>
         )}
       </div>
-
       {/* Database Management - Super Admin Only */}
       {isSuperAdmin && (
-        <div className="bg-slate-800 rounded-lg p-4 border border-red-500/30">
-          <h2
-            onClick={() => toggleSection("databaseMgmt")}
-            className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-red-400 mb-3 flex items-center gap-2"
-          >
-            <div className="flex items-center gap-2">
-              <Icon name="database" size={18} /> Database Management
-            </div>
-            <Icon
-              name={collapsed.databaseMgmt ? "chevron-down" : "chevron-up"}
-              size={16}
-              className="ml-auto opacity-50"
-            />
-          </h2>
-          {!collapsed.databaseMgmt && (
-            <>
-              <p className="text-xs text-slate-400 mb-4">
-                ⚠️ Danger Zone: These operations permanently delete data and
-                cannot be undone.
-              </p>
-
-              <div className="space-y-3">
-                {/* Translation Migration Button */}
-                <button
-                  onClick={async () => {
-                    if (
-                      !confirm(
-                        "🔗 Link Existing Translations?\n\nThis will:\n1. Find all translated questions (Chinese, Japanese, Korean, etc.)\n2. Match them with their English originals\n3. Ensure both share the same uniqueId\n4. Enable language switching\n\nThis is SAFE and won't delete any data.\n\nProceed?"
-                      )
-                    )
-                      return;
-
-                    try {
-                      showMessage(
-                        "🔄 Starting translation migration...",
-                        10000
-                      );
-
-                      // Call the Cloud Function
-                      const { migrateTranslationsViaCloudFunction } =
-                        await import("../services/cloudFunctions.js");
-
-                      const result =
-                        await migrateTranslationsViaCloudFunction();
-
-                      if (result.success) {
-                        const { stats } = result;
-                        showMessage(
-                          `✅ Migration complete!\n\n` +
-                            `📊 Statistics:\n` +
-                            `- Total questions: ${stats.totalQuestions}\n` +
-                            `- Total translations: ${stats.totalTranslations}\n` +
-                            `- Already linked: ${stats.alreadyLinked}\n` +
-                            `- Newly linked: ${stats.newlyLinked}\n` +
-                            `- Orphaned: ${stats.orphaned}\n\n` +
-                            `Refresh the page to see results.`,
-                          10000
-                        );
-                      }
-                    } catch (error) {
-                      showMessage(
-                        `❌ Migration failed: ${error.message}`,
-                        5000
-                      );
-                      console.error(error);
-                    }
-                  }}
-                  className="w-full px-4 py-3 bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-blue-700/50"
-                >
-                  <Icon name="link" size={16} />
-                  Link Existing Translations (Enable Language Switching)
-                </button>
-
-                <button
-                  onClick={async () => {
-                    if (
-                      !confirm(
-                        "⚠️ DELETE ALL QUESTIONS?\n\nThis will permanently delete ALL questions from the database for ALL users.\n\nThis action CANNOT be undone!\n\nType 'DELETE' to confirm."
-                      )
-                    )
-                      return;
-
-                    const confirmText = prompt("Type DELETE to confirm:");
-                    if (confirmText !== "DELETE") {
-                      showMessage("❌ Deletion cancelled", 3000);
-                      return;
-                    }
-
-                    try {
-                      showMessage("🗑️ Deleting all questions...", 10000);
-                      const count = await clearAllQuestionsFromFirestore();
-                      showMessage(
-                        `✅ Deleted ${count} questions from database`,
-                        5000
-                      );
-                    } catch (error) {
-                      showMessage(`❌ Delete failed: ${error.message}`, 5000);
-                      console.error(error);
-                    }
-                  }}
-                  className="w-full px-4 py-3 bg-red-900/30 hover:bg-red-900/50 text-red-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-red-700/50"
-                >
-                  <Icon name="trash-2" size={16} />
-                  Delete All Questions (ALL USERS)
-                </button>
-
-                <button
-                  onClick={async () => {
-                    if (
-                      !confirm(
-                        "Clear all rejected questions from the database?\n\nThis will only delete questions with status='rejected'."
-                      )
-                    )
-                      return;
-
-                    try {
-                      showMessage("🗑️ Clearing rejected questions...", 10000);
-                      // This would need a Cloud Function - for now just show message
-                      showMessage(
-                        "⚠️ Feature not yet implemented - needs Cloud Function",
-                        5000
-                      );
-                    } catch (error) {
-                      showMessage(`❌ Clear failed: ${error.message}`, 5000);
-                    }
-                  }}
-                  className="w-full px-4 py-3 bg-orange-900/30 hover:bg-orange-900/50 text-orange-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-orange-700/50"
-                >
-                  <Icon name="filter" size={16} />
-                  Clear Rejected Questions
-                </button>
-
-                <button
-                  onClick={async () => {
-                    if (
-                      !confirm(
-                        "🧹 Cleanup Deleted Questions?\n\nThis will permanently remove all questions with status 'deleted' across ALL disciplines.\n\nThis is a maintenance operation to resolve count discrepancies.\n\nProceed?"
-                      )
-                    )
-                      return;
-
-                    try {
-                      showMessage("🧹 Cleaning up deleted questions...", 10000);
-                      const count =
-                        await deleteSoftDeletedQuestionsFromFirestore();
-                      showMessage(
-                        `✅ Successfully removed ${count} ghost questions.`,
-                        5000
-                      );
-                      // Clear local cache if needed (page refresh is safest)
-                      setTimeout(() => window.location.reload(), 2000);
-                    } catch (error) {
-                      showMessage(`❌ Cleanup failed: ${error.message}`, 5000);
-                      console.error(error);
-                    }
-                  }}
-                  className="w-full px-4 py-3 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-emerald-700/50"
-                >
-                  <Icon name="trash" size={16} />
-                  Cleanup Deleted Questions (Release Quota)
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+        <DatabaseManagement
+          showMessage={showMessage}
+          isCollapsed={collapsed.databaseMgmt}
+          onToggle={() => toggleSection("databaseMgmt")}
+        />
       )}
     </div>
   );

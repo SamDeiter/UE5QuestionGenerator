@@ -92,12 +92,7 @@ const QuestionActions = ({
   isLocked = false,
   lockedBy = null,
   onUpdateStatus,
-  _onCritique,
-  _onExplain,
-  _onVariate,
   onDelete,
-  onUpdateQuestion,
-  _isProcessing,
   appMode,
   showMessage,
 }) => {
@@ -117,27 +112,10 @@ const QuestionActions = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Handle human verification
-  const _handleVerify = () => {
-    const reviewerName = localStorage.getItem("ue5_gen_config")
-      ? JSON.parse(localStorage.getItem("ue5_gen_config")).creatorName ||
-        "Unknown"
-      : "Unknown";
-
-    onUpdateQuestion(q.id, {
-      ...q,
-      humanVerified: true,
-      humanVerifiedAt: new Date().toISOString(),
-      humanVerifiedBy: reviewerName,
-    });
-    if (showMessage)
-      showMessage("✓ Question verified! You can now accept it.", 3000);
-  };
-
   // Handle accept with verification and score check
-    // Get accept button styling based on score
-    // Get accept button tooltip
-    if (appMode === "database") return null;
+  // Get accept button styling based on score
+  // Get accept button tooltip
+  if (appMode === "database") return null;
 
   return (
     <div className="flex items-center gap-2">

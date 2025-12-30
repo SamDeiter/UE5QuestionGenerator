@@ -247,7 +247,7 @@ const App = () => {
     setCurrentReviewIndex,
     sortBy,
     setSortBy,
-    contextFilteredQuestions: contextCounts,
+    contextCounts,
     filteredQuestions,
     uniqueFilteredQuestions,
   } = useFiltering({

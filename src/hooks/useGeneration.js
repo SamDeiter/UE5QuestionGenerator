@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+ 
 import { useState } from "react";
 import { useQuestionTranslation } from "./generation/useQuestionTranslation";
 import { useQuestionCritique } from "./generation/useQuestionCritique";

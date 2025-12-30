@@ -29,7 +29,6 @@ const Header = ({
   creatorName,
   appMode,
   tokenUsage = { inputTokens: 0, outputTokens: 0, totalCost: 0 },
-  _onRestartTutorial,
   onStartTutorial,
   isAdmin,
   onSignOut,

@@ -14,9 +14,6 @@ const LanguageControls = ({
   lockedBy = null, // NEW: Lock owner info
 }) => {
   const [loadingLang, setLoadingLang] = useState(null);
-  const [, setTranslateMenuOpen] = useState(false);
-  const translateMenuRef = useRef(null);
-
   // Translation generation: Only admins can create new translations
   // Non-admins (reviewers, users) can only view/switch existing translations
   const canTranslate =
@@ -24,20 +21,6 @@ const LanguageControls = ({
     q.sourceUrl &&
     !q.invalidUrl &&
     userRole === "admin"; // Only admins can generate new translations
-
-  // Close translate menu on click outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        translateMenuRef.current &&
-        !translateMenuRef.current.contains(event.target)
-      ) {
-        setTranslateMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Don't show translation controls if requirements aren't met - REMOVED to allow viewing current language
   // if (!canTranslate) {
