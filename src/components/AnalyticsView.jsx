@@ -18,7 +18,7 @@ import SafeResponsiveContainer from "./analytics/SafeResponsiveContainer";
 import { format } from "date-fns";
 import { getAnalytics, getTokenStats } from "../utils/analyticsStore";
 import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
-import { CATEGORY_KEYS as _CATEGORY_KEYS } from "../utils/constants";
+// CATEGORY_KEYS import removed - was unused
 
 // Import extracted components
 import StatCard from "./analytics/StatCard";

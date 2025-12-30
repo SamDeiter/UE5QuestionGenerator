@@ -135,77 +135,9 @@ const QuestionActions = ({
   };
 
   // Handle accept with verification and score check
-  const _handleAccept = () => {
-    if (q.status === "accepted") {
-      if (showMessage) showMessage("Question is already accepted.");
-      return;
-    }
-
-    // Require human verification before accepting
-    if (!q.humanVerified) {
-      if (showMessage)
-        showMessage(
-          "⚠️ Please verify source & answer first (click the shield icon)",
-          4000
-        );
-      return;
-    }
-
-    // Check critique score if available - must be 70+ to accept
-    const score = q.critiqueScore;
-    if (score !== undefined && score !== null && score < 70) {
-      if (showMessage)
-        showMessage(
-          `⛔ Score too low (${score}/100). Must be 70+ to accept. Apply AI suggestions to improve.`,
-          4000
-        );
-      return;
-    }
-
-    onUpdateStatus(q.id, "accepted");
-  };
-
-  // Get accept button styling based on score
-  const _getAcceptButtonStyle = () => {
-    if (q.status === "accepted") {
-      return "bg-green-600 text-white shadow-lg shadow-green-900/50";
-    }
-
-    if (!q.humanVerified) {
-      return "bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed";
-    }
-
-    const score = q.critiqueScore;
-
-    // Score-based styling
-    if (score !== undefined && score !== null) {
-      if (score < 70) {
-        return "bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed border border-red-900/50";
-      }
-      // High score - ready to accept
-      return "bg-slate-800 text-green-500 hover:bg-green-900/20 hover:text-green-400 border border-green-700/50";
-    }
-
-    // No score yet - normal state
-    return "bg-slate-800 text-slate-500 hover:bg-green-900/20 hover:text-green-500";
-  };
-
-  // Get accept button tooltip
-  const _getAcceptTooltip = () => {
-    if (q.status === "accepted") return "Already accepted";
-    if (!q.humanVerified) return "Verify first before accepting";
-
-    const score = q.critiqueScore;
-    if (score !== undefined && score !== null) {
-      if (score < 70)
-        return `Score too low (${score}/100). Must be 70+ to accept.`;
-      return `Good score (${score}/100). Ready to accept!`;
-    }
-
-    return "Accept question";
-  };
-
-  if (appMode === "database") return null;
+    // Get accept button styling based on score
+    // Get accept button tooltip
+    if (appMode === "database") return null;
 
   return (
     <div className="flex items-center gap-2">

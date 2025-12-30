@@ -52,13 +52,7 @@ const QuestionItem = ({
   }, [showMessage]);
 
   // Auto-lock on view (review mode) - prevents concurrent reviews
-  const {
-    lockStatus: _lockStatus,
-    lockedBy,
-    isLocked,
-    hasLock,
-    isAcquiring: _isAcquiring, // Unused but kept for potential future use
-  } = useEditLock(
+  const { lockedBy, isLocked, hasLock } = useEditLock(
     q.id,
     userId,
     userEmail,

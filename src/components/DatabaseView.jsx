@@ -26,9 +26,7 @@ const DatabaseView = ({
   isAdmin = false, // Whether current user is admin
   userRole = "user", // NEW
 }) => {
-  const [_isSyncing, _setIsSyncing] = useState(false);
-  const [_syncProgress, _setSyncProgress] = useState(0);
-  const [_loadMenuOpen, setLoadMenuOpen] = useState(false);
+      const [, setLoadMenuOpen] = useState(false);
   const loadMenuRef = useRef(null);
 
   // PERFORMANCE: Track how many items to render (windowed rendering)

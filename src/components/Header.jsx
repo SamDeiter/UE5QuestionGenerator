@@ -35,7 +35,7 @@ const Header = ({
   onSignOut,
   user, // Add user prop for super admin check
 }) => {
-  const _showTutorialCenter = useState(false);
+  // Tutorial center state removed - was unused
 
   // Super Admin check - case-insensitive with trim
   const userEmail = user?.email?.toLowerCase();

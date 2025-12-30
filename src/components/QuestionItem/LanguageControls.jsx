@@ -14,7 +14,7 @@ const LanguageControls = ({
   lockedBy = null, // NEW: Lock owner info
 }) => {
   const [loadingLang, setLoadingLang] = useState(null);
-  const [_translateMenuOpen, setTranslateMenuOpen] = useState(false);
+  const [, setTranslateMenuOpen] = useState(false);
   const translateMenuRef = useRef(null);
 
   // Translation generation: Only admins can create new translations

@@ -58,7 +58,7 @@ const App = () => {
   // ========================================================================
   // HOOKS - Toast Notifications
   // ========================================================================
-  const { toasts, addToast: _addToast, removeToast, showMessage } = useToast();
+  const { toasts, removeToast, showMessage } = useToast();
 
   // ========================================================================
   // HOOKS - Auth, Custom Tags, and Compliance (extracted to useAuth)
@@ -72,14 +72,12 @@ const App = () => {
     registrationLoading,
     markAsRegistered,
     customTags,
-    setCustomTags: _setCustomTags,
     handleSaveCustomTags,
     tokenUsage,
     showTerms,
     setShowTerms,
     showAgeGate,
     setShowAgeGate,
-    termsAccepted: _termsAccepted,
     setTermsAccepted,
   } = useAuth(showMessage);
 
@@ -187,8 +185,7 @@ const App = () => {
     approvedCounts,
     approvedCount,
 
-    pendingCount: _pendingCount,
-    totalApproved,
+    pendingCount: totalApproved,
     overallPercentage,
     isTargetMet,
     maxBatchSize,
@@ -221,24 +218,16 @@ const App = () => {
   const [status, setStatus] = useState("");
 
   // 4. File Handling
-  const {
-    _files,
-    _setFiles,
-    fileInputRef,
-    _isDetecting,
-    handleFileChange,
-    _removeFile,
-    getFileContext,
-    handleDetectTopics,
-  } = useFileHandler(
-    config,
-    setConfig,
-    addQuestionsToState,
-    showMessage,
-    setStatus,
-    isApiReady,
-    effectiveApiKey
-  );
+  const { fileInputRef, handleFileChange, getFileContext, handleDetectTopics } =
+    useFileHandler(
+      config,
+      setConfig,
+      addQuestionsToState,
+      showMessage,
+      setStatus,
+      isApiReady,
+      effectiveApiKey
+    );
 
   // 5. Filtering & Search (extracted to useFiltering hook)
   const {
@@ -258,8 +247,7 @@ const App = () => {
     setCurrentReviewIndex,
     sortBy,
     setSortBy,
-    contextFilteredQuestions: _contextFilteredQuestions,
-    contextCounts,
+    contextFilteredQuestions: contextCounts,
     filteredQuestions,
     uniqueFilteredQuestions,
   } = useFiltering({
@@ -354,15 +342,11 @@ const App = () => {
 
   // 7. Modal State (extracted to useModalState hook)
   const {
-    showExportMenu: _showExportMenu,
-    setShowExportMenu,
+    showExportMenu: setShowExportMenu,
     showBulkExportModal,
     setShowBulkExportModal,
     showAnalytics,
     setShowAnalytics,
-    dataMenuOpen: _dataMenuOpen,
-    setDataMenuOpen: _setDataMenuOpen,
-    dataMenuRef: _dataMenuRef,
     showAdvancedConfig,
     setShowAdvancedConfig,
     showDangerZone,
@@ -427,7 +411,7 @@ const App = () => {
           );
 
           // Inline migration code (can't use dynamic import - not bundled by Vite)
-          const { db, auth: _auth } = await import("./services/firebase");
+          const { db } = await import("./services/firebase");
           const { collection, getDocs, doc, updateDoc } = await import(
             "firebase/firestore"
           );

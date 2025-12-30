@@ -74,7 +74,7 @@ export function useAuth(showMessage) {
                   role: adminResult.role || "admin",
                 };
               }
-            } catch (setupError) {
+            } catch {
               // setupInitialAdmin throws if email not whitelisted - this is expected
               console.log("ℹ️ Not a whitelisted admin email");
             }

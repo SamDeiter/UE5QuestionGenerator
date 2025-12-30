@@ -127,7 +127,7 @@ const AdminPanel = ({
     if (!confirm(`Revoke invite code: ${code}?`)) return;
 
     try {
-      const _result = await revokeInvite(code);
+      await revokeInvite(code);
 
       // Immediately remove invite from UI (optimistic update)
       setInvites((prevInvites) =>
@@ -158,7 +158,7 @@ const AdminPanel = ({
 
     try {
       const revokeUserFn = httpsCallable(functions, "revokeUserAccess");
-      const _result = await revokeUserFn({ userId });
+      await revokeUserFn({ userId });
 
       // Immediately remove user from UI (optimistic update)
       setUsers((prevUsers) => prevUsers.filter((u) => u.uid !== userId));
