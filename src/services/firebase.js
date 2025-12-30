@@ -117,6 +117,21 @@ if (typeof window !== "undefined") {
 
 // Process queued items when back online
 const processOfflineQueue = async () => {
+  // Re-hydrate from localStorage in case items were added by another session/tab
+  // or if the module loaded before localStorage was populated
+  try {
+    const savedQueue = localStorage.getItem("ue5_offline_queue");
+    if (savedQueue) {
+      const parsed = JSON.parse(savedQueue);
+      if (parsed.length > offlineQueue.length) {
+        console.log(`📦 Re-hydrated ${parsed.length} items from localStorage`);
+        offlineQueue = parsed;
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to re-hydrate queue:", e);
+  }
+
   if (syncInProgress || offlineQueue.length === 0) return;
 
   syncInProgress = true;
