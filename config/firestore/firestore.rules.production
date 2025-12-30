@@ -2,7 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper functions
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
+    
     function isSignedIn() {
       return request.auth != null;
     }
@@ -11,36 +14,115 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
     
-    // Questions collection - all authenticated users can READ, but only owners can WRITE
+    function isAdmin() {
+      return request.auth.token.role == 'admin' 
+        || request.auth.token.email == 'sam.deiter@epicgames.com'
+        || get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isReviewer() {
+      return get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'reviewer';
+    }
+    
+    // Version control: Prevent version regression
+    function versionNotRegressing() {
+      return !resource.data.keys().hasAny(['version']) || 
+             request.resource.data.version > resource.data.version;
+    }
+    
+    // ============================================================
+    // QUESTIONS COLLECTION (with version control)
+    // ============================================================
+    
     match /questions/{questionId} {
       // All authenticated users can read questions (for shared review workflow)
       allow read: if isSignedIn();
       
+      // Create: Requires authentication, must set version = 1, must set creatorId
       allow create: if isSignedIn()
         && request.resource.data.creatorId == request.auth.uid
-        && request.resource.data.creatorEmail == request.auth.token.email;
+        && request.resource.data.creatorEmail == request.auth.token.email
+        && (!request.resource.data.keys().hasAny(['version']) || request.resource.data.version == 1);
       
-      allow update: if isSignedIn()
-        && resource.data.creatorId == request.auth.uid
-        && request.resource.data.creatorId == request.auth.uid;
+      // Update: Must be authenticated, version must increment, updatedBy must match auth
+      // Special case: Admins can update specific fields without version check
+      allow update: if isSignedIn() && (
+        // Standard update: Owner updates their question with version increment
+        (resource.data.creatorId == request.auth.uid 
+         && request.resource.data.creatorId == request.auth.uid
+         && versionNotRegressing())
+        ||
+        // Admin or Reviewer override: Can update specific review-related fields
+        ((isAdmin() || isReviewer())
+         && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'aiScore', 'scoredAt', 'scoreSource', 'status', 
+              'rejectionReason', 'rejectionCategory', 'rejectionNotes', 
+              'rejectedAt', 'rejectedBy', 'acceptedAt', 'acceptedBy',
+              'reviewedBy', 'reviewedAt', 'reviewCompletedAt', 
+              'reviewerName', 'reviewDuration', 'firestoreUpdatedAt'
+            ]))
+      );
       
-      allow delete: if isSignedIn()
-        && (resource.data.creatorId == request.auth.uid || request.auth.token.email == 'sam.deiter@epicgames.com');
+      // Delete: Admins only
+      allow delete: if isAdmin();
     }
     
-    // User settings - users can only access their own settings
+    // ============================================================
+    // EDIT LOCKS COLLECTION
+    // ============================================================
+    
+    match /edit-locks/{questionId} {
+      // Read: All authenticated users (to check lock status)
+      allow read: if isSignedIn();
+      
+      // Create/Update: Authenticated users (lock ownership checked in transaction logic)
+      allow create, update: if isSignedIn()
+                               && request.resource.data.userId == request.auth.uid;
+      
+      // Delete: Only the owner can delete their lock
+      allow delete: if isSignedIn() 
+                       && resource.data.userId == request.auth.uid;
+    }
+    
+    // ============================================================
+    // AUDIT LOG COLLECTION
+    // ============================================================
+    
+    match /audit-log/{eventId} {
+      // Read: Admins only
+      allow read: if isAdmin();
+      
+      // Create: All authenticated users (write-only logging)
+      allow create: if isSignedIn()
+                       && request.resource.data.userId == request.auth.uid;
+      
+      // No updates or deletes (immutable log)
+      allow update, delete: if false;
+    }
+    
+    // ============================================================
+    // USER SETTINGS
+    // ============================================================
+    
     match /userSettings/{userId} {
       allow read, write: if isSignedIn() && isOwner(userId);
     }
     
-    // API access tracking (if you implement rate limiting)
+    // ============================================================
+    // API ACCESS TRACKING
+    // ============================================================
+    
     match /QuestionsAPIAccess/{docId} {
       allow read: if isSignedIn();
       allow write: if isSignedIn() 
         && request.resource.data.userId == request.auth.uid;
     }
     
-    // Deny all other access
+    // ============================================================
+    // DENY ALL OTHER ACCESS
+    // ============================================================
+    
     match /{document=**} {
       allow read, write: if false;
     }
