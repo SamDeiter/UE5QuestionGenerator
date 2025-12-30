@@ -334,10 +334,21 @@ export const useQuestionManager = (config, showMessage) => {
         // CRITICAL FIX: Accept/Reject operations don't acquire edit locks
         // so they can't use SaveGuardAgent (which requires locks).
         // Use direct Firestore save for status changes instead.
-        await saveQuestionToFirestore(updatedQ);
+        const saveResult = await saveQuestionToFirestore(updatedQ);
         updateQuestionInState(id, () => updatedQ);
 
-        if (
+        // FIX: Alert user if save was queued (offline/connection issue)
+        if (saveResult.queued) {
+          if (showMessage) {
+            showMessage(
+              "⚠️ Connection issue - your review is queued and will sync when connection is restored. Consider refreshing.",
+              6000
+            );
+          }
+          console.warn(
+            `[useQuestionManager] Save queued for ${id} - connection issue detected`
+          );
+        } else if (
           showMessage &&
           (newStatus === "accepted" || newStatus === "rejected")
         ) {

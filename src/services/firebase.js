@@ -174,7 +174,75 @@ if (typeof window !== "undefined") {
   setTimeout(() => {
     if (isOnline) processOfflineQueue();
   }, 3000);
+
+  // FIX 3: Periodic queue check - warn user if items are stuck
+  setInterval(() => {
+    if (offlineQueue.length > 0 && isOnline) {
+      console.warn(
+        `⚠️ [Queue Check] ${offlineQueue.length} items stuck in queue - attempting sync...`
+      );
+      processOfflineQueue();
+    }
+  }, 30000); // Check every 30 seconds
 }
+
+/**
+ * FIX 2: Refresh auth token proactively before critical saves
+ * Firebase tokens expire after ~1 hour. This forces a refresh.
+ * @returns {Promise<boolean>} true if token refreshed successfully
+ */
+export const refreshAuthToken = async () => {
+  try {
+    if (!auth.currentUser) {
+      console.warn("[Auth] No current user - cannot refresh token");
+      return false;
+    }
+    // Force token refresh
+    await auth.currentUser.getIdToken(true);
+    console.log("[Auth] Token refreshed successfully");
+    return true;
+  } catch (error) {
+    console.error("[Auth] Token refresh failed:", error);
+    return false;
+  }
+};
+
+/**
+ * Check if auth token is likely expired (heuristic based on last activity)
+ * @returns {boolean} true if token might be stale
+ */
+let lastAuthActivity = Date.now();
+export const markAuthActivity = () => {
+  lastAuthActivity = Date.now();
+};
+
+export const isAuthPotentiallyStale = () => {
+  const STALE_THRESHOLD_MS = 45 * 60 * 1000; // 45 minutes
+  return Date.now() - lastAuthActivity > STALE_THRESHOLD_MS;
+};
+
+/**
+ * Get detailed queue status for UI display
+ * @returns {Object} Queue status with item count and oldest item age
+ */
+export const getQueueDetails = () => {
+  if (offlineQueue.length === 0) return { count: 0, oldestAge: 0 };
+
+  const oldestTimestamp = Math.min(
+    ...offlineQueue.map((item) => item.timestamp)
+  );
+  const oldestAge = Math.round((Date.now() - oldestTimestamp) / 1000 / 60); // minutes
+
+  return {
+    count: offlineQueue.length,
+    oldestAge,
+    items: offlineQueue.map((item) => ({
+      id: item.question?.uniqueId?.slice(0, 8),
+      status: item.question?.status,
+      age: Math.round((Date.now() - item.timestamp) / 1000 / 60),
+    })),
+  };
+};
 
 export const signInWithGoogle = async () => {
   try {
@@ -323,6 +391,13 @@ export const saveQuestionToFirestore = async (question) => {
       notifyConnectionListeners();
       return { success: false, queued: true };
     }
+
+    // FIX 2: Proactively refresh auth token if it might be stale
+    if (isAuthPotentiallyStale() && auth.currentUser) {
+      console.log("[Save] Auth token might be stale - refreshing...");
+      await refreshAuthToken();
+    }
+    markAuthActivity(); // Track this save attempt
 
     await saveQuestionToFirestoreInternal(question);
     return { success: true, queued: false };
