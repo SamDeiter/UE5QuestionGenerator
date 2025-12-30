@@ -12,7 +12,6 @@ import React, { useState, useEffect } from "react";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app } from "../services/firebase";
 import Icon from "./Icon";
-import { downloadTrainingData } from "../utils/analyticsStore";
 import { UI_LABELS } from "../utils/constants";
 
 import {
@@ -27,6 +26,11 @@ const DatabaseManagement = React.lazy(() =>
 const ApiConfig = React.lazy(() => import("./Admin/ApiConfig"));
 const UserList = React.lazy(() => import("./Admin/UserList"));
 const InviteManagement = React.lazy(() => import("./Admin/InviteManagement"));
+const CustomTagsEditor = React.lazy(() => import("./Admin/CustomTagsEditor"));
+const EnvironmentInfo = React.lazy(() => import("./Admin/EnvironmentInfo"));
+const TrainingDataExport = React.lazy(() =>
+  import("./Admin/TrainingDataExport")
+);
 
 const functions = getFunctions(app, "us-central1");
 
@@ -372,150 +376,55 @@ const AdminPanel = ({
         />
       </React.Suspense>
 
-      {/* Custom Tags */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-orange-500/30">
-        <h2
-          onClick={() => toggleSection("customTags")}
-          className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-orange-400 mb-3 flex items-center gap-2"
-        >
-          <div className="flex items-center gap-2">
-            <Icon name="tag" size={18} /> Custom Tags
+      {/* Custom Tags - Extracted Component */}
+      <React.Suspense
+        fallback={
+          <div className="p-4 text-center text-slate-500">
+            <Icon name="loader" className="animate-spin mb-2" />
+            <p>Loading Custom Tags...</p>
           </div>
-          <Icon
-            name={collapsed.customTags ? "chevron-down" : "chevron-up"}
-            size={16}
-            className="ml-auto opacity-50"
-          />
-        </h2>
-        {!collapsed.customTags && (
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
-                Custom Tags (comma separated)
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customTags}
-                  onChange={(e) => onSaveCustomTags(e.target.value)}
-                  placeholder="e.g. priority, v2_audit, check_contrast"
-                  className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:border-orange-500 outline-none"
-                />
-              </div>
-              <p className="text-[10px] text-slate-500 mt-1">
-                Tags available in the simplified tag selector
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+        }
+      >
+        <CustomTagsEditor
+          customTags={customTags}
+          onSaveCustomTags={onSaveCustomTags}
+          isCollapsed={collapsed.customTags}
+          onToggle={() => toggleSection("customTags")}
+        />
+      </React.Suspense>
+
       {/* Training Data Export - Super Admin Only */}
       {isSuperAdmin && (
-        <div className="bg-slate-800 rounded-lg p-4 border border-purple-500/30">
-          <h2
-            onClick={() => toggleSection("trainingData")}
-            className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-purple-400 mb-3 flex items-center gap-2"
-          >
-            <div className="flex items-center gap-2">
-              <Icon name="download" size={18} /> Training Data
+        <React.Suspense
+          fallback={
+            <div className="p-4 text-center text-slate-500">
+              <Icon name="loader" className="animate-spin mb-2" />
+              <p>Loading Training Data...</p>
             </div>
-            <Icon
-              name={collapsed.trainingData ? "chevron-down" : "chevron-up"}
-              size={16}
-              className="ml-auto opacity-50"
-            />
-          </h2>
-          {!collapsed.trainingData && (
-            <div className="space-y-3">
-              <button
-                onClick={() => downloadTrainingData()}
-                className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded font-bold transition-all flex items-center justify-center gap-2"
-              >
-                <Icon name="download" size={16} />
-                Download Full Training Dataset (JSON)
-              </button>
-              <p className="text-xs text-slate-500 text-center">
-                exports all accepted questions in a format suitable for Gemini
-                fine-tuning
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-      {/* Environment Info */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-slate-600/30">
-        <h2
-          onClick={() => toggleSection("envInfo")}
-          className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-slate-400 mb-3 flex items-center gap-2"
+          }
         >
-          <div className="flex items-center gap-2">
-            <Icon name="server" size={18} /> Environment Info
-          </div>
-          <Icon
-            name={collapsed.envInfo ? "chevron-down" : "chevron-up"}
-            size={16}
-            className="ml-auto opacity-50"
+          <TrainingDataExport
+            isCollapsed={collapsed.trainingData}
+            onToggle={() => toggleSection("trainingData")}
           />
-        </h2>
-        {!collapsed.envInfo && (
-          <>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Firebase Project:</span>
-                <span className="text-slate-300 font-mono">
-                  {import.meta.env.VITE_FIREBASE_PROJECT_ID || "Not Set"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Environment:</span>
-                <span
-                  className={`font-bold ${
-                    import.meta.env.VITE_FIREBASE_PROJECT_ID?.includes("prod")
-                      ? "text-red-400"
-                      : "text-green-400"
-                  }`}
-                >
-                  {import.meta.env.VITE_FIREBASE_PROJECT_ID?.includes("prod")
-                    ? "🔴 PRODUCTION"
-                    : "🟢 DEVELOPMENT"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">API Mode:</span>
-                <span className="text-cyan-400">Cloud Functions</span>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-3 pt-3 border-t border-slate-700">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText("npm run dev:dev");
-                  showMessage(
-                    "Copied! Paste in terminal to switch to DEV environment.",
-                    3000
-                  );
-                }}
-                className="flex-1 px-2 py-1.5 bg-green-900/30 hover:bg-green-900/50 text-green-300 text-xs font-bold rounded border border-green-700/50 transition-colors flex items-center justify-center gap-1"
-              >
-                <Icon name="clipboard" size={12} />
-                Switch to DEV
-              </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText("npm run dev:prod");
-                  showMessage(
-                    "Copied! Paste in terminal to switch to PROD environment.",
-                    3000
-                  );
-                }}
-                className="flex-1 px-2 py-1.5 bg-red-900/30 hover:bg-red-900/50 text-red-300 text-xs font-bold rounded border border-red-700/50 transition-colors flex items-center justify-center gap-1"
-              >
-                <Icon name="clipboard" size={12} />
-                Switch to PROD
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+        </React.Suspense>
+      )}
+
+      {/* Environment Info - Extracted Component */}
+      <React.Suspense
+        fallback={
+          <div className="p-4 text-center text-slate-500">
+            <Icon name="loader" className="animate-spin mb-2" />
+            <p>Loading Environment Info...</p>
+          </div>
+        }
+      >
+        <EnvironmentInfo
+          showMessage={showMessage}
+          isCollapsed={collapsed.envInfo}
+          onToggle={() => toggleSection("envInfo")}
+        />
+      </React.Suspense>
       {/* Database Management - Super Admin Only */}
       {isSuperAdmin && (
         <DatabaseManagement
