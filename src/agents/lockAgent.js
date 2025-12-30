@@ -122,8 +122,17 @@ export class LockAgent {
 
       return result;
     } catch (error) {
-      console.error("[LockAgent] acquireLock failed:", error);
-      return { success: false, error: error.message };
+      const isNetwork = this._isNetworkError(error);
+      if (isNetwork) {
+        console.warn("[LockAgent] acquireLock network failure:", error.message);
+      } else {
+        console.error("[LockAgent] acquireLock failed:", error);
+      }
+      return { 
+        success: false, 
+        error: error.message, 
+        isNetworkError: isNetwork 
+      };
     }
   }
 
@@ -178,8 +187,18 @@ export class LockAgent {
 
       return result;
     } catch (error) {
-      console.error("[LockAgent] renewLock failed:", error);
-      return { success: false, error: error.message };
+      const isNetwork = this._isNetworkError(error);
+      // Suppress full error for network issues to avoid console spam during heartbeat
+      if (isNetwork) {
+        console.warn("[LockAgent] renewLock network failure:", error.message);
+      } else {
+        console.error("[LockAgent] renewLock failed:", error);
+      }
+      return { 
+        success: false, 
+        error: error.message, 
+        isNetworkError: isNetwork 
+      };
     }
   }
 
@@ -244,5 +263,14 @@ export class LockAgent {
       console.error("[LockAgent] checkLockStatus failed:", error);
       return { locked: false, error: error.message };
     }
+  }
+
+  _isNetworkError(error) {
+    const networkCodes = ['unavailable', 'deadline-exceeded', 'resource-exhausted', 'internal', 'unknown'];
+    return (
+      error.code && networkCodes.includes(error.code) ||
+      error.message?.includes('net::ERR_CONNECTION_CLOSED') ||
+      error.message?.includes('network')
+    );
   }
 }

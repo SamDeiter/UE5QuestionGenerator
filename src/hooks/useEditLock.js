@@ -93,6 +93,7 @@ export function useEditLock(
   const heartbeatRef = useRef(null);
   const lockAttemptedRef = useRef(false);
   const viewTimerRef = useRef(null);
+  const consecutiveFailuresRef = useRef(0);
 
   // Refs ONLY for cleanup/unmount logic (closures can be stale)
   const lockStatusRef = useRef(lockStatus);
@@ -179,15 +180,36 @@ export function useEditLock(
       const result = await lockAgent.renewLock(String(questionId));
 
       if (!result.success) {
-        console.warn("[useEditLock] Lock renewal failed:", result.error);
+        if (result.isNetworkError) {
+          consecutiveFailuresRef.current++;
+          console.warn(`[useEditLock] Lock renewal network failure (${consecutiveFailuresRef.current}):`, result.error);
+          
+          // Allow up to 3 consecutive network failures (approx 1.5 mins) before expiring
+          if (consecutiveFailuresRef.current >= 3) {
+            console.error("[useEditLock] Persistent network failure (3 attempts). Expiring lock.");
+            setLockStatus("expired");
+            if (onLockExpired) onLockExpired();
+            return result;
+          }
+          
+          // Return special success-like state for network retry
+          return { success: true, isRetrying: true };
+        }
+
+        console.warn("[useEditLock] Lock renewal failed (logic error):", result.error);
         setLockStatus("expired");
         if (onLockExpired) onLockExpired();
+      } else {
+        // Reset failure counter on success
+        consecutiveFailuresRef.current = 0;
       }
 
       return result;
     } catch (error) {
-      console.error("[useEditLock] Lock renewal error:", error);
+      // Uncaught errors still expire
+      console.error("[useEditLock] Lock renewal unexpected error:", error);
       setLockStatus("expired");
+      if (onLockExpired) onLockExpired();
       return { success: false, error: error.message };
     }
   }, [agents, questionId, onLockExpired]);
