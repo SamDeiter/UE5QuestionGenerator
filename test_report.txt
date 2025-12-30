@@ -1,0 +1,481 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.14 [39m[90mC:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator[39m
+
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:140:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:140:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should generate a question successfully
+The above error occurred in the <TestComponent> component:
+
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:329:5)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:195:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:195:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should not generate without creator name
+The above error occurred in the <TestComponent> component:
+
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:329:5)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:235:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:235:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should not generate without API key
+The above error occurred in the <TestComponent> component:
+
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:329:5)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:278:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:278:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should handle API errors gracefully
+The above error occurred in the <TestComponent> component:
+
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:329:5)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:326:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:326:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate variations of existing question
+The above error occurred in the <TestComponent> component:
+
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:329:5)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:374:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:374:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate explanation for question
+The above error occurred in the <TestComponent> component:
+
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:329:5)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:417:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:417:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate critique for question
+The above error occurred in the <TestComponent> component:
+
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:329:5)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:462:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:462:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Token Usage Tracking > should log token usage for successful generation
+The above error occurred in the <TestComponent> component:
+
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:329:5)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:512:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+    at useQuestionGenerator (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js:350:5)
+    at Module.useGeneration (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useGeneration.js:36:25)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/questionGeneration.integration.test.jsx:512:9
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:331:27)
+    at renderWithHooks (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:20103:13)
+    at beginWork (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\react-dom\cjs\react-dom.development.js:4164:14)
+    at HTMLUnknownElement.callTheUserObjectsOperation (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\generated\EventListener.js:26:30)
+    at innerInvokeEventListeners (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\jsdom\lib\jsdom\living\events\EventTarget-impl.js:360:16)
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Token Usage Tracking > should log failed generation attempts
+The above error occurred in the <TestComponent> component:
+
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:329:5)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+ [31mΓ¥»[39m src/__tests__/questionGeneration.integration.test.jsx [2m([22m[2m9 tests[22m[2m | [22m[31m9 failed[39m[2m)[22m[32m 52[2mms[22m[39m
+[31m       [31m├ù[31m should generate a question successfully[39m[32m 24[2mms[22m[39m
+[31m       [31m├ù[31m should not generate without creator name[39m[32m 4[2mms[22m[39m
+[31m       [31m├ù[31m should not generate without API key[39m[32m 6[2mms[22m[39m
+[31m       [31m├ù[31m should handle API errors gracefully[39m[32m 3[2mms[22m[39m
+[31m       [31m├ù[31m should generate variations of existing question[39m[32m 3[2mms[22m[39m
+[31m       [31m├ù[31m should generate explanation for question[39m[32m 2[2mms[22m[39m
+[31m       [31m├ù[31m should generate critique for question[39m[32m 2[2mms[22m[39m
+[31m       [31m├ù[31m should log token usage for successful generation[39m[32m 2[2mms[22m[39m
+[31m       [31m├ù[31m should log failed generation attempts[39m[32m 4[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 9 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should generate a question successfully
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+ Γ¥» useQuestionGenerator src/hooks/generation/useQuestionGenerator.js:350:5
+    348|     handleAutoCritique,
+    349|     handlePerformGeneration,
+    350|     prepareGenerationContext,
+       |     ^
+    351|   ]);
+    352| 
+ Γ¥» Module.useGeneration src/hooks/useGeneration.js:36:25
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:140:9
+ Γ¥» TestComponent node_modules/@testing-library/react/dist/pure.js:331:27
+ Γ¥» renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:15486:18
+ Γ¥» mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:20103:13
+ Γ¥» beginWork node_modules/react-dom/cjs/react-dom.development.js:21626:16
+ Γ¥» beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:27465:14
+ Γ¥» performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:26599:12
+ Γ¥» workLoopSync node_modules/react-dom/cjs/react-dom.development.js:26505:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/9]ΓÄ»
+
+ FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should not generate without creator name
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+ Γ¥» useQuestionGenerator src/hooks/generation/useQuestionGenerator.js:350:5
+    348|     handleAutoCritique,
+    349|     handlePerformGeneration,
+    350|     prepareGenerationContext,
+       |     ^
+    351|   ]);
+    352| 
+ Γ¥» Module.useGeneration src/hooks/useGeneration.js:36:25
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:195:9
+ Γ¥» TestComponent node_modules/@testing-library/react/dist/pure.js:331:27
+ Γ¥» renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:15486:18
+ Γ¥» mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:20103:13
+ Γ¥» beginWork node_modules/react-dom/cjs/react-dom.development.js:21626:16
+ Γ¥» beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:27465:14
+ Γ¥» performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:26599:12
+ Γ¥» workLoopSync node_modules/react-dom/cjs/react-dom.development.js:26505:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/9]ΓÄ»
+
+ FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should not generate without API key
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+ Γ¥» useQuestionGenerator src/hooks/generation/useQuestionGenerator.js:350:5
+    348|     handleAutoCritique,
+    349|     handlePerformGeneration,
+    350|     prepareGenerationContext,
+       |     ^
+    351|   ]);
+    352| 
+ Γ¥» Module.useGeneration src/hooks/useGeneration.js:36:25
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:235:9
+ Γ¥» TestComponent node_modules/@testing-library/react/dist/pure.js:331:27
+ Γ¥» renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:15486:18
+ Γ¥» mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:20103:13
+ Γ¥» beginWork node_modules/react-dom/cjs/react-dom.development.js:21626:16
+ Γ¥» beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:27465:14
+ Γ¥» performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:26599:12
+ Γ¥» workLoopSync node_modules/react-dom/cjs/react-dom.development.js:26505:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/9]ΓÄ»
+
+ FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Single Question Generation > should handle API errors gracefully
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+ Γ¥» useQuestionGenerator src/hooks/generation/useQuestionGenerator.js:350:5
+    348|     handleAutoCritique,
+    349|     handlePerformGeneration,
+    350|     prepareGenerationContext,
+       |     ^
+    351|   ]);
+    352| 
+ Γ¥» Module.useGeneration src/hooks/useGeneration.js:36:25
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:278:9
+ Γ¥» TestComponent node_modules/@testing-library/react/dist/pure.js:331:27
+ Γ¥» renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:15486:18
+ Γ¥» mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:20103:13
+ Γ¥» beginWork node_modules/react-dom/cjs/react-dom.development.js:21626:16
+ Γ¥» beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:27465:14
+ Γ¥» performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:26599:12
+ Γ¥» workLoopSync node_modules/react-dom/cjs/react-dom.development.js:26505:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[4/9]ΓÄ»
+
+ FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate variations of existing question
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+ Γ¥» useQuestionGenerator src/hooks/generation/useQuestionGenerator.js:350:5
+    348|     handleAutoCritique,
+    349|     handlePerformGeneration,
+    350|     prepareGenerationContext,
+       |     ^
+    351|   ]);
+    352| 
+ Γ¥» Module.useGeneration src/hooks/useGeneration.js:36:25
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:326:9
+ Γ¥» TestComponent node_modules/@testing-library/react/dist/pure.js:331:27
+ Γ¥» renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:15486:18
+ Γ¥» mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:20103:13
+ Γ¥» beginWork node_modules/react-dom/cjs/react-dom.development.js:21626:16
+ Γ¥» beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:27465:14
+ Γ¥» performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:26599:12
+ Γ¥» workLoopSync node_modules/react-dom/cjs/react-dom.development.js:26505:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[5/9]ΓÄ»
+
+ FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate explanation for question
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+ Γ¥» useQuestionGenerator src/hooks/generation/useQuestionGenerator.js:350:5
+    348|     handleAutoCritique,
+    349|     handlePerformGeneration,
+    350|     prepareGenerationContext,
+       |     ^
+    351|   ]);
+    352| 
+ Γ¥» Module.useGeneration src/hooks/useGeneration.js:36:25
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:374:9
+ Γ¥» TestComponent node_modules/@testing-library/react/dist/pure.js:331:27
+ Γ¥» renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:15486:18
+ Γ¥» mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:20103:13
+ Γ¥» beginWork node_modules/react-dom/cjs/react-dom.development.js:21626:16
+ Γ¥» beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:27465:14
+ Γ¥» performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:26599:12
+ Γ¥» workLoopSync node_modules/react-dom/cjs/react-dom.development.js:26505:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[6/9]ΓÄ»
+
+ FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate critique for question
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+ Γ¥» useQuestionGenerator src/hooks/generation/useQuestionGenerator.js:350:5
+    348|     handleAutoCritique,
+    349|     handlePerformGeneration,
+    350|     prepareGenerationContext,
+       |     ^
+    351|   ]);
+    352| 
+ Γ¥» Module.useGeneration src/hooks/useGeneration.js:36:25
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:417:9
+ Γ¥» TestComponent node_modules/@testing-library/react/dist/pure.js:331:27
+ Γ¥» renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:15486:18
+ Γ¥» mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:20103:13
+ Γ¥» beginWork node_modules/react-dom/cjs/react-dom.development.js:21626:16
+ Γ¥» beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:27465:14
+ Γ¥» performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:26599:12
+ Γ¥» workLoopSync node_modules/react-dom/cjs/react-dom.development.js:26505:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[7/9]ΓÄ»
+
+ FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Token Usage Tracking > should log token usage for successful generation
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+ Γ¥» useQuestionGenerator src/hooks/generation/useQuestionGenerator.js:350:5
+    348|     handleAutoCritique,
+    349|     handlePerformGeneration,
+    350|     prepareGenerationContext,
+       |     ^
+    351|   ]);
+    352| 
+ Γ¥» Module.useGeneration src/hooks/useGeneration.js:36:25
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:462:9
+ Γ¥» TestComponent node_modules/@testing-library/react/dist/pure.js:331:27
+ Γ¥» renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:15486:18
+ Γ¥» mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:20103:13
+ Γ¥» beginWork node_modules/react-dom/cjs/react-dom.development.js:21626:16
+ Γ¥» beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:27465:14
+ Γ¥» performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:26599:12
+ Γ¥» workLoopSync node_modules/react-dom/cjs/react-dom.development.js:26505:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[8/9]ΓÄ»
+
+ FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Token Usage Tracking > should log failed generation attempts
+ReferenceError: Cannot access 'prepareGenerationContext' before initialization
+ Γ¥» useQuestionGenerator src/hooks/generation/useQuestionGenerator.js:350:5
+    348|     handleAutoCritique,
+    349|     handlePerformGeneration,
+    350|     prepareGenerationContext,
+       |     ^
+    351|   ]);
+    352| 
+ Γ¥» Module.useGeneration src/hooks/useGeneration.js:36:25
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:512:9
+ Γ¥» TestComponent node_modules/@testing-library/react/dist/pure.js:331:27
+ Γ¥» renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:15486:18
+ Γ¥» mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:20103:13
+ Γ¥» beginWork node_modules/react-dom/cjs/react-dom.development.js:21626:16
+ Γ¥» beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:27465:14
+ Γ¥» performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:26599:12
+ Γ¥» workLoopSync node_modules/react-dom/cjs/react-dom.development.js:26505:5
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[9/9]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m9 failed[39m[22m[90m (9)[39m
+[2m   Start at [22m 15:22:50
+[2m   Duration [22m 1.58s[2m (transform 240ms, setup 128ms, import 380ms, tests 52ms, environment 798ms)[22m
+

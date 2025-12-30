@@ -148,11 +148,11 @@ describe("Question Generation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
           mockSetShowNameModal,
-          mockSetShowAdvancedConfig,
           mockSetShowApiError,
           mockSetShowHistory,
           translationMap,
@@ -203,11 +203,11 @@ describe("Question Generation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
           mockSetShowNameModal,
-          mockSetShowAdvancedConfig,
           mockSetShowApiError,
           mockSetShowHistory,
           translationMap,
@@ -243,6 +243,7 @@ describe("Question Generation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
@@ -285,6 +286,7 @@ describe("Question Generation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
@@ -307,7 +309,7 @@ describe("Question Generation Integration Tests", () => {
       // Should show error message
       expect(mockShowMessage).toHaveBeenCalledWith(
         expect.stringContaining("Network timeout"),
-        10000
+        4000
       );
 
       // Should set error status
@@ -332,6 +334,7 @@ describe("Question Generation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
@@ -359,10 +362,10 @@ describe("Question Generation Integration Tests", () => {
       );
 
       // Verify variations were added
-      expect(mockUpdateQuestionInState).toHaveBeenCalled();
+      expect(mockAddQuestionsToState).toHaveBeenCalled();
       expect(mockShowMessage).toHaveBeenCalledWith(
         expect.stringContaining("variations"),
-        1500
+        1000
       );
     });
 
@@ -379,11 +382,11 @@ describe("Question Generation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
           mockSetShowNameModal,
-          mockSetShowAdvancedConfig,
           mockSetShowApiError,
           mockSetShowHistory,
           translationMap,
@@ -422,11 +425,11 @@ describe("Question Generation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
           mockSetShowNameModal,
-          mockSetShowAdvancedConfig,
           mockSetShowApiError,
           mockSetShowHistory,
           translationMap,
@@ -467,11 +470,11 @@ describe("Question Generation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
           mockSetShowNameModal,
-          mockSetShowAdvancedConfig,
           mockSetShowApiError,
           mockSetShowHistory,
           translationMap,
@@ -517,11 +520,11 @@ describe("Question Generation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
           mockSetShowNameModal,
-          mockSetShowAdvancedConfig,
           mockSetShowApiError,
           mockSetShowHistory,
           translationMap,

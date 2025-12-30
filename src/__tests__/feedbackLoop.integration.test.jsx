@@ -125,6 +125,7 @@ describe("Feedback Loop Integration Tests", () => {
         mockHandlers.mockCheckAndStoreQuestions,
         mockHandlers.mockAddQuestionsToState,
         mockHandlers.mockUpdateQuestionInState,
+        vi.fn(), // updateAllVariantsInState
         mockHandlers.mockHandleLanguageSwitch,
         mockShowMessage,
         mockSetStatus,
@@ -175,6 +176,7 @@ describe("Feedback Loop Integration Tests", () => {
         mockHandlers.mockCheckAndStoreQuestions,
         mockHandlers.mockAddQuestionsToState,
         mockHandlers.mockUpdateQuestionInState,
+        vi.fn(), // updateAllVariantsInState
         mockHandlers.mockHandleLanguageSwitch,
         mockShowMessage,
         mockSetStatus,

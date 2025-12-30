@@ -1,0 +1,511 @@
+
+> ue5-question-generator@2.2.10 test
+> vitest --run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.14 [39m[90mC:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator[39m
+
+[90mstdout[2m | functions/test/invite.test.js
+[22m[39mΓ£à All invite system tests defined. Run with: npm test
+
+ [32mΓ£ô[39m functions/test/invite.test.js [2m([22m[2m25 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/questionFilters.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/tokenCounter.test.js [2m([22m[2m23 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+Not implemented: Window's open() method
+ [32mΓ£ô[39m src/utils/questionHelpers.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+Not implemented: Window's open() method
+ [32mΓ£ô[39m src/services/googleSheets.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/helpers.test.js [2m([22m[2m14 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/fileProcessor.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstdout[2m | src/__tests__/debug.test.js[2m > [22m[2mDebug CSV[2m > [22m[2mshould parse csv
+[22m[39mContent: ID,UniqueId,Discipline,Type,Difficulty,Question,OptionA,OptionB,OptionC,OptionD,CorrectLetter,DateAdded,SourceURL,SourceExcerpt,CreatorName,ReviewerName,Language
+1,uid-001,Graphics,Multiple Choice,Easy,What is UE5?,Game Engine,Car,Food,Planet,A,2024-01-01,,,TestUser,,English
+Result: [
+  {
+    "id": 1767126875700.0151,
+    "uniqueId": "uid-001",
+    "discipline": "Graphics",
+    "type": "Multiple Choice",
+    "difficulty": "Easy",
+    "question": "What is UE5?",
+    "options": {
+      "A": "Game Engine",
+      "B": "Car",
+      "C": "Food",
+      "D": "Planet"
+    },
+    "correct": "A",
+    "sourceUrl": "",
+    "sourceExcerpt": "",
+    "creatorName": "TestUser",
+    "reviewerName": "",
+    "status": "accepted",
+    "language": "English"
+  }
+]
+
+ [32mΓ£ô[39m src/__tests__/debug.test.js [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+[90mstdout[2m | src/utils/exportUtils.test.js[2m > [22m[2mexportUtils[2m > [22m[2mgetCSVContent[2m > [22m[2mhandles missing optional fields
+[22m[39mDEBUG CSV ROW: "1","u1","Tech Art","Multiple Choice","Easy","Q1","A","B","","","A","2025-12-30","","Excerpt","Unknown","No","","","Sam","Rev","English","","","","pending","",""
+
+ [32mΓ£ô[39m src/utils/exportUtils.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/scormExporter.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/importExport.integration.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[32m 120[2mms[22m[39m
+[90mstdout[2m | src/__tests__/feedbackLoop.integration.test.jsx[2m > [22m[2mFeedback Loop Integration Tests[2m > [22m[2mshould include rejected questions in the system prompt
+[22m[39m≡ƒöì [geminiSecure] Checking authentication: {
+  isAuthenticated: [33mfalse[39m,
+  hasEffectiveKey: [33mtrue[39m,
+  effectiveKeyLength: [33m12[39m
+}
+Γ¥ô User not authenticated - using direct API
+≡ƒôí Calling direct API with key: test-api-k...
+
+stderr | src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should translate a question to target language
+JSON parse failed, trying parseQuestions fallback SyntaxError: Unexpected token '|', "| ID | Dis"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Object.handleTranslateSingle (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionTranslation.js:61:33)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/translation.integration.test.jsx:143:9
+
+[90mstdout[2m | src/__tests__/feedbackLoop.integration.test.jsx[2m > [22m[2mFeedback Loop Integration Tests[2m > [22m[2mshould NOT include rejected questions from other disciplines
+[22m[39m≡ƒöì [geminiSecure] Checking authentication: {
+  isAuthenticated: [33mfalse[39m,
+  hasEffectiveKey: [33mtrue[39m,
+  effectiveKeyLength: [33m12[39m
+}
+Γ¥ô User not authenticated - using direct API
+≡ƒôí Calling direct API with key: test-api-k...
+
+ [32mΓ£ô[39m src/__tests__/feedbackLoop.integration.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[32m 236[2mms[22m[39m
+stderr | src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should preserve question metadata during translation
+JSON parse failed, trying parseQuestions fallback SyntaxError: Unexpected token '|', "| ID | Dis"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Object.handleTranslateSingle (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionTranslation.js:61:33)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/translation.integration.test.jsx:207:9
+
+stderr | src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should handle translation errors gracefully
+Translation error: Error: Translation failed
+    at Module.simulateError (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/mocks/gemini.mock.js:239:41)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/translation.integration.test.jsx:228:18
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:919:26
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1244:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1210:10)
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1654:37
+    at Traces.$ (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/traces.U4xDYhzZ.js:115:27)
+    at trace (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/test.DqQZzsWf.js:234:21)
+
+ [32mΓ£ô[39m src/__tests__/Header.test.jsx [2m([22m[2m18 tests[22m[2m)[22m[33m 391[2mms[22m[39m
+[90mstdout[2m | src/components/QuestionItem.test.jsx[2m > [22m[2mQuestionItem[2m > [22m[2mrenders question text and metadata correctly
+[22m[39m[useEditLock] Reusing existing lock from global state
+[useEditLock] Starting heartbeat for 123
+
+stderr | src/components/QuestionItem.test.jsx > QuestionItem > renders question text and metadata correctly
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+
+[90mstdout[2m | src/components/QuestionItem.test.jsx[2m > [22m[2mQuestionItem[2m > [22m[2mrenders question text and metadata correctly
+[22m[39m[useEditLock] Stopping heartbeat for 123
+[useEditLock] Scheduling delayed release for: 123
+
+[90mstdout[2m | src/components/QuestionItem.test.jsx[2m > [22m[2mQuestionItem[2m > [22m[2mrenders options for Multiple Choice
+[22m[39m[useEditLock] Reusing existing lock from global state
+[useEditLock] Starting heartbeat for 123
+
+stderr | src/components/QuestionItem.test.jsx > QuestionItem > renders options for Multiple Choice
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+
+[90mstdout[2m | src/components/QuestionItem.test.jsx[2m > [22m[2mQuestionItem[2m > [22m[2mrenders options for Multiple Choice
+[22m[39m[useEditLock] Stopping heartbeat for 123
+[useEditLock] Scheduling delayed release for: 123
+
+ [32mΓ£ô[39m src/__tests__/questionGeneration.integration.test.jsx [2m([22m[2m9 tests[22m[2m)[22m[33m 599[2mms[22m[39m
+[90mstdout[2m | src/components/QuestionItem.test.jsx[2m > [22m[2mQuestionItem[2m > [22m[2mcalls onUpdateStatus when Accept button is clicked
+[22m[39m[useEditLock] Reusing existing lock from global state
+[useEditLock] Starting heartbeat for 123
+
+stderr | src/components/QuestionItem.test.jsx > QuestionItem > calls onUpdateStatus when Accept button is clicked
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+
+[90mstdout[2m | src/components/QuestionItem.test.jsx[2m > [22m[2mQuestionItem[2m > [22m[2mcalls onUpdateStatus when Accept button is clicked
+[22m[39m[useEditLock] Stopping heartbeat for 123
+[useEditLock] Scheduling delayed release for: 123
+
+[90mstdout[2m | src/components/QuestionItem.test.jsx[2m > [22m[2mQuestionItem[2m > [22m[2mcalls onUpdateStatus when Reject button is clicked
+[22m[39m[useEditLock] Reusing existing lock from global state
+[useEditLock] Starting heartbeat for 123
+
+stderr | src/components/QuestionItem.test.jsx > QuestionItem > calls onUpdateStatus when Reject button is clicked
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+
+[90mstdout[2m | src/components/QuestionItem.test.jsx[2m > [22m[2mQuestionItem[2m > [22m[2mcalls onUpdateStatus when Reject button is clicked
+[22m[39m[useEditLock] Stopping heartbeat for 123
+[useEditLock] Scheduling delayed release for: 123
+
+[90mstdout[2m | src/components/QuestionItem.test.jsx[2m > [22m[2mQuestionItem[2m > [22m[2mshows correct styling for accepted status
+[22m[39m[useEditLock] Reusing existing lock from global state
+[useEditLock] Starting heartbeat for 123
+
+stderr | src/components/QuestionItem.test.jsx > QuestionItem > shows correct styling for accepted status
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+Warning: An update to QuestionItem inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at QuestionItem (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/QuestionItem.jsx:41:3)
+[AgentFactory] Agents not initialized. Call initializeAgents(db) first.
+
+[90mstdout[2m | src/components/QuestionItem.test.jsx[2m > [22m[2mQuestionItem[2m > [22m[2mshows correct styling for accepted status
+[22m[39m[useEditLock] Stopping heartbeat for 123
+[useEditLock] Scheduling delayed release for: 123
+
+ [32mΓ£ô[39m src/components/QuestionItem.test.jsx [2m([22m[2m5 tests[22m[2m)[22m[33m 394[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/translation.integration.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1184[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m should translate multiple questions to target languages [33m 340[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m should show progress during bulk translation [33m 337[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/googleSheets.integration.test.jsx [2m([22m[2m10 tests[22m[2m)[22m[33m 1474[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m should import from Sheets and re-export successfully [33m 363[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Suites 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/components/__tests__/InviteSignUp.test.jsx [ src/components/__tests__/InviteSignUp.test.jsx ]
+TypeError: Cannot read properties of undefined (reading 'getProvider')
+ Γ¥» _getProvider ../../../../Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@firebase/app/dist/esm/index.esm.js:272:10
+ Γ¥» getFunctions ../../../../Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@firebase/functions/dist/esm/index.esm.js:923:31
+ Γ¥» src/services/inviteService.js:14:31
+     12| 
+     13| // Initialize Cloud Functions
+     14| const functions = getFunctions(app, "us-central1");
+       |                               ^
+     15| 
+     16| /**
+ Γ¥» src/components/InviteSignUp.jsx:2:1
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m17 passed[39m[22m[90m (18)[39m
+[2m      Tests [22m [1m[32m159 passed[39m[22m[90m (159)[39m
+[2m   Start at [22m 15:34:34
+[2m   Duration [22m 3.19s[2m (transform 2.16s, setup 2.53s, import 4.43s, tests 4.55s, environment 18.30s)[22m
+

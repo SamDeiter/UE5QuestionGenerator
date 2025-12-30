@@ -34,6 +34,7 @@ This tool was created by an Epic Games employee in support of Epic's educational
 - **Human Oversight** - All AI-generated code reviewed and approved by Sam Deiter
 
 **AI-Assisted Features (2025-12-11):**
+
 | Feature | Description | Files Modified |
 |---------|-------------|----------------|
 | Toast Notification System | Smart replacement, priority levels, progress bars | `useToast.js`, `Toast.jsx`, `ToastContainer.jsx` |
@@ -72,14 +73,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 - **License:** MIT
 - **Copyright:** Facebook, Inc. and its affiliates
-- **URL:** https://github.com/facebook/react
+- **URL:** <https://github.com/facebook/react>
 - **Purpose:** UI framework
 
 #### React DOM (^18.3.1)
 
 - **License:** MIT
 - **Copyright:** Facebook, Inc. and its affiliates
-- **URL:** https://github.com/facebook/react
+- **URL:** <https://github.com/facebook/react>
 - **Purpose:** React rendering for web
 
 ---
@@ -90,7 +91,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 - **License:** Apache-2.0
 - **Copyright:** Google LLC
-- **URL:** https://github.com/firebase/firebase-js-sdk
+- **URL:** <https://github.com/firebase/firebase-js-sdk>
 - **Purpose:** Authentication, Firestore database, Analytics
 - **Modules Used:**
   - `firebase/app` - Core SDK
@@ -106,14 +107,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 - **License:** MIT
 - **Copyright:** Jeff Mott and contributors
-- **URL:** https://github.com/brix/crypto-js
+- **URL:** <https://github.com/brix/crypto-js>
 - **Purpose:** AES encryption for localStorage
 
 #### DOMPurify (^3.3.1)
 
 - **License:** Apache-2.0 OR MPL-2.0
 - **Copyright:** Cure53 and contributors
-- **URL:** https://github.com/cure53/DOMPurify
+- **URL:** <https://github.com/cure53/DOMPurify>
 - **Purpose:** XSS prevention, HTML sanitization
 
 ---
@@ -124,28 +125,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 - **License:** ISC
 - **Copyright:** Lucide Contributors
-- **URL:** https://github.com/lucide-icons/lucide
+- **URL:** <https://github.com/lucide-icons/lucide>
 - **Purpose:** Icon library (replaces Feather Icons)
 
 #### Recharts (^3.5.1)
 
 - **License:** MIT
 - **Copyright:** Recharts Group
-- **URL:** https://github.com/recharts/recharts
+- **URL:** <https://github.com/recharts/recharts>
 - **Purpose:** Analytics charts and data visualization
 
 #### React Virtuoso (^4.15.0)
 
 - **License:** MIT
 - **Copyright:** Petyo Ivanov
-- **URL:** https://github.com/petyosi/react-virtuoso
+- **URL:** <https://github.com/petyosi/react-virtuoso>
 - **Purpose:** Virtual scrolling for large question lists
 
 #### date-fns (^4.1.0)
 
 - **License:** MIT
 - **Copyright:** date-fns contributors
-- **URL:** https://github.com/date-fns/date-fns
+- **URL:** <https://github.com/date-fns/date-fns>
 - **Purpose:** Date formatting and manipulation
 
 ---
@@ -158,14 +159,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 - **License:** MIT
 - **Copyright:** Yuxi (Evan) You and Vite contributors
-- **URL:** https://github.com/vitejs/vite
+- **URL:** <https://github.com/vitejs/vite>
 - **Purpose:** Build tool and dev server
 
 #### @vitejs/plugin-react (^4.3.3)
 
 - **License:** MIT
 - **Copyright:** Vite contributors
-- **URL:** https://github.com/vitejs/vite-plugin-react
+- **URL:** <https://github.com/vitejs/vite-plugin-react>
 - **Purpose:** React support for Vite
 
 ---
@@ -176,21 +177,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 - **License:** MIT
 - **Copyright:** Tailwind Labs, Inc.
-- **URL:** https://github.com/tailwindlabs/tailwindcss
+- **URL:** <https://github.com/tailwindlabs/tailwindcss>
 - **Purpose:** Utility-first CSS framework
 
 #### PostCSS (^8.4.49)
 
 - **License:** MIT
 - **Copyright:** Andrey Sitnik
-- **URL:** https://github.com/postcss/postcss
+- **URL:** <https://github.com/postcss/postcss>
 - **Purpose:** CSS transformation
 
 #### Autoprefixer (^10.4.20)
 
 - **License:** MIT
 - **Copyright:** Andrey Sitnik
-- **URL:** https://github.com/postcss/autoprefixer
+- **URL:** <https://github.com/postcss/autoprefixer>
 - **Purpose:** Vendor prefix automation
 
 ---
@@ -201,35 +202,35 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 - **License:** MIT
 - **Copyright:** Anthony Fu and contributors
-- **URL:** https://github.com/vitest-dev/vitest
+- **URL:** <https://github.com/vitest-dev/vitest>
 - **Purpose:** Unit testing framework
 
 #### @testing-library/react (^16.3.0)
 
 - **License:** MIT
 - **Copyright:** Kent C. Dodds
-- **URL:** https://github.com/testing-library/react-testing-library
+- **URL:** <https://github.com/testing-library/react-testing-library>
 - **Purpose:** React component testing utilities
 
 #### @testing-library/jest-dom (^6.9.1)
 
 - **License:** MIT
 - **Copyright:** Kent C. Dodds
-- **URL:** https://github.com/testing-library/jest-dom
+- **URL:** <https://github.com/testing-library/jest-dom>
 - **Purpose:** Custom Jest matchers for DOM
 
 #### @testing-library/user-event (^14.6.1)
 
 - **License:** MIT
 - **Copyright:** Giorgio Polvara
-- **URL:** https://github.com/testing-library/user-event
+- **URL:** <https://github.com/testing-library/user-event>
 - **Purpose:** User interaction simulation
 
 #### jsdom (^27.2.0)
 
 - **License:** MIT
 - **Copyright:** jsdom contributors
-- **URL:** https://github.com/jsdom/jsdom
+- **URL:** <https://github.com/jsdom/jsdom>
 - **Purpose:** DOM implementation for Node.js
 
 ---
@@ -240,29 +241,36 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 - **License:** MIT
 - **Copyright:** Nicholas C. Zakas and contributors
-- **URL:** https://github.com/eslint/eslint
+- **URL:** <https://github.com/eslint/eslint>
 - **Purpose:** JavaScript linting
 
 #### eslint-plugin-react (^7.37.2)
 
 - **License:** MIT
 - **Copyright:** Yannick Croissant
-- **URL:** https://github.com/jsx-eslint/eslint-plugin-react
+- **URL:** <https://github.com/jsx-eslint/eslint-plugin-react>
 - **Purpose:** React-specific linting rules
 
 #### eslint-plugin-react-hooks (^5.0.0)
 
 - **License:** MIT
 - **Copyright:** Facebook, Inc.
-- **URL:** https://github.com/facebook/react
+- **URL:** <https://github.com/facebook/react>
 - **Purpose:** React Hooks linting rules
 
 #### eslint-plugin-react-refresh (^0.4.14)
 
 - **License:** MIT
 - **Copyright:** Arnaud Barré
-- **URL:** https://github.com/ArnaudBarre/eslint-plugin-react-refresh
+- **URL:** <https://github.com/ArnaudBarre/eslint-plugin-react-refresh>
 - **Purpose:** React Fast Refresh validation
+
+#### eslint-plugin-sonarjs (^3.0.1)
+
+- **License:** LGPL-3.0
+- **Copyright:** SonarSource
+- **URL:** <https://github.com/SonarSource/eslint-plugin-sonarjs>
+- **Purpose:** Advanced code quality, complexity analysis, and bug detection
 
 ---
 
@@ -272,7 +280,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 - **License:** MIT
 - **Copyright:** Tim Schaub
-- **URL:** https://github.com/tschaub/gh-pages
+- **URL:** <https://github.com/tschaub/gh-pages>
 - **Purpose:** GitHub Pages deployment
 
 ---
@@ -308,7 +316,7 @@ All system fonts are used via their respective operating systems and are not red
 
 - **Service:** Generative Language API
 - **Provider:** Google LLC
-- **Terms:** https://ai.google.dev/gemini-api/terms
+- **Terms:** <https://ai.google.dev/gemini-api/terms>
 - **Usage:** Question generation via API
 - **License:** Proprietary (API access subject to Google's terms)
 - **Note:** API keys required, not included in repository
@@ -317,7 +325,7 @@ All system fonts are used via their respective operating systems and are not red
 
 - **Service:** Firebase Platform (Auth, Firestore, Analytics)
 - **Provider:** Google LLC
-- **Terms:** https://firebase.google.com/terms
+- **Terms:** <https://firebase.google.com/terms>
 - **License:** Proprietary (service subject to Firebase terms)
 - **Components:**
   - Firebase Authentication (Google OAuth)
@@ -328,7 +336,7 @@ All system fonts are used via their respective operating systems and are not red
 
 - **Service:** Google Sheets API v4
 - **Provider:** Google LLC
-- **Terms:** https://developers.google.com/sheets/api/terms
+- **Terms:** <https://developers.google.com/sheets/api/terms>
 - **Usage:** Question export functionality
 - **License:** Proprietary (API access subject to Google's terms)
 
@@ -354,7 +362,7 @@ This tool is specifically designed for **Unreal Engine Authorized Instructors** 
 
 **Program Context:**
 
-- **Unreal Authorized Instructor Program:** https://www.unrealengine.com/en-US/educators
+- **Unreal Authorized Instructor Program:** <https://www.unrealengine.com/en-US/educators>
 - **Purpose:** Creating assessment materials for authentic Unreal Engine training
 - **Users:** Certified instructors teaching official Unreal Engine curriculum
 - **Use Case:** Generating scenario-based questions aligned with official learning objectives
@@ -558,14 +566,14 @@ Commercial use of this tool or generated content should be reviewed against:
 
 **Epic Games Legal:**
 
-- EULA: https://www.unrealengine.com/eula
-- Support: https://www.unrealengine.com/support
+- EULA: <https://www.unrealengine.com/eula>
+- Support: <https://www.unrealengine.com/support>
 - Legal Contact: Via Epic Games official channels
 
 **Project Creator:**
 
-- Repository: https://github.com/SamDeiter/UE5QuestionGenerator
-- Issues: https://github.com/SamDeiter/UE5QuestionGenerator/issues
+- Repository: <https://github.com/SamDeiter/UE5QuestionGenerator>
+- Issues: <https://github.com/SamDeiter/UE5QuestionGenerator/issues>
 - Contact: [Via GitHub repository]
 
 ---
@@ -997,7 +1005,7 @@ The following Python libraries are used in development/deployment scripts:
 
 - `os`, `sys`, `subprocess`, `json`, `shutil`, `pathlib`
 - **License:** Python Software Foundation License
-- **URL:** https://docs.python.org/3/license.html
+- **URL:** <https://docs.python.org/3/license.html>
 
 ### No Third-Party Python Packages Required
 
@@ -1051,7 +1059,7 @@ SOFTWARE.
 
 ### Apache License 2.0 (Firebase, DOMPurify)
 
-Full text available at: https://www.apache.org/licenses/LICENSE-2.0
+Full text available at: <https://www.apache.org/licenses/LICENSE-2.0>
 
 ### ISC License (Lucide React)
 
@@ -1092,5 +1100,5 @@ When adding new dependencies:
 
 ---
 
-**For questions about licensing, contact:** admin@example.com  
-**Repository:** https://github.com/SamDeiter/UE5QuestionGenerator
+**For questions about licensing, contact:** <admin@example.com>  
+**Repository:** <https://github.com/SamDeiter/UE5QuestionGenerator>

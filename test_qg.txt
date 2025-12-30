@@ -1,0 +1,34 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.14 [39m[90mC:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator[39m
+
+ [32mΓ£ô[39m src/__tests__/questionGeneration.integration.test.jsx[2m > [22mQuestion Generation Integration Tests[2m > [22mSingle Question Generation[2m > [22mshould generate a question successfully[32m 146[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/questionGeneration.integration.test.jsx[2m > [22mQuestion Generation Integration Tests[2m > [22mSingle Question Generation[2m > [22mshould not generate without creator name[32m 3[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/questionGeneration.integration.test.jsx[2m > [22mQuestion Generation Integration Tests[2m > [22mSingle Question Generation[2m > [22mshould not generate without API key[32m 2[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/questionGeneration.integration.test.jsx[2m > [22mQuestion Generation Integration Tests[2m > [22mSingle Question Generation[2m > [22mshould handle API errors gracefully[32m 8[2mms[22m[39m
+ [31m├ù[39m src/__tests__/questionGeneration.integration.test.jsx[2m > [22mQuestion Generation Integration Tests[2m > [22mQuestion Variations[2m > [22mshould generate variations of existing question[32m 131[2mms[22m[39m
+[31m   ΓåÆ expected "vi.fn()" to be called at least once[39m
+ [32mΓ£ô[39m src/__tests__/questionGeneration.integration.test.jsx[2m > [22mQuestion Generation Integration Tests[2m > [22mQuestion Variations[2m > [22mshould generate explanation for question[32m 112[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/questionGeneration.integration.test.jsx[2m > [22mQuestion Generation Integration Tests[2m > [22mQuestion Variations[2m > [22mshould generate critique for question[32m 71[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/questionGeneration.integration.test.jsx[2m > [22mQuestion Generation Integration Tests[2m > [22mToken Usage Tracking[2m > [22mshould log token usage for successful generation[32m 117[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/questionGeneration.integration.test.jsx[2m > [22mQuestion Generation Integration Tests[2m > [22mToken Usage Tracking[2m > [22mshould log failed generation attempts[32m 4[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate variations of existing question
+AssertionError: expected "vi.fn()" to be called at least once
+ Γ¥» src/__tests__/questionGeneration.integration.test.jsx:365:41
+    363| 
+    364|       // Verify variations were added
+    365|       expect(mockUpdateQuestionInState).toHaveBeenCalled();
+       |                                         ^
+    366|       expect(mockShowMessage).toHaveBeenCalledWith(
+    367|         expect.stringContaining("variations"),
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m8 passed[39m[22m[90m (9)[39m
+[2m   Start at [22m 15:33:33
+[2m   Duration [22m 2.08s[2m (transform 240ms, setup 133ms, import 374ms, tests 595ms, environment 773ms)[22m
+

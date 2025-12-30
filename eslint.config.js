@@ -3,6 +3,7 @@ import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import react from "eslint-plugin-react";
+import sonarjs from "eslint-plugin-sonarjs";
 
 export default [
   // Ignore patterns
@@ -47,6 +48,7 @@ export default [
       react,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
+      sonarjs,
     },
     settings: {
       react: {
@@ -56,6 +58,7 @@ export default [
     rules: {
       // ESLint recommended
       ...js.configs.recommended.rules,
+      ...sonarjs.configs.recommended.rules,
 
       // React rules (relaxed for productivity)
       "react/react-in-jsx-scope": "off", // Not needed in React 17+
@@ -72,6 +75,36 @@ export default [
         "warn",
         { allowConstantExport: true },
       ],
+
+      // === CODE QUALITY GUARDRAILS ===
+
+      // Magic Numbers: Avoid hardcoded values (except common 0, 1, -1)
+      "no-magic-numbers": [
+        "warn",
+        {
+          ignore: [0, 1, -1],
+          ignoreArrayIndexes: true,
+          enforceConst: true,
+          detectObjects: false,
+        },
+      ],
+
+      // God Functions: Limit cyclomatic complexity
+      complexity: ["warn", { max: 15 }],
+
+      // God Functions: Limit function length
+      "max-lines-per-function": [
+        "warn",
+        {
+          max: 100,
+          skipBlankLines: true,
+          skipComments: true,
+          IIFEs: true,
+        },
+      ],
+
+      // Cognitive Complexity (SonarJS): Limit logic nesting
+      "sonarjs/cognitive-complexity": ["warn", 20],
 
       // General rules (relaxed)
       "no-unused-vars": [

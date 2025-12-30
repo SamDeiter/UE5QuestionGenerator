@@ -127,6 +127,7 @@ describe("Translation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
@@ -173,7 +174,7 @@ describe("Translation Integration Tests", () => {
       // Verify success message
       expect(mockShowMessage).toHaveBeenCalledWith(
         expect.stringContaining("Translated"),
-        3000
+        1500 // TOAST_DURATION.MEDIUM
       );
     });
 
@@ -190,10 +191,10 @@ describe("Translation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
-          vi.fn(),
           vi.fn(),
           vi.fn(),
           vi.fn(),
@@ -238,10 +239,10 @@ describe("Translation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
-          vi.fn(),
           vi.fn(),
           vi.fn(),
           vi.fn(),
@@ -262,6 +263,10 @@ describe("Translation Integration Tests", () => {
       });
 
       expect(mockSetStatus).toHaveBeenCalledWith("Translation Failed");
+      expect(mockShowMessage).toHaveBeenCalledWith(
+        expect.stringContaining("Translation Failed"),
+        2500
+      );
       expect(mockAddQuestionsToState).not.toHaveBeenCalled();
     });
   });
@@ -290,10 +295,10 @@ describe("Translation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
-          vi.fn(),
           vi.fn(),
           vi.fn(),
           vi.fn(),
@@ -310,7 +315,7 @@ describe("Translation Integration Tests", () => {
         () => {
           expect(result.current.isProcessing).toBe(false);
         },
-        { timeout: 5000 }
+        { timeout: 2500 }
       );
 
       // Should translate to CN, JP, KR (3 languages)
@@ -322,7 +327,7 @@ describe("Translation Integration Tests", () => {
       // Verify success message
       expect(mockShowMessage).toHaveBeenCalledWith(
         expect.stringContaining("complete"),
-        7000
+        4000 // TOAST_DURATION.EXTENDED
       );
     });
 
@@ -352,10 +357,10 @@ describe("Translation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
-          vi.fn(),
           vi.fn(),
           vi.fn(),
           vi.fn(),
@@ -372,7 +377,7 @@ describe("Translation Integration Tests", () => {
         () => {
           expect(result.current.isProcessing).toBe(false);
         },
-        { timeout: 5000 }
+        { timeout: 2500 }
       );
 
       // Should only translate JP and KR (2 languages)
@@ -400,10 +405,10 @@ describe("Translation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
-          vi.fn(),
           vi.fn(),
           vi.fn(),
           vi.fn(),
@@ -424,7 +429,7 @@ describe("Translation Integration Tests", () => {
         () => {
           expect(result.current.isProcessing).toBe(false);
         },
-        { timeout: 5000 }
+        { timeout: 2500 }
       );
     });
 
@@ -445,10 +450,10 @@ describe("Translation Integration Tests", () => {
           mockCheckAndStoreQuestions,
           mockAddQuestionsToState,
           mockUpdateQuestionInState,
+          vi.fn(), // updateAllVariantsInState
           mockHandleLanguageSwitch,
           mockShowMessage,
           mockSetStatus,
-          vi.fn(),
           vi.fn(),
           vi.fn(),
           vi.fn(),
@@ -468,7 +473,7 @@ describe("Translation Integration Tests", () => {
       // Should show message that no translations are needed
       expect(mockShowMessage).toHaveBeenCalledWith(
         expect.stringContaining("already exist"),
-        5000
+        2500 // TOAST_DURATION.LONG
       );
 
       // Should not call API
