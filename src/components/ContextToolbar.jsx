@@ -213,6 +213,15 @@ const ContextToolbar = ({
           label="All"
           count={counts.all}
         />
+        {counts.other > 0 && (
+          <FilterButton
+            mode="other"
+            current={filterMode}
+            setFilter={setFilterMode}
+            label="Other"
+            count={counts.other}
+          />
+        )}
         <div className="w-px h-4 bg-slate-700 mx-1"></div>
         <FilterButton
           mode="accepted"

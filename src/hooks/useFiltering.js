@@ -216,8 +216,36 @@ export function useFiltering({
     const rejected = contextFilteredQuestions.filter(
       (q) => q.status === "rejected"
     ).length;
+    const other = contextFilteredQuestions.filter(
+      (q) =>
+        q.status &&
+        q.status !== "pending" &&
+        q.status !== "accepted" &&
+        q.status !== "rejected"
+    ).length;
     const all = contextFilteredQuestions.length;
-    return { pending, accepted, rejected, all };
+
+    // DIAGNOSTIC LOGGING: Identify mysterious statuses
+    if (other > 0) {
+      const otherStatuses = contextFilteredQuestions
+        .filter(
+          (q) =>
+            q.status &&
+            q.status !== "pending" &&
+            q.status !== "accepted" &&
+            q.status !== "rejected"
+        )
+        .reduce((acc, q) => {
+          acc[q.status] = (acc[q.status] || 0) + 1;
+          return acc;
+        }, {});
+      console.warn(
+        "⚠️ [Count Discrepancy] Found non-standard statuses:",
+        otherStatuses
+      );
+    }
+
+    return { pending, accepted, rejected, other, all };
   }, [contextFilteredQuestions]);
 
   // 3. Now apply the status filter for the actual view

@@ -66,6 +66,15 @@ export const createFilteredQuestions = (
         if (q.status !== "accepted") return false;
       } else if (filterMode === "rejected") {
         if (q.status !== "rejected") return false;
+      } else if (filterMode === "other") {
+        // Other: any status that isn't empty, pending, accepted, or rejected
+        if (
+          !q.status ||
+          q.status === "pending" ||
+          q.status === "accepted" ||
+          q.status === "rejected"
+        )
+          return false;
       }
     }
 

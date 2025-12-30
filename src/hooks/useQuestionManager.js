@@ -597,6 +597,17 @@ export const useQuestionManager = (config, showMessage) => {
         .length,
     [unifiedQuestions]
   );
+  const otherCount = useMemo(
+    () =>
+      unifiedQuestions.filter(
+        (q) =>
+          q.status &&
+          q.status !== "pending" &&
+          q.status !== "accepted" &&
+          q.status !== "rejected"
+      ).length,
+    [unifiedQuestions]
+  );
 
   const totalApproved = useMemo(() => {
     return CATEGORY_KEYS.reduce((sum, key) => sum + approvedCounts[key], 0);
@@ -755,6 +766,7 @@ export const useQuestionManager = (config, showMessage) => {
     approvedCount,
     rejectedCount,
     pendingCount,
+    otherCount,
     totalApproved,
     overallPercentage,
     isTargetMet,
