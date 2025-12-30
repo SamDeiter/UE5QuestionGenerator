@@ -15,7 +15,10 @@ import Icon from "./Icon";
 import { createInvite, revokeInvite } from "../services/inviteService";
 import { downloadTrainingData } from "../utils/analyticsStore";
 import { UI_LABELS } from "../utils/constants";
-import { clearAllQuestionsFromFirestore } from "../services/firebase";
+import {
+  clearAllQuestionsFromFirestore,
+  deleteSoftDeletedQuestionsFromFirestore,
+} from "../services/firebase";
 import { sendReviewerInvitesViaEmail } from "../services/cloudFunctions";
 import {
   getReviewerAnalytics,
@@ -1146,6 +1149,36 @@ const AdminPanel = ({
                 >
                   <Icon name="filter" size={16} />
                   Clear Rejected Questions
+                </button>
+
+                <button
+                  onClick={async () => {
+                    if (
+                      !confirm(
+                        "🧹 Cleanup Deleted Questions?\n\nThis will permanently remove all questions with status 'deleted' across ALL disciplines.\n\nThis is a maintenance operation to resolve count discrepancies.\n\nProceed?"
+                      )
+                    )
+                      return;
+
+                    try {
+                      showMessage("🧹 Cleaning up deleted questions...", 10000);
+                      const count =
+                        await deleteSoftDeletedQuestionsFromFirestore();
+                      showMessage(
+                        `✅ Successfully removed ${count} ghost questions.`,
+                        5000
+                      );
+                      // Clear local cache if needed (page refresh is safest)
+                      setTimeout(() => window.location.reload(), 2000);
+                    } catch (error) {
+                      showMessage(`❌ Cleanup failed: ${error.message}`, 5000);
+                      console.error(error);
+                    }
+                  }}
+                  className="w-full px-4 py-3 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-emerald-700/50"
+                >
+                  <Icon name="trash" size={16} />
+                  Cleanup Deleted Questions (Release Quota)
                 </button>
               </div>
             </>

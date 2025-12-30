@@ -595,6 +595,38 @@ export const clearAllQuestionsFromFirestore = async () => {
 };
 
 /**
+ * Deletes all questions with status 'deleted' from Firestore.
+ * This is used to clean up ghost questions that cause count discrepancies.
+ * @returns {Promise<number>} Number of documents deleted.
+ */
+export const deleteSoftDeletedQuestionsFromFirestore = async () => {
+  try {
+    const q = query(
+      collection(db, "questions"),
+      where("status", "==", "deleted")
+    );
+
+    const querySnapshot = await getDocs(q);
+    let deletedCount = 0;
+
+    const deletePromises = [];
+    querySnapshot.forEach((docSnapshot) => {
+      deletePromises.push(deleteDoc(docSnapshot.ref));
+      deletedCount++;
+    });
+
+    await Promise.all(deletePromises);
+    console.log(
+      `Successfully cleaned up ${deletedCount} soft-deleted questions.`
+    );
+    return deletedCount;
+  } catch (error) {
+    console.error("Error cleaning up soft-deleted questions:", error);
+    throw error;
+  }
+};
+
+/**
  * Deletes a single question from Firestore by uniqueId.
  * @param {string} uniqueId - The uniqueId of the question to delete
  * @returns {Promise<void>}
