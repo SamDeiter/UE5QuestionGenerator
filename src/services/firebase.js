@@ -168,6 +168,14 @@ export const getConnectionStatus = () => ({
   syncInProgress,
 });
 
+// Manual sync trigger for UI "Sync Now" button
+export const triggerManualSync = async () => {
+  console.log("🔄 Manual sync triggered by user");
+  notifyConnectionListeners(); // Update UI to show syncing
+  await processOfflineQueue();
+  notifyConnectionListeners(); // Update UI when done
+};
+
 // Subscribe to connection status changes
 const connectionListeners = new Set();
 export const subscribeToConnectionStatus = (callback) => {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Icon from "./Icon";
 import useConnectionStatus from "../hooks/useConnectionStatus";
-import { signOutUser } from "../services/firebase";
+import { signOutUser, triggerManualSync } from "../services/firebase";
 import { APP_VERSION } from "../utils/constants";
 
 const getVersionDisplay = () => {
@@ -234,13 +234,15 @@ const Header = ({
                   </div>
                 )}
                 {connectionStatus.queuedCount > 0 && (
-                  <div
-                    className="flex items-center gap-0.5 text-orange-400 font-bold"
-                    title={`${connectionStatus.queuedCount} items queued for sync`}
+                  <button
+                    onClick={triggerManualSync}
+                    className="flex items-center gap-0.5 text-orange-400 font-bold hover:text-orange-300 hover:bg-orange-900/30 px-1 rounded cursor-pointer transition-colors"
+                    title={`${connectionStatus.queuedCount} items queued - Click to sync now!`}
                   >
                     <Icon name="upload-cloud" size={12} />
                     <span>{connectionStatus.queuedCount}</span>
-                  </div>
+                    <span className="text-[8px] ml-0.5">SYNC</span>
+                  </button>
                 )}
                 {connectionStatus.syncInProgress && (
                   <div
