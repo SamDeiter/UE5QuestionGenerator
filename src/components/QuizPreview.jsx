@@ -19,6 +19,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
   const [timeRemaining, setTimeRemaining] = useState(config.timeLimit * 60);
   const [quizStarted, setQuizStarted] = useState(false);
   const [feedbackShown, setFeedbackShown] = useState(false);
+  const [showAnswerWarning, setShowAnswerWarning] = useState(false);
 
   // Adaptive difficulty state
   const [recentCorrect, setRecentCorrect] = useState([]); // Last 3 answers: true/false
@@ -258,6 +259,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
   const handleNext = useCallback(
     (updatedRecent = recentCorrect, currentAnswers = answers) => {
       setFeedbackShown(false);
+      setShowAnswerWarning(false);
 
       if (currentIndex + 1 >= totalQuestions) {
         setShowResults(true);
@@ -634,7 +636,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
           {/* Next button - always visible but shows warning if no answer selected */}
           <div className="mt-8 text-center">
             {/* Warning message - only shows after clicking Next without answering */}
-            {!isAnswered && feedbackShown && (
+            {!isAnswered && showAnswerWarning && (
               <p className="text-red-400 text-sm mb-3 animate-bounce">
                 ⚠️ Please select an answer before continuing
               </p>
@@ -642,8 +644,8 @@ const QuizPreview = ({ questions, config, onClose }) => {
             <button
               onClick={() => {
                 if (!isAnswered) {
-                  // Show warning by toggling feedbackShown
-                  setFeedbackShown(true);
+                  // Show warning (not feedbackShown to avoid highlighting correct answer)
+                  setShowAnswerWarning(true);
                   return;
                 }
                 handleNext();
