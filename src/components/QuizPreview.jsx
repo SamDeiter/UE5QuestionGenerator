@@ -631,29 +631,34 @@ const QuizPreview = ({ questions, config, onClose }) => {
               }
             )}
           </div>
-
-          {/* Prompt to select an answer if not answered yet */}
-          {!isAnswered && (
-            <div className="mt-8 text-center">
-              <p className="text-slate-400 text-sm animate-pulse">
-                👆 Please select an answer above to continue
+          {/* Next button - always visible but shows warning if no answer selected */}
+          <div className="mt-8 text-center">
+            {/* Warning message - only shows after clicking Next without answering */}
+            {!isAnswered && feedbackShown && (
+              <p className="text-red-400 text-sm mb-3 animate-bounce">
+                ⚠️ Please select an answer before continuing
               </p>
-            </div>
-          )}
-
-          {/* Feedback / Next button - Show if feedback is enabled OR if question is answered (fallback) */}
-          {(feedbackShown || isAnswered) && (
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => handleNext()}
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
-              >
-                {currentIndex + 1 >= totalQuestions
-                  ? "See Results"
-                  : "Next Question"}
-              </button>
-            </div>
-          )}
+            )}
+            <button
+              onClick={() => {
+                if (!isAnswered) {
+                  // Show warning by toggling feedbackShown
+                  setFeedbackShown(true);
+                  return;
+                }
+                handleNext();
+              }}
+              className={`px-8 py-3 rounded-lg font-semibold transition-colors ${
+                isAnswered
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-slate-700 hover:bg-slate-600 text-slate-300"
+              }`}
+            >
+              {currentIndex + 1 >= totalQuestions
+                ? "See Results"
+                : "Next Question"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
