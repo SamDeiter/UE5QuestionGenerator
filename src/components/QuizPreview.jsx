@@ -480,9 +480,10 @@ const QuizPreview = ({ questions, config, onClose }) => {
             </span>
           </div>
 
-          <h2 className="text-xl text-white mb-6 leading-relaxed">
-            {currentQuestion.question}
-          </h2>
+          <h2
+            className="text-xl text-white mb-6 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: currentQuestion.question }}
+          />
 
           {/* Calming instruction */}
           <p className="text-sm text-slate-400 mb-4">
@@ -524,7 +525,10 @@ const QuizPreview = ({ questions, config, onClose }) => {
                     >
                       {key}
                     </span>
-                    <span className="text-white flex-1">{text}</span>
+                    <span
+                      className="text-white flex-1"
+                      dangerouslySetInnerHTML={{ __html: text }}
+                    />
                   </div>
                 </button>
               );
