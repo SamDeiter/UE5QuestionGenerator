@@ -10,6 +10,7 @@ import { useEffect, useRef } from "react";
  * @param {boolean} params.isAdmin - Whether the user is an admin
  * @param {Function} params.showMessage - Toast notification handler
  * @param {Function} params.handleLoadFromFirestore - Function to reload data after migration
+ * @param {Function} params.setConfig - Config setter for language migration
  */
 export function useMigrations({
   user,
@@ -17,7 +18,24 @@ export function useMigrations({
   isAdmin,
   showMessage,
   handleLoadFromFirestore,
+  setConfig,
 }) {
+  // ========================================================================
+  // MIGRATION 0: Language Reset (runs for all users, once)
+  // ========================================================================
+  useEffect(() => {
+    const migrationKey = "language_reset_v1";
+    const hasReset = localStorage.getItem(migrationKey);
+
+    if (!hasReset && setConfig) {
+      console.log("🔄 Running language reset migration...");
+      setConfig((prev) => ({ ...prev, language: "English" }));
+      localStorage.setItem(migrationKey, "true");
+      console.log("✅ Language reset to English");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Migration 1: Fix auto-accepted questions (missing reviewCompletedAt)
   const hasAutoAcceptMigratedRef = useRef(false);
 

@@ -42,6 +42,7 @@ import { useToast } from "./hooks/useToast";
 import { useAuth } from "./hooks/useAuth";
 import { useModalState } from "./hooks/useModalState";
 import { useAppHandlers } from "./hooks/useAppHandlers";
+import { useMigrations } from "./hooks/useMigrations";
 
 // Concurrent Editing Agents
 import { initializeAgents } from "./agents";
@@ -152,21 +153,15 @@ const App = () => {
     setPendingNavigationUniqueId,
   } = useAppConfig();
 
-  // One-time migration: Force language to English and clear any cached preferences
-  useEffect(() => {
-    const migrationKey = "language_reset_v1";
-    const hasReset = localStorage.getItem(migrationKey);
-
-    if (!hasReset) {
-      console.log("🔄 Running language reset migration...");
-      // Force config to English
-      setConfig((prev) => ({ ...prev, language: "English" }));
-      // Mark migration as complete
-      localStorage.setItem(migrationKey, "true");
-      console.log("✅ Language reset to English");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
+  // Run all migrations (extracted to useMigrations hook)
+  useMigrations({
+    user,
+    authLoading,
+    isAdmin,
+    showMessage,
+    handleLoadFromFirestore: () => {}, // Will be set after useExport is called
+    setConfig,
+  });
 
   // 2. Question Data Management
   const {
