@@ -84,6 +84,51 @@ const QuizPreview = ({ questions, config, onClose }) => {
     }
   }, [quizStarted, quizGuid, buildBalancedQuestionList]);
 
+  // Anti-cheating: Block keyboard shortcuts and track tab visibility
+  useEffect(() => {
+    if (!quizStarted || showResults) return;
+
+    const handleKeydown = (e) => {
+      // Block common cheating shortcuts
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === "c" || // Copy
+          e.key === "v" || // Paste
+          e.key === "f" || // Find
+          e.key === "p" || // Print
+          e.key === "s") // Save
+      ) {
+        e.preventDefault();
+        console.log("Anti-cheat: Blocked keyboard shortcut");
+      }
+    };
+
+    const handleCopy = (e) => {
+      e.preventDefault();
+      console.log("Anti-cheat: Blocked copy attempt");
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log("Anti-cheat: Quiz tab lost focus", {
+          quizGuid,
+          timestamp: new Date().toISOString(),
+          questionIndex: currentIndex,
+        });
+      }
+    };
+
+    document.addEventListener("keydown", handleKeydown);
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeydown);
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [quizStarted, showResults, quizGuid, currentIndex]);
+
   // Current question
   const currentQuestion = quizQuestions[currentIndex];
   const totalQuestions = quizQuestions.length;
@@ -216,7 +261,10 @@ const QuizPreview = ({ questions, config, onClose }) => {
   // Start screen
   if (!quizStarted) {
     return (
-      <div className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4">
+      <div
+        className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4 select-none"
+        onContextMenu={(e) => e.preventDefault()}
+      >
         <div className="max-w-lg w-full text-center">
           <div className="mb-8">
             {/* Unreal Engine Logo */}
@@ -314,7 +362,10 @@ const QuizPreview = ({ questions, config, onClose }) => {
   // Results screen
   if (showResults) {
     return (
-      <div className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4">
+      <div
+        className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4 select-none"
+        onContextMenu={(e) => e.preventDefault()}
+      >
         <div className="max-w-lg w-full text-center">
           {/* UE Branding */}
           <img
@@ -380,7 +431,10 @@ const QuizPreview = ({ questions, config, onClose }) => {
   // No questions available
   if (!currentQuestion) {
     return (
-      <div className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center">
+      <div
+        className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center select-none"
+        onContextMenu={(e) => e.preventDefault()}
+      >
         <div className="bg-slate-800 p-8 rounded-lg text-center max-w-sm">
           <Icon
             name="alert-triangle"
@@ -408,7 +462,10 @@ const QuizPreview = ({ questions, config, onClose }) => {
 
   // Question screen
   return (
-    <div className="fixed inset-0 bg-slate-900 z-[9999] flex flex-col">
+    <div
+      className="fixed inset-0 bg-slate-900 z-[9999] flex flex-col select-none"
+      onContextMenu={(e) => e.preventDefault()}
+    >
       {/* Header */}
       <div className="bg-slate-800 border-b border-slate-700 px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
