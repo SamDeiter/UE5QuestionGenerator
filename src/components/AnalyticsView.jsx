@@ -98,7 +98,6 @@ const AnalyticsView = ({
     },
   ];
 
-  // Process analytics data
   const {
     disciplineData,
     difficultyData,
@@ -106,6 +105,7 @@ const AnalyticsView = ({
     qualityDistribution,
     recentGenerations,
     filteredSummary,
+    filteredQuestions,
   } = useMemo(() => {
     let questions = allQuestions;
     let generations = analytics.generations || [];
@@ -264,6 +264,7 @@ const AnalyticsView = ({
       qualityDistribution,
       recentGenerations,
       filteredSummary,
+      filteredQuestions: questions, // Time-filtered questions for consistent counting
     };
   }, [analytics, timeRange, allQuestions]);
 
@@ -373,7 +374,7 @@ const AnalyticsView = ({
         {activeTab === "disciplines" && (
           <DisciplinesTab
             disciplineData={disciplineData}
-            allQuestions={allQuestions}
+            allQuestions={filteredQuestions}
             disciplines={DISCIPLINES}
           />
         )}
