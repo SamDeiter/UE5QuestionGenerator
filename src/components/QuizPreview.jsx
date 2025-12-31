@@ -36,6 +36,9 @@ const QuizPreview = ({ questions, config, onClose }) => {
   // Derived state - must be before useEffect hooks that use them
   const currentQuestion = quizQuestions[currentIndex];
   const totalQuestions = quizQuestions.length;
+  const questionId = currentQuestion?.id || currentQuestion?.uniqueId;
+  const selectedAnswer = answers[questionId];
+  const isAnswered = selectedAnswer !== undefined;
 
   /**
    * Build a balanced question list at quiz start
@@ -336,11 +339,6 @@ const QuizPreview = ({ questions, config, onClose }) => {
       reportToSCORM(results, quizGuid, timeSpent);
     }
   }, [showResults, results, quizGuid, quizStartTime]);
-
-  // Derived state for current question
-  const questionId = currentQuestion?.id || currentQuestion?.uniqueId;
-  const selectedAnswer = answers[questionId];
-  const isAnswered = selectedAnswer !== undefined;
 
   // ========== UI RENDERING (unchanged from before) ==========
 
