@@ -43,6 +43,8 @@ import { useAuth } from "./hooks/useAuth";
 import { useModalState } from "./hooks/useModalState";
 import { useAppHandlers } from "./hooks/useAppHandlers";
 import { useMigrations } from "./hooks/useMigrations";
+import { usePendingCount } from "./hooks/usePendingCount";
+import { useNavigationAfterLanguageSwitch } from "./hooks/useNavigationAfterLanguageSwitch";
 
 // Concurrent Editing Agents
 import { initializeAgents } from "./agents";
@@ -253,53 +255,16 @@ const App = () => {
     allQuestionsMap,
   });
 
-  // Language switch navigation: navigate to the correct question after language filter changes
-  useEffect(() => {
-    if (pendingNavigationUniqueId && uniqueFilteredQuestions.length > 0) {
-      // Find the index of the question with this uniqueId
-      const targetIndex = uniqueFilteredQuestions.findIndex(
-        (q) => q.uniqueId === pendingNavigationUniqueId
-      );
-
-      console.log("🔄 [App] Navigating after language switch:", {
-        pendingNavigationUniqueId,
-        targetIndex,
-        totalQuestions: uniqueFilteredQuestions.length,
-      });
-
-      if (targetIndex >= 0) {
-        setCurrentReviewIndex(targetIndex);
-      }
-
-      // Clear the pending navigation
-      setPendingNavigationUniqueId(null);
-    }
-  }, [
+  // Language switch navigation (extracted to hook)
+  useNavigationAfterLanguageSwitch({
     pendingNavigationUniqueId,
     uniqueFilteredQuestions,
     setCurrentReviewIndex,
     setPendingNavigationUniqueId,
-  ]);
+  });
 
-  // Calculate total PENDING questions for the Review badge
-  // This count increases when questions are kicked back to review
-  const totalPendingQuestions = useMemo(() => {
-    let pending = 0;
-    allQuestionsMap.forEach((variants) => {
-      // Use the English version or first variant to determine status
-      const canonical =
-        variants.find((v) => (v.language || "English") === "English") ||
-        variants[0];
-      if (canonical && (!canonical.status || canonical.status === "pending")) {
-        pending++;
-      }
-    });
-    console.log("🔍 [DEBUG] Review Badge Count:", {
-      allQuestionsMapSize: allQuestionsMap.size,
-      pendingCount: pending,
-    });
-    return pending;
-  }, [allQuestionsMap]);
+  // Calculate total PENDING questions for the Review badge (extracted to hook)
+  const totalPendingQuestions = usePendingCount(allQuestionsMap);
 
   // 6. Generation & Translation Logic
   const {
