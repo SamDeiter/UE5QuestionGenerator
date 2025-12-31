@@ -318,10 +318,11 @@ const QuizPreview = ({ questions, config, onClose }) => {
       <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
         <div className="max-w-lg w-full text-center">
           <div className="mb-8">
-            <Icon
-              name="clipboard-list"
-              size={64}
-              className="mx-auto text-blue-400 mb-4"
+            {/* Unreal Engine Logo */}
+            <img
+              src="/UE5QuestionGenerator/logos/UE-Secondary-Logo-2023-Horizontal-White.svg"
+              alt="Unreal Engine"
+              className="h-12 mx-auto mb-6"
             />
             <h1 className="text-3xl font-bold text-white mb-2">
               {config.title}
@@ -420,6 +421,12 @@ const QuizPreview = ({ questions, config, onClose }) => {
     return (
       <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
         <div className="max-w-lg w-full text-center">
+          {/* Unreal Engine Logo */}
+          <img
+            src="/UE5QuestionGenerator/logos/UE-Secondary-Logo-2023-Horizontal-White.svg"
+            alt="Unreal Engine"
+            className="h-10 mx-auto mb-8 opacity-60"
+          />
           <div
             className={`mb-8 ${
               results.passed ? "text-green-400" : "text-red-400"
@@ -498,10 +505,15 @@ const QuizPreview = ({ questions, config, onClose }) => {
       <div className="bg-slate-800 border-b border-slate-700 px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
+            {/* UE Icon */}
+            <img
+              src="/UE5QuestionGenerator/logos/UE-Icon-2023-White.svg"
+              alt="Unreal Engine"
+              className="h-6 w-6 opacity-80"
+            />
             <span className="text-white font-semibold">
               Question {currentIndex + 1} of {totalQuestions}
             </span>
-            {/* Difficulty Badge Removed per user request */}
           </div>
 
           <div className="flex items-center gap-4">
