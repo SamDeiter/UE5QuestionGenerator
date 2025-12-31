@@ -760,7 +760,7 @@ const AnalyticsView = ({
             {selectedDiscipline && (
               <DisciplineDetailPanel
                 discipline={selectedDiscipline}
-                questions={analytics.questions || []}
+                questions={allQuestions}
                 color={DISCIPLINE_COLORS[selectedDiscipline]}
                 onClose={() => setSelectedDiscipline(null)}
               />
