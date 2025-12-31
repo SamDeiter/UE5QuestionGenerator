@@ -1,31 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
 import Icon from "./Icon";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-} from "recharts";
-import SafeResponsiveContainer from "./analytics/SafeResponsiveContainer";
 import { format } from "date-fns";
 import { getAnalytics, getTokenStats } from "../utils/analyticsStore";
 import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
-// CATEGORY_KEYS import removed - was unused
 
-// Import extracted components
-import StatCard from "./analytics/StatCard";
-import EmptyState from "./analytics/EmptyState";
-import DisciplineDetailPanel from "./analytics/DisciplineDetailPanel";
-import TagCloudAnalytics from "./analytics/TagCloudAnalytics";
-import TagConnectionGraph from "./analytics/TagConnectionGraph";
+// Import extracted tab components
+import OverviewTab from "./analytics/OverviewTab";
+import DisciplinesTab from "./analytics/DisciplinesTab";
+import QualityTab from "./analytics/QualityTab";
 
 // Define discipline list from tagTaxonomy
 const DISCIPLINES = Object.keys(TAGS_BY_DISCIPLINE);
@@ -42,34 +24,24 @@ const TIME_RANGES = [
 // Color palettes - using highly distinct, contrasting colors
 const DISCIPLINE_COLORS = {
   // Full names
-  "Technical Art": "#f97316", // Orange
-  "Lighting & Rendering": "#eab308", // Yellow
-  "Look Development (Materials)": "#facc15", // Bright yellow (was lime, too similar to Animation)
-  "Animation & Rigging": "#a855f7", // Purple (was teal, too similar to VFX)
-  "VFX (Niagara)": "#22d3ee", // Bright cyan
-  "World Building & Level Design": "#6366f1", // Indigo
-  Blueprints: "#8b5cf6", // Purple (lighter shade)
-  "Game Logic & Systems": "#ec4899", // Pink
-  "C++ Programming": "#dc2626", // Crimson red (was similar pink, now distinct red)
-  Networking: "#8b5cf6", // Violet
-
-  // Abbreviated names (for compatibility with question data)
-  "Tech Art": "#f97316", // Orange
-  "Look Dev": "#facc15", // Bright yellow
-  Animation: "#a855f7", // Purple
-  VFX: "#22d3ee", // Bright cyan
-  Worldbuilding: "#6366f1", // Indigo
-  "Game Dev": "#ec4899", // Pink
-  Programming: "#dc2626", // Crimson red
-};
-
-const _DIFFICULTY_COLORS = {
-  "Beginner MC": "#22c55e",
-  "Beginner T/F": "#4ade80",
-  "Intermediate MC": "#eab308",
-  "Intermediate T/F": "#facc15",
-  "Expert MC": "#ef4444",
-  "Expert T/F": "#f87171",
+  "Technical Art": "#f97316",
+  "Lighting & Rendering": "#eab308",
+  "Look Development (Materials)": "#facc15",
+  "Animation & Rigging": "#a855f7",
+  "VFX (Niagara)": "#22d3ee",
+  "World Building & Level Design": "#6366f1",
+  Blueprints: "#8b5cf6",
+  "Game Logic & Systems": "#ec4899",
+  "C++ Programming": "#dc2626",
+  Networking: "#8b5cf6",
+  // Abbreviated names
+  "Tech Art": "#f97316",
+  "Look Dev": "#facc15",
+  Animation: "#a855f7",
+  VFX: "#22d3ee",
+  Worldbuilding: "#6366f1",
+  "Game Dev": "#ec4899",
+  Programming: "#dc2626",
 };
 
 /**
@@ -82,7 +54,6 @@ const AnalyticsView = ({
   allQuestionsMap = new Map(),
 }) => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [selectedDiscipline, setSelectedDiscipline] = useState(null);
   const [timeRange, setTimeRange] = useState("all");
   const analytics = getAnalytics();
   const tokenStats = getTokenStats();
@@ -134,10 +105,9 @@ const AnalyticsView = ({
     statusData,
     qualityDistribution,
     recentGenerations,
-    filteredSummary, // New: Summary stats for the selected period
+    filteredSummary,
   } = useMemo(() => {
-    // Use allQuestions from allQuestionsMap instead of analytics.questions from localStorage
-    let questions = allQuestions; // Changed from analytics.questions
+    let questions = allQuestions;
     let generations = analytics.generations || [];
 
     // Filter by Time Range
@@ -146,7 +116,6 @@ const AnalyticsView = ({
       if (range && range.days) {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - range.days);
-
         questions = questions.filter((q) => new Date(q.created) >= cutoff);
         generations = generations.filter(
           (g) => new Date(g.timestamp) >= cutoff
@@ -154,7 +123,7 @@ const AnalyticsView = ({
       }
     }
 
-    // New: Calculate summary for the filtered view
+    // Calculate summary for the filtered view
     const filteredSummary = {
       totalQuestions: questions.length,
       totalGenerations: generations.length,
@@ -210,7 +179,6 @@ const AnalyticsView = ({
       .sort((a, b) => b.value - a.value);
 
     // Difficulty breakdown - normalize all difficulty values to base type
-    // Helper to normalize any difficulty format to a base level
     const getDifficultyBase = (difficulty) => {
       if (!difficulty) return null;
       const d = difficulty.toString().toLowerCase().trim();
@@ -394,485 +362,28 @@ const AnalyticsView = ({
       {/* Content */}
       <div className="max-w-7xl mx-auto p-6">
         {activeTab === "overview" && (
-          <div className="space-y-6">
-            {/* Summary Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard
-                title="Total Questions"
-                value={summary.totalQuestions || 0}
-                icon="file-text"
-                color="blue"
-              />
-              <StatCard
-                title="Acceptance Rate"
-                value={`${summary.acceptanceRate || 0}%`}
-                icon="check-circle"
-                color="emerald"
-              />
-              <StatCard
-                title="Avg Quality"
-                value={summary.averageQuality || 0}
-                icon="star"
-                color="amber"
-              />
-              <StatCard
-                title="Total Cost"
-                value={`$${(summary.estimatedCost || 0).toFixed(4)}`}
-                icon="dollar-sign"
-                color="purple"
-              />
-            </div>
-
-            {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Status Pie Chart */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
-                  <Icon
-                    name="pie-chart"
-                    size={16}
-                    className="text-emerald-400"
-                  />
-                  Question Status
-                </h3>
-                <div className="h-64">
-                  {statusData.length > 0 ? (
-                    <SafeResponsiveContainer
-                      width="100%"
-                      height="100%"
-                      minWidth={0}
-                      minHeight={0}
-                    >
-                      <PieChart>
-                        <Pie
-                          data={statusData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={90}
-                          dataKey="value"
-                          label={({ name, percent }) =>
-                            `${name} ${(percent * 100).toFixed(0)}%`
-                          }
-                        >
-                          {statusData.map((entry, idx) => (
-                            <Cell key={idx} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#1e293b",
-                            border: "1px solid #334155",
-                          }}
-                        />
-                      </PieChart>
-                    </SafeResponsiveContainer>
-                  ) : (
-                    <EmptyState message="No question data yet" />
-                  )}
-                </div>
-              </div>
-
-              {/* Difficulty Distribution */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
-                  <Icon name="sliders" size={16} className="text-amber-400" />
-                  Difficulty Distribution
-                </h3>
-                <div className="h-64">
-                  {difficultyData.length > 0 ? (
-                    <SafeResponsiveContainer
-                      width="100%"
-                      height="100%"
-                      minWidth={0}
-                      minHeight={0}
-                    >
-                      <BarChart
-                        data={difficultyData}
-                        margin={{ top: 10, right: 10, left: 0, bottom: 30 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                        <XAxis
-                          dataKey="name"
-                          stroke="#94a3b8"
-                          tick={{ fontSize: 10, angle: -45, textAnchor: "end" }}
-                          height={60}
-                        />
-                        <YAxis stroke="#94a3b8" />
-                        <Tooltip
-                          cursor={false}
-                          contentStyle={{
-                            backgroundColor: "#1e293b",
-                            border: "1px solid #334155",
-                          }}
-                        />
-                        <Bar
-                          dataKey="value"
-                          radius={[4, 4, 0, 0]}
-                          activeBar={false}
-                        >
-                          {difficultyData.map((entry, idx) => (
-                            <Cell key={idx} fill={entry.fill} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </SafeResponsiveContainer>
-                  ) : (
-                    <EmptyState message="No difficulty data yet" />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Generation Trend */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-              <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
-                <Icon name="trending-up" size={16} className="text-blue-400" />
-                Recent Generation Activity
-              </h3>
-              <div className="h-64">
-                {recentGenerations.length > 0 ? (
-                  <SafeResponsiveContainer
-                    width="100%"
-                    height="100%"
-                    minWidth={0}
-                    minHeight={0}
-                  >
-                    <AreaChart
-                      data={recentGenerations}
-                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                    >
-                      <defs>
-                        <linearGradient
-                          id="colorTokens"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="5%"
-                            stopColor="#3b82f6"
-                            stopOpacity={0.8}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor="#3b82f6"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                        <linearGradient
-                          id="colorQuestions"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="5%"
-                            stopColor="#22c55e"
-                            stopOpacity={0.8}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor="#22c55e"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                      <XAxis
-                        dataKey="name"
-                        stroke="#94a3b8"
-                        tick={{ fontSize: 11 }}
-                      />
-                      <YAxis stroke="#94a3b8" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "1px solid #334155",
-                        }}
-                      />
-                      <Legend />
-                      <Area
-                        type="monotone"
-                        dataKey="tokens"
-                        stroke="#3b82f6"
-                        fillOpacity={1}
-                        fill="url(#colorTokens)"
-                        name="Tokens"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="questions"
-                        stroke="#22c55e"
-                        fillOpacity={1}
-                        fill="url(#colorQuestions)"
-                        name="Questions"
-                      />
-                    </AreaChart>
-                  </SafeResponsiveContainer>
-                ) : (
-                  <EmptyState message="Generate some questions to see trends" />
-                )}
-              </div>
-            </div>
-          </div>
+          <OverviewTab
+            summary={summary}
+            statusData={statusData}
+            difficultyData={difficultyData}
+            recentGenerations={recentGenerations}
+          />
         )}
 
         {activeTab === "disciplines" && (
-          <div className="space-y-6">
-            {/* Large Discipline Bar Chart */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-slate-300 mb-6 flex items-center gap-2">
-                <Icon name="layers" size={20} className="text-purple-400" />
-                Questions by Discipline
-              </h3>
-              <div className="h-96">
-                {disciplineData.length > 0 ? (
-                  <SafeResponsiveContainer
-                    width="100%"
-                    height="100%"
-                    minWidth={0}
-                    minHeight={0}
-                  >
-                    <BarChart
-                      data={disciplineData}
-                      layout="vertical"
-                      margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
-                    >
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        stroke="#334155"
-                        horizontal={false}
-                      />
-                      <XAxis type="number" stroke="#94a3b8" />
-                      <YAxis
-                        type="category"
-                        dataKey="fullName"
-                        stroke="#94a3b8"
-                        width={110}
-                        tick={{ fontSize: 11 }}
-                      />
-                      <Tooltip
-                        cursor={false}
-                        contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "1px solid #334155",
-                        }}
-                        formatter={(value) => [value, "Questions"]}
-                      />
-                      <Bar
-                        dataKey="value"
-                        radius={[0, 4, 4, 0]}
-                        fill="none"
-                        isAnimationActive={false}
-                        activeBar={false}
-                        cursor="default"
-                      >
-                        {disciplineData.map((entry, idx) => (
-                          <Cell key={idx} fill={entry.fill} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </SafeResponsiveContainer>
-                ) : (
-                  <EmptyState message="No discipline data yet. Generate some questions!" />
-                )}
-              </div>
-            </div>
-
-            {/* Tag Cloud Analytics */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-slate-300 mb-6 flex items-center gap-2">
-                <Icon name="tag" size={20} className="text-cyan-400" />
-                Tag Cloud
-              </h3>
-              <TagCloudAnalytics
-                questions={allQuestions}
-                selectedDiscipline={selectedDiscipline}
-                showAllDisciplines={!selectedDiscipline}
-              />
-            </div>
-
-            {/* Tag Connection Graph */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-slate-300 mb-6 flex items-center gap-2">
-                <Icon
-                  name="git-branch"
-                  size={20}
-                  className="text-emerald-400"
-                />
-                Tag Connections (Top 20)
-              </h3>
-              <TagConnectionGraph
-                questions={allQuestions}
-                selectedDiscipline={selectedDiscipline}
-                showAllDisciplines={!selectedDiscipline}
-              />
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {DISCIPLINES.map((disc) => {
-                const count = allQuestions.filter(
-                  (q) => q.discipline === disc
-                ).length;
-                const color = DISCIPLINE_COLORS[disc] || "#64748b";
-                const isSelected = selectedDiscipline === disc;
-                return (
-                  <button
-                    key={disc}
-                    onClick={() =>
-                      setSelectedDiscipline(isSelected ? null : disc)
-                    }
-                    className={`bg-slate-900 border rounded-xl p-4 transition-all text-left ${
-                      isSelected
-                        ? "border-2 ring-2 ring-opacity-50"
-                        : "border-slate-800 hover:border-slate-700"
-                    }`}
-                    style={{
-                      borderColor: isSelected ? color : undefined,
-                      "--tw-ring-color": isSelected ? color : undefined,
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
-                      {isSelected && (
-                        <Icon
-                          name="chevron-up"
-                          size={14}
-                          className="text-slate-400"
-                        />
-                      )}
-                    </div>
-                    <p className="text-2xl font-bold text-white">{count}</p>
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">
-                      {disc}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Selected Discipline Detail Panel */}
-            {selectedDiscipline && (
-              <DisciplineDetailPanel
-                discipline={selectedDiscipline}
-                questions={allQuestions}
-                color={DISCIPLINE_COLORS[selectedDiscipline]}
-                onClose={() => setSelectedDiscipline(null)}
-              />
-            )}
-          </div>
+          <DisciplinesTab
+            disciplineData={disciplineData}
+            allQuestions={allQuestions}
+            disciplines={DISCIPLINES}
+          />
         )}
 
         {activeTab === "quality" && (
-          <div className="space-y-6">
-            {/* Quality Score Distribution */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-slate-300 mb-6 flex items-center gap-2">
-                <Icon name="target" size={20} className="text-emerald-400" />
-                Quality Score Distribution
-              </h3>
-              <div className="h-64">
-                {qualityDistribution.length > 0 ? (
-                  <SafeResponsiveContainer
-                    width="100%"
-                    height="100%"
-                    minWidth={0}
-                    minHeight={0}
-                  >
-                    <BarChart
-                      data={qualityDistribution}
-                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                      <XAxis dataKey="range" stroke="#94a3b8" />
-                      <YAxis stroke="#94a3b8" />
-                      <Tooltip
-                        cursor={false}
-                        contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "1px solid #334155",
-                        }}
-                        formatter={(value) => [value, "Questions"]}
-                      />
-                      <Bar
-                        dataKey="count"
-                        radius={[4, 4, 0, 0]}
-                        activeBar={false}
-                      >
-                        {qualityDistribution.map((entry, idx) => (
-                          <Cell key={idx} fill={entry.fill} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </SafeResponsiveContainer>
-                ) : (
-                  <EmptyState message="Run AI Critique on questions to see quality distribution" />
-                )}
-              </div>
-            </div>
-
-            {/* Token Usage Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-blue-900/30 rounded-lg">
-                    <Icon name="zap" size={20} className="text-blue-400" />
-                  </div>
-                  <span className="text-sm font-medium text-slate-300">
-                    Total Tokens
-                  </span>
-                </div>
-                <p className="text-3xl font-bold text-white">
-                  {(tokenStats.total / 1000).toFixed(1)}k
-                </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Input: {(tokenStats.avgInput / 1000).toFixed(1)}k avg •
-                  Output: {(tokenStats.avgOutput / 1000).toFixed(1)}k avg
-                </p>
-              </div>
-
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-emerald-900/30 rounded-lg">
-                    <Icon
-                      name="check-circle"
-                      size={20}
-                      className="text-emerald-400"
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-slate-300">
-                    URL Success Rate
-                  </span>
-                </div>
-                <p className="text-3xl font-bold text-emerald-400">100%</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  536 verified URLs in database
-                </p>
-              </div>
-
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-purple-900/30 rounded-lg">
-                    <Icon name="award" size={20} className="text-purple-400" />
-                  </div>
-                  <span className="text-sm font-medium text-slate-300">
-                    Generations
-                  </span>
-                </div>
-                <p className="text-3xl font-bold text-white">
-                  {summary.totalGenerations || 0}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Total generation batches run
-                </p>
-              </div>
-            </div>
-          </div>
+          <QualityTab
+            qualityDistribution={qualityDistribution}
+            tokenStats={tokenStats}
+            summary={summary}
+          />
         )}
       </div>
     </div>
