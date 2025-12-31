@@ -146,8 +146,6 @@ const QuizPreview = ({ questions, config, onClose }) => {
     };
   }, [quizStarted, showResults, quizGuid, currentIndex]);
 
-  // TODO: Re-add keyboard navigation after fixing initialization order
-  /*
   // Accessibility: Keyboard navigation for quiz questions
   useEffect(() => {
     if (!quizStarted || showResults || !currentQuestion) return;
@@ -203,6 +201,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
     selectedAnswer,
     handleAnswer,
     handleNext,
+    getOptions,
   ]);
 
   // Reset focused option when question changes
@@ -219,7 +218,6 @@ const QuizPreview = ({ questions, config, onClose }) => {
       );
     }
   }, [currentIndex, currentQuestion, totalQuestions]);
-  */
 
   // Timer
   useEffect(() => {
