@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Icon from "./Icon";
 
 /**
@@ -9,75 +9,65 @@ import Icon from "./Icon";
  * - Adaptive mode: adjusts difficulty based on recent performance
  * - Timer support
  * - Immediate or end-of-quiz feedback
+ * - Shuffled answer options to test knowledge, not memorization
  */
 const QuizPreview = ({ questions, config, onClose }) => {
   // Quiz state
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState({}); // { questionId: selectedAnswer (A/B/C/D) }
+  const [answers, setAnswers] = useState({}); // { questionId: { displayKey, originalKey, isCorrect } }
   const [showResults, setShowResults] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(config.timeLimit * 60);
   const [quizStarted, setQuizStarted] = useState(false);
   const [feedbackShown, setFeedbackShown] = useState(false);
 
-  // Store shuffled options per question: { questionId: { A: { text, originalKey }, B: {...}, ... } }
-  const [shuffledOptionsMap, setShuffledOptionsMap] = useState({});
-
   // Adaptive difficulty state
   const [recentCorrect, setRecentCorrect] = useState([]); // Last 3 answers: true/false
 
+  // Cache shuffled options per question to prevent re-shuffling on re-render
+  const shuffledOptionsCache = useRef({});
+
   /**
-   * Shuffle array using Fisher-Yates algorithm
+   * Get shuffled options for a question - shuffles once and caches
+   * This prevents memorization by putting correct answer in random position
    */
-  const shuffleArray = useCallback((array) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  const getShuffledOptions = useCallback((question) => {
+    if (!question) return {};
+
+    const questionId = question.id || question.uniqueId;
+
+    // Return cached shuffle if already computed for this question
+    if (shuffledOptionsCache.current[questionId]) {
+      return shuffledOptionsCache.current[questionId];
     }
+
+    // Get valid options
+    const entries = Object.entries(question.options || {}).filter(
+      ([, value]) => value
+    );
+
+    // Fisher-Yates shuffle
+    for (let i = entries.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [entries[i], entries[j]] = [entries[j], entries[i]];
+    }
+
+    // Map to A, B, C, D labels
+    const labels = ["A", "B", "C", "D"];
+    const shuffled = {};
+    entries.forEach(([originalKey, text], index) => {
+      if (index < labels.length) {
+        shuffled[labels[index]] = {
+          text,
+          originalKey,
+          isCorrect: originalKey === question.correct,
+        };
+      }
+    });
+
+    // Cache the shuffled options
+    shuffledOptionsCache.current[questionId] = shuffled;
     return shuffled;
   }, []);
-
-  /**
-   * Get or create shuffled options for a question
-   * Always returns options labeled A, B, C, D but with shuffled content
-   */
-  const getShuffledOptions = useCallback(
-    (question) => {
-      const questionId = question.id || question.uniqueId;
-
-      // Return cached shuffle if exists
-      if (shuffledOptionsMap[questionId]) {
-        return shuffledOptionsMap[questionId];
-      }
-
-      // Create new shuffle
-      const optionEntries = Object.entries(question.options || {}).filter(
-        ([, value]) => value
-      );
-      const shuffled = shuffleArray(optionEntries);
-      const labels = ["A", "B", "C", "D"];
-
-      const newShuffledOptions = {};
-      shuffled.forEach(([originalKey, text], index) => {
-        if (index < labels.length) {
-          newShuffledOptions[labels[index]] = {
-            text,
-            originalKey, // Track which original option this was (for scoring)
-            isCorrect: originalKey === question.correct,
-          };
-        }
-      });
-
-      // Cache the shuffle
-      setShuffledOptionsMap((prev) => ({
-        ...prev,
-        [questionId]: newShuffledOptions,
-      }));
-
-      return newShuffledOptions;
-    },
-    [shuffledOptionsMap, shuffleArray]
-  );
 
   /**
    * Distribute questions by difficulty to avoid clustering
@@ -239,12 +229,19 @@ const QuizPreview = ({ questions, config, onClose }) => {
     if (!currentQuestion) return;
 
     const questionId = currentQuestion.id || currentQuestion.uniqueId;
-    const shuffledOptions = getShuffledOptions(currentQuestion);
-    const selectedOption = shuffledOptions[displayKey];
+    const shuffledOpts = getShuffledOptions(currentQuestion);
+    const selectedOption = shuffledOpts[displayKey];
     const isCorrect = selectedOption?.isCorrect || false;
 
-    // Store the display key (A/B/C/D) as the answer
-    setAnswers((prev) => ({ ...prev, [questionId]: displayKey }));
+    // Store the display key (A/B/C/D) as the answer, along with original key for scoring
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: {
+        displayKey,
+        originalKey: selectedOption?.originalKey,
+        isCorrect,
+      },
+    }));
 
     // Track recent performance for adaptive mode
     const newRecent = [...recentCorrect, isCorrect].slice(-3);
@@ -286,23 +283,14 @@ const QuizPreview = ({ questions, config, onClose }) => {
     ]
   );
 
-  // Calculate results
+  // Calculate results - now using isCorrect stored in each answer
   const results = useMemo(() => {
-    const questionsToCheck = config.adaptiveDifficulty
-      ? adaptiveQueue
-      : orderedQuestions;
     let correct = 0;
     const total = Object.keys(answers).length;
 
-    questionsToCheck.forEach((q) => {
-      const qId = q.id || q.uniqueId;
-      const userAnswer = answers[qId];
-      if (userAnswer && shuffledOptionsMap[qId]) {
-        // Check if the user's selected option (A/B/C/D) was correct
-        const selectedOption = shuffledOptionsMap[qId][userAnswer];
-        if (selectedOption?.isCorrect) {
-          correct++;
-        }
+    Object.values(answers).forEach((answer) => {
+      if (answer?.isCorrect) {
+        correct++;
       }
     });
 
@@ -310,7 +298,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
     const passed = percentage >= config.passingScore;
 
     return { correct, total, percentage, passed };
-  }, [answers, orderedQuestions, adaptiveQueue, config, shuffledOptionsMap]);
+  }, [answers, config.passingScore]);
 
   // Start screen
   if (!quizStarted) {
