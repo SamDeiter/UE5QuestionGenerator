@@ -29,6 +29,14 @@ const QuizPreview = ({ questions, config, onClose }) => {
   const [showAnswerWarning, setShowAnswerWarning] = useState(false);
   const [quizStartTime, setQuizStartTime] = useState(null);
 
+  // Accessibility state
+  const [focusedOptionIndex, setFocusedOptionIndex] = useState(0);
+  const [announceMessage, setAnnounceMessage] = useState("");
+
+  // Derived state - must be before useEffect hooks that use them
+  const currentQuestion = quizQuestions[currentIndex];
+  const totalQuestions = quizQuestions.length;
+
   /**
    * Build a balanced question list at quiz start
    * Uses seeded randomization for reproducibility
@@ -135,9 +143,77 @@ const QuizPreview = ({ questions, config, onClose }) => {
     };
   }, [quizStarted, showResults, quizGuid, currentIndex]);
 
-  // Current question
-  const currentQuestion = quizQuestions[currentIndex];
-  const totalQuestions = quizQuestions.length;
+  // Accessibility: Keyboard navigation for quiz questions
+  useEffect(() => {
+    if (!quizStarted || showResults || !currentQuestion) return;
+
+    const optionKeys = Object.keys(getOptions(currentQuestion));
+
+    const handleKeyDown = (e) => {
+      // Arrow key navigation between options
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+        e.preventDefault();
+        setFocusedOptionIndex((prev) => {
+          const newIndex = (prev + 1) % optionKeys.length;
+          setAnnounceMessage(
+            `Option ${optionKeys[newIndex]}, ${
+              optionKeys.length - newIndex
+            } of ${optionKeys.length}`
+          );
+          return newIndex;
+        });
+      } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        setFocusedOptionIndex((prev) => {
+          const newIndex = prev === 0 ? optionKeys.length - 1 : prev - 1;
+          setAnnounceMessage(
+            `Option ${optionKeys[newIndex]}, ${newIndex + 1} of ${
+              optionKeys.length
+            }`
+          );
+          return newIndex;
+        });
+      }
+      // Enter or Space to select focused option
+      else if ((e.key === "Enter" || e.key === " ") && !selectedAnswer) {
+        e.preventDefault();
+        const selectedKey = optionKeys[focusedOptionIndex];
+        handleAnswer(selectedKey);
+        setAnnounceMessage(`Selected option ${selectedKey}`);
+      }
+      // N key for Next Question (when answer is selected)
+      else if (e.key === "n" && selectedAnswer) {
+        e.preventDefault();
+        handleNext();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    quizStarted,
+    showResults,
+    currentQuestion,
+    focusedOptionIndex,
+    selectedAnswer,
+    handleAnswer,
+    handleNext,
+  ]);
+
+  // Reset focused option when question changes
+  useEffect(() => {
+    setFocusedOptionIndex(0);
+    if (currentQuestion) {
+      setAnnounceMessage(
+        `Question ${
+          currentIndex + 1
+        } of ${totalQuestions}: ${currentQuestion.question.replace(
+          /<[^>]*>/g,
+          ""
+        )}`
+      );
+    }
+  }, [currentIndex, currentQuestion, totalQuestions]);
 
   // Timer
   useEffect(() => {
@@ -476,6 +552,16 @@ const QuizPreview = ({ questions, config, onClose }) => {
       className="fixed inset-0 bg-slate-900 z-[9999] flex flex-col select-none"
       onContextMenu={(e) => e.preventDefault()}
     >
+      {/* Screen reader announcements */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announceMessage}
+      </div>
+
       {/* Header */}
       <div className="bg-slate-800 border-b border-slate-700 px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -560,11 +646,18 @@ const QuizPreview = ({ questions, config, onClose }) => {
               : "Select the best answer:"}
           </p>
 
+          {/* Keyboard navigation hint */}
+          <p className="text-xs text-slate-500 mb-4 italic">
+            Use arrow keys to navigate, Enter/Space to select, N for next
+            question
+          </p>
+
           {/* Options */}
           <div className="space-y-4" role="listbox" aria-label="Answer options">
-            {Object.entries(options).map(([key, text]) => {
+            {Object.entries(options).map(([key, text], index) => {
               const isSelected = selectedAnswer === key;
               const isCorrectAnswer = key === currentQuestion.correct;
+              const isFocused = index === focusedOptionIndex;
 
               return (
                 <button
@@ -576,7 +669,11 @@ const QuizPreview = ({ questions, config, onClose }) => {
                   aria-label={`Option ${key}: ${text}${
                     isSelected ? ", selected" : ""
                   }`}
-                  className={`w-full text-left p-4 rounded-lg border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                  className={`w-full text-left p-4 rounded-lg border-2 transition-all focus:outline-none ${
+                    isFocused
+                      ? "ring-4 ring-yellow-400 ring-offset-2 ring-offset-slate-900"
+                      : ""
+                  } ${
                     isSelected
                       ? "border-blue-500 bg-blue-900/30"
                       : "border-slate-600 hover:border-slate-500 bg-slate-800"
