@@ -330,7 +330,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
           </div>
 
           <div className="bg-slate-800 rounded-lg p-6 mb-6 text-left">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <span className="text-slate-400">Questions:</span>
                 <span className="text-white ml-2 font-semibold">
@@ -347,12 +347,6 @@ const QuizPreview = ({ questions, config, onClose }) => {
                 <span className="text-slate-400">Passing Score:</span>
                 <span className="text-white ml-2 font-semibold">
                   {config.passingScore}%
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400">Difficulty:</span>
-                <span className="text-white ml-2 font-semibold">
-                  {config.adaptiveDifficulty ? "Adaptive" : "Mixed"}
                 </span>
               </div>
             </div>
