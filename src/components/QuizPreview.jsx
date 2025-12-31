@@ -264,7 +264,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
             <p className="text-slate-400">{config.description}</p>
           </div>
 
-          <div className="bg-slate-800 rounded-lg p-6 mb-8 text-left">
+          <div className="bg-slate-800 rounded-lg p-6 mb-6 text-left">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-slate-400">Questions:</span>
@@ -291,6 +291,49 @@ const QuizPreview = ({ questions, config, onClose }) => {
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Clear Instructions Section */}
+          <div
+            className="bg-blue-900/30 border border-blue-700 rounded-lg p-5 mb-6 text-left"
+            role="region"
+            aria-label="Quiz instructions"
+          >
+            <h2 className="text-sm font-bold text-blue-300 mb-3 flex items-center gap-2">
+              <Icon name="info" size={16} />
+              How This Assessment Works
+            </h2>
+            <ul className="text-sm text-slate-300 space-y-2">
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400 mt-0.5">•</span>
+                <span>
+                  Read each question carefully before selecting your answer
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400 mt-0.5">•</span>
+                <span>
+                  Click on an answer option to select it, then click "Next
+                  Question"
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400 mt-0.5">•</span>
+                <span>
+                  Questions may be Multiple Choice (A, B, C, D) or True/False
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400 mt-0.5">•</span>
+                <span>The timer starts when you click "Start Quiz"</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400 mt-0.5">•</span>
+                <span>
+                  Your results will be shown at the end of the assessment
+                </span>
+              </li>
+            </ul>
           </div>
 
           <div className="flex gap-4 justify-center">
@@ -422,7 +465,14 @@ const QuizPreview = ({ questions, config, onClose }) => {
       </div>
 
       {/* Progress bar */}
-      <div className="h-1 bg-slate-700">
+      <div
+        className="h-1 bg-slate-700"
+        role="progressbar"
+        aria-valuenow={currentIndex + 1}
+        aria-valuemin={1}
+        aria-valuemax={totalQuestions}
+        aria-label={`Question ${currentIndex + 1} of ${totalQuestions}`}
+      >
         <div
           className="h-full bg-blue-500 transition-all duration-300"
           style={{ width: `${((currentIndex + 1) / totalQuestions) * 100}%` }}
@@ -462,7 +512,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
           </p>
 
           {/* Options */}
-          <div className="space-y-4">
+          <div className="space-y-4" role="listbox" aria-label="Answer options">
             {Object.entries(currentQuestion.options || {}).map(
               ([key, value]) => {
                 if (!value) return null;
@@ -477,7 +527,14 @@ const QuizPreview = ({ questions, config, onClose }) => {
                     key={key}
                     onClick={() => !isAnswered && handleAnswer(key)}
                     disabled={isAnswered}
-                    className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                    role="option"
+                    aria-selected={isSelected}
+                    aria-label={`Option ${key.toUpperCase()}: ${value}${
+                      isSelected ? ", selected" : ""
+                    }${showCorrect ? ", correct answer" : ""}${
+                      showWrong ? ", incorrect" : ""
+                    }`}
+                    className={`w-full text-left p-4 rounded-lg border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${
                       showCorrect
                         ? "border-green-500 bg-green-900/30"
                         : showWrong
