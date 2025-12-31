@@ -13,14 +13,71 @@ import Icon from "./Icon";
 const QuizPreview = ({ questions, config, onClose }) => {
   // Quiz state
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState({}); // { questionId: selectedAnswer }
+  const [answers, setAnswers] = useState({}); // { questionId: selectedAnswer (A/B/C/D) }
   const [showResults, setShowResults] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(config.timeLimit * 60);
   const [quizStarted, setQuizStarted] = useState(false);
   const [feedbackShown, setFeedbackShown] = useState(false);
 
+  // Store shuffled options per question: { questionId: { A: { text, originalKey }, B: {...}, ... } }
+  const [shuffledOptionsMap, setShuffledOptionsMap] = useState({});
+
   // Adaptive difficulty state
   const [recentCorrect, setRecentCorrect] = useState([]); // Last 3 answers: true/false
+
+  /**
+   * Shuffle array using Fisher-Yates algorithm
+   */
+  const shuffleArray = useCallback((array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, []);
+
+  /**
+   * Get or create shuffled options for a question
+   * Always returns options labeled A, B, C, D but with shuffled content
+   */
+  const getShuffledOptions = useCallback(
+    (question) => {
+      const questionId = question.id || question.uniqueId;
+
+      // Return cached shuffle if exists
+      if (shuffledOptionsMap[questionId]) {
+        return shuffledOptionsMap[questionId];
+      }
+
+      // Create new shuffle
+      const optionEntries = Object.entries(question.options || {}).filter(
+        ([, value]) => value
+      );
+      const shuffled = shuffleArray(optionEntries);
+      const labels = ["A", "B", "C", "D"];
+
+      const newShuffledOptions = {};
+      shuffled.forEach(([originalKey, text], index) => {
+        if (index < labels.length) {
+          newShuffledOptions[labels[index]] = {
+            text,
+            originalKey, // Track which original option this was (for scoring)
+            isCorrect: originalKey === question.correct,
+          };
+        }
+      });
+
+      // Cache the shuffle
+      setShuffledOptionsMap((prev) => ({
+        ...prev,
+        [questionId]: newShuffledOptions,
+      }));
+
+      return newShuffledOptions;
+    },
+    [shuffledOptionsMap, shuffleArray]
+  );
 
   /**
    * Distribute questions by difficulty to avoid clustering
@@ -178,13 +235,16 @@ const QuizPreview = ({ questions, config, onClose }) => {
   );
 
   // Handle answer selection
-  const handleAnswer = (answer) => {
+  const handleAnswer = (displayKey) => {
     if (!currentQuestion) return;
 
     const questionId = currentQuestion.id || currentQuestion.uniqueId;
-    const isCorrect = answer === currentQuestion.correct;
+    const shuffledOptions = getShuffledOptions(currentQuestion);
+    const selectedOption = shuffledOptions[displayKey];
+    const isCorrect = selectedOption?.isCorrect || false;
 
-    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+    // Store the display key (A/B/C/D) as the answer
+    setAnswers((prev) => ({ ...prev, [questionId]: displayKey }));
 
     // Track recent performance for adaptive mode
     const newRecent = [...recentCorrect, isCorrect].slice(-3);
@@ -236,8 +296,13 @@ const QuizPreview = ({ questions, config, onClose }) => {
 
     questionsToCheck.forEach((q) => {
       const qId = q.id || q.uniqueId;
-      if (answers[qId] === q.correct) {
-        correct++;
+      const userAnswer = answers[qId];
+      if (userAnswer && shuffledOptionsMap[qId]) {
+        // Check if the user's selected option (A/B/C/D) was correct
+        const selectedOption = shuffledOptionsMap[qId][userAnswer];
+        if (selectedOption?.isCorrect) {
+          correct++;
+        }
       }
     });
 
@@ -245,7 +310,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
     const passed = percentage >= config.passingScore;
 
     return { correct, total, percentage, passed };
-  }, [answers, orderedQuestions, adaptiveQueue, config]);
+  }, [answers, orderedQuestions, adaptiveQueue, config, shuffledOptionsMap]);
 
   // Start screen
   if (!quizStarted) {
@@ -511,25 +576,25 @@ const QuizPreview = ({ questions, config, onClose }) => {
               : "Select the best answer:"}
           </p>
 
-          {/* Options */}
+          {/* Options - Always displayed as A, B, C, D but content is shuffled */}
           <div className="space-y-4" role="listbox" aria-label="Answer options">
-            {Object.entries(currentQuestion.options || {}).map(
-              ([key, value]) => {
-                if (!value) return null;
+            {Object.entries(getShuffledOptions(currentQuestion)).map(
+              ([displayKey, option]) => {
+                if (!option?.text) return null;
 
-                const isSelected = selectedAnswer === key;
-                const showCorrect =
-                  feedbackShown && key === currentQuestion.correct;
-                const showWrong = feedbackShown && isSelected && !isCorrect;
+                const isSelected = selectedAnswer === displayKey;
+                const showCorrect = feedbackShown && option.isCorrect;
+                const showWrong =
+                  feedbackShown && isSelected && !option.isCorrect;
 
                 return (
                   <button
-                    key={key}
-                    onClick={() => !isAnswered && handleAnswer(key)}
+                    key={displayKey}
+                    onClick={() => !isAnswered && handleAnswer(displayKey)}
                     disabled={isAnswered}
                     role="option"
                     aria-selected={isSelected}
-                    aria-label={`Option ${key.toUpperCase()}: ${value}${
+                    aria-label={`Option ${displayKey}: ${option.text}${
                       isSelected ? ", selected" : ""
                     }${showCorrect ? ", correct answer" : ""}${
                       showWrong ? ", incorrect" : ""
@@ -552,9 +617,9 @@ const QuizPreview = ({ questions, config, onClose }) => {
                             : "bg-slate-700 text-slate-300"
                         }`}
                       >
-                        {key.toUpperCase()}
+                        {displayKey}
                       </span>
-                      <span className="text-white flex-1">{value}</span>
+                      <span className="text-white flex-1">{option.text}</span>
                       {showCorrect && (
                         <Icon
                           name="check"
