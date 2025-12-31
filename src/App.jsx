@@ -49,6 +49,7 @@ import { useNavigationAfterLanguageSwitch } from "./hooks/useNavigationAfterLang
 // Concurrent Editing Agents
 import { initializeAgents } from "./agents";
 // Utilities
+import { TOAST_DURATION } from "./utils/constants";
 
 // Simple loading spinner component for auth loading state
 const LoadingSpinner = () => (
@@ -742,7 +743,10 @@ const App = () => {
                 );
                 if (result.success) {
                   handleUpdateQuestion(result.question.id, result.question);
-                  showMessage("✓ Reloaded latest version", 2000);
+                  showMessage(
+                    "✓ Reloaded latest version",
+                    TOAST_DURATION.MEDIUM
+                  );
                 }
               }
             } else if (action === "OVERWRITE") {
