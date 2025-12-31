@@ -70,39 +70,60 @@ const AdminPanel = ({
 
   const [users, setUsers] = useState([]);
   const [invites, setInvites] = useState([]);
-  const [reviewerAnalytics, setReviewerAnalytics] = useState(null); // NEW: Analytics data
-  const [analyticsLoading, setAnalyticsLoading] = useState(false); // NEW: Loading state
+  const [reviewerAnalytics, setReviewerAnalytics] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  // PERFORMANCE: Separate loading states for load-on-expand pattern
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersLoaded, setUsersLoaded] = useState(false);
+  const [invitesLoading, setInvitesLoading] = useState(false);
+  const [invitesLoaded, setInvitesLoaded] = useState(false);
 
   // Safe wrapper for handleChange to prevent React warnings
   const safeHandleChange = handleChange || (() => {});
-  const [loading, setLoading] = useState(true);
 
-  // Load users and invites
-  useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
+  // PERFORMANCE: Load users only when section is expanded (load-on-expand pattern)
+  const loadUsers = async () => {
+    if (usersLoaded || usersLoading) return; // Already loaded or loading
+    setUsersLoading(true);
     try {
-      // Load users and invites in parallel for better performance
       const listUsersFn = httpsCallable(functions, "listRegisteredUsers");
-      const listInvitesFn = httpsCallable(functions, "listInvites");
-
-      const [usersResult, invitesResult] = await Promise.all([
-        listUsersFn({}),
-        listInvitesFn({}),
-      ]);
-
-      setUsers(usersResult.data.users || []);
-      setInvites(invitesResult.data.invites || []);
+      const result = await listUsersFn({});
+      setUsers(result.data.users || []);
+      setUsersLoaded(true);
     } catch (error) {
-      console.error("Failed to load admin data:", error);
-      showMessage(`❌ Failed to load data: ${error.message}`, 5000);
+      console.error("Failed to load users:", error);
+      showMessage(`❌ Failed to load users: ${error.message}`, 5000);
     } finally {
-      setLoading(false);
+      setUsersLoading(false);
     }
+  };
+
+  // PERFORMANCE: Load invites only when section is expanded
+  const loadInvites = async () => {
+    if (invitesLoaded || invitesLoading) return; // Already loaded or loading
+    setInvitesLoading(true);
+    try {
+      const listInvitesFn = httpsCallable(functions, "listInvites");
+      const result = await listInvitesFn({});
+      setInvites(result.data.invites || []);
+      setInvitesLoaded(true);
+    } catch (error) {
+      console.error("Failed to load invites:", error);
+      showMessage(`❌ Failed to load invites: ${error.message}`, 5000);
+    } finally {
+      setInvitesLoading(false);
+    }
+  };
+
+  // Refresh function for after mutations (invites/users)
+  const refreshUsers = () => {
+    setUsersLoaded(false);
+    loadUsers();
+  };
+  const refreshInvites = () => {
+    setInvitesLoaded(false);
+    loadInvites();
   };
 
   const handleRevokeUser = async (userId, email) => {
@@ -123,14 +144,12 @@ const AdminPanel = ({
       showMessage(`✅ Access revoked for ${email}`, 3000);
 
       // Wait a moment for server-side deletion to complete before refreshing
-      setTimeout(async () => {
-        await loadData();
-      }, 500);
+      setTimeout(() => refreshUsers(), 500);
     } catch (error) {
       console.error("❌ Revoke user error:", error);
       showMessage(`❌ Failed to revoke user: ${error.message}`, 5000);
       // Reload data to restore UI state if revocation failed
-      await loadData();
+      refreshUsers();
     }
   };
 
@@ -151,11 +170,11 @@ const AdminPanel = ({
       showMessage(`✅ ${email} is now ${newRole}`, 3000);
 
       // Refresh data from server to ensure consistency
-      await loadData();
+      refreshUsers();
     } catch (error) {
       showMessage(`❌ Failed to change role: ${error.message}`, 5000);
       // Reload data to restore UI state if role change failed
-      await loadData();
+      refreshUsers();
     }
   };
 
@@ -173,14 +192,7 @@ const AdminPanel = ({
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-10">
-        <Icon name="loader" className="animate-spin mr-2" size={24} />
-        <span className="text-slate-400">Loading admin panel...</span>
-      </div>
-    );
-  }
+  // PERFORMANCE: No blocking loading spinner - UI renders immediately
 
   return (
     <div className="space-y-2 p-4">
@@ -297,10 +309,15 @@ const AdminPanel = ({
       >
         <InviteManagement
           invites={invites}
-          onRefresh={loadData}
+          onRefresh={refreshInvites}
           showMessage={showMessage}
           isCollapsed={collapsed.inviteManagement}
-          onToggle={() => toggleSection("inviteManagement")}
+          isLoading={invitesLoading}
+          onToggle={() => {
+            toggleSection("inviteManagement");
+            // PERFORMANCE: Load invites when section is expanded
+            if (collapsed.inviteManagement) loadInvites();
+          }}
         />
       </React.Suspense>
       {/* Registered Users List */}
@@ -315,7 +332,12 @@ const AdminPanel = ({
         <UserList
           users={users}
           isCollapsed={collapsed.registeredUsers}
-          onToggle={() => toggleSection("registeredUsers")}
+          isLoading={usersLoading}
+          onToggle={() => {
+            toggleSection("registeredUsers");
+            // PERFORMANCE: Load users when section is expanded
+            if (collapsed.registeredUsers) loadUsers();
+          }}
           handleChangeRole={handleChangeRole}
           handleRevokeUser={handleRevokeUser}
         />

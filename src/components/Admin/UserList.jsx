@@ -4,6 +4,7 @@ import Icon from "../Icon";
 const UserList = ({
   users,
   isCollapsed,
+  isLoading,
   onToggle,
   handleChangeRole,
   handleRevokeUser,
@@ -53,7 +54,12 @@ const UserList = ({
       </h2>
       {!isCollapsed && (
         <div className="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-          {!users || users.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center p-4 text-slate-400">
+              <Icon name="loader" className="animate-spin mr-2" size={16} />
+              Loading users...
+            </div>
+          ) : !users || users.length === 0 ? (
             <p className="text-slate-500 text-sm">No users found.</p>
           ) : (
             users.map((user) => (

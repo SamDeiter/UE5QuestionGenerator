@@ -18,6 +18,7 @@ const InviteManagement = ({
   onRefresh,
   showMessage,
   isCollapsed,
+  isLoading,
   onToggle,
 }) => {
   const [newInviteSettings, setNewInviteSettings] = useState({
@@ -308,7 +309,12 @@ const InviteManagement = ({
             <h3 className="text-sm font-bold text-yellow-400 mb-2 flex items-center gap-2">
               <Icon name="key" size={14} /> Active Invites ({invites.length})
             </h3>
-            {invites.length === 0 ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center p-4 text-slate-400">
+                <Icon name="loader" className="animate-spin mr-2" size={16} />
+                Loading invites...
+              </div>
+            ) : invites.length === 0 ? (
               <p className="text-slate-500 text-sm">No active invites</p>
             ) : (
               invites.map((invite) => (
