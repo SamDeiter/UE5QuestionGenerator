@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Icon from "./Icon";
+import {
+  generateGUID,
+  createSeededRandom,
+  seededShuffle,
+  reportToSCORM,
+} from "../utils/quizUtils";
 
 /**
  * QuizPreview - Simplified interactive quiz component
@@ -12,6 +18,7 @@ import Icon from "./Icon";
  */
 const QuizPreview = ({ questions, config, onClose }) => {
   // Core quiz state
+  const [quizGuid, setQuizGuid] = useState(null); // Unique GUID for this quiz instance
   const [quizQuestions, setQuizQuestions] = useState([]); // Built once at start
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({}); // Simple: { questionId: "A" }
@@ -20,60 +27,62 @@ const QuizPreview = ({ questions, config, onClose }) => {
   const [timeRemaining, setTimeRemaining] = useState(config.timeLimit * 60);
   const [quizStarted, setQuizStarted] = useState(false);
   const [showAnswerWarning, setShowAnswerWarning] = useState(false);
+  const [quizStartTime, setQuizStartTime] = useState(null);
 
   /**
    * Build a balanced question list at quiz start
+   * Uses seeded randomization for reproducibility
    * Interleaves Easy, Medium, Hard to avoid clustering
    */
-  const buildBalancedQuestionList = useCallback(() => {
-    const easy = questions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("easy")
-    );
-    const medium = questions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("medium")
-    );
-    const hard = questions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("hard")
-    );
+  const buildBalancedQuestionList = useCallback(
+    (guid) => {
+      const randomFn = createSeededRandom(guid);
 
-    // Shuffle each pool
-    const shuffle = (arr) => {
-      const copy = [...arr];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
+      const easy = questions.filter((q) =>
+        (q.difficulty || "").toLowerCase().includes("easy")
+      );
+      const medium = questions.filter((q) =>
+        (q.difficulty || "").toLowerCase().includes("medium")
+      );
+      const hard = questions.filter((q) =>
+        (q.difficulty || "").toLowerCase().includes("hard")
+      );
+
+      // Shuffle each pool using seeded random
+      const shuffledEasy = seededShuffle(easy, randomFn);
+      const shuffledMedium = seededShuffle(medium, randomFn);
+      const shuffledHard = seededShuffle(hard, randomFn);
+
+      // Interleave: E-M-H-E-M-H...
+      const distributed = [];
+      const maxLen = Math.max(
+        shuffledEasy.length,
+        shuffledMedium.length,
+        shuffledHard.length
+      );
+
+      for (let i = 0; i < maxLen; i++) {
+        if (shuffledEasy[i]) distributed.push(shuffledEasy[i]);
+        if (shuffledMedium[i]) distributed.push(shuffledMedium[i]);
+        if (shuffledHard[i]) distributed.push(shuffledHard[i]);
       }
-      return copy;
-    };
 
-    const shuffledEasy = shuffle(easy);
-    const shuffledMedium = shuffle(medium);
-    const shuffledHard = shuffle(hard);
+      // Take only what we need
+      return distributed.slice(0, config.questionCount || distributed.length);
+    },
+    [questions, config.questionCount]
+  );
 
-    // Interleave: E-M-H-E-M-H...
-    const distributed = [];
-    const maxLen = Math.max(
-      shuffledEasy.length,
-      shuffledMedium.length,
-      shuffledHard.length
-    );
-
-    for (let i = 0; i < maxLen; i++) {
-      if (shuffledEasy[i]) distributed.push(shuffledEasy[i]);
-      if (shuffledMedium[i]) distributed.push(shuffledMedium[i]);
-      if (shuffledHard[i]) distributed.push(shuffledHard[i]);
-    }
-
-    // Take only what we need
-    return distributed.slice(0, config.questionCount || distributed.length);
-  }, [questions, config.questionCount]);
-
-  // Build question list when quiz starts
+  // Generate GUID and build question list when quiz starts
   useEffect(() => {
-    if (quizStarted && quizQuestions.length === 0) {
-      setQuizQuestions(buildBalancedQuestionList());
+    if (quizStarted && !quizGuid) {
+      const guid = generateGUID();
+      setQuizGuid(guid);
+      setQuizStartTime(Date.now());
+      setQuizQuestions(buildBalancedQuestionList(guid));
+      console.log("Quiz started with GUID:", guid);
     }
-  }, [quizStarted, quizQuestions.length, buildBalancedQuestionList]);
+  }, [quizStarted, quizGuid, buildBalancedQuestionList]);
 
   // Current question
   const currentQuestion = quizQuestions[currentIndex];
@@ -188,6 +197,14 @@ const QuizPreview = ({ questions, config, onClose }) => {
         return acc;
       }, {});
   };
+
+  // Report results to SCORM when quiz completes
+  useEffect(() => {
+    if (showResults && quizGuid && quizStartTime) {
+      const timeSpent = Math.floor((Date.now() - quizStartTime) / 1000);
+      reportToSCORM(results, quizGuid, timeSpent);
+    }
+  }, [showResults, results, quizGuid, quizStartTime]);
 
   // Derived state for current question
   const questionId = currentQuestion?.id || currentQuestion?.uniqueId;
