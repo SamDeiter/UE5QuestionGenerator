@@ -270,6 +270,10 @@ const QuizPreview = ({ questions, config, onClose }) => {
         const nextQ = getNextAdaptiveQuestion(updatedRecent, currentAnswers);
         if (nextQ) {
           setAdaptiveQueue((prev) => [...prev, nextQ]);
+        } else {
+          // No more questions available - show results early
+          setShowResults(true);
+          return;
         }
       }
 
