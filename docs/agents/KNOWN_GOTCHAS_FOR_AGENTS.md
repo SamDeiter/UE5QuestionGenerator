@@ -28,6 +28,13 @@ This document contains important information and common pitfalls for each agent 
 - Use `React.memo()` for expensive components
 - Memoize callbacks with `useCallback` and values with `useMemo`
 
+### Anti-Patterns (Lessons Learned)
+
+- **Firebase Auth**: Do not use `getAuth()` directly in components; always pass the user object from `App.jsx`
+- **Tailwind**: Do not use dynamic template literals for color classes (e.g., `bg-${color}-500`) because Tailwind can't purge them. Use full class names.
+- **Line Endings**: Always enforce LF line endings
+- **Vite**: Do not use `require()` imports; use ES `import`
+
 ---
 
 ## Agent-Specific Gotchas

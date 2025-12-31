@@ -483,9 +483,10 @@ const QuizPreview = ({ questions, config, onClose }) => {
   }
 
   const questionId = currentQuestion.id || currentQuestion.uniqueId;
-  const selectedAnswer = answers[questionId];
-  const isAnswered = selectedAnswer !== undefined;
-  const isCorrect = selectedAnswer === currentQuestion.correct;
+  const answerData = answers[questionId]; // Now { displayKey, originalKey, isCorrect }
+  const selectedDisplayKey = answerData?.displayKey;
+  const isAnswered = selectedDisplayKey !== undefined;
+  const isCorrect = answerData?.isCorrect || false;
 
   return (
     <div className="fixed inset-0 bg-slate-900 z-50 flex flex-col">
@@ -576,7 +577,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
               ([displayKey, option]) => {
                 if (!option?.text) return null;
 
-                const isSelected = selectedAnswer === displayKey;
+                const isSelected = selectedDisplayKey === displayKey;
                 const showCorrect = feedbackShown && option.isCorrect;
                 const showWrong =
                   feedbackShown && isSelected && !option.isCorrect;
@@ -630,6 +631,15 @@ const QuizPreview = ({ questions, config, onClose }) => {
               }
             )}
           </div>
+
+          {/* Prompt to select an answer if not answered yet */}
+          {!isAnswered && (
+            <div className="mt-8 text-center">
+              <p className="text-slate-400 text-sm animate-pulse">
+                👆 Please select an answer above to continue
+              </p>
+            </div>
+          )}
 
           {/* Feedback / Next button - Show if feedback is enabled OR if question is answered (fallback) */}
           {(feedbackShown || isAnswered) && (
