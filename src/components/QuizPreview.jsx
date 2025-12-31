@@ -432,9 +432,34 @@ const QuizPreview = ({ questions, config, onClose }) => {
       {/* Question */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-xl text-white mb-8 leading-relaxed">
+          {/* Question Type Badge - helps test-taker understand what's expected */}
+          <div className="flex items-center gap-2 mb-4">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                currentQuestion.type === "True/False" ||
+                Object.keys(currentQuestion.options || {}).length === 2
+                  ? "bg-purple-900/50 text-purple-300 border border-purple-700"
+                  : "bg-blue-900/50 text-blue-300 border border-blue-700"
+              }`}
+            >
+              {currentQuestion.type === "True/False" ||
+              Object.keys(currentQuestion.options || {}).length === 2
+                ? "✓✗ True/False"
+                : "◎ Multiple Choice"}
+            </span>
+          </div>
+
+          <h2 className="text-xl text-white mb-6 leading-relaxed">
             {currentQuestion.question}
           </h2>
+
+          {/* Calming instruction */}
+          <p className="text-sm text-slate-400 mb-4">
+            {currentQuestion.type === "True/False" ||
+            Object.keys(currentQuestion.options || {}).length === 2
+              ? "Select True or False:"
+              : "Select the best answer:"}
+          </p>
 
           {/* Options */}
           <div className="space-y-4">
@@ -470,7 +495,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
                             : "bg-slate-700 text-slate-300"
                         }`}
                       >
-                        {key}
+                        {key.toUpperCase()}
                       </span>
                       <span className="text-white flex-1">{value}</span>
                       {showCorrect && (
