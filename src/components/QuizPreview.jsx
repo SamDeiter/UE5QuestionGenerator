@@ -216,7 +216,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
   // Start screen
   if (!quizStarted) {
     return (
-      <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4">
         <div className="max-w-lg w-full text-center">
           <div className="mb-8">
             {/* Unreal Engine Logo */}
@@ -314,7 +314,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
   // Results screen
   if (showResults) {
     return (
-      <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4">
         <div className="max-w-lg w-full text-center">
           {/* UE Branding */}
           <img
@@ -380,7 +380,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
   // No questions available
   if (!currentQuestion) {
     return (
-      <div className="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center">
         <div className="bg-slate-800 p-8 rounded-lg text-center max-w-sm">
           <Icon
             name="alert-triangle"
@@ -408,7 +408,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
 
   // Question screen
   return (
-    <div className="fixed inset-0 bg-slate-900 z-50 flex flex-col">
+    <div className="fixed inset-0 bg-slate-900 z-[9999] flex flex-col">
       {/* Header */}
       <div className="bg-slate-800 border-b border-slate-700 px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
