@@ -38,13 +38,19 @@ const QuizPreview = ({ questions, config, onClose }) => {
     (guid) => {
       const randomFn = createSeededRandom(guid);
 
-      const easy = questions.filter((q) =>
+      // Filter to English-only questions first
+      const englishQuestions = questions.filter((q) => {
+        const lang = (q.language || "").toLowerCase();
+        return lang === "" || lang === "english" || lang === "en";
+      });
+
+      const easy = englishQuestions.filter((q) =>
         (q.difficulty || "").toLowerCase().includes("easy")
       );
-      const medium = questions.filter((q) =>
+      const medium = englishQuestions.filter((q) =>
         (q.difficulty || "").toLowerCase().includes("medium")
       );
-      const hard = questions.filter((q) =>
+      const hard = englishQuestions.filter((q) =>
         (q.difficulty || "").toLowerCase().includes("hard")
       );
 
@@ -238,7 +244,11 @@ const QuizPreview = ({ questions, config, onClose }) => {
       .filter(([, value]) => value)
       .sort(([a], [b]) => a.localeCompare(b)) // Ensure A, B, C, D order
       .reduce((acc, [key, value]) => {
-        acc[key] = value;
+        // Normalize TRUE/FALSE to proper capitalization
+        let displayValue = value;
+        if (value === "TRUE") displayValue = "True";
+        if (value === "FALSE") displayValue = "False";
+        acc[key] = displayValue;
         return acc;
       }, {});
   };
