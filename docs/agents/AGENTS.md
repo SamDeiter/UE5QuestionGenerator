@@ -100,6 +100,137 @@ Agent persona definitions are located in the `.agent/` directory:
 
 ---
 
+## 🚀 Antigravity-Specific Workflows
+
+### Bifurcated Workspace Architecture
+
+Antigravity operates across two distinct interfaces:
+
+| Workspace | Purpose | Key Features |
+|-----------|---------|--------------|
+| **Agent Manager (Mission Control)** | Multi-agent orchestration | Asynchronous parallelism, background task management, 128-thread utilization |
+| **Editor View (Canvas)** | Code editing & refactoring | Gemini 3 Pro engine, `docs/` folder as Single Source of Truth |
+
+**Workflow Example:** While `@Database-Specialist` runs migrations in the background, you can review schema documentation in the Editor View without lag.
+
+### Three-Phase Agent Workflow (Antigravity Protocol)
+
+All agents must follow this strictly verifiable workflow for complex features:
+
+#### **Phase A: Planning & Artifacts** 📋
+
+**Before writing any code**, agents MUST generate:
+
+1. **Task List** (`task.md`): Granular breakdown of the mission
+   - Example: "Build Privacy.com API bridge for virtual card generation"
+2. **Implementation Plan** (`implementation_plan.md`): Technical specification
+   - Which files will be changed and why
+   - Database schema modifications
+   - API integration details
+   - Security considerations
+
+**Human Approval Required:**
+
+- Antigravity pauses execution
+- User reviews artifacts for security flaws, architectural issues
+- User comments on plan; agent adjusts accordingly
+- **No code is written until explicit approval**
+
+#### **Phase B: Execution & Atomic Commits** ⚙️
+
+Once approved, agents enter **Execution Mode**:
+
+1. **Atomic Steps**: Execute one task at a time
+   - Complete database migration → Commit to Git
+   - Implement API endpoint → Run tests → Commit
+2. **Tool Access**:
+   - Direct Terminal access (run build commands, migrations)
+   - Integrated Browser (test live functionality)
+3. **Continuous Verification**:
+   - Run tests after each significant change
+   - Validate against project `ANCHOR_MANIFEST.md` standards
+
+#### **Phase C: Verification (Verifiable Deliverables)** ✅
+
+Agents don't just report "done" — they provide **proof**:
+
+1. **Walkthrough** (`walkthrough.md`): Summary of changes
+2. **Browser Recordings**: Video of live functionality (e.g., scraper working)
+3. **Screenshots**: Visual proof of UI updates
+4. **Test Results**: Pass/fail status of automated tests
+5. **Performance Metrics**: Response times, memory usage
+
+### Single Source of Truth (SSOT) Architecture
+
+To prevent "Context Bloat", agents maintain **three core anchors**:
+
+#### **1. ANCHOR_MANIFEST.md**
+
+**Rigid, non-negotiable standards** for each project:
+
+- Database: RLS policies, migration protocols, naming conventions
+- UI: Tailwind standards, component patterns, accessibility requirements
+- Security: Environment variables, input sanitization, rate limiting
+- API: Error handling, external integration patterns
+
+**Location:** `<project-root>/.agent/ANCHOR_MANIFEST.md`
+
+#### **2. NEXT_SESSION.md**
+
+**Session handoff file** for context persistence:
+
+- Current status: What's completed
+- Blockers: What's awaiting approval
+- Next steps: What to do when resuming
+
+**Usage:** When opening IDE, agent reads this file first to restore full context.
+
+**Location:** `<project-root>/docs/project-context/NEXT_SESSION.md`
+
+#### **3. Knowledge Base**
+
+**Local cache of successful patterns** (Antigravity-managed):
+
+- How to bypass specific challenges (e.g., bot detection)
+- Validated code templates (e.g., RLS policies)
+- Proven integration patterns (e.g., API error handling)
+
+**Location:** `C:\Users\Sam Deiter\.gemini\antigravity\knowledge\`
+
+### Model Context Protocol (MCP) Security
+
+For projects handling sensitive data:
+
+1. **Schema Visibility Only**: Agent sees database structure, not actual data
+   - Can analyze table relationships
+   - Cannot read customer PII or transaction details
+2. **Session-Limited Permissions**: User grants temporary access for specific debugging
+3. **Audit Trail**: All agent database queries logged for security review
+
+### Critical Human-in-the-Loop Checkpoints
+
+**Non-negotiable approval requirements:**
+
+| Action | Requires Human Approval |
+|--------|------------------------|
+| Push to production | ✅ Manual approval required |
+| Execute real payments/transactions | ✅ User confirms action |
+| Modify database schema | ✅ Review `implementation_plan.md` |
+| Access production data | ✅ Session-limited permission |
+| Delete user data | ✅ Explicit confirmation |
+
+### Project-Specific Protocols
+
+Each project may have its own Antigravity protocol document:
+
+- **Family Household Manager**: `.agent/ANTIGRAVITY_PROTOCOL.md`
+- **UE5 Question Generator**: `docs/agents/` (this folder)
+- **KitCheck Android**: `docs/AGENTS.md`
+
+**Rule:** Always check for project-specific protocols before starting work.
+
+---
+
 ## 🖥️ Hardware Parallelization Protocols
 
 All projects run on a high-performance workstation. Agents **MUST** leverage these capabilities for maximum efficiency.
