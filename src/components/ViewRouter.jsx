@@ -1,6 +1,7 @@
 import React from "react";
 import { Suspense } from "react";
 import Icon from "./Icon";
+import { SuspenseSpinner as LoadingSpinner } from "./LoadingSpinner";
 // Lazy load heavy views - most views are lazy for better navigation perf
 const AnalyticsView = React.lazy(() => import("./AnalyticsView"));
 const DatabaseView = React.lazy(() => import("./DatabaseView"));
@@ -10,12 +11,6 @@ const TestView = React.lazy(() => import("./TestView"));
 const PromptPlayground = React.lazy(() => import("./PromptPlayground"));
 const AdminPanel = React.lazy(() => import("./AdminPanel"));
 import QuestionList from "./QuestionList";
-
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center p-10 text-slate-500">
-    <Icon name="loader" className="animate-spin mr-2" /> Loading...
-  </div>
-);
 
 /**
  * EmptyReviewState - Illustrated empty state with CTA

@@ -6,13 +6,8 @@ import ContextToolbar from "./ContextToolbar";
 import ViewRouter from "./ViewRouter";
 import EmptyState from "./EmptyState";
 import ReviewModeBanner from "./ReviewModeBanner";
+import { SuspenseSpinner as LoadingSpinner } from "./LoadingSpinner";
 import { TARGET_TOTAL, TARGET_PER_CATEGORY } from "../utils/constants";
-
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center p-10 text-slate-500">
-    <Icon name="loader" className="animate-spin mr-2" /> Loading...
-  </div>
-);
 
 /**
  * MainLayout Component

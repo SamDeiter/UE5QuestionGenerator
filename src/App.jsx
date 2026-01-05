@@ -50,13 +50,7 @@ import { useNavigationAfterLanguageSwitch } from "./hooks/useNavigationAfterLang
 import { initializeAgents } from "./agents";
 // Utilities
 import { TOAST_DURATION } from "./utils/constants";
-
-// Simple loading spinner component for auth loading state
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center h-screen bg-slate-950">
-    <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-  </div>
-);
+import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 
 const App = () => {
   // ========================================================================
