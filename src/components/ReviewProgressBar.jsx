@@ -1,6 +1,52 @@
 import Icon from "./Icon";
 import { QUALITY_PASS_THRESHOLD } from "../utils/constants";
 
+// Helper functions to compute step styling without nested ternaries
+const getCircleClass = (step) => {
+  if (step.completed) return "bg-green-600 text-white";
+  if (step.failed) return "bg-red-600 text-white";
+  if (step.active)
+    return "bg-orange-500 text-white animate-pulse shadow-lg shadow-orange-500/50 group-hover:bg-orange-400";
+  if (step.ready)
+    return "bg-blue-600/70 text-white cursor-pointer hover:bg-blue-500";
+  return "bg-slate-700 text-slate-400 border-2 border-slate-600";
+};
+
+const getLabelClass = (step) => {
+  if (step.completed) return "text-green-400";
+  if (step.failed) return "text-red-400";
+  if (step.active) return "text-orange-400";
+  if (step.ready) return "text-blue-400";
+  return "text-slate-500";
+};
+
+const getSublabelClass = (step) => {
+  if (step.completed) return "text-green-400/70";
+  if (step.failed) return "text-red-400/70";
+  if (step.active) return "text-orange-400/70";
+  if (step.ready) return "text-blue-400/70";
+  return "text-slate-600";
+};
+
+const getLineClass = (step) => {
+  if (step.completed) return "bg-green-600";
+  if (step.failed) return "bg-red-600/50";
+  return "bg-slate-700";
+};
+
+const getButtonTitle = (step, isLocked, lockedBy) => {
+  if (isLocked) return `Locked by ${lockedBy?.userEmail || "another user"}`;
+  if (step.locked) return "Complete previous step first";
+  return step.sublabel;
+};
+
+// Helper to render circle content
+const renderCircleContent = (step, critiqueScore) => {
+  if (step.completed) return <Icon name="check" size={18} />;
+  if (step.failed) return <span>{critiqueScore}</span>;
+  return <span>{step.num}</span>;
+};
+
 /**
  * ReviewProgressBar - Visual stepper workflow for the review process
  * Shows 3 steps: CRITIQUE → VERIFY → ACCEPT with connecting lines
@@ -157,71 +203,24 @@ const ReviewProgressBar = ({
                                     : ""
                                 }
                             `}
-              title={
-                isLocked
-                  ? `Locked by ${lockedBy?.userEmail || "another user"}`
-                  : step.locked
-                  ? "Complete previous step first"
-                  : step.sublabel
-              }
+              title={getButtonTitle(step, isLocked, lockedBy)}
               data-tour={step.num === 1 ? "critique-button" : undefined}
             >
               {/* Circle */}
               <div
-                className={`
-                                w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all
-                                ${
-                                  step.completed
-                                    ? "bg-green-600 text-white"
-                                    : step.failed
-                                    ? "bg-red-600 text-white"
-                                    : step.active
-                                    ? "bg-orange-500 text-white animate-pulse shadow-lg shadow-orange-500/50 group-hover:bg-orange-400"
-                                    : step.ready
-                                    ? "bg-blue-600/70 text-white cursor-pointer hover:bg-blue-500"
-                                    : "bg-slate-700 text-slate-400 border-2 border-slate-600"
-                                }
-                            `}
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${getCircleClass(
+                  step
+                )}`}
               >
-                {step.completed ? (
-                  <Icon name="check" size={18} />
-                ) : step.failed ? (
-                  <span>{q.critiqueScore}</span>
-                ) : (
-                  <span>{step.num}</span>
-                )}
+                {renderCircleContent(step, q.critiqueScore)}
               </div>
 
               {/* Label */}
               <div className="flex flex-col">
-                <span
-                  className={`text-sm font-bold ${
-                    step.completed
-                      ? "text-green-400"
-                      : step.failed
-                      ? "text-red-400"
-                      : step.active
-                      ? "text-orange-400"
-                      : step.ready
-                      ? "text-blue-400"
-                      : "text-slate-500"
-                  }`}
-                >
+                <span className={`text-sm font-bold ${getLabelClass(step)}`}>
                   {step.label}
                 </span>
-                <span
-                  className={`text-xs ${
-                    step.completed
-                      ? "text-green-400/70"
-                      : step.failed
-                      ? "text-red-400/70"
-                      : step.active
-                      ? "text-orange-400/70"
-                      : step.ready
-                      ? "text-blue-400/70"
-                      : "text-slate-600"
-                  }`}
-                >
+                <span className={`text-xs ${getSublabelClass(step)}`}>
                   {step.sublabel}
                 </span>
               </div>
@@ -230,13 +229,7 @@ const ReviewProgressBar = ({
             {/* Connecting Line */}
             {index < steps.length - 1 && (
               <div
-                className={`flex-1 h-0.5 mx-4 rounded ${
-                  step.completed
-                    ? "bg-green-600"
-                    : step.failed
-                    ? "bg-red-600/50"
-                    : "bg-slate-700"
-                }`}
+                className={`flex-1 h-0.5 mx-4 rounded ${getLineClass(step)}`}
               />
             )}
           </div>

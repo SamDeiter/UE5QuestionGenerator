@@ -75,14 +75,22 @@ export const useRealtimeQuestions = (enabled = true) => {
 
         // Merge: use server data for non-queued items, keep local state for queued items
         setQuestions((prevQuestions) => {
-          const prevMap = new Map(prevQuestions.map((q) => [q.uniqueId, q]));
-          return updatedQuestions.map((serverQ) => {
+          // Build lookup map for previous questions
+          const prevMap = new Map();
+          for (const q of prevQuestions) {
+            prevMap.set(q.uniqueId, q);
+          }
+          // Merge with queue protection
+          const merged = [];
+          for (const serverQ of updatedQuestions) {
             if (queuedIds.has(serverQ.uniqueId)) {
               // Keep local version (with user's pending changes) for queued items
-              return prevMap.get(serverQ.uniqueId) || serverQ;
+              merged.push(prevMap.get(serverQ.uniqueId) || serverQ);
+            } else {
+              merged.push(serverQ);
             }
-            return serverQ;
-          });
+          }
+          return merged;
         });
 
         prevCountRef.current = newCount;
