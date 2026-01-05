@@ -244,6 +244,35 @@ Generate at least 50% of questions using these underrepresented tags.`
 **CRITICAL RULE: IF THE ANSWER FROM YOUR SOURCE IS NOT IN YOUR OPTIONS, YOU HAVE FAILED. REGENERATE THE QUESTION.**
 **CRITICAL RULE: IF CorrectLetter POINTS TO A WRONG ANSWER, YOU HAVE FAILED. FIX IT.**
 
+### 2.7 FACTUAL ACCURACY REQUIREMENTS (DO NOT HALLUCINATE)
+
+**GOLDEN RULE:** If you are uncertain about a technical fact, **DO NOT GUESS**. Either find it in documentation or skip that question topic.
+
+**VERIFIED UE5 TECHNOLOGY FACTS (memorize these):**
+
+| Technology | TRUE Facts | COMMON MISCONCEPTIONS (FALSE) |
+|------------|------------|-------------------------------|
+| **Nanite** | ✅ Static meshes only | ❌ "Nanite supports skeletal meshes" - FALSE |
+| **Nanite** | ✅ Hierarchical LOD clusters | ❌ "Nanite uses traditional LOD levels" - FALSE |
+| **Lumen** | ✅ Software ray tracing by default | ❌ "Lumen requires RTX hardware" - FALSE |
+| **Lumen** | ✅ Works with Nanite meshes | ❌ "Lumen cannot light Nanite geometry" - FALSE |
+| **VSM** | ✅ Works with skeletal meshes | ❌ "VSM only works with static geometry" - FALSE |
+| **World Partition** | ✅ Replaces World Composition | ❌ "World Partition is optional for large worlds" - FALSE in UE5 |
+| **Chaos** | ✅ Default physics engine in UE5 | ❌ "PhysX is still the default" - FALSE |
+| **MetaSounds** | ✅ Node-based audio system | ❌ "MetaSounds replaces all audio features" - FALSE |
+
+**TRUE/FALSE SPECIFIC VALIDATION:**
+For T/F questions, you MUST:
+1. **Read the assertion 3 times** before deciding if it's TRUE or FALSE
+2. **Check for inverted logic** — "does support" vs "does not support" changes everything
+3. **Verify specific versions** — UE4 behavior often differs from UE5
+4. **Quote your source** — SourceExcerpt MUST explicitly confirm the TRUE/FALSE status
+
+**WHEN UNCERTAIN:**
+- Generate a different question topic you ARE certain about
+- Use the SourceExcerpt to prove your answer
+- If no documentation exists, that topic is off-limits
+
 ### 3. Sourcing & URL Integrity (CRITICAL - STRICT ENFORCEMENT)
 **RULE:** Only use URLs you are 100% CERTAIN exist in Epic documentation. A broken URL is WORSE than no URL.
 
