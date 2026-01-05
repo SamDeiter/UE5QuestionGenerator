@@ -2,6 +2,7 @@ import { sanitizeText } from "../utils/sanitize";
 import Icon from "./Icon";
 import { renderMarkdown, computeWordDiff } from "../utils/stringHelpers";
 import { QUALITY_THRESHOLDS } from "../utils/constants";
+import { getSeverityStyles } from "../utils/scoreColors";
 
 /**
  * Renders inline word-level diff with highlighting
@@ -66,55 +67,7 @@ const CritiqueModal = ({
 }) => {
   if (!isOpen || !q) return null;
 
-  const getSeverityStyles = (score) => {
-    if (score === null || score === undefined)
-      return {
-        bg: "bg-slate-800",
-        border: "border-slate-700",
-        text: "text-slate-400",
-        icon: "text-slate-500",
-      };
-
-    // STRICTER COLOR THRESHOLDS
-    // 90-100: Green (Excellent/Perfect)
-    if (score >= QUALITY_THRESHOLDS.EXCELLENT)
-      return {
-        bg: "bg-emerald-950/40",
-        border: "border-emerald-500/50",
-        text: "text-emerald-200",
-        icon: "text-emerald-400",
-        label: "Excellent",
-      };
-
-    // 70-89: Yellow (Good but flawed)
-    if (score >= QUALITY_THRESHOLDS.PASS)
-      return {
-        bg: "bg-yellow-950/40",
-        border: "border-yellow-500/50",
-        text: "text-yellow-200",
-        icon: "text-yellow-400",
-        label: "Good",
-      };
-
-    // 50-69: Orange (Mediocre)
-    if (score >= QUALITY_THRESHOLDS.MEDIOCRE)
-      return {
-        bg: "bg-orange-950/40",
-        border: "border-orange-500/50",
-        text: "text-orange-200",
-        icon: "text-orange-400",
-        label: "Mediocre",
-      };
-
-    // 0-49: Red (Critical)
-    return {
-      bg: "bg-red-950/40",
-      border: "border-red-500/50",
-      text: "text-red-200",
-      icon: "text-red-400",
-      label: "Critical",
-    };
-  };
+  // Use shared severity styles utility
 
   const styles = getSeverityStyles(score);
   const isFailing = score !== null && score < QUALITY_THRESHOLDS.MEDIOCRE;

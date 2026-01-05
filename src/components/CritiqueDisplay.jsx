@@ -1,6 +1,7 @@
 import Icon from "./Icon";
 import { computeWordDiff } from "../utils/stringHelpers";
-import { QUALITY_PASS_THRESHOLD, QUALITY_THRESHOLDS } from "../utils/constants";
+import { QUALITY_PASS_THRESHOLD } from "../utils/constants";
+import { getScoreColorClasses } from "../utils/scoreColors";
 
 // Simple markdown to HTML converter
 const parseMarkdown = (text) => {
@@ -99,16 +100,7 @@ const CritiqueDisplay = ({
   const score = isNewFormat ? critique.score : null;
   const text = (isNewFormat ? critique.text : critique) || "";
 
-  // Color coding based on score
-  const getScoreColor = (score) => {
-    if (score >= QUALITY_THRESHOLDS.EXCELLENT)
-      return "bg-green-900/30 border-green-700/50 text-green-300";
-    if (score >= QUALITY_THRESHOLDS.PASS)
-      return "bg-yellow-900/30 border-yellow-700/50 text-yellow-300";
-    if (score >= QUALITY_THRESHOLDS.MEDIOCRE)
-      return "bg-orange-900/30 border-orange-700/50 text-orange-300";
-    return "bg-red-900/30 border-red-700/50 text-red-300";
-  };
+  // Use shared score color utility
 
   // Process text into structured sections
   const renderContent = () => {
@@ -198,7 +190,9 @@ const CritiqueDisplay = ({
   return (
     <div
       className={`mb-3 p-3 border rounded-lg animate-in fade-in slide-in-from-top-2 ${
-        isNewFormat ? getScoreColor(score) : "bg-red-950/30 border-red-500/30"
+        isNewFormat
+          ? getScoreColorClasses(score)
+          : "bg-red-950/30 border-red-500/30"
       }`}
     >
       <div className="flex items-center justify-between mb-2">
