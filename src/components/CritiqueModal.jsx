@@ -1,55 +1,11 @@
 import { sanitizeText } from "../utils/sanitize";
 import Icon from "./Icon";
-import { renderMarkdown, computeWordDiff } from "../utils/stringHelpers";
+import { renderMarkdown } from "../utils/stringHelpers";
+import DiffText from "./DiffText";
 import { QUALITY_THRESHOLDS } from "../utils/constants";
 import { getSeverityStyles } from "../utils/scoreColors";
 
-/**
- * Renders inline word-level diff with highlighting
- * @param {string} oldText - Original text
- * @param {string} newText - New text
- */
-const _DiffText = ({ oldText, newText }) => {
-  const diff = computeWordDiff(oldText || "", newText || "");
-
-  if (diff.length === 0) return null;
-
-  // Check if there are any actual changes
-  const hasChanges = diff.some((seg) => seg.type !== "unchanged");
-
-  if (!hasChanges) {
-    return <span className="text-slate-300">{oldText}</span>;
-  }
-
-  return (
-    <span className="leading-relaxed">
-      {diff.map((segment, idx) => {
-        if (segment.type === "removed") {
-          return (
-            <span key={idx} className="text-slate-500 line-through">
-              {segment.text}
-            </span>
-          );
-        }
-        if (segment.type === "added") {
-          return (
-            <span
-              key={idx}
-              className="bg-green-900/50 text-green-300 font-semibold px-0.5 rounded"
-            >
-              {segment.text}
-            </span>
-          );
-        }
-        return (
-          <span key={idx} className="text-slate-300">
-            {segment.text}
-          </span>
-        );
-      })}
-    </span>
-  );
-};
+// DiffText imported from shared component
 
 const CritiqueModal = ({
   isOpen,
