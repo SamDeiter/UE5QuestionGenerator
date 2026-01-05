@@ -1,0 +1,28 @@
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ReviewProgressBar.jsx
+  54:27  warning  Arrow function has too many lines (206). Maximum allowed is 100  max-lines-per-function
+  63:4   warning  Arrow function has a complexity of 27. Maximum allowed is 15     complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useRealtimeQuestions.js
+  101:7  warning  No magic number: 5000  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\firebase.js
+  204:6   warning  No magic number: 3000   no-magic-numbers
+  214:6   warning  No magic number: 30000  no-magic-numbers
+  248:30  warning  No magic number: 45     no-magic-numbers
+  248:35  warning  No magic number: 60     no-magic-numbers
+  248:40  warning  No magic number: 1000   no-magic-numbers
+  262:65  warning  No magic number: 1000   no-magic-numbers
+  262:72  warning  No magic number: 60     no-magic-numbers
+  268:45  warning  No magic number: 8      no-magic-numbers
+  270:55  warning  No magic number: 1000   no-magic-numbers
+  270:62  warning  No magic number: 60     no-magic-numbers
+  344:22  warning  No magic number: 30     no-magic-numbers
+  344:27  warning  No magic number: 1000   no-magic-numbers
+  494:16  warning  No magic number: 5000   no-magic-numbers
+  513:46  warning  No magic number: 1000   no-magic-numbers
+  579:64  warning  No magic number: 5000   no-magic-numbers
+  628:16  warning  No magic number: 20     no-magic-numbers
+
+Γ£û 19 problems (0 errors, 19 warnings)
+

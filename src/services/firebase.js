@@ -16,6 +16,7 @@ import {
   limit,
   startAfter,
   onSnapshot,
+  writeBatch,
 } from "firebase/firestore";
 import {
   getAuth,
@@ -406,8 +407,9 @@ const saveQuestionToFirestoreInternal = async (question) => {
 /**
  * Saves a single question to Firestore with offline queue fallback.
  * If offline or save fails, queues for retry when connection is restored.
+ * FIX: Automatically retries with token refresh on 403 permission errors.
  * @param {Object} question - The question object to save.
- * @returns {Object} { success: boolean, queued: boolean }
+ * @returns {Object} { success: boolean, queued: boolean, error?: string }
  */
 export const saveQuestionToFirestore = async (question) => {
   try {
@@ -420,25 +422,136 @@ export const saveQuestionToFirestore = async (question) => {
       return { success: false, queued: true };
     }
 
-    // FIX 2: Proactively refresh auth token if it might be stale
+    // Proactively refresh auth token if it might be stale
     if (isAuthPotentiallyStale() && auth.currentUser) {
       console.log("[Save] Auth token might be stale - refreshing...");
       await refreshAuthToken();
     }
-    markAuthActivity(); // Track this save attempt
+    markAuthActivity();
 
     await saveQuestionToFirestoreInternal(question);
     return { success: true, queued: false };
   } catch (error) {
+    const errorCode = error?.code || "";
+    const errorMessage = error?.message || "";
+    const is403 =
+      errorCode === "permission-denied" ||
+      errorMessage.includes("403") ||
+      errorMessage.includes("PERMISSION_DENIED");
+
+    // FIX: Retry with forced token refresh on 403/permission errors
+    if (is403 && auth.currentUser) {
+      console.warn(
+        `🔐 Permission denied for ${question.uniqueId} - refreshing token and retrying...`
+      );
+      try {
+        await refreshAuthToken();
+        markAuthActivity();
+        await saveQuestionToFirestoreInternal(question);
+        console.log(`✅ Retry succeeded for ${question.uniqueId}`);
+        return { success: true, queued: false };
+      } catch (retryError) {
+        console.error(
+          `❌ Retry also failed for ${question.uniqueId}:`,
+          retryError.message
+        );
+        // Fall through to queue
+      }
+    }
+
     console.warn(
       `⚠️ Save failed for ${question.uniqueId}, queuing for retry:`,
-      error.message
+      errorMessage
     );
     offlineQueue.push({ question, timestamp: Date.now() });
     persistQueue();
     notifyConnectionListeners();
-    return { success: false, queued: true };
+    return { success: false, queued: true, error: errorMessage };
   }
+};
+
+/**
+ * PERFORMANCE: Batch save multiple questions in a single Firestore operation.
+ * Uses writeBatch for significantly faster bulk operations (500 docs max per batch).
+ * Falls back to individual saves for offline or if batch fails.
+ * @param {Array} questions - Array of question objects to save.
+ * @returns {Object} { success: number, failed: number, queued: number }
+ */
+export const batchSaveQuestions = async (questions) => {
+  if (!questions || questions.length === 0) {
+    return { success: 0, failed: 0, queued: 0 };
+  }
+
+  // If offline, queue all
+  if (!isOnline) {
+    console.log(
+      `📴 Offline - queuing ${questions.length} questions for later sync`
+    );
+    questions.forEach((q) =>
+      offlineQueue.push({ question: q, timestamp: Date.now() })
+    );
+    persistQueue();
+    notifyConnectionListeners();
+    return { success: 0, failed: 0, queued: questions.length };
+  }
+
+  // Proactive token refresh before batch operation
+  if (isAuthPotentiallyStale() && auth.currentUser) {
+    await refreshAuthToken();
+  }
+  markAuthActivity();
+
+  const results = { success: 0, failed: 0, queued: 0 };
+  const startTime = performance.now();
+
+  // Firebase batch limit is 500 operations
+  const BATCH_SIZE = 500;
+  const batches = [];
+
+  for (let i = 0; i < questions.length; i += BATCH_SIZE) {
+    batches.push(questions.slice(i, i + BATCH_SIZE));
+  }
+
+  for (const batch of batches) {
+    try {
+      const writeBatchOp = writeBatch(db);
+
+      batch.forEach((question) => {
+        if (!question?.uniqueId) return;
+        const docRef = doc(db, "questions", question.uniqueId);
+        const payload = removeUndefined({
+          ...question,
+          firestoreUpdatedAt: Timestamp.now(),
+          creatorId: auth.currentUser?.uid || question.creatorId,
+          creatorEmail: auth.currentUser?.email || question.creatorEmail,
+        });
+        writeBatchOp.set(docRef, payload, { merge: true });
+      });
+
+      await writeBatchOp.commit();
+      results.success += batch.length;
+    } catch (error) {
+      console.warn(
+        `⚠️ Batch save failed, falling back to individual saves:`,
+        error.message
+      );
+      // Fall back to individual saves
+      for (const q of batch) {
+        const result = await saveQuestionToFirestore(q);
+        if (result.success) results.success++;
+        else if (result.queued) results.queued++;
+        else results.failed++;
+      }
+    }
+  }
+
+  // Invalidate cache
+  _questionsCache = null;
+
+  const duration = Math.round(performance.now() - startTime);
+  console.log(`⚡ Batch saved ${results.success} questions in ${duration}ms`);
+
+  return results;
 };
 
 /**

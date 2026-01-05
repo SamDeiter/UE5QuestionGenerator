@@ -17,6 +17,19 @@ import { getSecureItem } from "../utils/secureStorage";
 import { useEditLock } from "../hooks/useEditLock";
 import { useAuth } from "../hooks/useAuth";
 
+// Helper functions to avoid nested ternaries
+const getLockIconName = (hasLock, isLocked) => {
+  if (hasLock) return "lock";
+  if (isLocked) return "lock";
+  return "loader";
+};
+
+const getLockStatusText = (hasLock, isLocked) => {
+  if (hasLock) return "Reviewing";
+  if (isLocked) return "Locked";
+  return "Connecting...";
+};
+
 const QuestionItem = ({
   q,
   onUpdateStatus,
@@ -207,7 +220,7 @@ const QuestionItem = ({
           }
         >
           <Icon
-            name={hasLock ? "lock" : isLocked ? "lock" : "loader"}
+            name={getLockIconName(hasLock, isLocked)}
             size={14}
             className={
               hasLock
@@ -217,9 +230,7 @@ const QuestionItem = ({
                 : "text-amber-400 animate-spin"
             }
           />
-          <span>
-            {hasLock ? "Reviewing" : isLocked ? "Locked" : "Connecting..."}
-          </span>
+          <span>{getLockStatusText(hasLock, isLocked)}</span>
         </div>
       )}
 
