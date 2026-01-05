@@ -1,5 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { subscribeToAllQuestions } from "../services/firebase";
+import {
+  subscribeToAllQuestions,
+  getQueuedQuestionIds,
+} from "../services/firebase";
 
 /**
  * Custom hook for real-time Firestore synchronization.
@@ -60,8 +63,29 @@ export const useRealtimeQuestions = (enabled = true) => {
           }
         }
 
+        // FIX: Prevent real-time updates from overwriting queued (pending sync) items
+        // This prevents the race condition where server's old "pending" status
+        // overwrites local "accepted" status before the queue syncs
+        const queuedIds = getQueuedQuestionIds();
+        if (queuedIds.size > 0) {
+          console.log(
+            `🛡️ Protecting ${queuedIds.size} queued items from server overwrite`
+          );
+        }
+
+        // Merge: use server data for non-queued items, keep local state for queued items
+        setQuestions((prevQuestions) => {
+          const prevMap = new Map(prevQuestions.map((q) => [q.uniqueId, q]));
+          return updatedQuestions.map((serverQ) => {
+            if (queuedIds.has(serverQ.uniqueId)) {
+              // Keep local version (with user's pending changes) for queued items
+              return prevMap.get(serverQ.uniqueId) || serverQ;
+            }
+            return serverQ;
+          });
+        });
+
         prevCountRef.current = newCount;
-        setQuestions(updatedQuestions);
         setIsLoading(false);
         setError(null);
         setSyncStatus("synced");

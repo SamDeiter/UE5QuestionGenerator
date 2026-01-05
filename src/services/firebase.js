@@ -168,6 +168,11 @@ export const getConnectionStatus = () => ({
   syncInProgress,
 });
 
+// FIX: Track IDs currently in offline queue (to prevent real-time overwrites)
+export const getQueuedQuestionIds = () => {
+  return new Set(offlineQueue.map((item) => item.question?.uniqueId));
+};
+
 // Manual sync trigger for UI "Sync Now" button
 export const triggerManualSync = async () => {
   console.log("🔄 Manual sync triggered by user");

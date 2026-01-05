@@ -107,9 +107,9 @@ const ReviewProgressBar = ({
       sublabel: isVerified ? "Source confirmed" : "Check source & answer",
       completed: isVerified,
       // For high scores, Verify is the next step (flash it)
-      active: critiquePass && !isVerified,
+      active: hasCritique && !isVerified,
       ready: false,
-      locked: !critiquePass, // Locked until score >= threshold
+      locked: !hasCritique, // FIX: Locked until critique EXISTS (not just passes)
       icon: "eye",
       onClick: onVerify,
     },
