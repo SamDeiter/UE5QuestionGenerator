@@ -86,6 +86,13 @@ const CritiqueDisplay = ({
 }) => {
   if (!critique) return null;
 
+  // Helper function to get button text (eliminates nested ternary)
+  const getApplyButtonText = (isLoading, qualityScore, threshold) => {
+    if (isLoading) return "Applying...";
+    if (qualityScore >= threshold) return "NO FIX NEEDED";
+    return "APPLY FIX";
+  };
+
   // Handle both old (string) and new (object with score) formats
   const isNewFormat =
     typeof critique === "object" && critique.score !== undefined;
@@ -249,11 +256,11 @@ const CritiqueDisplay = ({
                   }
                 >
                   <Icon name="zap" size={16} />
-                  {isProcessing
-                    ? "Applying..."
-                    : score >= QUALITY_PASS_THRESHOLD
-                    ? "NO FIX NEEDED"
-                    : "APPLY FIX"}
+                  {getApplyButtonText(
+                    isProcessing,
+                    score,
+                    QUALITY_PASS_THRESHOLD
+                  )}
                 </button>
               )}
 
