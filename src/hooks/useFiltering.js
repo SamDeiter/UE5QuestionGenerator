@@ -17,6 +17,7 @@ import {
   createFilteredQuestions,
   createUniqueFilteredQuestions,
 } from "../utils/questionFilters";
+import { STORAGE_KEYS } from "../utils/constants";
 
 /**
  * Custom hook for managing question filtering state and logic.
@@ -39,13 +40,13 @@ export function useFiltering({
   // STATE - Filter & Search
   // ========================================================================
   const [searchTerm, setSearchTerm] = useState(
-    () => localStorage.getItem("ue5_pref_search") || ""
+    () => localStorage.getItem(STORAGE_KEYS.PREF_SEARCH) || ""
   );
   const [filterMode, setFilterMode] = useState(
-    () => localStorage.getItem("ue5_pref_filter") || "pending"
+    () => localStorage.getItem(STORAGE_KEYS.PREF_FILTER) || "pending"
   );
   const [showHistory, setShowHistory] = useState(
-    () => localStorage.getItem("ue5_pref_history") === "true"
+    () => localStorage.getItem(STORAGE_KEYS.PREF_HISTORY) === "true"
   );
   const [filterByCreator, setFilterByCreator] = useState(false);
   const [filterTags, setFilterTags] = useState([]);
@@ -54,7 +55,7 @@ export function useFiltering({
   // PERSISTED NAVIGATION: Survive page refreshes
   const [currentReviewIndex, setCurrentReviewIndex] = useState(() => {
     if (appMode !== "review") return 0;
-    const saved = localStorage.getItem("ue5_pref_review_index");
+    const saved = localStorage.getItem(STORAGE_KEYS.PREF_REVIEW_INDEX);
     return saved ? parseInt(saved, 10) : 0;
   });
 
@@ -62,7 +63,7 @@ export function useFiltering({
 
   // Track the uniqueId of the current question for better cross-refresh restoration
   const [lastUniqueId, setLastUniqueId] = useState(
-    () => localStorage.getItem("ue5_pref_last_id") || null
+    () => localStorage.getItem(STORAGE_KEYS.PREF_LAST_ID) || null
   );
 
   // Reset review index when entering Review mode FROM another mode (not refresh)
@@ -71,7 +72,7 @@ export function useFiltering({
   // Persistence for review index
   useEffect(() => {
     if (appMode === "review") {
-      localStorage.setItem("ue5_pref_review_index", currentReviewIndex);
+      localStorage.setItem(STORAGE_KEYS.PREF_REVIEW_INDEX, currentReviewIndex);
     }
   }, [currentReviewIndex, appMode]);
 
@@ -81,9 +82,9 @@ export function useFiltering({
 
   // Persist filter preferences to localStorage
   useEffect(() => {
-    localStorage.setItem("ue5_pref_search", searchTerm);
-    localStorage.setItem("ue5_pref_filter", filterMode);
-    localStorage.setItem("ue5_pref_history", showHistory);
+    localStorage.setItem(STORAGE_KEYS.PREF_SEARCH, searchTerm);
+    localStorage.setItem(STORAGE_KEYS.PREF_FILTER, filterMode);
+    localStorage.setItem(STORAGE_KEYS.PREF_HISTORY, showHistory);
   }, [searchTerm, filterMode, showHistory]);
 
   // NOTE: Position is preserved when switching filters - no reset needed
@@ -362,7 +363,7 @@ export function useFiltering({
       lastKnownListRef.current = uniqueFilteredQuestions;
 
       if (currentUniqueId) {
-        localStorage.setItem("ue5_pref_last_id", currentUniqueId);
+        localStorage.setItem(STORAGE_KEYS.PREF_LAST_ID, currentUniqueId);
         setLastUniqueId(currentUniqueId);
       }
       return;
@@ -390,7 +391,7 @@ export function useFiltering({
     // D. Update tracking for next run
     if (currentUniqueId) {
       lastKnownUniqueIdRef.current = currentUniqueId;
-      localStorage.setItem("ue5_pref_last_id", currentUniqueId);
+      localStorage.setItem(STORAGE_KEYS.PREF_LAST_ID, currentUniqueId);
       setLastUniqueId(currentUniqueId);
     }
     lastKnownIndexRef.current = currentReviewIndex;
@@ -434,6 +435,7 @@ export function useFiltering({
 
   // 3. Handle restoration on mount or mode change
   // TRIGGER: Now runs AFTER potential resets in the same render cycle
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentional: only re-run when list LENGTH changes, not array reference
   useEffect(() => {
     if (
       appMode === "review" &&
@@ -441,9 +443,9 @@ export function useFiltering({
       uniqueFilteredQuestions.length > 0
     ) {
       // Small delay to ensure all questions from initial fetch are processed
-      const savedId = localStorage.getItem("ue5_pref_last_id");
+      const savedId = localStorage.getItem(STORAGE_KEYS.PREF_LAST_ID);
       const savedIndex = parseInt(
-        localStorage.getItem("ue5_pref_review_index") || "0",
+        localStorage.getItem(STORAGE_KEYS.PREF_REVIEW_INDEX) || "0",
         10
       );
 

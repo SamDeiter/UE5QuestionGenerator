@@ -93,6 +93,8 @@ export const STORAGE_KEYS = {
   PREF_SEARCH: "ue5_pref_search",
   PREF_FILTER: "ue5_pref_filter",
   PREF_HISTORY: "ue5_pref_history",
+  PREF_REVIEW_INDEX: "ue5_pref_review_index",
+  PREF_LAST_ID: "ue5_pref_last_id",
 };
 
 // Context Optimization Limits
