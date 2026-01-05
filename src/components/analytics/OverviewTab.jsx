@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import StatCard from "./StatCard";
-import EmptyState from "./EmptyState";
+import EmptyState from "../EmptyState";
 
 /**
  * OverviewTab - Dashboard overview with summary stats and charts

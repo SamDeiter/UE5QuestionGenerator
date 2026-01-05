@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from "recharts";
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
-import EmptyState from "./EmptyState";
+import EmptyState from "../EmptyState";
 import DisciplineDetailPanel from "./DisciplineDetailPanel";
 import TagCloudAnalytics from "./TagCloudAnalytics";
 import TagConnectionGraph from "./TagConnectionGraph";
