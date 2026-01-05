@@ -251,10 +251,12 @@ const ContextToolbar = ({
               ? "bg-blue-600/20 text-blue-300 border-blue-500/50"
               : "bg-transparent text-slate-400 border-transparent hover:bg-slate-800"
           }`}
-          title={`Filter by Creator: ${config.creatorName}`}
+          title={`Filter by Reviewer: ${
+            config.reviewerName || config.creatorName
+          }`}
         >
-          <Icon name="user" size={14} />
-          {filterByCreator ? "My Questions Only" : "All Creators"}
+          <Icon name="user-check" size={14} />
+          {filterByCreator ? "My Reviews Only" : "All Reviewers"}
         </button>
 
         <div className="h-4 w-px bg-slate-700"></div>

@@ -8,7 +8,7 @@
  * @param {Array} historicalQuestions - Historical questions from previous sessions
  * @param {boolean} showHistory - Whether to show all questions or just current session
  * @param {string} filterMode - Filter by status: 'pending', 'accepted', 'rejected', or 'all'
- * @param {boolean} filterByCreator - Whether to filter by creator name
+ * @param {boolean} filterByCreator - Whether to filter by reviewer name (shows questions reviewed by current user)
  * @param {string} searchTerm - Text search term
  * @param {string} creatorName - Current user's creator name
  * @param {string} discipline - Selected discipline (e.g., 'Technical Art')
@@ -78,8 +78,8 @@ export const createFilteredQuestions = (
       }
     }
 
-    // 2. Creator Filter
-    if (filterByCreator && q.creatorName !== creatorName) return false;
+    // 2. Reviewer Filter (filter by who reviewed the question)
+    if (filterByCreator && q.reviewerName !== creatorName) return false;
 
     // 3. Discipline Filter
     if (discipline && q.discipline !== discipline) return false;
