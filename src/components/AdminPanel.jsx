@@ -8,7 +8,7 @@
  * - Promote/demote users
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app } from "../services/firebase";
 import Icon from "./Icon";

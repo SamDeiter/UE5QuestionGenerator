@@ -112,7 +112,28 @@ const CritiqueDisplay = ({
 
     const flushList = () => {
       if (currentList.length > 0) {
-            lines.forEach((line, index) => {
+        const ListTag = listType === "number" ? "ol" : "ul";
+        const listClassName =
+          listType === "number"
+            ? "list-decimal list-inside space-y-0.5 ml-2"
+            : "list-disc list-inside space-y-0.5 ml-2";
+
+        elements.push(
+          <ListTag key={`list-${elements.length}`} className={listClassName}>
+            {currentList.map((item, i) => (
+              <li
+                key={i}
+                dangerouslySetInnerHTML={{ __html: parseMarkdown(item) }}
+              />
+            ))}
+          </ListTag>
+        );
+        currentList = [];
+        listType = null;
+      }
+    };
+
+    lines.forEach((line, index) => {
       const trimmed = line.trim();
 
       // Check for bullet points (* item or - item)

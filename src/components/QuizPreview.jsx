@@ -655,7 +655,6 @@ const QuizPreview = ({ questions, config, onClose }) => {
           <div className="space-y-4" role="listbox" aria-label="Answer options">
             {Object.entries(options).map(([key, text], index) => {
               const isSelected = selectedAnswer === key;
-              const isCorrectAnswer = key === currentQuestion.correct;
               const isFocused = index === focusedOptionIndex;
 
               return (

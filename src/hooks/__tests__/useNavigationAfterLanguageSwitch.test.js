@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook } from "@testing-library/react";
 import { useNavigationAfterLanguageSwitch } from "../useNavigationAfterLanguageSwitch";
 
 // Mock console.log to suppress debug output during tests

@@ -342,7 +342,6 @@ export function useFiltering({
   const lastKnownListRef = useRef(uniqueFilteredQuestions);
 
   useEffect(() => {
-    const listRefChanged = uniqueFilteredQuestions !== lastKnownListRef.current;
     const indexChanged = currentReviewIndex !== lastKnownIndexRef.current;
 
     if (uniqueFilteredQuestions.length === 0) {
