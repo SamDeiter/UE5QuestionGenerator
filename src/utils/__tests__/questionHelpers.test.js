@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseQuestions } from "./questionHelpers";
+import { parseQuestions } from "../questionHelpers";
 
 describe("questionHelpers - parseQuestions", () => {
   it("parses clean JSON array", () => {

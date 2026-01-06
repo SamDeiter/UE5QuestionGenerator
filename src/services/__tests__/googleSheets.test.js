@@ -4,7 +4,7 @@ import {
   fetchQuestionsFromSheets,
   saveQuestionsToSheets,
   clearQuestionsFromSheets,
-} from "./googleSheets";
+} from "../googleSheets";
 
 describe("Google Sheets Service", () => {
   let appendChildSpy;

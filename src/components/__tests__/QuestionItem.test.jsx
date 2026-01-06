@@ -1,13 +1,13 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import QuestionItem from "./QuestionItem";
+import QuestionItem from "../QuestionItem";
 
 // Mock child components to simplify testing
-vi.mock("./Icon", () => ({
+vi.mock("../Icon", () => ({
   default: ({ name }) => <span data-testid={`icon-${name}`}>{name}</span>,
 }));
 
-vi.mock("./FlagIcon", () => ({
+vi.mock("../FlagIcon", () => ({
   default: ({ code }) => <span data-testid={`flag-${code}`}>{code}</span>,
 }));
 

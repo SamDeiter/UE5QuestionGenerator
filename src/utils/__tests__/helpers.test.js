@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
-import { chunkArray, stripHtmlTags, parseCSVLine } from "./stringHelpers";
-import { formatUrl, filterDuplicateQuestions } from "./parserUtils";
-import { formatDate } from "./dateHelpers";
+import { chunkArray, stripHtmlTags, parseCSVLine } from "../stringHelpers";
+import { formatUrl, filterDuplicateQuestions } from "../parserUtils";
+import { formatDate } from "../dateHelpers";
 
 describe("Helper Functions", () => {
   describe("chunkArray", () => {

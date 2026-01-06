@@ -5,10 +5,10 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import Header from "../components/Header";
+import Header from "../Header";
 
 // Mock the hooks and services
-vi.mock("../hooks/useConnectionStatus", () => ({
+vi.mock("../../hooks/useConnectionStatus", () => ({
   default: () => ({
     isOnline: true,
     queuedCount: 0,
@@ -16,7 +16,7 @@ vi.mock("../hooks/useConnectionStatus", () => ({
   }),
 }));
 
-vi.mock("../services/firebase", () => ({
+vi.mock("../../services/firebase", () => ({
   signOutUser: vi.fn().mockResolvedValue(undefined),
 }));
 

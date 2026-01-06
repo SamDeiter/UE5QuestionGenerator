@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   createFilteredQuestions,
   createUniqueFilteredQuestions,
-} from "./questionFilters";
+} from "../questionFilters";
 
 describe("createFilteredQuestions", () => {
   const mockQuestions = [
@@ -10,6 +10,7 @@ describe("createFilteredQuestions", () => {
       uniqueId: "1",
       status: "pending",
       creatorName: "Sam",
+      reviewerName: "Sam",
       discipline: "Tech Art",
       difficulty: "Easy",
       type: "Multiple Choice",
@@ -19,6 +20,7 @@ describe("createFilteredQuestions", () => {
       uniqueId: "2",
       status: "accepted",
       creatorName: "Sam",
+      reviewerName: "Sam",
       discipline: "Tech Art",
       difficulty: "Hard",
       type: "True/False",
@@ -37,6 +39,7 @@ describe("createFilteredQuestions", () => {
       uniqueId: "4",
       status: "pending",
       creatorName: "Sam",
+      reviewerName: "Sam",
       discipline: "Tech Art",
       difficulty: "Easy",
       type: "True/False",
