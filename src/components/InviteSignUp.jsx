@@ -116,6 +116,11 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
     }
   };
 
+  const getAuthButtonText = () => {
+    if (isAuthenticating) return "Please wait...";
+    return isNewUser ? "Create Account" : "Sign In";
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl">
@@ -149,6 +154,7 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
               placeholder="Enter your invite code"
               className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 font-mono tracking-wider"
               disabled={validationStatus === "valid"}
+              aria-invalid={validationStatus === "invalid"}
             />
           </div>
 
@@ -180,8 +186,8 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
             </div>
           )}
 
-          {/* Actions */}
-          {validationStatus !== "valid" ? (
+          {/* Actions - Refactored to avoid nested ternaries for linting */}
+          {validationStatus !== "valid" && (
             <button
               onClick={() => handleValidate()}
               disabled={validationStatus === "validating" || !inviteCode.trim()}
@@ -189,7 +195,9 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
             >
               Validate Invite Code
             </button>
-          ) : showEmailAuth ? (
+          )}
+
+          {validationStatus === "valid" && showEmailAuth && (
             /* Email/Password Form */
             <form onSubmit={handleEmailAuth} className="space-y-3">
               <input
@@ -214,11 +222,7 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
                 disabled={isAuthenticating}
                 className="w-full py-3 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white font-bold rounded-lg transition-colors"
               >
-                {isAuthenticating
-                  ? "Please wait..."
-                  : isNewUser
-                  ? "Create Account"
-                  : "Sign In"}
+                {getAuthButtonText()}
               </button>
               <button
                 type="button"
@@ -237,7 +241,9 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
                 ← Back to sign-in options
               </button>
             </form>
-          ) : (
+          )}
+
+          {validationStatus === "valid" && !showEmailAuth && (
             /* Auth Options */
             <div className="space-y-3">
               <button
@@ -248,20 +254,27 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
                 {isAuthenticating ? (
                   <Icon name="loader" size={20} className="animate-spin" />
                 ) : (
-                  <GoogleIcon />
+                  <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google"
+                    className="w-5 h-5"
+                  />
                 )}
-                {isAuthenticating ? "Signing in..." : "Continue with Google"}
+                <span>Continue with Google</span>
               </button>
-              <div className="flex items-center gap-3 text-slate-500 text-sm">
-                <div className="flex-1 h-px bg-slate-700" />
-                <span>or</span>
-                <div className="flex-1 h-px bg-slate-700" />
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-700"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-slate-900 px-2 text-slate-500">Or</span>
+                </div>
               </div>
               <button
                 onClick={() => setShowEmailAuth(true)}
-                className="w-full flex items-center justify-center gap-3 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg transition-colors border border-slate-700"
+                disabled={isAuthenticating}
+                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg border border-slate-700 transition-colors disabled:opacity-50"
               >
-                <Icon name="mail" size={20} />
                 Continue with Email
               </button>
               <p className="text-xs text-slate-500 text-center">

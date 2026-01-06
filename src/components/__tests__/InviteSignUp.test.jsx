@@ -8,6 +8,8 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, test, expect, vi, beforeEach } from "vitest";
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 import InviteSignUp from "../InviteSignUp";
 import * as inviteService from "../../services/inviteService";
 import * as firebase from "../../services/firebase";
@@ -59,6 +61,11 @@ vi.mock("firebase/firestore", () => ({
   limit: vi.fn(),
   startAfter: vi.fn(),
   Timestamp: { now: vi.fn(() => 12345) },
+}));
+
+vi.mock("firebase/functions", () => ({
+  getFunctions: vi.fn(() => ({})),
+  httpsCallable: vi.fn(() => vi.fn().mockResolvedValue({ data: {} })),
 }));
 
 describe("InviteSignUp Component", () => {
@@ -164,12 +171,10 @@ describe("InviteSignUp Component", () => {
 
   describe("Validation Flow", () => {
     test("shows loading state during validation", async () => {
-      inviteService.validateInvite.mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ valid: true }), 100)
-          )
-      );
+      inviteService.validateInvite.mockImplementation(async () => {
+        await delay(100);
+        return { valid: true };
+      });
 
       render(<InviteSignUp onSuccess={mockOnSuccess} />);
       await userEvent.type(

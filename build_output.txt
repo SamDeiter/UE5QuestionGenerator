@@ -1,0 +1,56 @@
+
+> ue5-question-generator@2.2.10 build
+> vite build
+
+[36mvite v7.2.4 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 1118 modules transformed.
+Γ£ù Build failed in 3.04s
+error during build:
+[vite:esbuild] Transform failed with 4 errors:
+C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/sidebar/GenerationSettings.jsx:460:12: ERROR: Unexpected closing "CollapsibleSection" tag does not match opening "div" tag
+C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/sidebar/GenerationSettings.jsx:461:10: ERROR: Unexpected closing "div" tag does not match opening "CollapsibleSection" tag
+C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/sidebar/GenerationSettings.jsx:463:6: ERROR: Unexpected closing "CollapsibleSection" tag does not match opening "div" tag
+C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/sidebar/GenerationSettings.jsx:468:0: ERROR: Unexpected end of file before a closing "CollapsibleSection" tag
+file: C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/sidebar/GenerationSettings.jsx:460:12
+
+Unexpected closing "CollapsibleSection" tag does not match opening "div" tag
+458 |                  </button>
+459 |              </div>
+460 |            </CollapsibleSection>
+    |              ^
+461 |          </div>
+462 |        </div>
+
+Unexpected closing "div" tag does not match opening "CollapsibleSection" tag
+459 |              </div>
+460 |            </CollapsibleSection>
+461 |          </div>
+    |            ^
+462 |        </div>
+463 |      </CollapsibleSection>
+
+Unexpected closing "CollapsibleSection" tag does not match opening "div" tag
+461 |          </div>
+462 |        </div>
+463 |      </CollapsibleSection>
+    |        ^
+464 |    );
+465 |  };
+
+Unexpected end of file before a closing "CollapsibleSection" tag
+466 |  
+467 |  export default GenerationSettings;
+468 |  
+    |  ^
+
+    at failureErrorWithLog (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\esbuild\lib\main.js:1467:15)
+    at C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\esbuild\lib\main.js:736:50
+    at responseCallbacks.<computed> (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\esbuild\lib\main.js:603:9)
+    at handleIncomingPacket (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\esbuild\lib\main.js:658:12)
+    at Socket.readFromStdout (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\esbuild\lib\main.js:581:7)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)

@@ -1,5 +1,6 @@
 import React from "react";
 import Icon from "../Icon";
+import CollapsibleSection from "../CollapsibleSection";
 
 const UserList = ({
   users,
@@ -37,92 +38,87 @@ const UserList = ({
   };
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-blue-500/30">
-      <h2
-        onClick={onToggle}
-        className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-blue-400 mb-3 flex items-center gap-2"
-      >
-        <div className="flex items-center gap-2">
-          <Icon name="users" size={18} /> Registered Users ({users?.length || 0}
-          )
-        </div>
-        <Icon
-          name={isCollapsed ? "chevron-down" : "chevron-up"}
-          size={16}
-          className="ml-auto opacity-50"
-        />
-      </h2>
-      {!isCollapsed && (
-        <div className="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-4 text-slate-400">
-              <Icon name="loader" className="animate-spin mr-2" size={16} />
-              Loading users...
-            </div>
-          ) : !users || users.length === 0 ? (
-            <p className="text-slate-500 text-sm">No users found.</p>
-          ) : (
-            users.map((user) => (
-              <div
-                key={user.uid}
-                className="bg-slate-700/50 p-3 rounded flex items-center justify-between border border-slate-600/30 hover:border-slate-500/50 transition-colors"
-              >
-                <div>
-                  <div className="text-white font-medium text-sm flex items-center gap-2">
-                    {user.email}
-                    {user.role === "admin" && (
-                      <Icon
-                        name="shield"
-                        size={12}
-                        className="text-yellow-400"
-                        title="Admin User"
-                      />
-                    )}
-                  </div>
-                  <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold ${getRoleBadgeClasses(
-                        user.role
-                      )}`}
-                    >
-                      {user.role}
-                    </span>
-                    Joined: {formatDate(user.registeredAt)}
-                  </div>
-                </div>
+    <CollapsibleSection
+      title={`Registered Users (${users?.length || 0})`}
+      icon="users"
+      isCollapsed={isCollapsed}
+      onToggle={onToggle}
+      variant="blue"
+    >
+      <div className="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+        {isLoading && (
+          <div className="flex items-center justify-center p-4 text-slate-400">
+            <Icon name="loader" className="animate-spin mr-2" size={16} />
+            Loading users...
+          </div>
+        )}
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() =>
-                      handleChangeRole(user.uid, user.role, user.email)
-                    }
-                    className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded transition-all"
-                    title={
-                      user.role === "admin"
-                        ? "Demote to User"
-                        : "Promote to Admin"
-                    }
-                  >
+        {!isLoading && (!users || users.length === 0) && (
+          <p className="text-slate-500 text-sm">No users found.</p>
+        )}
+
+        {!isLoading &&
+          users &&
+          users.length > 0 &&
+          users.map((user) => (
+            <div
+              key={user.uid}
+              className="bg-slate-700/50 p-3 rounded flex items-center justify-between border border-slate-600/30 hover:border-slate-500/50 transition-colors"
+            >
+              <div>
+                <div className="text-white font-medium text-sm flex items-center gap-2">
+                  {user.email}
+                  {user.role === "admin" && (
                     <Icon
-                      name={user.role === "admin" ? "arrow-down" : "arrow-up"}
+                      name="shield"
                       size={12}
+                      className="text-yellow-400"
+                      title="Admin User"
                     />
-                  </button>
-
-                  <button
-                    onClick={() => handleRevokeUser(user.uid, user.email)}
-                    className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-all"
-                    title="Revoke Access"
+                  )}
+                </div>
+                <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold ${getRoleBadgeClasses(
+                      user.role
+                    )}`}
                   >
-                    <Icon name="x" size={12} />
-                  </button>
+                    {user.role}
+                  </span>
+                  Joined: {formatDate(user.registeredAt)}
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      )}
-    </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    handleChangeRole(user.uid, user.role, user.email)
+                  }
+                  className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded transition-all"
+                  title={
+                    user.role === "admin"
+                      ? "Demote to User"
+                      : "Promote to Admin"
+                  }
+                >
+                  <Icon
+                    name={user.role === "admin" ? "arrow-down" : "arrow-up"}
+                    size={12}
+                  />
+                </button>
+
+                <button
+                  onClick={() => handleRevokeUser(user.uid, user.email)}
+                  className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-all"
+                  title="Revoke Access"
+                >
+                  <Icon name="x" size={12} />
+                </button>
+              </div>
+            </div>
+          ))}
+      </div>
+    </CollapsibleSection>
   );
 };
 

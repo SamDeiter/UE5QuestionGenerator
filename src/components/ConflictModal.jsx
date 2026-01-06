@@ -11,10 +11,37 @@
 
 import React, { useState } from "react";
 import Icon from "./Icon";
+import CollapsibleSection from "./CollapsibleSection";
 
 const ConflictModal = ({ isOpen, onClose, conflictData, onResolve }) => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [showDiff, setShowDiff] = useState(false);
+
+  /**
+   * Returns styles for the resolution button based on selected option
+   */
+  const getResolveButtonStyles = () => {
+    if (selectedOption === "DISCARD") {
+      return "bg-green-600 hover:bg-green-500 text-white";
+    }
+    if (selectedOption === "OVERWRITE") {
+      return "bg-red-600 hover:bg-red-500 text-white";
+    }
+    return "bg-slate-700 text-slate-400 cursor-not-allowed";
+  };
+
+  /**
+   * Returns text for the resolution button based on selected option
+   */
+  const getResolveButtonText = () => {
+    if (selectedOption === "DISCARD") {
+      return "Reload Latest Version";
+    }
+    if (selectedOption === "OVERWRITE") {
+      return "Force Overwrite";
+    }
+    return "Select an Option";
+  };
 
   if (!isOpen || !conflictData) return null;
 
@@ -210,32 +237,18 @@ const ConflictModal = ({ isOpen, onClose, conflictData, onResolve }) => {
               </div>
             </div>
 
-            {/* Option 3: View Diff */}
-            <button
-              onClick={() => setShowDiff(!showDiff)}
-              className="w-full border-2 border-slate-700 rounded-lg p-4 bg-slate-800/30 hover:border-cyan-500/50 transition-all text-left"
+            <CollapsibleSection
+              title={`${showDiff ? "Hide" : "View"} Detailed Changes`}
+              icon="eye"
+              isCollapsed={!showDiff}
+              onToggle={() => setShowDiff(!showDiff)}
+              variant="slate"
+              className="!border-2 !border-slate-700 hover:!border-cyan-500/50 !p-1"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Icon name="eye" size={20} className="text-cyan-400" />
-                  <span className="font-semibold text-white">
-                    {showDiff ? "Hide" : "View"} Detailed Changes
-                  </span>
-                </div>
-                <Icon
-                  name={showDiff ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  className="text-slate-400"
-                />
-              </div>
-            </button>
-
-            {/* Diff View */}
-            {showDiff && (
-              <div className="border border-slate-700 rounded-lg p-4 bg-slate-900/50">
+              <div className="p-3 border border-slate-700 rounded-lg bg-slate-900/50">
                 {renderDiff()}
               </div>
-            )}
+            </CollapsibleSection>
           </div>
 
           {/* Action Buttons */}
@@ -249,19 +262,9 @@ const ConflictModal = ({ isOpen, onClose, conflictData, onResolve }) => {
             <button
               onClick={() => handleResolve(selectedOption)}
               disabled={!selectedOption}
-              className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all ${
-                selectedOption === "DISCARD"
-                  ? "bg-green-600 hover:bg-green-500 text-white"
-                  : selectedOption === "OVERWRITE"
-                  ? "bg-red-600 hover:bg-red-500 text-white"
-                  : "bg-slate-700 text-slate-400 cursor-not-allowed"
-              }`}
+              className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all ${getResolveButtonStyles()}`}
             >
-              {selectedOption === "DISCARD"
-                ? "Reload Latest Version"
-                : selectedOption === "OVERWRITE"
-                ? "Force Overwrite"
-                : "Select an Option"}
+              {getResolveButtonText()}
             </button>
           </div>
         </div>

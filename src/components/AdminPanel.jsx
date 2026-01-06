@@ -12,6 +12,7 @@ import React, { useState } from "react";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app } from "../services/firebase";
 import Icon from "./Icon";
+import CollapsibleSection from "./CollapsibleSection";
 import { UI_LABELS } from "../utils/constants";
 
 import {
@@ -54,8 +55,8 @@ const AdminPanel = ({
   // Collapsible sections state
   const [collapsed, setCollapsed] = useState({
     featureAccess: true,
-    inviteManagement: false, // Merged: generateInvite + activeInvites
-    registeredUsers: false,
+    inviteManagement: true, // Merged: generateInvite + activeInvites
+    registeredUsers: true,
     reviewerActivity: true, // NEW: Reviewer Activity Analytics section
     apiConfig: true,
     customTags: true,
@@ -204,100 +205,83 @@ const AdminPanel = ({
         </h1>
       </div>
       {/* Feature Access Overview */}
-      <div className="bg-blue-900/20 rounded-lg p-6 border border-blue-500/30">
-        <h2
-          onClick={() => toggleSection("featureAccess")}
-          className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-blue-400 mb-4 flex items-center gap-2"
-        >
-          <div className="flex items-center gap-2">
-            <Icon name="eye" size={18} /> Feature Access Overview
+      <CollapsibleSection
+        title="Feature Access Overview"
+        icon="eye"
+        isCollapsed={collapsed.featureAccess}
+        onToggle={() => toggleSection("featureAccess")}
+        variant="blue"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-slate-800/50 p-4 rounded border border-blue-500/30">
+            <h3 className="text-sm font-bold text-blue-400 mb-3">
+              🔍 Reviewers (Limited Access)
+            </h3>
+            <ul className="space-y-2 text-xs text-slate-300">
+              <li className="flex items-center gap-2">
+                <Icon name="list-checks" size={12} className="text-blue-400" />
+                Review Mode (view & approve questions)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon name="database" size={12} className="text-blue-400" />
+                Database View (Extended Access)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon name="bar-chart-2" size={12} className="text-blue-400" />
+                Analytics Dashboard
+              </li>
+              <li className="flex items-center gap-2 text-slate-500">
+                <Icon name="x" size={12} className="text-red-400" />
+                <span className="line-through">Create Questions</span>
+              </li>
+              <li className="flex items-center gap-2 text-slate-500">
+                <Icon name="x" size={12} className="text-red-400" />
+                <span className="line-through">Admin Panel</span>
+              </li>
+            </ul>
           </div>
-          <Icon
-            name={collapsed.featureAccess ? "chevron-down" : "chevron-up"}
-            size={16}
-            className="ml-auto opacity-50"
-          />
-        </h2>
-        {!collapsed.featureAccess && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-800/50 p-4 rounded border border-blue-500/30">
-              <h3 className="text-sm font-bold text-blue-400 mb-3">
-                🔍 Reviewers (Limited Access)
-              </h3>
-              <ul className="space-y-2 text-xs text-slate-300">
-                <li className="flex items-center gap-2">
-                  <Icon
-                    name="list-checks"
-                    size={12}
-                    className="text-blue-400"
-                  />
-                  Review Mode (view & approve questions)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="database" size={12} className="text-blue-400" />
-                  Database View (Extended Access)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon
-                    name="bar-chart-2"
-                    size={12}
-                    className="text-blue-400"
-                  />
-                  Analytics Dashboard
-                </li>
-                <li className="flex items-center gap-2 text-slate-500">
-                  <Icon name="x" size={12} className="text-red-400" />
-                  <span className="line-through">Create Questions</span>
-                </li>
-                <li className="flex items-center gap-2 text-slate-500">
-                  <Icon name="x" size={12} className="text-red-400" />
-                  <span className="line-through">Admin Panel</span>
-                </li>
-              </ul>
-            </div>
 
-            <div className="bg-slate-800/50 p-4 rounded border border-purple-500/30">
-              <h3 className="text-sm font-bold text-purple-400 mb-3">
-                👑 Admins (Full Access)
-              </h3>
-              <ul className="space-y-2 text-xs text-slate-300">
-                <li className="flex items-center gap-2">
-                  <Icon name="check" size={12} className="text-purple-400" />
-                  All Reviewer Features
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon
-                    name="plus-circle"
-                    size={12}
-                    className="text-purple-400"
-                  />
-                  Create Mode (generate questions)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon
-                    name="clipboard-list"
-                    size={12}
-                    className="text-purple-400"
-                  />
-                  Test View (experimental features)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="terminal" size={12} className="text-purple-400" />
-                  Prompt Lab (AI testing)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="shield" size={12} className="text-purple-400" />
-                  Admin Panel (user management)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="database" size={12} className="text-purple-400" />
-                  Database Editing (full CRUD)
-                </li>
-              </ul>
-            </div>
+          <div className="bg-slate-800/50 p-4 rounded border border-purple-500/30">
+            <h3 className="text-sm font-bold text-purple-400 mb-3">
+              👑 Admins (Full Access)
+            </h3>
+            <ul className="space-y-2 text-xs text-slate-300">
+              <li className="flex items-center gap-2">
+                <Icon name="check" size={12} className="text-purple-400" />
+                All Reviewer Features
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon
+                  name="plus-circle"
+                  size={12}
+                  className="text-purple-400"
+                />
+                Create Mode (generate questions)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon
+                  name="clipboard-list"
+                  size={12}
+                  className="text-purple-400"
+                />
+                Test View (experimental features)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon name="terminal" size={12} className="text-purple-400" />
+                Prompt Lab (AI testing)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon name="shield" size={12} className="text-purple-400" />
+                Admin Panel (user management)
+              </li>
+              <li className="flex items-center gap-2">
+                <Icon name="database" size={12} className="text-purple-400" />
+                Database Editing (full CRUD)
+              </li>
+            </ul>
           </div>
-        )}
-      </div>
+        </div>
+      </CollapsibleSection>
       {/* Invite Management - Extracted Component */}
       <React.Suspense
         fallback={
@@ -344,40 +328,28 @@ const AdminPanel = ({
       </React.Suspense>
 
       {/* Reviewer Activity Analytics */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-cyan-500/30">
-        <h2
-          onClick={() => toggleSection("reviewerActivity")}
-          className="cursor-pointer hover:text-white transition-colors text-lg font-bold text-cyan-400 mb-3 flex items-center gap-2"
-        >
-          <div className="flex items-center gap-2">
-            <Icon name="bar-chart-2" size={18} /> Reviewer Analytics
+      <React.Suspense
+        fallback={
+          <div className="p-8 text-center text-slate-400">
+            <Icon name="loader" className="animate-spin mb-2 mx-auto" />
+            Loading Analytics...
           </div>
-          <Icon
-            name={collapsed.reviewerActivity ? "chevron-down" : "chevron-up"}
-            size={16}
-            className="ml-auto opacity-50"
-          />
-        </h2>
-        {!collapsed.reviewerActivity && (
-          <React.Suspense
-            fallback={
-              <div className="p-8 text-center text-slate-400">
-                <Icon name="loader" className="animate-spin mb-2 mx-auto" />
-                Loading Analytics...
-              </div>
-            }
-          >
-            <ReviewerAnalytics
-              reviewerAnalytics={reviewerAnalytics}
-              analyticsLoading={analyticsLoading}
-              loadReviewerAnalytics={loadReviewerAnalytics}
-              formatDuration={formatDuration}
-              formatAnalyticsDate={formatAnalyticsDate}
-              formatDate={formatAnalyticsDate}
-            />
-          </React.Suspense>
-        )}
-      </div>
+        }
+      >
+        <ReviewerAnalytics
+          reviewerAnalytics={reviewerAnalytics}
+          analyticsLoading={analyticsLoading}
+          loadReviewerAnalytics={loadReviewerAnalytics}
+          formatDuration={formatDuration}
+          formatAnalyticsDate={formatAnalyticsDate}
+          formatDate={formatAnalyticsDate}
+          isCollapsed={collapsed.reviewerActivity}
+          onToggle={() => {
+            toggleSection("reviewerActivity");
+            if (collapsed.reviewerActivity) loadReviewerAnalytics();
+          }}
+        />
+      </React.Suspense>
 
       {/* API Configuration */}
       <React.Suspense
