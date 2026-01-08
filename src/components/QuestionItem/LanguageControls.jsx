@@ -3,6 +3,24 @@ import Icon from "../Icon";
 import FlagIcon from "../FlagIcon";
 import { LANGUAGE_CODES, LANGUAGE_FLAGS } from "../../utils/constants";
 
+/**
+ * Get button title text based on language state
+ */
+const getButtonTitle = (
+  lang,
+  isLocked,
+  lockedBy,
+  isCurrent,
+  exists,
+  canTranslate
+) => {
+  if (isLocked) return `Locked by ${lockedBy?.userEmail || "another user"}`;
+  if (isCurrent) return `Current: ${lang}`;
+  if (exists) return `Switch to ${lang}`;
+  if (canTranslate) return `Translate to ${lang}`;
+  return `${lang} (Unavailable)`;
+};
+
 const LanguageControls = ({
   q,
   availableLanguages,
@@ -134,17 +152,14 @@ const LanguageControls = ({
               (!exists && !canTranslate)
             }
             className={containerClass}
-            title={
-              isLocked
-                ? `Locked by ${lockedBy?.userEmail || "another user"}`
-                : isCurrent
-                ? `Current: ${lang}`
-                : exists
-                ? `Switch to ${lang}`
-                : canTranslate
-                ? `Translate to ${lang}`
-                : `${lang} (Unavailable)`
-            }
+            title={getButtonTitle(
+              lang,
+              isLocked,
+              lockedBy,
+              isCurrent,
+              exists,
+              canTranslate
+            )}
           >
             {isLoading ? (
               <Icon
