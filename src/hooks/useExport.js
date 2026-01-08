@@ -192,6 +192,7 @@ export const useExport = (
     try {
       const data = await fetchQuestionsFromSheets(config.sheetUrl);
       const loadedQuestions = data.map((q, index) => ({
+        // eslint-disable-next-line sonarjs/pseudo-random
         id: Date.now() + index + Math.random(),
         uniqueId: q["Unique ID"] || q.uniqueId || crypto.randomUUID(),
         discipline: q.Discipline || q.discipline || "Imported",
@@ -259,6 +260,7 @@ export const useExport = (
         // PERFORMANCE: Load once to prevent re-render loops
         const loadedQuestions = data.map((q, index) => ({
           ...q,
+          // eslint-disable-next-line sonarjs/pseudo-random
           id: q.id || Date.now() + index + Math.random(), // Ensure React key
           status: q.status || "pending", // CRITICAL: Preserve actual status
         }));
