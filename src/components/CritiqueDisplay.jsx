@@ -7,10 +7,11 @@
 /* eslint-disable sonarjs/slow-regex */
 import Icon from "./Icon";
 import DiffText from "./DiffText";
+import DOMPurify from "dompurify";
 import { QUALITY_PASS_THRESHOLD } from "../utils/constants";
 import { getScoreColorClasses } from "../utils/scoreColors";
 
-// Simple markdown to HTML converter
+// Simple markdown to HTML converter with XSS protection
 const parseMarkdown = (text) => {
   if (!text) return "";
 
@@ -32,7 +33,11 @@ const parseMarkdown = (text) => {
     '<code class="bg-slate-800 px-1 rounded text-orange-300">$1</code>'
   );
 
-  return html;
+  // SECURITY: Sanitize output to prevent XSS from AI-generated content
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ["strong", "em", "code"],
+    ALLOWED_ATTR: ["class"],
+  });
 };
 
 // DiffText imported from shared component

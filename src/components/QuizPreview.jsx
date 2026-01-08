@@ -7,6 +7,7 @@
 /* eslint-disable sonarjs/slow-regex */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Icon from "./Icon";
+import { sanitizeText } from "../utils/sanitize";
 import {
   generateGUID,
   createSeededRandom,
@@ -642,7 +643,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
 
           <h2
             className="text-xl text-white mb-6 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: currentQuestion.question }}
+            dangerouslySetInnerHTML={sanitizeText(currentQuestion.question)}
           />
 
           {/* Calming instruction */}
@@ -697,7 +698,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
                     </span>
                     <span
                       className="text-white flex-1"
-                      dangerouslySetInnerHTML={{ __html: text }}
+                      dangerouslySetInnerHTML={sanitizeText(text)}
                     />
                   </div>
                 </button>
