@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 
@@ -10,6 +10,10 @@ const UserList = ({
   handleChangeRole,
   handleRevokeUser,
 }) => {
+  // Multi-select state for bulk actions
+  const [selectedUsers, setSelectedUsers] = useState(new Set());
+  const [bulkRevoking, setBulkRevoking] = useState(false);
+
   // Robust date formatter
   const formatDate = (dateVal) => {
     if (!dateVal) return "N/A";
@@ -37,6 +41,68 @@ const UserList = ({
     }
   };
 
+  // Toggle single user selection
+  const toggleUserSelection = (uid) => {
+    setSelectedUsers((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(uid)) {
+        newSet.delete(uid);
+      } else {
+        newSet.add(uid);
+      }
+      return newSet;
+    });
+  };
+
+  // Toggle select all (non-admin users only - admins shouldn't be bulk revoked)
+  const toggleSelectAll = () => {
+    const nonAdminUsers = users.filter((u) => u.role !== "admin");
+    if (selectedUsers.size === nonAdminUsers.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(nonAdminUsers.map((u) => u.uid)));
+    }
+  };
+
+  // Bulk revoke selected users
+  const handleBulkRevoke = async () => {
+    if (selectedUsers.size === 0) return;
+
+    const selectedEmails = users
+      .filter((u) => selectedUsers.has(u.uid))
+      .map((u) => u.email)
+      .join(", ");
+
+    if (
+      !confirm(
+        `Revoke access for ${selectedUsers.size} user(s)?\n${selectedEmails}`
+      )
+    )
+      return;
+
+    setBulkRevoking(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const uid of selectedUsers) {
+      const user = users.find((u) => u.uid === uid);
+      if (user) {
+        try {
+          await handleRevokeUser(uid, user.email, true); // true = suppress individual confirmation
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to revoke ${user.email}:`, error);
+          failCount++;
+        }
+      }
+    }
+
+    setSelectedUsers(new Set());
+    setBulkRevoking(false);
+  };
+
+  const nonAdminCount = users?.filter((u) => u.role !== "admin").length || 0;
+
   return (
     <CollapsibleSection
       title={`Registered Users (${users?.length || 0})`}
@@ -45,6 +111,34 @@ const UserList = ({
       onToggle={onToggle}
       variant="blue"
     >
+      {/* Bulk Actions Bar */}
+      {users && users.length > 0 && (
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-600/30">
+          <button
+            onClick={toggleSelectAll}
+            className="text-xs text-slate-400 hover:text-white transition-colors"
+          >
+            {selectedUsers.size === nonAdminCount && nonAdminCount > 0
+              ? "Deselect All"
+              : `Select All (${nonAdminCount} non-admin)`}
+          </button>
+          {selectedUsers.size > 0 && (
+            <button
+              onClick={handleBulkRevoke}
+              disabled={bulkRevoking}
+              className="px-3 py-1 bg-red-600 hover:bg-red-500 disabled:bg-slate-600 text-white text-xs rounded transition-all flex items-center gap-1"
+            >
+              {bulkRevoking ? (
+                <Icon name="loader" className="animate-spin" size={12} />
+              ) : (
+                <Icon name="trash-2" size={12} />
+              )}
+              Revoke Selected ({selectedUsers.size})
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
         {isLoading && (
           <div className="flex items-center justify-center p-4 text-slate-400">
@@ -63,9 +157,26 @@ const UserList = ({
           users.map((user) => (
             <div
               key={user.uid}
-              className="bg-slate-700/50 p-3 rounded flex items-center justify-between border border-slate-600/30 hover:border-slate-500/50 transition-colors"
+              className={`bg-slate-700/50 p-3 rounded flex items-center justify-between border transition-colors ${
+                selectedUsers.has(user.uid)
+                  ? "ring-2 ring-blue-500 border-blue-500/50"
+                  : "border-slate-600/30 hover:border-slate-500/50"
+              }`}
             >
-              <div>
+              {/* Checkbox for non-admin users */}
+              {user.role !== "admin" ? (
+                <input
+                  type="checkbox"
+                  checked={selectedUsers.has(user.uid)}
+                  onChange={() => toggleUserSelection(user.uid)}
+                  className="mr-3 w-4 h-4 accent-blue-500 cursor-pointer"
+                  aria-label={`Select user ${user.email}`}
+                />
+              ) : (
+                <div className="mr-3 w-4" /> // Spacer for admin rows
+              )}
+
+              <div className="flex-1">
                 <div className="text-white font-medium text-sm flex items-center gap-2">
                   {user.email}
                   {user.role === "admin" && (

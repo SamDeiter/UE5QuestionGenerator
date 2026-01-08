@@ -31,6 +31,10 @@ const InviteManagement = ({
     forName: "",
   });
 
+  // Multi-select state for bulk actions
+  const [selectedInvites, setSelectedInvites] = useState(new Set());
+  const [bulkRevoking, setBulkRevoking] = useState(false);
+
   const handleCreateInvite = async () => {
     try {
       const result = await createInvite(newInviteSettings);
@@ -59,6 +63,58 @@ const InviteManagement = ({
       console.error("❌ Revoke invite error:", error);
       showMessage(`❌ Failed to revoke: ${error.message}`, 5000);
       await onRefresh();
+    }
+  };
+
+  // Bulk revoke selected invites
+  const handleBulkRevoke = async () => {
+    if (selectedInvites.size === 0) return;
+    if (!confirm(`Revoke ${selectedInvites.size} selected invite(s)?`)) return;
+
+    setBulkRevoking(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const code of selectedInvites) {
+      try {
+        await revokeInvite(code);
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to revoke ${code}:`, error);
+        failCount++;
+      }
+    }
+
+    setSelectedInvites(new Set());
+    setBulkRevoking(false);
+    showMessage(
+      `✅ Revoked ${successCount} invite(s)${
+        failCount > 0 ? `, ${failCount} failed` : ""
+      }`,
+      3000
+    );
+    await onRefresh();
+  };
+
+  // Toggle single invite selection
+  const toggleInviteSelection = (code) => {
+    setSelectedInvites((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(code)) {
+        newSet.delete(code);
+      } else {
+        newSet.add(code);
+      }
+      return newSet;
+    });
+  };
+
+  // Toggle select all
+  const toggleSelectAll = () => {
+    if (selectedInvites.size === invites.length) {
+      setSelectedInvites(new Set());
+    } else {
+      setSelectedInvites(new Set(invites.map((inv) => inv.code)));
     }
   };
 
@@ -180,8 +236,18 @@ const InviteManagement = ({
     return invites.map((invite) => (
       <div
         key={invite.code}
-        className="bg-slate-700/50 p-3 rounded flex items-center justify-between mb-2"
+        className={`bg-slate-700/50 p-3 rounded flex items-center justify-between mb-2 ${
+          selectedInvites.has(invite.code) ? "ring-2 ring-blue-500" : ""
+        }`}
       >
+        {/* Checkbox for multi-select */}
+        <input
+          type="checkbox"
+          checked={selectedInvites.has(invite.code)}
+          onChange={() => toggleInviteSelection(invite.code)}
+          className="mr-3 w-4 h-4 accent-blue-500 cursor-pointer"
+          aria-label={`Select invite ${invite.code}`}
+        />
         <div className="flex-1">
           <div className="text-white font-mono text-sm">{invite.code}</div>
           <div className="text-xs text-slate-400">
@@ -364,9 +430,37 @@ const InviteManagement = ({
 
         {/* Active Invites List */}
         <div className="space-y-2">
-          <h3 className="text-sm font-bold text-yellow-400 mb-2 flex items-center gap-2">
-            <Icon name="key" size={14} /> Active Invites ({invites.length})
-          </h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold text-yellow-400 flex items-center gap-2">
+              <Icon name="key" size={14} /> Active Invites ({invites.length})
+            </h3>
+            {invites.length > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleSelectAll}
+                  className="text-xs text-slate-400 hover:text-white transition-colors"
+                >
+                  {selectedInvites.size === invites.length
+                    ? "Deselect All"
+                    : "Select All"}
+                </button>
+                {selectedInvites.size > 0 && (
+                  <button
+                    onClick={handleBulkRevoke}
+                    disabled={bulkRevoking}
+                    className="px-3 py-1 bg-red-600 hover:bg-red-500 disabled:bg-slate-600 text-white text-xs rounded transition-all flex items-center gap-1"
+                  >
+                    {bulkRevoking ? (
+                      <Icon name="loader" className="animate-spin" size={12} />
+                    ) : (
+                      <Icon name="trash-2" size={12} />
+                    )}
+                    Revoke Selected ({selectedInvites.size})
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           {renderInvitesList()}
         </div>
 
