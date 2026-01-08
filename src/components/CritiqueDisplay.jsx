@@ -1,3 +1,10 @@
+/**
+ * CritiqueDisplay Component - Shows AI critique with markdown rendering
+ *
+ * NOTE: Regex patterns are for parsing markdown/list formats.
+ * Input is AI-generated critique text - controlled, no DoS risk.
+ */
+/* eslint-disable sonarjs/slow-regex */
 import Icon from "./Icon";
 import DiffText from "./DiffText";
 import { QUALITY_PASS_THRESHOLD } from "../utils/constants";

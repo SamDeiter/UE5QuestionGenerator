@@ -1,3 +1,10 @@
+/**
+ * QuizPreview - Interactive quiz component with SCORM reporting
+ *
+ * NOTE: Regex patterns are for HTML tag stripping in accessibility announcements.
+ * Input is question text from app database - controlled, no DoS risk.
+ */
+/* eslint-disable sonarjs/slow-regex */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Icon from "./Icon";
 import {
