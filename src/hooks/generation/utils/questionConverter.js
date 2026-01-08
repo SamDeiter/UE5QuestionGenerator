@@ -30,23 +30,20 @@ export const convertMCtoTF = (mcQuestion, difficulty) => {
   // eslint-disable-next-line sonarjs/pseudo-random
   const randomBool = Math.random() > 0.5;
 
-  let makeItTrue;
-  let targetAnswer;
+  // Declare variables with proper initial values based on condition
+  const makeItTrue = isBooleanAnswer
+    ? ["true", "yes"].includes(lowerCorrect)
+    : randomBool;
 
-  if (isBooleanAnswer) {
-    // PRESERVE MODE: If original answer is True/False, keep the statement as is.
-    // Force the new question to match the original truthiness.
-    makeItTrue = ["true", "yes"].includes(lowerCorrect);
-    targetAnswer = correctAnswerText;
-  } else {
-    // STANDARD MODE: Randomly decide if this will be a TRUE or FALSE question (50/50)
-    makeItTrue = randomBool;
-    // eslint-disable-next-line sonarjs/pseudo-random
-    targetAnswer = makeItTrue
-      ? correctAnswerText
-      : wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)] ||
-        "incorrect";
+  // eslint-disable-next-line sonarjs/pseudo-random
+  const targetAnswer = isBooleanAnswer
+    ? correctAnswerText
+    : makeItTrue
+    ? correctAnswerText
+    : wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)] ||
+      "incorrect";
 
+  if (!isBooleanAnswer) {
     // 1. Handle "Can you..." -> "You can [stem] [answer]"
     if (/^Can you/i.test(newStatement)) {
       const stem = newStatement.replace(/^Can you\s+/i, "");
