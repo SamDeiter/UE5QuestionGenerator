@@ -16,6 +16,7 @@ import QuestionNotesField from "./QuestionItem/QuestionNotesField";
 import { getSecureItem } from "../utils/secureStorage";
 import { useEditLock } from "../hooks/useEditLock";
 import { useAuth } from "../hooks/useAuth";
+import { saveTrainingPair } from "../services/trainingDataService";
 
 // Helper functions to avoid nested ternaries
 const getLockIconName = (hasLock, isLocked) => {
@@ -28,6 +29,26 @@ const getLockStatusText = (hasLock, isLocked) => {
   if (hasLock) return "Reviewing";
   if (isLocked) return "Locked";
   return "Connecting...";
+};
+
+const getLockIndicatorClass = (hasLock, isLocked) => {
+  if (hasLock && !isLocked)
+    return "bg-green-900/30 border border-green-500/50 text-green-400";
+  if (isLocked) return "bg-red-900/30 border border-red-500/50 text-red-400";
+  return "bg-amber-900/30 border border-amber-500/50 text-amber-400";
+};
+
+const getLockTooltip = (hasLock, isLocked, lockedByEmail) => {
+  if (hasLock)
+    return "You have the review lock - others cannot modify this question";
+  if (isLocked) return `Locked by ${lockedByEmail || "another user"}`;
+  return "Acquiring lock...";
+};
+
+const getLockIconColor = (hasLock, isLocked) => {
+  if (hasLock) return "text-green-400";
+  if (isLocked) return "text-red-400";
+  return "text-amber-400 animate-spin";
 };
 
 const QuestionItem = ({
@@ -204,31 +225,16 @@ const QuestionItem = ({
       {/* Active Lock Indicator - Always visible in review mode, color shows status */}
       {appMode === "review" && (
         <div
-          className={`ml-6 mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all duration-500 ${
-            hasLock && !isLocked
-              ? "bg-green-900/30 border border-green-500/50 text-green-400"
-              : isLocked
-              ? "bg-red-900/30 border border-red-500/50 text-red-400"
-              : "bg-amber-900/30 border border-amber-500/50 text-amber-400"
-          }`}
-          title={
-            hasLock
-              ? "You have the review lock - others cannot modify this question"
-              : isLocked
-              ? `Locked by ${lockedBy?.email || "another user"}`
-              : "Acquiring lock..."
-          }
+          className={`ml-6 mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all duration-500 ${getLockIndicatorClass(
+            hasLock,
+            isLocked
+          )}`}
+          title={getLockTooltip(hasLock, isLocked, lockedBy?.email)}
         >
           <Icon
             name={getLockIconName(hasLock, isLocked)}
             size={14}
-            className={
-              hasLock
-                ? "text-green-400"
-                : isLocked
-                ? "text-red-400"
-                : "text-amber-400 animate-spin"
-            }
+            className={getLockIconColor(hasLock, isLocked)}
           />
           <span>{getLockStatusText(hasLock, isLocked)}</span>
         </div>
@@ -391,6 +397,16 @@ const QuestionItem = ({
               lastProcessedCritiqueRef.current = `applied-${
                 q.id
               }-${Date.now()}`;
+
+              // CAPTURE TRAINING DATA: Save original vs. improved for fine-tuning
+              if (improved) {
+                try {
+                  await saveTrainingPair(q, improved, "ai_improvement");
+                  console.log("✅ Training pair saved for question:", q.id);
+                } catch (err) {
+                  console.warn("Failed to save training pair:", err);
+                }
+              }
 
               // Apply improvements to question - keep critiqueScore for display
               await onUpdateQuestion(q.id, {

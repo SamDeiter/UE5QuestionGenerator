@@ -434,6 +434,7 @@ const AdminPanel = ({
           <TrainingDataExport
             isCollapsed={collapsed.trainingData}
             onToggle={() => toggleSection("trainingData")}
+            showMessage={showMessage}
           />
         </React.Suspense>
       )}

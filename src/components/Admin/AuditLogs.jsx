@@ -12,6 +12,10 @@ import CollapsibleSection from "../CollapsibleSection";
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "../../services/firebase";
 
+// Constants for query limits
+const LOGS_PER_COLLECTION = 25;
+const MAX_TOTAL_LOGS = 50;
+
 const AuditLogs = ({ isCollapsed, onToggle }) => {
   const [logs, setLogs] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +33,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         const apiUsageQuery = query(
           collection(db, "apiUsage"),
           orderBy("timestamp", "desc"),
-          limit(25)
+          limit(LOGS_PER_COLLECTION)
         );
         const apiUsageSnapshot = await getDocs(apiUsageQuery);
         apiUsageSnapshot.forEach((doc) => {
@@ -53,7 +57,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         const inviteAttemptsQuery = query(
           collection(db, "inviteAttempts"),
           orderBy("lastAttempt", "desc"),
-          limit(25)
+          limit(LOGS_PER_COLLECTION)
         );
         const inviteAttemptsSnapshot = await getDocs(inviteAttemptsQuery);
         inviteAttemptsSnapshot.forEach((doc) => {
@@ -77,7 +81,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
       // Sort by timestamp (newest first)
       combinedLogs.sort((a, b) => b.timestamp - a.timestamp);
 
-      setLogs(combinedLogs.slice(0, 50)); // Limit to 50 total
+      setLogs(combinedLogs.slice(0, MAX_TOTAL_LOGS)); // Limit to max total
     } catch (err) {
       console.error("Failed to load audit logs:", err);
       setError(err.message);

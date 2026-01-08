@@ -11,6 +11,7 @@ import {
   signInWithEmail,
 } from "../services/firebase";
 import Icon from "./Icon";
+import EmailLogin from "./EmailLogin";
 
 /**
  * InviteSignUp - Registration with invite code validation
@@ -32,6 +33,9 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isNewUser, setIsNewUser] = useState(true);
+
+  // NEW: Toggle for existing user login (no invite needed)
+  const [showExistingUserLogin, setShowExistingUserLogin] = useState(false);
 
   const handleValidate = useCallback(
     async (code) => {
@@ -120,6 +124,16 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
     if (isAuthenticating) return "Please wait...";
     return isNewUser ? "Create Account" : "Sign In";
   };
+
+  // If existing user login is toggled, show EmailLogin component
+  if (showExistingUserLogin) {
+    return (
+      <EmailLogin
+        onSuccess={() => onSuccess?.()}
+        onBack={() => setShowExistingUserLogin(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
@@ -290,6 +304,21 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
             >
               Cancel
             </button>
+          )}
+
+          {/* Existing User Login Link */}
+          {!showEmailAuth && (
+            <div className="mt-4 pt-4 border-t border-slate-800 text-center">
+              <p className="text-slate-500 text-sm mb-2">
+                Already have an account?
+              </p>
+              <button
+                onClick={() => setShowExistingUserLogin(true)}
+                className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+              >
+                Sign in with email →
+              </button>
+            </div>
           )}
         </div>
       </div>
