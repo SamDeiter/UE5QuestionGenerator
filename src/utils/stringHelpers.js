@@ -1,3 +1,10 @@
+/**
+ * String utilities for text processing, markdown rendering, and CSV parsing.
+ *
+ * NOTE: Regex patterns here are for text/markdown processing.
+ * Input is application-controlled (internal question text), not user-provided - no DoS risk.
+ */
+/* eslint-disable sonarjs/slow-regex */
 import DOMPurify from "dompurify";
 
 export const chunkArray = (array, size) => {

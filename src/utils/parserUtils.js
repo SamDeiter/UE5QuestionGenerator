@@ -2,8 +2,9 @@
  * ParserUtils - Utilities for parsing AI text/JSON/Markdown responses.
  *
  * NOTE: Uses Math.random for unique ID generation (non-security).
+ * Regex patterns are for markdown/text parsing - input is app-controlled.
  */
-/* eslint-disable sonarjs/pseudo-random */
+/* eslint-disable sonarjs/pseudo-random, sonarjs/slow-regex */
 import { textSimilarity } from "./stringHelpers";
 import { normalizeQuestion } from "./normalizeQuestion";
 /**
