@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getCSVContent, segmentQuestions } from "../exportUtils";
+import { logger } from "../../utils/logger";
 
 describe("exportUtils", () => {
   describe("getCSVContent", () => {
@@ -47,7 +48,7 @@ describe("exportUtils", () => {
       ];
       const csv = getCSVContent(incompleteQ, "Sam", "Rev");
       const dataRow = csv.split("\n")[1];
-      console.log("DEBUG CSV ROW:", dataRow);
+      logger.log("DEBUG CSV ROW:", dataRow);
 
       // Should handle missing C/D options gracefully (empty strings between delimiters)
       // Note: Exact check depends on delimiter, but we expect no "undefined" or "null" strings
