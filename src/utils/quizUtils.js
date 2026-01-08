@@ -4,10 +4,13 @@
 
 /**
  * Generate a UUID v4 GUID
+ * NOTE: Using Math.random for GUID generation is acceptable here.
+ * This is for generating unique identifiers, not for security purposes.
  * @returns {string} GUID in format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
  */
 export function generateGUID() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    // eslint-disable-next-line sonarjs/pseudo-random
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);

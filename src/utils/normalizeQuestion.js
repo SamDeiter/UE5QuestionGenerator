@@ -7,6 +7,7 @@
 
 /**
  * Generate a UUID, with fallback for environments where crypto.randomUUID isn't available
+ * NOTE: Math.random fallback is acceptable for unique IDs, not security.
  */
 const generateUUID = () => {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -14,6 +15,7 @@ const generateUUID = () => {
   }
   // Fallback UUID v4 implementation
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    // eslint-disable-next-line sonarjs/pseudo-random
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);

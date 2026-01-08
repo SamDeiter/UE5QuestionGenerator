@@ -11,10 +11,12 @@
 
 /**
  * Generate a UUID v4
+ * NOTE: Using Math.random for session ID generation - acceptable for unique IDs, not security.
  * @returns {string} UUID string
  */
 function generateUUID() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    // eslint-disable-next-line sonarjs/pseudo-random
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
