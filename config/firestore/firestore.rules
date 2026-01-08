@@ -120,6 +120,77 @@ service cloud.firestore {
     }
     
     // ============================================================
+    // API USAGE (Rate Limiting & Analytics)
+    // ============================================================
+    
+    match /apiUsage/{docId} {
+      // Read: Admins only (for audit trail)
+      allow read: if isAdmin();
+      // Create: Any authenticated user (Cloud Functions log usage)
+      allow create: if isSignedIn();
+      // Immutable - no updates or deletes
+      allow update, delete: if false;
+    }
+    
+    // ============================================================
+    // INVITES COLLECTION (Managed by Cloud Functions + Admin UI)
+    // ============================================================
+    
+    match /invites/{inviteId} {
+      // Read/Write: Admins only (Cloud Functions bypass rules)
+      allow read: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // ============================================================
+    // INVITE ATTEMPTS (Rate Limiting for Invite Validation)
+    // ============================================================
+    
+    match /inviteAttempts/{clientId} {
+      // Read: Admins only (for audit trail)
+      allow read: if isAdmin();
+      // Write: Cloud Functions only (no client access)
+      allow write: if false;
+    }
+    
+    // ============================================================
+    // ADMINS COLLECTION
+    // ============================================================
+    
+    match /admins/{userId} {
+      // Read: Any authenticated user (to check admin status)
+      allow read: if isSignedIn();
+      // Write: Admins only
+      allow write: if isAdmin();
+    }
+    
+    // ============================================================
+    // REGISTERED USERS
+    // ============================================================
+    
+    match /registeredUsers/{userId} {
+      // Read: Admins can read all, users can read their own
+      allow read: if isAdmin() || isOwner(userId);
+      // Create: Cloud Functions handle this (via consumeInvite)
+      allow create: if false;
+      // Update/Delete: Admins only
+      allow update, delete: if isAdmin();
+    }
+    
+    // ============================================================
+    // TRAINING DATA (Correction Pairs for AI Fine-Tuning)
+    // ============================================================
+    
+    match /training_data/{docId} {
+      // Read: Admins only (for export)
+      allow read: if isAdmin();
+      // Create: Any authenticated reviewer/admin
+      allow create: if isSignedIn() && (isAdmin() || isReviewer());
+      // Immutable - no updates or deletes
+      allow update, delete: if false;
+    }
+    
+    // ============================================================
     // DENY ALL OTHER ACCESS
     // ============================================================
     
