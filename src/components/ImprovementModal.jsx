@@ -2,13 +2,39 @@ import { useState } from "react";
 import Icon from "./Icon";
 import { sanitizeText } from "../utils/sanitize";
 import { logger } from "../utils/logger";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 /**
  * Get score-based styling class for badges
  * @param {number} score - The quality score (0-100)
  * @param {string} variant - 'badge' for header/inline, 'column' for column headers
+ * @param {boolean} colorblindMode - Whether to use colorblind-safe palette
  */
-const getScoreBadgeClass = (score, variant = "badge") => {
+const getScoreBadgeClass = (
+  score,
+  variant = "badge",
+  colorblindMode = false
+) => {
+  if (colorblindMode) {
+    // Colorblind-safe palette: Blue (excellent), Amber (good), Purple (mediocre), Rose (poor)
+    if (variant === "column") {
+      if (score >= 90) return "bg-blue-900/50 border-blue-500 text-blue-300";
+      if (score >= 70) return "bg-amber-900/50 border-amber-500 text-amber-300";
+      if (score >= 50)
+        return "bg-purple-900/50 border-purple-500 text-purple-300";
+      return "bg-rose-900/50 border-rose-500 text-rose-300";
+    }
+    // Default badge variant (colorblind)
+    if (score >= 90)
+      return "bg-blue-600/20 border border-blue-500/50 text-blue-300";
+    if (score >= 70)
+      return "bg-amber-600/20 border border-amber-500/50 text-amber-300";
+    if (score >= 50)
+      return "bg-purple-600/20 border border-purple-500/50 text-purple-300";
+    return "bg-rose-600/20 border border-rose-500/50 text-rose-300";
+  }
+
+  // Default colors
   if (variant === "column") {
     if (score >= 90) return "bg-green-900/50 border-green-500 text-green-300";
     if (score >= 70)
@@ -38,6 +64,7 @@ const ImprovementModal = ({
   onDismiss,
 }) => {
   const [isApplying, setIsApplying] = useState(false);
+  const { colorblindMode } = useAccessibility();
 
   const handleApply = async () => {
     setIsApplying(true);
@@ -72,7 +99,9 @@ const ImprovementModal = ({
               <h2 className="text-lg font-bold text-white">AI Critique</h2>
               <span
                 className={`px-3 py-1 rounded text-sm font-bold ${getScoreBadgeClass(
-                  critiqueScore
+                  critiqueScore,
+                  "badge",
+                  colorblindMode
                 )}`}
               >
                 Score: {critiqueScore}/100
@@ -140,7 +169,8 @@ const ImprovementModal = ({
                   <span
                     className={`px-2 py-0.5 rounded text-xs font-bold border ${getScoreBadgeClass(
                       critiqueScore,
-                      "column"
+                      "column",
+                      colorblindMode
                     )}`}
                   >
                     {critiqueScore}/100
@@ -155,7 +185,8 @@ const ImprovementModal = ({
                     <span
                       className={`px-2 py-0.5 rounded text-xs font-bold border ${getScoreBadgeClass(
                         improvedScore,
-                        "column"
+                        "column",
+                        colorblindMode
                       )}`}
                     >
                       {improvedScore}/100
