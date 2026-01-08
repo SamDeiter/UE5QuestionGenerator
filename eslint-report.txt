@@ -1,0 +1,105 @@
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\__tests__\questionGeneration.integration.test.jsx[24m[0m
+[0m  [2m111:5[22m  [31merror[39m  Remove this useless assignment to variable "mockSetShowAdvancedConfig"  [2msonarjs/no-dead-store[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\__tests__\translation.integration.test.jsx[24m[0m
+[0m  [2m129:20[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m  [2m193:20[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m  [2m241:20[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m  [2m297:20[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m  [2m359:20[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m  [2m407:20[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m  [2m452:20[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AnalyticsDashboard.jsx[24m[0m
+[0m  [2m557:30[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep     [2msonarjs/no-nested-functions[22m[0m
+[0m  [2m608:39[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\BulkExportModal.jsx[24m[0m
+[0m  [2m188:31[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m  [2m190:31[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ContextToolbar.jsx[24m[0m
+[0m  [2m296:63[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\CritiqueDisplay.jsx[24m[0m
+[0m   [2m96:41[22m  [31merror[39m  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  [2msonarjs/slow-regex[22m[0m
+[0m  [2m105:41[22m  [31merror[39m  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  [2msonarjs/slow-regex[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ImprovementModal.jsx[24m[0m
+[0m   [2m56:23[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m  [2m127:27[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m  [2m145:29[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\MainLayout.jsx[24m[0m
+[0m  [2m2:8[22m  [31merror[39m  Remove this unused import of 'Icon'  [2msonarjs/unused-import[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\NameEntryModal.jsx[24m[0m
+[0m  [2m18:37[22m  [31merror[39m  Make sure that using this pseudorandom number generator is safe here  [2msonarjs/pseudo-random[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\OmniWatchdog.jsx[24m[0m
+[0m  [2m195:33[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\PromptPlayground.jsx[24m[0m
+[0m  [2m198:17[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\LanguageControls.jsx[24m[0m
+[0m  [2m140:19[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m  [2m142:19[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m  [2m144:19[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionActions.jsx[24m[0m
+[0m  [2m170:21[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m  [2m177:21[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionNotesField.jsx[24m[0m
+[0m  [2m56:17[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuizPreview.jsx[24m[0m
+[0m  [2m215:11[22m  [31merror[39m  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  [2msonarjs/slow-regex[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TestView.jsx[24m[0m
+[0m  [2m63:7[22m   [31merror[39m  Replace this if-then-else flow by a single return statement           [2msonarjs/prefer-single-boolean-return[22m[0m
+[0m  [2m82:45[22m  [31merror[39m  Make sure that using this pseudorandom number generator is safe here  [2msonarjs/pseudo-random[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\DisciplineDetailPanel.jsx[24m[0m
+[0m  [2m150:21[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m  [2m152:23[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\__tests__\useToast.test.js[24m[0m
+[0m  [2m219:42[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m  [2m221:16[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m  [2m228:16[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\useQuestionCritique.js[24m[0m
+[0m  [2m90:19[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\utils\questionConverter.js[24m[0m
+[0m  [2m40:5[22m   [31merror[39m  Remove this useless assignment to variable "targetAnswer"             [2msonarjs/no-dead-store[22m[0m
+[0m  [2m47:33[22m  [31merror[39m  Make sure that using this pseudorandom number generator is safe here  [2msonarjs/pseudo-random[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scormExporter.test.js[24m[0m
+[0m  [2m127:22[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m  [2m133:43[22m  [31merror[39m  Refactor this code to not nest functions more than 4 levels deep  [2msonarjs/no-nested-functions[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\googleSheets.js[24m[0m
+[0m  [2m7:22[22m  [31merror[39m  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  [2msonarjs/slow-regex[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\answerValidator.js[24m[0m
+[0m  [2m32:18[22m  [31merror[39m  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  [2msonarjs/slow-regex[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\bulkDeleteDeleted.js[24m[0m
+[0m  [2m15:3[22m  [31merror[39m  Remove this unused import of 'doc'  [2msonarjs/unused-import[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\parserUtils.js[24m[0m
+[0m  [2m227:17[22m  [31merror[39m  Extract this nested ternary operation into an independent statement  [2msonarjs/no-nested-conditional[22m[0m
+[0m  [2m285:40[22m  [31merror[39m  Replace this character class by the character itself                 [2msonarjs/single-char-in-character-classes[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\questionValidator.js[24m[0m
+[0m  [2m72:42[22m  [31merror[39m  This branch's code block is the same as the block for the branch on line 67  [2msonarjs/no-duplicated-branches[22m[0m
+[0m[0m
+[0m[4mC:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\stringHelpers.js[24m[0m
+[0m  [2m237:9[22m  [31merror[39m  Remove this assignment of "i"  [2msonarjs/updated-loop-counter[22m[0m
+[0m[0m
+[0m[31m[1m✖ 48 problems (48 errors, 0 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[0m

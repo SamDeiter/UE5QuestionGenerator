@@ -12,7 +12,6 @@ import {
   where,
   getDocs,
   deleteDoc,
-  doc,
 } from "firebase/firestore";
 
 export async function bulkDeleteSoftDeleted(discipline = null, dryRun = true) {

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import Icon from "./Icon";
 import Sidebar from "./Sidebar";
 import AppNavigation from "./AppNavigation";
 import ContextToolbar from "./ContextToolbar";
