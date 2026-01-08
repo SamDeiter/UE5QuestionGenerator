@@ -32,6 +32,8 @@ const EnvironmentInfo = React.lazy(() => import("./Admin/EnvironmentInfo"));
 const TrainingDataExport = React.lazy(() =>
   import("./Admin/TrainingDataExport")
 );
+const SystemHealth = React.lazy(() => import("./Admin/SystemHealth"));
+const AuditLogs = React.lazy(() => import("./Admin/AuditLogs"));
 
 const functions = getFunctions(app, "us-central1");
 
@@ -58,6 +60,8 @@ const AdminPanel = ({
     inviteManagement: true, // Merged: generateInvite + activeInvites
     registeredUsers: true,
     reviewerActivity: true, // NEW: Reviewer Activity Analytics section
+    systemHealth: true, // NEW: System Health diagnostics
+    auditLogs: true, // NEW: Audit Trail
     apiConfig: true,
     customTags: true,
     trainingData: true,
@@ -384,6 +388,36 @@ const AdminPanel = ({
           onSaveCustomTags={onSaveCustomTags}
           isCollapsed={collapsed.customTags}
           onToggle={() => toggleSection("customTags")}
+        />
+      </React.Suspense>
+
+      {/* System Health Diagnostic */}
+      <React.Suspense
+        fallback={
+          <div className="p-4 text-center text-slate-500">
+            <Icon name="loader" className="animate-spin mb-2" />
+            <p>Loading System Health...</p>
+          </div>
+        }
+      >
+        <SystemHealth
+          isCollapsed={collapsed.systemHealth}
+          onToggle={() => toggleSection("systemHealth")}
+        />
+      </React.Suspense>
+
+      {/* Audit Logs */}
+      <React.Suspense
+        fallback={
+          <div className="p-4 text-center text-slate-500">
+            <Icon name="loader" className="animate-spin mb-2" />
+            <p>Loading Audit Logs...</p>
+          </div>
+        }
+      >
+        <AuditLogs
+          isCollapsed={collapsed.auditLogs}
+          onToggle={() => toggleSection("auditLogs")}
         />
       </React.Suspense>
 
