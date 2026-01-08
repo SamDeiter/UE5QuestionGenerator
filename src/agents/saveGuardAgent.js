@@ -18,6 +18,7 @@
  */
 
 import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
+import { logger } from "../utils/logger";
 
 export class SaveGuardAgent {
   /**
@@ -106,12 +107,12 @@ export class SaveGuardAgent {
         return { success: true, newVersion };
       });
 
-      console.log(
+      logger.log(
         `[SaveGuard] Save successful for question ${questionId}. New version: ${result.newVersion}`
       );
       return result;
     } catch (error) {
-      console.error("[SaveGuard] Save failed:", error);
+      logger.error("[SaveGuard] Save failed:", error);
 
       // Parse error type - ensure errorMessage is always a string
       let errorMessage;
@@ -254,12 +255,12 @@ export class SaveGuardAgent {
         return { success: true, newVersion };
       });
 
-      console.warn(
+      logger.warn(
         `[SaveGuard] UNSAFE save successful for question ${questionId}. New version: ${result.newVersion}`
       );
       return result;
     } catch (error) {
-      console.error("[SaveGuard] Unsafe save failed:", error);
+      logger.error("[SaveGuard] Unsafe save failed:", error);
 
       // Parse error type - ensure errorMessage is always a string
       let errorMessage;

@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * Migration Script: Add improvedScore to existing critique data
  *
@@ -53,7 +54,7 @@ export const migrateQuestionsWithImprovedScores = (questions) => {
     return q;
   });
 
-  console.log(
+  logger.log(
     `✅ Migration complete: Added improvedScore to ${updatedCount} questions`
   );
   return {
@@ -71,7 +72,7 @@ export const runLocalStorageMigration = () => {
     const stored = localStorage.getItem(questionsKey);
 
     if (!stored) {
-      console.log("ℹ️ No questions found in localStorage");
+      logger.log("ℹ️ No questions found in localStorage");
       return { updated: 0 };
     }
 
@@ -81,12 +82,12 @@ export const runLocalStorageMigration = () => {
     // Save migrated questions back
     localStorage.setItem(questionsKey, JSON.stringify(result.migrated));
 
-    console.log(
+    logger.log(
       `✅ localStorage migration complete: ${result.updated} questions updated`
     );
     return result;
   } catch (error) {
-    console.error("❌ Migration failed:", error);
+    logger.error("❌ Migration failed:", error);
     return { updated: 0, error };
   }
 };

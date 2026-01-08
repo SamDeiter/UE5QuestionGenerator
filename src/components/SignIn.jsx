@@ -5,6 +5,7 @@ import {
   resetPassword,
 } from "../services/firebase";
 import Icon from "./Icon";
+import { logger } from "../utils/logger";
 
 const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +22,7 @@ const SignIn = () => {
     try {
       await signInWithGoogle();
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       if (err.code === "auth/configuration-not-found") {
         setError(
           "Google Sign-In is not enabled. Please enable it in the Firebase Console > Authentication > Sign-in method."
@@ -48,7 +49,7 @@ const SignIn = () => {
       // Sign in only - new accounts need invite codes via InviteSignUp
       await signInWithEmail(email, password);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       const getErrorMessage = (code) => {
         switch (code) {
           case "auth/wrong-password":
@@ -82,7 +83,7 @@ const SignIn = () => {
       await resetPassword(email);
       setResetSuccess(true);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       let message = err.message || "Failed to send reset email";
       if (err.code === "auth/user-not-found") {
         message = "No account found with this email address.";

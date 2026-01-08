@@ -6,6 +6,7 @@ import {
   getTranslationSystemPrompt,
   getTranslationUserPrompt,
 } from "../../services/prompts/translationPrompts";
+import { logger } from "../../utils/logger";
 
 /**
  * Hook for handling question translation logic.
@@ -60,7 +61,7 @@ export const useQuestionTranslation = ({
           const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
           translatedData = JSON.parse(cleanText);
         } catch (e) {
-          console.warn("JSON parse failed, trying parseQuestions fallback", e);
+          logger.warn("JSON parse failed, trying parseQuestions fallback", e);
         }
 
         const translatedQs = translatedData
@@ -110,7 +111,7 @@ export const useQuestionTranslation = ({
           throw new Error("Parser returned no questions from translation.");
         }
       } catch (e) {
-        console.error("Translation error:", e);
+        logger.error("Translation error:", e);
         setStatus("Translation Failed");
         showMessage(`Translation Failed: ${e.message}`, TOAST_DURATION.LONG);
       } finally {
@@ -238,7 +239,7 @@ export const useQuestionTranslation = ({
           generatedCount++;
         }
       } catch (e) {
-        console.error(
+        logger.error(
           `Failed to generate translation for ${q.uniqueId} to ${targetLang}:`,
           e
         );

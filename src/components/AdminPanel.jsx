@@ -20,6 +20,7 @@ import {
   formatDuration,
   formatDate as formatAnalyticsDate,
 } from "../utils/reviewerAnalytics";
+import { logger } from "../utils/logger";
 const ReviewerAnalytics = React.lazy(() => import("./Admin/ReviewerAnalytics"));
 const DatabaseManagement = React.lazy(() =>
   import("./Admin/DatabaseManagement")
@@ -97,7 +98,7 @@ const AdminPanel = ({
       setUsers(result.data.users || []);
       setUsersLoaded(true);
     } catch (error) {
-      console.error("Failed to load users:", error);
+      logger.error("Failed to load users:", error);
       showMessage(`❌ Failed to load users: ${error.message}`, 5000);
     } finally {
       setUsersLoading(false);
@@ -114,7 +115,7 @@ const AdminPanel = ({
       setInvites(result.data.invites || []);
       setInvitesLoaded(true);
     } catch (error) {
-      console.error("Failed to load invites:", error);
+      logger.error("Failed to load invites:", error);
       showMessage(`❌ Failed to load invites: ${error.message}`, 5000);
     } finally {
       setInvitesLoading(false);
@@ -151,7 +152,7 @@ const AdminPanel = ({
       // Wait a moment for server-side deletion to complete before refreshing
       setTimeout(() => refreshUsers(), 500);
     } catch (error) {
-      console.error("❌ Revoke user error:", error);
+      logger.error("❌ Revoke user error:", error);
       showMessage(`❌ Failed to revoke user: ${error.message}`, 5000);
       // Reload data to restore UI state if revocation failed
       refreshUsers();
@@ -190,7 +191,7 @@ const AdminPanel = ({
       const data = await getReviewerAnalytics();
       setReviewerAnalytics(data);
     } catch (error) {
-      console.error("Failed to load reviewer analytics:", error);
+      logger.error("Failed to load reviewer analytics:", error);
       showMessage(`❌ Failed to load analytics: ${error.message}`, 5000);
     } finally {
       setAnalyticsLoading(false);

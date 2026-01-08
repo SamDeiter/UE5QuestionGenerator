@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * Tutorial analytics and telemetry
  *
@@ -33,7 +34,7 @@ export const logTutorialEvent = (eventName, payload) => {
 
   // Console logging for development
   if (import.meta.env.DEV) {
-    console.log("[Tutorial Analytics]", event);
+    logger.log("[Tutorial Analytics]", event);
   }
 
   // NOTE: Analytics service integration - currently using localStorage for debugging
@@ -52,7 +53,7 @@ export const logTutorialEvent = (eventName, payload) => {
     localStorage.setItem(key, JSON.stringify(existing));
   } catch (error) {
     // Silently fail if localStorage is unavailable
-    console.warn("Failed to log tutorial event:", error);
+    logger.warn("Failed to log tutorial event:", error);
   }
 };
 
@@ -76,7 +77,7 @@ export const clearTutorialEvents = () => {
   try {
     localStorage.removeItem("ue5_tutorial_events");
   } catch (error) {
-    console.warn("Failed to clear tutorial events:", error);
+    logger.warn("Failed to clear tutorial events:", error);
   }
 };
 

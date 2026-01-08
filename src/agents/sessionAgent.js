@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * Session Agent
  *
@@ -40,9 +41,9 @@ export class SessionAgent {
     if (!sessionId) {
       sessionId = generateUUID();
       sessionStorage.setItem(this.SESSION_KEY, sessionId);
-      console.log("[SessionAgent] New session created:", sessionId);
+      logger.log("[SessionAgent] New session created:", sessionId);
     } else {
-      console.log("[SessionAgent] Existing session restored:", sessionId);
+      logger.log("[SessionAgent] Existing session restored:", sessionId);
     }
 
     return sessionId;
@@ -61,7 +62,7 @@ export class SessionAgent {
    */
   clearSession() {
     sessionStorage.removeItem(this.SESSION_KEY);
-    console.log("[SessionAgent] Session cleared");
+    logger.log("[SessionAgent] Session cleared");
   }
 }
 

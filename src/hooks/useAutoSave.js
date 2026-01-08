@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
+import { logger } from "../utils/logger";
 
 /**
  * Hook for auto-saving data to localStorage
@@ -22,9 +23,9 @@ export const useAutoSave = (key, data, interval = 10000, enabled = true) => {
             };
             localStorage.setItem(key, JSON.stringify(savePayload));
             lastSaveRef.current = Date.now();
-            console.log(`Auto-saved: ${key}`);
+            logger.log(`Auto-saved: ${key}`);
         } catch (error) {
-            console.error('Auto-save failed:', error);
+            logger.error('Auto-save failed:', error);
         }
     }, [key, data, enabled]);
 
@@ -36,7 +37,7 @@ export const useAutoSave = (key, data, interval = 10000, enabled = true) => {
                 return { data: savedData, timestamp };
             }
         } catch (error) {
-            console.error('Failed to load saved data:', error);
+            logger.error('Failed to load saved data:', error);
         }
         return null;
     }, [key]);
@@ -44,7 +45,7 @@ export const useAutoSave = (key, data, interval = 10000, enabled = true) => {
     const clearSaved = useCallback(() => {
         localStorage.removeItem(key);
         lastSaveRef.current = null;
-        console.log(`Cleared saved data: ${key}`);
+        logger.log(`Cleared saved data: ${key}`);
     }, [key]);
 
     const hasSavedData = useCallback(() => {

@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * CSRF (Cross-Site Request Forgery) Protection Utility
  * Generates and validates CSRF tokens for state-changing operations
@@ -23,7 +24,7 @@ const generateCSRFToken = () => {
 export const getCSRFToken = () => {
     if (!csrfToken) {
         csrfToken = generateCSRFToken();
-        console.log('[CSRF] Token generated');
+        logger.log('[CSRF] Token generated');
     }
     return csrfToken;
 };
@@ -42,7 +43,7 @@ export const validateCSRFToken = (token) => {
  */
 export const refreshCSRFToken = () => {
     csrfToken = generateCSRFToken();
-    console.log('[CSRF] Token refreshed');
+    logger.log('[CSRF] Token refreshed');
     return csrfToken;
 };
 

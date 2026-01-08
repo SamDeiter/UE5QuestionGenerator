@@ -17,6 +17,7 @@ import {
   classifyQuestionDiscipline as classifyQuestionDisciplinePortkey,
   generateTagsForQuestion as generateTagsForQuestionPortkey,
 } from "./portkey.js";
+import { logger } from "../utils/logger";
 
 /**
  * Check if Portkey is configured and should be used
@@ -41,7 +42,7 @@ export const generateContentSecure = async (
   model = "gemini-1.5-flash"
 ) => {
   if (shouldUsePortkey()) {
-    console.log("🌐 Using Portkey Gateway for generation");
+    logger.log("🌐 Using Portkey Gateway for generation");
     return await generateContentPortkey(
       effectiveKey,
       systemPrompt,
@@ -67,7 +68,7 @@ export const generateCritiqueSecure = async (
   model = "gemini-1.5-flash"
 ) => {
   if (shouldUsePortkey()) {
-    console.log("🌐 Using Portkey Gateway for critique");
+    logger.log("🌐 Using Portkey Gateway for critique");
     return await generateCritiquePortkey(apiKey, question, model);
   }
 
@@ -81,7 +82,7 @@ export const generateCritiqueSecure = async (
  */
 export const generateTagsSecure = async (apiKey, questionText) => {
   if (shouldUsePortkey()) {
-    console.log("🌐 Using Portkey Gateway for tags");
+    logger.log("🌐 Using Portkey Gateway for tags");
     return await generateTagsForQuestionPortkey(apiKey, questionText);
   }
 

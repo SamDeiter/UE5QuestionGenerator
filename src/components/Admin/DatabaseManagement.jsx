@@ -5,6 +5,7 @@ import {
   clearAllQuestionsFromFirestore,
   deleteSoftDeletedQuestionsFromFirestore,
 } from "../../services/firebase";
+import { logger } from "../../utils/logger";
 
 const DatabaseManagement = ({ showMessage, isCollapsed, onToggle }) => {
   return (
@@ -57,7 +58,7 @@ const DatabaseManagement = ({ showMessage, isCollapsed, onToggle }) => {
               }
             } catch (error) {
               showMessage(`❌ Migration failed: ${error.message}`, 5000);
-              console.error(error);
+              logger.error(error);
             }
           }}
           className="w-full px-4 py-3 bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-blue-700/50"
@@ -87,7 +88,7 @@ const DatabaseManagement = ({ showMessage, isCollapsed, onToggle }) => {
               showMessage(`✅ Deleted ${count} questions from database`, 5000);
             } catch (error) {
               showMessage(`❌ Delete failed: ${error.message}`, 5000);
-              console.error(error);
+              logger.error(error);
             }
           }}
           className="w-full px-4 py-3 bg-red-900/30 hover:bg-red-900/50 text-red-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-red-700/50"
@@ -142,7 +143,7 @@ const DatabaseManagement = ({ showMessage, isCollapsed, onToggle }) => {
               setTimeout(() => window.location.reload(), 2000);
             } catch (error) {
               showMessage(`❌ Cleanup failed: ${error.message}`, 5000);
-              console.error(error);
+              logger.error(error);
             }
           }}
           className="w-full px-4 py-3 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-300 rounded font-bold transition-all flex items-center justify-center gap-2 border border-emerald-700/50"

@@ -4,6 +4,7 @@ import {
   generateTagsSecure,
 } from "../../services/geminiSecure";
 import { QUALITY_THRESHOLDS, TOAST_DURATION } from "../../utils/constants";
+import { logger } from "../../utils/logger";
 
 /**
  * Hook for handling question critique and feedback loop logic.
@@ -71,7 +72,7 @@ export const useQuestionCritique = ({
               ].slice(0, 5);
             }
           } catch (error) {
-            console.error("Tag generation failed during critique:", error);
+            logger.error("Tag generation failed during critique:", error);
           }
         }
 
@@ -140,7 +141,7 @@ export const useQuestionCritique = ({
           );
         }
       } catch (e) {
-        console.error("Critique failed:", e);
+        logger.error("Critique failed:", e);
         setStatus("Fail");
         showMessage(`Critique Failed: ${e.message}`, TOAST_DURATION.LONG);
       } finally {

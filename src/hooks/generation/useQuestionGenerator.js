@@ -22,6 +22,7 @@ import {
   filterForbiddenSources,
   verifyAndProcessQuestions,
 } from "../../utils/generationUtils";
+import { logger } from "../../utils/logger";
 
 /**
  * Hook to handle question generation, explanation, and variation.
@@ -473,7 +474,7 @@ export const useQuestionGenerator = ({
         updateQuestionInState(q.id, (item) => ({ ...item, explanation: exp }));
         setStatus("");
       } catch (error) {
-        console.error("Explanation failed:", error);
+        logger.error("Explanation failed:", error);
         setStatus("Fail");
       } finally {
         setIsProcessing(false);
@@ -546,7 +547,7 @@ Output in Markdown Table format.`;
           );
         }
       } catch (e) {
-        console.error("Variation generation failed:", e);
+        logger.error("Variation generation failed:", e);
         setStatus("Fail");
         showMessage(
           `Failed to generate variations: ${e.message}`,

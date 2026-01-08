@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * localStorage wrapper (encryption removed - API key now server-side)
  *
@@ -12,7 +13,7 @@ export const setSecureItem = (key, value) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (err) {
-    console.error(`Failed to store ${key}:`, err);
+    logger.error(`Failed to store ${key}:`, err);
   }
 };
 
@@ -25,7 +26,7 @@ export const getSecureItem = (key) => {
     if (!stored) return null;
     return JSON.parse(stored);
   } catch {
-    console.warn(`Could not parse ${key}, returning null`);
+    logger.warn(`Could not parse ${key}, returning null`);
     return null;
   }
 };

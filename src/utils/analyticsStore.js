@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * Analytics Store
  * Manages analytics data in localStorage with support for:
@@ -19,7 +20,7 @@ export const getAnalytics = () => {
         const data = localStorage.getItem(STORAGE_KEY);
         return data ? JSON.parse(data) : initializeAnalytics();
     } catch (error) {
-        console.error('Error reading analytics:', error);
+        logger.error('Error reading analytics:', error);
         return initializeAnalytics();
     }
 };
@@ -53,7 +54,7 @@ const saveAnalytics = (data) => {
         data.summary.lastUpdated = new Date().toISOString();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
-        console.error('Error saving analytics:', error);
+        logger.error('Error saving analytics:', error);
     }
 };
 

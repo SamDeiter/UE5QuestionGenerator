@@ -13,6 +13,7 @@ import {
   seededShuffle,
   reportToSCORM,
 } from "../utils/quizUtils";
+import { logger } from "../utils/logger";
 
 /**
  * QuizPreview - Simplified interactive quiz component
@@ -104,7 +105,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
       setQuizGuid(guid);
       setQuizStartTime(Date.now());
       setQuizQuestions(buildBalancedQuestionList(guid));
-      console.log("Quiz started with GUID:", guid);
+      logger.log("Quiz started with GUID:", guid);
     }
   }, [quizStarted, quizGuid, buildBalancedQuestionList]);
 
@@ -123,18 +124,18 @@ const QuizPreview = ({ questions, config, onClose }) => {
           e.key === "s") // Save
       ) {
         e.preventDefault();
-        console.log("Anti-cheat: Blocked keyboard shortcut");
+        logger.log("Anti-cheat: Blocked keyboard shortcut");
       }
     };
 
     const handleCopy = (e) => {
       e.preventDefault();
-      console.log("Anti-cheat: Blocked copy attempt");
+      logger.log("Anti-cheat: Blocked copy attempt");
     };
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        console.log("Anti-cheat: Quiz tab lost focus", {
+        logger.log("Anti-cheat: Quiz tab lost focus", {
           quizGuid,
           timestamp: new Date().toISOString(),
           questionIndex: currentIndex,

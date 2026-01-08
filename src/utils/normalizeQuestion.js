@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * normalizeQuestion.js - Ensures all questions have consistent data fields
  *
@@ -82,7 +83,7 @@ const QUESTION_DEFAULTS = {
  */
 export const normalizeQuestion = (q, contextDefaults = {}) => {
   if (!q || typeof q !== "object") {
-    console.warn("normalizeQuestion received invalid input:", q);
+    logger.warn("normalizeQuestion received invalid input:", q);
     return null;
   }
 
@@ -360,7 +361,7 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
  */
 export const normalizeQuestions = (questions, contextDefaults = {}) => {
   if (!Array.isArray(questions)) {
-    console.warn("normalizeQuestions received non-array:", questions);
+    logger.warn("normalizeQuestions received non-array:", questions);
     return [];
   }
 

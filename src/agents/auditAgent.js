@@ -19,6 +19,7 @@
  */
 
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { logger } from "../utils/logger";
 
 export class AuditAgent {
   /**
@@ -55,12 +56,12 @@ export class AuditAgent {
         userAgent: navigator.userAgent,
       });
 
-      console.log(
+      logger.log(
         `[AuditAgent] Logged event: ${eventType} for question ${questionId}`
       );
     } catch (error) {
       // Don't block operations if audit logging fails
-      console.error("[AuditAgent] Failed to log event:", error);
+      logger.error("[AuditAgent] Failed to log event:", error);
     }
   }
 

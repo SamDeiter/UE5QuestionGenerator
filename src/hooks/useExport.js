@@ -10,6 +10,7 @@ import {
 } from "../services/firebase";
 import { downloadFile } from "../utils/questionHelpers";
 import { formatDate } from "../utils/dateHelpers";
+import { logger } from "../utils/logger";
 
 export const useExport = (
   config,
@@ -160,7 +161,7 @@ export const useExport = (
         7000
       );
     } catch (e) {
-      console.error("Error pushing to Sheets endpoint:", e);
+      logger.error("Error pushing to Sheets endpoint:", e);
       showMessage(
         `Error connecting to endpoint. Check URL/Console: ${e.message}`,
         10000
@@ -227,7 +228,7 @@ export const useExport = (
         3000
       );
     } catch (e) {
-      console.error("Load Error:", e);
+      logger.error("Load Error:", e);
       showMessage(
         `Load Failed: ${e.message}. (Ensure Script Access is set to 'Anyone')`,
         7000
@@ -275,7 +276,7 @@ export const useExport = (
           );
         }
       } catch (e) {
-        console.error("Firestore Load Error:", e);
+        logger.error("Firestore Load Error:", e);
         if (!silent) {
           showMessage(`Firestore Load Failed: ${e.message}`, 7000);
         }
@@ -340,7 +341,7 @@ export const useExport = (
           await saveQuestionsToSheets(config.sheetUrl, questionsToExport);
           showMessage(`Export launched! Check new tab for status.`, 5000);
         } catch (e) {
-          console.error(e);
+          logger.error(e);
           showMessage(`Error: ${e.message}`, 5000);
         } finally {
           setIsProcessing(false);

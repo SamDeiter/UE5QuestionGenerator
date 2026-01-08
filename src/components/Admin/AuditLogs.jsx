@@ -11,6 +11,7 @@ import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "../../services/firebase";
+import { logger } from "../../utils/logger";
 
 // Constants for query limits
 const LOGS_PER_COLLECTION = 25;
@@ -49,7 +50,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
           });
         });
       } catch (err) {
-        console.warn("Could not fetch apiUsage:", err.message);
+        logger.warn("Could not fetch apiUsage:", err.message);
       }
 
       // Fetch inviteAttempts logs
@@ -75,7 +76,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
           });
         });
       } catch (err) {
-        console.warn("Could not fetch inviteAttempts:", err.message);
+        logger.warn("Could not fetch inviteAttempts:", err.message);
       }
 
       // Sort by timestamp (newest first)
@@ -83,7 +84,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
 
       setLogs(combinedLogs.slice(0, MAX_TOTAL_LOGS)); // Limit to max total
     } catch (err) {
-      console.error("Failed to load audit logs:", err);
+      logger.error("Failed to load audit logs:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);

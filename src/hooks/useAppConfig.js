@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getSecureItem, setSecureItem } from "../utils/secureStorage";
+import { logger } from "../utils/logger";
 
 export const useAppConfig = () => {
   // Application mode: 'landing' (home screen), 'create' (generation mode), 'review' (review mode), 'database' (view all)
@@ -72,7 +73,7 @@ export const useAppConfig = () => {
   }
 
   // DEBUG: Uncomment to debug API status (removed to reduce console spam)
-  // console.log("🔍 [useAppConfig] API Status Debug:", {
+  // logger.log("🔍 [useAppConfig] API Status Debug:", {
   //   isInternalEnvironment,
   //   hasClientKey,
   //   isAuthReady,
@@ -123,7 +124,7 @@ export const useAppConfig = () => {
     useState(null);
 
   const handleLanguageSwitch = (lang, uniqueId = null) => {
-    console.log(
+    logger.log(
       "🌍 [handleLanguageSwitch] Switching global language filter to:",
       lang,
       "| Navigate to uniqueId:",

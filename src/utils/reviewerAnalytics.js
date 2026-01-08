@@ -7,6 +7,7 @@
 
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { db } from "../services/firebase";
+import { logger } from "../utils/logger";
 
 /**
  * Fetches all questions that have been reviewed (have reviewCompletedAt timestamp)
@@ -35,7 +36,7 @@ export const fetchReviewedQuestions = async () => {
 
     return questions;
   } catch (error) {
-    console.error("Error fetching reviewed questions:", error);
+    logger.error("Error fetching reviewed questions:", error);
     throw error;
   }
 };
@@ -170,7 +171,7 @@ export const formatDate = (dateVal) => {
     const date = dateVal instanceof Date ? dateVal : new Date(dateVal);
     return isNaN(date.getTime()) ? "Invalid Date" : date.toLocaleDateString();
   } catch (e) {
-    console.error("Date formatting error:", e);
+    logger.error("Date formatting error:", e);
     return "Invalid Date";
   }
 };
@@ -193,7 +194,7 @@ export const getReviewerAnalytics = async () => {
       },
     };
   } catch (error) {
-    console.error("Error getting reviewer analytics:", error);
+    logger.error("Error getting reviewer analytics:", error);
     throw error;
   }
 };

@@ -16,6 +16,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db, auth } from "./firebase";
+import { logger } from "../utils/logger";
 
 /**
  * Save a training pair (original vs. corrected question)
@@ -63,10 +64,10 @@ export const saveTrainingPair = async (
 
     const docRef = await addDoc(collection(db, "training_data"), trainingData);
 
-    console.log(`✅ Training pair saved: ${docRef.id}`);
+    logger.log(`✅ Training pair saved: ${docRef.id}`);
     return { success: true, docId: docRef.id };
   } catch (error) {
-    console.error("Failed to save training pair:", error);
+    logger.error("Failed to save training pair:", error);
     return { success: false, error: error.message };
   }
 };
@@ -114,7 +115,7 @@ export const exportTrainingData = async (maxRecords = 1000) => {
 
     return { success: true, data: jsonl, count: records.length };
   } catch (error) {
-    console.error("Failed to export training data:", error);
+    logger.error("Failed to export training data:", error);
     return { success: false, error: error.message };
   }
 };
@@ -233,7 +234,7 @@ export const exportRejectedQuestions = async (maxRecords = 500) => {
 
     return { success: true, data: jsonl, count: records.length };
   } catch (error) {
-    console.error("Failed to export rejected questions:", error);
+    logger.error("Failed to export rejected questions:", error);
     return { success: false, error: error.message };
   }
 };
