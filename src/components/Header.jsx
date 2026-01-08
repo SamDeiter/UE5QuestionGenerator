@@ -184,7 +184,7 @@ const Header = ({
             aria-label="Toggle colorblind mode"
           >
             <Icon name="eye" size={12} />
-            {colorblindMode ? "A11Y ON" : "A11Y"}
+            {colorblindMode ? "Colorblind ✓" : "Colorblind"}
           </button>
           {/* Tutorial Button - First */}
           {onStartTutorial &&
