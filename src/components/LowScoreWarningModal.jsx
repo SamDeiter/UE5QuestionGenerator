@@ -1,6 +1,52 @@
 import Icon from "./Icon";
 
 /**
+ * Get color scheme based on warning state
+ */
+const getColorScheme = (isFinalRejection, isLastChance) => {
+  if (isFinalRejection) {
+    return {
+      border: "border-red-500",
+      bgGradient: "bg-gradient-to-b from-red-950 to-slate-900",
+      headerBorder: "border-red-700/50",
+      headerBg: "bg-red-900/30",
+      iconBg: "bg-red-500/20",
+      iconColor: "text-red-400",
+      titleColor: "text-red-300",
+    };
+  }
+  if (isLastChance) {
+    return {
+      border: "border-orange-500",
+      bgGradient: "bg-gradient-to-b from-orange-950 to-slate-900",
+      headerBorder: "border-orange-700/50",
+      headerBg: "bg-orange-900/30",
+      iconBg: "bg-orange-500/20",
+      iconColor: "text-orange-400",
+      titleColor: "text-orange-300",
+    };
+  }
+  return {
+    border: "border-yellow-500",
+    bgGradient: "bg-gradient-to-b from-yellow-950 to-slate-900",
+    headerBorder: "border-yellow-700/50",
+    headerBg: "bg-yellow-900/30",
+    iconBg: "bg-yellow-500/20",
+    iconColor: "text-yellow-400",
+    titleColor: "text-yellow-300",
+  };
+};
+
+/**
+ * Get score color based on value
+ */
+const getScoreColor = (score) => {
+  if (score >= 70) return "text-yellow-400";
+  if (score >= 50) return "text-orange-400";
+  return "text-red-400";
+};
+
+/**
  * LowScoreWarningModal - Full-screen warning when a question is struggling to pass
  * Shows prominently that the question needs improvement or will be auto-rejected
  */
@@ -15,65 +61,34 @@ const LowScoreWarningModal = ({
 }) => {
   const isLastChance = attemptsLeft === 1;
   const isFinalRejection = attemptsLeft <= 0;
+  const colors = getColorScheme(isFinalRejection, isLastChance);
+
+  const getTitle = () => {
+    if (isFinalRejection) return "Question Automatically Rejected";
+    if (isLastChance) return "Final Attempt Warning!";
+    return "Quality Score Below Threshold";
+  };
 
   return (
     <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
       <div
-        className={`max-w-lg w-full rounded-xl border-2 shadow-2xl overflow-hidden ${
-          isFinalRejection
-            ? "border-red-500 bg-gradient-to-b from-red-950 to-slate-900"
-            : isLastChance
-            ? "border-orange-500 bg-gradient-to-b from-orange-950 to-slate-900"
-            : "border-yellow-500 bg-gradient-to-b from-yellow-950 to-slate-900"
-        }`}
+        className={`max-w-lg w-full rounded-xl border-2 shadow-2xl overflow-hidden ${colors.border} ${colors.bgGradient}`}
       >
         {/* Header */}
         <div
-          className={`px-6 py-4 border-b ${
-            isFinalRejection
-              ? "border-red-700/50 bg-red-900/30"
-              : isLastChance
-              ? "border-orange-700/50 bg-orange-900/30"
-              : "border-yellow-700/50 bg-yellow-900/30"
-          }`}
+          className={`px-6 py-4 border-b ${colors.headerBorder} ${colors.headerBg}`}
         >
           <div className="flex items-center gap-3">
-            <div
-              className={`p-2 rounded-full ${
-                isFinalRejection
-                  ? "bg-red-500/20"
-                  : isLastChance
-                  ? "bg-orange-500/20"
-                  : "bg-yellow-500/20"
-              }`}
-            >
+            <div className={`p-2 rounded-full ${colors.iconBg}`}>
               <Icon
                 name={isFinalRejection ? "x-circle" : "alert-triangle"}
                 size={28}
-                className={
-                  isFinalRejection
-                    ? "text-red-400"
-                    : isLastChance
-                    ? "text-orange-400"
-                    : "text-yellow-400"
-                }
+                className={colors.iconColor}
               />
             </div>
             <div>
-              <h2
-                className={`text-xl font-bold ${
-                  isFinalRejection
-                    ? "text-red-300"
-                    : isLastChance
-                    ? "text-orange-300"
-                    : "text-yellow-300"
-                }`}
-              >
-                {isFinalRejection
-                  ? "Question Automatically Rejected"
-                  : isLastChance
-                  ? "Final Attempt Warning!"
-                  : "Quality Score Below Threshold"}
+              <h2 className={`text-xl font-bold ${colors.titleColor}`}>
+                {getTitle()}
               </h2>
               <p className="text-sm text-slate-400">
                 {isFinalRejection
@@ -89,15 +104,7 @@ const LowScoreWarningModal = ({
           {/* Score Display */}
           <div className="flex items-center justify-center gap-4 py-4 bg-slate-800/50 rounded-lg">
             <div className="text-center">
-              <div
-                className={`text-5xl font-black ${
-                  score >= 70
-                    ? "text-yellow-400"
-                    : score >= 50
-                    ? "text-orange-400"
-                    : "text-red-400"
-                }`}
-              >
+              <div className={`text-5xl font-black ${getScoreColor(score)}`}>
                 {score}
               </div>
               <div className="text-xs text-slate-500 uppercase tracking-wider mt-1">

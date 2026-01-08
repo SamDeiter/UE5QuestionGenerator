@@ -1,5 +1,18 @@
 import Icon from "./Icon";
 
+/**
+ * Get icon name based on filter mode
+ */
+const getIconName = (mode) => {
+  const iconMap = {
+    accepted: "check",
+    rejected: "x",
+    pending: "clock",
+    other: "help-circle",
+  };
+  return iconMap[mode] || "list";
+};
+
 const FilterButton = ({ mode, current, setFilter, label, count }) => {
   const isActive = mode === current;
   const baseClasses =
@@ -20,20 +33,7 @@ const FilterButton = ({ mode, current, setFilter, label, count }) => {
       onClick={() => setFilter(mode)}
       className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
     >
-      <Icon
-        name={
-          mode === "accepted"
-            ? "check"
-            : mode === "rejected"
-            ? "x"
-            : mode === "pending"
-            ? "clock"
-            : mode === "other"
-            ? "help-circle"
-            : "list"
-        }
-        size={12}
-      />
+      <Icon name={getIconName(mode)} size={12} />
       {label}{" "}
       <span className="text-[10px] bg-slate-950/50 px-1.5 rounded-full">
         {count}

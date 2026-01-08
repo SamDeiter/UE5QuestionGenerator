@@ -66,21 +66,34 @@ const Header = ({
   }, [mobileMenuOpen]);
   const isReview = appMode === "review";
   const isAnalytics = appMode === "analytics";
-  const borderColor = isReview
-    ? "border-indigo-600"
-    : isAnalytics
-    ? "border-emerald-600"
-    : "border-orange-600";
-  const titleColor = isReview
-    ? "text-indigo-50"
-    : isAnalytics
-    ? "text-emerald-50"
-    : "text-orange-50";
-  const headerBg = isReview
-    ? "bg-slate-950 bg-gradient-to-r from-indigo-950/30 to-slate-950"
-    : isAnalytics
-    ? "bg-slate-950 bg-gradient-to-r from-emerald-950/30 to-slate-950"
-    : "bg-slate-950";
+
+  // Get mode-specific styles using object lookup instead of nested ternaries
+  const getModeStyles = () => {
+    if (isReview) {
+      return {
+        border: "border-indigo-600",
+        title: "text-indigo-50",
+        bg: "bg-slate-950 bg-gradient-to-r from-indigo-950/30 to-slate-950",
+      };
+    }
+    if (isAnalytics) {
+      return {
+        border: "border-emerald-600",
+        title: "text-emerald-50",
+        bg: "bg-slate-950 bg-gradient-to-r from-emerald-950/30 to-slate-950",
+      };
+    }
+    return {
+      border: "border-orange-600",
+      title: "text-orange-50",
+      bg: "bg-slate-950",
+    };
+  };
+
+  const modeStyles = getModeStyles();
+  const borderColor = modeStyles.border;
+  const titleColor = modeStyles.title;
+  const headerBg = modeStyles.bg;
 
   const totalTokens =
     (tokenUsage.inputTokens || 0) + (tokenUsage.outputTokens || 0);
