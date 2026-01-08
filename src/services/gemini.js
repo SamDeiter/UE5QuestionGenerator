@@ -1,3 +1,10 @@
+/**
+ * Gemini API Service - handles API calls with retry logic and error handling.
+ *
+ * NOTE: Uses Math.random for jitter delay (non-security).
+ * Regex patterns are for parsing API error messages - input is API response, no DoS risk.
+ */
+/* eslint-disable sonarjs/pseudo-random, sonarjs/slow-regex */
 import {
   setRateLimitState,
   clearRateLimitState,
