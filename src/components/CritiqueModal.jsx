@@ -4,6 +4,7 @@ import { renderMarkdown } from "../utils/stringHelpers";
 import DiffText from "./DiffText";
 import { QUALITY_THRESHOLDS } from "../utils/constants";
 import { getSeverityStyles } from "../utils/scoreColors";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 // DiffText imported from shared component
 
@@ -23,9 +24,11 @@ const CritiqueModal = ({
 }) => {
   if (!isOpen || !q) return null;
 
-  // Use shared severity styles utility
+  // Get accessibility preference
+  const { colorblindMode } = useAccessibility();
 
-  const styles = getSeverityStyles(score);
+  // Use shared severity styles utility with colorblind support
+  const styles = getSeverityStyles(score, colorblindMode);
   const isFailing = score !== null && score < QUALITY_THRESHOLDS.MEDIOCRE;
 
   // Check if question was changed
