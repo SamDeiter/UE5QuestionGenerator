@@ -3,7 +3,11 @@
  *
  * This utility normalizes question objects to have all required fields with
  * proper defaults, preventing issues with filtering, display, and analytics.
+ *
+ * NOTE: Uses Math.random for UUID fallback (non-security).
+ * Regex patterns are for text normalization - input is app-controlled.
  */
+/* eslint-disable sonarjs/pseudo-random, sonarjs/slow-regex */
 
 /**
  * Generate a UUID, with fallback for environments where crypto.randomUUID isn't available
