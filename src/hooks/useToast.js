@@ -6,7 +6,11 @@
  * - Priority levels (high=sticky, medium=normal, low=replaceable)
  * - Progress toast support
  * - Deduplication
+ *
+ * NOTE: Regex patterns here are used for toast message matching.
+ * Input is application-controlled, not user-provided - no DoS risk.
  */
+/* eslint-disable sonarjs/slow-regex */
 import { useState, useCallback, useRef } from "react";
 
 // Patterns for messages that should replace (not stack)
