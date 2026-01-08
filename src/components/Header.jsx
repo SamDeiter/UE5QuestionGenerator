@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Icon from "./Icon";
 import useConnectionStatus from "../hooks/useConnectionStatus";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 import { signOutUser, triggerManualSync } from "../services/firebase";
 import { APP_VERSION } from "../utils/constants";
 import { logger } from "../utils/logger";
@@ -43,6 +44,7 @@ const Header = ({
     import.meta.env.VITE_SUPER_ADMIN_EMAIL?.trim()?.toLowerCase();
   const isSuperAdmin = userEmail === envSuperAdmin && envSuperAdmin;
   const connectionStatus = useConnectionStatus();
+  const { colorblindMode, toggleColorblindMode } = useAccessibility();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -167,6 +169,23 @@ const Header = ({
           >
             {getBadgeText()}
           </span>
+          {/* Colorblind Mode Toggle */}
+          <button
+            onClick={toggleColorblindMode}
+            className={`flex items-center h-7 gap-1 px-2 text-[10px] font-bold rounded-lg transition-all whitespace-nowrap ${
+              colorblindMode
+                ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/50"
+                : "bg-slate-700 hover:bg-slate-600 text-slate-300"
+            }`}
+            title={
+              colorblindMode ? "Colorblind mode ON" : "Enable colorblind mode"
+            }
+            aria-pressed={colorblindMode}
+            aria-label="Toggle colorblind mode"
+          >
+            <Icon name="eye" size={12} />
+            {colorblindMode ? "A11Y ON" : "A11Y"}
+          </button>
           {/* Tutorial Button - First */}
           {onStartTutorial &&
             ["create", "review", "database", "analytics"].includes(appMode) && (
