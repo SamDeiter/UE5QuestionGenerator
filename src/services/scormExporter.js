@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { logger } from "../utils/logger";
 
 /**
  * SCORM 1.2 Exporter Service
@@ -148,7 +149,7 @@ export async function exportToScorm(questions, config = {}) {
       questionCount: questions.length,
     };
   } catch (error) {
-    console.error("SCORM export failed:", error);
+    logger.error("SCORM export failed:", error);
     throw new Error(`Failed to generate SCORM package: ${error.message}`);
   }
 }

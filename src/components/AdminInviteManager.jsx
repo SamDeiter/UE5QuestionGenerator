@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { createInvite, revokeInvite } from "../services/inviteService";
 import Icon from "./Icon";
+import { logger } from "../utils/logger";
 
 /**
  * InviteCreator - Form for creating new invite codes
@@ -196,7 +197,7 @@ const AdminInviteManager = () => {
       await revokeInvite(code);
       setCreatedInvites((prev) => prev.filter((i) => i.code !== code));
     } catch (err) {
-      console.error("Failed to revoke invite:", err);
+      logger.error("Failed to revoke invite:", err);
     }
   };
 

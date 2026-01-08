@@ -7,6 +7,7 @@
 /* eslint-disable sonarjs/pseudo-random, sonarjs/slow-regex */
 import { textSimilarity } from "./stringHelpers";
 import { normalizeQuestion } from "./normalizeQuestion";
+import { logger } from "../utils/logger";
 /**
  * Strips code fences and conversational prefixes from AI text.
  */
@@ -50,7 +51,7 @@ export const removeDuplicateQuestions = (questions, threshold = 0.85) => {
   }
 
   if (duplicatesRemoved.length > 0) {
-    console.log(
+    logger.log(
       `[Dedup] Removed ${duplicatesRemoved.length} duplicate(s):`,
       duplicatesRemoved
     );

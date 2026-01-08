@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { processUploadedFile } from '../utils/fileProcessor';
 import { generateContentSecure as generateContent } from '../services/geminiSecure';
 import { processMultipleFiles, analyzeOptimization } from '../utils/contextOptimizer';
+import { logger } from "../utils/logger";
 
 export const useFileHandler = (config, setConfig, addQuestionsToState, showMessage, setStatus, isApiReady, effectiveApiKey) => {
     const [files, setFiles] = useState([]);
@@ -59,7 +60,7 @@ export const useFileHandler = (config, setConfig, addQuestionsToState, showMessa
         if (importedCount > 0) showMessage(`Successfully imported ${importedCount} questions.`, 4000);
         if (referenceCount > 0) showMessage(`Added ${referenceCount} reference files.`, 3000);
         if (errors.length > 0) {
-            console.error("File processing errors:", errors);
+            logger.error("File processing errors:", errors);
             showMessage(`Some files failed: ${errors.slice(0, 2).join(', ')}`, 6000);
         }
 

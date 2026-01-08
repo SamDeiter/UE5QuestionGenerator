@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { logger } from "../utils/logger";
 
 /**
  * Hook to handle navigation after a language switch.
@@ -23,7 +24,7 @@ export function useNavigationAfterLanguageSwitch({
         (q) => q.uniqueId === pendingNavigationUniqueId
       );
 
-      console.log("🔄 [App] Navigating after language switch:", {
+      logger.log("🔄 [App] Navigating after language switch:", {
         pendingNavigationUniqueId,
         targetIndex,
         totalQuestions: uniqueFilteredQuestions.length,

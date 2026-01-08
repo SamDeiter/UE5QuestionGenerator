@@ -3,6 +3,7 @@ import Icon from "./Icon";
 import MetricsDashboard from "./MetricsDashboard";
 import QuestionItem from "./QuestionItem.jsx";
 import { exportQuestionsForCritique } from "../utils/externalCritique";
+import { logger } from "../utils/logger";
 
 // PERFORMANCE: Number of items to render initially and load per batch
 const INITIAL_RENDER_COUNT = 50;
@@ -29,7 +30,7 @@ const DatabaseView = ({
 
   // Export for external critique (Admin only)
   const handleExport = () => {
-    console.log("📤 Exporting questions for external critique...");
+    logger.log("📤 Exporting questions for external critique...");
     const result = exportQuestionsForCritique(questions);
     showMessage(
       `✅ Exported ${result.count} questions! Prompt copied to clipboard.`,
@@ -62,7 +63,7 @@ const DatabaseView = ({
         // Progress callback
         (progress) => {
           setBatchProgress(progress);
-          console.log(`📊 Progress: ${progress.processed}/${progress.total} (${progress.percent}%)`);
+          logger.log(`📊 Progress: ${progress.processed}/${progress.total} (${progress.percent}%)`);
         },
         // Complete callback
         (result) => {

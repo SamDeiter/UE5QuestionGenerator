@@ -3,6 +3,7 @@ import { constructSystemPrompt } from "../services/promptBuilder";
 import { generateContentSecure } from "../services/geminiSecure";
 
 import Icon from "./Icon";
+import { logger } from "../utils/logger";
 
 const PromptPlayground = ({ config, apiKeyReady, effectiveApiKey }) => {
   // Local state for prompts and parameters
@@ -56,7 +57,7 @@ const PromptPlayground = ({ config, apiKeyReady, effectiveApiKey }) => {
       setOutput(result);
       setStatus("Complete");
     } catch (err) {
-      console.error("Playground error:", err);
+      logger.error("Playground error:", err);
       setError(err.message || "Failed to generate content");
       setStatus("Failed");
     } finally {

@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import Icon from "./Icon";
 import QuestionItem from "./QuestionItem";
+import { logger } from "../utils/logger";
 
 const ReviewMode = ({
   questions,
@@ -52,7 +53,7 @@ const ReviewMode = ({
   // This finds the translated variant by uniqueId and navigates to its index
   const handleLanguageSwitchWithNavigation = React.useCallback(
     (targetLang, uniqueId) => {
-      console.log("🔄 [ReviewMode] Language switch with navigation:", {
+      logger.log("🔄 [ReviewMode] Language switch with navigation:", {
         targetLang,
         uniqueId,
       });
@@ -68,7 +69,7 @@ const ReviewMode = ({
           // Note: questions prop will be updated after re-render, so we need to query the DOM or use a ref
           // For now, we'll trust the filter and just stay at the same position
           // The parent needs to handle the navigation after filter update
-          console.log(
+          logger.log(
             "🔄 [ReviewMode] Navigation scheduled - parent should handle index update via pendingNavigationUniqueId"
           );
         }, 100);

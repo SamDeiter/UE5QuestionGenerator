@@ -3,10 +3,11 @@ import Icon from "./Icon";
 import useConnectionStatus from "../hooks/useConnectionStatus";
 import { signOutUser, triggerManualSync } from "../services/firebase";
 import { APP_VERSION } from "../utils/constants";
+import { logger } from "../utils/logger";
 
 const getVersionDisplay = () => {
   const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
-  console.log(
+  logger.log(
     "🔍 [Header] Project ID:",
     projectId,
     "| isProd:",

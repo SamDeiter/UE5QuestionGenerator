@@ -4,6 +4,7 @@ import {
   exportToScorm,
   validateQuestionsForExport,
 } from "../services/scormExporter";
+import { logger } from "../utils/logger";
 
 /**
  * SCORM Export Modal
@@ -33,14 +34,14 @@ const ScormExportModal = ({ questions, onClose }) => {
 
     // Show warnings if any
     if (validation.warnings.length > 0) {
-      console.warn("SCORM Export Warnings:", validation.warnings);
+      logger.warn("SCORM Export Warnings:", validation.warnings);
     }
 
     setIsExporting(true);
 
     try {
       const result = await exportToScorm(questions, config);
-      console.log("SCORM export successful:", result);
+      logger.log("SCORM export successful:", result);
 
       // Close modal after successful export
       setTimeout(() => {

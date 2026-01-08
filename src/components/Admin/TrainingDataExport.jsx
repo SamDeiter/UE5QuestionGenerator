@@ -16,6 +16,7 @@ import {
   downloadTrainingDataAsFile,
   downloadAllTrainingData,
 } from "../../services/trainingDataService";
+import { logger } from "../../utils/logger";
 
 const TrainingDataExport = ({ isCollapsed, onToggle, showMessage }) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -33,7 +34,7 @@ const TrainingDataExport = ({ isCollapsed, onToggle, showMessage }) => {
         );
       }
     } catch (error) {
-      console.error("Export failed:", error);
+      logger.error("Export failed:", error);
       if (showMessage) {
         showMessage(`❌ Export failed: ${error.message}`, 5000);
       }
@@ -55,7 +56,7 @@ const TrainingDataExport = ({ isCollapsed, onToggle, showMessage }) => {
         );
       }
     } catch (error) {
-      console.error("Export failed:", error);
+      logger.error("Export failed:", error);
       if (showMessage) {
         showMessage(`❌ Export failed: ${error.message}`, 5000);
       }

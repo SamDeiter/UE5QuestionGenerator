@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { logger } from "../utils/logger";
 
 /**
  * Hook to calculate the total number of pending questions for the Review badge.
@@ -19,7 +20,7 @@ export function usePendingCount(allQuestionsMap) {
         pending++;
       }
     });
-    console.log("🔍 [DEBUG] Review Badge Count:", {
+    logger.log("🔍 [DEBUG] Review Badge Count:", {
       allQuestionsMapSize: allQuestionsMap.size,
       pendingCount: pending,
     });

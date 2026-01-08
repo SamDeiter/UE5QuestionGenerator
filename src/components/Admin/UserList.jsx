@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
+import { logger } from "../../utils/logger";
 
 const UserList = ({
   users,
@@ -25,7 +26,7 @@ const UserList = ({
           : new Date(dateVal);
       return isNaN(date.getTime()) ? "Invalid Date" : date.toLocaleDateString();
     } catch (e) {
-      console.error("Date formatting error:", e);
+      logger.error("Date formatting error:", e);
       return "Invalid Date";
     }
   };
@@ -91,7 +92,7 @@ const UserList = ({
           await handleRevokeUser(uid, user.email, true); // true = suppress individual confirmation
           successCount++;
         } catch (error) {
-          console.error(`Failed to revoke ${user.email}:`, error);
+          logger.error(`Failed to revoke ${user.email}:`, error);
           failCount++;
         }
       }

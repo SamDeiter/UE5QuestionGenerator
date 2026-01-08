@@ -11,6 +11,7 @@ import {
 } from './testHelpers';
 import { processUploadedFile } from '../utils/fileProcessor';
 import { getCSVContent } from '../utils/exportUtils';
+import { logger } from "../utils/logger";
 
 describe('Import/Export Integration Tests', () => {
     let mockLocalStorage;
@@ -37,8 +38,8 @@ describe('Import/Export Integration Tests', () => {
             const csvFile = createMockFile(csvContent, 'questions.csv');
             const result = await processUploadedFile(csvFile, 'TestUser');
 
-            if (result.error) console.error("Import Error:", result.error);
-            if (result.type !== 'questions') console.error("Unexpected Result Type:", result.type, result);
+            if (result.error) logger.error("Import Error:", result.error);
+            if (result.type !== 'questions') logger.error("Unexpected Result Type:", result.type, result);
 
             expect(result.type).toBe('questions');
             expect(result.data).toBeInstanceOf(Array);

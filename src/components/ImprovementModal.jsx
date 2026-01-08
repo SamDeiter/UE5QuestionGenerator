@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "./Icon";
 import { sanitizeText } from "../utils/sanitize";
+import { logger } from "../utils/logger";
 
 /**
  * Get score-based styling class for badges
@@ -43,7 +44,7 @@ const ImprovementModal = ({
     try {
       await onApply(improvedQuestion);
     } catch (err) {
-      console.error("[ImprovementModal] onApply error:", err);
+      logger.error("[ImprovementModal] onApply error:", err);
     }
     setIsApplying(false);
   };

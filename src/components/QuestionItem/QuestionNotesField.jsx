@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { logger } from "../../utils/logger";
 
 const QuestionNotesField = ({ question, onUpdateQuestion, showMessage }) => {
   const [notes, setNotes] = useState(question.notes || "");
@@ -17,7 +18,7 @@ const QuestionNotesField = ({ question, onUpdateQuestion, showMessage }) => {
         showMessage("✓ Notes saved", 2000);
       }
     } catch (error) {
-      console.error("Failed to save notes:", error);
+      logger.error("Failed to save notes:", error);
       if (showMessage) {
         showMessage("⚠️ Failed to save notes", 3000);
       }

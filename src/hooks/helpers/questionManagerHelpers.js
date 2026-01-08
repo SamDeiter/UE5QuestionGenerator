@@ -1,3 +1,4 @@
+import { logger } from "../../utils/logger";
 /**
  * Question Manager Helpers
  * Pure utility functions extracted from useQuestionManager for testability
@@ -45,7 +46,7 @@ export const validateDocumentId = (question) => {
 
   // Handle legacy numeric IDs by converting to string
   if (typeof docId === "number") {
-    console.warn(`Converting numeric ID to string: ${docId}`);
+    logger.warn(`Converting numeric ID to string: ${docId}`);
     docId = String(docId);
   }
 

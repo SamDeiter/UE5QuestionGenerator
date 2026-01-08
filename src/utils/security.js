@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * Security utility functions for file uploads and data processing.
  *
@@ -41,7 +42,7 @@ export const validateFile = (file) => {
   // We rely more on content parsing, but this is a good first gate.
   if (!ALLOWED_MIME_TYPES.includes(file.type) && file.type !== "") {
     // Note: file.type can be empty string on Windows sometimes
-    console.warn(`Warning: Unusual MIME type for CSV: ${file.type}`);
+    logger.warn(`Warning: Unusual MIME type for CSV: ${file.type}`);
   }
 
   return { isValid: true, error: null };

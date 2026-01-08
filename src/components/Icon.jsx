@@ -1,4 +1,5 @@
 import * as LucideIcons from 'lucide-react';
+import { logger } from "../utils/logger";
 
 const Icon = ({ name, size = 16, className = "", ariaLabel, role }) => {
     // Convert kebab-case to PascalCase for Lucide component name
@@ -9,7 +10,7 @@ const Icon = ({ name, size = 16, className = "", ariaLabel, role }) => {
     const LucideIcon = LucideIcons[pascalName];
 
     if (!LucideIcon) {
-        console.warn(`Icon "${name}" (mapped to "${pascalName}") not found in lucide-react.`);
+        logger.warn(`Icon "${name}" (mapped to "${pascalName}") not found in lucide-react.`);
         return <span style={{ width: size, height: size, display: 'inline-block' }} />;
     }
 
