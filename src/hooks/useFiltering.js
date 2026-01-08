@@ -435,7 +435,7 @@ export function useFiltering({
 
   // 3. Handle restoration on mount or mode change
   // TRIGGER: Now runs AFTER potential resets in the same render cycle
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentional: only re-run when list LENGTH changes, not array reference
+   
   useEffect(() => {
     if (
       appMode === "review" &&

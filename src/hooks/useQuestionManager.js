@@ -8,7 +8,6 @@ import {
 } from "../utils/constants";
 import {
   saveQuestionToFirestore,
-  getQuestionsPaginated,
   deleteQuestionFromFirestore,
 } from "../services/firebase";
 import { logQuestion } from "../utils/analyticsStore";
@@ -27,11 +26,6 @@ export const useQuestionManager = (config, showMessage) => {
 
   // Database view questions
   const [databaseQuestions, setDatabaseQuestions] = useState([]);
-
-  // PERFORMANCE: Pagination state
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState(null);
 
   // Version tracking for concurrent editing (maps question ID -> version)
   const [questionVersions, setQuestionVersions] = useState(new Map());
@@ -628,28 +622,10 @@ export const useQuestionManager = (config, showMessage) => {
     return Math.min(100, (totalApproved / TARGET_TOTAL) * 100);
   }, [totalApproved]);
 
-  // Check if global quota is reached (kept for informational purposes)
-  const _isGlobalQuotaMet = useMemo(() => {
-    return totalApproved >= TARGET_TOTAL;
-  }, [totalApproved]);
+  // Global quota check: totalApproved >= TARGET_TOTAL (used for info display)
 
-  // Calculate per-difficulty totals (combining MC and T/F)
-  const _difficultyTotals = useMemo(() => {
-    return {
-      Beginner:
-        (approvedCounts["Beginner MC"] || 0) +
-        (approvedCounts["Beginner T/F"] || 0),
-      Intermediate:
-        (approvedCounts["Intermediate MC"] || 0) +
-        (approvedCounts["Intermediate T/F"] || 0),
-      Expert:
-        (approvedCounts["Expert MC"] || 0) +
-        (approvedCounts["Expert T/F"] || 0),
-    };
-  }, [approvedCounts]);
-
-  // Target per difficulty level (2 categories * TARGET_PER_CATEGORY = 66 per difficulty)
-  const _TARGET_PER_DIFFICULTY = TARGET_PER_CATEGORY * 2; // 66
+  // Per-difficulty calculations available via:
+  // (approvedCounts["Beginner MC"] || 0) + (approvedCounts["Beginner T/F"] || 0)
 
   const isTargetMet = useMemo(() => {
     // Only block if the selected type for this difficulty is full
@@ -734,31 +710,6 @@ export const useQuestionManager = (config, showMessage) => {
   const checkAndStoreQuestions = useCallback(async (newQuestions) => {
     return newQuestions;
   }, []);
-
-  // PERFORMANCE: Load more questions
-  const _loadMoreQuestions = useCallback(
-    async (userId) => {
-      if (!hasMore || isLoadingMore) return;
-
-      setIsLoadingMore(true);
-      try {
-        const {
-          questions: moreQuestions,
-          lastDoc: newLastDoc,
-          hasMore: moreAvailable,
-        } = await getQuestionsPaginated(userId, 20, lastDoc);
-
-        setDatabaseQuestions((prev) => [...prev, ...moreQuestions]);
-        setLastDoc(newLastDoc);
-        setHasMore(moreAvailable);
-      } catch (error) {
-        console.error("Failed to load more questions:", error);
-      } finally {
-        setIsLoadingMore(false);
-      }
-    },
-    [hasMore, isLoadingMore, lastDoc]
-  );
 
   return {
     questions,

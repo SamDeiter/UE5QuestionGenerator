@@ -24,10 +24,7 @@ async function migrateTranslations() {
 
     console.log(`📊 Found ${allQuestions.length} total questions`);
 
-    // 2. Group questions by their content similarity (same question text = same original)
-    const _translationGroups = new Map();
-
-    // Find all non-English questions (translations)
+    // 2. Find all non-English questions (translations)
     const translations = allQuestions.filter(
       (q) => q.language && q.language !== "English"
     );

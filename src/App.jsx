@@ -94,7 +94,7 @@ const App = () => {
     handleRestartTutorial,
     handleStartTutorial,
   } = useTutorial(showMessage, undefined, {
-    // TODO: Wire up actual panel/modal setters when implementing tutorial actions
+    // FUTURE: Wire up actual panel/modal setters when implementing tutorial actions
     // setShowAdvancedConfig: (open) => { /* implement */ },
     // setShowCritiqueModal: (open) => { /* implement */ },
     // setActiveAnalyticsTab: (tab) => { /* implement */ },

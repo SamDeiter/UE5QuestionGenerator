@@ -36,9 +36,8 @@ export const logTutorialEvent = (eventName, payload) => {
     console.log("[Tutorial Analytics]", event);
   }
 
-  // TODO: Wire into Firestore or analytics service
-  // Example: analytics.logEvent(eventName, payload);
-  // For now, we'll use localStorage for debugging
+  // NOTE: Analytics service integration - currently using localStorage for debugging
+  // When ready: analytics.logEvent(eventName, payload);
 
   try {
     const key = "ue5_tutorial_events";

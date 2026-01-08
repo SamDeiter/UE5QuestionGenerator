@@ -1,0 +1,212 @@
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\__tests__\debug.test.js
+  6:5  error  Add at least one assertion to this test case  sonarjs/assertions-in-tests
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\__tests__\questionGeneration.integration.test.jsx
+  108:5   error  Remove this useless assignment to variable "mockSetShowAdvancedConfig"  sonarjs/no-dead-store
+  118:26  error  Make sure that using this pseudorandom number generator is safe here    sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\__tests__\translation.integration.test.jsx
+  100:26  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+  126:20  error  Refactor this code to not nest functions more than 4 levels deep      sonarjs/no-nested-functions
+  190:20  error  Refactor this code to not nest functions more than 4 levels deep      sonarjs/no-nested-functions
+  238:20  error  Refactor this code to not nest functions more than 4 levels deep      sonarjs/no-nested-functions
+  294:20  error  Refactor this code to not nest functions more than 4 levels deep      sonarjs/no-nested-functions
+  356:20  error  Refactor this code to not nest functions more than 4 levels deep      sonarjs/no-nested-functions
+  404:20  error  Refactor this code to not nest functions more than 4 levels deep      sonarjs/no-nested-functions
+  449:20  error  Refactor this code to not nest functions more than 4 levels deep      sonarjs/no-nested-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\agents\sessionAgent.js
+  18:16  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AnalyticsDashboard.jsx
+  557:30  error  Refactor this code to not nest functions more than 4 levels deep     sonarjs/no-nested-functions
+  608:39  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\BulkExportModal.jsx
+  188:31  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  190:31  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ContextToolbar.jsx
+  296:63  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\CritiqueDisplay.jsx
+   96:41  error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  105:41  error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\FilterButton.jsx
+  27:15  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  29:15  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  31:15  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Header.jsx
+  71:7  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  76:7  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  81:7  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ImprovementModal.jsx
+   56:23  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  127:27  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  145:29  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\LowScoreWarningModal.jsx
+  25:15  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  35:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  45:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  56:23  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  67:23  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  74:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  96:23  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\MainLayout.jsx
+  2:8  error  Remove this unused import of 'Icon'  sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\NameEntryModal.jsx
+  10:59  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\OmniWatchdog.jsx
+  195:33  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\PromptPlayground.jsx
+  198:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\LanguageControls.jsx
+  140:19  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  142:19  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  144:19  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionActions.jsx
+  170:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  177:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionNotesField.jsx
+  56:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuizPreview.jsx
+  215:11  error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TestView.jsx
+  63:7   error  Replace this if-then-else flow by a single return statement           sonarjs/prefer-single-boolean-return
+  80:45  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ViewRouter.jsx
+   42:11  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  132:11  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  151:11  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  158:11  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  164:11  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  182:11  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  201:11  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\DisciplineDetailPanel.jsx
+  150:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  152:23  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\sidebar\ActionFooter.jsx
+  104:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  106:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  116:15  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  120:15  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\__tests__\useToast.test.js
+  219:42  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  221:16  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  228:16  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\useQuestionCritique.js
+  90:19  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\utils\questionConverter.js
+  24:9   error  Remove this useless assignment to variable "targetAnswer"                                                  sonarjs/no-dead-store
+  33:26  error  Review this redundant assignment: "makeItTrue" already holds the assigned value along all execution paths  sonarjs/no-redundant-assignments
+  44:22  error  Make sure that using this pseudorandom number generator is safe here                                       sonarjs/pseudo-random
+  45:81  error  Make sure that using this pseudorandom number generator is safe here                                       sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useExport.js
+  195:34  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+  262:44  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useQuestionManager.js
+  632:9  error  Remove the declaration of the unused '_isGlobalQuotaMet' variable       sonarjs/no-unused-vars
+  637:9  error  Remove the declaration of the unused '_difficultyTotals' variable       sonarjs/no-unused-vars
+  652:9  error  Remove the declaration of the unused '_TARGET_PER_DIFFICULTY' variable  sonarjs/no-unused-vars
+  739:9  error  Remove the declaration of the unused '_loadMoreQuestions' variable      sonarjs/no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useToast.js
+   21:5   error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  177:13  error  Remove this useless assignment to variable "type"                                                                                 sonarjs/no-dead-store
+  183:20  error  Review this redundant assignment: "type" already holds the assigned value along all execution paths                               sonarjs/no-redundant-assignments
+  185:20  error  Review this redundant assignment: "type" already holds the assigned value along all execution paths                               sonarjs/no-redundant-assignments
+  194:24  error  Review this redundant assignment: "priority" already holds the assigned value along all execution paths                           sonarjs/no-redundant-assignments
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scormExporter.test.js
+  127:22  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  133:43  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\gemini.js
+   50:23  error  Make sure that using this pseudorandom number generator is safe here                                                              sonarjs/pseudo-random
+  337:7   error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\googleSheets.js
+  3:24  error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  9:70  error  Make sure that using this pseudorandom number generator is safe here                                                              sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\promptBuilder.js
+  30:7   error  Remove this useless assignment to variable "targetType"                                                    sonarjs/no-dead-store
+  47:18  error  Review this redundant assignment: "targetType" already holds the assigned value along all execution paths  sonarjs/no-redundant-assignments
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\scormExporter.js
+  26:36  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\answerValidator.js
+  32:18  error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\bulkDeleteDeleted.js
+  15:3  error  Remove this unused import of 'doc'  sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\fileProcessor.js
+  69:40  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+  87:40  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateTranslations.js
+  28:11  error  Remove the declaration of the unused '_translationGroups' variable  sonarjs/no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\mockQuestionGenerator.js
+   43:18  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+   47:35  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+   62:31  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+   68:34  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+   94:20  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+  112:27  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\normalizeQuestion.js
+  17:16  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\parserUtils.js
+  140:35  error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  206:38  error  Make sure that using this pseudorandom number generator is safe here                                                              sonarjs/pseudo-random
+  221:17  error  Extract this nested ternary operation into an independent statement                                                               sonarjs/no-nested-conditional
+  242:7   error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  243:21  error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  279:40  error  Replace this character class by the character itself                                                                              sonarjs/single-char-in-character-classes
+  300:32  error  Make sure that using this pseudorandom number generator is safe here                                                              sonarjs/pseudo-random
+  357:18  error  Make sure that using this pseudorandom number generator is safe here                                                              sonarjs/pseudo-random
+  360:33  error  Make sure that using this pseudorandom number generator is safe here                                                              sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\questionHelpers.js
+  1:10  error  Remove this unused import of 'textSimilarity'     sonarjs/unused-import
+  2:10  error  Remove this unused import of 'normalizeQuestion'  sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\questionValidator.js
+  72:42  error  This branch's code block is the same as the block for the branch on line 67  sonarjs/no-duplicated-branches
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\quizUtils.js
+  11:16  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\stringHelpers.js
+   24:16  error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  159:7   error  Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  230:9   error  Remove this assignment of "i"                                                                                                     sonarjs/updated-loop-counter
+
+Γ£û 117 problems (117 errors, 0 warnings)
+
