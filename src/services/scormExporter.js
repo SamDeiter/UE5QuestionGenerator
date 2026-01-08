@@ -23,6 +23,7 @@ export function convertQuestionToScormFormat(question) {
   }));
 
   return {
+    // eslint-disable-next-line sonarjs/pseudo-random
     id: guid || `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     text: questionText,
     type: type,

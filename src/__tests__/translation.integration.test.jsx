@@ -3,7 +3,10 @@
  *
  * Tests the translation workflow using the useGeneration hook
  * and mocked Gemini API.
+ *
+ * NOTE: Uses Math.random in mock functions for unique test IDs - non-security.
  */
+/* eslint-disable sonarjs/pseudo-random */
 
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";

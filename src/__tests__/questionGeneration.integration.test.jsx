@@ -1,7 +1,10 @@
 /**
  * Integration Tests for Question Generation Flow
  * Tests the complete workflow of generating questions using AI
+ *
+ * NOTE: Uses Math.random in mock functions for unique test IDs - non-security.
  */
+/* eslint-disable sonarjs/pseudo-random */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
