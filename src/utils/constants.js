@@ -51,6 +51,39 @@ export const QUALITY_THRESHOLDS = {
 // Shorthand for common usage
 export const QUALITY_PASS_THRESHOLD = QUALITY_THRESHOLDS.PASS;
 
+// Colorblind-Safe Color Palette
+// Uses blue/orange/purple instead of green/yellow/red for better visibility
+export const COLORBLIND_COLORS = {
+  EXCELLENT: {
+    bg: "bg-blue-900/30",
+    border: "border-blue-700/50",
+    text: "text-blue-300",
+    icon: "✓",
+    label: "Excellent",
+  },
+  GOOD: {
+    bg: "bg-amber-900/30",
+    border: "border-amber-700/50",
+    text: "text-amber-300",
+    icon: "⚠",
+    label: "Good",
+  },
+  MEDIOCRE: {
+    bg: "bg-purple-900/30",
+    border: "border-purple-700/50",
+    text: "text-purple-300",
+    icon: "⊛",
+    label: "Mediocre",
+  },
+  CRITICAL: {
+    bg: "bg-rose-900/30",
+    border: "border-rose-700/50",
+    text: "text-rose-300",
+    icon: "✗",
+    label: "Critical",
+  },
+};
+
 // Toast Notification Durations (ms) - Kept short to prevent stacking
 export const TOAST_DURATION = {
   SHORT: 1000, // Quick confirmations
