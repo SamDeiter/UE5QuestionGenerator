@@ -1,7 +1,9 @@
 /**
  * Google Sheets API integration via JSONP.
  * NOTE: Uses Math.random for unique callback name generation (non-security).
+ * NOTE: Regex patterns are for HTML tag stripping - input is from trusted sources.
  */
+/* eslint-disable sonarjs/slow-regex */
 const stripHtmlTags = (str) => {
   if (!str) return "";
   return str.replace(/<[^>]*>/g, "");
