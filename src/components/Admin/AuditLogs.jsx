@@ -12,6 +12,7 @@ import CollapsibleSection from "../CollapsibleSection";
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { logger } from "../../utils/logger";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 // Constants for query limits
 const LOGS_PER_COLLECTION = 25;
@@ -21,6 +22,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
   const [logs, setLogs] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { colorblindMode } = useAccessibility();
 
   const loadAuditLogs = async () => {
     setIsLoading(true);
@@ -103,6 +105,18 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
   };
 
   const getActionBadge = (action) => {
+    // Colorblind-safe palette
+    if (colorblindMode) {
+      const badges = {
+        generation: "bg-blue-900/50 text-blue-300",
+        critique: "bg-purple-900/50 text-purple-300",
+        api_call: "bg-amber-900/50 text-amber-300",
+        invite_attempt: "bg-cyan-900/50 text-cyan-300",
+        invite_lockout: "bg-rose-900/50 text-rose-300",
+      };
+      return badges[action] || "bg-slate-700 text-slate-300";
+    }
+    // Default colors
     const badges = {
       generation: "bg-green-900/50 text-green-300",
       critique: "bg-purple-900/50 text-purple-300",
