@@ -13,6 +13,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getAgents } from "../agents";
+import { logger } from "../utils/logger";
 
 // =========================================================================
 // GLOBAL LOCK STATE - Persists across component remounts
@@ -41,7 +42,7 @@ function scheduleLockRelease(questionId, releaseCallback) {
   }
   
   const timeoutId = setTimeout(() => {
-    console.log(`[useEditLock] Executing delayed release for: ${questionId}`);
+    logger.log(`[useEditLock] Executing delayed release for: ${questionId}`);
     globalLockState.activeLocks.delete(questionId);
     releaseCallback();
   }, 2000); // 2 second delay allows component to remount and cancel
@@ -117,12 +118,12 @@ export function useEditLock(
     }
 
     if (!agents) {
-      console.warn("[useEditLock] Agents not initialized yet");
+      logger.warn("[useEditLock] Agents not initialized yet");
       return { success: false, error: "Agents not initialized" };
     }
 
     if (!questionId || !userId || !userEmail) {
-      console.warn("[useEditLock] Missing required parameters");
+      logger.warn("[useEditLock] Missing required parameters");
       return { success: false, error: "Missing required parameters" };
     }
 
@@ -152,17 +153,17 @@ export function useEditLock(
           userEmail,
           result.action === "stolen"
         );
-        console.log(`[useEditLock] Lock acquired for question ${questionId}`);
+        logger.log(`[useEditLock] Lock acquired for question ${questionId}`);
         return { success: true };
       } else {
         setLockStatus("locked_by_other");
         // LockAgent.acquireLock returns { lockedBy: existingLock } on rejection
         setLockedBy(result.lockedBy);
-        console.warn(`[useEditLock] Lock acquisition failed:`, result.error);
+        logger.warn(`[useEditLock] Lock acquisition failed:`, result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error("[useEditLock] Lock acquisition error:", error);
+      logger.error("[useEditLock] Lock acquisition error:", error);
       setLockStatus("none");
       return { success: false, error: error.message };
     }
@@ -182,11 +183,11 @@ export function useEditLock(
       if (!result.success) {
         if (result.isNetworkError) {
           consecutiveFailuresRef.current++;
-          console.warn(`[useEditLock] Lock renewal network failure (${consecutiveFailuresRef.current}):`, result.error);
+          logger.warn(`[useEditLock] Lock renewal network failure (${consecutiveFailuresRef.current}):`, result.error);
           
           // Allow up to 3 consecutive network failures (approx 1.5 mins) before expiring
           if (consecutiveFailuresRef.current >= 3) {
-            console.error("[useEditLock] Persistent network failure (3 attempts). Expiring lock.");
+            logger.error("[useEditLock] Persistent network failure (3 attempts). Expiring lock.");
             setLockStatus("expired");
             if (onLockExpired) onLockExpired();
             return result;
@@ -196,7 +197,7 @@ export function useEditLock(
           return { success: true, isRetrying: true };
         }
 
-        console.warn("[useEditLock] Lock renewal failed (logic error):", result.error);
+        logger.warn("[useEditLock] Lock renewal failed (logic error):", result.error);
         setLockStatus("expired");
         if (onLockExpired) onLockExpired();
       } else {
@@ -207,7 +208,7 @@ export function useEditLock(
       return result;
     } catch (error) {
       // Uncaught errors still expire
-      console.error("[useEditLock] Lock renewal unexpected error:", error);
+      logger.error("[useEditLock] Lock renewal unexpected error:", error);
       setLockStatus("expired");
       if (onLockExpired) onLockExpired();
       return { success: false, error: error.message };
@@ -236,12 +237,12 @@ export function useEditLock(
         setLockInfo(null);
         setLockedBy(null);
         await auditAgent.logLockReleased(String(questionId), userId, userEmail);
-        console.log(`[useEditLock] Lock released for question ${questionId}`);
+        logger.log(`[useEditLock] Lock released for question ${questionId}`);
       }
 
       return result;
     } catch (error) {
-      console.error("[useEditLock] Lock release error:", error);
+      logger.error("[useEditLock] Lock release error:", error);
       return { success: false, error: error.message };
     }
   }, [agents, questionId, userId, userEmail]);
@@ -266,7 +267,7 @@ export function useEditLock(
       }
       return result;
     } catch (error) {
-      console.error("[useEditLock] Lock status check error:", error);
+      logger.error("[useEditLock] Lock status check error:", error);
       return { locked: false, error: error.message };
     }
   }, [agents, questionId]);
@@ -276,7 +277,7 @@ export function useEditLock(
   useEffect(() => {
     if (lockStatus !== "acquired") return;
 
-    console.log("[useEditLock] Starting heartbeat for", questionId);
+    logger.log("[useEditLock] Starting heartbeat for", questionId);
     heartbeatRef.current = setInterval(async () => {
       const result = await renewLockRef.current();
       if (!result.success) {
@@ -289,7 +290,7 @@ export function useEditLock(
 
     return () => {
       if (heartbeatRef.current) {
-        console.log("[useEditLock] Stopping heartbeat for", questionId);
+        logger.log("[useEditLock] Stopping heartbeat for", questionId);
         clearInterval(heartbeatRef.current);
         heartbeatRef.current = null;
       }
@@ -319,14 +320,14 @@ export function useEditLock(
     return () => {
       // Use refs to check latest values in cleanup (closures can be stale)
       if (lockStatusRef.current === "acquired" && !isProcessingRef.current) {
-        console.log(`[useEditLock] Scheduling delayed release for: ${qId}`);
+        logger.log(`[useEditLock] Scheduling delayed release for: ${qId}`);
         // Use delayed release - if component remounts quickly, it will be cancelled
         scheduleLockRelease(qId, () => {
-          console.log(`[useEditLock] Releasing lock on exit for: ${qId}`);
+          logger.log(`[useEditLock] Releasing lock on exit for: ${qId}`);
           releaseLockRef.current();
         });
       } else if (isProcessingRef.current) {
-        console.log(
+        logger.log(
           `[useEditLock] Delaying lock release for ${qId} - save in progress`
         );
       }
@@ -338,7 +339,7 @@ export function useEditLock(
   useEffect(() => {
     // Skip if already have active lock in global state (survived remount)
     if (hasActiveLock(questionId, userId)) {
-      console.log("[useEditLock] Reusing existing lock from global state");
+      logger.log("[useEditLock] Reusing existing lock from global state");
       setLockStatus("acquired");
       lockAttemptedRef.current = true;
       return;
@@ -358,9 +359,9 @@ export function useEditLock(
       return;
     }
 
-    console.log("[useEditLock] Starting 1s view timer");
+    logger.log("[useEditLock] Starting 1s view timer");
     viewTimerRef.current = setTimeout(() => {
-      console.log("[useEditLock] Auto-acquiring lock");
+      logger.log("[useEditLock] Auto-acquiring lock");
       acquireLockRef.current();
     }, 1000);
 
@@ -383,7 +384,7 @@ export function useEditLock(
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        console.log("[useEditLock] Tab visible - retrying lock acquisition");
+        logger.log("[useEditLock] Tab visible - retrying lock acquisition");
         lockAttemptedRef.current = false; // Allow retry
         acquireLock();
       }

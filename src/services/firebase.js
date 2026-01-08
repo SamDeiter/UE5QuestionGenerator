@@ -27,6 +27,7 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
 } from "firebase/auth";
+import { logger } from "../utils/logger";
 
 // SECURITY NOTE: CSRF Protection
 // For production deployment with a backend API proxy, add CSRF tokens:
@@ -50,10 +51,10 @@ const firebaseConfig = {
 
 // Validate required config
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.error(
+  logger.error(
     "❌ Firebase configuration missing. Ensure .env.local is set up correctly."
   );
-  console.error(
+  logger.error(
     "Run: npm run env:dev or npm run env:prod to configure environment."
   );
 }
@@ -71,7 +72,7 @@ const analytics = null;
 //     analytics = getAnalytics(app);
 //   }
 // } catch (e) {
-//   console.warn("Firebase Analytics not available:", e.message);
+//   logger.warn("Firebase Analytics not available:", e.message);
 // }
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -87,10 +88,10 @@ try {
   const savedQueue = localStorage.getItem("ue5_offline_queue");
   if (savedQueue) {
     offlineQueue = JSON.parse(savedQueue);
-    console.log(`📦 Loaded ${offlineQueue.length} queued items from storage`);
+    logger.log(`📦 Loaded ${offlineQueue.length} queued items from storage`);
   }
 } catch (e) {
-  console.warn("Failed to load offline queue:", e);
+  logger.warn("Failed to load offline queue:", e);
 }
 
 // Save queue to localStorage
@@ -98,20 +99,20 @@ const persistQueue = () => {
   try {
     localStorage.setItem("ue5_offline_queue", JSON.stringify(offlineQueue));
   } catch (e) {
-    console.warn("Failed to persist offline queue:", e);
+    logger.warn("Failed to persist offline queue:", e);
   }
 };
 
 // Connection status listeners
 if (typeof window !== "undefined") {
   window.addEventListener("online", () => {
-    console.log("🌐 Connection restored");
+    logger.log("🌐 Connection restored");
     isOnline = true;
     processOfflineQueue();
   });
 
   window.addEventListener("offline", () => {
-    console.log("📴 Connection lost");
+    logger.log("📴 Connection lost");
     isOnline = false;
   });
 }
@@ -125,18 +126,18 @@ const processOfflineQueue = async () => {
     if (savedQueue) {
       const parsed = JSON.parse(savedQueue);
       if (parsed.length > offlineQueue.length) {
-        console.log(`📦 Re-hydrated ${parsed.length} items from localStorage`);
+        logger.log(`📦 Re-hydrated ${parsed.length} items from localStorage`);
         offlineQueue = parsed;
       }
     }
   } catch (e) {
-    console.warn("Failed to re-hydrate queue:", e);
+    logger.warn("Failed to re-hydrate queue:", e);
   }
 
   if (syncInProgress || offlineQueue.length === 0) return;
 
   syncInProgress = true;
-  console.log(`🔄 Processing ${offlineQueue.length} queued items...`);
+  logger.log(`🔄 Processing ${offlineQueue.length} queued items...`);
 
   const itemsToProcess = [...offlineQueue];
   offlineQueue = [];
@@ -144,12 +145,9 @@ const processOfflineQueue = async () => {
   for (const item of itemsToProcess) {
     try {
       await saveQuestionToFirestoreInternal(item.question);
-      console.log(`✓ Synced queued item: ${item.question.uniqueId}`);
+      logger.log(`✓ Synced queued item: ${item.question.uniqueId}`);
     } catch (err) {
-      console.warn(
-        `Failed to sync ${item.question.uniqueId}, re-queuing:`,
-        err
-      );
+      logger.warn(`Failed to sync ${item.question.uniqueId}, re-queuing:`, err);
       offlineQueue.push(item);
     }
   }
@@ -158,7 +156,7 @@ const processOfflineQueue = async () => {
   syncInProgress = false;
 
   if (offlineQueue.length > 0) {
-    console.log(`⚠️ ${offlineQueue.length} items still queued`);
+    logger.log(`⚠️ ${offlineQueue.length} items still queued`);
   }
 };
 
@@ -176,7 +174,7 @@ export const getQueuedQuestionIds = () => {
 
 // Manual sync trigger for UI "Sync Now" button
 export const triggerManualSync = async () => {
-  console.log("🔄 Manual sync triggered by user");
+  logger.log("🔄 Manual sync triggered by user");
   notifyConnectionListeners(); // Update UI to show syncing
   await processOfflineQueue();
   notifyConnectionListeners(); // Update UI when done
@@ -207,7 +205,7 @@ if (typeof window !== "undefined") {
   // FIX 3: Periodic queue check - warn user if items are stuck
   setInterval(() => {
     if (offlineQueue.length > 0 && isOnline) {
-      console.warn(
+      logger.warn(
         `⚠️ [Queue Check] ${offlineQueue.length} items stuck in queue - attempting sync...`
       );
       processOfflineQueue();
@@ -223,15 +221,15 @@ if (typeof window !== "undefined") {
 export const refreshAuthToken = async () => {
   try {
     if (!auth.currentUser) {
-      console.warn("[Auth] No current user - cannot refresh token");
+      logger.warn("[Auth] No current user - cannot refresh token");
       return false;
     }
     // Force token refresh
     await auth.currentUser.getIdToken(true);
-    console.log("[Auth] Token refreshed successfully");
+    logger.log("[Auth] Token refreshed successfully");
     return true;
   } catch (error) {
-    console.error("[Auth] Token refresh failed:", error);
+    logger.error("[Auth] Token refresh failed:", error);
     return false;
   }
 };
@@ -278,7 +276,7 @@ export const signInWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
   } catch (error) {
-    console.error("Error signing in with Google:", error);
+    logger.error("Error signing in with Google:", error);
     throw error;
   }
 };
@@ -287,7 +285,7 @@ export const signOutUser = async () => {
   try {
     await signOut(auth);
   } catch (error) {
-    console.error("Error signing out:", error);
+    logger.error("Error signing out:", error);
     throw error;
   }
 };
@@ -303,7 +301,7 @@ export const signUpWithEmail = async (email, password) => {
       error.code !== "auth/email-already-in-use" &&
       error.code !== "auth/weak-password"
     ) {
-      console.error("Error signing up with email:", error);
+      logger.error("Error signing up with email:", error);
     }
     throw error;
   }
@@ -320,7 +318,7 @@ export const signInWithEmail = async (email, password) => {
       error.code !== "auth/wrong-password" &&
       error.code !== "auth/user-not-found"
     ) {
-      console.error("Error signing in with email:", error);
+      logger.error("Error signing in with email:", error);
     }
     throw error;
   }
@@ -331,7 +329,7 @@ export const resetPassword = async (email) => {
   try {
     await sendPasswordResetEmail(auth, email);
   } catch (error) {
-    console.error("Error sending password reset email:", error);
+    logger.error("Error sending password reset email:", error);
     throw error;
   }
 };
@@ -367,7 +365,7 @@ const removeUndefined = (obj) => {
  */
 const saveQuestionToFirestoreInternal = async (question) => {
   if (!question || !question.uniqueId) {
-    console.error("Invalid question object or missing uniqueId", question);
+    logger.error("Invalid question object or missing uniqueId", question);
     return;
   }
 
@@ -389,7 +387,7 @@ const saveQuestionToFirestoreInternal = async (question) => {
 
   // Set the document (overwrite if exists, create if new)
   await setDoc(docRef, payload, { merge: true });
-  console.log(`Question ${question.uniqueId} saved to Firestore.`);
+  logger.log(`Question ${question.uniqueId} saved to Firestore.`);
 
   // Invalidate cache so next load gets fresh data
   _questionsCache = null;
@@ -415,7 +413,7 @@ export const saveQuestionToFirestore = async (question) => {
   try {
     // If offline, queue immediately
     if (!isOnline) {
-      console.log(`📴 Offline - queuing ${question.uniqueId} for later sync`);
+      logger.log(`📴 Offline - queuing ${question.uniqueId} for later sync`);
       offlineQueue.push({ question, timestamp: Date.now() });
       persistQueue();
       notifyConnectionListeners();
@@ -424,7 +422,7 @@ export const saveQuestionToFirestore = async (question) => {
 
     // Proactively refresh auth token if it might be stale
     if (isAuthPotentiallyStale() && auth.currentUser) {
-      console.log("[Save] Auth token might be stale - refreshing...");
+      logger.log("[Save] Auth token might be stale - refreshing...");
       await refreshAuthToken();
     }
     markAuthActivity();
@@ -441,17 +439,17 @@ export const saveQuestionToFirestore = async (question) => {
 
     // FIX: Retry with forced token refresh on 403/permission errors
     if (is403 && auth.currentUser) {
-      console.warn(
+      logger.warn(
         `🔐 Permission denied for ${question.uniqueId} - refreshing token and retrying...`
       );
       try {
         await refreshAuthToken();
         markAuthActivity();
         await saveQuestionToFirestoreInternal(question);
-        console.log(`✅ Retry succeeded for ${question.uniqueId}`);
+        logger.log(`✅ Retry succeeded for ${question.uniqueId}`);
         return { success: true, queued: false };
       } catch (retryError) {
-        console.error(
+        logger.error(
           `❌ Retry also failed for ${question.uniqueId}:`,
           retryError.message
         );
@@ -459,7 +457,7 @@ export const saveQuestionToFirestore = async (question) => {
       }
     }
 
-    console.warn(
+    logger.warn(
       `⚠️ Save failed for ${question.uniqueId}, queuing for retry:`,
       errorMessage
     );
@@ -484,7 +482,7 @@ export const batchSaveQuestions = async (questions) => {
 
   // If offline, queue all
   if (!isOnline) {
-    console.log(
+    logger.log(
       `📴 Offline - queuing ${questions.length} questions for later sync`
     );
     questions.forEach((q) =>
@@ -531,7 +529,7 @@ export const batchSaveQuestions = async (questions) => {
       await writeBatchOp.commit();
       results.success += batch.length;
     } catch (error) {
-      console.warn(
+      logger.warn(
         `⚠️ Batch save failed, falling back to individual saves:`,
         error.message
       );
@@ -549,7 +547,7 @@ export const batchSaveQuestions = async (questions) => {
   _questionsCache = null;
 
   const duration = Math.round(performance.now() - startTime);
-  console.log(`⚡ Batch saved ${results.success} questions in ${duration}ms`);
+  logger.log(`⚡ Batch saved ${results.success} questions in ${duration}ms`);
 
   return results;
 };
@@ -562,7 +560,7 @@ export const getQuestionsFromFirestore = async () => {
   try {
     // Require authentication
     if (!auth.currentUser) {
-      console.log("⚠️ No user signed in, cannot load questions");
+      logger.log("⚠️ No user signed in, cannot load questions");
       return [];
     }
 
@@ -579,18 +577,18 @@ export const getQuestionsFromFirestore = async () => {
     });
 
     if (questions.length === 0) {
-      console.log(
+      logger.log(
         `📭 No questions found for user ${auth.currentUser.uid} (this is normal for new users)`
       );
     } else {
-      console.log(
+      logger.log(
         `✅ Loaded ${questions.length} questions for user ${auth.currentUser.uid}`
       );
     }
 
     return questions;
   } catch (error) {
-    console.error("Error getting questions from Firestore:", error);
+    logger.error("Error getting questions from Firestore:", error);
     return [];
   }
 };
@@ -610,7 +608,7 @@ export const getAllQuestionsFromFirestore = async (
   try {
     // Require authentication
     if (!auth.currentUser) {
-      console.log("⚠️ No user signed in, cannot load questions");
+      logger.log("⚠️ No user signed in, cannot load questions");
       return [];
     }
 
@@ -621,7 +619,7 @@ export const getAllQuestionsFromFirestore = async (
       _questionsCache &&
       now - _questionsCacheTimestamp < CACHE_TTL_MS
     ) {
-      console.log(
+      logger.log(
         `⚡ Returning ${_questionsCache.length} cached questions (${Math.round(
           (now - _questionsCacheTimestamp) / 1000
         )}s old)`
@@ -629,8 +627,8 @@ export const getAllQuestionsFromFirestore = async (
       return _questionsCache;
     }
 
-    console.log("🔄 Fetching questions from Firestore...");
-    console.log(`📍 Firebase Project: ${firebaseConfig.projectId}`);
+    logger.log("🔄 Fetching questions from Firestore...");
+    logger.log(`📍 Firebase Project: ${firebaseConfig.projectId}`);
     const startTime = performance.now();
 
     // Load ALL questions (not filtered by creatorId)
@@ -653,10 +651,10 @@ export const getAllQuestionsFromFirestore = async (
     });
 
     const duration = Math.round(performance.now() - startTime);
-    console.log(
+    logger.log(
       `✅ Loaded ${questions.length} questions from Firestore in ${duration}ms`
     );
-    console.log("📊 Discipline Breakdown:", disciplineCounts);
+    logger.log("📊 Discipline Breakdown:", disciplineCounts);
 
     // Update cache
     _questionsCache = questions;
@@ -664,7 +662,7 @@ export const getAllQuestionsFromFirestore = async (
 
     return questions;
   } catch (error) {
-    console.error("Error getting all questions from Firestore:", error);
+    logger.error("Error getting all questions from Firestore:", error);
     return [];
   }
 };
@@ -673,7 +671,7 @@ export const getAllQuestionsFromFirestore = async (
 export const invalidateQuestionsCache = () => {
   _questionsCache = null;
   _questionsCacheTimestamp = 0;
-  console.log("🗑️ Questions cache invalidated");
+  logger.log("🗑️ Questions cache invalidated");
 };
 
 /**
@@ -692,12 +690,12 @@ export const invalidateQuestionsCache = () => {
 export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
   // Require authentication
   if (!auth.currentUser) {
-    console.log("⚠️ No user signed in, cannot subscribe to questions");
+    logger.log("⚠️ No user signed in, cannot subscribe to questions");
     callback([]);
     return () => {}; // Return no-op unsubscribe
   }
 
-  console.log("🔄 Setting up real-time question listener...");
+  logger.log("🔄 Setting up real-time question listener...");
 
   // Create query for all questions
   const q = query(
@@ -715,7 +713,7 @@ export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
         questions.push({ id: docSnapshot.id, ...docSnapshot.data() });
       });
 
-      console.log(
+      logger.log(
         `✅ Real-time update: ${questions.length} questions (${
           snapshot.docChanges().length
         } changes)`
@@ -725,13 +723,13 @@ export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
       callback(questions);
     },
     (error) => {
-      console.error("❌ Error in real-time listener:", error);
+      logger.error("❌ Error in real-time listener:", error);
       // On error, fall back to empty array
       callback([]);
     }
   );
 
-  console.log("✓ Real-time listener active");
+  logger.log("✓ Real-time listener active");
   return unsubscribe;
 };
 
@@ -769,7 +767,7 @@ export const getQuestionsPaginated = async (
       hasMore: questions.length === limitCount,
     };
   } catch (error) {
-    console.error("Error fetching paginated questions:", error);
+    logger.error("Error fetching paginated questions:", error);
     return { questions: [], lastDoc: null, hasMore: false };
   }
 };
@@ -802,10 +800,10 @@ export const clearAllQuestionsFromFirestore = async () => {
     });
 
     await Promise.all(deletePromises);
-    console.log(`Deleted ${deletedCount} questions from Firestore.`);
+    logger.log(`Deleted ${deletedCount} questions from Firestore.`);
     return deletedCount;
   } catch (error) {
-    console.error("Error clearing questions from Firestore:", error);
+    logger.error("Error clearing questions from Firestore:", error);
     throw error;
   }
 };
@@ -832,12 +830,12 @@ export const deleteSoftDeletedQuestionsFromFirestore = async () => {
     });
 
     await Promise.all(deletePromises);
-    console.log(
+    logger.log(
       `Successfully cleaned up ${deletedCount} soft-deleted questions.`
     );
     return deletedCount;
   } catch (error) {
-    console.error("Error cleaning up soft-deleted questions:", error);
+    logger.error("Error cleaning up soft-deleted questions:", error);
     throw error;
   }
 };
@@ -850,14 +848,14 @@ export const deleteSoftDeletedQuestionsFromFirestore = async () => {
 export const deleteQuestionFromFirestore = async (uniqueId) => {
   try {
     if (!uniqueId) {
-      console.error("Cannot delete question: missing uniqueId");
+      logger.error("Cannot delete question: missing uniqueId");
       return;
     }
     const docRef = doc(db, "questions", uniqueId);
     await deleteDoc(docRef);
-    console.log(`Question ${uniqueId} deleted from Firestore.`);
+    logger.log(`Question ${uniqueId} deleted from Firestore.`);
   } catch (error) {
-    console.error("Error deleting question from Firestore:", error);
+    logger.error("Error deleting question from Firestore:", error);
     throw error;
   }
 };
@@ -870,7 +868,7 @@ export const deleteQuestionFromFirestore = async (uniqueId) => {
 export const saveCustomTags = async (customTags) => {
   try {
     if (!auth.currentUser) {
-      console.warn("No user signed in, cannot save custom tags");
+      logger.warn("No user signed in, cannot save custom tags");
       return;
     }
 
@@ -884,9 +882,9 @@ export const saveCustomTags = async (customTags) => {
       { merge: true }
     );
 
-    console.log("Custom tags saved to Firestore");
+    logger.log("Custom tags saved to Firestore");
   } catch (error) {
-    console.error("Error saving custom tags:", error);
+    logger.error("Error saving custom tags:", error);
     throw error;
   }
 };
@@ -898,7 +896,7 @@ export const saveCustomTags = async (customTags) => {
 export const getCustomTags = async () => {
   try {
     if (!auth.currentUser) {
-      console.warn("No user signed in, returning empty custom tags");
+      logger.warn("No user signed in, returning empty custom tags");
       return {};
     }
 
@@ -912,7 +910,7 @@ export const getCustomTags = async () => {
 
     return {};
   } catch (error) {
-    console.error("Error getting custom tags:", error);
+    logger.error("Error getting custom tags:", error);
     return {};
   }
 };

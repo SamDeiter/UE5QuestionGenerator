@@ -17,9 +17,7 @@
 
 // Check if we're in production mode
 const isProduction =
-  import.meta.env?.PROD ||
-  import.meta.env?.MODE === "production" ||
-  process.env?.NODE_ENV === "production";
+  import.meta.env?.PROD || import.meta.env?.MODE === "production";
 
 // Log levels: 0=silent, 1=errors, 2=warnings, 3=info, 4=debug
 const LOG_LEVELS = {

@@ -7,6 +7,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 import { TARGET_PER_CATEGORY } from "./constants";
+import { logger } from "../utils/logger";
 
 /**
  * Production Database Cleanup Tool
@@ -16,12 +17,12 @@ import { TARGET_PER_CATEGORY } from "./constants";
  * 3. Remove excess questions beyond quota
  */
 export const cleanupProductionDatabase = async () => {
-  console.log("🔍 Starting database cleanup...");
+  logger.log("🔍 Starting database cleanup...");
 
   const questionsRef = collection(db, "questions");
   const snapshot = await getDocs(questionsRef);
 
-  console.log(`📊 Found ${snapshot.size} total questions`);
+  logger.log(`📊 Found ${snapshot.size} total questions`);
 
   // Step 1: Fix missing status
   let statusFixed = 0;
@@ -38,7 +39,7 @@ export const cleanupProductionDatabase = async () => {
   });
 
   await Promise.all(updatePromises);
-  console.log(`✅ Fixed ${statusFixed} status fields`);
+  logger.log(`✅ Fixed ${statusFixed} status fields`);
 
   // Step 2: Remove duplicates
   const uniqueMap = new Map();
@@ -72,7 +73,7 @@ export const cleanupProductionDatabase = async () => {
   });
 
   await Promise.all(deletePromises);
-  console.log(`✅ Removed ${duplicatesRemoved} duplicates`);
+  logger.log(`✅ Removed ${duplicatesRemoved} duplicates`);
 
   // Step 3: Remove excess questions
   const quotaMap = new Map();
@@ -112,10 +113,10 @@ export const cleanupProductionDatabase = async () => {
   });
 
   // Log normalized categories
-  console.log("\n📊 Normalized categories after combining equivalents:");
+  logger.log("\n📊 Normalized categories after combining equivalents:");
   quotaMap.forEach((questions, key) => {
     if (questions.length > 30) {
-      console.log(`  ${key}: ${questions.length}`);
+      logger.log(`  ${key}: ${questions.length}`);
     }
   });
 
@@ -126,7 +127,7 @@ export const cleanupProductionDatabase = async () => {
   quotaMap.forEach((questions, key) => {
     if (questions.length > QUOTA) {
       const [discipline, difficulty, qtype] = key.split("|");
-      console.log(
+      logger.log(
         `⚠️ ${discipline} ${difficulty} ${qtype}: ${questions.length} (quota: ${QUOTA})`
       );
 
@@ -146,13 +147,13 @@ export const cleanupProductionDatabase = async () => {
   });
 
   await Promise.all(excessDeletePromises);
-  console.log(`✅ Removed ${excessRemoved} excess questions`);
+  logger.log(`✅ Removed ${excessRemoved} excess questions`);
 
-  console.log(`\n🎉 Cleanup complete!`);
-  console.log(`   Status fixes: ${statusFixed}`);
-  console.log(`   Duplicates: ${duplicatesRemoved}`);
-  console.log(`   Excess: ${excessRemoved}`);
-  console.log(`   Total: ${statusFixed + duplicatesRemoved + excessRemoved}`);
+  logger.log(`\n🎉 Cleanup complete!`);
+  logger.log(`   Status fixes: ${statusFixed}`);
+  logger.log(`   Duplicates: ${duplicatesRemoved}`);
+  logger.log(`   Excess: ${excessRemoved}`);
+  logger.log(`   Total: ${statusFixed + duplicatesRemoved + excessRemoved}`);
 
   return {
     statusFixed,
@@ -166,12 +167,12 @@ export const cleanupProductionDatabase = async () => {
  * Debug: Audit the database to see what categories and counts exist
  */
 export const auditDatabaseCategories = async () => {
-  console.log("🔍 Auditing database categories...");
+  logger.log("🔍 Auditing database categories...");
 
   const questionsRef = collection(db, "questions");
   const snapshot = await getDocs(questionsRef);
 
-  console.log(`📊 Found ${snapshot.size} total questions`);
+  logger.log(`📊 Found ${snapshot.size} total questions`);
 
   // Log unique values
   const disciplines = new Set();
@@ -195,21 +196,21 @@ export const auditDatabaseCategories = async () => {
     categoryMap.set(rawKey, categoryMap.get(rawKey) + 1);
   });
 
-  console.log("\n📋 Unique disciplines:", Array.from(disciplines));
-  console.log("📋 Unique difficulties:", Array.from(difficulties));
-  console.log("📋 Unique types:", Array.from(types));
+  logger.log("\n📋 Unique disciplines:", Array.from(disciplines));
+  logger.log("📋 Unique difficulties:", Array.from(difficulties));
+  logger.log("📋 Unique types:", Array.from(types));
 
-  console.log("\n📊 Categories over 30 questions (quota is 40):");
+  logger.log("\n📊 Categories over 30 questions (quota is 40):");
   categoryMap.forEach((count, key) => {
     if (count > 30) {
-      console.log(`  ${key}: ${count}`);
+      logger.log(`  ${key}: ${count}`);
     }
   });
 
-  console.log("\n📊 All Animation & Rigging categories:");
+  logger.log("\n📊 All Animation & Rigging categories:");
   categoryMap.forEach((count, key) => {
     if (key.startsWith("Animation")) {
-      console.log(`  ${key}: ${count}`);
+      logger.log(`  ${key}: ${count}`);
     }
   });
 
@@ -221,12 +222,12 @@ export const auditDatabaseCategories = async () => {
  * Converts Easy->Beginner, Medium->Intermediate, Hard->Expert
  */
 export const migrateDifficultyNames = async () => {
-  console.log("🔄 Starting difficulty name migration...");
+  logger.log("🔄 Starting difficulty name migration...");
 
   const questionsRef = collection(db, "questions");
   const snapshot = await getDocs(questionsRef);
 
-  console.log(`📊 Found ${snapshot.size} total questions`);
+  logger.log(`📊 Found ${snapshot.size} total questions`);
 
   const updates = [];
   let needsMigration = 0;
@@ -253,14 +254,14 @@ export const migrateDifficultyNames = async () => {
     }
   });
 
-  console.log(`📝 Found ${needsMigration} questions needing migration`);
+  logger.log(`📝 Found ${needsMigration} questions needing migration`);
 
   if (needsMigration > 0) {
-    console.log("⏳ Updating documents...");
+    logger.log("⏳ Updating documents...");
     await Promise.all(updates);
-    console.log(`✅ Migrated ${needsMigration} questions!`);
+    logger.log(`✅ Migrated ${needsMigration} questions!`);
   } else {
-    console.log("✅ All questions already have correct difficulty names!");
+    logger.log("✅ All questions already have correct difficulty names!");
   }
 
   return { migrated: needsMigration };

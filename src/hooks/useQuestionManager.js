@@ -13,6 +13,7 @@ import {
 import { logQuestion } from "../utils/analyticsStore";
 import { completeReviewTracking } from "../utils/normalizeQuestion";
 import { getAgents } from "../agents";
+import { logger } from "../utils/logger";
 
 export const useQuestionManager = (config, showMessage) => {
   // Current session questions
@@ -50,12 +51,12 @@ export const useQuestionManager = (config, showMessage) => {
       if (e.key === "ue5_gen_questions" && e.newValue) {
         try {
           const newQuestions = JSON.parse(e.newValue);
-          console.log(
+          logger.log(
             `🔄 Syncing ${newQuestions.length} questions from another tab...`
           );
           setQuestions(newQuestions);
         } catch (err) {
-          console.error("Failed to sync questions from storage:", err);
+          logger.error("Failed to sync questions from storage:", err);
         }
       }
     };
@@ -73,7 +74,7 @@ export const useQuestionManager = (config, showMessage) => {
         !q.creatorName || q.creatorName === "N/A" || q.creatorName === "Unknown"
     );
     if (questionsNeedingBackfill.length > 0) {
-      console.log(
+      logger.log(
         `📝 Backfilling creatorName on ${questionsNeedingBackfill.length} questions...`
       );
       setQuestions((prev) =>
@@ -135,16 +136,16 @@ export const useQuestionManager = (config, showMessage) => {
     async (newItems, isHistory = false, insertAfterId = null) => {
       // Auto-save to Firestore for crash protection
       if (newItems && newItems.length > 0) {
-        console.log(
+        logger.log(
           `💾 Auto-saving ${newItems.length} questions to Firestore...`
         );
         const savePromises = newItems.map((q) =>
           saveQuestionToFirestore(q).catch((err) => {
-            console.warn(`⚠️ Failed to auto-save question ${q.uniqueId}:`, err);
+            logger.warn(`⚠️ Failed to auto-save question ${q.uniqueId}:`, err);
           })
         );
         await Promise.all(savePromises);
-        console.log(`✓ Auto-saved ${newItems.length} questions to cloud`);
+        logger.log(`✓ Auto-saved ${newItems.length} questions to cloud`);
       }
 
       const targetSet = isHistory ? setHistoricalQuestions : setQuestions;
@@ -153,7 +154,7 @@ export const useQuestionManager = (config, showMessage) => {
         const uniqueNew = filterDuplicateQuestions(newItems, prev, otherList);
 
         // DEBUG: Log questions being added to state
-        console.log(
+        logger.log(
           "🐛 [DEBUG] Adding to state:",
           uniqueNew.map((q) => ({
             id: q.uniqueId?.slice(0, 8),
@@ -217,7 +218,7 @@ export const useQuestionManager = (config, showMessage) => {
   // Update ALL variants of a question (same uniqueId) with critique/metadata
   const updateAllVariantsInState = useCallback((uniqueId, updateFn) => {
     if (!uniqueId) {
-      console.warn("[updateAllVariantsInState] No uniqueId provided");
+      logger.warn("[updateAllVariantsInState] No uniqueId provided");
       return;
     }
 
@@ -248,7 +249,7 @@ export const useQuestionManager = (config, showMessage) => {
         historicalQuestions.find((q) => q.id === id);
 
       if (!currentQ) {
-        console.warn(`handleUpdateStatus: Question ${id} not found`);
+        logger.warn(`handleUpdateStatus: Question ${id} not found`);
         return;
       }
 
@@ -259,12 +260,12 @@ export const useQuestionManager = (config, showMessage) => {
 
       // Handle legacy numeric IDs by converting to string
       if (typeof docId === "number") {
-        console.warn(`Converting numeric ID to string: ${docId}`);
+        logger.warn(`Converting numeric ID to string: ${docId}`);
         docId = String(docId);
       }
 
       if (!docId || typeof docId !== "string") {
-        console.error("Invalid question ID:", { currentQ, id, docId });
+        logger.error("Invalid question ID:", { currentQ, id, docId });
         if (showMessage) {
           showMessage(
             "⚠️ Cannot save: Question has invalid ID. Please refresh the page.",
@@ -287,7 +288,7 @@ export const useQuestionManager = (config, showMessage) => {
             deletedAt: new Date().toISOString(),
           });
         } catch (err) {
-          console.error("Failed to delete question:", err);
+          logger.error("Failed to delete question:", err);
           if (showMessage)
             showMessage("Failed to delete question from cloud.", 3000);
         }
@@ -339,7 +340,7 @@ export const useQuestionManager = (config, showMessage) => {
               6000
             );
           }
-          console.warn(
+          logger.warn(
             `[useQuestionManager] Save queued for ${id} - connection issue detected`
           );
         } else if (
@@ -351,15 +352,15 @@ export const useQuestionManager = (config, showMessage) => {
           showMessage(`✓ Question ${statusLabel} and saved to cloud`, 2000);
         }
       } catch (err) {
-        console.error("Firestore sync failed:", err);
+        logger.error("Firestore sync failed:", err);
         // DEBUG: Log detailed error information to diagnose false positives
-        console.log("[DEBUG] Error type:", typeof err);
-        console.log("[DEBUG] Error message:", err.message);
-        console.log("[DEBUG] Full error:", err);
+        logger.log("[DEBUG] Error type:", typeof err);
+        logger.log("[DEBUG] Error message:", err.message);
+        logger.log("[DEBUG] Full error:", err);
 
         // Handle QUESTION_DELETED: Remove from local state automatically
         if (err.message?.startsWith("QUESTION_DELETED:")) {
-          console.warn(
+          logger.warn(
             `Question ${id} was deleted from Firestore - removing from local state`
           );
           setQuestions((prev) => prev.filter((q) => q.id !== id));
@@ -409,7 +410,7 @@ export const useQuestionManager = (config, showMessage) => {
         historicalQuestions.find((q) => q.id === id);
 
       if (!currentQ) {
-        console.warn(`handleUpdateQuestion: Question ${id} not found`);
+        logger.warn(`handleUpdateQuestion: Question ${id} not found`);
         return;
       }
 
@@ -420,12 +421,12 @@ export const useQuestionManager = (config, showMessage) => {
 
       // Handle legacy numeric IDs by converting to string
       if (typeof docId === "number") {
-        console.warn(`Converting numeric ID to string: ${docId}`);
+        logger.warn(`Converting numeric ID to string: ${docId}`);
         docId = String(docId);
       }
 
       if (!docId || typeof docId !== "string") {
-        console.error("Invalid question ID:", { currentQ, id, docId });
+        logger.error("Invalid question ID:", { currentQ, id, docId });
         if (showMessage) {
           showMessage(
             "⚠️ Cannot save: Question has invalid ID. Please refresh the page.",
@@ -451,7 +452,7 @@ export const useQuestionManager = (config, showMessage) => {
 
           if (!result.success) {
             if (result.errorType === "VERSION_CONFLICT") {
-              console.warn("Version conflict detected during question update");
+              logger.warn("Version conflict detected during question update");
               setConflictData({
                 serverQuestion: result.serverQuestion,
                 serverVersion: result.serverVersion,
@@ -480,11 +481,11 @@ export const useQuestionManager = (config, showMessage) => {
           updateQuestionInState(id, () => updatedQ);
         }
       } catch (err) {
-        console.error("Firestore sync failed:", err);
+        logger.error("Firestore sync failed:", err);
 
         // Handle QUESTION_DELETED: Remove from local state automatically
         if (err.message?.startsWith("QUESTION_DELETED:")) {
-          console.warn(
+          logger.warn(
             `Question ${id} was deleted from Firestore - removing from local state`
           );
           setQuestions((prev) => prev.filter((q) => q.id !== id));
@@ -675,14 +676,14 @@ export const useQuestionManager = (config, showMessage) => {
             );
           } catch (err) {
             // Safe to ignore re-renders here as it's an async error handling
-            console.error(
+            logger.error(
               "Failed to delete from Firestore during confirmDelete:",
               err
             );
           }
         }
 
-        console.log(`Deleting question ${deleteConfirmId}. Reason: ${reason}`);
+        logger.log(`Deleting question ${deleteConfirmId}. Reason: ${reason}`);
         setQuestions((prev) => prev.filter((q) => q.id !== deleteConfirmId));
         setHistoricalQuestions((prev) =>
           prev.filter((q) => q.id !== deleteConfirmId)
