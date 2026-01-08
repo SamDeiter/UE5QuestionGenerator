@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "../Icon";
 import FlagIcon from "../FlagIcon";
 import { LANGUAGE_CODES, LANGUAGE_FLAGS } from "../../utils/constants";
+import { logger } from "../../utils/logger";
 
 /**
  * Get button title text based on language state
@@ -69,13 +70,13 @@ const LanguageControls = ({
 
           // LOCK ENFORCEMENT: Exit immediately if locked by another user
           if (isLocked) {
-            console.log(
+            logger.log(
               "🔒 [LanguageControls] Translation blocked - question is locked"
             );
             return;
           }
 
-          console.log("🎯 [LanguageControls] Flag clicked:", {
+          logger.log("🎯 [LanguageControls] Flag clicked:", {
             lang,
             isCurrent,
             exists,
@@ -88,32 +89,32 @@ const LanguageControls = ({
           });
 
           if (isCurrent) {
-            console.log(
+            logger.log(
               "⏭️ [LanguageControls] Skipping - already current language"
             );
             return; // Do nothing if clicking current
           }
 
           if (exists) {
-            console.log(
+            logger.log(
               "🔄 [LanguageControls] Switching to existing translation"
             );
             // Pass both language AND uniqueId so parent can find the translated variant
             onSwitchLanguage(lang, q.uniqueId);
           } else if (canTranslate) {
-            console.log("🌐 [LanguageControls] Generating new translation");
+            logger.log("🌐 [LanguageControls] Generating new translation");
             setLoadingLang(lang);
             onTranslateSingle(q, lang)
               .then(() => {
-                console.log("✅ [LanguageControls] Translation complete");
+                logger.log("✅ [LanguageControls] Translation complete");
                 setLoadingLang(null);
               })
               .catch((err) => {
-                console.error("❌ [LanguageControls] Translation failed:", err);
+                logger.error("❌ [LanguageControls] Translation failed:", err);
                 setLoadingLang(null);
               });
           } else {
-            console.warn(
+            logger.warn(
               "⚠️ [LanguageControls] Cannot translate - requirements not met"
             );
           }

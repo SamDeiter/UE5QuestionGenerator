@@ -17,6 +17,7 @@ import {
   checkUserRegistration,
   setupInitialAdmin,
 } from "../services/inviteService";
+import { logger } from "../utils/logger";
 
 // SECURITY FIX V-002: Removed client-side FALLBACK_ADMIN_EMAILS
 // Admin detection now happens entirely server-side via checkUserRegistration()
@@ -68,7 +69,7 @@ export function useAuth(showMessage) {
             try {
               const adminResult = await setupInitialAdmin();
               if (adminResult.success) {
-                console.log("✅ Server-side admin setup successful");
+                logger.log("✅ Server-side admin setup successful");
                 regStatus = {
                   registered: true,
                   role: adminResult.role || "admin",
@@ -76,7 +77,7 @@ export function useAuth(showMessage) {
               }
             } catch {
               // setupInitialAdmin throws if email not whitelisted - this is expected
-              console.log("ℹ️ Not a whitelisted admin email");
+              logger.log("ℹ️ Not a whitelisted admin email");
             }
           }
 
@@ -84,7 +85,7 @@ export function useAuth(showMessage) {
           setUserRole(regStatus.role || "user");
           setIsAdmin(regStatus.role === "admin");
         } catch (error) {
-          console.error("Failed to check registration:", error);
+          logger.error("Failed to check registration:", error);
           // SECURITY: On error, default to no access (fail closed)
           setIsAdmin(false);
           setIsRegistered(false);
@@ -98,7 +99,7 @@ export function useAuth(showMessage) {
           const tags = await getCustomTags();
           setCustomTags(tags);
         } catch (error) {
-          console.error("Failed to load custom tags:", error);
+          logger.error("Failed to load custom tags:", error);
         }
       } else {
         setIsAdmin(false);
@@ -145,7 +146,7 @@ export function useAuth(showMessage) {
       setCustomTags(newCustomTags);
       showMessage("Custom tags saved!", 2000);
     } catch (error) {
-      console.error("Failed to save custom tags:", error);
+      logger.error("Failed to save custom tags:", error);
       showMessage("Failed to save tags", 3000);
     }
   };

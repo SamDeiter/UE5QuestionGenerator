@@ -11,6 +11,7 @@ import { LoadAgent } from "./loadAgent.js";
 import { SaveGuardAgent } from "./saveGuardAgent.js";
 import { ConflictResolverAgent } from "./conflictResolverAgent.js";
 import { AuditAgent } from "./auditAgent.js";
+import { logger } from "../utils/logger";
 
 let agentInstances = null;
 
@@ -21,11 +22,11 @@ let agentInstances = null;
  */
 export function initializeAgents(db) {
   if (agentInstances) {
-    console.warn("[AgentFactory] Agents already initialized");
+    logger.warn("[AgentFactory] Agents already initialized");
     return agentInstances;
   }
 
-  console.log("[AgentFactory] Initializing agents...");
+  logger.log("[AgentFactory] Initializing agents...");
 
   // Initialize agents in dependency order
   const sessionAgent = getSessionAgent();
@@ -48,8 +49,8 @@ export function initializeAgents(db) {
     auditAgent,
   };
 
-  console.log("[AgentFactory] Agents initialized successfully");
-  console.log("[AgentFactory] Session ID:", sessionAgent.getSessionId());
+  logger.log("[AgentFactory] Agents initialized successfully");
+  logger.log("[AgentFactory] Session ID:", sessionAgent.getSessionId());
 
   return agentInstances;
 }
@@ -60,7 +61,7 @@ export function initializeAgents(db) {
  */
 export function getAgents() {
   if (!agentInstances) {
-    console.warn(
+    logger.warn(
       "[AgentFactory] Agents not initialized. Call initializeAgents(db) first."
     );
     return null;
@@ -72,7 +73,7 @@ export function getAgents() {
  * Reset agents (for testing or reinitialization)
  */
 export function resetAgents() {
-  console.log("[AgentFactory] Resetting agents");
+  logger.log("[AgentFactory] Resetting agents");
   agentInstances = null;
 }
 
@@ -86,7 +87,7 @@ export function getAgent(agentName) {
   if (!agents) return null;
 
   if (!agents[agentName]) {
-    console.error(`[AgentFactory] Agent "${agentName}" not found`);
+    logger.error(`[AgentFactory] Agent "${agentName}" not found`);
     return null;
   }
 

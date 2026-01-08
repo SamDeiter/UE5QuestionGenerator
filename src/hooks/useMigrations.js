@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { logger } from "../utils/logger";
 
 /**
  * Hook to handle one-time database migrations.
@@ -28,10 +29,10 @@ export function useMigrations({
     const hasReset = localStorage.getItem(migrationKey);
 
     if (!hasReset && setConfig) {
-      console.log("🔄 Running language reset migration...");
+      logger.log("🔄 Running language reset migration...");
       setConfig((prev) => ({ ...prev, language: "English" }));
       localStorage.setItem(migrationKey, "true");
-      console.log("✅ Language reset to English");
+      logger.log("✅ Language reset to English");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -52,7 +53,7 @@ export function useMigrations({
       ) {
         hasAutoAcceptMigratedRef.current = true;
         try {
-          console.log(
+          logger.log(
             "🔄 Running migration: fixing auto-accepted questions..."
           );
 
@@ -84,7 +85,7 @@ export function useMigrations({
 
           if (batch.length > 0) {
             await Promise.all(batch);
-            console.log(
+            logger.log(
               `✅ Migration: Fixed ${fixedCount} of ${snapshot.size} questions`
             );
             showMessage(
@@ -93,14 +94,14 @@ export function useMigrations({
             );
             setTimeout(() => handleLoadFromFirestore(true), 1000);
           } else {
-            console.log(
+            logger.log(
               `✅ No questions needed fixing (checked ${snapshot.size} questions)`
             );
           }
 
           localStorage.setItem(migrationKey, "completed");
         } catch (error) {
-          console.error("❌ Migration error:", error);
+          logger.error("❌ Migration error:", error);
         }
       }
     };
@@ -118,7 +119,7 @@ export function useMigrations({
       if (user && !authLoading && isAdmin && !hasFirestoreMigratedRef.current) {
         hasFirestoreMigratedRef.current = true;
         try {
-          console.log(
+          logger.log(
             "🔄 Running migration: adding firestoreUpdatedAt to questions..."
           );
 
@@ -153,7 +154,7 @@ export function useMigrations({
 
           if (batch.length > 0) {
             await Promise.all(batch);
-            console.log(
+            logger.log(
               `✅ Migration: Added firestoreUpdatedAt to ${updatedCount} of ${snapshot.size} questions`
             );
             showMessage(
@@ -162,14 +163,14 @@ export function useMigrations({
             );
             setTimeout(() => handleLoadFromFirestore(true), 1000);
           } else {
-            console.log(
+            logger.log(
               `✅ No migration needed: All ${snapshot.size} questions have firestoreUpdatedAt`
             );
           }
 
           localStorage.setItem(migrationKey, "completed");
         } catch (error) {
-          console.error("❌ Firestore migration error:", error);
+          logger.error("❌ Firestore migration error:", error);
         }
       }
     };

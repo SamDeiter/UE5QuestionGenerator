@@ -3,6 +3,7 @@ import {
   subscribeToAllQuestions,
   getQueuedQuestionIds,
 } from "../services/firebase";
+import { logger } from "../utils/logger";
 
 /**
  * Custom hook for real-time Firestore synchronization.
@@ -38,7 +39,7 @@ export const useRealtimeQuestions = (enabled = true) => {
       return;
     }
 
-    console.log("🔄 Setting up real-time question sync...");
+    logger.log("🔄 Setting up real-time question sync...");
     setIsLoading(true);
     setError(null);
     setSyncStatus("connecting");
@@ -53,9 +54,9 @@ export const useRealtimeQuestions = (enabled = true) => {
         if (prevCount > 0 && newCount !== prevCount) {
           const diff = newCount - prevCount;
           if (diff > 0) {
-            console.log(`📥 ${diff} new question(s) added by another user`);
+            logger.log(`📥 ${diff} new question(s) added by another user`);
           } else {
-            console.log(
+            logger.log(
               `📤 ${Math.abs(
                 diff
               )} question(s) removed/accepted by another user`
@@ -68,7 +69,7 @@ export const useRealtimeQuestions = (enabled = true) => {
         // overwrites local "accepted" status before the queue syncs
         const queuedIds = getQueuedQuestionIds();
         if (queuedIds.size > 0) {
-          console.log(
+          logger.log(
             `🛡️ Protecting ${queuedIds.size} queued items from server overwrite`
           );
         }
@@ -103,7 +104,7 @@ export const useRealtimeQuestions = (enabled = true) => {
 
     // Cleanup on unmount or when refreshTrigger changes
     return () => {
-      console.log("🛑 Cleaning up real-time listener");
+      logger.log("🛑 Cleaning up real-time listener");
       setSyncStatus("disconnected");
       unsubscribe();
     };

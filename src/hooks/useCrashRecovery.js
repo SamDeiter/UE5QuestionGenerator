@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQuestionsFromFirestore } from "../services/firebase";
+import { logger } from "../utils/logger";
 
 /**
  * useCrashRecovery - Detects potential data loss from crashes and offers to restore from Firestore
@@ -29,7 +30,7 @@ export const useCrashRecovery = (
         );
 
         if (alreadyHandled === "true" || permanentlyDismissed === "true") {
-          console.log(
+          logger.log(
             "🔇 Skipping recovery check (already handled this session)"
           );
           return;
@@ -49,11 +50,11 @@ export const useCrashRecovery = (
 
         if (possibleCrash || localEmpty) {
           // Check Firestore for backup data
-          console.log("🔍 Checking Firestore for recoverable data...");
+          logger.log("🔍 Checking Firestore for recoverable data...");
           const firestoreQuestions = await getQuestionsFromFirestore();
 
           if (firestoreQuestions.length > currentLocalCount) {
-            console.log(
+            logger.log(
               `📦 Found ${firestoreQuestions.length} questions in Firestore (local has ${currentLocalCount})`
             );
             setRecoveryData({
@@ -74,7 +75,7 @@ export const useCrashRecovery = (
         // Mark session as active
         localStorage.setItem("ue5_session_active", "true");
       } catch (error) {
-        console.warn("Crash recovery check failed:", error);
+        logger.warn("Crash recovery check failed:", error);
       }
     };
 
@@ -140,7 +141,7 @@ export const useCrashRecovery = (
           try {
             const { logQuestion } = await import("../utils/analyticsStore");
             // Batch log - just log a summary instead of each question
-            console.log(
+            logger.log(
               `📊 Logging ${newQuestions.length} recovered questions to analytics...`
             );
             // Only log first 50 to analytics to avoid performance issues
@@ -158,7 +159,7 @@ export const useCrashRecovery = (
               });
             });
           } catch (err) {
-            console.warn("Background analytics logging failed:", err);
+            logger.warn("Background analytics logging failed:", err);
           }
         };
 
@@ -183,7 +184,7 @@ export const useCrashRecovery = (
       setShowRecoveryPrompt(false);
       setRecoveryData(null);
     } catch (error) {
-      console.error("Recovery failed:", error);
+      logger.error("Recovery failed:", error);
       showMessage(
         "❌ Recovery failed. Please try loading from Database View.",
         5000

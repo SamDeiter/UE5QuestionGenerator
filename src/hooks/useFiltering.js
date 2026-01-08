@@ -18,6 +18,7 @@ import {
   createUniqueFilteredQuestions,
 } from "../utils/questionFilters";
 import { STORAGE_KEYS } from "../utils/constants";
+import { logger } from "../utils/logger";
 
 /**
  * Custom hook for managing question filtering state and logic.
@@ -97,7 +98,7 @@ export function useFiltering({
   // NOTE: discipline, difficulty, and language are intentionally excluded
   // Changing these filters should maintain the current question position when possible
   useEffect(() => {
-    console.log(
+    logger.log(
       "🔄 [useFiltering] Resetting review index to 0. Triggered by:",
       {
         appMode,
@@ -259,7 +260,7 @@ export function useFiltering({
           acc[q.status] = (acc[q.status] || 0) + 1;
           return acc;
         }, {});
-      console.warn(
+      logger.warn(
         "⚠️ [Count Discrepancy] Found non-standard statuses:",
         otherStatuses
       );
@@ -413,7 +414,7 @@ export function useFiltering({
         lastModeRef.current !== "review" &&
         lastModeRef.current !== "database"
       ) {
-        console.log(
+        logger.log(
           "🔄 [useFiltering] Resetting review index: Entered Review mode"
         );
         setCurrentReviewIndex(0);
@@ -426,7 +427,7 @@ export function useFiltering({
   useEffect(() => {
     // Only reset if we've already finished the initial restoration
     if (hasRestoredRef.current && appMode === "review") {
-      console.log(
+      logger.log(
         "🔄 [useFiltering] Resetting review index: Discipline changed"
       );
       setCurrentReviewIndex(0);
@@ -449,7 +450,7 @@ export function useFiltering({
         10
       );
 
-      console.log("🎯 [Restoration] Attempting restoration...", {
+      logger.log("🎯 [Restoration] Attempting restoration...", {
         savedId,
         savedIndex,
         listSize: uniqueFilteredQuestions.length,
@@ -460,7 +461,7 @@ export function useFiltering({
           (q) => q.uniqueId === savedId
         );
         if (idx !== -1) {
-          console.log(
+          logger.log(
             `🎯 [Restoration] Found saved question ${savedId} at index ${idx}`
           );
           setCurrentReviewIndex(idx);
@@ -470,7 +471,7 @@ export function useFiltering({
       }
 
       if (savedIndex > 0 && savedIndex < uniqueFilteredQuestions.length) {
-        console.log(
+        logger.log(
           `🎯 [Restoration] Falling back to saved index ${savedIndex}`
         );
         setCurrentReviewIndex(savedIndex);

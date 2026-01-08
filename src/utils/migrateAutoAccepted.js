@@ -9,15 +9,16 @@
 
 import { db, auth } from '../services/firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { logger } from "../utils/logger";
 
 export const migrateAutoAcceptedQuestions = async () => {
   try {
     if (!auth.currentUser) {
-      console.error('❌ Must be signed in to run migration');
+      logger.error('❌ Must be signed in to run migration');
       return { success: false, error: 'Not authenticated' };
     }
 
-    console.log('🔄 Starting migration: Fixing auto-accepted questions...');
+    logger.log('🔄 Starting migration: Fixing auto-accepted questions...');
     
     // Get all questions
     const questionsRef = collection(db, 'questions');
@@ -34,7 +35,7 @@ export const migrateAutoAcceptedQuestions = async () => {
       // Check if question is "accepted" but has no review completion timestamp
       // This indicates it was auto-accepted, not manually reviewed
       if (question.status === 'accepted' && !question.reviewCompletedAt) {
-        console.log(`📝 Fixing question ${docSnap.id} - was auto-accepted`);
+        logger.log(`📝 Fixing question ${docSnap.id} - was auto-accepted`);
         batch.push(
           updateDoc(doc(db, 'questions', docSnap.id), {
             status: 'pending',
@@ -50,9 +51,9 @@ export const migrateAutoAcceptedQuestions = async () => {
     // Execute all updates
     if (batch.length > 0) {
       await Promise.all(batch);
-      console.log(`✅ Migration complete: Fixed ${fixedCount} of ${totalCount} questions`);
+      logger.log(`✅ Migration complete: Fixed ${fixedCount} of ${totalCount} questions`);
     } else {
-      console.log(`✅ No questions needed fixing (checked ${totalCount} questions)`);
+      logger.log(`✅ No questions needed fixing (checked ${totalCount} questions)`);
     }
     
     return {
@@ -62,7 +63,7 @@ export const migrateAutoAcceptedQuestions = async () => {
     };
     
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    logger.error('❌ Migration failed:', error);
     return {
       success: false,
       error: error.message

@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * Question History Manager
  * Provides undo/redo functionality for question edits
@@ -32,7 +33,7 @@ export const saveQuestionHistory = (questionId, questionState) => {
         
         localStorage.setItem(historyKey, JSON.stringify(history));
     } catch (error) {
-        console.error('Error saving question history:', error);
+        logger.error('Error saving question history:', error);
     }
 };
 
@@ -47,7 +48,7 @@ export const getQuestionHistory = (questionId) => {
         const data = localStorage.getItem(historyKey);
         return data ? JSON.parse(data) : { states: [], currentIndex: -1 };
     } catch (error) {
-        console.error('Error reading question history:', error);
+        logger.error('Error reading question history:', error);
         return { states: [], currentIndex: -1 };
     }
 };
@@ -70,7 +71,7 @@ export const undoQuestionChange = (questionId) => {
         
         return null; // Can't undo
     } catch (error) {
-        console.error('Error undoing question change:', error);
+        logger.error('Error undoing question change:', error);
         return null;
     }
 };
@@ -93,7 +94,7 @@ export const redoQuestionChange = (questionId) => {
         
         return null; // Can't redo
     } catch (error) {
-        console.error('Error redoing question change:', error);
+        logger.error('Error redoing question change:', error);
         return null;
     }
 };
@@ -127,7 +128,7 @@ export const clearQuestionHistory = (questionId) => {
         const historyKey = `${HISTORY_KEY_PREFIX}${questionId}`;
         localStorage.removeItem(historyKey);
     } catch (error) {
-        console.error('Error clearing question history:', error);
+        logger.error('Error clearing question history:', error);
     }
 };
 
@@ -143,6 +144,6 @@ export const clearAllHistories = () => {
             }
         });
     } catch (error) {
-        console.error('Error clearing all histories:', error);
+        logger.error('Error clearing all histories:', error);
     }
 };

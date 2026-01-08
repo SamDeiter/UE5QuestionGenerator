@@ -18,6 +18,7 @@ import {
   serverTimestamp,
   getDoc,
 } from "firebase/firestore";
+import { logger } from "../utils/logger";
 
 export class LockAgent {
   /**
@@ -110,11 +111,11 @@ export class LockAgent {
       });
 
       if (result.success) {
-        console.log(
+        logger.log(
           `[LockAgent] Lock ${result.action} for question ${questionId}`
         );
       } else {
-        console.warn(
+        logger.warn(
           `[LockAgent] Lock acquisition ${result.action}:`,
           result.error
         );
@@ -124,9 +125,9 @@ export class LockAgent {
     } catch (error) {
       const isNetwork = this._isNetworkError(error);
       if (isNetwork) {
-        console.warn("[LockAgent] acquireLock network failure:", error.message);
+        logger.warn("[LockAgent] acquireLock network failure:", error.message);
       } else {
-        console.error("[LockAgent] acquireLock failed:", error);
+        logger.error("[LockAgent] acquireLock failed:", error);
       }
       return { 
         success: false, 
@@ -180,9 +181,9 @@ export class LockAgent {
       });
 
       if (result.success) {
-        console.log(`[LockAgent] Lock renewed for question ${questionId}`);
+        logger.log(`[LockAgent] Lock renewed for question ${questionId}`);
       } else {
-        console.warn(`[LockAgent] Lock renewal failed:`, result.error);
+        logger.warn(`[LockAgent] Lock renewal failed:`, result.error);
       }
 
       return result;
@@ -190,9 +191,9 @@ export class LockAgent {
       const isNetwork = this._isNetworkError(error);
       // Suppress full error for network issues to avoid console spam during heartbeat
       if (isNetwork) {
-        console.warn("[LockAgent] renewLock network failure:", error.message);
+        logger.warn("[LockAgent] renewLock network failure:", error.message);
       } else {
-        console.error("[LockAgent] renewLock failed:", error);
+        logger.error("[LockAgent] renewLock failed:", error);
       }
       return { 
         success: false, 
@@ -227,10 +228,10 @@ export class LockAgent {
         }
       });
 
-      console.log(`[LockAgent] Lock released for question ${questionId}`);
+      logger.log(`[LockAgent] Lock released for question ${questionId}`);
       return { success: true };
     } catch (error) {
-      console.error("[LockAgent] releaseLock failed:", error);
+      logger.error("[LockAgent] releaseLock failed:", error);
       return { success: false, error: error.message };
     }
   }
@@ -260,7 +261,7 @@ export class LockAgent {
 
       return { locked: true, lock };
     } catch (error) {
-      console.error("[LockAgent] checkLockStatus failed:", error);
+      logger.error("[LockAgent] checkLockStatus failed:", error);
       return { locked: false, error: error.message };
     }
   }

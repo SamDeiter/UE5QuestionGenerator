@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * Export/Import utilities for external AI critique
  * Allows bulk processing with ChatGPT or Gemini Business
@@ -40,7 +41,7 @@ export const exportQuestionsForCritique = (questions) => {
   // Also copy prompt to clipboard
   const prompt = generateCritiquePrompt(exportData.length);
   navigator.clipboard.writeText(prompt).then(() => {
-    console.log("✅ Prompt copied to clipboard!");
+    logger.log("✅ Prompt copied to clipboard!");
   });
 
   return {
@@ -99,7 +100,7 @@ export const importCritiqueScores = async (jsonText, db, showMessage) => {
       throw new Error("Invalid format - expected JSON array");
     }
 
-    console.log(`📥 Importing scores for ${scores.length} questions...`);
+    logger.log(`📥 Importing scores for ${scores.length} questions...`);
 
     // Import to Firestore
     const { doc, updateDoc } = await import("firebase/firestore");
@@ -124,12 +125,12 @@ export const importCritiqueScores = async (jsonText, db, showMessage) => {
         await updateDoc(doc(db, "questions", item.id), updateData);
         updated++;
       } catch (error) {
-        console.error(`Failed to update ${item.id}:`, error);
+        logger.error(`Failed to update ${item.id}:`, error);
         errors++;
       }
     }
 
-    console.log(`✅ Import complete: ${updated} updated, ${errors} errors`);
+    logger.log(`✅ Import complete: ${updated} updated, ${errors} errors`);
 
     if (showMessage) {
       showMessage(`✅ Imported scores for ${updated} questions!`, 5000);
@@ -137,7 +138,7 @@ export const importCritiqueScores = async (jsonText, db, showMessage) => {
 
     return { updated, errors, total: scores.length };
   } catch (error) {
-    console.error("Import error:", error);
+    logger.error("Import error:", error);
     if (showMessage) {
       showMessage(`❌ Import failed: ${error.message}`, 5000);
     }

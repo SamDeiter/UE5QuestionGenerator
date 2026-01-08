@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * Utility functions for quiz GUID generation and seeded randomization
  */
@@ -72,9 +73,9 @@ export function seededShuffle(array, randomFn) {
  */
 export function reportToSCORM(results, quizGuid, timeSpent) {
   if (typeof window.SCORM12 === "undefined" || !window.SCORM12.isConnected()) {
-    console.log("SCORM not available - results not sent to LMS");
-    console.log("Quiz GUID:", quizGuid);
-    console.log("Results:", results);
+    logger.log("SCORM not available - results not sent to LMS");
+    logger.log("Quiz GUID:", quizGuid);
+    logger.log("Results:", results);
     return;
   }
 
@@ -103,9 +104,9 @@ export function reportToSCORM(results, quizGuid, timeSpent) {
     // Commit all changes
     window.SCORM12.commit();
 
-    console.log("Quiz results sent to SCORM LMS");
-    console.log("Quiz GUID:", quizGuid);
+    logger.log("Quiz results sent to SCORM LMS");
+    logger.log("Quiz GUID:", quizGuid);
   } catch (error) {
-    console.error("Failed to report to SCORM:", error);
+    logger.error("Failed to report to SCORM:", error);
   }
 }

@@ -19,10 +19,11 @@ import {
   updateDoc,
   Timestamp,
 } from "firebase/firestore";
+import { logger } from "../utils/logger";
 
 export const migrateFirestoreUpdatedAt = async () => {
   try {
-    console.log("🔄 Starting firestoreUpdatedAt migration...");
+    logger.log("🔄 Starting firestoreUpdatedAt migration...");
 
     const questionsRef = collection(db, "questions");
     const snapshot = await getDocs(questionsRef);
@@ -53,11 +54,11 @@ export const migrateFirestoreUpdatedAt = async () => {
     });
 
     if (batch.length > 0) {
-      console.log(
+      logger.log(
         `📝 Updating ${batch.length} questions with missing firestoreUpdatedAt...`
       );
       await Promise.all(batch);
-      console.log(
+      logger.log(
         `✅ Migration complete: Updated ${updatedCount} questions, skipped ${skippedCount}`
       );
       return {
@@ -66,13 +67,13 @@ export const migrateFirestoreUpdatedAt = async () => {
         total: snapshot.size,
       };
     } else {
-      console.log(
+      logger.log(
         `✅ No migration needed: All ${snapshot.size} questions already have firestoreUpdatedAt`
       );
       return { updated: 0, skipped: snapshot.size, total: snapshot.size };
     }
   } catch (error) {
-    console.error("❌ Migration failed:", error);
+    logger.error("❌ Migration failed:", error);
     throw error;
   }
 };

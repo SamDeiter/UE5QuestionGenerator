@@ -16,6 +16,7 @@ import batch_1000_1199 from "../../Scores/strict_scored_batch_1000_1199.json";
 import batch_1200_1399 from "../../Scores/strict_scored_batch_1200_1399.json";
 import batch_1400_1599 from "../../Scores/strict_scored_batch_1400_1599.json";
 import batch_1600_1695 from "../../Scores/strict_scored_batch_1600_1695.json";
+import { logger } from "../utils/logger";
 
 const allBatches = [
   ...batch_0_199,
@@ -33,7 +34,7 @@ const allBatches = [
  * Apply scores to Firestore in batches of 500 (Firestore limit)
  */
 export async function applyScoresToFirestore(onProgress) {
-  console.log(`🔥 Starting score import for ${allBatches.length} questions...`);
+  logger.log(`🔥 Starting score import for ${allBatches.length} questions...`);
 
   let updated = 0;
   let errors = 0;
@@ -57,7 +58,7 @@ export async function applyScoresToFirestore(onProgress) {
         });
         updated++;
       } catch (error) {
-        console.error(`❌ Error preparing update for ${questionId}:`, error);
+        logger.error(`❌ Error preparing update for ${questionId}:`, error);
         errors++;
       }
     }
@@ -65,7 +66,7 @@ export async function applyScoresToFirestore(onProgress) {
     // Commit batch
     try {
       await batch.commit();
-      console.log(
+      logger.log(
         `✅ Batch ${Math.floor(i / BATCH_SIZE) + 1} committed (${
           chunk.length
         } questions)`
@@ -79,14 +80,14 @@ export async function applyScoresToFirestore(onProgress) {
         });
       }
     } catch (error) {
-      console.error(`❌ Failed to commit batch:`, error);
+      logger.error(`❌ Failed to commit batch:`, error);
       errors += chunk.length;
     }
   }
 
-  console.log(`\n✅ Score import complete!`);
-  console.log(`   Updated: ${updated}`);
-  console.log(`   Errors: ${errors}`);
+  logger.log(`\n✅ Score import complete!`);
+  logger.log(`   Updated: ${updated}`);
+  logger.log(`   Errors: ${errors}`);
 
   return { updated, errors };
 }

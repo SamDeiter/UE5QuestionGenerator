@@ -6,6 +6,7 @@ import {
   isScenarioCompleted,
 } from "../utils/tutorial/tutorialHelpers";
 import { logTutorialEvent, TUTORIAL_EVENTS } from "../utils/tutorialAnalytics";
+import { logger } from "../utils/logger";
 
 // State machine states
 const TUTORIAL_STATES = {
@@ -48,7 +49,7 @@ export const useTutorial = (showMessage, onError, appContext = {}) => {
 
     const { type, payload } = step.action;
 
-    console.log(`[Tutorial] Executing action: ${type}`, payload);
+    logger.log(`[Tutorial] Executing action: ${type}`, payload);
 
     try {
       switch (type) {
@@ -108,10 +109,10 @@ export const useTutorial = (showMessage, onError, appContext = {}) => {
           break;
 
         default:
-          console.warn(`[Tutorial] Unknown action type: ${type}`);
+          logger.warn(`[Tutorial] Unknown action type: ${type}`);
       }
     } catch (error) {
-      console.error("[Tutorial] Error executing step action:", error);
+      logger.error("[Tutorial] Error executing step action:", error);
       logTutorialEvent(TUTORIAL_EVENTS.ERROR, {
         scenarioId: activeScenario,
         stepId: step.id,
@@ -130,7 +131,7 @@ export const useTutorial = (showMessage, onError, appContext = {}) => {
 
     if (!targetScenario) {
       const error = `Tutorial scenario '${scenarioId}' not found`;
-      console.error(error);
+      logger.error(error);
       setTutorialState(TUTORIAL_STATES.ERROR);
       setErrorMessage(error);
       onError?.(error);
@@ -145,7 +146,7 @@ export const useTutorial = (showMessage, onError, appContext = {}) => {
     // Validate scenario
     const errors = validateScenario(targetScenario, scenarioId);
     if (errors.length > 0) {
-      console.warn("Tutorial validation warnings:", errors);
+      logger.warn("Tutorial validation warnings:", errors);
       // Don't block tutorial, just warn
     }
 
@@ -171,7 +172,7 @@ export const useTutorial = (showMessage, onError, appContext = {}) => {
    */
   const handleTutorialNext = () => {
     if (tutorialState !== TUTORIAL_STATES.ACTIVE) {
-      console.warn("Cannot navigate: tutorial not active");
+      logger.warn("Cannot navigate: tutorial not active");
       return;
     }
 
@@ -197,7 +198,7 @@ export const useTutorial = (showMessage, onError, appContext = {}) => {
    */
   const handleTutorialPrev = () => {
     if (tutorialState !== TUTORIAL_STATES.ACTIVE) {
-      console.warn("Cannot navigate: tutorial not active");
+      logger.warn("Cannot navigate: tutorial not active");
       return;
     }
 
@@ -275,7 +276,7 @@ export const useTutorial = (showMessage, onError, appContext = {}) => {
    */
   const handleRestartTutorial = () => {
     if (!activeScenario) {
-      console.warn("Cannot restart: no active scenario");
+      logger.warn("Cannot restart: no active scenario");
       return;
     }
 

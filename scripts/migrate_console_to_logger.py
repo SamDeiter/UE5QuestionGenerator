@@ -74,23 +74,37 @@ def migrate_file(file_path: str, dry_run: bool = False) -> dict:
         import_path = get_relative_import_path(file_path)
         import_statement = f'import {{ logger }} from "{import_path}";\n'
         
-        # Find the best place to add import (after existing imports)
-        # Look for the last import statement
-        import_pattern = r'^import\s+.*?;?\s*$'
+        # Find the best place to add import (after all existing imports)
+        # Must handle multi-line imports like: import {\n  foo,\n  bar\n} from "x";
         lines = content.split('\n')
-        last_import_index = -1
+        last_import_end = -1
+        in_import = False
         
         for i, line in enumerate(lines):
-            if line.strip().startswith('import ') or line.strip().startswith('import{'):
-                last_import_index = i
+            stripped = line.strip()
+            
+            # Check if this line starts an import
+            if stripped.startswith('import ') or stripped.startswith('import{'):
+                in_import = True
+            
+            # Check if this line ends an import (has semicolon at end after 'from')
+            if in_import:
+                if ';' in line:
+                    last_import_end = i
+                    in_import = False
+                # Also handle imports that end with just the module path
+                elif stripped.endswith('";') or stripped.endswith("';"):
+                    last_import_end = i
+                    in_import = False
         
-        if last_import_index >= 0:
-            # Insert after last import
-            lines.insert(last_import_index + 1, import_statement.strip())
+        if last_import_end >= 0:
+            # Insert after the last import's closing line
+            lines.insert(last_import_end + 1, import_statement.strip())
             content = '\n'.join(lines)
         else:
             # No imports found, add at top after any comments
             content = import_statement + content
+
     
     if not dry_run:
         with open(file_path, 'w', encoding='utf-8') as f:

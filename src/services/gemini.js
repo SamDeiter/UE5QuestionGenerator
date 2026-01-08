@@ -10,6 +10,7 @@ import {
   clearRateLimitState,
   getRateLimitStatus,
 } from "../utils/rateLimitState";
+import { logger } from "../utils/logger";
 
 /**
  * Helper to handle API calls with retry logic and error handling.
@@ -61,7 +62,7 @@ const fetchWithRetry = async (url, options, setStatus = () => {}) => {
           setRateLimitState(true, Date.now() + waitTime);
 
           if (retries === maxRetries) {
-            console.warn("Rate limit exhausted after max retries.");
+            logger.warn("Rate limit exhausted after max retries.");
             throw new Error(
               `Rate Limit Exhausted. Please wait ${Math.ceil(
                 waitTime / 1000
@@ -98,7 +99,7 @@ const fetchWithRetry = async (url, options, setStatus = () => {}) => {
 
       return await response.json();
     } catch (error) {
-      console.error(`Attempt ${retries + 1} failed:`, error);
+      logger.error(`Attempt ${retries + 1} failed:`, error);
       if (retries === maxRetries) throw error;
 
       // For non-429 errors, use standard backoff
@@ -173,7 +174,7 @@ export const generateContent = async (
 
         // Skip forbidden sources (including Epic's YouTube)
         if (forbiddenInGrounding.some((domain) => url.includes(domain))) {
-          console.log("🚫 Filtered out grounding source:", chunk.web.uri);
+          logger.log("🚫 Filtered out grounding source:", chunk.web.uri);
           return;
         }
 
@@ -190,7 +191,7 @@ export const generateContent = async (
 
   // Also check searchEntryPoint for additional sources
   if (groundingMetadata?.webSearchQueries) {
-    console.log(
+    logger.log(
       "Grounding searches performed:",
       groundingMetadata.webSearchQueries
     );
@@ -202,7 +203,7 @@ export const generateContent = async (
 
   // Store grounding sources globally for this request (will be used by generation hook)
   if (groundingSources.length > 0) {
-    console.log("📚 Grounding sources found:", groundingSources);
+    logger.log("📚 Grounding sources found:", groundingSources);
     window.__lastGroundingSources = groundingSources;
   }
 
@@ -302,7 +303,7 @@ export const generateCritique = async (apiKey, q) => {
   const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
   // DEBUG: Log raw AI response for score investigation
-  console.log("[Critique DEBUG] Raw AI response:", rawText.substring(0, 500));
+  logger.log("[Critique DEBUG] Raw AI response:", rawText.substring(0, 500));
 
   // 4. Parse JSON
   try {
@@ -314,11 +315,11 @@ export const generateCritique = async (apiKey, q) => {
       typeof result.score === "number"
         ? result.score
         : parseInt(result.score || 0);
-    console.log(
+    logger.log(
       "[Critique DEBUG] JSON parsed successfully. Score:",
       finalScore
     );
-    console.log(
+    logger.log(
       "[Critique DEBUG] Scores - Original:",
       result.originalScore || result.score,
       "| Improved:",
@@ -333,7 +334,7 @@ export const generateCritique = async (apiKey, q) => {
       changes: result.changes,
     };
   } catch (e) {
-    console.error("Failed to parse critique JSON:", e, rawText);
+    logger.error("Failed to parse critique JSON:", e, rawText);
     // Fallback to multiple patterns for score extraction if JSON fails
     let score = null;
 
@@ -352,14 +353,14 @@ export const generateCritique = async (apiKey, q) => {
         const parsed = parseInt(match[1]);
         if (parsed >= 0 && parsed <= 100) {
           score = parsed;
-          console.log(`Extracted score ${score} using pattern: ${pattern}`);
+          logger.log(`Extracted score ${score} using pattern: ${pattern}`);
           break;
         }
       }
     }
 
     if (score === null) {
-      console.warn("Could not extract score from critique response");
+      logger.warn("Could not extract score from critique response");
       score = 0; // Default to 0 to force attention
     }
 
@@ -482,7 +483,7 @@ export const generateTagsForQuestion = async (apiKey, questionText) => {
   try {
     return JSON.parse(text);
   } catch (e) {
-    console.error("Failed to parse tags:", text, e);
+    logger.error("Failed to parse tags:", text, e);
     return [];
   }
 };
@@ -501,7 +502,7 @@ export const listModels = async (apiKey) => {
     const data = await response.json();
     return data.models?.map((m) => m.name.replace("models/", "")) || [];
   } catch (error) {
-    console.error("Failed to list models:", error);
+    logger.error("Failed to list models:", error);
     return [];
   }
 };

@@ -9,6 +9,7 @@
 
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app } from "./firebase";
+import { logger } from "../utils/logger";
 
 // Initialize Cloud Functions
 const functions = getFunctions(app, "us-central1");
@@ -27,7 +28,7 @@ export const validateInvite = async (code) => {
     const result = await validateInviteFn({ code });
     return result.data;
   } catch (error) {
-    console.error("Invite validation error:", error);
+    logger.error("Invite validation error:", error);
     throw new Error(error.message || "Failed to validate invite code");
   }
 };
@@ -46,7 +47,7 @@ export const consumeInvite = async (code) => {
     const result = await consumeInviteFn({ code });
     return result.data;
   } catch (error) {
-    console.error("Invite consumption error:", error);
+    logger.error("Invite consumption error:", error);
     throw new Error(error.message || "Failed to use invite code");
   }
 };
@@ -68,7 +69,7 @@ export const createInvite = async (options = {}) => {
     const result = await createInviteFn(options);
     return result.data;
   } catch (error) {
-    console.error("Invite creation error:", error);
+    logger.error("Invite creation error:", error);
     throw new Error(error.message || "Failed to create invite");
   }
 };
@@ -86,7 +87,7 @@ export const revokeInvite = async (code) => {
     const result = await revokeInviteFn({ code });
     return result.data;
   } catch (error) {
-    console.error("Invite revocation error:", error);
+    logger.error("Invite revocation error:", error);
     throw new Error(error.message || "Failed to revoke invite");
   }
 };
@@ -102,7 +103,7 @@ export const checkUserRegistration = async () => {
     const result = await checkFn({});
     return result.data;
   } catch (error) {
-    console.error("Registration check error:", error);
+    logger.error("Registration check error:", error);
     return { registered: false };
   }
 };
@@ -140,7 +141,7 @@ export const setupInitialAdmin = async () => {
     const result = await setupFn({});
     return result.data;
   } catch (error) {
-    console.error("Initial admin setup error:", error);
+    logger.error("Initial admin setup error:", error);
     throw new Error(error.message || "Failed to setup admin");
   }
 };

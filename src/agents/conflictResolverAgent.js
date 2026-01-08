@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 /**
  * Conflict Resolver Agent
  *
@@ -29,7 +30,7 @@ export class ConflictResolverAgent {
    * @returns {Promise<{action: string, serverQuestion?: object, serverVersion?: number, localChanges?: object, error?: string}>}
    */
   async handleConflict(questionId, localChanges, expectedVersion) {
-    console.log(
+    logger.log(
       `[ConflictResolver] Handling version conflict for question ${questionId}`
     );
 
@@ -46,7 +47,7 @@ export class ConflictResolverAgent {
     const serverQuestion = loadResult.question;
     const serverVersion = loadResult.baseVersion;
 
-    console.log(
+    logger.log(
       `[ConflictResolver] Conflict detected: Expected v${expectedVersion}, ` +
         `but server is at v${serverVersion}`
     );
@@ -67,14 +68,14 @@ export class ConflictResolverAgent {
    * @returns {Promise<{success: boolean, question?: object, baseVersion?: number, error?: string}>}
    */
   async discardLocalChanges(questionId) {
-    console.log(
+    logger.log(
       `[ConflictResolver] Discarding local changes for question ${questionId}`
     );
 
     const result = await this.loadAgent.reloadQuestion(questionId);
 
     if (result.success) {
-      console.log(
+      logger.log(
         `[ConflictResolver] Reloaded question ${questionId} at version ${result.latestVersion}`
       );
     }
@@ -92,7 +93,7 @@ export class ConflictResolverAgent {
    * @returns {Promise<{success: boolean, newVersion?: number, error?: string}>}
    */
   async overwriteServerChanges(questionId, localChanges, userId, userEmail) {
-    console.warn(
+    logger.warn(
       `[ConflictResolver] FORCING overwrite for question ${questionId}. ` +
         `Other user's changes will be lost!`
     );
@@ -133,7 +134,7 @@ export class ConflictResolverAgent {
     );
 
     if (saveResult.success) {
-      console.log(
+      logger.log(
         `[ConflictResolver] Overwrite successful. New version: ${saveResult.newVersion}`
       );
     }
@@ -150,7 +151,7 @@ export class ConflictResolverAgent {
    * @returns {Promise<{success: boolean, newVersion?: number, error?: string}>}
    */
   async applyManualMerge(questionId, mergedChanges, userId, userEmail) {
-    console.log(
+    logger.log(
       `[ConflictResolver] Applying manual merge for question ${questionId}`
     );
 
@@ -190,7 +191,7 @@ export class ConflictResolverAgent {
     );
 
     if (saveResult.success) {
-      console.log(
+      logger.log(
         `[ConflictResolver] Manual merge successful. New version: ${saveResult.newVersion}`
       );
     }

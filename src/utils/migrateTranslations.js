@@ -9,9 +9,10 @@
 
 import { db } from "../services/firebase.js";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { logger } from "../utils/logger";
 
 async function migrateTranslations() {
-  console.log("🔄 Starting translation migration...");
+  logger.log("🔄 Starting translation migration...");
 
   try {
     // 1. Fetch all questions from Firestore
@@ -22,14 +23,14 @@ async function migrateTranslations() {
       ...doc.data(),
     }));
 
-    console.log(`📊 Found ${allQuestions.length} total questions`);
+    logger.log(`📊 Found ${allQuestions.length} total questions`);
 
     // 2. Find all non-English questions (translations)
     const translations = allQuestions.filter(
       (q) => q.language && q.language !== "English"
     );
 
-    console.log(`🌍 Found ${translations.length} translated questions`);
+    logger.log(`🌍 Found ${translations.length} translated questions`);
 
     // 3. For each translation, find its English original
     let fixedCount = 0;
@@ -48,7 +49,7 @@ async function migrateTranslations() {
         );
 
         if (!englishOriginal) {
-          console.warn(
+          logger.warn(
             `⚠️ Translation has uniqueId but no English original found:`,
             {
               id: translation.id,
@@ -74,7 +75,7 @@ async function migrateTranslations() {
         // Generate or use existing uniqueId
         const sharedUniqueId = englishOriginal.uniqueId || crypto.randomUUID();
 
-        console.log(`🔗 Linking translation to original:`, {
+        logger.log(`🔗 Linking translation to original:`, {
           originalId: englishOriginal.id,
           translationId: translation.id,
           translationLanguage: translation.language,
@@ -87,18 +88,18 @@ async function migrateTranslations() {
             uniqueId: sharedUniqueId,
             language: "English", // Ensure language is set
           });
-          console.log(`  ✅ Updated English original with uniqueId`);
+          logger.log(`  ✅ Updated English original with uniqueId`);
         }
 
         // Update translation with uniqueId
         await updateDoc(doc(db, "questions", translation.firestoreId), {
           uniqueId: sharedUniqueId,
         });
-        console.log(`  ✅ Updated translation with uniqueId`);
+        logger.log(`  ✅ Updated translation with uniqueId`);
 
         fixedCount++;
       } else {
-        console.warn(`⚠️ No English original found for translation:`, {
+        logger.warn(`⚠️ No English original found for translation:`, {
           id: translation.id,
           language: translation.language,
           discipline: translation.discipline,
@@ -106,13 +107,13 @@ async function migrateTranslations() {
       }
     }
 
-    console.log("\n✅ Migration complete!");
-    console.log(`📊 Statistics:`);
-    console.log(`   - Already linked: ${alreadyLinkedCount}`);
-    console.log(`   - Newly linked: ${fixedCount}`);
-    console.log(`   - Total translations: ${translations.length}`);
+    logger.log("\n✅ Migration complete!");
+    logger.log(`📊 Statistics:`);
+    logger.log(`   - Already linked: ${alreadyLinkedCount}`);
+    logger.log(`   - Newly linked: ${fixedCount}`);
+    logger.log(`   - Total translations: ${translations.length}`);
   } catch (error) {
-    console.error("❌ Migration failed:", error);
+    logger.error("❌ Migration failed:", error);
     throw error;
   }
 }
@@ -121,4 +122,4 @@ async function migrateTranslations() {
 export { migrateTranslations };
 
 // Uncomment to run directly:
-// migrateTranslations().then(() => console.log('Done')).catch(console.error);
+// migrateTranslations().then(() => logger.log('Done')).catch(console.error);

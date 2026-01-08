@@ -4,6 +4,7 @@
 
 import { db } from "../services/firebase";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { logger } from "../utils/logger";
 
 /**
  * Estimates improved score based on original critique score
@@ -25,12 +26,12 @@ const estimateImprovedScore = (originalScore) => {
  */
 export const migrateFirestoreScores = async (showMessage) => {
   try {
-    console.log("🔄 Starting Firestore migration...");
+    logger.log("🔄 Starting Firestore migration...");
 
     const questionsRef = collection(db, "questions");
-    console.log("📥 Fetching questions from Firestore...");
+    logger.log("📥 Fetching questions from Firestore...");
     const snapshot = await getDocs(questionsRef);
-    console.log(`📊 Found ${snapshot.size} total questions in Firestore`);
+    logger.log(`📊 Found ${snapshot.size} total questions in Firestore`);
 
     let updatedCount = 0;
     let totalWithCritiques = 0;
@@ -68,14 +69,14 @@ export const migrateFirestoreScores = async (showMessage) => {
     });
 
     // Log summary
-    console.log(`📋 Migration Summary:`);
-    console.log(`   - Total questions: ${snapshot.size}`);
-    console.log(`   - With critiques: ${totalWithCritiques}`);
-    console.log(`   - Already migrated: ${alreadyMigrated}`);
-    console.log(`   - Need migration: ${updatedCount}`);
+    logger.log(`📋 Migration Summary:`);
+    logger.log(`   - Total questions: ${snapshot.size}`);
+    logger.log(`   - With critiques: ${totalWithCritiques}`);
+    logger.log(`   - Already migrated: ${alreadyMigrated}`);
+    logger.log(`   - Need migration: ${updatedCount}`);
     
     if (updatedCount === 0) {
-      console.log("✅ No questions need migration");
+      logger.log("✅ No questions need migration");
       if (showMessage) {
         showMessage("✅ All questions already have improved scores!", 3000);
       }
@@ -83,10 +84,10 @@ export const migrateFirestoreScores = async (showMessage) => {
     }
     
     // Execute all updates
-    console.log(`⏳ Updating ${updatedCount} questions...`);
+    logger.log(`⏳ Updating ${updatedCount} questions...`);
     await Promise.all(updates);
 
-    console.log(`✅ Migrated ${updatedCount} questions in Firestore`);
+    logger.log(`✅ Migrated ${updatedCount} questions in Firestore`);
     if (showMessage) {
       showMessage(
         `✅ Migrated ${updatedCount} questions with estimated improved scores`,
@@ -96,7 +97,7 @@ export const migrateFirestoreScores = async (showMessage) => {
 
     return { success: true, updated: updatedCount };
   } catch (error) {
-    console.error("❌ Firestore migration failed:", error);
+    logger.error("❌ Firestore migration failed:", error);
     if (showMessage) {
       showMessage(`❌ Migration failed: ${error.message}`, 5000);
     }

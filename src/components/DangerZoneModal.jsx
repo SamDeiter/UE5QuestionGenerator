@@ -10,6 +10,7 @@ import {
   deleteQuestionFromFirestore,
 } from "../services/firebase";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { logger } from "../utils/logger";
 
 /**
  * DangerZoneModal - Separate modal for destructive operations
@@ -48,7 +49,7 @@ const DangerZoneModal = ({
       return;
     }
 
-    console.log("⚠️ FACTORY RESET INITIATED");
+    logger.log("⚠️ FACTORY RESET INITIATED");
     setShowFactoryResetPrompt(false);
     setIsResetting(true);
 
@@ -56,30 +57,30 @@ const DangerZoneModal = ({
       let deletedCount = 0;
 
       // 1. Clear Firestore FIRST (critical)
-      console.log("Clearing Firestore...");
+      logger.log("Clearing Firestore...");
       try {
         deletedCount = await clearAllQuestionsFromFirestore();
-        console.log(`✅ Deleted ${deletedCount} questions from Firestore`);
+        logger.log(`✅ Deleted ${deletedCount} questions from Firestore`);
       } catch (firestoreError) {
-        console.error("❌ Firestore deletion failed:", firestoreError);
+        logger.error("❌ Firestore deletion failed:", firestoreError);
         throw new Error(`Firestore deletion failed: ${firestoreError.message}`);
       }
 
       // 2. Clear Google Spreadsheet
       if (config.sheetUrl) {
-        console.log("Clearing Google Spreadsheet...");
+        logger.log("Clearing Google Spreadsheet...");
         try {
           clearQuestionsFromSheets(config.sheetUrl);
-          console.log("✅ Spreadsheet clear request sent (check new tab)");
+          logger.log("✅ Spreadsheet clear request sent (check new tab)");
         } catch (sheetsError) {
-          console.error("❌ Sheets clearing failed:", sheetsError);
+          logger.error("❌ Sheets clearing failed:", sheetsError);
         }
       }
 
       // 3. Clear localStorage
-      console.log("Clearing localStorage...");
+      logger.log("Clearing localStorage...");
       localStorage.clear();
-      console.log("✅ Local storage cleared");
+      logger.log("✅ Local storage cleared");
 
       // 4. Reload
       alert(
@@ -89,7 +90,7 @@ const DangerZoneModal = ({
       );
       window.location.reload();
     } catch (error) {
-      console.error("❌ Factory reset error:", error);
+      logger.error("❌ Factory reset error:", error);
       alert(
         "Error during factory reset:\n\n" +
           error.message +
@@ -146,7 +147,7 @@ const DangerZoneModal = ({
       let successCount = 0;
       for (const question of questionsToUpdate) {
         try {
-          console.log(
+          logger.log(
             "Updating question:",
             question.firestoreId,
             "Creator:",
@@ -158,9 +159,9 @@ const DangerZoneModal = ({
             backfilledAt: new Date().toISOString(),
           });
           successCount++;
-          console.log("✓ Successfully updated:", question.firestoreId);
+          logger.log("✓ Successfully updated:", question.firestoreId);
         } catch (err) {
-          console.error(
+          logger.error(
             `Failed to update question ${question.firestoreId}:`,
             err.message,
             err
@@ -174,7 +175,7 @@ const DangerZoneModal = ({
         message: `Successfully updated ${successCount} of ${questionsToUpdate.length} questions!`,
       });
     } catch (error) {
-      console.error("Migration failed:", error);
+      logger.error("Migration failed:", error);
       alert("Migration failed: " + error.message);
     } finally {
       setIsMigrating(false);
@@ -203,7 +204,7 @@ const DangerZoneModal = ({
     setNukeProgress({ current: 0, total: 0 });
 
     try {
-      console.log("🔥 Admin nuke initiated by:", auth.currentUser.email);
+      logger.log("🔥 Admin nuke initiated by:", auth.currentUser.email);
 
       // Fetch ALL questions without filter
       const snapshot = await getDocs(collection(db, "questions"));
@@ -233,7 +234,7 @@ const DangerZoneModal = ({
               await deleteQuestionFromFirestore(q.uniqueId);
               deletedCount++;
             } catch (e) {
-              console.error("Delete failed for", q.uniqueId, e);
+              logger.error("Delete failed for", q.uniqueId, e);
               errorCount++;
             }
           })
@@ -253,7 +254,7 @@ const DangerZoneModal = ({
       localStorage.clear();
       window.location.reload();
     } catch (error) {
-      console.error("Nuke failed:", error);
+      logger.error("Nuke failed:", error);
       alert("Nuke failed: " + error.message);
     } finally {
       setIsNuking(false);

@@ -13,6 +13,7 @@ import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { createInvite, revokeInvite } from "../../services/inviteService";
 import { sendReviewerInvitesViaEmail } from "../../services/cloudFunctions";
+import { logger } from "../../utils/logger";
 
 const InviteManagement = ({
   invites,
@@ -60,7 +61,7 @@ const InviteManagement = ({
         await onRefresh();
       }, 500);
     } catch (error) {
-      console.error("❌ Revoke invite error:", error);
+      logger.error("❌ Revoke invite error:", error);
       showMessage(`❌ Failed to revoke: ${error.message}`, 5000);
       await onRefresh();
     }
@@ -91,7 +92,7 @@ const InviteManagement = ({
         await revokeInvite(code);
         successCount++;
       } catch (error) {
-        console.error(`Failed to revoke ${code}:`, error);
+        logger.error(`Failed to revoke ${code}:`, error);
         failCount++;
       }
     }
@@ -180,10 +181,10 @@ const InviteManagement = ({
           `⚠️ ${result.failed.length} email(s) failed. Check console.`,
           5000
         );
-        console.error("Failed emails:", result.failed);
+        logger.error("Failed emails:", result.failed);
       }
     } catch (error) {
-      console.error("❌ Email send error:", error);
+      logger.error("❌ Email send error:", error);
       showMessage(`❌ Failed to send emails: ${error.message}`, 5000);
     }
   };
@@ -219,7 +220,7 @@ const InviteManagement = ({
         showMessage(`⚠️ Failed to send email`, 3000);
       }
     } catch (error) {
-      console.error("❌ Resend error:", error);
+      logger.error("❌ Resend error:", error);
       showMessage(`❌ Failed: ${error.message}`, 5000);
     }
   };

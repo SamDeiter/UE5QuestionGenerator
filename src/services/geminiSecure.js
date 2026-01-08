@@ -15,6 +15,7 @@ import {
   generateContent as generateContentDirect,
   generateCritique as generateCritiqueDirect,
 } from "./gemini.js";
+import { logger } from "../utils/logger";
 
 /**
  * Secure generate content wrapper
@@ -29,7 +30,7 @@ export const generateContentSecure = async (
   model = "gemini-2.0-flash"
 ) => {
   // DEBUG: Log authentication status
-  console.log("🔍 [geminiSecure] Checking authentication:", {
+  logger.log("🔍 [geminiSecure] Checking authentication:", {
     isAuthenticated: isUserAuthenticated(),
     hasEffectiveKey: !!effectiveKey,
     effectiveKeyLength: effectiveKey?.length || 0,
@@ -38,7 +39,7 @@ export const generateContentSecure = async (
   // Try Cloud Functions first (most secure)
   if (isUserAuthenticated()) {
     try {
-      console.log("🔒 Using secure Cloud Function for generation");
+      logger.log("🔒 Using secure Cloud Function for generation");
       const result = await generateContentViaCloudFunction(
         systemPrompt,
         userPrompt,
@@ -46,19 +47,19 @@ export const generateContentSecure = async (
         temperature,
         model
       );
-      console.log("✅ Cloud Function succeeded");
+      logger.log("✅ Cloud Function succeeded");
       return result;
     } catch (error) {
-      console.error("❌ Cloud Function failed:", error);
+      logger.error("❌ Cloud Function failed:", error);
       // Fail hard - do not fall back to insecure client-side key
       throw new Error(`Cloud Function generation failed: ${error.message}`);
     }
   } else {
-    console.log("❓ User not authenticated - using direct API");
+    logger.log("❓ User not authenticated - using direct API");
   }
 
   // Fallback to direct API only if NOT authenticated
-  console.log(
+  logger.log(
     "📡 Calling direct API with key:",
     effectiveKey ? `${effectiveKey.substring(0, 10)}...` : "NONE"
   );
@@ -84,11 +85,11 @@ export const generateCritiqueSecure = async (
   // Try Cloud Functions first (most secure)
   if (isUserAuthenticated()) {
     try {
-      console.log(
+      logger.log(
         "🔒 [CritiqueSecure DEBUG] Using Cloud Function for critique"
       );
       const result = await generateCritiqueViaCloudFunction(question, model);
-      console.log(
+      logger.log(
         "🔒 [CritiqueSecure DEBUG] Cloud Function returned score:",
         result.score,
         "improvedScore:",
@@ -96,19 +97,19 @@ export const generateCritiqueSecure = async (
       );
       return result;
     } catch (error) {
-      console.error("❌ Cloud Function failed:", error);
+      logger.error("❌ Cloud Function failed:", error);
       throw new Error(`Cloud Function critique failed: ${error.message}`);
     }
   } else {
-    console.log(
+    logger.log(
       "❓ [CritiqueSecure DEBUG] User not authenticated - using direct API for critique"
     );
   }
 
   // Fallback to direct API only if NOT authenticated
-  console.log("📡 [CritiqueSecure DEBUG] Calling direct API for critique");
+  logger.log("📡 [CritiqueSecure DEBUG] Calling direct API for critique");
   const result = await generateCritiqueDirect(apiKey, question);
-  console.log(
+  logger.log(
     "📡 [CritiqueSecure DEBUG] Direct API returned score:",
     result.score
   );
@@ -144,7 +145,7 @@ export const generateTagsSecure = async (apiKey, questionText) => {
     const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
     return JSON.parse(cleanText);
   } catch (error) {
-    console.warn("Secure Tagging failed:", error);
+    logger.warn("Secure Tagging failed:", error);
     return [];
   }
 };

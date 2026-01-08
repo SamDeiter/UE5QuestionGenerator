@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { saveQuestionToFirestore } from '../services/firebase';
+import { logger } from "../utils/logger";
 
 /**
  * Hook for managing database view actions.
@@ -59,31 +60,31 @@ export const useDatabaseActions = ({
           kickedBackReason: "Moved from Database to Review",
         };
 
-        console.log(
+        logger.log(
           "🔄 [Kick Back] Saving to Firestore:",
           updatedQuestion.uniqueId
         );
         await saveQuestionToFirestore(updatedQuestion);
 
         // Remove from database view (so it no longer shows)
-        console.log("🔄 [Kick Back] Removing from databaseQuestions");
+        logger.log("🔄 [Kick Back] Removing from databaseQuestions");
         setDatabaseQuestions((prev) =>
           prev.filter((q) => q.uniqueId !== question.uniqueId)
         );
 
         // Add to historical questions with 'pending' status so it appears in Review Mode
-        console.log("🔄 [Kick Back] Adding to historicalQuestions");
+        logger.log("🔄 [Kick Back] Adding to historicalQuestions");
         setHistoricalQuestions((prev) => {
           // Check if already exists to prevent duplicates
           if (prev.some((q) => q.uniqueId === question.uniqueId)) {
-            console.log(
+            logger.log(
               "🔄 [Kick Back] Updating existing in historicalQuestions"
             );
             return prev.map((q) =>
               q.uniqueId === question.uniqueId ? updatedQuestion : q
             );
           }
-          console.log(
+          logger.log(
             `🔄 [Kick Back] Historical: ${prev.length} -> ${prev.length + 1}`
           );
           return [...prev, updatedQuestion];
@@ -93,11 +94,11 @@ export const useDatabaseActions = ({
 
         // Force refresh to ensure counts are updated
         if (handleLoadFromFirestore) {
-          console.log("🔄 [Kick Back] Triggering Firestore refresh");
+          logger.log("🔄 [Kick Back] Triggering Firestore refresh");
           await handleLoadFromFirestore();
         }
       } catch (error) {
-        console.error("Error kicking back question:", error);
+        logger.error("Error kicking back question:", error);
         showMessage("Failed to kick back question. Please try again.", 3000);
       }
     },

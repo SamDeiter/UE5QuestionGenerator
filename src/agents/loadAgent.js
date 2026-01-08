@@ -10,6 +10,7 @@
  */
 
 import { doc, getDoc } from "firebase/firestore";
+import { logger } from "../utils/logger";
 
 export class LoadAgent {
   /**
@@ -44,7 +45,7 @@ export class LoadAgent {
       // Get the version field (default to 1 if missing)
       const baseVersion = question.version || 1;
 
-      console.log(
+      logger.log(
         `[LoadAgent] Loaded question ${questionId} at version ${baseVersion}`
       );
 
@@ -54,7 +55,7 @@ export class LoadAgent {
         baseVersion,
       };
     } catch (error) {
-      console.error("[LoadAgent] loadQuestion failed:", error);
+      logger.error("[LoadAgent] loadQuestion failed:", error);
       return {
         success: false,
         error: error.message,
@@ -79,7 +80,7 @@ export class LoadAgent {
       const failures = results.filter((r) => !r.success);
 
       if (failures.length > 0) {
-        console.warn(`[LoadAgent] Failed to load ${failures.length} questions`);
+        logger.warn(`[LoadAgent] Failed to load ${failures.length} questions`);
       }
 
       return {
@@ -88,7 +89,7 @@ export class LoadAgent {
         failedCount: failures.length,
       };
     } catch (error) {
-      console.error("[LoadAgent] loadQuestions failed:", error);
+      logger.error("[LoadAgent] loadQuestions failed:", error);
       return {
         success: false,
         error: error.message,
@@ -106,7 +107,7 @@ export class LoadAgent {
     const result = await this.loadQuestion(questionId);
 
     if (result.success) {
-      console.log(
+      logger.log(
         `[LoadAgent] Reloaded question ${questionId} - latest version: ${result.baseVersion}`
       );
       return {

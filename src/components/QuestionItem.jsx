@@ -17,6 +17,7 @@ import { getSecureItem } from "../utils/secureStorage";
 import { useEditLock } from "../hooks/useEditLock";
 import { useAuth } from "../hooks/useAuth";
 import { saveTrainingPair } from "../services/trainingDataService";
+import { logger } from "../utils/logger";
 
 // Helper functions to avoid nested ternaries
 const getLockIconName = (hasLock, isLocked) => {
@@ -97,7 +98,7 @@ const QuestionItem = ({
 
   // Auto-open modal when NEW critique data arrives
   useEffect(() => {
-    console.log("[QuestionItem DEBUG] useEffect triggered:", {
+    logger.log("[QuestionItem DEBUG] useEffect triggered:", {
       critiqueScore: q.critiqueScore,
       suggestedRewrite: !!q.suggestedRewrite,
       improvementsApplied: q.improvementsApplied,
@@ -107,7 +108,7 @@ const QuestionItem = ({
 
     // Skip if improvements were already applied (prevents re-opening after apply)
     if (q.improvementsApplied) {
-      console.log(
+      logger.log(
         "[QuestionItem DEBUG] Skipping - improvements already applied"
       );
       return;
@@ -120,7 +121,7 @@ const QuestionItem = ({
 
       // Skip if we've already processed this exact critique
       if (lastProcessedCritiqueRef.current === critiqueKey) {
-        console.log(
+        logger.log(
           "[QuestionItem DEBUG] Skipping - already processed this critique"
         );
         return;
@@ -128,13 +129,13 @@ const QuestionItem = ({
 
       // Skip if user dismissed this specific critique
       if (lastProcessedCritiqueRef.current === dismissedKey) {
-        console.log(
+        logger.log(
           "[QuestionItem DEBUG] Skipping - user dismissed this critique"
         );
         return;
       }
 
-      console.log(
+      logger.log(
         "[QuestionItem DEBUG] Opening modal for score:",
         q.critiqueScore
       );
@@ -402,9 +403,9 @@ const QuestionItem = ({
               if (improved) {
                 try {
                   await saveTrainingPair(q, improved, "ai_improvement");
-                  console.log("✅ Training pair saved for question:", q.id);
+                  logger.log("✅ Training pair saved for question:", q.id);
                 } catch (err) {
-                  console.warn("Failed to save training pair:", err);
+                  logger.warn("Failed to save training pair:", err);
                 }
               }
 

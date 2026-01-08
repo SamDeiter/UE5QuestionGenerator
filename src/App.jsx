@@ -51,6 +51,7 @@ import { initializeAgents } from "./agents";
 // Utilities
 import { TOAST_DURATION } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
+import { logger } from "./utils/logger";
 
 const App = () => {
   // ========================================================================
@@ -110,9 +111,9 @@ const App = () => {
         try {
           const { db } = await import("./services/firebase");
           initializeAgents(db);
-          console.log("✅ Concurrent editing agents initialized");
+          logger.log("✅ Concurrent editing agents initialized");
         } catch (error) {
-          console.error("❌ Failed to initialize agents:", error);
+          logger.error("❌ Failed to initialize agents:", error);
         }
       };
       initAgents();
@@ -340,13 +341,13 @@ const App = () => {
       // One-time migration: Add improvedScore to existing critiques
       const migrated = runLocalStorageMigration();
       if (migrated.updated > 0) {
-        console.log(
+        logger.log(
           `🔄 Migrated ${migrated.updated} questions with estimated improved scores`
         );
       }
 
       hasAutoLoadedRef.current = true;
-      console.log("📊 Auto-loading database for difficulty chart...");
+      logger.log("📊 Auto-loading database for difficulty chart...");
       handleLoadFromFirestore(true); // Silent auto-recovery
     }
   }, [user, authLoading, handleLoadFromFirestore]);
@@ -498,7 +499,7 @@ const App = () => {
           apiKeyStatus={apiKeyStatus}
           isCloudReady={isAuthReady}
           onOpenSettings={() => {
-            console.log("🚀 Configure Now clicked!");
+            logger.log("🚀 Configure Now clicked!");
             setShowApiKeyModal(true);
           }}
           isAdmin={isAdmin} // Pass admin status

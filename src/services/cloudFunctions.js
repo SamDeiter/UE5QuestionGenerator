@@ -6,6 +6,7 @@
 
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app, auth } from "./firebase";
+import { logger } from "../utils/logger";
 
 // Initialize Cloud Functions
 const functions = getFunctions(app, "us-central1");
@@ -49,13 +50,13 @@ export const generateContentViaCloudFunction = async (
       result.data.groundingSources &&
       result.data.groundingSources.length > 0
     ) {
-      console.log("📚 Grounding sources found:", result.data.groundingSources);
+      logger.log("📚 Grounding sources found:", result.data.groundingSources);
       window.__lastGroundingSources = result.data.groundingSources;
     }
 
     return result.data.textResponse;
   } catch (error) {
-    console.error("Cloud Function error:", error);
+    logger.error("Cloud Function error:", error);
     setStatus(`Error: ${error.message}`);
     throw error;
   }
@@ -86,12 +87,12 @@ export const generateCritiqueViaCloudFunction = async (
       throw new Error(result.data.error || "Critique failed");
     }
 
-    console.log(
+    logger.log(
       "[CloudFunction DEBUG] Raw result.data:",
       JSON.stringify(result.data).substring(0, 200)
     );
-    console.log("[CloudFunction DEBUG] Extracted score:", result.data.score);
-    console.log(
+    logger.log("[CloudFunction DEBUG] Extracted score:", result.data.score);
+    logger.log(
       "[CloudFunction DEBUG] Extracted improvedScore:",
       result.data.improvedScore
     );
@@ -104,7 +105,7 @@ export const generateCritiqueViaCloudFunction = async (
       changes: result.data.changes,
     };
   } catch (error) {
-    console.error("Critique Cloud Function error:", error);
+    logger.error("Critique Cloud Function error:", error);
     throw error;
   }
 };
@@ -138,7 +139,7 @@ export const migrateTranslationsViaCloudFunction = async () => {
       stats: result.data.stats,
     };
   } catch (error) {
-    console.error("Migration Cloud Function error:", error);
+    logger.error("Migration Cloud Function error:", error);
     throw error;
   }
 };
@@ -167,7 +168,7 @@ export const sendReviewerInvitesViaEmail = async (invites) => {
       total: result.data.total,
     };
   } catch (error) {
-    console.error("SendReviewerInvites Cloud Function error:", error);
+    logger.error("SendReviewerInvites Cloud Function error:", error);
     throw error;
   }
 };

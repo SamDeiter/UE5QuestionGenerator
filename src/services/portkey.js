@@ -11,6 +11,7 @@
  */
 
 import Portkey from "portkey-ai";
+import { logger } from "../utils/logger";
 
 /**
  * Initialize Portkey client
@@ -101,7 +102,7 @@ export const generateContent = async (
     setStatus("Content generated successfully");
     return content;
   } catch (error) {
-    console.error("Portkey generation error:", error);
+    logger.error("Portkey generation error:", error);
     throw new Error(`Portkey generation failed: ${error.message}`);
   }
 };
@@ -196,7 +197,7 @@ export const generateCritique = async (
 
     const rawText = completion.choices?.[0]?.message?.content || "";
 
-    console.log(
+    logger.log(
       "[Portkey Critique DEBUG] Raw response:",
       rawText.substring(0, 500)
     );
@@ -205,7 +206,7 @@ export const generateCritique = async (
     const cleanJson = rawText.replace(/```json\n?|\n?```/g, "").trim();
     const result = JSON.parse(cleanJson);
 
-    console.log(
+    logger.log(
       "[Portkey Critique DEBUG] Scores - Original:",
       result.originalScore,
       "| Improved:",
@@ -220,7 +221,7 @@ export const generateCritique = async (
       changes: result.changes,
     };
   } catch (error) {
-    console.error("Portkey critique error:", error);
+    logger.error("Portkey critique error:", error);
     throw new Error(`Portkey critique failed: ${error.message}`);
   }
 };
@@ -263,7 +264,7 @@ export const rewriteQuestion = async (apiKey, question, critiqueText) => {
 
     return completion.choices?.[0]?.message?.content || "";
   } catch (error) {
-    console.error("Portkey rewrite error:", error);
+    logger.error("Portkey rewrite error:", error);
     throw new Error(`Portkey rewrite failed: ${error.message}`);
   }
 };
@@ -302,7 +303,7 @@ export const classifyQuestionDiscipline = async (apiKey, questionText) => {
 
     return (completion.choices?.[0]?.message?.content || "").trim();
   } catch (error) {
-    console.error("Portkey classification error:", error);
+    logger.error("Portkey classification error:", error);
     throw new Error(`Portkey classification failed: ${error.message}`);
   }
 };
@@ -338,7 +339,7 @@ export const generateTagsForQuestion = async (apiKey, questionText) => {
     const text = completion.choices?.[0]?.message?.content || "[]";
     return JSON.parse(text);
   } catch (error) {
-    console.error("Portkey tags error:", error);
+    logger.error("Portkey tags error:", error);
     return [];
   }
 };
