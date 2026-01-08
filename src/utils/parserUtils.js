@@ -1,6 +1,11 @@
+/**
+ * ParserUtils - Utilities for parsing AI text/JSON/Markdown responses.
+ *
+ * NOTE: Uses Math.random for unique ID generation (non-security).
+ */
+/* eslint-disable sonarjs/pseudo-random */
 import { textSimilarity } from "./stringHelpers";
 import { normalizeQuestion } from "./normalizeQuestion";
-
 /**
  * Strips code fences and conversational prefixes from AI text.
  */
