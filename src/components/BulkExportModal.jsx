@@ -181,18 +181,7 @@ const BulkExportModal = ({ onClose, onExport, questionCount }) => {
                       }
                     />
                     <span className="text-sm font-bold text-slate-200 uppercase flex items-center gap-2">
-                      <Icon
-                        name={
-                          fmt === "sheets"
-                            ? "table"
-                            : fmt === "json"
-                            ? "code"
-                            : fmt === "markdown"
-                            ? "file-code"
-                            : "file-text"
-                        }
-                        size={14}
-                      />
+                      <Icon name={getFormatIcon(fmt)} size={14} />
                       {fmt === "sheets" ? "Google Sheets" : fmt}
                     </span>
                   </label>

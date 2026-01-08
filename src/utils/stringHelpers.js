@@ -234,6 +234,7 @@ export const parseCSVLine = (text) => {
     if (char === '"') {
       if (insideQuote && text[i + 1] === '"') {
         cell += '"';
+        // eslint-disable-next-line sonarjs/updated-loop-counter -- Intentional: skip escaped quote
         i++;
       } else {
         insideQuote = !insideQuote;
