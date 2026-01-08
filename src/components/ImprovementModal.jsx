@@ -3,6 +3,26 @@ import Icon from "./Icon";
 import { sanitizeText } from "../utils/sanitize";
 
 /**
+ * Get score-based styling class for badges
+ * @param {number} score - The quality score (0-100)
+ * @param {string} variant - 'badge' for header/inline, 'column' for column headers
+ */
+const getScoreBadgeClass = (score, variant = "badge") => {
+  if (variant === "column") {
+    if (score >= 90) return "bg-green-900/50 border-green-500 text-green-300";
+    if (score >= 70)
+      return "bg-yellow-900/50 border-yellow-500 text-yellow-300";
+    return "bg-red-900/50 border-red-500 text-red-300";
+  }
+  // Default badge variant
+  if (score >= 90)
+    return "bg-green-600/20 border border-green-500/50 text-green-300";
+  if (score >= 70)
+    return "bg-yellow-600/20 border border-yellow-500/50 text-yellow-300";
+  return "bg-red-600/20 border border-red-500/50 text-red-300";
+};
+
+/**
  * Comprehensive Critique Modal - Shows critique + side-by-side improvements
  * Combines AI feedback with visual comparison in one view
  */
@@ -50,13 +70,9 @@ const ImprovementModal = ({
               <Icon name="sparkles" size={20} className="text-green-400" />
               <h2 className="text-lg font-bold text-white">AI Critique</h2>
               <span
-                className={`px-3 py-1 rounded text-sm font-bold ${
-                  critiqueScore >= 90
-                    ? "bg-green-600/20 border border-green-500/50 text-green-300"
-                    : critiqueScore >= 70
-                    ? "bg-yellow-600/20 border border-yellow-500/50 text-yellow-300"
-                    : "bg-red-600/20 border border-red-500/50 text-red-300"
-                }`}
+                className={`px-3 py-1 rounded text-sm font-bold ${getScoreBadgeClass(
+                  critiqueScore
+                )}`}
               >
                 Score: {critiqueScore}/100
               </span>
@@ -121,13 +137,10 @@ const ImprovementModal = ({
                     Original
                   </h3>
                   <span
-                    className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                      critiqueScore >= 90
-                        ? "bg-green-900/50 border-green-500 text-green-300"
-                        : critiqueScore >= 70
-                        ? "bg-yellow-900/50 border-yellow-500 text-yellow-300"
-                        : "bg-red-900/50 border-red-500 text-red-300"
-                    }`}
+                    className={`px-2 py-0.5 rounded text-xs font-bold border ${getScoreBadgeClass(
+                      critiqueScore,
+                      "column"
+                    )}`}
                   >
                     {critiqueScore}/100
                   </span>
@@ -139,13 +152,10 @@ const ImprovementModal = ({
                   </h3>
                   {improvedScore ? (
                     <span
-                      className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                        improvedScore >= 90
-                          ? "bg-green-900/50 border-green-500 text-green-300"
-                          : improvedScore >= 70
-                          ? "bg-yellow-900/50 border-yellow-500 text-yellow-300"
-                          : "bg-orange-900/50 border-orange-500 text-orange-300"
-                      }`}
+                      className={`px-2 py-0.5 rounded text-xs font-bold border ${getScoreBadgeClass(
+                        improvedScore,
+                        "column"
+                      )}`}
                     >
                       {improvedScore}/100
                       {scoreDelta > 0 && (
