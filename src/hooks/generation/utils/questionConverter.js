@@ -35,13 +35,17 @@ export const convertMCtoTF = (mcQuestion, difficulty) => {
     ? ["true", "yes"].includes(lowerCorrect)
     : randomBool;
 
+  // Determine target answer based on question type and mode
   // eslint-disable-next-line sonarjs/pseudo-random
-  const targetAnswer = isBooleanAnswer
-    ? correctAnswerText
-    : makeItTrue
-    ? correctAnswerText
-    : wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)] ||
-      "incorrect";
+  const getTargetAnswer = () => {
+    if (isBooleanAnswer) return correctAnswerText;
+    if (makeItTrue) return correctAnswerText;
+    return (
+      wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)] ||
+      "incorrect"
+    );
+  };
+  const targetAnswer = getTargetAnswer();
 
   if (!isBooleanAnswer) {
     // 1. Handle "Can you..." -> "You can [stem] [answer]"

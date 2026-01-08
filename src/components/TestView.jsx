@@ -60,9 +60,8 @@ const TestView = ({
   // Filter approved questions based on criteria
   const filteredQuestions = useMemo(() => {
     return approvedQuestions.filter((q) => {
-      if (filters.discipline && q.discipline !== filters.discipline)
-        return false;
-      return true;
+      // If discipline filter is set, only include matching questions
+      return !filters.discipline || q.discipline === filters.discipline;
     });
   }, [approvedQuestions, filters]);
 

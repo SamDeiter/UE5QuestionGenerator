@@ -282,7 +282,7 @@ export const parseQuestions = (text) => {
     if (tagsRaw && tagsRaw !== "-" && tagsRaw !== "") {
       tags = tagsRaw
         .split(",")
-        .map((t) => t.trim().replace(/^[#]/, ""))
+        .map((t) => t.trim().replace(/^#/, ""))
         .filter((t) => t);
     }
 
