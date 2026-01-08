@@ -174,3 +174,111 @@ export const downloadTrainingDataAsFile = async () => {
 
   return { success: true, count: result.count };
 };
+
+/**
+ * Export rejected questions as negative training examples
+ * These are questions that reviewers marked as rejected - useful for teaching
+ * the model what NOT to generate.
+ *
+ * @param {number} maxRecords - Maximum number of records to export
+ * @returns {Promise<{success: boolean, data?: string, count?: number, error?: string}>}
+ */
+export const exportRejectedQuestions = async (maxRecords = 500) => {
+  try {
+    if (!auth.currentUser) {
+      return { success: false, error: "Not authenticated" };
+    }
+
+    // Query questions with status "rejected"
+    const rejectedQuery = query(
+      collection(db, "questions"),
+      orderBy("lastModified", "desc"),
+      limit(maxRecords)
+    );
+
+    const snapshot = await getDocs(rejectedQuery);
+    const records = [];
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+
+      // Only include rejected questions
+      if (data.status !== "rejected") return;
+
+      // Format as negative example
+      const record = {
+        input: `Generate a ${data.difficulty || "Medium"} difficulty ${
+          data.type || "Multiple Choice"
+        } question about ${data.discipline || "UE5"}.`,
+        output: formatQuestionOutput({
+          question: data.question,
+          options: data.options,
+          correct: data.correct,
+        }),
+        metadata: {
+          id: doc.id,
+          type: "rejected",
+          reason:
+            data.reviewFeedback || data.rejectionReason || "Quality issue",
+          discipline: data.discipline,
+          isNegativeExample: true,
+        },
+      };
+
+      records.push(record);
+    });
+
+    // Convert to JSONL format
+    const jsonl = records.map((r) => JSON.stringify(r)).join("\\n");
+
+    return { success: true, data: jsonl, count: records.length };
+  } catch (error) {
+    console.error("Failed to export rejected questions:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Download all training data (corrections + rejected) as JSONL file
+ */
+export const downloadAllTrainingData = async () => {
+  // Get correction pairs
+  const corrections = await exportTrainingData();
+  // Get rejected questions
+  const rejected = await exportRejectedQuestions();
+
+  if (!corrections.success && !rejected.success) {
+    throw new Error("Failed to export any training data");
+  }
+
+  // Combine both datasets
+  const allData = [];
+  if (corrections.success && corrections.data) {
+    allData.push(corrections.data);
+  }
+  if (rejected.success && rejected.data) {
+    allData.push(rejected.data);
+  }
+
+  const combinedJsonl = allData.join("\\n");
+  const totalCount = (corrections.count || 0) + (rejected.count || 0);
+
+  const blob = new Blob([combinedJsonl], { type: "application/jsonl" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ue5-all-training-data-${
+    new Date().toISOString().split("T")[0]
+  }.jsonl`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  return {
+    success: true,
+    count: totalCount,
+    corrections: corrections.count || 0,
+    rejected: rejected.count || 0,
+  };
+};

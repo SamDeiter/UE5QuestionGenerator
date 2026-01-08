@@ -4,20 +4,26 @@
  * Extracted from AdminPanel.jsx - Super Admin only
  * Now includes:
  * - Original JSON export (all accepted questions)
- * - NEW: JSONL export of correction pairs for fine-tuning
+ * - JSONL export of correction pairs for fine-tuning
+ * - NEW: Combined export (corrections + rejected questions)
  */
 
 import React, { useState } from "react";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { downloadTrainingData } from "../../utils/analyticsStore";
-import { downloadTrainingDataAsFile } from "../../services/trainingDataService";
+import {
+  downloadTrainingDataAsFile,
+  downloadAllTrainingData,
+} from "../../services/trainingDataService";
 
 const TrainingDataExport = ({ isCollapsed, onToggle, showMessage }) => {
   const [isExporting, setIsExporting] = useState(false);
+  const [exportType, setExportType] = useState(null);
 
   const handleExportCorrectionPairs = async () => {
     setIsExporting(true);
+    setExportType("corrections");
     try {
       const result = await downloadTrainingDataAsFile();
       if (showMessage) {
@@ -33,6 +39,29 @@ const TrainingDataExport = ({ isCollapsed, onToggle, showMessage }) => {
       }
     } finally {
       setIsExporting(false);
+      setExportType(null);
+    }
+  };
+
+  const handleExportAll = async () => {
+    setIsExporting(true);
+    setExportType("all");
+    try {
+      const result = await downloadAllTrainingData();
+      if (showMessage) {
+        showMessage(
+          `✅ Exported ${result.count} total records (${result.corrections} corrections, ${result.rejected} rejected)`,
+          5000
+        );
+      }
+    } catch (error) {
+      console.error("Export failed:", error);
+      if (showMessage) {
+        showMessage(`❌ Export failed: ${error.message}`, 5000);
+      }
+    } finally {
+      setIsExporting(false);
+      setExportType(null);
     }
   };
 
@@ -59,13 +88,13 @@ const TrainingDataExport = ({ isCollapsed, onToggle, showMessage }) => {
 
         <hr className="border-slate-700" />
 
-        {/* NEW: Correction Pairs JSONL Export */}
+        {/* Correction Pairs JSONL Export */}
         <button
           onClick={handleExportCorrectionPairs}
           disabled={isExporting}
           className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-slate-600 disabled:to-slate-600 text-white rounded font-bold transition-all flex items-center justify-center gap-2"
         >
-          {isExporting ? (
+          {isExporting && exportType === "corrections" ? (
             <>
               <Icon name="loader" className="animate-spin" size={16} />
               Exporting...
@@ -78,7 +107,31 @@ const TrainingDataExport = ({ isCollapsed, onToggle, showMessage }) => {
           )}
         </button>
         <p className="text-xs text-slate-500 text-center">
-          Original vs. corrected pairs for Vertex AI/Gemini fine-tuning
+          Original vs. corrected pairs for fine-tuning
+        </p>
+
+        <hr className="border-slate-700" />
+
+        {/* All Training Data (Corrections + Rejected) */}
+        <button
+          onClick={handleExportAll}
+          disabled={isExporting}
+          className="w-full px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 disabled:from-slate-600 disabled:to-slate-600 text-white rounded font-bold transition-all flex items-center justify-center gap-2"
+        >
+          {isExporting && exportType === "all" ? (
+            <>
+              <Icon name="loader" className="animate-spin" size={16} />
+              Exporting All...
+            </>
+          ) : (
+            <>
+              <Icon name="database" size={16} />
+              Export All Training Data (JSONL)
+            </>
+          )}
+        </button>
+        <p className="text-xs text-slate-500 text-center">
+          Corrections + rejected questions (negative examples)
         </p>
       </div>
     </CollapsibleSection>
