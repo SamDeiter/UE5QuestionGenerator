@@ -1,5 +1,6 @@
 import Icon from "../Icon";
 import ScoreBadge from "../ScoreBadge";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 /**
  * Normalize difficulty value - handles legacy "BALANCED ALL" and other invalid values
@@ -34,7 +35,13 @@ const QuestionHeader = ({
   appMode,
   onOpenCritiqueModal,
 }) => {
+  const { colorblindMode } = useAccessibility();
   const displayDifficulty = normalizeDifficulty(q.difficulty);
+
+  // Colorblind-safe AI Improvement button classes
+  const aiImprovementClasses = colorblindMode
+    ? "bg-blue-600/20 text-blue-300 border border-blue-500/50 hover:bg-blue-600/30"
+    : "bg-green-600/20 text-green-300 border border-green-500/50 hover:bg-green-600/30";
 
   return (
     <div className="flex justify-between items-start">
@@ -72,7 +79,7 @@ const QuestionHeader = ({
           {q.suggestedRewrite && (
             <button
               onClick={() => onOpenCritiqueModal?.()}
-              className="px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105 bg-green-600/20 text-green-300 border border-green-500/50 hover:bg-green-600/30"
+              className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105 ${aiImprovementClasses}`}
               title="AI Improvements Available - Click to review"
             >
               <Icon name="sparkles" size={12} />

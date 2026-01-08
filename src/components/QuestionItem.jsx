@@ -16,6 +16,7 @@ import QuestionNotesField from "./QuestionItem/QuestionNotesField";
 import { getSecureItem } from "../utils/secureStorage";
 import { useEditLock } from "../hooks/useEditLock";
 import { useAuth } from "../hooks/useAuth";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 import { saveTrainingPair } from "../services/trainingDataService";
 import { logger } from "../utils/logger";
 
@@ -32,7 +33,14 @@ const getLockStatusText = (hasLock, isLocked) => {
   return "Connecting...";
 };
 
-const getLockIndicatorClass = (hasLock, isLocked) => {
+const getLockIndicatorClass = (hasLock, isLocked, colorblindMode = false) => {
+  if (colorblindMode) {
+    if (hasLock && !isLocked)
+      return "bg-blue-900/30 border border-blue-500/50 text-blue-400";
+    if (isLocked)
+      return "bg-rose-900/30 border border-rose-500/50 text-rose-400";
+    return "bg-amber-900/30 border border-amber-500/50 text-amber-400";
+  }
   if (hasLock && !isLocked)
     return "bg-green-900/30 border border-green-500/50 text-green-400";
   if (isLocked) return "bg-red-900/30 border border-red-500/50 text-red-400";
@@ -46,7 +54,12 @@ const getLockTooltip = (hasLock, isLocked, lockedByEmail) => {
   return "Acquiring lock...";
 };
 
-const getLockIconColor = (hasLock, isLocked) => {
+const getLockIconColor = (hasLock, isLocked, colorblindMode = false) => {
+  if (colorblindMode) {
+    if (hasLock) return "text-blue-400";
+    if (isLocked) return "text-rose-400";
+    return "text-amber-400 animate-spin";
+  }
   if (hasLock) return "text-green-400";
   if (isLocked) return "text-red-400";
   return "text-amber-400 animate-spin";
@@ -78,6 +91,7 @@ const QuestionItem = ({
 
   // Get current user info for lock management
   const { user } = useAuth();
+  const { colorblindMode } = useAccessibility();
   const userId = user?.uid;
   const userEmail = user?.email;
 
@@ -228,14 +242,15 @@ const QuestionItem = ({
         <div
           className={`ml-6 mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all duration-500 ${getLockIndicatorClass(
             hasLock,
-            isLocked
+            isLocked,
+            colorblindMode
           )}`}
           title={getLockTooltip(hasLock, isLocked, lockedBy?.email)}
         >
           <Icon
             name={getLockIconName(hasLock, isLocked)}
             size={14}
-            className={getLockIconColor(hasLock, isLocked)}
+            className={getLockIconColor(hasLock, isLocked, colorblindMode)}
           />
           <span>{getLockStatusText(hasLock, isLocked)}</span>
         </div>
