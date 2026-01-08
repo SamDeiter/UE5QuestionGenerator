@@ -12,6 +12,7 @@ import {
   getStatusColor,
   getLockColor,
   getEventColor,
+  getActionColor,
   SCORE_TIERS,
 } from "../utils/themeColors";
 
@@ -71,6 +72,12 @@ export const useThemeColors = () => {
      * @param {string} event - Event type
      */
     eventColor: (event) => getEventColor(event, colorblindMode),
+
+    /**
+     * Get action button color
+     * @param {string} action - 'success', 'danger', 'warning', 'info'
+     */
+    actionColor: (action) => getActionColor(action, colorblindMode),
 
     /**
      * Current colorblind mode state (for components that need raw access)

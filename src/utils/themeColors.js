@@ -178,6 +178,37 @@ const EVENT_COLORS = {
 };
 
 // =============================================================================
+// ACTION BUTTON COLORS - For action/success buttons (AI improvement, etc.)
+// =============================================================================
+
+const ACTION_COLORS = {
+  success: {
+    default:
+      "bg-green-600/20 text-green-300 border border-green-500/50 hover:bg-green-600/30",
+    colorblind:
+      "bg-blue-600/20 text-blue-300 border border-blue-500/50 hover:bg-blue-600/30",
+  },
+  danger: {
+    default:
+      "bg-red-600/20 text-red-300 border border-red-500/50 hover:bg-red-600/30",
+    colorblind:
+      "bg-rose-600/20 text-rose-300 border border-rose-500/50 hover:bg-rose-600/30",
+  },
+  warning: {
+    default:
+      "bg-yellow-600/20 text-yellow-300 border border-yellow-500/50 hover:bg-yellow-600/30",
+    colorblind:
+      "bg-amber-600/20 text-amber-300 border border-amber-500/50 hover:bg-amber-600/30",
+  },
+  info: {
+    default:
+      "bg-blue-600/20 text-blue-300 border border-blue-500/50 hover:bg-blue-600/30",
+    colorblind:
+      "bg-cyan-600/20 text-cyan-300 border border-cyan-500/50 hover:bg-cyan-600/30",
+  },
+};
+
+// =============================================================================
 // PUBLIC API - Getters for color values
 // =============================================================================
 
@@ -248,4 +279,17 @@ export const getLockColor = (
 export const getEventColor = (event, colorblindMode = false) => {
   const mode = colorblindMode ? "colorblind" : "default";
   return EVENT_COLORS[event]?.[mode] || "bg-slate-700 text-slate-300";
+};
+
+/**
+ * Get action button color classes
+ * @param {string} action - 'success', 'danger', 'warning', 'info'
+ * @param {boolean} colorblindMode - Whether to use colorblind-safe palette
+ */
+export const getActionColor = (action, colorblindMode = false) => {
+  const mode = colorblindMode ? "colorblind" : "default";
+  return (
+    ACTION_COLORS[action]?.[mode] ||
+    "bg-slate-600/20 text-slate-300 border border-slate-500/50"
+  );
 };

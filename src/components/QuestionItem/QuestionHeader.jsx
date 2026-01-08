@@ -1,6 +1,6 @@
 import Icon from "../Icon";
 import ScoreBadge from "../ScoreBadge";
-import { useAccessibility } from "../../contexts/AccessibilityContext";
+import { useThemeColors } from "../../hooks/useThemeColors";
 
 /**
  * Normalize difficulty value - handles legacy "BALANCED ALL" and other invalid values
@@ -35,13 +35,11 @@ const QuestionHeader = ({
   appMode,
   onOpenCritiqueModal,
 }) => {
-  const { colorblindMode } = useAccessibility();
+  const { actionColor } = useThemeColors();
   const displayDifficulty = normalizeDifficulty(q.difficulty);
 
-  // Colorblind-safe AI Improvement button classes
-  const aiImprovementClasses = colorblindMode
-    ? "bg-blue-600/20 text-blue-300 border border-blue-500/50 hover:bg-blue-600/30"
-    : "bg-green-600/20 text-green-300 border border-green-500/50 hover:bg-green-600/30";
+  // Colorblind-safe AI Improvement button classes from centralized theme
+  const aiImprovementClasses = actionColor("success");
 
   return (
     <div className="flex justify-between items-start">
