@@ -1,6 +1,6 @@
-import { textSimilarity } from "./stringHelpers";
-import { normalizeQuestion } from "./normalizeQuestion";
-
+/**
+ * Question Helpers - Re-exports from parserUtils and provides downloadFile utility
+ */
 export {
   removeDuplicateQuestions,
   filterDuplicateQuestions,
