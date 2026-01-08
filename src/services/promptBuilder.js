@@ -27,7 +27,6 @@ export const constructSystemPrompt = (
   // Get available tags for this discipline
   const availableTags = TAGS_BY_DISCIPLINE[config.discipline] || [];
   const batchNum = parseInt(config.batchSize) || 6;
-  let targetType = "Multiple Choice ONLY";
 
   // Parse difficulty and type
   let difficulty = config.difficulty;
@@ -40,12 +39,11 @@ export const constructSystemPrompt = (
     type = parts.slice(1).join(" ");
   }
 
-  // Set type based on explicit selection (required - no balanced mode)
-  if (type === "True/False" || type === "T/F") {
-    targetType = "True/False ONLY";
-  } else {
-    targetType = "Multiple Choice ONLY";
-  }
+  // Determine target type based on explicit selection
+  const targetType =
+    type === "True/False" || type === "T/F"
+      ? "True/False ONLY"
+      : "Multiple Choice ONLY";
 
   const difficultyPrompt = `Generate exactly ${batchNum} ${difficulty} questions of type: ${targetType}.`;
 
