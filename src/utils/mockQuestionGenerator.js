@@ -1,7 +1,11 @@
 /**
  * Utility to generate mock questions for Test View visualization
  * Generates realistic questions across all 7 disciplines
+ *
+ * NOTE: Uses Math.random extensively for test data generation.
+ * This is intentional - mock data doesn't need cryptographic security.
  */
+/* eslint-disable sonarjs/pseudo-random */
 
 const generateDisciplineQuestions = (discipline, count, startId) => {
   const questions = [];
