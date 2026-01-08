@@ -66,6 +66,17 @@ const InviteManagement = ({
     }
   };
 
+  // Copy invite link to clipboard for manual email
+  const copyInviteLink = (invite) => {
+    const baseUrl = window.location.origin + window.location.pathname;
+    const inviteUrl = `${baseUrl}?invite=${invite.code}`;
+    navigator.clipboard.writeText(inviteUrl);
+    showMessage(
+      `📋 Invite link copied! Send to: ${invite.forEmail || "anyone"}`,
+      3000
+    );
+  };
+
   // Bulk revoke selected invites
   const handleBulkRevoke = async () => {
     if (selectedInvites.size === 0) return;
@@ -269,6 +280,15 @@ const InviteManagement = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Copy Link Button - for manual email */}
+          <button
+            onClick={() => copyInviteLink(invite)}
+            className="px-3 py-1 bg-slate-600 hover:bg-slate-500 text-white text-xs rounded transition-all flex items-center gap-1"
+            title="Copy invite link to clipboard"
+          >
+            <Icon name="copy" size={12} />
+            Copy
+          </button>
           {invite.forEmail && (
             <button
               onClick={() => handleResendSingleInvite(invite)}

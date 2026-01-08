@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   signInWithGoogle,
-  signUpWithEmail,
   signInWithEmail,
   resetPassword,
 } from "../services/firebase";
@@ -14,7 +13,6 @@ const SignIn = () => {
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isNewUser, setIsNewUser] = useState(true);
   const [resetSuccess, setResetSuccess] = useState(false);
 
   const handleGoogleSignIn = async () => {
@@ -47,34 +45,28 @@ const SignIn = () => {
     setIsLoading(true);
     setError(null);
     try {
-      if (isNewUser) {
-        await signUpWithEmail(email, password);
-      } else {
-        await signInWithEmail(email, password);
-      }
+      // Sign in only - new accounts need invite codes via InviteSignUp
+      await signInWithEmail(email, password);
     } catch (err) {
       console.error(err);
-      let message = err.message || "Authentication failed";
-      if (err.code === "auth/email-already-in-use") {
-        message = "Email already registered. Try signing in instead.";
-        setIsNewUser(false);
-      } else if (err.code === "auth/weak-password") {
-        message = "Password should be at least 6 characters.";
-      } else if (
-        err.code === "auth/wrong-password" ||
-        err.code === "auth/invalid-credential"
-      ) {
-        message = "Incorrect email or password.";
-      } else if (err.code === "auth/user-not-found") {
-        message = "No account found with this email. Try creating an account.";
-        setIsNewUser(true);
-      } else if (err.code === "auth/invalid-email") {
-        message = "Invalid email address format.";
-      } else if (err.code === "auth/user-disabled") {
-        message =
-          "Your account has been disabled by an administrator. Please contact support if you believe this is an error.";
-      }
-      setError(message);
+      const getErrorMessage = (code) => {
+        switch (code) {
+          case "auth/wrong-password":
+          case "auth/invalid-credential":
+            return "Incorrect email or password.";
+          case "auth/user-not-found":
+            return "No account found. You may need an invite code to register.";
+          case "auth/invalid-email":
+            return "Invalid email address format.";
+          case "auth/user-disabled":
+            return "Your account has been disabled. Please contact support.";
+          case "auth/too-many-requests":
+            return "Too many attempts. Please try again later.";
+          default:
+            return err.message || "Sign in failed.";
+        }
+      };
+      setError(getErrorMessage(err.code));
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +95,157 @@ const SignIn = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+  // Render content based on current view state
+  const renderContent = () => {
+    if (showPasswordReset) {
+      return (
+        // Password Reset Form
+        <form onSubmit={handlePasswordReset} className="space-y-3 text-left">
+          <div>
+            <label
+              htmlFor="reset-email"
+              className="block text-sm font-medium text-slate-300 mb-2"
+            >
+              Email Address
+            </label>
+            <input
+              id="reset-email"
+              type="email"
+              placeholder="your.email@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
+          >
+            {isLoading ? "Sending..." : "Send Reset Email"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowPasswordReset(false);
+              setResetSuccess(false);
+              setError(null);
+            }}
+            className="w-full text-sm text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            ← Back to sign in
+          </button>
+        </form>
+      );
+    }
+
+    if (!showEmailAuth) {
+      return (
+        // Auth Options
+        <div className="space-y-3">
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-bold py-3 px-6 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <Icon name="loader" className="animate-spin" />
+            ) : (
+              <GoogleIcon />
+            )}
+            {isLoading ? "Signing in..." : "Sign in with Google"}
+          </button>
+
+          <div className="flex items-center gap-3 text-slate-500 text-sm">
+            <div className="flex-1 h-px bg-slate-700" />
+            <span>or</span>
+            <div className="flex-1 h-px bg-slate-700" />
+          </div>
+
+          <button
+            onClick={() => setShowEmailAuth(true)}
+            className="w-full flex items-center justify-center gap-3 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all border border-slate-700"
+          >
+            <Icon name="mail" size={20} />
+            Continue with Email
+          </button>
+
+          <p className="text-xs text-slate-600">
+            Sign in with any Google or email account.
+          </p>
+        </div>
+      );
+    }
+
+    // Email/Password Form
+    return (
+      <form onSubmit={handleEmailAuth} className="space-y-3 text-left">
+        <div>
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-slate-300 mb-2"
+          >
+            Email Address
+          </label>
+          <input
+            id="email"
+            type="email"
+            placeholder="your.email@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-slate-300 mb-2"
+          >
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            placeholder="6+ characters"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+            required
+            minLength={6}
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
+        >
+          {isLoading ? "Signing in..." : "Sign In"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setShowPasswordReset(true);
+            setShowEmailAuth(false);
+          }}
+          className="w-full text-sm text-blue-400 hover:text-blue-300 transition-colors"
+        >
+          Forgot password?
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowEmailAuth(false)}
+          className="w-full text-sm text-slate-500 hover:text-slate-300 transition-colors"
+        >
+          ← Back to sign-in options
+        </button>
+        <p className="text-xs text-slate-600 text-center pt-2">
+          Need an account? Contact an admin for an invite code.
+        </p>
+      </form>
+    );
   };
 
   return (
@@ -135,158 +278,7 @@ const SignIn = () => {
           </div>
         )}
 
-        {showPasswordReset ? (
-          // Password Reset Form
-          <form onSubmit={handlePasswordReset} className="space-y-3 text-left">
-            <div>
-              <label
-                htmlFor="reset-email"
-                className="block text-sm font-medium text-slate-300 mb-2"
-              >
-                Email Address
-              </label>
-              <input
-                id="reset-email"
-                type="email"
-                placeholder="your.email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
-            >
-              {isLoading ? "Sending..." : "Send Reset Email"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowPasswordReset(false);
-                setResetSuccess(false);
-                setError(null);
-              }}
-              className="w-full text-sm text-slate-500 hover:text-slate-300 transition-colors"
-            >
-              ← Back to sign in
-            </button>
-          </form>
-        ) : !showEmailAuth ? (
-          // Auth Options
-          <div className="space-y-3">
-            <button
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-bold py-3 px-6 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <Icon name="loader" className="animate-spin" />
-              ) : (
-                <GoogleIcon />
-              )}
-              {isLoading ? "Signing in..." : "Sign in with Google"}
-            </button>
-
-            <div className="flex items-center gap-3 text-slate-500 text-sm">
-              <div className="flex-1 h-px bg-slate-700" />
-              <span>or</span>
-              <div className="flex-1 h-px bg-slate-700" />
-            </div>
-
-            <button
-              onClick={() => setShowEmailAuth(true)}
-              className="w-full flex items-center justify-center gap-3 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all border border-slate-700"
-            >
-              <Icon name="mail" size={20} />
-              Continue with Email
-            </button>
-
-            <p className="text-xs text-slate-600">
-              Sign in with any Google or email account.
-            </p>
-          </div>
-        ) : (
-          // Email/Password Form
-          <form onSubmit={handleEmailAuth} className="space-y-3 text-left">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-slate-300 mb-2"
-              >
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="your.email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-slate-300 mb-2"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                placeholder="6+ characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                required
-                minLength={6}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
-            >
-              {isLoading
-                ? "Please wait..."
-                : isNewUser
-                ? "Create Account"
-                : "Sign In"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsNewUser(!isNewUser)}
-              className="w-full text-sm text-slate-400 hover:text-white transition-colors"
-            >
-              {isNewUser
-                ? "Already have an account? Sign in"
-                : "New user? Create account"}
-            </button>
-            {!isNewUser && (
-              <button
-                type="button"
-                onClick={() => {
-                  setShowPasswordReset(true);
-                  setShowEmailAuth(false);
-                }}
-                className="w-full text-sm text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                Forgot password?
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowEmailAuth(false)}
-              className="w-full text-sm text-slate-500 hover:text-slate-300 transition-colors"
-            >
-              ← Back to sign-in options
-            </button>
-          </form>
-        )}
+        {renderContent()}
       </div>
     </div>
   );
