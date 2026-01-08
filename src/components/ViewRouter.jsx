@@ -20,57 +20,65 @@ const EmptyReviewState = ({
   onNavigateToCreate,
   hasQuestionsInOtherFilters = false,
   isAdmin = false,
-}) => (
-  <div className="flex flex-col items-center justify-center h-full py-16 px-8">
-    {/* Illustration */}
-    <div className="relative mb-8">
-      <div className="w-24 h-24 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full flex items-center justify-center">
-        <Icon name="clipboard-list" size={48} className="text-indigo-400" />
+}) => {
+  const getMessage = () => {
+    if (hasQuestionsInOtherFilters) {
+      return "All questions in this filter have been reviewed! Check other filters or generate more.";
+    }
+    if (isAdmin) {
+      return "Generate your first batch of questions to start reviewing and approving them for your assessments.";
+    }
+    return "No questions are pending review. Ask an administrator to generate more questions.";
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center h-full py-16 px-8">
+      {/* Illustration */}
+      <div className="relative mb-8">
+        <div className="w-24 h-24 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full flex items-center justify-center">
+          <Icon name="clipboard-list" size={48} className="text-indigo-400" />
+        </div>
+        <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center animate-bounce">
+          <Icon name="sparkles" size={20} className="text-orange-400" />
+        </div>
       </div>
-      <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center animate-bounce">
-        <Icon name="sparkles" size={20} className="text-orange-400" />
-      </div>
+
+      {/* Message */}
+      <h3 className="text-xl font-bold text-white mb-2">
+        {hasQuestionsInOtherFilters
+          ? "No Pending Questions"
+          : "Ready to Review"}
+      </h3>
+      <p className="text-slate-400 text-center max-w-md mb-6">{getMessage()}</p>
+
+      {/* CTA Button - Admin only */}
+      {isAdmin && (
+        <button
+          onClick={onNavigateToCreate}
+          className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 transition-all hover:scale-105 active:scale-95"
+        >
+          <Icon name="plus-circle" size={20} />
+          Generate Your First Batch
+        </button>
+      )}
+
+      {/* Keyboard shortcut hint - Admin only */}
+      {isAdmin && (
+        <p className="text-xs text-slate-600 mt-4">
+          or press{" "}
+          <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">
+            Ctrl
+          </kbd>{" "}
+          +{" "}
+          <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">
+            Enter
+          </kbd>{" "}
+          in Create mode
+        </p>
+      )}
     </div>
-
-    {/* Message */}
-    <h3 className="text-xl font-bold text-white mb-2">
-      {hasQuestionsInOtherFilters ? "No Pending Questions" : "Ready to Review"}
-    </h3>
-    <p className="text-slate-400 text-center max-w-md mb-6">
-      {hasQuestionsInOtherFilters
-        ? "All questions in this filter have been reviewed! Check other filters or generate more."
-        : isAdmin
-        ? "Generate your first batch of questions to start reviewing and approving them for your assessments."
-        : "No questions are pending review. Ask an administrator to generate more questions."}
-    </p>
-
-    {/* CTA Button - Admin only */}
-    {isAdmin && (
-      <button
-        onClick={onNavigateToCreate}
-        className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 transition-all hover:scale-105 active:scale-95"
-      >
-        <Icon name="plus-circle" size={20} />
-        Generate Your First Batch
-      </button>
-    )}
-
-    {/* Keyboard shortcut hint - Admin only */}
-    {isAdmin && (
-      <p className="text-xs text-slate-600 mt-4">
-        or press{" "}
-        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">
-          Ctrl
-        </kbd>{" "}
-        +{" "}
-        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">
-          Enter
-        </kbd>{" "}
-        in Create mode
-      </p>
-    )}
-  </div>
-);
+  );
+};
 
 const ViewRouter = ({
   appMode,
@@ -121,15 +129,23 @@ const ViewRouter = ({
     showMessage,
   } = setters;
 
-  return (
-    <Suspense fallback={<LoadingSpinner />}>
-      {appMode === "analytics" ? (
+  /**
+   * Render the appropriate view based on appMode
+   * Uses early returns instead of nested ternaries for clarity
+   */
+  const renderView = () => {
+    if (appMode === "analytics") {
+      return (
         <AnalyticsView
           onBack={onNavigateHome}
           onStartTutorial={() => onStartTutorial("analytics")}
           allQuestionsMap={allQuestionsMap}
         />
-      ) : appMode === "database" ? (
+      );
+    }
+
+    if (appMode === "database") {
+      return (
         <DatabaseView
           questions={databaseQuestions}
           sheetUrl={config.sheetUrl}
@@ -148,20 +164,32 @@ const ViewRouter = ({
           isAdmin={isAdmin}
           userRole={userRole}
         />
-      ) : appMode === "test" && isAdmin ? (
+      );
+    }
+
+    if (appMode === "test" && isAdmin) {
+      return (
         <TestView
           questions={[...questions, ...databaseQuestions]}
           config={config}
           isAdmin={isAdmin}
           showMessage={showMessage}
         />
-      ) : appMode === "playground" && isAdmin ? (
+      );
+    }
+
+    if (appMode === "playground" && isAdmin) {
+      return (
         <PromptPlayground
           config={config}
           apiKeyReady={!!effectiveApiKey}
           effectiveApiKey={effectiveApiKey}
         />
-      ) : appMode === "admin" && isAdmin ? (
+      );
+    }
+
+    if (appMode === "admin" && isAdmin) {
+      return (
         <AdminPanel
           showMessage={showMessage}
           config={config}
@@ -179,7 +207,11 @@ const ViewRouter = ({
           onSaveCustomTags={handlers.handleSaveCustomTags}
           currentUser={state.currentUser}
         />
-      ) : appMode === "review" && uniqueFilteredQuestions.length > 0 ? (
+      );
+    }
+
+    if (appMode === "review" && uniqueFilteredQuestions.length > 0) {
+      return (
         <ReviewMode
           questions={uniqueFilteredQuestions}
           currentIndex={currentReviewIndex}
@@ -196,10 +228,13 @@ const ViewRouter = ({
           translationMap={translationMap}
           onStartTutorial={() => onStartTutorial("review")}
           onKickBack={handleKickBackToReview}
-          userRole={userRole} // NEW
+          userRole={userRole}
         />
-      ) : appMode === "review" && uniqueFilteredQuestions.length === 0 ? (
-        /* NEW: Empty state for Review mode with CTA */
+      );
+    }
+
+    if (appMode === "review" && uniqueFilteredQuestions.length === 0) {
+      return (
         <EmptyReviewState
           onNavigateToCreate={onNavigateToCreate}
           hasQuestionsInOtherFilters={
@@ -207,27 +242,34 @@ const ViewRouter = ({
           }
           isAdmin={isAdmin}
         />
-      ) : (
-        <>
-          <QuestionList
-            questions={uniqueFilteredQuestions}
-            translationMap={translationMap}
-            appMode={appMode}
-            isProcessing={isProcessing}
-            onUpdateStatus={handleUpdateStatus}
-            onExplain={handleExplain}
-            onVariate={handleVariate}
-            onCritique={handleCritique}
-            onApplyRewrite={handleApplyRewrite}
-            onTranslateSingle={handleTranslateSingle}
-            onSwitchLanguage={handleLanguageSwitch}
-            onDelete={handleDelete}
-            onUpdateQuestion={handleManualUpdate}
-            showMessage={showMessage}
-            userRole={userRole} // NEW
-          />
-        </>
-      )}
+      );
+    }
+
+    // Default: QuestionList for create mode
+    return (
+      <QuestionList
+        questions={uniqueFilteredQuestions}
+        translationMap={translationMap}
+        appMode={appMode}
+        isProcessing={isProcessing}
+        onUpdateStatus={handleUpdateStatus}
+        onExplain={handleExplain}
+        onVariate={handleVariate}
+        onCritique={handleCritique}
+        onApplyRewrite={handleApplyRewrite}
+        onTranslateSingle={handleTranslateSingle}
+        onSwitchLanguage={handleLanguageSwitch}
+        onDelete={handleDelete}
+        onUpdateQuestion={handleManualUpdate}
+        showMessage={showMessage}
+        userRole={userRole}
+      />
+    );
+  };
+
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      {renderView()}
 
       {uniqueFilteredQuestions.length === 0 &&
         filteredQuestions.length > 0 &&
