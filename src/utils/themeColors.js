@@ -209,6 +209,103 @@ const ACTION_COLORS = {
 };
 
 // =============================================================================
+// SEVERITY STYLES - For modals and detailed views (object return type)
+// =============================================================================
+
+const SEVERITY_STYLES = {
+  excellent: {
+    default: {
+      bg: "bg-emerald-950/40",
+      border: "border-emerald-500/50",
+      text: "text-emerald-200",
+      icon: "text-emerald-400",
+      iconSymbol: "✓",
+      label: "Excellent",
+    },
+    colorblind: {
+      bg: "bg-blue-950/40",
+      border: "border-blue-500/50",
+      text: "text-blue-200",
+      icon: "text-blue-400",
+      iconSymbol: "✓",
+      label: "Excellent",
+    },
+  },
+  good: {
+    default: {
+      bg: "bg-yellow-950/40",
+      border: "border-yellow-500/50",
+      text: "text-yellow-200",
+      icon: "text-yellow-400",
+      iconSymbol: "⚠",
+      label: "Good",
+    },
+    colorblind: {
+      bg: "bg-amber-950/40",
+      border: "border-amber-500/50",
+      text: "text-amber-200",
+      icon: "text-amber-400",
+      iconSymbol: "⚠",
+      label: "Good",
+    },
+  },
+  mediocre: {
+    default: {
+      bg: "bg-orange-950/40",
+      border: "border-orange-500/50",
+      text: "text-orange-200",
+      icon: "text-orange-400",
+      iconSymbol: "⊛",
+      label: "Mediocre",
+    },
+    colorblind: {
+      bg: "bg-purple-950/40",
+      border: "border-purple-500/50",
+      text: "text-purple-200",
+      icon: "text-purple-400",
+      iconSymbol: "⊛",
+      label: "Mediocre",
+    },
+  },
+  critical: {
+    default: {
+      bg: "bg-red-950/40",
+      border: "border-red-500/50",
+      text: "text-red-200",
+      icon: "text-red-400",
+      iconSymbol: "✗",
+      label: "Critical",
+    },
+    colorblind: {
+      bg: "bg-rose-950/40",
+      border: "border-rose-500/50",
+      text: "text-rose-200",
+      icon: "text-rose-400",
+      iconSymbol: "✗",
+      label: "Critical",
+    },
+  },
+  unknown: {
+    default: {
+      bg: "bg-slate-800",
+      border: "border-slate-700",
+      text: "text-slate-400",
+      icon: "text-slate-500",
+      iconSymbol: "",
+      label: "Unknown",
+    },
+    colorblind: {
+      bg: "bg-slate-800",
+      border: "border-slate-700",
+      text: "text-slate-400",
+      icon: "text-slate-500",
+      iconSymbol: "",
+      label: "Unknown",
+    },
+  },
+};
+
+// =============================================================================
 // PUBLIC API - Getters for color values
 // =============================================================================
 
@@ -292,4 +389,30 @@ export const getActionColor = (action, colorblindMode = false) => {
     ACTION_COLORS[action]?.[mode] ||
     "bg-slate-600/20 text-slate-300 border border-slate-500/50"
   );
+};
+
+/**
+ * Get severity tier from numeric score
+ * @param {number} score - Quality score (0-100)
+ * @returns {string} Severity tier name
+ */
+export const getSeverityTier = (score) => {
+  if (score === null || score === undefined) return "unknown";
+  if (score >= 90) return "excellent";
+  if (score >= 70) return "good";
+  if (score >= 50) return "mediocre";
+  return "critical";
+};
+
+/**
+ * Get severity styles object for modals and detailed views
+ * Returns object with bg, border, text, icon, iconSymbol, and label properties
+ * @param {number|null} score - Quality score (0-100) or null
+ * @param {boolean} colorblindMode - Whether to use colorblind-safe palette
+ * @returns {Object} Style object with individual CSS classes
+ */
+export const getSeverityStylesFromScore = (score, colorblindMode = false) => {
+  const tier = getSeverityTier(score);
+  const mode = colorblindMode ? "colorblind" : "default";
+  return SEVERITY_STYLES[tier]?.[mode] || SEVERITY_STYLES.unknown[mode];
 };

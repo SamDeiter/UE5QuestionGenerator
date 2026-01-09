@@ -3,8 +3,7 @@ import Icon from "./Icon";
 import { renderMarkdown } from "../utils/stringHelpers";
 import DiffText from "./DiffText";
 import { QUALITY_THRESHOLDS } from "../utils/constants";
-import { getSeverityStyles } from "../utils/scoreColors";
-import { useAccessibility } from "../contexts/AccessibilityContext";
+import { useThemeColors } from "../hooks/useThemeColors";
 
 // DiffText imported from shared component
 
@@ -24,11 +23,11 @@ const CritiqueModal = ({
 }) => {
   if (!isOpen || !q) return null;
 
-  // Get accessibility preference
-  const { colorblindMode } = useAccessibility();
+  // Get centralized theme colors with colorblind support
+  const { severityStyles } = useThemeColors();
 
-  // Use shared severity styles utility with colorblind support
-  const styles = getSeverityStyles(score, colorblindMode);
+  // Use centralized severity styles
+  const styles = severityStyles(score);
   const isFailing = score !== null && score < QUALITY_THRESHOLDS.MEDIOCRE;
 
   // Check if question was changed

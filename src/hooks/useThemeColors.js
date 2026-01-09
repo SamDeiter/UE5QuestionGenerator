@@ -13,6 +13,7 @@ import {
   getLockColor,
   getEventColor,
   getActionColor,
+  getSeverityStylesFromScore,
   SCORE_TIERS,
 } from "../utils/themeColors";
 
@@ -78,6 +79,13 @@ export const useThemeColors = () => {
      * @param {string} action - 'success', 'danger', 'warning', 'info'
      */
     actionColor: (action) => getActionColor(action, colorblindMode),
+
+    /**
+     * Get severity styles object (returns object with bg, border, text, icon, etc.)
+     * @param {number|null} score - Quality score (0-100)
+     */
+    severityStyles: (score) =>
+      getSeverityStylesFromScore(score, colorblindMode),
 
     /**
      * Current colorblind mode state (for components that need raw access)
