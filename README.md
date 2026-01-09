@@ -1,32 +1,50 @@
 # UE5 Question Generator
 
-A powerful, AI-driven tool for generating, translating, and managing quiz questions for Unreal Engine 5. Built with React, Tailwind CSS, and Google Gemini.
+A powerful, AI-driven tool for generating, translating, and managing quiz questions for Unreal Engine 5 training. Built with React, Vite, Tailwind CSS, and Google Gemini AI.
 
-## 🚀 Features
+[![Deploy Status](https://img.shields.io/badge/deploy-GitHub%20Pages-blue)](https://samdeiter.github.io/UE5QuestionGenerator/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### 🤖 AI-Powered Generation
+## 🚀 Live Demo
 
-- **Context-Aware**: Generates questions based on your specific source material (documentation, code snippets).
-- **Multi-Language**: Automatically translates questions into 10+ languages including Chinese, Japanese, Korean, and Spanish.
-- **Smart Context Optimization**: Automatically reduces token usage by summarizing repetitive content.
+**Production App**: [https://samdeiter.github.io/UE5QuestionGenerator/](https://samdeiter.github.io/UE5QuestionGenerator/)
 
-### 📊 Analytics & Metrics
+## ✨ Features
 
-- **Token Usage Tracking**: Real-time monitoring of input/output tokens and estimated costs.
-- **Quality Metrics**: Visual dashboard showing question distribution by difficulty, type, and discipline.
-- **Vertex AI Ready**: Export "Gold Standard" (>75% score) and "Rejected" data for fine-tuning custom models.
+### 🤖 AI-Powered Question Generation
 
-### 🛠️ Advanced Tools
+- **Context-Aware**: Generates questions based on your specific source material (documentation, code snippets)
+- **Multi-Language**: Automatically translates questions into 10+ languages including Chinese, Japanese, Korean, and Spanish
+- **Smart Context Optimization**: Automatically reduces token usage by summarizing repetitive content
+- **Quality Critique**: AI-powered scoring and suggested rewrites for low-quality questions
 
-- **Review Mode**: Efficiently review, edit, and approve generated questions.
-- **Database View**: Manage your entire question bank with filtering and bulk actions.
-- **Google Sheets Integration**: Seamlessly import/export questions to Google Sheets.
+### 📊 Analytics & Reviewer Tracking
+
+- **Token Usage Tracking**: Real-time monitoring of input/output tokens and estimated costs
+- **Quality Metrics**: Visual dashboard showing question distribution by difficulty, type, and discipline
+- **Reviewer Analytics**: Track reviewer activity, acceptance rates, and review durations
+- **Vertex AI Ready**: Export "Gold Standard" (>75% score) and "Rejected" data for fine-tuning custom models
+
+### 🛠️ Workflow Tools
+
+- **Create Mode**: Generate new questions with AI assistance
+- **Review Mode**: Efficiently review, critique, and approve generated questions
+- **Database View**: Manage your entire question bank with filtering and bulk actions
+- **SCORM Export**: Export question banks as SCORM 1.2 packages for LMS integration
+- **Google Sheets Integration**: Seamlessly import/export questions to Google Sheets
+
+### 👥 Multi-User Collaboration
+
+- **Concurrent Editing**: Real-time edit locks prevent conflicts when multiple reviewers work simultaneously
+- **Audit Trail**: Complete history of question changes and reviewer actions
+- **Role-Based Access**: Admin and Reviewer roles with appropriate permissions
+- **Invite System**: Secure invite-only registration for new users
 
 ### ♿ Accessibility
 
-- **Inclusive Design**: Full keyboard navigation support with visible focus indicators.
-- **Reduced Motion**: Respects system preferences for reduced motion.
-- **Screen Reader Support**: ARIA labels and semantic HTML for better compatibility.
+- **Inclusive Design**: Full keyboard navigation support with visible focus indicators
+- **Reduced Motion**: Respects system preferences for reduced motion
+- **Screen Reader Support**: ARIA labels and semantic HTML for better compatibility
 
 ## 🔒 Security Architecture
 
@@ -34,7 +52,7 @@ A powerful, AI-driven tool for generating, translating, and managing quiz questi
 
 **Production**: All Gemini API calls are routed through Firebase Cloud Functions to keep API keys secure on the server side.
 
-**Development**: LocalStorage keys (`ue5_gen_config.geminiApiKey`) are available for local development and testing only. These keys are never exposed in production builds.
+**Development**: LocalStorage keys are available for local development and testing only. These keys are never exposed in production builds.
 
 #### Cloud Functions
 
@@ -45,75 +63,15 @@ All AI operations use secure Firebase Cloud Function endpoints:
 - `generateTags` - Automatic tag generation
 - `generateTranslation` - Multi-language translation
 
-**Client-Side Security**:
+**Security Measures**:
 
 - ✅ NO direct Gemini API calls in production code
 - ✅ All API requests authenticated via Firebase Auth
 - ✅ Rate limiting enforced at Cloud Function level
 - ✅ Input validation and sanitization
-
-#### Development Setup
-
-1. Copy `.env.example` to `.env`
-2. Add your Firebase configuration to `.env`
-3. For local testing, optionally add `VITE_GEMINI_API_KEY` (dev-only)
-4. Never commit `.env` to version control
-
-#### Production Deployment
-
-1. Set Firebase Cloud Function environment variables:
-
-   ```bash
-   firebase functions:config:set gemini.api_key="YOUR_API_KEY"
-   ```
-
-2. Deploy Cloud Functions:
-
-   ```bash
-   npm run deploy:functions
-   ```
-
-3. Client-side code automatically uses Cloud Functions (no configuration needed)
-
-#### Portkey.ai Integration (Optional)
-
-For enhanced observability and Vertex AI access, you can optionally use Portkey.ai as your AI gateway:
-
-1. **Get Portkey Credentials**:
-   - Sign up at [portkey.ai](https://portkey.ai)
-   - Get your API key from the dashboard
-   - (Optional) Create a Virtual Key for Vertex AI authentication
-
-2. **Configure Environment Variables**:
-   Add to your `.env` file:
-
-   ```bash
-   VITE_PORTKEY_API_KEY=your_portkey_api_key
-   VITE_PORTKEY_VIRTUAL_KEY=your_portkey_virtual_key  # Optional
-   VITE_AI_SERVICE=portkey  # Set to "portkey" to use Portkey Gateway
-   ```
-
-3. **Service Selection**:
-   - `VITE_AI_SERVICE=direct` - Direct Gemini API (default)
-   - `VITE_AI_SERVICE=cloud` - Firebase Cloud Functions (recommended for production)
-   - `VITE_AI_SERVICE=portkey` - Portkey Gateway (for Vertex AI or enhanced observability)
-
-**Note**: Portkey integration is completely optional and does not replace existing authentication methods. All three service options work independently.
-
-### Content Security
-
-This application implements:
-
 - ✅ XSS prevention with DOMPurify sanitization
 - ✅ Content Security Policy (CSP) headers
-- ✅ Input validation on user-generated content
-- ✅ Firebase Authentication for user management
-- ✅ Role-based access control (Admin/User)
-- ✅ Secure invite-only registration system
-
-### Reporting Security Issues
-
-If you discover a security vulnerability, please email the repository owner instead of using the issue tracker.
+- ✅ Role-based access control (Admin/Reviewer)
 
 ## 📦 Installation
 
@@ -130,21 +88,74 @@ If you discover a security vulnerability, please email the repository owner inst
     npm install
     ```
 
-3. **Start the development server:**
+3. **Configure environment:**
+
+    ```bash
+    cp .env.example .env
+    # Edit .env with your Firebase configuration
+    ```
+
+4. **Start the development server:**
 
     ```bash
     npm run dev
     ```
 
+## 🚀 Deployment
+
+### GitHub Pages
+
+```bash
+npm run build
+npm run deploy
+```
+
+### Firebase Functions
+
+```bash
+cd functions
+npm install
+firebase deploy --only functions
+```
+
 ## ⚙️ Configuration
 
-1. **API Key**: Enter your Google Gemini API Key in the **Settings** modal.
-2. **Google Sheets**: (Optional) Configure the Google Apps Script URL for Sheets integration.
+1. **Firebase**: Configure your Firebase project settings in `.env`
+2. **Gemini API**: Set up Firebase Cloud Functions with your Gemini API key
+3. **Google Sheets**: (Optional) Configure the Google Apps Script URL for Sheets integration
+
+## 📁 Project Structure
+
+```
+├── src/
+│   ├── agents/          # Concurrent editing, session management
+│   ├── components/      # React components
+│   ├── hooks/           # Custom React hooks
+│   ├── services/        # Firebase, Gemini API integrations
+│   └── utils/           # Helper functions, constants
+├── functions/           # Firebase Cloud Functions
+├── config/              # Firebase rules and configuration
+├── docs/                # Documentation
+└── public/              # Static assets
+```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read `CONTRIBUTING.md` (if available) or submit a Pull Request.
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [React](https://react.dev/) and [Vite](https://vitejs.dev/)
+- AI powered by [Google Gemini](https://ai.google.dev/)
+- Backend powered by [Firebase](https://firebase.google.com/)
+- Icons from [Lucide](https://lucide.dev/)
