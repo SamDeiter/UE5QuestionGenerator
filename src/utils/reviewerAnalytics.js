@@ -15,12 +15,13 @@ import { logger } from "../utils/logger";
  */
 export const fetchReviewedQuestions = async () => {
   try {
-    const auditRef = collection(getDb(), "audit-log");
+    // Query the questions collection for reviewed questions (accepted or rejected)
+    const questionsRef = collection(getDb(), "questions");
 
-    // Query for questions that have been completed (accepted or rejected)
+    // Query for questions that have been reviewed (have status of accepted or rejected)
     const q = query(
-      auditRef,
-      where("reviewCompletedAt", "!=", null),
+      questionsRef,
+      where("status", "in", ["accepted", "rejected"]),
       orderBy("reviewCompletedAt", "desc")
     );
 
@@ -34,6 +35,9 @@ export const fetchReviewedQuestions = async () => {
       });
     });
 
+    logger.log(
+      `📊 [ReviewerAnalytics] Found ${questions.length} reviewed questions`
+    );
     return questions;
   } catch (error) {
     // Handle permission errors gracefully - user may not be admin
@@ -42,10 +46,38 @@ export const fetchReviewedQuestions = async () => {
       error.message?.includes("insufficient permissions")
     ) {
       logger.warn(
-        "User does not have permission to access audit-log. Admin access required."
+        "User does not have permission to access reviewer analytics. Admin access required."
       );
       return []; // Return empty array instead of throwing
     }
+
+    // Handle index errors - reviewCompletedAt index might not exist
+    if (error.message?.includes("index")) {
+      logger.warn(
+        "Firestore index required for reviewCompletedAt query. Falling back to simple query."
+      );
+      // Fallback: Query without ordering by reviewCompletedAt
+      try {
+        const questionsRef = collection(getDb(), "questions");
+        const fallbackQuery = query(
+          questionsRef,
+          where("status", "in", ["accepted", "rejected"])
+        );
+        const fallbackSnapshot = await getDocs(fallbackQuery);
+        const fallbackQuestions = [];
+        fallbackSnapshot.forEach((doc) => {
+          fallbackQuestions.push({ id: doc.id, ...doc.data() });
+        });
+        logger.log(
+          `📊 [ReviewerAnalytics] Fallback found ${fallbackQuestions.length} reviewed questions`
+        );
+        return fallbackQuestions;
+      } catch (fallbackError) {
+        logger.error("Fallback query also failed:", fallbackError);
+        return [];
+      }
+    }
+
     logger.error("Error fetching reviewed questions:", error);
     throw error;
   }
