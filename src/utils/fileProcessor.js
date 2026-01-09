@@ -8,6 +8,7 @@
 import { FIELD_DELIMITER, LANGUAGE_FLAGS, LANGUAGE_CODES } from "./constants";
 import { parseCSVLine } from "./stringHelpers";
 import { validateFile, validateCSVContent } from "./security";
+import { validateQuestion } from "./questionValidator";
 /**
  * Detects the language of a file based on its filename.
  * Checks for full language names (e.g., "Chinese_(Simplified)") and codes (e.g., "_CN_").
@@ -115,10 +116,24 @@ export const parseCSVQuestions = (content, fileName, defaultCreatorName) => {
         sourceExcerpt: cols[13] || "",
         creatorName: cols[14] || defaultCreatorName || "",
         reviewerName: cols[15] || "",
-        status: "accepted",
         language: cols[16] || fileLanguage || "English",
       };
     }
+
+    // Run Validation
+    const validation = validateQuestion(qObj);
+    qObj._validation = validation;
+
+    // Set Status based on Validation
+    // Critical failure (missing URL/excerpt) -> rejected
+    // Warning (bad answer match) -> accepted (but shows warning in UI)
+    // Valid -> accepted
+    if (validation.isCriticalFailure) {
+      qObj.status = "rejected";
+    } else {
+      qObj.status = "accepted";
+    }
+
     importedQuestions.push(qObj);
   });
 

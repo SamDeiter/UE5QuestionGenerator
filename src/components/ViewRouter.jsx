@@ -229,6 +229,7 @@ const ViewRouter = ({
           onStartTutorial={() => onStartTutorial("review")}
           onKickBack={handleKickBackToReview}
           userRole={userRole}
+          allQuestionsMap={allQuestionsMap}
         />
       );
     }

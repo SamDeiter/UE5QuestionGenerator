@@ -116,7 +116,9 @@ const AnalyticsView = ({
       if (range && range.days) {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - range.days);
-        questions = questions.filter((q) => new Date(q.created) >= cutoff);
+        questions = questions.filter(
+          (q) => new Date(q.created || q.timestamp || q.dateAdded) >= cutoff
+        );
         generations = generations.filter(
           (g) => new Date(g.timestamp) >= cutoff
         );

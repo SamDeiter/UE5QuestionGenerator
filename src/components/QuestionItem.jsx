@@ -52,13 +52,46 @@ const QuestionItem = ({
   onDelete,
   onUpdateQuestion,
   onKickBack,
-  availableLanguages,
+  availableVariants = [], // RENAMED from availableLanguages
   isProcessing,
   appMode,
   showMessage,
   isAdmin = false,
   userRole, // NEW
 }) => {
+  // Local state for toggling language on THIS card only
+  // Default to English variant if available, otherwise the passed-in q
+  const [displayQuestion, setDisplayQuestion] = useState(() => {
+    if (!availableVariants || availableVariants.length === 0) return q;
+    const englishVariant = availableVariants.find(
+      (v) => (v.language || "English") === "English"
+    );
+    return englishVariant || q;
+  });
+
+  // Keep displayQuestion in sync if q changes (e.g. after an update)
+  useEffect(() => {
+    // If the card is currently showing its 'own' language, update it when q updates
+    if (displayQuestion.id === q.id) {
+      setDisplayQuestion(q);
+    }
+  }, [q, displayQuestion.id]);
+
+  const handleLocalLanguageSwitch = useCallback(
+    (targetLang) => {
+      const variant = availableVariants.find(
+        (v) => (v.language || "English") === targetLang
+      );
+      if (variant) {
+        setDisplayQuestion(variant);
+      } else {
+        // Fallback or trigger translation
+        onTranslateSingle?.(q, targetLang);
+      }
+    },
+    [availableVariants, q, onTranslateSingle]
+  );
+
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(q.question);
   const [showImprovementModal, setShowImprovementModal] = useState(false);
@@ -235,7 +268,8 @@ const QuestionItem = ({
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <QuestionHeader
-              q={q}
+              q={displayQuestion}
+              originalQ={q} // Pass original for mode-based actions
               getDiffBadgeColor={getDiffBadgeColor}
               onKickBack={onKickBack}
               appMode={appMode}
@@ -298,14 +332,14 @@ const QuestionItem = ({
         )}
 
         <LanguageControls
-          q={q}
-          availableLanguages={availableLanguages}
+          q={displayQuestion}
+          availableVariants={availableVariants}
           isLocked={isLocked}
           lockedBy={lockedBy}
-          onSwitchLanguage={onSwitchLanguage}
+          onSwitchLanguage={handleLocalLanguageSwitch}
           onTranslateSingle={onTranslateSingle}
           isProcessing={isProcessing}
-          userRole={userRole} // NEW
+          userRole={userRole}
         />
       </div>
 
@@ -313,7 +347,7 @@ const QuestionItem = ({
 
       <div className="pl-6">
         <QuestionContent
-          q={q}
+          q={displayQuestion}
           isEditing={isEditing}
           editedText={editedText}
           setEditedText={setEditedText}
@@ -342,7 +376,7 @@ const QuestionItem = ({
           showMessage={showMessage}
         />
 
-        <ExplanationDisplay explanation={q.explanation} />
+        <ExplanationDisplay explanation={displayQuestion.explanation} />
 
         <QuestionMetadata q={q} />
 
@@ -453,6 +487,15 @@ const arePropsEqual = (prevProps, nextProps) => {
         prevProps.q?.id === nextProps.q?.id &&
         prevProps.q?.uniqueId === nextProps.q?.uniqueId
       );
+    }
+    if (key === "availableVariants") {
+      // Compare variants array length and first item ID for quick check
+      if (
+        prevProps.availableVariants?.length !==
+        nextProps.availableVariants?.length
+      )
+        return false;
+      return true; // Deep compare omitted for perf, length + key change usually sufficient
     }
     return prevProps[key] === nextProps[key];
   });

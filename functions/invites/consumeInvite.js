@@ -747,6 +747,26 @@ exports.consumeInvite = functions
 
       console.log(`Invite ${sanitizedCode} consumed by ${userEmail}`);
 
+      // AUDIT LOG: Log successful registration for analytics
+      try {
+        await db.collection("audit-log").add({
+          eventType: "user_registered",
+          userId: userId,
+          userEmail: userEmail,
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          details: {
+            inviteCode: sanitizedCode,
+            role: invite.role || "reviewer",
+          },
+          severity: "info",
+          sessionId: null, // Cloud functions don't have session IDs
+          userAgent: context.rawRequest?.headers?.["user-agent"] || "unknown",
+        });
+      } catch (logError) {
+        console.error("Failed to write audit log for registration:", logError);
+        // Don't fail the registration if logging fails
+      }
+
       return { success: true, role: invite.role || "reviewer" };
     } catch (error) {
       if (error instanceof functions.https.HttpsError) {

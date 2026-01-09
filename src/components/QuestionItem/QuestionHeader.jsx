@@ -30,6 +30,7 @@ const normalizeDifficulty = (difficulty) => {
 
 const QuestionHeader = ({
   q,
+  originalQ, // NEW: The base question record
   getDiffBadgeColor,
   onKickBack,
   appMode,
@@ -37,6 +38,7 @@ const QuestionHeader = ({
 }) => {
   const { actionColor } = useThemeColors();
   const displayDifficulty = normalizeDifficulty(q.difficulty);
+  const lang = q.language || "English";
 
   // Colorblind-safe AI Improvement button classes from centralized theme
   const aiImprovementClasses = actionColor("success");
@@ -44,7 +46,19 @@ const QuestionHeader = ({
   return (
     <div className="flex justify-between items-start">
       <div className="flex flex-col gap-1">
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-1.5 items-center flex-wrap">
+          {/* Language Badge - Highlight current view */}
+          <span
+            className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border flex items-center gap-1.5 ${
+              lang === "English"
+                ? "bg-slate-800 text-slate-300 border-slate-700"
+                : "bg-indigo-950 text-indigo-300 border-indigo-800 shadow-[0_0_10px_-2px_rgba(99,102,241,0.5)]"
+            }`}
+          >
+            <Icon name="globe" size={12} />
+            {lang}
+          </span>
+
           <span
             className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(
               displayDifficulty
@@ -136,7 +150,7 @@ const QuestionHeader = ({
         {/* DATABASE MODE: Show Kick Back to Review button */}
         {appMode === "database" && (
           <button
-            onClick={() => onKickBack(q)}
+            onClick={() => onKickBack(originalQ || q)}
             className="px-3 py-1.5 rounded-lg transition-all bg-indigo-900/30 text-indigo-300 hover:bg-indigo-800/50 hover:text-indigo-200 border border-indigo-700/50 flex items-center gap-2 text-xs font-medium"
             title="Send back to Review Console"
             aria-label="Kick back to review"
@@ -149,7 +163,7 @@ const QuestionHeader = ({
         {/* REVIEW MODE: Show Restore button for rejected questions */}
         {appMode === "review" && q.status === "rejected" && onKickBack && (
           <button
-            onClick={() => onKickBack(q)}
+            onClick={() => onKickBack(originalQ || q)}
             className="px-4 py-2 mr-4 rounded-lg transition-all bg-amber-900/40 text-amber-300 hover:bg-amber-800/60 hover:text-amber-200 border-2 border-amber-700/50 hover:border-amber-500 flex items-center gap-2 text-sm font-bold"
             title="Restore to Pending for re-review"
             aria-label="Restore to pending"

@@ -24,7 +24,7 @@ const getButtonTitle = (
 
 const LanguageControls = ({
   q,
-  availableLanguages,
+  availableVariants = [], // RENAMED from availableLanguages
   onSwitchLanguage,
   onTranslateSingle,
   isProcessing,
@@ -41,11 +41,6 @@ const LanguageControls = ({
     !q.invalidUrl &&
     userRole === "admin"; // Only admins can generate new translations
 
-  // Don't show translation controls if requirements aren't met - REMOVED to allow viewing current language
-  // if (!canTranslate) {
-  //     return null;
-  // }
-
   const allLanguages = Object.keys(LANGUAGE_FLAGS);
 
   return (
@@ -56,11 +51,11 @@ const LanguageControls = ({
           LANGUAGE_CODES[lang] || lang.substring(0, 2).toUpperCase();
 
         // Check if translation exists for THIS specific language
-        // English always exists (it's the original), other languages check availableLanguages
+        // Use the variants array passed from parent
         const exists =
           isCurrent ||
           lang === "English" ||
-          (availableLanguages && availableLanguages.has(lang));
+          availableVariants.some((v) => (v.language || "English") === lang);
 
         const isLoading = loadingLang === lang;
 
@@ -76,47 +71,21 @@ const LanguageControls = ({
             return;
           }
 
-          logger.log("🎯 [LanguageControls] Flag clicked:", {
-            lang,
-            isCurrent,
-            exists,
-            canTranslate,
-            questionStatus: q.status,
-            questionLanguage: q.language,
-            hasSourceUrl: !!q.sourceUrl,
-            invalidUrl: q.invalidUrl,
-            questionUniqueId: q.uniqueId,
-          });
-
-          if (isCurrent) {
-            logger.log(
-              "⏭️ [LanguageControls] Skipping - already current language"
-            );
-            return; // Do nothing if clicking current
-          }
+          if (isCurrent) return; // Do nothing if clicking current
 
           if (exists) {
-            logger.log(
-              "🔄 [LanguageControls] Switching to existing translation"
-            );
-            // Pass both language AND uniqueId so parent can find the translated variant
-            onSwitchLanguage(lang, q.uniqueId);
+            // Trigger local toggle in QuestionItem
+            onSwitchLanguage(lang);
           } else if (canTranslate) {
-            logger.log("🌐 [LanguageControls] Generating new translation");
             setLoadingLang(lang);
             onTranslateSingle(q, lang)
               .then(() => {
-                logger.log("✅ [LanguageControls] Translation complete");
                 setLoadingLang(null);
               })
               .catch((err) => {
                 logger.error("❌ [LanguageControls] Translation failed:", err);
                 setLoadingLang(null);
               });
-          } else {
-            logger.warn(
-              "⚠️ [LanguageControls] Cannot translate - requirements not met"
-            );
           }
         };
 

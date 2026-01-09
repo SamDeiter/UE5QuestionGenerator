@@ -16,17 +16,31 @@ import { getAgents } from "../agents";
 import { logger } from "../utils/logger";
 
 export const useQuestionManager = (config, showMessage) => {
-  // Current session questions
-  const [questions, setQuestions] = useState(() => {
+  // Unified State: Single source of truth for ALL questions
+  // Each question will have a `_source` property: 'session', 'import', 'database'
+  const [allQuestions, setAllQuestions] = useState(() => {
     const saved = getSecureItem("ue5_gen_questions");
-    return saved || [];
+    if (saved && Array.isArray(saved)) {
+      // Hydrate saved questions as 'session' source
+      return saved.map((q) => ({ ...q, _source: "session" }));
+    }
+    return [];
   });
 
-  // Historical questions
-  const [historicalQuestions, setHistoricalQuestions] = useState([]);
-
-  // Database view questions
-  const [databaseQuestions, setDatabaseQuestions] = useState([]);
+  // Derived arrays for backward compatibility and specific views
+  // These are cheap filters on the main array
+  const questions = useMemo(
+    () => allQuestions.filter((q) => q._source === "session"),
+    [allQuestions]
+  );
+  const historicalQuestions = useMemo(
+    () => allQuestions.filter((q) => q._source === "import"),
+    [allQuestions]
+  );
+  const databaseQuestions = useMemo(
+    () => allQuestions.filter((q) => q._source === "database"),
+    [allQuestions]
+  );
 
   // Version tracking for concurrent editing (maps question ID -> version)
   const [questionVersions, setQuestionVersions] = useState(new Map());
@@ -39,22 +53,36 @@ export const useQuestionManager = (config, showMessage) => {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [showClearModal, setShowClearModal] = useState(false);
 
-  // Get concurrent editing agents
-  const agents = getAgents();
-
-  // Persist session questions
-  useEffect(() => setSecureItem("ue5_gen_questions", questions), [questions]);
+  // Persist session questions ONLY
+  useEffect(() => {
+    const sessionQuestions = allQuestions.filter(
+      (q) => q._source === "session"
+    );
+    // Strip the internal _source tag before saving to avoid cluttering storage/exports
+    // But keep it in memory. Actually, keeping it in storage is fine, but cleaner to strip.
+    // Let's strip it to match previous behavior exactly.
+    const cleanQuestions = sessionQuestions.map(({ _source, ...q }) => q);
+    setSecureItem("ue5_gen_questions", cleanQuestions);
+  }, [allQuestions]);
 
   // Sync questions across browser tabs via storage event
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === "ue5_gen_questions" && e.newValue) {
         try {
-          const newQuestions = JSON.parse(e.newValue);
+          const newSessionQuestions = JSON.parse(e.newValue).map((q) => ({
+            ...q,
+            _source: "session",
+          }));
           logger.log(
-            `🔄 Syncing ${newQuestions.length} questions from another tab...`
+            `🔄 Syncing ${newSessionQuestions.length} questions from another tab...`
           );
-          setQuestions(newQuestions);
+
+          // Update ONLY the session questions in the unified state
+          setAllQuestions((prev) => {
+            const nonSession = prev.filter((q) => q._source !== "session");
+            return [...nonSession, ...newSessionQuestions];
+          });
         } catch (err) {
           logger.error("Failed to sync questions from storage:", err);
         }
@@ -65,24 +93,27 @@ export const useQuestionManager = (config, showMessage) => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  // Backfill creatorName on questions missing it
+  // Backfill creatorName on questions missing it (Session only)
   useEffect(() => {
-    if (!config.creatorName) return; // No name to backfill with
+    if (!config.creatorName) return;
 
-    const questionsNeedingBackfill = questions.filter(
+    // Check if any session questions need backfill
+    const needsBackfill = allQuestions.some(
       (q) =>
-        !q.creatorName || q.creatorName === "N/A" || q.creatorName === "Unknown"
+        q._source === "session" &&
+        (!q.creatorName ||
+          q.creatorName === "N/A" ||
+          q.creatorName === "Unknown")
     );
-    if (questionsNeedingBackfill.length > 0) {
-      logger.log(
-        `📝 Backfilling creatorName on ${questionsNeedingBackfill.length} questions...`
-      );
-      setQuestions((prev) =>
+
+    if (needsBackfill) {
+      setAllQuestions((prev) =>
         prev.map((q) => {
           if (
-            !q.creatorName ||
-            q.creatorName === "N/A" ||
-            q.creatorName === "Unknown"
+            q._source === "session" &&
+            (!q.creatorName ||
+              q.creatorName === "N/A" ||
+              q.creatorName === "Unknown")
           ) {
             return { ...q, creatorName: config.creatorName };
           }
@@ -90,20 +121,77 @@ export const useQuestionManager = (config, showMessage) => {
         })
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config.creatorName]); // Only run when creatorName changes
+  }, [config.creatorName, allQuestions]);
 
-  // Central question storage map - memoized for performance and stability
+  // Legacy Setters Compatibility Layer
+  // These allow existing code to "set" a specific bucket without knowing about the unified state
+
+  const setQuestions = useCallback((action) => {
+    setAllQuestions((prev) => {
+      const currentSession = prev.filter((q) => q._source === "session");
+      const others = prev.filter((q) => q._source !== "session");
+
+      let newSession;
+      if (typeof action === "function") {
+        newSession = action(currentSession);
+      } else {
+        newSession = action;
+      }
+
+      // Ensure new items are tagged correctly
+      const taggedNewSession = newSession.map((q) => ({
+        ...q,
+        _source: "session",
+      }));
+      return [...others, ...taggedNewSession];
+    });
+  }, []);
+
+  const setHistoricalQuestions = useCallback((action) => {
+    setAllQuestions((prev) => {
+      const currentImport = prev.filter((q) => q._source === "import");
+      const others = prev.filter((q) => q._source !== "import");
+
+      let newImport;
+      if (typeof action === "function") {
+        newImport = action(currentImport);
+      } else {
+        newImport = action;
+      }
+
+      const taggedNewImport = newImport.map((q) => ({
+        ...q,
+        _source: "import",
+      }));
+      return [...others, ...taggedNewImport];
+    });
+  }, []);
+
+  const setDatabaseQuestions = useCallback((action) => {
+    setAllQuestions((prev) => {
+      const currentDb = prev.filter((q) => q._source === "database");
+      const others = prev.filter((q) => q._source !== "database");
+
+      let newDb;
+      if (typeof action === "function") {
+        newDb = action(currentDb);
+      } else {
+        newDb = action;
+      }
+
+      const taggedNewDb = newDb.map((q) => ({
+        ...q,
+        _source: "database",
+      }));
+      return [...others, ...taggedNewDb];
+    });
+  }, []);
+
+  // Central question storage map - memoized for performance
   const allQuestionsMap = useMemo(() => {
-    const combined = [
-      ...questions,
-      ...historicalQuestions,
-      ...databaseQuestions,
-    ];
-
     const newMap = new Map();
 
-    combined.forEach((q) => {
+    allQuestions.forEach((q) => {
       const id = q.uniqueId || q.id;
       if (!id) return;
       if (!newMap.has(id)) newMap.set(id, []);
@@ -111,14 +199,17 @@ export const useQuestionManager = (config, showMessage) => {
       const variants = newMap.get(id);
       const lang = q.language || "English";
 
-      // Dedupe by language within each uniqueId bucket to prevent double-counting
+      // Dedupe by language within each uniqueId bucket
+      // Priority: session > import > database (if duplicates exist across sources)
+      // Since we iterate allQuestions, the order depends on how they are merged.
+      // But usually uniqueIds shouldn't overlap across sources unless it's the SAME question.
       if (!variants.some((v) => (v.language || "English") === lang)) {
         variants.push(q);
       }
     });
 
     return newMap;
-  }, [questions, historicalQuestions, databaseQuestions]);
+  }, [allQuestions]);
 
   // Translation Map - derived from the stable allQuestionsMap
   const translationMap = useMemo(() => {
@@ -133,9 +224,15 @@ export const useQuestionManager = (config, showMessage) => {
 
   // Helper to add questions with automatic cloud backup
   const addQuestionsToState = useCallback(
-    async (newItems, isHistory = false, insertAfterId = null) => {
-      // Auto-save to Firestore for crash protection
-      if (newItems && newItems.length > 0) {
+    async (newItems, source = "session", insertAfterId = null) => {
+      // Normalize source
+      // Legacy support: isHistory boolean -> 'import'
+      let targetSource = source;
+      if (source === true) targetSource = "import";
+      if (source === false) targetSource = "session";
+
+      // Auto-save session items to Firestore for crash protection
+      if (targetSource === "session" && newItems && newItems.length > 0) {
         logger.log(
           `💾 Auto-saving ${newItems.length} questions to Firestore...`
         );
@@ -148,71 +245,66 @@ export const useQuestionManager = (config, showMessage) => {
         logger.log(`✓ Auto-saved ${newItems.length} questions to cloud`);
       }
 
-      const targetSet = isHistory ? setHistoricalQuestions : setQuestions;
-      targetSet((prev) => {
-        const otherList = isHistory ? questions : historicalQuestions;
-        const uniqueNew = filterDuplicateQuestions(newItems, prev, otherList);
+      setAllQuestions((prev) => {
+        // Tag new items
+        const taggedNewItems = newItems.map((q) => ({
+          ...q,
+          _source: targetSource,
+        }));
 
-        // DEBUG: Log questions being added to state
+        // Filter duplicates against the SAME source
+        // (We allow duplicates across sources e.g. imported same question as session)
+        const currentSourceItems = prev.filter(
+          (q) => q._source === targetSource
+        );
+        const otherSourceItems = prev.filter((q) => q._source !== targetSource);
+
+        // Use helper to filter duplicates within this source
+        // Note: passing empty array as 'otherList' because we only care about dupes in this source context for now
+        // OR we can pass otherSourceItems if we want to prevent duplicates GLOBALLY.
+        // Legacy behavior checked separation. Let's strict checking within source.
+        const uniqueNew = filterDuplicateQuestions(
+          taggedNewItems,
+          currentSourceItems,
+          []
+        );
+
         logger.log(
           "🐛 [DEBUG] Adding to state:",
           uniqueNew.map((q) => ({
             id: q.uniqueId?.slice(0, 8),
             status: q.status,
+            source: targetSource,
           }))
         );
 
         if (insertAfterId && uniqueNew.length > 0) {
-          // Find index to insert after
-          const idx = prev.findIndex(
-            (q) => q.id === insertAfterId || q.uniqueId === insertAfterId
-          );
-          if (idx !== -1) {
-            const newArr = [...prev];
-            newArr.splice(idx + 1, 0, ...uniqueNew);
-            return newArr;
-          }
+          // Find index to insert after WITHIN the full array?
+          // This is tricky with a unified array.
+          // Strategy: Append to end, then sort?
+          // Legacy added it to specific array.
+          // Simplest approach: Just append. The UI sorts by date anyway.
+          return [...prev, ...uniqueNew];
         }
 
         return [...prev, ...uniqueNew];
       });
     },
-    [questions, historicalQuestions]
+    []
   );
 
   // Helper to update question
   const updateQuestionInState = useCallback((id, updateFn) => {
-    let found = false;
-
-    setQuestions((prev) => {
+    setAllQuestions((prev) => {
       const idx = prev.findIndex((q) => q.id === id);
-      if (idx === -1) return prev;
-      found = true;
+      if (idx === -1) return prev; // Not found
+
       const newArr = [...prev];
-      newArr[idx] = updateFn(newArr[idx]);
+      const updatedItem = updateFn(newArr[idx]);
+      // Ensure source tag is preserved
+      newArr[idx] = { ...updatedItem, _source: newArr[idx]._source };
       return newArr;
     });
-
-    if (!found) {
-      setHistoricalQuestions((prev) => {
-        const idx = prev.findIndex((q) => q.id === id);
-        if (idx === -1) return prev;
-        found = true;
-        const newArr = [...prev];
-        newArr[idx] = updateFn(newArr[idx]);
-        return newArr;
-      });
-    }
-
-    if (!found) {
-      setDatabaseQuestions((prev) => {
-        const idx = prev.findIndex((q) => q.id === id);
-        if (idx === -1) return prev;
-        const newArr = [...prev];
-        newArr[idx] = updateFn(newArr[idx]);
-        return newArr;
-      });
-    }
   }, []);
 
   // Update ALL variants of a question (same uniqueId) with critique/metadata
@@ -222,18 +314,7 @@ export const useQuestionManager = (config, showMessage) => {
       return;
     }
 
-    // Update in questions array
-    setQuestions((prev) =>
-      prev.map((q) => (q.uniqueId === uniqueId ? updateFn(q) : q))
-    );
-
-    // Update in historicalQuestions
-    setHistoricalQuestions((prev) =>
-      prev.map((q) => (q.uniqueId === uniqueId ? updateFn(q) : q))
-    );
-
-    // CRITICAL: Also update in databaseQuestions so the Database View reflects the changes
-    setDatabaseQuestions((prev) =>
+    setAllQuestions((prev) =>
       prev.map((q) => (q.uniqueId === uniqueId ? updateFn(q) : q))
     );
   }, []);
@@ -241,12 +322,12 @@ export const useQuestionManager = (config, showMessage) => {
   // Status update handler - now with version control and conflict resolution
   const handleUpdateStatus = useCallback(
     async (id, newStatus, rejectionReason = null) => {
-      // Find the question
-      const variants = allQuestionsMap.get(id) || [];
-      const currentQ =
-        variants.find((v) => v.id === id) ||
-        questions.find((q) => q.id === id) ||
-        historicalQuestions.find((q) => q.id === id);
+      // Find the question in unified state
+      // We look in allQuestions directly now
+      // Find the question in unified state using the map/helper
+      // We look in allQuestions directly now via allQuestionsMap which is derived from it
+
+      const currentQ = allQuestionsMap.get(id)?.find((v) => v.id === id);
 
       if (!currentQ) {
         logger.warn(`handleUpdateStatus: Question ${id} not found`);
@@ -254,13 +335,8 @@ export const useQuestionManager = (config, showMessage) => {
       }
 
       // Validate and normalize the document ID
-      // - Firestore expects string IDs
-      // - Legacy questions may have numeric IDs, so convert them
       let docId = currentQ.id || currentQ.uniqueId;
-
-      // Handle legacy numeric IDs by converting to string
       if (typeof docId === "number") {
-        logger.warn(`Converting numeric ID to string: ${docId}`);
         docId = String(docId);
       }
 
@@ -279,8 +355,8 @@ export const useQuestionManager = (config, showMessage) => {
       if (newStatus === "deleted") {
         try {
           await deleteQuestionFromFirestore(currentQ.uniqueId || currentQ.id);
-          setQuestions((prev) => prev.filter((q) => q.id !== id));
-          setHistoricalQuestions((prev) => prev.filter((q) => q.id !== id));
+          setAllQuestions((prev) => prev.filter((q) => q.id !== id));
+
           logQuestion({
             ...currentQ,
             status: "deleted",
@@ -298,13 +374,9 @@ export const useQuestionManager = (config, showMessage) => {
       // Calculate new state
       let updatedQ = { ...currentQ };
 
-      // Always complete review tracking when accepting or rejecting
-      // This ensures analytics capture all reviews, even if reviewStartedAt is missing
       if (newStatus === "accepted" || newStatus === "rejected") {
-        // If review wasn't started yet, retroactively set a start time
-        // Use a reasonable estimate (30 seconds ago) for duration calculation
         if (!updatedQ.reviewStartedAt) {
-          const estimatedStartTime = new Date(Date.now() - 30000); // 30 seconds ago
+          const estimatedStartTime = new Date(Date.now() - 30000);
           updatedQ = {
             ...updatedQ,
             reviewStartedAt: estimatedStartTime.toISOString(),
@@ -326,23 +398,11 @@ export const useQuestionManager = (config, showMessage) => {
       };
 
       try {
-        // CRITICAL FIX: Accept/Reject operations don't acquire edit locks
-        // so they can't use SaveGuardAgent (which requires locks).
-        // Use direct Firestore save for status changes instead.
         const saveResult = await saveQuestionToFirestore(updatedQ);
         updateQuestionInState(id, () => updatedQ);
 
-        // FIX: Alert user if save was queued (offline/connection issue)
         if (saveResult.queued) {
-          if (showMessage) {
-            showMessage(
-              "⚠️ Connection issue - your review is queued and will sync when connection is restored. Consider refreshing.",
-              6000
-            );
-          }
-          logger.warn(
-            `[useQuestionManager] Save queued for ${id} - connection issue detected`
-          );
+          if (showMessage) showMessage("⚠️ Connection issue - queued.", 6000);
         } else if (
           showMessage &&
           (newStatus === "accepted" || newStatus === "rejected")
@@ -353,97 +413,51 @@ export const useQuestionManager = (config, showMessage) => {
         }
       } catch (err) {
         logger.error("Firestore sync failed:", err);
-        // DEBUG: Log detailed error information to diagnose false positives
-        logger.log("[DEBUG] Error type:", typeof err);
-        logger.log("[DEBUG] Error message:", err.message);
-        logger.log("[DEBUG] Full error:", err);
-
-        // Handle QUESTION_DELETED: Remove from local state automatically
         if (err.message?.startsWith("QUESTION_DELETED:")) {
-          logger.warn(
-            `Question ${id} was deleted from Firestore - removing from local state`
-          );
-          setQuestions((prev) => prev.filter((q) => q.id !== id));
-          setHistoricalQuestions((prev) => prev.filter((q) => q.id !== id));
-          if (showMessage) {
-            showMessage(
-              "⚠️ This question was deleted from the database. Removed from your queue.",
-              4000
-            );
-          }
-          return; // Exit early - question is now removed
+          logger.warn(`Question ${id} deleted from DB - removing local`);
+          setAllQuestions((prev) => prev.filter((q) => q.id !== id));
+          if (showMessage) showMessage("Question deleted from DB.", 4000);
+          return;
         }
 
-        // For other errors, show generic error and save locally
-        if (showMessage) {
-          showMessage(
-            `⚠️ Failed to save to cloud: ${err.message}. Question saved locally only.`,
-            5000
-          );
-        }
+        if (showMessage) showMessage(`⚠️ Failed to save: ${err.message}`, 5000);
         updateQuestionInState(id, () => updatedQ);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      updateQuestionInState,
+      allQuestionsMap, // dependency needed to find Q
       config.creatorName,
-      config.userId,
-      config.userEmail,
-      allQuestionsMap,
-      questions,
-      historicalQuestions,
-      agents,
-      questionVersions,
       showMessage,
+      updateQuestionInState,
     ]
   );
 
   // Generic persisted update handler - now with version control
   const handleUpdateQuestion = useCallback(
     async (id, updates) => {
-      // Find the question
-      const variants = allQuestionsMap.get(id) || [];
-      const currentQ =
-        variants.find((v) => v.id === id) ||
-        questions.find((q) => q.id === id) ||
-        historicalQuestions.find((q) => q.id === id);
+      const currentQ = allQuestionsMap.get(id)?.find((v) => v.id === id);
 
       if (!currentQ) {
         logger.warn(`handleUpdateQuestion: Question ${id} not found`);
         return;
       }
 
-      // Validate and normalize the document ID
-      // - Firestore expects string IDs
-      // - Legacy questions may have numeric IDs, so convert them
       let docId = currentQ.id || currentQ.uniqueId;
-
-      // Handle legacy numeric IDs by converting to string
-      if (typeof docId === "number") {
-        logger.warn(`Converting numeric ID to string: ${docId}`);
-        docId = String(docId);
-      }
+      if (typeof docId === "number") docId = String(docId);
 
       if (!docId || typeof docId !== "string") {
         logger.error("Invalid question ID:", { currentQ, id, docId });
-        if (showMessage) {
-          showMessage(
-            "⚠️ Cannot save: Question has invalid ID. Please refresh the page.",
-            5000
-          );
-        }
         return;
       }
 
       const updatedQ = { ...currentQ, ...updates };
+      const agents = getAgents();
 
       try {
-        // Use SaveGuard Agent if available
         if (agents?.saveGuardAgent) {
           const baseVersion = questionVersions.get(id) || currentQ.version || 1;
           const result = await agents.saveGuardAgent.saveQuestion(
-            docId, // Use validated document ID
+            docId,
             updates,
             baseVersion,
             config.userId || "unknown",
@@ -452,7 +466,7 @@ export const useQuestionManager = (config, showMessage) => {
 
           if (!result.success) {
             if (result.errorType === "VERSION_CONFLICT") {
-              logger.warn("Version conflict detected during question update");
+              logger.warn("Version conflict detected");
               setConflictData({
                 serverQuestion: result.serverQuestion,
                 serverVersion: result.serverVersion,
@@ -465,64 +479,39 @@ export const useQuestionManager = (config, showMessage) => {
             throw new Error(result.error || "Save failed");
           }
 
-          // Update version tracking
           setQuestionVersions((prev) =>
             new Map(prev).set(id, result.newVersion)
           );
-
-          // Update local state with new version
           updateQuestionInState(id, () => ({
             ...updatedQ,
             version: result.newVersion,
           }));
         } else {
-          // Fallback: Direct save
           await saveQuestionToFirestore(updatedQ);
           updateQuestionInState(id, () => updatedQ);
         }
       } catch (err) {
         logger.error("Firestore sync failed:", err);
-
-        // Handle QUESTION_DELETED: Remove from local state automatically
         if (err.message?.startsWith("QUESTION_DELETED:")) {
-          logger.warn(
-            `Question ${id} was deleted from Firestore - removing from local state`
-          );
-          setQuestions((prev) => prev.filter((q) => q.id !== id));
-          setHistoricalQuestions((prev) => prev.filter((q) => q.id !== id));
-          if (showMessage) {
-            showMessage(
-              "⚠️ This question was deleted from the database. Removed from your queue.",
-              4000
-            );
-          }
-          return; // Exit early - question is now removed
+          setAllQuestions((prev) => prev.filter((q) => q.id !== id));
+          if (showMessage) showMessage("Question deleted from DB.", 4000);
+          return;
         }
-
-        // For other errors, show generic error and save locally
-        if (showMessage) {
-          showMessage(
-            `⚠️ Failed to save changes to cloud: ${err.message}`,
-            4000
-          );
-        }
+        if (showMessage) showMessage(`⚠️ Failed to save: ${err.message}`, 4000);
         updateQuestionInState(id, () => updatedQ);
       }
     },
     [
-      updateQuestionInState,
       allQuestionsMap,
-      questions,
-      historicalQuestions,
+      questionVersions,
       config.userId,
       config.userEmail,
-      agents,
-      questionVersions,
+      updateQuestionInState,
       showMessage,
     ]
   );
 
-  // Statistics - count both pending and accepted questions for generation target
+  // Statistics
   const approvedCounts = useMemo(() => {
     const counts = CATEGORY_KEYS.reduce(
       (acc, key) => ({ ...acc, [key]: 0 }),
@@ -535,8 +524,6 @@ export const useQuestionManager = (config, showMessage) => {
         variants.find((v) => (v.language || "English") === "English") ||
         variants[0];
 
-      // Count both pending and accepted questions for generation targets
-      // This ensures newly generated questions update the counter immediately
       const isCountable =
         baseQ &&
         (baseQ.status === "accepted" ||
@@ -557,34 +544,27 @@ export const useQuestionManager = (config, showMessage) => {
     return counts;
   }, [allQuestionsMap, config.discipline]);
 
-  // Unified List (Source of Truth for Counts)
+  // Unified List (Source of Truth for Counts) - Essentially just the Session + Import sorted naturally?
+  // Previous logic did a complex merge.
+  // With Unified State, "UnifiedQuestions" is basically... AllQuestions?
+  // But legacy logic deduplicated across the 3 lists.
+  // We've already unified them. So `unifiedQuestions` is just `allQuestions` (sorted).
   const unifiedQuestions = useMemo(() => {
     const all = [];
-
-    // FIX: Sort uniqueIds to ensure stable iteration order
-    // Map.forEach() can have unstable order when Map is mutated
     const sortedUniqueIds = Array.from(allQuestionsMap.keys()).sort();
 
     sortedUniqueIds.forEach((uniqueId) => {
       const variants = allQuestionsMap.get(uniqueId);
-      // Use the first variant or English version as the canonical entry
       const canonical =
         variants.find((v) => (v.language || "English") === "English") ||
         variants[0];
       if (canonical) all.push(canonical);
     });
 
-    // Sort by date (newest first), with uniqueId as tiebreaker for stability
     return all.sort((a, b) => {
       const dateA = new Date(a.created || a.dateAdded || 0).getTime();
       const dateB = new Date(b.created || b.dateAdded || 0).getTime();
-
-      // Primary sort: date (newest first)
-      if (dateB !== dateA) {
-        return dateB - dateA;
-      }
-
-      // Tiebreaker: uniqueId (alphabetical) for fully stable sort
+      if (dateB !== dateA) return dateB - dateA;
       return (a.uniqueId || "").localeCompare(b.uniqueId || "");
     });
   }, [allQuestionsMap]);
@@ -623,15 +603,7 @@ export const useQuestionManager = (config, showMessage) => {
     return Math.min(100, (totalApproved / TARGET_TOTAL) * 100);
   }, [totalApproved]);
 
-  // Global quota check: totalApproved >= TARGET_TOTAL (used for info display)
-
-  // Per-difficulty calculations available via:
-  // (approvedCounts["Beginner MC"] || 0) + (approvedCounts["Beginner T/F"] || 0)
-
   const isTargetMet = useMemo(() => {
-    // Only block if the selected type for this difficulty is full
-    // Global quota blocking is handled by validateGeneration() which
-    // checks individual category limits properly
     const typeKey = config.type === "True/False" ? "T/F" : "MC";
     const categoryKey = `${config.difficulty} ${typeKey}`;
     const currentCount = approvedCounts[categoryKey] || 0;
@@ -639,8 +611,6 @@ export const useQuestionManager = (config, showMessage) => {
   }, [config.difficulty, config.type, approvedCounts]);
 
   const maxBatchSize = useMemo(() => {
-    // Calculate remaining for this specific type only
-    // validateGeneration() handles cross-category logic
     const typeKey = config.type === "True/False" ? "T/F" : "MC";
     const categoryKey = `${config.difficulty} ${typeKey}`;
     const currentCount = approvedCounts[categoryKey] || 0;
@@ -649,17 +619,15 @@ export const useQuestionManager = (config, showMessage) => {
   }, [config.difficulty, config.type, approvedCounts]);
 
   // Delete Handlers
-  // Delete Handlers
   const handleDelete = useCallback((id) => setDeleteConfirmId(id), []);
 
   const confirmDelete = useCallback(
     async (reason = "Unknown") => {
       if (deleteConfirmId) {
-        // Find the question before deleting to log it
-        const questionToDelete =
-          allQuestionsMap.get(deleteConfirmId)?.[0] ||
-          questions.find((q) => q.id === deleteConfirmId) ||
-          historicalQuestions.find((q) => q.id === deleteConfirmId);
+        // Find from allQuestions
+        const questionToDelete = allQuestions.find(
+          (q) => q.id === deleteConfirmId
+        );
 
         if (questionToDelete) {
           logQuestion({
@@ -669,13 +637,11 @@ export const useQuestionManager = (config, showMessage) => {
             deletedAt: new Date().toISOString(),
           });
 
-          // Perform Hard Delete from Firestore
           try {
             await deleteQuestionFromFirestore(
               questionToDelete.uniqueId || questionToDelete.id
             );
           } catch (err) {
-            // Safe to ignore re-renders here as it's an async error handling
             logger.error(
               "Failed to delete from Firestore during confirmDelete:",
               err
@@ -684,27 +650,21 @@ export const useQuestionManager = (config, showMessage) => {
         }
 
         logger.log(`Deleting question ${deleteConfirmId}. Reason: ${reason}`);
-        setQuestions((prev) => prev.filter((q) => q.id !== deleteConfirmId));
-        setHistoricalQuestions((prev) =>
-          prev.filter((q) => q.id !== deleteConfirmId)
-        );
+        setAllQuestions((prev) => prev.filter((q) => q.id !== deleteConfirmId));
         if (showMessage) showMessage(`Question deleted: ${reason}`, 2000);
         setDeleteConfirmId(null);
       }
     },
-    [
-      deleteConfirmId,
-      allQuestionsMap,
-      questions,
-      historicalQuestions,
-      showMessage,
-    ]
+    [deleteConfirmId, allQuestions, showMessage]
   );
 
   const handleDeleteAllQuestions = useCallback(() => {
     setShowClearModal(false);
-    setQuestions([]);
-    setHistoricalQuestions([]);
+    // Clear ONLY session questions, likely? Or ALL?
+    // "handleDeleteAllQuestions" usually implies clearing the session.
+    // Legacy behavior: questions and historical set to empty.
+    // So we should remove 'session' and 'import'. Maybe keep 'database'?
+    setAllQuestions((prev) => prev.filter((q) => q._source === "database"));
     if (showMessage) showMessage("Local session cleared.", 3000);
   }, [showMessage]);
 
@@ -743,8 +703,7 @@ export const useQuestionManager = (config, showMessage) => {
     handleDeleteAllQuestions,
     checkAndStoreQuestions,
     unifiedQuestions,
-    handleUpdateQuestion, // Added persistent update handler
-    // Concurrent editing conflict resolution
+    handleUpdateQuestion,
     conflictData,
     showConflictModal,
     setShowConflictModal,

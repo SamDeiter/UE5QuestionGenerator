@@ -20,12 +20,38 @@ const ValidationWarnings = ({ q }) => {
 
   const hasTagWarning = !q.tags || q.tags.length < 3;
 
-  if (!hasAnswerWarning && !hasUrlWarning && !hasTagWarning) {
+  const criticalWarnings =
+    q._validation && !q._validation.isValid
+      ? q._validation.warnings.filter((w) => w.startsWith("Critical"))
+      : [];
+
+  const hasCriticalWarnings = criticalWarnings.length > 0;
+
+  if (
+    !hasAnswerWarning &&
+    !hasUrlWarning &&
+    !hasTagWarning &&
+    !hasCriticalWarnings
+  ) {
     return null;
   }
 
   return (
     <div className="pl-6 mb-3 flex flex-col gap-2">
+      {/* Critical Validation Errors */}
+      {hasCriticalWarnings && (
+        <div className="flex flex-col gap-1 p-2 bg-red-950/60 border border-red-600/60 rounded text-red-200 text-xs animate-in fade-in slide-in-from-top-1">
+          <div className="flex items-center gap-2 font-bold text-red-400">
+            <Icon name="x-circle" size={14} />
+            <span>Critical Validation Failed:</span>
+          </div>
+          <ul className="list-disc list-inside pl-1 opacity-90">
+            {criticalWarnings.map((w, i) => (
+              <li key={i}>{w.replace("Critical: ", "")}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       {/* Answer Mismatch Warning */}
       {hasAnswerWarning && (
         <div className="flex items-center gap-2 p-2 bg-yellow-950/40 border border-yellow-700/40 rounded text-yellow-200 text-xs animate-in fade-in slide-in-from-top-1">

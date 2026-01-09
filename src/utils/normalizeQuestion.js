@@ -141,6 +141,7 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
     creatorName: getValue("creatorName", q.creatorName),
     timestamp,
     dateAdded: timestamp, // Alias for backward compatibility
+    created: timestamp, // Alias for analytics filtering
 
     // Source/Documentation
     sourceUrl: q.sourceUrl || "",

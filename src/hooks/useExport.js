@@ -11,6 +11,7 @@ import {
 import { downloadFile } from "../utils/questionHelpers";
 import { formatDate } from "../utils/dateHelpers";
 import { logger } from "../utils/logger";
+import { validateQuestion } from "../utils/questionValidator";
 
 export const useExport = (
   config,
@@ -213,11 +214,22 @@ export const useExport = (
         sourceExcerpt: q.sourceExcerpt || "",
         creatorName: q.creator || q.creatorName || "",
         reviewerName: q.reviewer || q.reviewerName || "",
-        status: "accepted",
+        reviewerName: q.reviewer || q.reviewerName || "",
       }));
 
-      setDatabaseQuestions(loadedQuestions);
-      if (setHistoricalQuestions) setHistoricalQuestions(loadedQuestions);
+      // Validate loaded questions and set status
+      const questionsWithValidation = loadedQuestions.map((q) => {
+        const validation = validateQuestion(q);
+        return {
+          ...q,
+          _validation: validation,
+          status: validation.isCriticalFailure ? "rejected" : "accepted",
+        };
+      });
+
+      setDatabaseQuestions(questionsWithValidation);
+      if (setHistoricalQuestions)
+        setHistoricalQuestions(questionsWithValidation);
 
       // Only switch to database view if NOT in review mode
       // Actually, user might want to see it in DB view first.

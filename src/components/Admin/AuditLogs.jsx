@@ -81,6 +81,33 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         logger.warn("Could not fetch inviteAttempts:", err.message);
       }
 
+      // Fetch generic audit-log (e.g. user registrations, excessive usage)
+      try {
+        const auditLogQuery = query(
+          collection(db, "audit-log"),
+          orderBy("timestamp", "desc"),
+          limit(LOGS_PER_COLLECTION)
+        );
+        const auditLogSnapshot = await getDocs(auditLogQuery);
+        auditLogSnapshot.forEach((doc) => {
+          const data = doc.data();
+          combinedLogs.push({
+            id: doc.id,
+            type: "system", // generic system event
+            action: data.eventType || "unknown",
+            userId: data.userId,
+            timestamp: data.timestamp?.toDate?.() || new Date(),
+            details: data.details
+              ? typeof data.details === "string"
+                ? data.details
+                : JSON.stringify(data.details)
+              : "No details",
+          });
+        });
+      } catch (err) {
+        logger.warn("Could not fetch audit-log:", err.message);
+      }
+
       // Sort by timestamp (newest first)
       combinedLogs.sort((a, b) => b.timestamp - a.timestamp);
 
@@ -99,6 +126,8 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         return <Icon name="zap" size={14} className="text-yellow-400" />;
       case "invite":
         return <Icon name="mail" size={14} className="text-blue-400" />;
+      case "system":
+        return <Icon name="shield" size={14} className="text-green-400" />;
       default:
         return <Icon name="activity" size={14} className="text-slate-400" />;
     }

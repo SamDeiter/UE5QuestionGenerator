@@ -37,7 +37,11 @@ const QuestionList = ({
             onSwitchLanguage={onSwitchLanguage}
             onDelete={onDelete}
             onUpdateQuestion={onUpdateQuestion}
-            availableLanguages={translationMap.get(q.uniqueId)}
+            availableVariants={
+              translationMap.get(q.uniqueId)
+                ? Array.from(allQuestionsMap.get(q.uniqueId) || [])
+                : []
+            }
             isProcessing={isProcessing}
             appMode={appMode}
             showMessage={showMessage}

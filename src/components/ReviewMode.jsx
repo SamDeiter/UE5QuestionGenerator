@@ -22,6 +22,7 @@ const ReviewMode = ({
   onStartTutorial,
   onKickBack, // For restoring rejected questions
   userRole, // NEW
+  allQuestionsMap,
 }) => {
   // Auto-start tutorial if not completed (and compliance modals are done)
   useEffect(() => {
@@ -141,10 +142,14 @@ const ReviewMode = ({
           onCritique={onCritique}
           onApplyRewrite={onApplyRewrite}
           onTranslateSingle={onTranslateSingle}
-          onSwitchLanguage={handleLanguageSwitchWithNavigation}
+          onSwitchLanguage={onSwitchLanguage}
           onDelete={onDelete}
           onUpdateQuestion={onUpdateQuestion}
-          availableLanguages={translationMap.get(currentQuestion.uniqueId)}
+          availableVariants={
+            translationMap.get(currentQuestion.uniqueId)
+              ? Array.from(allQuestionsMap.get(currentQuestion.uniqueId) || [])
+              : []
+          }
           isProcessing={isProcessing}
           appMode="review"
           showMessage={showMessage}

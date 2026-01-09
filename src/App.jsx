@@ -298,7 +298,8 @@ const App = () => {
 
   // 7. Modal State (extracted to useModalState hook)
   const {
-    showExportMenu: setShowExportMenu,
+    showExportMenu,
+    setShowExportMenu,
     showBulkExportModal,
     setShowBulkExportModal,
     showAnalytics,

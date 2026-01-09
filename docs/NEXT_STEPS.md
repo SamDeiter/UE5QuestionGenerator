@@ -35,12 +35,24 @@
 
 ## 🎯 Current Backlog
 
+### Refactoring (Jan 2026)
+
+- [x] **Simplify Question State** - Refactored `useQuestionManager.js` to use a single `allQuestions` source of truth, reducing state complexity by ~50%.
+
+### Analytics & Monitoring (Jan 2026)
+
+- [x] **Verify New User Analytics** - Implemented server-side logging for `user_registered` events and updated Admin Panel to display them. Fixed deployment issues in Cloud Functions.
+- [x] **Analytics Time Filter Debug** - Fixed time ranges (24h, 7d, 15d, 30d, 90d) and unified `created` field across questions and analytics views.
+
+---
+
+## 🎯 Current Backlog
+
 | Feature | Priority | Effort | Notes |
 |---------|----------|--------|-------|
-| **Status Triage** | High | Low | Review 121 "Other" questions |
-| **Simplify Question State** | Medium | Medium | 3 arrays → 1 source of truth |
-| **Additional Unit Tests** | Low | Medium | Expand agent test coverage |
 | **Import Audit** | Medium | Low | Investigate "Success"/"Error" statuses from imports |
+| **Additional Unit Tests** | Low | Medium | Expand agent test coverage |
+| **Status Triage** | Low | Low | **DEFERRED (Risk)**: Review 121 "Other" questions later |
 
 ---
 
@@ -54,18 +66,19 @@
 | **SCORM Export** | ✅ Production-ready |
 | **Multi-language Support** | ✅ 10+ languages |
 | **Code Quality** | ✅ 0 lint errors |
+| **State Management** | ✅ Unified Source of Truth |
 
 ---
 
 ## 🔧 Tech Debt
 
-### Simplify Question State Management
+### (Completed) Simplify Question State Management
 
 **File:** `src/hooks/useQuestionManager.js`
 
-- Current: 3 arrays (`questions`, `historicalQuestions`, `databaseQuestions`) + Map + variants
-- Proposed: Single Firestore source of truth + simple counts object
-- Complexity reduction: ~50%
+- ✅ **Status:** Completed Jan 2026
+- **Changes:** Consolidated 3 arrays (`questions`, `historicalQuestions`, `databaseQuestions`) into single `allQuestions` array with `_source` tagging.
+- **Outcome:** Simplified data flow, unified persistence logic, backward compatible API.
 
 ---
 

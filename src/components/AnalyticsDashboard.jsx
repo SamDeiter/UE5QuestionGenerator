@@ -50,7 +50,7 @@ const MetricCard = ({ title, value, icon, color }) => {
 };
 
 const AnalyticsDashboard = ({ isOpen, onClose }) => {
-  const [timeRange, setTimeRange] = useState("7d"); // 24h, 7d, 14d, 30d, all
+  const [timeRange, setTimeRange] = useState("7d"); // 24h, 7d, 15d, 30d, 90d, all
 
   // Re-fetch analytics data whenever modal opens (removes useMemo dependency issue)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -72,11 +72,14 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
       case "7d":
         cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;
-      case "14d":
-        cutoffDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+      case "15d":
+        cutoffDate = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
         break;
       case "30d":
         cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case "90d":
+        cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
         break;
       default:
         return allAnalyticsData;
@@ -87,7 +90,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
         (g) => new Date(g.timestamp) >= cutoffDate
       ),
       questions: allAnalyticsData.questions.filter(
-        (q) => new Date(q.created) >= cutoffDate
+        (q) => new Date(q.created || q.timestamp || q.dateAdded) >= cutoffDate
       ),
       summary: allAnalyticsData.summary, // Keep overall summary
     };
@@ -122,8 +125,9 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
             >
               <option value="24h">Last 24 Hours</option>
               <option value="7d">Last 7 Days</option>
-              <option value="14d">Last 14 Days</option>
+              <option value="15d">Last 15 Days</option>
               <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
               <option value="all">All Time</option>
             </select>
 
