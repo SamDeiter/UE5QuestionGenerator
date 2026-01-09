@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { useQuestionDerivedData } from "../useQuestionDerivedData";
 vi.mock("../../../utils/constants", () => ({
   CATEGORY_KEYS: [
@@ -30,7 +30,6 @@ vi.mock("../../../utils/constants", () => ({
 // No need to import real constants if we mocked them fully above, but if we did, we'd use vi.mock logic
 // But since we are mocking the module, the import below would get the mock.
 import {
-  CATEGORY_KEYS,
   TARGET_PER_CATEGORY,
   QUESTION_SOURCES,
   QUESTION_STATUS,

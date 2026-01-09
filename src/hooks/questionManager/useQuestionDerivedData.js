@@ -93,7 +93,7 @@ export const useQuestionDerivedData = (allQuestions, config) => {
       ) {
         const typeAbbrev = q.type === "True/False" ? "T/F" : "MC";
         const key = `${q.difficulty} ${typeAbbrev}`;
-        if (counts.hasOwnProperty(key)) {
+        if (Object.hasOwn(counts, key)) {
           counts[key]++;
         }
       }

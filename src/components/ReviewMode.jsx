@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import Icon from "./Icon";
 import QuestionItem from "./QuestionItem";
-import { logger } from "../utils/logger";
 
 const ReviewMode = ({
   questions,

@@ -2,7 +2,6 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionState } from "../useQuestionState";
 import { getSecureItem, setSecureItem } from "../../../utils/secureStorage";
-import { logger } from "../../../utils/logger";
 import { STORAGE_KEYS, QUESTION_SOURCES } from "../../../utils/constants";
 
 // Mock dependencies

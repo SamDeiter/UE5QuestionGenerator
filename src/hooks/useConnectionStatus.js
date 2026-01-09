@@ -20,25 +20,20 @@ export const useConnectionStatus = () => {
       setQueueDetails(getQueueDetails());
     });
 
-    // Also listen for browser online/offline events directly
-    const handleOnline = () => {
-      const s = getConnectionStatus();
-      setStatus(s);
-      setQueueDetails(getQueueDetails());
-    };
-    const handleOffline = () => {
+    // Handle connection state changes from browser events
+    const handleConnectionChange = () => {
       const s = getConnectionStatus();
       setStatus(s);
       setQueueDetails(getQueueDetails());
     };
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleConnectionChange);
+    window.addEventListener("offline", handleConnectionChange);
 
     return () => {
       unsubscribe();
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleConnectionChange);
+      window.removeEventListener("offline", handleConnectionChange);
     };
   }, []);
 

@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionSync } from "../useQuestionSync";
 import { saveQuestionToFirestore } from "../../../services/firebase";
 import { STORAGE_KEYS, QUESTION_SOURCES } from "../../../utils/constants";
-import { logger } from "../../../utils/logger";
 
 vi.mock("../../../services/firebase", () => ({
   saveQuestionToFirestore: vi.fn().mockResolvedValue(true),

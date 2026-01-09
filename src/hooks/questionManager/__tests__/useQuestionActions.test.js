@@ -1,14 +1,12 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionActions } from "../useQuestionActions";
-import { QUESTION_SOURCES, QUESTION_STATUS } from "../../../utils/constants";
+import { QUESTION_STATUS } from "../../../utils/constants";
 import {
   saveQuestionToFirestore,
   deleteQuestionFromFirestore,
 } from "../../../services/firebase";
 import { logQuestion } from "../../../utils/analyticsStore";
-import { getAgents } from "../../../agents";
-import { logger } from "../../../utils/logger";
 
 // Mocks
 vi.mock("../../../services/firebase", () => ({

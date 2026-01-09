@@ -380,13 +380,11 @@ const arePropsEqual = (prevProps, nextProps) => {
       );
     }
     if (key === "availableVariants") {
-      // Compare variants array length and first item ID for quick check
-      if (
-        prevProps.availableVariants?.length !==
+      // Compare variants array length for quick check (deep compare omitted for perf)
+      return (
+        prevProps.availableVariants?.length ===
         nextProps.availableVariants?.length
-      )
-        return false;
-      return true; // Deep compare omitted for perf, length + key change usually sufficient
+      );
     }
     return prevProps[key] === nextProps[key];
   });

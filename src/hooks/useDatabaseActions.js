@@ -58,7 +58,6 @@ export const useDatabaseActions = ({
         if (handleLoadFromFirestore) {
           await handleLoadFromFirestore();
         }
-        return;
       }
     },
     [showMessage, handleLoadFromFirestore, moveQuestion]
