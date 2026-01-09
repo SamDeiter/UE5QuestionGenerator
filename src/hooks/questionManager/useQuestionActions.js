@@ -38,12 +38,15 @@ export const useQuestionActions = (
   // CRUD Helpers
   const addQuestions = useCallback(
     async (newItems, source = QUESTION_SOURCES.SESSION) => {
-      let targetSource =
-        source === true
-          ? QUESTION_SOURCES.IMPORT
-          : source === false
-          ? QUESTION_SOURCES.SESSION
-          : source;
+      // Determine target source - handle legacy boolean values
+      let targetSource;
+      if (source === true) {
+        targetSource = QUESTION_SOURCES.IMPORT;
+      } else if (source === false) {
+        targetSource = QUESTION_SOURCES.SESSION;
+      } else {
+        targetSource = source;
+      }
       await backupToCloud(newItems, targetSource);
       setAllQuestions((prev) => {
         const tagged = newItems.map((q) => ({ ...q, _source: targetSource }));

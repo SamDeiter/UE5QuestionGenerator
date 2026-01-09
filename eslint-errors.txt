@@ -34,18 +34,12 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\OmniWat
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\PromptPlayground.jsx
   199:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
 
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem.jsx
-  384:7  error  Replace this if-then-else flow by a single return statement  sonarjs/prefer-single-boolean-return
-
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionActions.jsx
   170:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
   177:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionNotesField.jsx
   57:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ReviewMode.jsx
-  4:10  error  Remove this unused import of 'logger'  sonarjs/unused-import
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TestView.jsx
   81:45  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
@@ -65,35 +59,11 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\u
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\utils\questionConverter.js
   44:31  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
 
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\__tests__\useQuestionActions.test.js
-   4:10  error  Remove this unused import of 'QUESTION_SOURCES'  sonarjs/unused-import
-  10:10  error  Remove this unused import of 'getAgents'         sonarjs/unused-import
-  11:10  error  Remove this unused import of 'logger'            sonarjs/unused-import
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\__tests__\useQuestionDerivedData.test.js
-   4:1  error  'vi' is not defined                           no-undef
-  33:3  error  Remove this unused import of 'CATEGORY_KEYS'  sonarjs/unused-import
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\__tests__\useQuestionState.test.js
-  5:10  error  Remove this unused import of 'logger'  sonarjs/unused-import
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\__tests__\useQuestionSync.test.js
-  6:10  error  Remove this unused import of 'logger'  sonarjs/unused-import
-
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionActions.js
   44:13  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
 
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionDerivedData.js
-  96:20  error  Do not access Object.prototype method 'hasOwnProperty' from target object  no-prototype-builtins
-
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionSync.js
   26:19  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useConnectionStatus.js
-  29:30  error  Update this function so that its implementation is not identical to the one on line 24  sonarjs/no-identical-functions
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useDatabaseActions.js
-  61:9  error  Remove this redundant jump  sonarjs/no-redundant-jump
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scormExporter.test.js
   127:22  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
@@ -105,5 +75,5 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\__tests__\sa
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\parserUtils.js
   228:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
 
-Γ£û 46 problems (46 errors, 0 warnings)
+Γ£û 34 problems (34 errors, 0 warnings)
 

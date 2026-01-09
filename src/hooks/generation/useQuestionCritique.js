@@ -75,6 +75,13 @@ export const useQuestionCritique = ({
             logger.error("Tag generation failed during critique:", error);
           }
         }
+        // Normalize changes to array format
+        let improvements = [];
+        if (Array.isArray(changes)) {
+          improvements = changes;
+        } else if (changes) {
+          improvements = [changes];
+        }
 
         const updatedRewrite = rewrite
           ? {
@@ -86,11 +93,7 @@ export const useQuestionCritique = ({
                 D: rewrite.optionD || q.options?.D || "",
               },
               correct: rewrite.correctLetter || q.correct || "A",
-              improvements: Array.isArray(changes)
-                ? changes
-                : changes
-                ? [changes]
-                : [],
+              improvements,
               critiqueScore: improvedScore,
               critiqueText: text,
               tags: suggestedTags,
