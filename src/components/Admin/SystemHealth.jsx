@@ -51,7 +51,7 @@ const SystemHealth = ({ isCollapsed, onToggle }) => {
 
     // Test 2: Firestore Read Permission
     try {
-      const userDocRef = doc(db, "registeredUsers", auth.currentUser?.uid);
+      const userDocRef = doc(getDb(), "registeredUsers", auth.currentUser?.uid);
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
         results.firestoreRead = {

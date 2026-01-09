@@ -1,14 +1,10 @@
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionGenerator } from "../useQuestionGenerator";
 import * as geminiSecure from "../../../services/geminiSecure";
 import * as analyticsStore from "../../../utils/analyticsStore";
 import * as quotaEnforcement from "../../../utils/quotaEnforcement";
 import * as generationUtils from "../../../utils/generationUtils";
-import {
-  GENERATION_LIMITS,
-  QUALITY_THRESHOLDS,
-} from "../../../utils/constants";
 
 // Mock dependencies
 vi.mock("../../../services/geminiSecure");

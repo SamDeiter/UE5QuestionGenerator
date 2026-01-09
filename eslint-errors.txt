@@ -16,14 +16,10 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\__tests__\translat
   452:20  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\AuditLogs.jsx
-   61:22  error  'db' is not defined                                                  no-undef
-   87:22  error  'db' is not defined                                                  no-undef
   101:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\SystemHealth.jsx
-  14:10  error  Remove this unused import of 'getDb'  sonarjs/unused-import
-  33:9   error  'db' is not defined                   no-undef
-  54:30  error  'db' is not defined                   no-undef
+  54:30  error  'db' is not defined  no-undef
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AnalyticsDashboard.jsx
   562:30  error  Refactor this code to not nest functions more than 4 levels deep     sonarjs/no-nested-functions
@@ -31,12 +27,6 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Analyti
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ContextToolbar.jsx
   296:63  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\CritiqueDisplay.jsx
-  73:33  error  React Hook "useThemeColors" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\CritiqueModal.jsx
-  27:30  error  React Hook "useThemeColors" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\NameEntryModal.jsx
   18:37  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
@@ -138,15 +128,7 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__
   133:43  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\firebase.js
-    2:10  error  Remove this unused import of 'getAnalytics'      sonarjs/unused-import
-  271:26  error  'signInWithPopup' is not defined                 no-undef
-  281:11  error  'signOut' is not defined                         no-undef
-  291:26  error  'createUserWithEmailAndPassword' is not defined  no-undef
-  307:26  error  'signInWithEmailAndPassword' is not defined      no-undef
-  325:11  error  'sendPasswordResetEmail' is not defined          no-undef
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\trainingDataService.js
-  198:18  error  'db' is not defined  no-undef
+  9:10  error  Remove this unused import of 'getAnalytics'  sonarjs/unused-import
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\__tests__\analyticsFiltering.test.js
   6:9  error  Remove the declaration of the unused 'now' variable  sonarjs/no-unused-vars
@@ -155,29 +137,8 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\__tests__\an
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\__tests__\sanitize.test.js
   42:43  error  Make sure that 'javascript:' code is safe as it is a form of eval()  sonarjs/code-eval
 
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\databaseCleanup.js
-   35:23  error  'db' is not defined  no-undef
-   69:43  error  'db' is not defined  no-undef
-  143:49  error  'db' is not defined  no-undef
-  172:35  error  'db' is not defined  no-undef
-  227:35  error  'db' is not defined  no-undef
-  248:23  error  'db' is not defined  no-undef
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateAutoAccepted.js
-  40:25  error  'db' is not defined  no-undef
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateFirestoreScores.js
-  63:25  error  'db' is not defined  no-undef
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateFirestoreUpdatedAt.js
-  46:25  error  'db' is not defined  no-undef
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateTranslations.js
-  87:31  error  'db' is not defined  no-undef
-  95:29  error  'db' is not defined  no-undef
-
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\parserUtils.js
   228:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
 
-Γ£û 88 problems (88 errors, 0 warnings)
+Γ£û 65 problems (65 errors, 0 warnings)
 

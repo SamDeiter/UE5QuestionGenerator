@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useAppConfig } from "../useAppConfig";
 import { STORAGE_KEYS, DEFAULT_CONFIG, APP_MODES } from "../../utils/constants";
 import * as secureStorage from "../../utils/secureStorage";

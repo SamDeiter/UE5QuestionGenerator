@@ -1,10 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionManager } from "../useQuestionManager";
-import {
-  saveQuestionToFirestore,
-  deleteQuestionFromFirestore,
-} from "../../services/firebase";
 
 // Mock ALL services to test internal wiring without side effects
 vi.mock("../../utils/secureStorage", () => ({

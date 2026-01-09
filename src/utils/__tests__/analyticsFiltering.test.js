@@ -3,10 +3,8 @@ import { describe, it, expect } from "vitest";
 // Simulating the filtering logic in AnalyticsView/AnalyticsDashboard
 const filterByTimeRange = (questions, days) => {
   if (days === null) return questions;
-  const now = new Date();
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
-
   return questions.filter((q) => {
     const dateValue = q.created || q.timestamp || q.dateAdded;
     return new Date(dateValue) >= cutoff;

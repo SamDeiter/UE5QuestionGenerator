@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { logger } from "../utils/logger";
 
 /**
  * Hook to calculate the total number of pending questions for the Review badge.

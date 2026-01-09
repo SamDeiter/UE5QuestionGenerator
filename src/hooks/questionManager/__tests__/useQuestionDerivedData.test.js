@@ -27,7 +27,6 @@ vi.mock("../../../utils/constants", () => ({
   },
 }));
 
-import { useQuestionDerivedData } from "../useQuestionDerivedData";
 // No need to import real constants if we mocked them fully above, but if we did, we'd use vi.mock logic
 // But since we are mocking the module, the import below would get the mock.
 import {

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { getSecureItem, setSecureItem } from "../../utils/secureStorage";
-import { logger } from "../../utils/logger";
 import { STORAGE_KEYS, QUESTION_SOURCES } from "../../utils/constants";
 
 /**

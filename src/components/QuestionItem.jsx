@@ -7,22 +7,22 @@ import {
 } from "../utils/constants";
 import Card from "./ui/Card";
 import ReviewProgressBar from "./ReviewProgressBar";
-import QuestionHeader from "./QuestionItem/QuestionHeader";
+
 import QuestionContent from "./QuestionItem/QuestionContent";
 import QuestionMetadata from "./QuestionItem/QuestionMetadata";
 import LanguageControls from "./QuestionItem/LanguageControls";
-import QuestionActions from "./QuestionItem/QuestionActions";
+
 import CritiqueSection from "./QuestionItem/CritiqueSection";
 import ValidationWarnings from "./QuestionItem/ValidationWarnings";
 import ExplanationDisplay from "./QuestionItem/ExplanationDisplay";
 import SourceContextCard from "./QuestionItem/SourceContextCard";
 import ImprovementModal from "./ImprovementModal";
-import Icon from "./Icon";
+
 import QuestionNotesField from "./QuestionItem/QuestionNotesField";
-import { getSecureItem } from "../utils/secureStorage";
+
 import { useEditLock } from "../hooks/useEditLock";
 import { useAuth } from "../hooks/useAuth";
-import { useThemeColors } from "../hooks/useThemeColors";
+
 import { saveTrainingPair } from "../services/trainingDataService";
 import { logger } from "../utils/logger";
 
@@ -161,26 +161,6 @@ const QuestionItem = ({
       return "bg-gradient-to-br from-slate-900/50 to-red-950 border-red-700 shadow-[0_0_15px_-5px_rgba(239,68,68,0.3)]";
     }
     return "bg-slate-900 border-slate-800";
-  };
-
-  const getDiffBadgeColor = (d) => {
-    const difficulty = d?.toLowerCase();
-    if (
-      difficulty === "easy" ||
-      difficulty === QUESTION_DIFFICULTY.BEGINNER.toLowerCase()
-    )
-      return "bg-green-950 text-green-400 border-green-900";
-    if (
-      difficulty === "medium" ||
-      difficulty === QUESTION_DIFFICULTY.INTERMEDIATE.toLowerCase()
-    )
-      return "bg-yellow-950 text-amber-300 border-yellow-900";
-    if (
-      difficulty === "hard" ||
-      difficulty === QUESTION_DIFFICULTY.EXPERT.toLowerCase()
-    )
-      return "bg-red-950 text-red-400 border-red-900";
-    return "bg-slate-800 text-slate-400 border-slate-700";
   };
 
   return (
