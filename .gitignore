@@ -52,6 +52,14 @@ temp_*.*
 test-output.txt
 *-test-data.*
 *-sample-data.*
+test_log.txt
+test_results.txt
+debug_error.txt
+
+# ESLint reports (regenerated on demand)
+eslint-errors.*
+eslint-output.*
+eslint-report.*
 
 # Lint fixing scripts (temporary utilities)
 fix_*.py
