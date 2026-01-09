@@ -350,6 +350,7 @@ exports.generateCritique = functions
           /"score"\s*:\s*(\d+)/i, // "score": 75
           /\bscore\s*[:\-=]\s*(\d+)/i, // score: 75, score = 75
           /(\d+)\s*\/\s*100/i, // 75/100
+          // eslint-disable-next-line sonarjs/slow-regex -- Safe pattern: simple lookahead
           /^(\d{1,3})(?!\d)/m, // Just a number at start of line (0-999)
         ];
 
