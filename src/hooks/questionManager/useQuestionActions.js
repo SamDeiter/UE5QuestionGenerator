@@ -113,6 +113,18 @@ export const useQuestionActions = (
         newStatus === QUESTION_STATUS.ACCEPTED ||
         newStatus === QUESTION_STATUS.REJECTED
       ) {
+        // Require a reviewer name - use creatorName, or userEmail as fallback
+        const reviewerName = config.creatorName || config.userEmail;
+        if (!reviewerName) {
+          if (showMessage) {
+            showMessage(
+              "⚠️ Please set your Creator Name in settings before reviewing questions.",
+              5000
+            );
+          }
+          return; // Don't proceed without a reviewer name
+        }
+
         if (!updatedQ.reviewStartedAt) {
           const estimatedDurationMs =
             (PROCESSING.ESTIMATED_REVIEW_SECONDS || 30) * 1000;
@@ -120,7 +132,7 @@ export const useQuestionActions = (
             Date.now() - estimatedDurationMs
           ).toISOString();
         }
-        updatedQ = completeReviewTracking(updatedQ, config.creatorName);
+        updatedQ = completeReviewTracking(updatedQ, reviewerName);
       }
 
       updatedQ = {

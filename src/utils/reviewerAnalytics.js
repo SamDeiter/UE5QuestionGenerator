@@ -92,8 +92,13 @@ export const aggregateReviewerStats = (questions) => {
   const reviewerMap = new Map();
 
   questions.forEach((q) => {
-    // Use reviewerName or acceptedBy as the reviewer identifier
-    const reviewerName = q.reviewerName || q.acceptedBy || "Unknown";
+    // Use reviewerName, acceptedBy name, or email as fallback for reviewer identification
+    const reviewerName =
+      q.reviewerName ||
+      q.acceptedBy ||
+      q.creatorEmail ||
+      q.creatorName ||
+      "Unknown";
 
     if (!reviewerMap.has(reviewerName)) {
       reviewerMap.set(reviewerName, {
