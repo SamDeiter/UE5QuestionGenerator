@@ -1,9 +1,5 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const _crypto = require("crypto");
-
-// Import utility functions
-const { isAdminUser: _isAdminUser } = require("../utils/isAdminUser");
 
 /**
  * Cloud Function: generateQuestions

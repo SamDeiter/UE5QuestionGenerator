@@ -1,4 +1,3 @@
-const _functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
 // Load environment variables from .env file (for local development)
