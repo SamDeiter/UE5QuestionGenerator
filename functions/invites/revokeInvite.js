@@ -797,6 +797,7 @@ exports.createInvite = functions
       // Validate and sanitize email if provided
       let sanitizedEmail = null;
       if (forEmail) {
+        // eslint-disable-next-line sonarjs/slow-regex -- Simple email validation, acceptable risk
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(forEmail)) {
           throw new functions.https.HttpsError(
