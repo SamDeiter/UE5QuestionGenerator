@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Icon from "./Icon";
 import { throttle, trapFocus } from "../utils/tutorial/domHelpers";
 import { logTutorialEvent, TUTORIAL_EVENTS } from "../utils/tutorialAnalytics";
+import { TUTORIAL } from "../utils/constants";
 
 const TutorialOverlay = ({
   steps,
@@ -22,7 +23,7 @@ const TutorialOverlay = ({
     let pollInterval;
     let resizeObserver;
     let attemptCount = 0;
-    const MAX_ATTEMPTS = 20; // Stop polling after 2 seconds (20 * 100ms)
+    const MAX_ATTEMPTS = TUTORIAL.MAX_ATTEMPT_COUNT || 20;
 
     setElementNotFound(false);
 
@@ -111,7 +112,10 @@ const TutorialOverlay = ({
     }
 
     // Throttled event listeners
-    const throttledUpdate = throttle(updatePosition, 100);
+    const throttledUpdate = throttle(
+      updatePosition,
+      TUTORIAL.RESIZE_THROTTLE || 100
+    );
     window.addEventListener("resize", throttledUpdate);
     window.addEventListener("scroll", throttledUpdate, true);
 

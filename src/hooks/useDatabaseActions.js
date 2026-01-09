@@ -1,22 +1,21 @@
-import { useCallback } from 'react';
-import { saveQuestionToFirestore } from '../services/firebase';
+import { useCallback } from "react";
+
 import { logger } from "../utils/logger";
+import { QUESTION_STATUS, QUESTION_SOURCES } from "../utils/constants";
 
 /**
  * Hook for managing database view actions.
  * Handles updating database questions and kicking questions back to review.
- * 
+ *
  * @param {Object} params - Hook parameters
- * @param {Function} params.setDatabaseQuestions - Setter for database questions state
- * @param {Function} params.setHistoricalQuestions - Setter for historical questions state
  * @param {Function} params.showMessage - Function to display toast messages
  * @returns {Object} Database action handlers
  */
 export const useDatabaseActions = ({
-  setDatabaseQuestions,
-  setHistoricalQuestions,
   showMessage,
   handleLoadFromFirestore,
+  moveQuestion,
+  updateQuestionInState,
 }) => {
   /**
    * Update a single question in the database view (local only).
@@ -27,19 +26,16 @@ export const useDatabaseActions = ({
    */
   const handleUpdateDatabaseQuestion = useCallback(
     (id, update) => {
-      setDatabaseQuestions((prev) =>
-        prev.map((q) => {
-          if (q.id !== id) return q;
-          const newData = typeof update === "function" ? update(q) : update;
-          return { ...q, ...newData };
-        })
-      );
+      updateQuestionInState(id, (current) => {
+        const newData = typeof update === "function" ? update(current) : update;
+        return { ...current, ...newData };
+      });
       showMessage(
         "Question updated locally. Click 'Sync to Firestore' to save changes.",
         3000
       );
     },
-    [setDatabaseQuestions, showMessage]
+    [updateQuestionInState, showMessage]
   );
 
   /**
@@ -50,64 +46,22 @@ export const useDatabaseActions = ({
    */
   const handleKickBackToReview = useCallback(
     async (question) => {
-      try {
-        // Update status to pending in Firestore (preserve the question)
-        const updatedQuestion = {
-          ...question,
-          status: "pending",
+      if (moveQuestion) {
+        logger.log("🔄 [Kick Back] Using moveQuestion action");
+        await moveQuestion(question.id, QUESTION_SOURCES.SESSION, {
+          status: QUESTION_STATUS.PENDING,
           kickedBackAt: new Date().toISOString(),
           kickedBackBy: "user",
           kickedBackReason: "Moved from Database to Review",
-        };
-
-        logger.log(
-          "🔄 [Kick Back] Saving to Firestore:",
-          updatedQuestion.uniqueId
-        );
-        await saveQuestionToFirestore(updatedQuestion);
-
-        // Remove from database view (so it no longer shows)
-        logger.log("🔄 [Kick Back] Removing from databaseQuestions");
-        setDatabaseQuestions((prev) =>
-          prev.filter((q) => q.uniqueId !== question.uniqueId)
-        );
-
-        // Add to historical questions with 'pending' status so it appears in Review Mode
-        logger.log("🔄 [Kick Back] Adding to historicalQuestions");
-        setHistoricalQuestions((prev) => {
-          // Check if already exists to prevent duplicates
-          if (prev.some((q) => q.uniqueId === question.uniqueId)) {
-            logger.log(
-              "🔄 [Kick Back] Updating existing in historicalQuestions"
-            );
-            return prev.map((q) =>
-              q.uniqueId === question.uniqueId ? updatedQuestion : q
-            );
-          }
-          logger.log(
-            `🔄 [Kick Back] Historical: ${prev.length} -> ${prev.length + 1}`
-          );
-          return [...prev, updatedQuestion];
         });
 
-        showMessage("Question kicked back to Review. Refreshing...", 3000);
-
-        // Force refresh to ensure counts are updated
         if (handleLoadFromFirestore) {
-          logger.log("🔄 [Kick Back] Triggering Firestore refresh");
           await handleLoadFromFirestore();
         }
-      } catch (error) {
-        logger.error("Error kicking back question:", error);
-        showMessage("Failed to kick back question. Please try again.", 3000);
+        return;
       }
     },
-    [
-      setDatabaseQuestions,
-      setHistoricalQuestions,
-      showMessage,
-      handleLoadFromFirestore,
-    ]
+    [showMessage, handleLoadFromFirestore, moveQuestion]
   );
 
   return {

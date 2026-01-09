@@ -10,7 +10,11 @@ import ReviewMode from "./ReviewMode";
 const TestView = React.lazy(() => import("./TestView"));
 const PromptPlayground = React.lazy(() => import("./PromptPlayground"));
 const AdminPanel = React.lazy(() => import("./AdminPanel"));
+const TranslationManagementView = React.lazy(() =>
+  import("./TranslationManagementView")
+);
 import QuestionList from "./QuestionList";
+import { APP_MODES } from "../utils/constants";
 
 /**
  * EmptyReviewState - Illustrated empty state with CTA
@@ -122,37 +126,30 @@ const ViewRouter = ({
     status,
     userRole, // NEW
   } = state;
-  const {
-    setDatabaseQuestions,
-    setCurrentReviewIndex,
-    setFilterByCreator,
-    showMessage,
-  } = setters;
+  const { setCurrentReviewIndex, setFilterByCreator, showMessage } = setters;
 
   /**
    * Render the appropriate view based on appMode
    * Uses early returns instead of nested ternaries for clarity
    */
   const renderView = () => {
-    if (appMode === "analytics") {
+    if (appMode === APP_MODES.ANALYTICS) {
       return (
         <AnalyticsView
           onBack={onNavigateHome}
-          onStartTutorial={() => onStartTutorial("analytics")}
+          onStartTutorial={() => onStartTutorial(APP_MODES.ANALYTICS)}
           allQuestionsMap={allQuestionsMap}
         />
       );
     }
 
-    if (appMode === "database") {
+    if (appMode === APP_MODES.DATABASE) {
       return (
         <DatabaseView
           questions={databaseQuestions}
           sheetUrl={config.sheetUrl}
           onLoad={handleLoadFromSheets}
           onLoadFirestore={handleLoadFromFirestore}
-          onClearView={() => setDatabaseQuestions([])}
-          onHardReset={() => setDatabaseQuestions([])}
           onUpdateQuestion={handleUpdateDatabaseQuestion}
           onKickBack={handleKickBackToReview}
           isProcessing={isProcessing}
@@ -160,14 +157,14 @@ const ViewRouter = ({
           filterMode={state.filterMode}
           sortBy={state.sortBy}
           searchTerm={state.searchTerm}
-          onStartTutorial={() => onStartTutorial("database")}
+          onStartTutorial={() => onStartTutorial(APP_MODES.DATABASE)}
           isAdmin={isAdmin}
           userRole={userRole}
         />
       );
     }
 
-    if (appMode === "test" && isAdmin) {
+    if (appMode === APP_MODES.TEST && isAdmin) {
       return (
         <TestView
           questions={[...questions, ...databaseQuestions]}
@@ -178,7 +175,7 @@ const ViewRouter = ({
       );
     }
 
-    if (appMode === "playground" && isAdmin) {
+    if (appMode === APP_MODES.PLAYGROUND && isAdmin) {
       return (
         <PromptPlayground
           config={config}
@@ -188,7 +185,7 @@ const ViewRouter = ({
       );
     }
 
-    if (appMode === "admin" && isAdmin) {
+    if (appMode === APP_MODES.ADMIN && isAdmin) {
       return (
         <AdminPanel
           showMessage={showMessage}
@@ -210,7 +207,25 @@ const ViewRouter = ({
       );
     }
 
-    if (appMode === "review" && uniqueFilteredQuestions.length > 0) {
+    if (appMode === APP_MODES.TRANSLATE && isAdmin) {
+      return (
+        <TranslationManagementView
+          questions={questions} // Use all raw questions for custom management filtering
+          allQuestionsMap={allQuestionsMap}
+          translationMap={translationMap}
+          onTranslateSingle={handleTranslateSingle}
+          onSwitchLanguage={handleLanguageSwitch}
+          onUpdateStatus={handleUpdateStatus}
+          onDelete={handleDelete}
+          onUpdateQuestion={handleManualUpdate}
+          isProcessing={isProcessing}
+          showMessage={showMessage}
+          userRole={userRole}
+        />
+      );
+    }
+
+    if (appMode === APP_MODES.REVIEW && uniqueFilteredQuestions.length > 0) {
       return (
         <ReviewMode
           questions={uniqueFilteredQuestions}
@@ -226,7 +241,7 @@ const ViewRouter = ({
           onDelete={handleDelete}
           onUpdateQuestion={handleManualUpdate}
           translationMap={translationMap}
-          onStartTutorial={() => onStartTutorial("review")}
+          onStartTutorial={() => onStartTutorial(APP_MODES.REVIEW)}
           onKickBack={handleKickBackToReview}
           userRole={userRole}
           allQuestionsMap={allQuestionsMap}
@@ -234,7 +249,7 @@ const ViewRouter = ({
       );
     }
 
-    if (appMode === "review" && uniqueFilteredQuestions.length === 0) {
+    if (appMode === APP_MODES.REVIEW && uniqueFilteredQuestions.length === 0) {
       return (
         <EmptyReviewState
           onNavigateToCreate={onNavigateToCreate}
@@ -264,6 +279,7 @@ const ViewRouter = ({
         onUpdateQuestion={handleManualUpdate}
         showMessage={showMessage}
         userRole={userRole}
+        allQuestionsMap={allQuestionsMap}
       />
     );
   };
@@ -274,7 +290,7 @@ const ViewRouter = ({
 
       {uniqueFilteredQuestions.length === 0 &&
         filteredQuestions.length > 0 &&
-        appMode !== "review" && (
+        appMode !== APP_MODES.REVIEW && (
           <div className="flex flex-col items-center justify-center h-full text-slate-600 pt-10">
             <Icon name="filter" size={32} className="mb-3 text-slate-800" />
             <p className="font-medium text-slate-500">
@@ -302,7 +318,7 @@ const ViewRouter = ({
         uniqueFilteredQuestions.length === 0 &&
         questions.length === 0 &&
         !status &&
-        appMode === "create" && (
+        appMode === APP_MODES.CREATE && (
           <div className="flex flex-col items-center justify-center h-full text-slate-600">
             <Icon name="terminal" size={48} className="mb-4 text-slate-800" />
             <p className="font-medium text-slate-500">

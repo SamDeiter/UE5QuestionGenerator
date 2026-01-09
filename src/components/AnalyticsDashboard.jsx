@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import SafeResponsiveContainer from "./analytics/SafeResponsiveContainer";
 import { format } from "date-fns";
+import { TIME } from "../utils/constants";
 import {
   BarChart2,
   Download,
@@ -67,19 +68,19 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
 
     switch (timeRange) {
       case "24h":
-        cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        cutoffDate = new Date(now.getTime() - TIME.DAY);
         break;
       case "7d":
-        cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        cutoffDate = new Date(now.getTime() - TIME.WEEK);
         break;
       case "15d":
-        cutoffDate = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
+        cutoffDate = new Date(now.getTime() - 15 * TIME.DAY);
         break;
       case "30d":
-        cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        cutoffDate = new Date(now.getTime() - TIME.MONTH);
         break;
       case "90d":
-        cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        cutoffDate = new Date(now.getTime() - TIME.QUARTER);
         break;
       default:
         return allAnalyticsData;

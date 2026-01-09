@@ -1,0 +1,5 @@
+Error: expected "vi.fn()" to be called with arguments: [ 'u1' ][90m
+
+Number of calls: [1m0[22m
+[39m
+Calls: []

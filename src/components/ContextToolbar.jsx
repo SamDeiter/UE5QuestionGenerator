@@ -449,44 +449,30 @@ const ContextToolbar = ({
     </div>
   );
 
-  const renderAnalyticsToolbar = () => (
+  const renderTranslateToolbar = () => (
     <div className="flex justify-between items-center w-full">
-      <span className="text-xs text-slate-500">Analytics Dashboard</span>
-    </div>
-  );
-
-  const renderTestToolbar = () => (
-    <div className="flex justify-between items-center w-full">
-      <div className="flex items-center gap-2">
-        <Icon name="clipboard-check" size={16} className="text-indigo-400" />
-        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-          Test Configuration
+      <div className="flex items-center gap-4">
+        <span className="text-xs text-slate-500 flex items-center gap-2">
+          <Icon name="languages" size={14} className="text-amber-400" />
+          Language Management & Translation
         </span>
+      </div>
+      <div className="flex items-center gap-3">
+        {/* Status indicator for translation */}
+        <div className="flex items-center gap-2 px-2 py-1 bg-slate-800 rounded border border-slate-700">
+          <span className="text-[10px] uppercase font-bold text-slate-500">
+            Source:
+          </span>
+          <span className="text-xs text-white font-medium">English</span>
+        </div>
       </div>
     </div>
   );
 
-  const renderAdminToolbar = () => (
-    <div className="flex justify-between items-center w-full">
-      <div className="flex items-center gap-2">
-        <Icon name="shield" size={16} className="text-red-400" />
-        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-          Admin Control Panel
-        </span>
-      </div>
-    </div>
-  );
-
-  const renderPlaygroundToolbar = () => (
-    <div className="flex justify-between items-center w-full">
-      <div className="flex items-center gap-2">
-        <Icon name="terminal" size={16} className="text-purple-400" />
-        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-          Prompt Playground
-        </span>
-      </div>
-    </div>
-  );
+  const renderAnalyticsToolbar = () => <div />;
+  const renderTestToolbar = () => <div />;
+  const renderAdminToolbar = () => <div />;
+  const renderPlaygroundToolbar = () => <div />;
 
   // ------------------------------------------------------------------------
   // MAIN RENDER
@@ -499,6 +485,7 @@ const ContextToolbar = ({
     "test",
     "admin",
     "playground",
+    "translate",
   ];
 
   return (
@@ -510,6 +497,7 @@ const ContextToolbar = ({
       {mode === "test" && renderTestToolbar()}
       {mode === "admin" && renderAdminToolbar()}
       {mode === "playground" && renderPlaygroundToolbar()}
+      {mode === "translate" && renderTranslateToolbar()}
       {!knownModes.includes(mode) && (
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <Icon name="alert-triangle" size={14} className="text-yellow-500" />

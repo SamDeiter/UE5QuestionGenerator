@@ -11,6 +11,11 @@ import {
 import { downloadFile } from "../utils/questionHelpers";
 import { formatDate } from "../utils/dateHelpers";
 import { logger } from "../utils/logger";
+import {
+  QUESTION_SOURCES,
+  QUESTION_STATUS,
+  APP_MODES,
+} from "../utils/constants";
 import { validateQuestion } from "../utils/questionValidator";
 
 export const useExport = (
@@ -23,17 +28,18 @@ export const useExport = (
   showMessage,
   setStatus,
   setIsProcessing,
-  setDatabaseQuestions,
   setAppMode,
   setShowExportMenu,
   setShowBulkExportModal,
-  setHistoricalQuestions
+  replaceQuestions // Added: new semantic action
 ) => {
   const handleExportByGroup = useCallback(() => {
     const sourceList = showHistory
       ? [...questions, ...historicalQuestions]
       : questions;
-    const valid = sourceList.filter((q) => q.status !== "rejected");
+    const valid = sourceList.filter(
+      (q) => q.status !== QUESTION_STATUS.REJECTED
+    );
 
     if (valid.length === 0) {
       setStatus("No accepted questions to export.");
@@ -87,7 +93,7 @@ export const useExport = (
 
     const valid = sourceList.filter(
       (q) =>
-        q.status !== "rejected" &&
+        q.status !== QUESTION_STATUS.REJECTED &&
         (q.language || "English") === config.language &&
         q.discipline === config.discipline &&
         q.difficulty === targetDiff &&
@@ -139,7 +145,9 @@ export const useExport = (
     const sourceList = showHistory
       ? [...questions, ...historicalQuestions]
       : questions;
-    const validQuestions = sourceList.filter((q) => q.status !== "rejected");
+    const validQuestions = sourceList.filter(
+      (q) => q.status !== QUESTION_STATUS.REJECTED
+    );
 
     if (validQuestions.length === 0) {
       showMessage("No accepted questions to export.", 3000);
@@ -214,7 +222,6 @@ export const useExport = (
         sourceExcerpt: q.sourceExcerpt || "",
         creatorName: q.creator || q.creatorName || "",
         reviewerName: q.reviewer || q.reviewerName || "",
-        reviewerName: q.reviewer || q.reviewerName || "",
       }));
 
       // Validate loaded questions and set status
@@ -223,22 +230,37 @@ export const useExport = (
         return {
           ...q,
           _validation: validation,
-          status: validation.isCriticalFailure ? "rejected" : "accepted",
+          status: validation.isCriticalFailure
+            ? QUESTION_STATUS.REJECTED
+            : QUESTION_STATUS.ACCEPTED,
         };
       });
 
-      setDatabaseQuestions(questionsWithValidation);
-      if (setHistoricalQuestions)
-        setHistoricalQuestions(questionsWithValidation);
+      if (replaceQuestions) {
+        // Use new semantic action to replace legacy QUESTION_SOURCES.DATABASE and QUESTION_SOURCES.IMPORT sources
+        // Note: QUESTION_SOURCES.IMPORT source is used for both sheets and legacy history
+        replaceQuestions(questionsWithValidation, QUESTION_SOURCES.DATABASE);
+        replaceQuestions(questionsWithValidation, QUESTION_SOURCES.IMPORT);
+      }
 
-      // Only switch to database view if NOT in review mode
-      // Actually, user might want to see it in DB view first.
-      // Let's keep behavior but ensure data is available for review.
-      setAppMode("database");
-      showMessage(
-        `Loaded ${loadedQuestions.length} questions from Database View!`,
-        3000
-      );
+      setAppMode(APP_MODES.DATABASE);
+
+      const totalRejected = questionsWithValidation.filter(
+        (q) => q.status === QUESTION_STATUS.REJECTED
+      ).length;
+      const totalAccepted = loadedQuestions.length - totalRejected;
+
+      if (totalRejected > 0) {
+        showMessage(
+          `Import Audit: ${totalAccepted} Success, ${totalRejected} Errors flagged for review.`,
+          6000
+        );
+      } else {
+        showMessage(
+          `Loaded ${loadedQuestions.length} questions from Database View!`,
+          3000
+        );
+      }
     } catch (e) {
       logger.error("Load Error:", e);
       showMessage(
@@ -255,9 +277,9 @@ export const useExport = (
     setIsProcessing,
     setStatus,
     setShowExportMenu,
-    setDatabaseQuestions,
-    setHistoricalQuestions,
+    setShowExportMenu,
     setAppMode,
+    replaceQuestions,
   ]);
 
   const handleLoadFromFirestore = useCallback(
@@ -275,11 +297,13 @@ export const useExport = (
           ...q,
           // eslint-disable-next-line sonarjs/pseudo-random
           id: q.id || Date.now() + index + Math.random(), // Ensure React key
-          status: q.status || "pending", // CRITICAL: Preserve actual status
+          status: q.status || QUESTION_STATUS.PENDING, // CRITICAL: Preserve actual status
         }));
 
-        setDatabaseQuestions(loadedQuestions);
-        if (setHistoricalQuestions) setHistoricalQuestions(loadedQuestions);
+        if (replaceQuestions) {
+          replaceQuestions(loadedQuestions, QUESTION_SOURCES.DATABASE);
+          replaceQuestions(loadedQuestions, QUESTION_SOURCES.IMPORT); // Sync history
+        }
 
         if (!silent) {
           showMessage(
@@ -301,9 +325,8 @@ export const useExport = (
       setIsProcessing,
       setStatus,
       setShowExportMenu,
-      setDatabaseQuestions,
-      setHistoricalQuestions,
       showMessage,
+      replaceQuestions,
     ]
   );
 
@@ -326,7 +349,8 @@ export const useExport = (
 
       let questionsToExport = sourceQuestions.filter((q) => {
         const langMatch = languages.includes(q.language || "English");
-        const statusMatch = includeRejected || q.status !== "rejected";
+        const statusMatch =
+          includeRejected || q.status !== QUESTION_STATUS.REJECTED;
         return langMatch && statusMatch;
       });
 

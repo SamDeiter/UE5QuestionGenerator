@@ -36,6 +36,10 @@ export const useNavigation = ({
         setShowHistory(true);
         setFilterMode("pending"); // Hide accepted items by default
         setCurrentReviewIndex(0); // Always start at first question when entering Review mode
+      } else if (mode === "translate") {
+        setShowHistory(true);
+        setFilterMode("accepted"); // Only show accepted items for translation
+        setCurrentReviewIndex(0);
       } else {
         setShowHistory(false);
         setFilterMode("pending");

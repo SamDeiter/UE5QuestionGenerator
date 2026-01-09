@@ -340,6 +340,7 @@ const QuestionItem = ({
           onTranslateSingle={onTranslateSingle}
           isProcessing={isProcessing}
           userRole={userRole}
+          appMode={appMode}
         />
       </div>
 

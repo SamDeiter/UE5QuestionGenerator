@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import { logger } from "../utils/logger";
+import { SCORM_DEFAULTS } from "../utils/constants";
 
 /**
  * SCORM 1.2 Exporter Service
@@ -43,8 +44,8 @@ export async function generateScormPackageFiles(questions, config = {}) {
   const {
     title = "UE5 Knowledge Assessment",
     description = "Test your Unreal Engine 5 knowledge",
-    passingScore = 80,
-    timeLimit = 30, // minutes
+    passingScore = SCORM_DEFAULTS.PASSING_SCORE,
+    timeLimit = SCORM_DEFAULTS.TIME_LIMIT_MINUTES, // minutes
   } = config;
 
   // Convert questions to SCORM format

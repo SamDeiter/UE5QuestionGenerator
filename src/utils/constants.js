@@ -149,6 +149,19 @@ export const TIMING = {
   DELETE_BATCH_SIZE: 10,
   AUTO_SAVE_INTERVAL: 10000, // ms
   MAX_POLLING_ATTEMPTS: 20,
+  CACHE_TTL_MS: 30 * 1000,
+  STALE_AUTH_MS: 45 * 60 * 1000,
+};
+
+// Standard Time Multipliers (in ms)
+export const TIME = {
+  SECOND: 1000,
+  MINUTE: 60 * 1000,
+  HOUR: 60 * 60 * 1000,
+  DAY: 24 * 60 * 60 * 1000,
+  WEEK: 7 * 24 * 60 * 60 * 1000,
+  MONTH: 30 * 24 * 60 * 60 * 1000,
+  QUARTER: 90 * 24 * 60 * 60 * 1000,
 };
 
 // SCORM Export Defaults
@@ -175,4 +188,51 @@ export const GENERATION_LIMITS = {
   TOTAL_TAGS_THRESHOLD: 3,
   MAX_GROUNDING_SOURCES: 3,
   BATCH_SIZE_PARALLEL_CRITIQUE: 3,
+  ID_SUBSTRING_LENGTH: 4,
+  MAX_RETRIES: 5,
+};
+
+// Processing Constants
+export const PROCESSING = {
+  BATCH_SIZE: 500,
+  ESTIMATED_REVIEW_SECONDS: 30,
+};
+
+// Tutorial System Settings
+export const TUTORIAL = {
+  MAX_ATTEMPT_COUNT: 20,
+  POLL_INTERVAL: 100,
+  RESIZE_THROTTLE: 100,
+};
+
+export const MAINTENANCE = {
+  NUKE_BATCH_SIZE: 10,
+};
+
+// Question Sources
+export const QUESTION_SOURCES = {
+  SESSION: "session",
+  DATABASE: "database",
+  IMPORT: "import",
+};
+
+// Question Statuses
+export const QUESTION_STATUS = {
+  PENDING: "pending",
+  ACCEPTED: "accepted",
+  REJECTED: "rejected",
+  DELETED: "deleted",
+};
+
+// App Modes
+export const APP_MODES = {
+  LANDING: "landing",
+  CREATE: "create",
+  REVIEW: "review",
+  DATABASE: "database",
+  ANALYTICS: "analytics",
+  TEST: "test",
+  ADMIN: "admin",
+  PLAYGROUND: "playground",
+  TRANSLATE: "translate",
 };

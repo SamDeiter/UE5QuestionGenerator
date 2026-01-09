@@ -868,6 +868,15 @@ export function validateURL(url) {
     }
   }
 
+  // Check for double hyphens (always invalid)
+  if (slug.includes("--")) {
+    return {
+      isValid: false,
+      confidence: 30,
+      warning: "URL has double hyphens",
+    };
+  }
+
   // Check if it's a known valid slug
   if (KNOWN_VALID_SLUGS.has(slug)) {
     return { isValid: true, confidence: 100, warning: null };
@@ -891,14 +900,6 @@ export function validateURL(url) {
       isValid: true,
       confidence: 40,
       warning: "URL slug seems too short",
-    };
-  }
-
-  if (slug.includes("--")) {
-    return {
-      isValid: false,
-      confidence: 30,
-      warning: "URL has double hyphens",
     };
   }
 

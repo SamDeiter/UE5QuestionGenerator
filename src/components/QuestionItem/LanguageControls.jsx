@@ -13,12 +13,15 @@ const getButtonTitle = (
   lockedBy,
   isCurrent,
   exists,
-  canTranslate
+  canTranslate,
+  qStatus
 ) => {
   if (isLocked) return `Locked by ${lockedBy?.userEmail || "another user"}`;
   if (isCurrent) return `Current: ${lang}`;
   if (exists) return `Switch to ${lang}`;
   if (canTranslate) return `Translate to ${lang}`;
+  if (!exists && qStatus !== "accepted")
+    return `${lang} (Accept question first)`;
   return `${lang} (Unavailable)`;
 };
 
@@ -31,15 +34,17 @@ const LanguageControls = ({
   userRole, // NEW: Check role for restrictions
   isLocked = false, // NEW: Lock state from concurrent editing
   lockedBy = null, // NEW: Lock owner info
+  appMode, // NEW
 }) => {
   const [loadingLang, setLoadingLang] = useState(null);
   // Translation generation: Only admins can create new translations
   // Non-admins (reviewers, users) can only view/switch existing translations
   const canTranslate =
     (q.language || "English") === "English" &&
+    (q.status === "accepted" || appMode === "translate") && // Relax restriction in dedicated view
     q.sourceUrl &&
     !q.invalidUrl &&
-    userRole === "admin"; // Only admins can generate new translations
+    userRole === "admin";
 
   const allLanguages = Object.keys(LANGUAGE_FLAGS);
 
@@ -128,7 +133,8 @@ const LanguageControls = ({
               lockedBy,
               isCurrent,
               exists,
-              canTranslate
+              canTranslate,
+              q.status
             )}
           >
             {isLoading ? (

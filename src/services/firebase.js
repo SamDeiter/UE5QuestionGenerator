@@ -28,6 +28,7 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { logger } from "../utils/logger";
+import { TIMING, PROCESSING } from "../utils/constants";
 
 // SECURITY NOTE: CSRF Protection
 // For production deployment with a backend API proxy, add CSRF tokens:
@@ -139,24 +140,53 @@ const processOfflineQueue = async () => {
   syncInProgress = true;
   logger.log(`🔄 Processing ${offlineQueue.length} queued items...`);
 
-  const itemsToProcess = [...offlineQueue];
-  offlineQueue = [];
+  try {
+    const itemsToProcess = [...offlineQueue];
+    offlineQueue = [];
+    persistQueue(); // Clear storage immediately so if we crash, we don't duplicate on restart
+    notifyConnectionListeners();
 
-  for (const item of itemsToProcess) {
-    try {
-      await saveQuestionToFirestoreInternal(item.question);
-      logger.log(`✓ Synced queued item: ${item.question.uniqueId}`);
-    } catch (err) {
-      logger.warn(`Failed to sync ${item.question.uniqueId}, re-queuing:`, err);
-      offlineQueue.push(item);
+    for (const item of itemsToProcess) {
+      try {
+        await saveQuestionToFirestoreInternal(item.question);
+        logger.log(`✓ Synced queued item: ${item.question.uniqueId}`);
+      } catch (err) {
+        // If it's a permission error, don't re-queue indefinitely
+        const isPermissionError =
+          err.code === "permission-denied" ||
+          err.message?.includes("permissions") ||
+          err.message?.includes("Missing or insufficient permissions");
+
+        logger.warn(
+          `Failed to sync ${item.question.uniqueId}, ${
+            isPermissionError ? "dropping due to permissions" : "re-queuing"
+          }:`,
+          err
+        );
+
+        if (!isPermissionError) {
+          // Re-queue but check if a newer version was already added while we were sync-ing
+          const alreadyHasNewer = offlineQueue.some(
+            (q) => q.question?.uniqueId === item.question?.uniqueId
+          );
+          if (!alreadyHasNewer) {
+            offlineQueue.push(item);
+          }
+        }
+      }
     }
-  }
+  } catch (error) {
+    logger.error("🛑 Critical error in processOfflineQueue:", error);
+  } finally {
+    persistQueue();
+    syncInProgress = false;
+    notifyConnectionListeners();
 
-  persistQueue();
-  syncInProgress = false;
-
-  if (offlineQueue.length > 0) {
-    logger.log(`⚠️ ${offlineQueue.length} items still queued`);
+    if (offlineQueue.length > 0) {
+      logger.log(`⚠️ ${offlineQueue.length} items still queued`);
+    } else {
+      logger.log("✅ Offline queue fully processed");
+    }
   }
 };
 
@@ -244,7 +274,7 @@ export const markAuthActivity = () => {
 };
 
 export const isAuthPotentiallyStale = () => {
-  const STALE_THRESHOLD_MS = 45 * 60 * 1000; // 45 minutes
+  const STALE_THRESHOLD_MS = TIMING.STALE_AUTH_MS;
   return Date.now() - lastAuthActivity > STALE_THRESHOLD_MS;
 };
 
@@ -265,7 +295,9 @@ export const getQueueDetails = () => {
     oldestAge,
     items: offlineQueue.map((item) => ({
       id: item.question?.uniqueId?.slice(0, 8),
+      text: item.question?.text?.slice(0, 30),
       status: item.question?.status,
+      timestamp: item.timestamp,
       age: Math.round((Date.now() - item.timestamp) / 1000 / 60),
     })),
   };
@@ -340,7 +372,7 @@ export const resetPassword = async (email) => {
 // REDUCED TTL: Changed from 5 minutes to 30 seconds for better multi-user sync
 let _questionsCache = null;
 let _questionsCacheTimestamp = 0;
-const CACHE_TTL_MS = 30 * 1000; // 30 seconds (reduced from 5 minutes)
+const CACHE_TTL_MS = TIMING.CACHE_TTL_MS;
 
 /**
  * Helper to recursively remove undefined values from an object
@@ -414,6 +446,10 @@ export const saveQuestionToFirestore = async (question) => {
     // If offline, queue immediately
     if (!isOnline) {
       logger.log(`📴 Offline - queuing ${question.uniqueId} for later sync`);
+      // Deduplicate: remove any existing entry for this uniqueId
+      offlineQueue = offlineQueue.filter(
+        (item) => item.question?.uniqueId !== question.uniqueId
+      );
       offlineQueue.push({ question, timestamp: Date.now() });
       persistQueue();
       notifyConnectionListeners();
@@ -461,6 +497,10 @@ export const saveQuestionToFirestore = async (question) => {
       `⚠️ Save failed for ${question.uniqueId}, queuing for retry:`,
       errorMessage
     );
+    // Deduplicate: remove any existing entry for this uniqueId
+    offlineQueue = offlineQueue.filter(
+      (item) => item.question?.uniqueId !== question.uniqueId
+    );
     offlineQueue.push({ question, timestamp: Date.now() });
     persistQueue();
     notifyConnectionListeners();
@@ -485,9 +525,13 @@ export const batchSaveQuestions = async (questions) => {
     logger.log(
       `📴 Offline - queuing ${questions.length} questions for later sync`
     );
-    questions.forEach((q) =>
-      offlineQueue.push({ question: q, timestamp: Date.now() })
-    );
+    questions.forEach((q) => {
+      // Deduplicate: remove any existing entry for this uniqueId
+      offlineQueue = offlineQueue.filter(
+        (item) => item.question?.uniqueId !== q.uniqueId
+      );
+      offlineQueue.push({ question: q, timestamp: Date.now() });
+    });
     persistQueue();
     notifyConnectionListeners();
     return { success: 0, failed: 0, queued: questions.length };
@@ -503,7 +547,7 @@ export const batchSaveQuestions = async (questions) => {
   const startTime = performance.now();
 
   // Firebase batch limit is 500 operations
-  const BATCH_SIZE = 500;
+  const BATCH_SIZE = PROCESSING.BATCH_SIZE;
   const batches = [];
 
   for (let i = 0; i < questions.length; i += BATCH_SIZE) {

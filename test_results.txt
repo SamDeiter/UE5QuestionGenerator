@@ -1,0 +1,20 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.14 [39m[90mC:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator[39m
+
+[90mstdout[2m | src/hooks/questionManager/__tests__/useQuestionActions.test.js[2m > [22m[2museQuestionActions[2m > [22m[2mshould delete question when status is deleted
+[22m[39mDEBUG: QUESTION_STATUS.DELETED = deleted
+
+ [31mΓ¥»[39m src/hooks/questionManager/__tests__/useQuestionActions.test.js [2m([22m[2m7 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 35[2mms[22m[39m
+     [32mΓ£ô[39m should add questions and trigger backup[32m 15[2mms[22m[39m
+     [32mΓ£ô[39m should handle updateQuestionInState[32m 2[2mms[22m[39m
+[31m     [31m├ù[31m should delete question when status is deleted[39m[32m 8[2mms[22m[39m
+[31m     [31m├ù[31m should save accepted question to firestore[39m[32m 2[2mms[22m[39m
+     [32mΓ£ô[39m should use saveGuardAgent if available[32m 4[2mms[22m[39m
+     [32mΓ£ô[39m should replace questions for a specific source[32m 1[2mms[22m[39m
+     [32mΓ£ô[39m should bulk delete questions[32m 1[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m5 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 12:48:05
+[2m   Duration [22m 1.47s[2m (transform 184ms, setup 133ms, import 288ms, tests 35ms, environment 790ms)[22m
+

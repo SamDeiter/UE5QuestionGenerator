@@ -74,10 +74,11 @@ export const parseCSVQuestions = (content, fileName, defaultCreatorName) => {
 
     let qObj = {};
     if (isV17) {
-      // v1.7 Mapping: 0:ID, 1:Unique, 2:Status, 3:Disc, 4:Diff, 5:Type, 6:Q, 7-10:Opts, 11:Ans, 12:Expl, 13:Lang, 14:Src, 15:Date
+      // v1.7 Mapping: 0:ID, 1:Unique, 2:Status, 3:Disc, 4:Diff, 5:Type, 6:Q, 7-10:Opts, 11:Ans, 12:Expl, 13:Lang, 14:Src, 15:Exc
       qObj = {
         id: Date.now() + idx + Math.random(),
         uniqueId: cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID(),
+        status: cols[2] || "pending",
         discipline: cols[3] || "Imported",
         difficulty: cols[4] || "Easy",
         type: cols[5] || "Multiple Choice",
@@ -92,12 +93,12 @@ export const parseCSVQuestions = (content, fileName, defaultCreatorName) => {
         explanation: cols[12] || "",
         language: cols[13] || fileLanguage || "English",
         sourceUrl: cols[14] || "",
-        status: "accepted",
+        sourceExcerpt: cols[15] || "",
         creatorName: defaultCreatorName || "",
         reviewerName: "",
       };
     } else {
-      // v1.6 Mapping: 0:ID, 1:Unique, 2:Disc, 3:Type, 4:Diff, 5:Q, 6-9:Opts, 10:Ans, 11:Date, 12:Src, 13:Exc, 14:Cr, 15:Rev, 16:Lang
+      // v1.6 Mapping: 0:ID, 1:Unique, 2:Disc, 3:Type, 4:Diff, 5:Q, 6-9:Opts, 10:Ans, 11:Date, 12:Src, 13:Exc, 14:SrcVerified... 20:Lang
       qObj = {
         id: Date.now() + idx + Math.random(),
         uniqueId: cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID(),
@@ -114,9 +115,9 @@ export const parseCSVQuestions = (content, fileName, defaultCreatorName) => {
         correct: cols[10] || "",
         sourceUrl: cols[12] || "",
         sourceExcerpt: cols[13] || "",
-        creatorName: cols[14] || defaultCreatorName || "",
-        reviewerName: cols[15] || "",
-        language: cols[16] || fileLanguage || "English",
+        creatorName: defaultCreatorName || "",
+        reviewerName: "",
+        language: cols[20] || fileLanguage || "English",
       };
     }
 
@@ -126,8 +127,6 @@ export const parseCSVQuestions = (content, fileName, defaultCreatorName) => {
 
     // Set Status based on Validation
     // Critical failure (missing URL/excerpt) -> rejected
-    // Warning (bad answer match) -> accepted (but shows warning in UI)
-    // Valid -> accepted
     if (validation.isCriticalFailure) {
       qObj.status = "rejected";
     } else {

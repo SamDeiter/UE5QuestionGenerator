@@ -11,6 +11,7 @@ import {
 } from "../services/firebase";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { logger } from "../utils/logger";
+import { MAINTENANCE } from "../utils/constants";
 
 /**
  * DangerZoneModal - Separate modal for destructive operations
@@ -223,7 +224,7 @@ const DangerZoneModal = ({
 
       let deletedCount = 0;
       let errorCount = 0;
-      const BATCH_SIZE = 10;
+      const BATCH_SIZE = MAINTENANCE.NUKE_BATCH_SIZE || 10;
 
       for (let i = 0; i < allQuestions.length; i += BATCH_SIZE) {
         const batch = allQuestions.slice(i, i + BATCH_SIZE);

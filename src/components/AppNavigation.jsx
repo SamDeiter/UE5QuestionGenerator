@@ -38,6 +38,13 @@ const AppNavigation = ({ activeMode, onNavigate, counts = {}, isAdmin }) => {
       adminOnly: true,
     },
     {
+      id: "translate",
+      label: "Language",
+      icon: "languages",
+      color: "amber",
+      adminOnly: true,
+    },
+    {
       id: "admin",
       label: "Admin",
       icon: "shield",

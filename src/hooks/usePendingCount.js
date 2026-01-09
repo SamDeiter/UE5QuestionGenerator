@@ -20,10 +20,6 @@ export function usePendingCount(allQuestionsMap) {
         pending++;
       }
     });
-    logger.log("🔍 [DEBUG] Review Badge Count:", {
-      allQuestionsMapSize: allQuestionsMap.size,
-      pendingCount: pending,
-    });
     return pending;
   }, [allQuestionsMap]);
 

@@ -49,7 +49,7 @@ import { useNavigationAfterLanguageSwitch } from "./hooks/useNavigationAfterLang
 // Concurrent Editing Agents
 import { initializeAgents } from "./agents";
 // Utilities
-import { TOAST_DURATION } from "./utils/constants";
+import { TOAST_DURATION, APP_MODES } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import { logger } from "./utils/logger";
 
@@ -164,11 +164,8 @@ const App = () => {
   // 2. Question Data Management
   const {
     questions,
-    setQuestions,
     historicalQuestions,
-    setHistoricalQuestions,
     databaseQuestions,
-    setDatabaseQuestions,
     allQuestionsMap,
     translationMap,
     addQuestionsToState,
@@ -196,6 +193,9 @@ const App = () => {
     conflictData,
     showConflictModal,
     setShowConflictModal,
+    replaceQuestions,
+    bulkDeleteQuestions,
+    moveQuestion,
   } = useQuestionManager(config, showMessage);
 
   // 2.5. Crash Recovery - detect and restore from cloud backup
@@ -328,11 +328,10 @@ const App = () => {
     showMessage,
     setStatus,
     () => {},
-    setDatabaseQuestions,
     setAppMode,
     setShowExportMenu,
     setShowBulkExportModal,
-    setHistoricalQuestions
+    replaceQuestions
   );
 
   // Auto-load database questions on startup for difficulty distribution chart
@@ -365,20 +364,20 @@ const App = () => {
   } = useReviewActions({
     uniqueFilteredQuestions,
     allQuestions: unifiedQuestions, // Pass complete dataset for Trim accuracy
-    setQuestions,
     handleUpdateStatus,
     handleUpdateQuestion, // Pass persistent handler
     handleCritique,
     showMessage,
+    bulkDeleteQuestions,
   });
 
   // 10. Database Actions
   const { handleUpdateDatabaseQuestion, handleKickBackToReview } =
     useDatabaseActions({
-      setDatabaseQuestions,
-      setHistoricalQuestions,
       showMessage,
       handleLoadFromFirestore,
+      moveQuestion,
+      updateQuestionInState,
     });
 
   // 11. Navigation (depends on handleLoadFromFirestore from useExport)
@@ -492,7 +491,7 @@ const App = () => {
     );
   }
 
-  if (appMode === "landing") {
+  if (appMode === APP_MODES.LANDING) {
     return (
       <Suspense fallback={<LoadingSpinner />}>
         <LandingPage
@@ -671,9 +670,11 @@ const App = () => {
             onBulkExport: () => setShowBulkExportModal(true),
             onClearPending: handleClearPending,
             onBulkAcceptHighScores:
-              appMode === "review" ? handleBulkAcceptHighScores : undefined,
+              appMode === APP_MODES.REVIEW
+                ? handleBulkAcceptHighScores
+                : undefined,
             onBulkCritiqueAll:
-              appMode === "review" ? handleBulkCritiqueAll : undefined,
+              appMode === APP_MODES.REVIEW ? handleBulkCritiqueAll : undefined,
             onTrimExcess: handleTrimExcess,
             onAutoTagAll: handleAutoTagAll, // Added
             effectiveApiKey: effectiveApiKey,
@@ -703,7 +704,6 @@ const App = () => {
             userRole, // Add role for component restrictions
           }}
           viewRouterSetters={{
-            setDatabaseQuestions,
             setCurrentReviewIndex,
             setFilterByCreator,
             showMessage,

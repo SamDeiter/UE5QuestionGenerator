@@ -20,10 +20,10 @@ import {
 export const useReviewActions = ({
   uniqueFilteredQuestions,
   allQuestions, // Added: Full dataset for global operations
-  setQuestions,
   handleUpdateStatus,
   handleCritique,
   showMessage,
+  bulkDeleteQuestions, // Added: New semantic action
 }) => {
   /**
    * Clear all pending questions after confirmation.
@@ -34,12 +34,17 @@ export const useReviewActions = ({
         "Are you sure you want to delete ALL pending questions? This cannot be undone."
       )
     ) {
-      setQuestions((prev) =>
-        prev.filter((q) => q.status === "accepted" || q.status === "rejected")
-      );
+      if (bulkDeleteQuestions) {
+        // Collect all pending IDs from the full dataset
+        const pendingIds = allQuestions
+          .filter((q) => q.status !== "accepted" && q.status !== "rejected")
+          .map((q) => q.id);
+
+        bulkDeleteQuestions(pendingIds);
+      }
       showMessage("All pending questions cleared.", 3000);
     }
-  }, [setQuestions, showMessage]);
+  }, [bulkDeleteQuestions, allQuestions, showMessage]);
 
   /**
    * Bulk accept all questions with critique score >= threshold that are human verified.
@@ -176,12 +181,14 @@ export const useReviewActions = ({
         )
       ) {
         // Get IDs of questions to delete
-        const idsToDelete = new Set(pendingToDelete.map((q) => q.id));
-
-        // Actually remove questions from the array
-        setQuestions((prevQuestions) =>
-          prevQuestions.filter((q) => !idsToDelete.has(q.id))
+        const idsToDelete = Array.from(
+          new Set(pendingToDelete.map((q) => q.id))
         );
+
+        // Use new bulk action if available
+        if (bulkDeleteQuestions) {
+          bulkDeleteQuestions(idsToDelete);
+        }
 
         showMessage(
           `✅ Trimmed ${pendingToDelete.length} questions successfully!`,
@@ -189,7 +196,7 @@ export const useReviewActions = ({
         );
       }
     },
-    [uniqueFilteredQuestions, allQuestions, showMessage, setQuestions]
+    [uniqueFilteredQuestions, allQuestions, showMessage, bulkDeleteQuestions]
   );
 
   return {

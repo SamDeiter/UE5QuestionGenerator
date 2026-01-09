@@ -18,6 +18,7 @@ const QuestionList = ({
   onUpdateQuestion,
   showMessage,
   userRole, // NEW
+  allQuestionsMap,
 }) => {
   return (
     <Virtuoso

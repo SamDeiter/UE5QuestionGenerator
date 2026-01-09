@@ -1,5 +1,7 @@
 import Icon from "./Icon";
 import { APP_VERSION } from "../utils/constants";
+import Button from "./ui/Button";
+import Card from "./ui/Card";
 
 const LandingPage = ({
   onSelectMode,
@@ -21,13 +23,13 @@ const LandingPage = ({
               API Key Not Configured - Question generation is disabled
             </span>
           </div>
-          <button
+          <Button
             onClick={onOpenSettings}
-            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors duration-200 font-medium"
+            variant="primary"
             aria-label="Open settings to configure API key"
           >
             Configure Now
-          </button>
+          </Button>
         </div>
       )}
 
@@ -58,21 +60,24 @@ const LandingPage = ({
         </p>
 
         {onStartTutorial && (
-          <button
+          <Button
             onClick={onStartTutorial}
-            className="inline-flex items-center gap-2 text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors"
+            variant="ghost"
+            size="sm"
+            className="text-orange-400 hover:text-orange-300"
           >
-            <Icon name="help-circle" size={16} />
+            <Icon name="help-circle" size={16} className="mr-2" />
             Take a quick tour
-          </button>
+          </Button>
         )}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center w-full">
-        <button
+        <Card
+          as="button"
           onClick={() => isAdmin && onSelectMode("create")}
           disabled={!isAdmin}
-          className={`group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 rounded-xl transition-all duration-300 w-full sm:w-64 shadow-lg 
+          className={`group relative flex flex-col items-center w-full sm:w-64 transition-all duration-300
                         ${
                           isAdmin
                             ? "hover:border-orange-500/50 hover:bg-slate-800/80 hover:shadow-orange-900/20 cursor-pointer"
@@ -107,9 +112,10 @@ const LandingPage = ({
           </p>
         </button>
 
-        <button
+        <Card
+          as="button"
           onClick={() => onSelectMode("review")}
-          className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-indigo-900/20"
+          className="group relative flex flex-col items-center w-full sm:w-64 hover:border-indigo-500/50 hover:bg-slate-800/80 hover:shadow-indigo-900/20 transition-all duration-300"
         >
           <div className="p-3 bg-indigo-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
             <Icon name="list-checks" size={32} className="text-indigo-500" />
@@ -118,11 +124,12 @@ const LandingPage = ({
           <p className="text-xs text-slate-400 text-center">
             Manage existing database, approve/reject questions, and bulk export.
           </p>
-        </button>
+        </Card>
 
-        <button
+        <Card
+          as="button"
           onClick={() => onSelectMode("database")}
-          className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-blue-900/20"
+          className="group relative flex flex-col items-center w-full sm:w-64 hover:border-blue-500/50 hover:bg-slate-800/80 hover:shadow-blue-900/20 transition-all duration-300"
         >
           <div className="p-3 bg-blue-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
             <Icon name="database" size={32} className="text-blue-500" />
@@ -131,11 +138,12 @@ const LandingPage = ({
           <p className="text-xs text-slate-400 text-center">
             Browse all approved questions from the shared Firestore database.
           </p>
-        </button>
+        </Card>
 
-        <button
+        <Card
+          as="button"
           onClick={() => onSelectMode("analytics")}
-          className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-emerald-900/20"
+          className="group relative flex flex-col items-center w-full sm:w-64 hover:border-emerald-500/50 hover:bg-slate-800/80 hover:shadow-emerald-900/20 transition-all duration-300"
         >
           <div className="p-3 bg-emerald-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
             <Icon name="bar-chart-2" size={32} className="text-emerald-500" />
@@ -144,13 +152,14 @@ const LandingPage = ({
           <p className="text-xs text-slate-400 text-center">
             View generation metrics, quality trends, and URL validation stats.
           </p>
-        </button>
+        </Card>
 
         {/* Admin Panel - Only shown to admins */}
         {isAdmin && (
-          <button
+          <Card
+            as="button"
             onClick={() => onSelectMode("admin")}
-            className="group relative flex flex-col items-center p-6 bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-xl hover:bg-slate-800/80 transition-all duration-300 w-full sm:w-64 shadow-lg hover:shadow-purple-900/20"
+            className="group relative flex flex-col items-center w-full sm:w-64 hover:border-purple-500/50 hover:bg-slate-800/80 hover:shadow-purple-900/20 transition-all duration-300"
           >
             <div className="p-3 bg-purple-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
               <Icon name="shield" size={32} className="text-purple-500" />
@@ -159,7 +168,7 @@ const LandingPage = ({
             <p className="text-xs text-slate-400 text-center">
               Manage users, invites, system settings, and API configuration.
             </p>
-          </button>
+          </Card>
         )}
       </div>
 
