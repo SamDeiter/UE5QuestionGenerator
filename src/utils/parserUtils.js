@@ -209,6 +209,14 @@ export const parseQuestions = (text) => {
             };
           }
 
+          // Parse tags - can be array or comma-separated string
+          let tags = [];
+          if (item.Tags) {
+            tags = Array.isArray(item.Tags)
+              ? item.Tags
+              : item.Tags.split(",").map((t) => t.trim());
+          }
+
           parsed.push({
             id: Date.now() + index + Math.random(),
             uniqueId: crypto.randomUUID(),
@@ -224,11 +232,7 @@ export const parseQuestions = (text) => {
             status: "pending",
             critique: null,
             critiqueScore: null,
-            tags: item.Tags
-              ? Array.isArray(item.Tags)
-                ? item.Tags
-                : item.Tags.split(",").map((t) => t.trim())
-              : [],
+            tags,
           });
         });
 

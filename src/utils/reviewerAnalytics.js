@@ -36,6 +36,16 @@ export const fetchReviewedQuestions = async () => {
 
     return questions;
   } catch (error) {
+    // Handle permission errors gracefully - user may not be admin
+    if (
+      error.code === "permission-denied" ||
+      error.message?.includes("insufficient permissions")
+    ) {
+      logger.warn(
+        "User does not have permission to access audit_logs. Admin access required."
+      );
+      return []; // Return empty array instead of throwing
+    }
     logger.error("Error fetching reviewed questions:", error);
     throw error;
   }
@@ -194,6 +204,24 @@ export const getReviewerAnalytics = async () => {
       },
     };
   } catch (error) {
+    // Handle permission errors gracefully
+    if (
+      error.code === "permission-denied" ||
+      error.message?.includes("insufficient permissions")
+    ) {
+      logger.warn(
+        "User does not have permission for reviewer analytics. Admin access required."
+      );
+      return {
+        reviewerStats: [],
+        metadata: {
+          totalQuestionsReviewed: 0,
+          totalReviewers: 0,
+          lastUpdated: new Date().toISOString(),
+          error: "Admin access required",
+        },
+      };
+    }
     logger.error("Error getting reviewer analytics:", error);
     throw error;
   }

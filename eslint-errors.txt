@@ -53,14 +53,8 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\__tests__\us
   221:16  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
   228:16  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
 
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\useQuestionCritique.js
-  91:19  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
-
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\utils\questionConverter.js
   44:31  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionActions.js
-  44:13  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionSync.js
   26:19  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
@@ -75,5 +69,5 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\__tests__\sa
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\parserUtils.js
   228:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
 
-Γ£û 34 problems (34 errors, 0 warnings)
+Γ£û 32 problems (32 errors, 0 warnings)
 

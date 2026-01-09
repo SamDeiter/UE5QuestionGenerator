@@ -50,17 +50,20 @@ const QuestionNotesField = ({ question, onUpdateQuestion, showMessage }) => {
       <div className="flex justify-between items-center mt-1">
         {isSaving && <p className="text-xs text-slate-500">Saving...</p>}
         <div className="flex-1"></div>
-        <span
-          className={`text-xs text-right ${
-            notes.length >= 500
-              ? "text-red-400"
-              : notes.length >= 450
-              ? "text-orange-400"
-              : "text-slate-500"
-          }`}
-        >
-          {notes.length} / 500 characters
-        </span>
+        {/* Character count color based on length */}
+        {(() => {
+          let colorClass = "text-slate-500";
+          if (notes.length >= 500) {
+            colorClass = "text-red-400";
+          } else if (notes.length >= 450) {
+            colorClass = "text-orange-400";
+          }
+          return (
+            <span className={`text-xs text-right ${colorClass}`}>
+              {notes.length} / 500 characters
+            </span>
+          );
+        })()}
       </div>
     </div>
   );

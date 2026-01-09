@@ -91,17 +91,22 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         const auditLogSnapshot = await getDocs(auditLogQuery);
         auditLogSnapshot.forEach((doc) => {
           const data = doc.data();
+          // Format details for display
+          let formattedDetails = "No details";
+          if (data.details) {
+            formattedDetails =
+              typeof data.details === "string"
+                ? data.details
+                : JSON.stringify(data.details);
+          }
+
           combinedLogs.push({
             id: doc.id,
             type: "system", // generic system event
             action: data.eventType || "unknown",
             userId: data.userId,
             timestamp: data.timestamp?.toDate?.() || new Date(),
-            details: data.details
-              ? typeof data.details === "string"
-                ? data.details
-                : JSON.stringify(data.details)
-              : "No details",
+            details: formattedDetails,
           });
         });
       } catch (err) {
