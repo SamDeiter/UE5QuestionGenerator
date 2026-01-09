@@ -37,7 +37,7 @@ describe("fileProcessor", () => {
     const v17Header =
       "ID,Unique ID,Status,Discipline,Difficulty,Type,Question,Option A,Option B,Option C,Option D,Answer,Explanation,Language,Source URL,Date";
     const v16Header =
-      "ID,Unique ID,Discipline,Type,Difficulty,Question,Option A,Option B,Option C,Option D,Answer,Date,Source URL,Source Excerpt,Creator,Reviewer,Language";
+      "ID,Unique ID,Discipline,Type,Difficulty,Question,Option A,Option B,Option C,Option D,Answer,Date,Source URL,Source Excerpt,Source Verified,Human Verified,Human Verified At,Human Verified By,Creator,Reviewer,Language";
 
     it("parses v1.7 format correctly", () => {
       const row =
@@ -55,7 +55,7 @@ describe("fileProcessor", () => {
 
     it("parses v1.6 format correctly", () => {
       const row =
-        "1,uid456,Code,Multiple Choice,Hard,Q2,A,B,C,D,B,2023-01-01,http://url,Excerpt,Creator,Rev,Spanish";
+        "1,uid456,Code,Multiple Choice,Hard,Q2,A,B,C,D,B,2023-01-01,http://url,Excerpt,Yes,No,,,Creator,Rev,Spanish";
       const content = `${v16Header}\n${row}`;
 
       const result = parseCSVQuestions(content, "test.csv", "DefaultCreator");

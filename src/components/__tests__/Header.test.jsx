@@ -20,6 +20,15 @@ vi.mock("../../services/firebase", () => ({
   signOutUser: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("../../contexts/AccessibilityContext", () => ({
+  useAccessibility: () => ({
+    fontClass: "font-normal",
+    setFontClass: vi.fn(),
+    highContrast: false,
+    setHighContrast: vi.fn(),
+  }),
+}));
+
 // Mock environment variables
 vi.stubEnv("VITE_FIREBASE_PROJECT_ID", "test-dev-project");
 vi.stubEnv("VITE_SUPER_ADMIN_EMAIL", "super@example.com");
