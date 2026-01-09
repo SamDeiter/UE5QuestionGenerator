@@ -15,7 +15,7 @@ import { logger } from "../utils/logger";
  */
 export const fetchReviewedQuestions = async () => {
   try {
-    const auditRef = collection(getDb(), "audit_logs");
+    const auditRef = collection(getDb(), "audit-log");
 
     // Query for questions that have been completed (accepted or rejected)
     const q = query(
@@ -42,7 +42,7 @@ export const fetchReviewedQuestions = async () => {
       error.message?.includes("insufficient permissions")
     ) {
       logger.warn(
-        "User does not have permission to access audit_logs. Admin access required."
+        "User does not have permission to access audit-log. Admin access required."
       );
       return []; // Return empty array instead of throwing
     }
