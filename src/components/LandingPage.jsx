@@ -110,7 +110,7 @@ const LandingPage = ({
               ? "Generate new questions, upload CSVs, and translate content."
               : "Restricted to administrators. Contact support for access."}
           </p>
-        </button>
+        </Card>
 
         <Card
           as="button"
