@@ -5,7 +5,7 @@
  * Run this in the browser console (F12) when signed in as admin
  */
 
-import { db } from "./src/services/firebase.js";
+import { getDb } from "./src/services/firebase.js";
 import {
   collection,
   query,
@@ -21,7 +21,7 @@ export async function bulkDeleteSoftDeleted(discipline = null, dryRun = true) {
 
   try {
     // Query for all "deleted" questions
-    const questionsRef = collection(db, "questions");
+    const questionsRef = collection(getDb(), "questions");
     let q = query(questionsRef, where("status", "==", "deleted"));
 
     // Optionally filter by discipline

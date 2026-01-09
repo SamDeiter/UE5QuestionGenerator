@@ -15,7 +15,7 @@ import {
   limit,
   Timestamp,
 } from "firebase/firestore";
-import { db, auth } from "./firebase";
+import { getDb, auth } from "./firebase";
 import { logger } from "../utils/logger";
 
 /**
@@ -62,7 +62,10 @@ export const saveTrainingPair = async (
       correctedAt: Timestamp.now(),
     };
 
-    const docRef = await addDoc(collection(db, "training_data"), trainingData);
+    const docRef = await addDoc(
+      collection(getDb(), "training_data"),
+      trainingData
+    );
 
     logger.log(`✅ Training pair saved: ${docRef.id}`);
     return { success: true, docId: docRef.id };
@@ -85,7 +88,7 @@ export const exportTrainingData = async (maxRecords = 1000) => {
     }
 
     const trainingQuery = query(
-      collection(db, "training_data"),
+      collection(getDb(), "training_data"),
       orderBy("correctedAt", "desc"),
       limit(maxRecords)
     );
@@ -192,7 +195,7 @@ export const exportRejectedQuestions = async (maxRecords = 500) => {
 
     // Query questions with status "rejected"
     const rejectedQuery = query(
-      collection(db, "questions"),
+      collection(getDb(), "questions"),
       orderBy("lastModified", "desc"),
       limit(maxRecords)
     );

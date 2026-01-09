@@ -109,8 +109,8 @@ const App = () => {
       // Initialize agents with Firestore instance
       const initAgents = async () => {
         try {
-          const { db } = await import("./services/firebase");
-          initializeAgents(db);
+          const { getDb } = await import("./services/firebase");
+          initializeAgents(getDb());
           logger.log("✅ Concurrent editing agents initialized");
         } catch (error) {
           logger.error("❌ Failed to initialize agents:", error);

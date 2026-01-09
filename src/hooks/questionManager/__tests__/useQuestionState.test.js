@@ -1,8 +1,9 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionState } from "../useQuestionState";
-import * as secureStorage from "../../../utils/secureStorage";
-import { STORAGE_KEYS } from "../../../utils/constants";
+import { getSecureItem, setSecureItem } from "../../../utils/secureStorage";
+import { logger } from "../../../utils/logger";
+import { STORAGE_KEYS, QUESTION_SOURCES } from "../../../utils/constants";
 
 // Mock dependencies
 vi.mock("../../../utils/secureStorage", () => ({
@@ -18,106 +19,99 @@ vi.mock("../../../utils/logger", () => ({
   },
 }));
 
+vi.mock("../../../utils/constants", () => ({
+  STORAGE_KEYS: {
+    QUESTIONS: "questions_key",
+  },
+  QUESTION_SOURCES: {
+    SESSION: "session",
+  },
+}));
+
 describe("useQuestionState", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("should initialize with empty array if storage is empty", () => {
-    secureStorage.getSecureItem.mockReturnValue(null);
-    const config = { creatorName: "TestUser" };
-
-    const { result } = renderHook(() => useQuestionState(config));
-
-    expect(result.current[0]).toEqual([]);
-    expect(secureStorage.getSecureItem).toHaveBeenCalledWith(
-      STORAGE_KEYS.QUESTIONS
-    );
+    getSecureItem.mockReturnValue(null);
+    const { result } = renderHook(() => useQuestionState({}));
+    const [allQuestions] = result.current;
+    expect(allQuestions).toEqual([]);
   });
 
-  it("should initialize with stored questions marked as session", () => {
-    const storedQuestions = [{ id: "q1", text: "Test?" }];
-    secureStorage.getSecureItem.mockReturnValue(storedQuestions);
-    const config = {}; // No creatorName to prevent backfill effect
+  it("should initialize with session questions from storage", async () => {
+    const mockSaved = [{ id: 1, text: "foo" }];
+    getSecureItem.mockReturnValue(mockSaved);
+    const { result } = renderHook(() => useQuestionState({}));
 
-    const { result } = renderHook(() => useQuestionState(config));
-
-    expect(result.current[0]).toEqual([
-      { id: "q1", text: "Test?", _source: "session" },
-    ]);
+    await waitFor(() => {
+      const [allQuestions] = result.current;
+      expect(allQuestions).toHaveLength(1);
+      expect(allQuestions[0]).toEqual({
+        ...mockSaved[0],
+        _source: QUESTION_SOURCES.SESSION,
+      });
+    });
   });
 
-  it("should sync changes to secureStorage (stripping _source)", () => {
-    secureStorage.getSecureItem.mockReturnValue([]);
-    const config = {}; // Prevent backfill
+  it("should persist session questions to storage on change", () => {
+    getSecureItem.mockReturnValue([]);
+    const { result } = renderHook(() => useQuestionState({}));
+    const [, setAllQuestions] = result.current;
 
-    const { result } = renderHook(() => useQuestionState(config));
-    const [_, setAllQuestions] = result.current;
-
+    const newQ = { id: 2, text: "bar", _source: QUESTION_SOURCES.SESSION };
     act(() => {
-      setAllQuestions([
-        { id: "q1", text: "New", _source: "session" },
-        { id: "q2", text: "Imported", _source: "import" }, // Should not be saved
-      ]);
+      setAllQuestions([newQ]);
     });
 
-    // Check second call (first is initial effect)
-    // Actually the effect runs on every render/change.
-    // The initial empty array also triggers useEfffect -> setSecureItem([], ...)
-
-    // getSecureItem returns [], initial state is [], useEffect runs.
-    expect(secureStorage.setSecureItem).toHaveBeenCalledWith(
+    expect(setSecureItem).toHaveBeenCalledWith(
       STORAGE_KEYS.QUESTIONS,
-      []
-    ); // First call
-
-    // After update
-    // We expect cleanQuestions to only contain session questions without _source
-    const expectedStored = [{ id: "q1", text: "New" }];
-
-    // Find the call with the updated data
-    const calls = secureStorage.setSecureItem.mock.calls;
-    const lastCall = calls[calls.length - 1];
-
-    expect(lastCall[0]).toBe(STORAGE_KEYS.QUESTIONS);
-    expect(lastCall[1]).toEqual(expectedStored);
+      [{ id: 2, text: "bar" }] // _source should be removed
+    );
   });
 
-  it("should backfill creatorName for session questions", () => {
-    const storedQuestions = [
-      { id: "q1", text: "NoCreator" },
-      { id: "q2", text: "HasCreator", creatorName: "Existing" },
-    ];
-    secureStorage.getSecureItem.mockReturnValue(storedQuestions);
+  it("should not persist non-session questions", () => {
+    getSecureItem.mockReturnValue([]);
+    const { result } = renderHook(() => useQuestionState({}));
+    const [, setAllQuestions] = result.current;
 
-    const config = { creatorName: "NewUser" };
+    const dbQ = { id: 3, text: "baz", _source: "database" };
+    act(() => {
+      setAllQuestions([dbQ]);
+    });
+
+    // Should filter out database q, leaving empty array
+    expect(setSecureItem).toHaveBeenCalledWith(STORAGE_KEYS.QUESTIONS, []);
+  });
+
+  it("should backfill creatorName if missing for session questions", async () => {
+    const mockSaved = [{ id: 1, question: "test" }]; // Missing creatorName, implies session when loaded
+    getSecureItem.mockReturnValue(mockSaved);
+
+    const config = { creatorName: "Alice" };
     const { result } = renderHook(() => useQuestionState(config));
 
-    // Wait for effect to update state
-    // Effect runs: needsBackfill check
+    // The hook runs effects, so it should be updated
+    await waitFor(() => {
+      const [allQuestions] = result.current;
+      expect(allQuestions[0]).toBeDefined();
+      expect(allQuestions[0].creatorName).toBe("Alice");
+      expect(allQuestions[0]._source).toBe(QUESTION_SOURCES.SESSION);
+    });
+  });
 
-    // The hook initializes, then the effect runs.
-    // We check the final state.
+  it("should NOT backfill creatorName if already present", async () => {
+    const mockSaved = [{ id: 1, question: "test", creatorName: "Bob" }];
+    getSecureItem.mockReturnValue(mockSaved);
 
-    // We might need to wait for the state update, but renderHook usually handles one cycle.
-    // If it's inside useEffect with a state update, it triggers a re-render.
+    const config = { creatorName: "Alice" };
+    const { result } = renderHook(() => useQuestionState(config));
 
-    // Let's assert on the result.current[0]
-    // Note: renderHook returns a mutable ref to result.
-
-    expect(result.current[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: "q1",
-          creatorName: "NewUser",
-          _source: "session",
-        }),
-        expect.objectContaining({
-          id: "q2",
-          creatorName: "Existing",
-          _source: "session",
-        }),
-      ])
-    );
+    await waitFor(() => {
+      const [allQuestions] = result.current;
+      expect(allQuestions[0]).toBeDefined();
+      expect(allQuestions[0].creatorName).toBe("Bob");
+    });
   });
 });

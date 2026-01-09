@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+// import { QUOTA_TARGETS } from "../useQuestionManager"; // Removed unused import causing circular dependency error
+import { QUESTION_SOURCES, QUESTION_STATUS } from "../../utils/constants";
 import {
   CATEGORY_KEYS,
   TARGET_TOTAL,
@@ -11,17 +13,17 @@ import {
 export const useQuestionDerivedData = (allQuestions, config) => {
   // Derived arrays for specific sources
   const questions = useMemo(
-    () => allQuestions.filter((q) => q._source === "session"),
+    () => allQuestions.filter((q) => q._source === QUESTION_SOURCES.SESSION),
     [allQuestions]
   );
 
   const historicalQuestions = useMemo(
-    () => allQuestions.filter((q) => q._source === "import"),
+    () => allQuestions.filter((q) => q._source === QUESTION_SOURCES.IMPORT),
     [allQuestions]
   );
 
   const databaseQuestions = useMemo(
-    () => allQuestions.filter((q) => q._source === "database"),
+    () => allQuestions.filter((q) => q._source === QUESTION_SOURCES.DATABASE),
     [allQuestions]
   );
 
@@ -84,7 +86,9 @@ export const useQuestionDerivedData = (allQuestions, config) => {
 
     unifiedQuestions.forEach((q) => {
       if (
-        (q.status === "accepted" || q.status === "pending" || !q.status) &&
+        (q.status === QUESTION_STATUS.ACCEPTED ||
+          q.status === QUESTION_STATUS.PENDING ||
+          !q.status) &&
         q.discipline === config.discipline
       ) {
         const typeAbbrev = q.type === "True/False" ? "T/F" : "MC";
@@ -98,17 +102,22 @@ export const useQuestionDerivedData = (allQuestions, config) => {
   }, [unifiedQuestions, config.discipline]);
 
   const approvedCount = useMemo(
-    () => unifiedQuestions.filter((q) => q.status === "accepted").length,
+    () =>
+      unifiedQuestions.filter((q) => q.status === QUESTION_STATUS.ACCEPTED)
+        .length,
     [unifiedQuestions]
   );
   const rejectedCount = useMemo(
-    () => unifiedQuestions.filter((q) => q.status === "rejected").length,
+    () =>
+      unifiedQuestions.filter((q) => q.status === QUESTION_STATUS.REJECTED)
+        .length,
     [unifiedQuestions]
   );
   const pendingCount = useMemo(
     () =>
-      unifiedQuestions.filter((q) => !q.status || q.status === "pending")
-        .length,
+      unifiedQuestions.filter(
+        (q) => !q.status || q.status === QUESTION_STATUS.PENDING
+      ).length,
     [unifiedQuestions]
   );
   const otherCount = useMemo(

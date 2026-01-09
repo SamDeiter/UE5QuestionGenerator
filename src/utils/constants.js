@@ -106,12 +106,17 @@ export const UI_LABELS = {
 
 export const DEFAULT_CONFIG = {
   apiKey: "",
-  sheetUrl: "",
+  sheetUrl:
+    "https://script.google.com/a/macros/epicgames.com/s/AKfycbxssaKhw3pOWkC9sPJE_6oMZuG66JYCgeEQFEHh010Q90wlHqH64oiVhFjE1JQkSTV6/exec",
   creatorName: "",
   reviewerName: "",
-  discipline: "Technical Art",
-  difficulty: "Easy MC",
+  discipline: "Tech Art",
+  difficulty: "Beginner", // Changed from "Easy MC" to match useAppConfig
+  type: "Multiple Choice",
   language: "English",
+  batchSize: "6",
+  model: "gemini-2.0-flash",
+  tags: [],
 };
 
 export const ERROR_MESSAGES = {
@@ -128,6 +133,7 @@ export const STORAGE_KEYS = {
   PREF_HISTORY: "ue5_pref_history",
   PREF_REVIEW_INDEX: "ue5_pref_review_index",
   PREF_LAST_ID: "ue5_pref_last_id",
+  APP_MODE: "ue5_app_mode",
 };
 
 // Context Optimization Limits
@@ -222,6 +228,12 @@ export const QUESTION_STATUS = {
   ACCEPTED: "accepted",
   REJECTED: "rejected",
   DELETED: "deleted",
+};
+
+export const QUESTION_DIFFICULTY = {
+  BEGINNER: "Beginner",
+  INTERMEDIATE: "Intermediate",
+  EXPERT: "Expert",
 };
 
 // App Modes

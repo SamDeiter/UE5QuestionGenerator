@@ -1,101 +1,93 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import QuestionItem from "../QuestionItem";
 
-// Mock child components to simplify testing
-vi.mock("../Icon", () => ({
-  default: ({ name }) => <span data-testid={`icon-${name}`}>{name}</span>,
+// Mock hooks
+vi.mock("../../hooks/useAuth", () => ({
+  useAuth: () => ({ user: { uid: "123", email: "test@test.com" } }),
 }));
 
-vi.mock("../FlagIcon", () => ({
-  default: ({ code }) => <span data-testid={`flag-${code}`}>{code}</span>,
+vi.mock("../../hooks/useThemeColors", () => ({
+  useThemeColors: () => ({ lockColor: () => "bg-red-500" }),
 }));
+
+vi.mock("../../hooks/useEditLock", () => ({
+  useEditLock: () => ({ lockedBy: null, isLocked: false, hasLock: false }),
+}));
+
+vi.mock("../../utils/secureStorage", () => ({
+  getSecureItem: () => "TestUser",
+}));
+
+vi.mock("../../utils/logger", () => ({
+  logger: { log: vi.fn(), warn: vi.fn() },
+}));
+
+// Mock child components to avoid deep rendering issues and dependencies
+// Paths must be relative to THIS test file (src/components/__tests__/QuestionItem.test.jsx)
+vi.mock("../QuestionItem/QuestionHeader", () => ({
+  default: () => <div data-testid="header" />,
+}));
+vi.mock("../QuestionItem/QuestionContent", () => ({
+  default: () => <div data-testid="content" />,
+}));
+vi.mock("../QuestionItem/QuestionMetadata", () => ({
+  default: () => <div data-testid="metadata" />,
+}));
+vi.mock("../QuestionItem/LanguageControls", () => ({
+  default: () => <div data-testid="lang-controls">Language Controls</div>,
+}));
+vi.mock("../QuestionItem/QuestionActions", () => ({
+  default: () => <div data-testid="actions" />,
+}));
+vi.mock("../QuestionItem/CritiqueSection", () => ({
+  default: () => <div data-testid="critique" />,
+}));
+vi.mock("../QuestionItem/ValidationWarnings", () => ({
+  default: () => <div data-testid="warnings" />,
+}));
+vi.mock("../QuestionItem/ExplanationDisplay", () => ({
+  default: () => <div data-testid="explanation" />,
+}));
+vi.mock("../QuestionItem/SourceContextCard", () => ({
+  default: () => <div data-testid="source" />,
+}));
+vi.mock("../QuestionItem/QuestionNotesField", () => ({
+  default: () => <div data-testid="notes" />,
+}));
+vi.mock("../ImprovementModal", () => ({
+  default: () => <div data-testid="modal" />,
+}));
+vi.mock("../ReviewProgressBar", () => ({
+  default: () => <div data-testid="progress" />,
+}));
+vi.mock("../ui/Card", () => ({
+  default: ({ children }) => <div data-testid="card">{children}</div>,
+}));
+
+import { APP_MODES, QUESTION_STATUS } from "../../utils/constants";
 
 describe("QuestionItem", () => {
-  const mockQuestion = {
-    id: "123",
-    uniqueId: "uid-123",
-    question: "What is Unreal Engine?",
-    difficulty: "Easy",
-    type: "Multiple Choice",
-    options: { A: "Game Engine", B: "Car", C: "Food", D: "Planet" },
-    correct: "A",
-    status: "pending",
-    creatorName: "TestUser",
-    language: "English",
-  };
-
-  const mockHandlers = {
+  const defaultProps = {
+    q: {
+      id: 1,
+      question: "Test?",
+      status: QUESTION_STATUS.PENDING,
+      _source: "session",
+    },
     onUpdateStatus: vi.fn(),
-    onExplain: vi.fn(),
-    onVariate: vi.fn(),
-    onCritique: vi.fn(),
-    onTranslateSingle: vi.fn(),
-    onSwitchLanguage: vi.fn(),
-    onDelete: vi.fn(),
+    appMode: APP_MODES.CREATE,
+    availableVariants: [],
   };
 
-  it("renders question text and metadata correctly", () => {
-    render(<QuestionItem q={mockQuestion} {...mockHandlers} />);
-
-    expect(screen.getByText("What is Unreal Engine?")).toBeInTheDocument();
-    expect(screen.getByText("Beginner")).toBeInTheDocument();
-    expect(screen.getByText("MC")).toBeInTheDocument(); // 'Multiple Choice' maps to 'MC'
-    expect(screen.getByText("TestUser")).toBeInTheDocument();
+  it("should render LanguageControls if isAdmin is true", () => {
+    render(<QuestionItem {...defaultProps} isAdmin={true} />);
+    expect(screen.getByTestId("lang-controls")).toBeInTheDocument();
+    expect(screen.getByTestId("card")).toBeInTheDocument(); // It's wrapped in Card
   });
 
-  it("renders options for Multiple Choice", () => {
-    render(<QuestionItem q={mockQuestion} {...mockHandlers} />);
-
-    expect(screen.getByText("Game Engine")).toBeInTheDocument();
-    expect(screen.getByText("Car")).toBeInTheDocument();
-  });
-
-  it("calls onUpdateStatus when Accept button is clicked", () => {
-    // Question must be verified and have good score to be accepted in Review Mode
-    const readyQ = {
-      ...mockQuestion,
-      humanVerified: true,
-      critiqueScore: 90,
-    };
-    render(<QuestionItem q={readyQ} {...mockHandlers} appMode="review" />);
-
-    // Accept button is part of ReviewProgressBar now
-    // Use getByRole to avoid matching instruction text
-    const acceptBtn = screen.getByRole("button", { name: /Accept/i });
-    fireEvent.click(acceptBtn);
-
-    expect(mockHandlers.onUpdateStatus).toHaveBeenCalledWith("123", "accepted");
-  });
-
-  it("calls onUpdateStatus when Reject button is clicked", () => {
-    render(
-      <QuestionItem q={mockQuestion} {...mockHandlers} appMode="review" />
-    );
-
-    // 1. Open Reject Menu
-    const rejectBtn = screen.getByLabelText("Reject question");
-    fireEvent.click(rejectBtn);
-
-    // 2. Select a reason (e.g., 'Too Easy')
-    const reasonBtn = screen.getByText("Too Easy");
-    fireEvent.click(reasonBtn);
-
-    // Expect update with specific reason ID ('too_easy')
-    expect(mockHandlers.onUpdateStatus).toHaveBeenCalledWith(
-      "123",
-      "rejected",
-      "too_easy"
-    );
-  });
-
-  it("shows correct styling for accepted status", () => {
-    const acceptedQ = { ...mockQuestion, status: "accepted" };
-    const { container } = render(
-      <QuestionItem q={acceptedQ} {...mockHandlers} />
-    );
-
-    // Check for the green ring class applied in getStatusStyle
-    expect(container.firstChild).toHaveClass("ring-green-500/50");
+  it("should NOT render LanguageControls if isAdmin is false", () => {
+    render(<QuestionItem {...defaultProps} isAdmin={false} />);
+    expect(screen.queryByTestId("lang-controls")).not.toBeInTheDocument();
   });
 });

@@ -6,7 +6,11 @@ import ViewRouter from "./ViewRouter";
 import EmptyState from "./EmptyState";
 import ReviewModeBanner from "./ReviewModeBanner";
 import { SuspenseSpinner as LoadingSpinner } from "./LoadingSpinner";
-import { TARGET_TOTAL, TARGET_PER_CATEGORY } from "../utils/constants";
+import {
+  TARGET_TOTAL,
+  TARGET_PER_CATEGORY,
+  APP_MODES,
+} from "../utils/constants";
 
 /**
  * MainLayout Component
@@ -132,14 +136,14 @@ const MainLayout = ({
    * @param {string} mode - Target mode: 'create' | 'review' | 'database' | 'analytics' | 'test'
    */
   const handleModeChange = (mode) => {
-    if (mode === "analytics") setAppMode("analytics");
-    else if (mode === "database") handleViewDatabase();
+    if (mode === APP_MODES.ANALYTICS) setAppMode(APP_MODES.ANALYTICS);
+    else if (mode === APP_MODES.DATABASE) handleViewDatabase();
     else handleModeSelect(mode);
   };
 
   return (
     <div className="flex flex-1 overflow-hidden">
-      {appMode === "create" && (
+      {appMode === APP_MODES.CREATE && (
         <Sidebar
           {...sidebarProps}
           TARGET_TOTAL={TARGET_TOTAL}
@@ -165,12 +169,11 @@ const MainLayout = ({
             uniqueFilteredQuestions.length === 0 &&
             questions.length === 0 &&
             !status &&
-            appMode === "create" && <EmptyState />}
-
+            appMode === APP_MODES.CREATE && <EmptyState />}
           {/* CREATE MODE: Call-to-Action Banner */}
-          {appMode === "create" && questions.length > 0 && (
+          {appMode === APP_MODES.CREATE && questions.length > 0 && (
             <ReviewModeBanner
-              onNavigateToReview={() => handleModeSelect("review")}
+              onNavigateToReview={() => handleModeSelect(APP_MODES.REVIEW)}
             />
           )}
 
@@ -187,7 +190,7 @@ const MainLayout = ({
               handlers={viewRouterHandlers}
               state={viewRouterState}
               setters={viewRouterSetters}
-              onNavigateToCreate={() => handleModeSelect("create")}
+              onNavigateToCreate={() => handleModeSelect(APP_MODES.CREATE)}
               onNavigateHome={handleGoHome}
               onStartTutorial={onStartTutorial}
               allQuestionsMap={allQuestionsMap}

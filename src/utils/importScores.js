@@ -3,7 +3,7 @@
  * Run this from the browser console in the app
  */
 
-import { db } from "../services/firebase";
+import { getDb } from "../services/firebase";
 import { doc, writeBatch } from "firebase/firestore";
 
 // Import all score batches
@@ -35,6 +35,8 @@ const allBatches = [
  */
 export async function applyScoresToFirestore(onProgress) {
   logger.log(`🔥 Starting score import for ${allBatches.length} questions...`);
+
+  const db = getDb(); // Initialize db here
 
   let updated = 0;
   let errors = 0;

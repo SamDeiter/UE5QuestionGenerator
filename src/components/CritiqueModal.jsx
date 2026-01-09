@@ -21,10 +21,10 @@ const CritiqueModal = ({
   changes,
   onApplySuggestions,
 }) => {
-  if (!isOpen || !q) return null;
-
-  // Get centralized theme colors with colorblind support
+  // Get centralized theme colors with colorblind support (must be before any returns)
   const { severityStyles } = useThemeColors();
+
+  if (!isOpen || !q) return null;
 
   // Use centralized severity styles
   const styles = severityStyles(score);

@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { getSecureItem, setSecureItem } from "../utils/secureStorage";
 import { logger } from "../utils/logger";
+import { DEFAULT_CONFIG, STORAGE_KEYS, APP_MODES } from "../utils/constants";
 
 export const useAppConfig = () => {
   // Application mode: 'landing' (home screen), 'create' (generation mode), 'review' (review mode), 'database' (view all)
-  // Application mode: 'landing' (home screen), 'create' (generation mode), 'review' (review mode), 'database' (view all)
   const [appMode, setAppMode] = useState(() => {
     // SECURITY: Get mode from localStorage if available to prevent flash-resets on hydrate
-    if (typeof window === "undefined") return "landing";
-    return localStorage.getItem("ue5_app_mode") || "landing";
+    if (typeof window === "undefined") return APP_MODES.LANDING;
+    return localStorage.getItem(STORAGE_KEYS.APP_MODE) || APP_MODES.LANDING;
   });
 
   // Check if running in internal Canvas environment (has auto-injected API key)
@@ -26,29 +26,17 @@ export const useAppConfig = () => {
 
   // Main application configuration (persisted to localStorage)
   const [config, setConfig] = useState(() => {
-    const saved = getSecureItem("ue5_gen_config");
-    const defaults = {
-      discipline: "Tech Art",
-      batchSize: "6",
-      difficulty: "Beginner",
-      type: "Multiple Choice", // Explicit type selection (no Balanced mode)
-      language: "English",
-      creatorName: "",
-      reviewerName: "",
-      apiKey: "",
-      sheetUrl:
-        "https://script.google.com/a/macros/epicgames.com/s/AKfycbxssaKhw3pOWkC9sPJE_6oMZuG66JYCgeEQFEHh010Q90wlHqH64oiVhFjE1JQkSTV6/exec",
-      model: "gemini-2.0-flash",
-      tags: [], // Selected sub-topic tags
-    };
+    const saved = getSecureItem(STORAGE_KEYS.CONFIG);
 
-    const initialConfig = saved ? { ...defaults, ...saved } : defaults;
+    // Merge saved config with defaults
+    const initialConfig = saved
+      ? { ...DEFAULT_CONFIG, ...saved }
+      : { ...DEFAULT_CONFIG };
 
-    // Ensure all required fields have default values
+    // Ensure all required fields have default values (double-check)
     initialConfig.creatorName = initialConfig.creatorName || "";
     initialConfig.reviewerName = initialConfig.reviewerName || "";
     initialConfig.apiKey = initialConfig.apiKey || "";
-    initialConfig.sheetUrl = initialConfig.sheetUrl || defaults.sheetUrl;
 
     return initialConfig;
   });
@@ -72,15 +60,6 @@ export const useAppConfig = () => {
     apiKeyStatus = "Not Set";
   }
 
-  // DEBUG: Uncomment to debug API status (removed to reduce console spam)
-  // logger.log("🔍 [useAppConfig] API Status Debug:", {
-  //   isInternalEnvironment,
-  //   hasClientKey,
-  //   isAuthReady,
-  //   isApiReady,
-  //   apiKeyStatus,
-  // });
-
   // UI States
   const [showNameModal, setShowNameModal] = useState(false);
   const [showGenSettings, setShowGenSettings] = useState(true);
@@ -98,7 +77,7 @@ export const useAppConfig = () => {
     if (!hasInitialized.current) {
       hasInitialized.current = true;
       // Only show modal if name is truly empty after initial load
-      const savedConfig = getSecureItem("ue5_gen_config");
+      const savedConfig = getSecureItem(STORAGE_KEYS.CONFIG);
       if (!savedConfig?.creatorName && !config.creatorName) {
         setShowNameModal(true);
       }
@@ -107,14 +86,15 @@ export const useAppConfig = () => {
     // After initial mount, show modal if name becomes empty
     if (!config.creatorName) setShowNameModal(true);
   }, [config.creatorName]);
+
   useEffect(() => {
-    setSecureItem("ue5_gen_config", config);
+    setSecureItem(STORAGE_KEYS.CONFIG, config);
   }, [config]);
 
   // Persist appMode to localStorage independently for faster restoration
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("ue5_app_mode", appMode);
+      localStorage.setItem(STORAGE_KEYS.APP_MODE, appMode);
     }
   }, [appMode]);
 

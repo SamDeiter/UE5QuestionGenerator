@@ -5,9 +5,9 @@ import PromptDialog from "./PromptDialog";
 import { clearQuestionsFromSheets } from "../services/googleSheets";
 import {
   clearAllQuestionsFromFirestore,
-  db,
   auth,
   deleteQuestionFromFirestore,
+  getDb, // Changed: Replaced 'db' with 'getDb'
 } from "../services/firebase";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { logger } from "../utils/logger";
@@ -115,7 +115,7 @@ const DangerZoneModal = ({
 
     try {
       const creatorName = config.creatorName || "Unknown";
-      const querySnapshot = await getDocs(collection(db, "questions"));
+      const querySnapshot = await getDocs(collection(getDb(), "questions")); // Changed: Used getDb()
 
       const questionsToUpdate = [];
       querySnapshot.forEach((docSnap) => {
@@ -154,7 +154,7 @@ const DangerZoneModal = ({
             "Creator:",
             question.creatorName
           );
-          const questionRef = doc(db, "questions", question.firestoreId);
+          const questionRef = doc(getDb(), "questions", question.firestoreId); // Changed: Used getDb()
           await updateDoc(questionRef, {
             creatorName: creatorName,
             backfilledAt: new Date().toISOString(),
@@ -208,7 +208,7 @@ const DangerZoneModal = ({
       logger.log("🔥 Admin nuke initiated by:", auth.currentUser.email);
 
       // Fetch ALL questions without filter
-      const snapshot = await getDocs(collection(db, "questions"));
+      const snapshot = await getDocs(collection(getDb(), "questions")); // Changed: Used getDb()
       const allQuestions = snapshot.docs.map((doc) => ({
         uniqueId: doc.id,
         ...doc.data(),

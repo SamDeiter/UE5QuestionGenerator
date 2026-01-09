@@ -11,7 +11,7 @@
  * using their dateAdded or current timestamp as fallback.
  */
 
-import { db } from "../services/firebase.js";
+import { getDb } from "../services/firebase.js";
 import {
   collection,
   getDocs,
@@ -25,7 +25,7 @@ export const migrateFirestoreUpdatedAt = async () => {
   try {
     logger.log("🔄 Starting firestoreUpdatedAt migration...");
 
-    const questionsRef = collection(db, "questions");
+    const questionsRef = collection(getDb(), "questions");
     const snapshot = await getDocs(questionsRef);
 
     let updatedCount = 0;
@@ -43,7 +43,7 @@ export const migrateFirestoreUpdatedAt = async () => {
           : new Date();
 
         batch.push(
-          updateDoc(doc(db, "questions", docSnap.id), {
+          updateDoc(doc(getDb(), "questions", docSnap.id), {
             firestoreUpdatedAt: Timestamp.fromDate(fallbackDate),
           })
         );

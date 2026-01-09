@@ -29,9 +29,11 @@ const Button = ({
   };
 
   const sizes = {
+    xs: "px-2 py-1 text-[10px] h-7",
     sm: "px-3 py-1.5 text-xs",
     md: "px-4 py-2 text-sm",
     lg: "px-6 py-3 text-base",
+    icon: "p-2", // For icon-only buttons
   };
 
   return (
@@ -58,7 +60,7 @@ Button.propTypes = {
     "ghost",
     "outline",
   ]),
-  size: PropTypes.oneOf(["sm", "md", "lg"]),
+  size: PropTypes.oneOf(["xs", "sm", "md", "lg", "icon"]),
   className: PropTypes.string,
   type: PropTypes.oneOf(["button", "submit", "reset"]),
 };

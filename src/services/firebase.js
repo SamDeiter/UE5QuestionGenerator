@@ -1,83 +1,53 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { logEvent } from "firebase/analytics";
+import { app, auth, googleProvider, firebaseConfig } from "./firebaseAuth";
 import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  deleteDoc,
-  query,
-  where,
-  Timestamp,
-  orderBy,
-  limit,
-  startAfter,
-  onSnapshot,
-  writeBatch,
-} from "firebase/firestore";
-import {
-  getAuth,
-  GoogleAuthProvider,
   signInWithPopup,
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
 } from "firebase/auth";
+import { getAnalytics, logEvent } from "firebase/analytics";
+import {
+  getFirestore,
+  getDoc,
+  doc,
+  setDoc,
+  query,
+  where,
+  getDocs,
+  collection,
+  orderBy,
+  limit,
+  deleteDoc,
+  Timestamp,
+  writeBatch,
+  onSnapshot,
+  startAfter,
+} from "firebase/firestore";
 import { logger } from "../utils/logger";
 import { TIMING, PROCESSING } from "../utils/constants";
-
-// SECURITY NOTE: CSRF Protection
-// For production deployment with a backend API proxy, add CSRF tokens:
-// import { getCSRFToken } from '../utils/csrf';
-// Include in all write operations:
-// headers: { 'X-CSRF-Token': getCSRFToken() }
-// Firebase SDK handles some CSRF protection via SameSite cookies,
-// but explicit tokens provide defense-in-depth.
-
-// Your web app's Firebase configuration
-// SECURITY: Firebase config REQUIRES environment variables - no fallbacks
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-};
-
-// Validate required config
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  logger.error(
-    "❌ Firebase configuration missing. Ensure .env.local is set up correctly."
-  );
-  logger.error(
-    "Run: npm run env:dev or npm run env:prod to configure environment."
-  );
-}
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 
 // NOTE: Analytics disabled - requires additional Firebase Console configuration
 // that causes errors in production. Re-enable after configuring in Firebase Console:
 // 1. Go to Firebase Console > Analytics > Enable Analytics
 // 2. Add the measurementId to your .env files
 const analytics = null;
-// try {
-//   if (firebaseConfig.measurementId) {
-//     analytics = getAnalytics(app);
-//   }
-// } catch (e) {
-//   logger.warn("Firebase Analytics not available:", e.message);
-// }
-const db = getFirestore(app);
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
+try {
+  if (firebaseConfig.measurementId) {
+    // analytics = getAnalytics(app); // Optimization: Keep disabled unless needed
+  }
+} catch (e) {
+  logger.warn("Firebase Analytics not available:", e.message);
+}
+
+// Lazy-load Firestore
+let _db = null;
+export const getDb = () => {
+  if (!_db) {
+    _db = getFirestore(app);
+  }
+  return _db;
+};
 
 // --- Offline Queue for Resilience ---
 let offlineQueue = [];
@@ -402,7 +372,7 @@ const saveQuestionToFirestoreInternal = async (question) => {
   }
 
   // Create a reference to the document
-  const docRef = doc(db, "questions", question.uniqueId);
+  const docRef = doc(getDb(), "questions", question.uniqueId);
 
   // Add a timestamp for when it was saved/updated in Firestore
   // Remove any undefined values that Firestore rejects
@@ -556,11 +526,11 @@ export const batchSaveQuestions = async (questions) => {
 
   for (const batch of batches) {
     try {
-      const writeBatchOp = writeBatch(db);
+      const writeBatchOp = writeBatch(getDb());
 
       batch.forEach((question) => {
         if (!question?.uniqueId) return;
-        const docRef = doc(db, "questions", question.uniqueId);
+        const docRef = doc(getDb(), "questions", question.uniqueId);
         const payload = removeUndefined({
           ...question,
           firestoreUpdatedAt: Timestamp.now(),
@@ -610,7 +580,7 @@ export const getQuestionsFromFirestore = async () => {
 
     // Load user-specific questions only
     const userQuery = query(
-      collection(db, "questions"),
+      collection(getDb(), "questions"),
       where("creatorId", "==", auth.currentUser.uid)
     );
     const userSnapshot = await getDocs(userQuery);
@@ -677,7 +647,7 @@ export const getAllQuestionsFromFirestore = async (
 
     // Load ALL questions (not filtered by creatorId)
     const allQuery = query(
-      collection(db, "questions"),
+      collection(getDb(), "questions"),
       orderBy("firestoreUpdatedAt", "desc"),
       limit(maxResults)
     );
@@ -743,7 +713,7 @@ export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
 
   // Create query for all questions
   const q = query(
-    collection(db, "questions"),
+    collection(getDb(), "questions"),
     orderBy("firestoreUpdatedAt", "desc"),
     limit(maxResults)
   );
@@ -784,7 +754,7 @@ export const getQuestionsPaginated = async (
   lastDoc = null
 ) => {
   try {
-    const db = getFirestore();
+    const db = getDb();
     let q = query(
       collection(db, "questions"),
       where("creatorId", "==", userId),
@@ -826,11 +796,11 @@ export const clearAllQuestionsFromFirestore = async () => {
     let q;
     if (auth.currentUser) {
       q = query(
-        collection(db, "questions"),
+        collection(getDb(), "questions"),
         where("creatorId", "==", auth.currentUser.uid)
       );
     } else {
-      q = collection(db, "questions");
+      q = collection(getDb(), "questions");
     }
 
     const querySnapshot = await getDocs(q);
@@ -860,7 +830,7 @@ export const clearAllQuestionsFromFirestore = async () => {
 export const deleteSoftDeletedQuestionsFromFirestore = async () => {
   try {
     const q = query(
-      collection(db, "questions"),
+      collection(getDb(), "questions"),
       where("status", "==", "deleted")
     );
 
@@ -895,7 +865,7 @@ export const deleteQuestionFromFirestore = async (uniqueId) => {
       logger.error("Cannot delete question: missing uniqueId");
       return;
     }
-    const docRef = doc(db, "questions", uniqueId);
+    const docRef = doc(getDb(), "questions", uniqueId);
     await deleteDoc(docRef);
     logger.log(`Question ${uniqueId} deleted from Firestore.`);
   } catch (error) {
@@ -916,7 +886,7 @@ export const saveCustomTags = async (customTags) => {
       return;
     }
 
-    const docRef = doc(db, "userSettings", auth.currentUser.uid);
+    const docRef = doc(getDb(), "userSettings", auth.currentUser.uid);
     await setDoc(
       docRef,
       {
@@ -945,7 +915,7 @@ export const getCustomTags = async () => {
     }
 
     // Get the specific user's document
-    const userDocRef = doc(db, "userSettings", auth.currentUser.uid);
+    const userDocRef = doc(getDb(), "userSettings", auth.currentUser.uid);
     const userDocSnap = await getDoc(userDocRef);
 
     if (userDocSnap.exists()) {
@@ -959,4 +929,4 @@ export const getCustomTags = async () => {
   }
 };
 
-export { app, analytics, db, auth };
+export { app, analytics, auth };

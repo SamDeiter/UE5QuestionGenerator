@@ -21,7 +21,6 @@ export const useQuestionManager = (config, showMessage) => {
   const actions = useQuestionActions(
     allQuestions,
     setAllQuestions,
-    derived.allQuestionsMap,
     backupToCloud,
     showMessage,
     config

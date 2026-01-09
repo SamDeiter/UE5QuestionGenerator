@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import Icon from "./Icon";
+import Button from "./ui/Button";
 import useConnectionStatus from "../hooks/useConnectionStatus";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 import { signOutUser, triggerManualSync } from "../services/firebase";
-import { APP_VERSION } from "../utils/constants";
+import { APP_VERSION, APP_MODES } from "../utils/constants";
 import { logger } from "../utils/logger";
 
 const getVersionDisplay = () => {
@@ -67,8 +68,8 @@ const Header = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [mobileMenuOpen]);
-  const isReview = appMode === "review";
-  const isAnalytics = appMode === "analytics";
+  const isReview = appMode === APP_MODES.REVIEW;
+  const isAnalytics = appMode === APP_MODES.ANALYTICS;
 
   // Get mode-specific styles using object lookup instead of nested ternaries
   const getModeStyles = () => {
@@ -122,7 +123,7 @@ const Header = ({
       return "bg-indigo-500/20 text-indigo-300 border-indigo-500/50";
     if (isAnalytics)
       return "bg-emerald-500/20 text-emerald-300 border-emerald-500/50";
-    if (appMode === "database")
+    if (appMode === APP_MODES.DATABASE)
       return "bg-blue-500/20 text-blue-300 border-blue-500/50";
     return "bg-orange-500/20 text-orange-300 border-orange-500/50";
   };
@@ -130,7 +131,7 @@ const Header = ({
   const getBadgeText = () => {
     if (isReview) return "REVIEW MODE";
     if (isAnalytics) return "ANALYTICS";
-    if (appMode === "database") return "DATABASE VIEW";
+    if (appMode === APP_MODES.DATABASE) return "DATABASE VIEW";
     return "CREATE MODE";
   };
 
@@ -170,11 +171,13 @@ const Header = ({
             {getBadgeText()}
           </span>
           {/* Colorblind Mode Toggle */}
-          <button
+          <Button
             onClick={toggleColorblindMode}
-            className={`flex items-center h-7 gap-1 px-2 text-[10px] font-bold rounded-lg transition-all whitespace-nowrap ${
+            variant={colorblindMode ? "primary" : "secondary"}
+            size="xs"
+            className={`flex items-center gap-1 font-bold whitespace-nowrap ${
               colorblindMode
-                ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/50"
+                ? "bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/50"
                 : "bg-slate-700 hover:bg-slate-600 text-slate-300"
             }`}
             title={
@@ -185,18 +188,24 @@ const Header = ({
           >
             <Icon name="eye" size={12} />
             {colorblindMode ? "Colorblind ✓" : "Colorblind"}
-          </button>
+          </Button>
           {/* Tutorial Button - First */}
           {onStartTutorial &&
-            ["create", "review", "database", "analytics"].includes(appMode) && (
-              <button
+            [
+              APP_MODES.CREATE,
+              APP_MODES.REVIEW,
+              APP_MODES.DATABASE,
+              APP_MODES.ANALYTICS,
+            ].includes(appMode) && (
+              <Button
                 onClick={() => onStartTutorial(appMode)}
-                className="flex items-center h-7 gap-1 px-2 text-[10px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-900/50 whitespace-nowrap"
+                size="xs"
+                className="flex items-center gap-1 font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/50 whitespace-nowrap"
                 title={`Start ${appMode} tutorial`}
               >
                 <Icon name="help-circle" size={12} />
                 Tutorial
-              </button>
+              </Button>
             )}
           {/* User Info */}
           {creatorName && (
@@ -370,7 +379,9 @@ const Header = ({
         </div>
 
         {/* Mobile Hamburger Button */}
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-expanded={mobileMenuOpen}
@@ -378,7 +389,7 @@ const Header = ({
           aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
         >
           <Icon name={mobileMenuOpen ? "x" : "menu"} size={20} />
-        </button>
+        </Button>
       </div>
 
       {/* Mobile Menu Dropdown */}
@@ -455,19 +466,24 @@ const Header = ({
 
             {/* Tutorial Button */}
             {onStartTutorial &&
-              ["create", "review", "database", "analytics"].includes(
-                appMode
-              ) && (
-                <button
+              [
+                APP_MODES.CREATE,
+                APP_MODES.REVIEW,
+                APP_MODES.DATABASE,
+                APP_MODES.ANALYTICS,
+              ].includes(appMode) && (
+                <Button
                   onClick={() => {
                     setMobileMenuOpen(false);
                     onStartTutorial(appMode);
                   }}
-                  className="flex items-center justify-center h-10 gap-2 px-4 text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-900/50"
+                  size="sm"
+                  variant="primary"
+                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/50"
                 >
                   <Icon name="help-circle" size={16} />
                   Start Tutorial
-                </button>
+                </Button>
               )}
 
             {/* Stats Row */}

@@ -1,5 +1,5 @@
 import Icon from "./Icon";
-import { APP_VERSION } from "../utils/constants";
+import { APP_VERSION, APP_MODES } from "../utils/constants";
 import Button from "./ui/Button";
 import Card from "./ui/Card";
 
@@ -75,14 +75,14 @@ const LandingPage = ({
       <div className="flex flex-col sm:flex-row gap-4 justify-center w-full">
         <Card
           as="button"
-          onClick={() => isAdmin && onSelectMode("create")}
+          onClick={() => isAdmin && onSelectMode(APP_MODES.CREATE)}
           disabled={!isAdmin}
-          className={`group relative flex flex-col items-center w-full sm:w-64 transition-all duration-300
-                        ${
-                          isAdmin
-                            ? "hover:border-orange-500/50 hover:bg-slate-800/80 hover:shadow-orange-900/20 cursor-pointer"
-                            : "opacity-50 cursor-not-allowed border-slate-800/50"
-                        }`}
+          color="orange"
+          className={`sm:w-64 ${
+            !isAdmin
+              ? "opacity-50 cursor-not-allowed border-slate-800/50 hover:border-slate-800/50 hover:shadow-none hover:bg-slate-900"
+              : ""
+          }`}
         >
           <div
             className={`p-3 rounded-full mb-4 transition-transform ${
@@ -114,8 +114,9 @@ const LandingPage = ({
 
         <Card
           as="button"
-          onClick={() => onSelectMode("review")}
-          className="group relative flex flex-col items-center w-full sm:w-64 hover:border-indigo-500/50 hover:bg-slate-800/80 hover:shadow-indigo-900/20 transition-all duration-300"
+          onClick={() => onSelectMode(APP_MODES.REVIEW)}
+          color="indigo"
+          className="sm:w-64"
         >
           <div className="p-3 bg-indigo-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
             <Icon name="list-checks" size={32} className="text-indigo-500" />
@@ -128,8 +129,9 @@ const LandingPage = ({
 
         <Card
           as="button"
-          onClick={() => onSelectMode("database")}
-          className="group relative flex flex-col items-center w-full sm:w-64 hover:border-blue-500/50 hover:bg-slate-800/80 hover:shadow-blue-900/20 transition-all duration-300"
+          onClick={() => onSelectMode(APP_MODES.DATABASE)}
+          color="blue"
+          className="sm:w-64"
         >
           <div className="p-3 bg-blue-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
             <Icon name="database" size={32} className="text-blue-500" />
@@ -142,8 +144,9 @@ const LandingPage = ({
 
         <Card
           as="button"
-          onClick={() => onSelectMode("analytics")}
-          className="group relative flex flex-col items-center w-full sm:w-64 hover:border-emerald-500/50 hover:bg-slate-800/80 hover:shadow-emerald-900/20 transition-all duration-300"
+          onClick={() => onSelectMode(APP_MODES.ANALYTICS)}
+          color="emerald"
+          className="sm:w-64"
         >
           <div className="p-3 bg-emerald-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
             <Icon name="bar-chart-2" size={32} className="text-emerald-500" />
@@ -158,8 +161,9 @@ const LandingPage = ({
         {isAdmin && (
           <Card
             as="button"
-            onClick={() => onSelectMode("admin")}
-            className="group relative flex flex-col items-center w-full sm:w-64 hover:border-purple-500/50 hover:bg-slate-800/80 hover:shadow-purple-900/20 transition-all duration-300"
+            onClick={() => onSelectMode(APP_MODES.ADMIN)}
+            color="purple"
+            className="sm:w-64"
           >
             <div className="p-3 bg-purple-900/20 rounded-full mb-4 group-hover:scale-110 transition-transform">
               <Icon name="shield" size={32} className="text-purple-500" />

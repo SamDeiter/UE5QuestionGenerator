@@ -1,0 +1,183 @@
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\App.jsx
+  301:5  error  Remove the declaration of the unused 'showExportMenu' variable  sonarjs/no-unused-vars
+  301:5  error  Remove this useless assignment to variable "showExportMenu"     sonarjs/no-dead-store
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\__tests__\questionGeneration.integration.test.jsx
+  111:5  error  Remove this useless assignment to variable "mockSetShowAdvancedConfig"  sonarjs/no-dead-store
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\__tests__\translation.integration.test.jsx
+  129:20  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  193:20  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  241:20  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  297:20  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  359:20  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  407:20  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  452:20  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\AuditLogs.jsx
+   61:22  error  'db' is not defined                                                  no-undef
+   87:22  error  'db' is not defined                                                  no-undef
+  101:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\SystemHealth.jsx
+  14:10  error  Remove this unused import of 'getDb'  sonarjs/unused-import
+  33:9   error  'db' is not defined                   no-undef
+  54:30  error  'db' is not defined                   no-undef
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AnalyticsDashboard.jsx
+  562:30  error  Refactor this code to not nest functions more than 4 levels deep     sonarjs/no-nested-functions
+  613:39  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ContextToolbar.jsx
+  296:63  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\CritiqueDisplay.jsx
+  73:33  error  React Hook "useThemeColors" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\CritiqueModal.jsx
+  27:30  error  React Hook "useThemeColors" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\NameEntryModal.jsx
+  18:37  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\OmniWatchdog.jsx
+  195:33  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\PromptPlayground.jsx
+  199:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem.jsx
+   10:8   error  Remove this unused import of 'QuestionHeader'                      sonarjs/unused-import
+   14:8   error  Remove this unused import of 'QuestionActions'                     sonarjs/unused-import
+   20:8   error  Remove this unused import of 'Icon'                                sonarjs/unused-import
+   22:10  error  Remove this unused import of 'getSecureItem'                       sonarjs/unused-import
+   25:10  error  Remove this unused import of 'useThemeColors'                      sonarjs/unused-import
+  166:9   error  Remove the declaration of the unused 'getDiffBadgeColor' variable  sonarjs/no-unused-vars
+  166:9   error  Remove this useless assignment to variable "getDiffBadgeColor"     sonarjs/no-dead-store
+  404:7   error  Replace this if-then-else flow by a single return statement        sonarjs/prefer-single-boolean-return
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionActions.jsx
+  170:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  177:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionNotesField.jsx
+  57:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ReviewMode.jsx
+  55:9  error  Remove the declaration of the unused 'handleLanguageSwitchWithNavigation' variable  sonarjs/no-unused-vars
+  55:9  error  Remove this useless assignment to variable "handleLanguageSwitchWithNavigation"     sonarjs/no-dead-store
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TestView.jsx
+  81:45  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\DisciplineDetailPanel.jsx
+  150:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  152:23  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\__tests__\useAppConfig.test.js
+  2:48  error  Remove this unused import of 'afterEach'  sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\__tests__\useQuestionManager.test.js
+  5:3  error  Remove this unused import of 'saveQuestionToFirestore'      sonarjs/unused-import
+  6:3  error  Remove this unused import of 'deleteQuestionFromFirestore'  sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\__tests__\useToast.test.js
+  219:42  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  221:16  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  228:16  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\__tests__\useQuestionGenerator.test.js
+   1:27  error  Remove this unused import of 'waitFor'             sonarjs/unused-import
+   9:3   error  Remove this unused import of 'GENERATION_LIMITS'   sonarjs/unused-import
+  10:3   error  Remove this unused import of 'QUALITY_THRESHOLDS'  sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\useQuestionCritique.js
+  91:19  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\utils\questionConverter.js
+  44:31  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\__tests__\useQuestionActions.test.js
+   4:10  error  Remove this unused import of 'QUESTION_SOURCES'  sonarjs/unused-import
+  10:10  error  Remove this unused import of 'getAgents'         sonarjs/unused-import
+  11:10  error  Remove this unused import of 'logger'            sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\__tests__\useQuestionDerivedData.test.js
+  30:10  error  Parsing error: Identifier 'useQuestionDerivedData' has already been declared
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\__tests__\useQuestionState.test.js
+  5:10  error  Remove this unused import of 'logger'  sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\__tests__\useQuestionSync.test.js
+  6:10  error  Remove this unused import of 'logger'  sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionActions.js
+  44:13  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionDerivedData.js
+  96:20  error  Do not access Object.prototype method 'hasOwnProperty' from target object  no-prototype-builtins
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionState.js
+  3:10  error  Remove this unused import of 'logger'  sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionSync.js
+  26:19  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useConnectionStatus.js
+  29:30  error  Update this function so that its implementation is not identical to the one on line 24  sonarjs/no-identical-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useDatabaseActions.js
+  61:9  error  Remove this redundant jump  sonarjs/no-redundant-jump
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\usePendingCount.js
+  2:10  error  Remove this unused import of 'logger'  sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scormExporter.test.js
+  127:22  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+  133:43  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\firebase.js
+    2:10  error  Remove this unused import of 'getAnalytics'      sonarjs/unused-import
+  271:26  error  'signInWithPopup' is not defined                 no-undef
+  281:11  error  'signOut' is not defined                         no-undef
+  291:26  error  'createUserWithEmailAndPassword' is not defined  no-undef
+  307:26  error  'signInWithEmailAndPassword' is not defined      no-undef
+  325:11  error  'sendPasswordResetEmail' is not defined          no-undef
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\trainingDataService.js
+  198:18  error  'db' is not defined  no-undef
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\__tests__\analyticsFiltering.test.js
+  6:9  error  Remove the declaration of the unused 'now' variable  sonarjs/no-unused-vars
+  6:9  error  Remove this useless assignment to variable "now"     sonarjs/no-dead-store
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\__tests__\sanitize.test.js
+  42:43  error  Make sure that 'javascript:' code is safe as it is a form of eval()  sonarjs/code-eval
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\databaseCleanup.js
+   35:23  error  'db' is not defined  no-undef
+   69:43  error  'db' is not defined  no-undef
+  143:49  error  'db' is not defined  no-undef
+  172:35  error  'db' is not defined  no-undef
+  227:35  error  'db' is not defined  no-undef
+  248:23  error  'db' is not defined  no-undef
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateAutoAccepted.js
+  40:25  error  'db' is not defined  no-undef
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateFirestoreScores.js
+  63:25  error  'db' is not defined  no-undef
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateFirestoreUpdatedAt.js
+  46:25  error  'db' is not defined  no-undef
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateTranslations.js
+  87:31  error  'db' is not defined  no-undef
+  95:29  error  'db' is not defined  no-undef
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\parserUtils.js
+  228:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+Γ£û 88 problems (88 errors, 0 warnings)
+

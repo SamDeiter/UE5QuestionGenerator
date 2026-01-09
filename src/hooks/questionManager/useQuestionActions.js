@@ -20,7 +20,6 @@ import { logger } from "../../utils/logger";
 export const useQuestionActions = (
   allQuestions,
   setAllQuestions,
-  allQuestionsMap,
   backupToCloud,
   showMessage,
   config
@@ -84,7 +83,8 @@ export const useQuestionActions = (
   // Status handler
   const handleUpdateStatus = useCallback(
     async (id, newStatus, rejectionReason = null) => {
-      const currentQ = allQuestionsMap.get(id)?.find((v) => v.id === id);
+      // Linear search instead of map lookup
+      const currentQ = allQuestions.find((q) => q.id === id);
       if (!currentQ) return;
 
       if (newStatus === QUESTION_STATUS.DELETED) {
@@ -157,7 +157,7 @@ export const useQuestionActions = (
       }
     },
     [
-      allQuestionsMap,
+      allQuestions,
       config.creatorName,
       setAllQuestions,
       updateQuestionInState,
@@ -167,7 +167,7 @@ export const useQuestionActions = (
 
   const handleUpdateQuestion = useCallback(
     async (id, updates) => {
-      const currentQ = allQuestionsMap.get(id)?.find((v) => v.id === id);
+      const currentQ = allQuestions.find((q) => q.id === id);
       if (!currentQ) return;
 
       const updatedQ = { ...currentQ, ...updates };
@@ -218,7 +218,7 @@ export const useQuestionActions = (
       }
     },
     [
-      allQuestionsMap,
+      allQuestions,
       questionVersions,
       config.userId,
       config.userEmail,
@@ -249,7 +249,7 @@ export const useQuestionActions = (
 
   const moveQuestion = useCallback(
     async (id, targetSource, updates = {}) => {
-      const currentQ = allQuestionsMap.get(id)?.find((v) => v.id === id);
+      const currentQ = allQuestions.find((q) => q.id === id);
       if (!currentQ) return;
 
       const updatedQ = {
@@ -275,12 +275,7 @@ export const useQuestionActions = (
         }
       }
     },
-    [
-      allQuestionsMap,
-      saveQuestionToFirestore,
-      updateQuestionInState,
-      showMessage,
-    ]
+    [allQuestions, saveQuestionToFirestore, updateQuestionInState, showMessage]
   );
 
   const clearQuestions = useCallback(() => {

@@ -10,7 +10,7 @@ import React, { useState } from "react";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
-import { db } from "../../services/firebase";
+import { getDb } from "../../services/firebase";
 import { logger } from "../../utils/logger";
 import { useThemeColors } from "../../hooks/useThemeColors";
 
@@ -34,7 +34,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
       // Fetch apiUsage logs
       try {
         const apiUsageQuery = query(
-          collection(db, "apiUsage"),
+          collection(getDb(), "apiUsage"),
           orderBy("timestamp", "desc"),
           limit(LOGS_PER_COLLECTION)
         );
@@ -58,7 +58,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
       // Fetch inviteAttempts logs
       try {
         const inviteAttemptsQuery = query(
-          collection(db, "inviteAttempts"),
+          collection(getDb(), "inviteAttempts"),
           orderBy("lastAttempt", "desc"),
           limit(LOGS_PER_COLLECTION)
         );
@@ -84,7 +84,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
       // Fetch generic audit-log (e.g. user registrations, excessive usage)
       try {
         const auditLogQuery = query(
-          collection(db, "audit-log"),
+          collection(getDb(), "audit-log"),
           orderBy("timestamp", "desc"),
           limit(LOGS_PER_COLLECTION)
         );

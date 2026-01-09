@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { logger } from "../../utils/logger";
-import { STORAGE_KEYS } from "../../utils/constants";
+import { STORAGE_KEYS, QUESTION_SOURCES } from "../../utils/constants";
 import { saveQuestionToFirestore } from "../../services/firebase";
 
 /**
@@ -14,7 +14,7 @@ export const useQuestionSync = (allQuestions, setAllQuestions) => {
         try {
           const newSessionQuestions = JSON.parse(e.newValue).map((q) => ({
             ...q,
-            _source: "session",
+            _source: QUESTION_SOURCES.SESSION,
           }));
           logger.log(
             `🔄 Syncing ${newSessionQuestions.length} questions from another tab...`
@@ -22,7 +22,9 @@ export const useQuestionSync = (allQuestions, setAllQuestions) => {
 
           // Update ONLY the session questions in the unified state
           setAllQuestions((prev) => {
-            const nonSession = prev.filter((q) => q._source !== "session");
+            const nonSession = prev.filter(
+              (q) => q._source !== QUESTION_SOURCES.SESSION
+            );
             return [...nonSession, ...newSessionQuestions];
           });
         } catch (err) {
@@ -39,7 +41,11 @@ export const useQuestionSync = (allQuestions, setAllQuestions) => {
    * Helper to perform cloud backup
    */
   const backupToCloud = async (newItems, targetSource) => {
-    if (targetSource === "session" && newItems && newItems.length > 0) {
+    if (
+      targetSource === QUESTION_SOURCES.SESSION &&
+      newItems &&
+      newItems.length > 0
+    ) {
       logger.log(`💾 Auto-saving ${newItems.length} questions to Firestore...`);
       const savePromises = newItems.map((q) =>
         saveQuestionToFirestore(q).catch((err) => {

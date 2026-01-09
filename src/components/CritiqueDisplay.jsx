@@ -54,6 +54,9 @@ const CritiqueDisplay = ({
   onExplain,
   onVariate,
 }) => {
+  // Get colorblind-safe colors from centralized theme (must be before any returns)
+  const { scoreColorByValue } = useThemeColors();
+
   if (!critique) return null;
 
   // Helper function to get button text (eliminates nested ternary)
@@ -68,9 +71,6 @@ const CritiqueDisplay = ({
     typeof critique === "object" && critique.score !== undefined;
   const score = isNewFormat ? critique.score : null;
   const text = (isNewFormat ? critique.text : critique) || "";
-
-  // Get colorblind-safe colors from centralized theme
-  const { scoreColorByValue } = useThemeColors();
 
   // Process text into structured sections
   const renderContent = () => {

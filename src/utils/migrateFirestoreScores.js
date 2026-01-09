@@ -2,7 +2,7 @@
  * Firestore Migration: Add improvedScore to existing critique data
  */
 
-import { db } from "../services/firebase";
+import { getDb } from "../services/firebase";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { logger } from "../utils/logger";
 
@@ -28,7 +28,7 @@ export const migrateFirestoreScores = async (showMessage) => {
   try {
     logger.log("🔄 Starting Firestore migration...");
 
-    const questionsRef = collection(db, "questions");
+    const questionsRef = collection(getDb(), "questions");
     logger.log("📥 Fetching questions from Firestore...");
     const snapshot = await getDocs(questionsRef);
     logger.log(`📊 Found ${snapshot.size} total questions in Firestore`);
@@ -45,12 +45,12 @@ export const migrateFirestoreScores = async (showMessage) => {
       if (q.critiqueScore !== undefined && q.critiqueScore !== null) {
         totalWithCritiques++;
       }
-      
+
       // Track already migrated
       if (q.improvedScore) {
         alreadyMigrated++;
       }
-      
+
       // Only migrate if has critique, suggested rewrite, and no improvedScore
       if (
         q.critiqueScore !== undefined &&
@@ -60,7 +60,7 @@ export const migrateFirestoreScores = async (showMessage) => {
       ) {
         const improvedScore = estimateImprovedScore(q.critiqueScore);
         updates.push(
-          updateDoc(doc(db, "questions", docSnap.id), {
+          updateDoc(doc(getDb(), "questions", docSnap.id), {
             improvedScore: improvedScore,
           })
         );
@@ -74,7 +74,7 @@ export const migrateFirestoreScores = async (showMessage) => {
     logger.log(`   - With critiques: ${totalWithCritiques}`);
     logger.log(`   - Already migrated: ${alreadyMigrated}`);
     logger.log(`   - Need migration: ${updatedCount}`);
-    
+
     if (updatedCount === 0) {
       logger.log("✅ No questions need migration");
       if (showMessage) {
@@ -82,7 +82,7 @@ export const migrateFirestoreScores = async (showMessage) => {
       }
       return { success: true, updated: 0 };
     }
-    
+
     // Execute all updates
     logger.log(`⏳ Updating ${updatedCount} questions...`);
     await Promise.all(updates);

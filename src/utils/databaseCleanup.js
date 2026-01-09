@@ -5,7 +5,7 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
-import { db } from "../services/firebase";
+import { getDb } from "../services/firebase";
 import { TARGET_PER_CATEGORY } from "./constants";
 import { logger } from "../utils/logger";
 
@@ -19,7 +19,7 @@ import { logger } from "../utils/logger";
 export const cleanupProductionDatabase = async () => {
   logger.log("🔍 Starting database cleanup...");
 
-  const questionsRef = collection(db, "questions");
+  const questionsRef = collection(getDb(), "questions");
   const snapshot = await getDocs(questionsRef);
 
   logger.log(`📊 Found ${snapshot.size} total questions`);
@@ -32,7 +32,7 @@ export const cleanupProductionDatabase = async () => {
     const data = docSnap.data();
     if (!data.status || data.status === "") {
       updatePromises.push(
-        updateDoc(doc(db, "questions", docSnap.id), { status: "pending" })
+        updateDoc(doc(getDb(), "questions", docSnap.id), { status: "pending" })
       );
       statusFixed++;
     }
@@ -66,7 +66,7 @@ export const cleanupProductionDatabase = async () => {
       variants.sort((a, b) => a.dateAdded.localeCompare(b.dateAdded));
       // Delete all except first
       variants.slice(1).forEach((variant) => {
-        deletePromises.push(deleteDoc(doc(db, "questions", variant.id)));
+        deletePromises.push(deleteDoc(doc(getDb(), "questions", variant.id)));
         duplicatesRemoved++;
       });
     }
@@ -140,7 +140,7 @@ export const cleanupProductionDatabase = async () => {
 
       // Delete excess (from end)
       questions.slice(QUOTA).forEach((q) => {
-        excessDeletePromises.push(deleteDoc(doc(db, "questions", q.id)));
+        excessDeletePromises.push(deleteDoc(doc(getDb(), "questions", q.id)));
         excessRemoved++;
       });
     }
@@ -169,7 +169,7 @@ export const cleanupProductionDatabase = async () => {
 export const auditDatabaseCategories = async () => {
   logger.log("🔍 Auditing database categories...");
 
-  const questionsRef = collection(db, "questions");
+  const questionsRef = collection(getDb(), "questions");
   const snapshot = await getDocs(questionsRef);
 
   logger.log(`📊 Found ${snapshot.size} total questions`);
@@ -224,7 +224,7 @@ export const auditDatabaseCategories = async () => {
 export const migrateDifficultyNames = async () => {
   logger.log("🔄 Starting difficulty name migration...");
 
-  const questionsRef = collection(db, "questions");
+  const questionsRef = collection(getDb(), "questions");
   const snapshot = await getDocs(questionsRef);
 
   logger.log(`📊 Found ${snapshot.size} total questions`);
@@ -245,7 +245,7 @@ export const migrateDifficultyNames = async () => {
     if (newDifficulty) {
       needsMigration++;
       updates.push(
-        updateDoc(doc(db, "questions", docSnap.id), {
+        updateDoc(doc(getDb(), "questions", docSnap.id), {
           difficulty: newDifficulty,
           _migratedDifficulty: difficulty, // Keep original for reference
           _migratedAt: new Date().toISOString(),

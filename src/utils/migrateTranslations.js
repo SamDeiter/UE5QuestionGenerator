@@ -7,7 +7,7 @@
  * 3. Both can be found by createUniqueFilteredQuestions for language switching
  */
 
-import { db } from "../services/firebase.js";
+import { getDb } from "../services/firebase.js";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { logger } from "../utils/logger";
 
@@ -16,7 +16,7 @@ async function migrateTranslations() {
 
   try {
     // 1. Fetch all questions from Firestore
-    const questionsRef = collection(db, "questions");
+    const questionsRef = collection(getDb(), "questions");
     const snapshot = await getDocs(questionsRef);
     const allQuestions = snapshot.docs.map((doc) => ({
       firestoreId: doc.id,
@@ -84,15 +84,18 @@ async function migrateTranslations() {
 
         // Update English original if it doesn't have uniqueId
         if (!englishOriginal.uniqueId) {
-          await updateDoc(doc(db, "questions", englishOriginal.firestoreId), {
-            uniqueId: sharedUniqueId,
-            language: "English", // Ensure language is set
-          });
+          await updateDoc(
+            doc(getDb(), "questions", englishOriginal.firestoreId),
+            {
+              uniqueId: sharedUniqueId,
+              language: "English", // Ensure language is set
+            }
+          );
           logger.log(`  ✅ Updated English original with uniqueId`);
         }
 
         // Update translation with uniqueId
-        await updateDoc(doc(db, "questions", translation.firestoreId), {
+        await updateDoc(doc(getDb(), "questions", translation.firestoreId), {
           uniqueId: sharedUniqueId,
         });
         logger.log(`  ✅ Updated translation with uniqueId`);

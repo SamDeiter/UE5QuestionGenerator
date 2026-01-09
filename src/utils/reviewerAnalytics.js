@@ -6,7 +6,7 @@
  */
 
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { db } from "../services/firebase";
+import { getDb } from "../services/firebase";
 import { logger } from "../utils/logger";
 
 /**
@@ -15,11 +15,11 @@ import { logger } from "../utils/logger";
  */
 export const fetchReviewedQuestions = async () => {
   try {
-    const questionsRef = collection(db, "questions");
+    const auditRef = collection(getDb(), "audit_logs");
 
     // Query for questions that have been completed (accepted or rejected)
     const q = query(
-      questionsRef,
+      auditRef,
       where("reviewCompletedAt", "!=", null),
       orderBy("reviewCompletedAt", "desc")
     );
