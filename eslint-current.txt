@@ -12,12 +12,8 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\__tests__\translat
   452:20  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AnalyticsDashboard.jsx
-  557:30  error  Refactor this code to not nest functions more than 4 levels deep     sonarjs/no-nested-functions
-  608:39  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\BulkExportModal.jsx
-  188:31  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
-  190:31  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  562:30  error  Refactor this code to not nest functions more than 4 levels deep     sonarjs/no-nested-functions
+  613:39  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ContextToolbar.jsx
   296:63  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
@@ -29,18 +25,13 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\OmniWat
   195:33  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\PromptPlayground.jsx
-  198:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  199:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionActions.jsx
-  170:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
-  177:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionNotesField.jsx
-  56:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+  138:42  error  Parsing error: Unexpected token `>`. Did you mean `&gt;` or `{">"}`?
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TestView.jsx
-  63:7   error  Replace this if-then-else flow by a single return statement           sonarjs/prefer-single-boolean-return
-  82:45  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+  81:45  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\DisciplineDetailPanel.jsx
   150:21  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
@@ -51,23 +42,18 @@ C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\__tests__\us
   221:16  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
   228:16  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
 
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\useQuestionCritique.js
-  91:19  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
-
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\utils\questionConverter.js
-  41:7   error  Extract this nested ternary operation into an independent statement   sonarjs/no-nested-conditional
-  43:31  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+  44:31  error  Make sure that using this pseudorandom number generator is safe here  sonarjs/pseudo-random
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionSync.js
+  26:19  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
 
 C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scormExporter.test.js
   127:22  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
   133:43  error  Refactor this code to not nest functions more than 4 levels deep  sonarjs/no-nested-functions
 
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\parserUtils.js
-  227:17  error  Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
-  285:40  error  Replace this character class by the character itself                 sonarjs/single-char-in-character-classes
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\__tests__\sanitize.test.js
+  42:43  error  Make sure that 'javascript:' code is safe as it is a form of eval()  sonarjs/code-eval
 
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\stringHelpers.js
-  237:9  error  Remove this assignment of "i"  sonarjs/updated-loop-counter
-
-Γ£û 34 problems (34 errors, 0 warnings)
+✖ 26 problems (26 errors, 0 warnings)
 

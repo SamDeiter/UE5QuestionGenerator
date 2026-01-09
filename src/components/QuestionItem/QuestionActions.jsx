@@ -115,6 +115,32 @@ const QuestionActions = ({
   // Handle accept with verification and score check
   // Get accept button styling based on score
   // Get accept button tooltip
+
+  // Determine button styling based on state
+  const getButtonClass = () => {
+    const baseClass =
+      "px-4 py-2 rounded-lg transition-all flex items-center gap-2 font-bold text-sm";
+    if (isLocked) {
+      return `${baseClass} bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed border-2 border-slate-700`;
+    }
+    if (q.status === "rejected") {
+      return `${baseClass} bg-red-600 text-white shadow-lg shadow-red-900/50 ring-2 ring-red-500`;
+    }
+    return `${baseClass} bg-red-900/40 text-red-300 hover:bg-red-800/60 hover:text-red-200 border-2 border-red-700/50 hover:border-red-500`;
+  };
+
+  // Determine title based on state
+  const getButtonTitle = () => {
+    if (isLocked) {
+      return `Locked by ${lockedBy?.userEmail || "another user"}`;
+    }
+    if (q.status === "rejected" && q.rejectionReason) {
+      const reason = REJECTION_REASONS.find((r) => r.id === q.rejectionReason);
+      return `Rejected: ${reason?.label || q.rejectionReason}`;
+    }
+    return "Mark as bad question";
+  };
+
   if (appMode === "database") return null;
 
   return (
@@ -134,32 +160,7 @@ const QuestionActions = ({
         <>
           {/* REJECT BUTTON - Made more prominent */}
           <div className="relative" ref={rejectMenuRef}>
-              // Determine button styling based on state
-              const getButtonClass = () => {
-                const baseClass = "px-4 py-2 rounded-lg transition-all flex items-center gap-2 font-bold text-sm";
-                if (isLocked) {
-                  return `${baseClass} bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed border-2 border-slate-700`;
-                }
-                if (q.status === "rejected") {
-                  return `${baseClass} bg-red-600 text-white shadow-lg shadow-red-900/50 ring-2 ring-red-500`;
-                }
-                return `${baseClass} bg-red-900/40 text-red-300 hover:bg-red-800/60 hover:text-red-200 border-2 border-red-700/50 hover:border-red-500`;
-              };
-              
-              // Determine title based on state
-              const getButtonTitle = () => {
-                if (isLocked) {
-                  return `Locked by ${lockedBy?.userEmail || "another user"}`;
-                }
-                if (q.status === "rejected" && q.rejectionReason) {
-                  const reason = REJECTION_REASONS.find((r) => r.id === q.rejectionReason);
-                  return `Rejected: ${reason?.label || q.rejectionReason}`;
-                }
-                return "Mark as bad question";
-              };
-              
-              return (
-              <button
+            <button
               onClick={() => {
                 if (isLocked) {
                   if (showMessage)
