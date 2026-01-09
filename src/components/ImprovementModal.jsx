@@ -2,52 +2,7 @@ import { useState } from "react";
 import Icon from "./Icon";
 import { sanitizeText } from "../utils/sanitize";
 import { logger } from "../utils/logger";
-import { useAccessibility } from "../contexts/AccessibilityContext";
-
-/**
- * Get score-based styling class for badges
- * @param {number} score - The quality score (0-100)
- * @param {string} variant - 'badge' for header/inline, 'column' for column headers
- * @param {boolean} colorblindMode - Whether to use colorblind-safe palette
- */
-const getScoreBadgeClass = (
-  score,
-  variant = "badge",
-  colorblindMode = false
-) => {
-  if (colorblindMode) {
-    // Colorblind-safe palette: Blue (excellent), Amber (good), Purple (mediocre), Rose (poor)
-    if (variant === "column") {
-      if (score >= 90) return "bg-blue-900/50 border-blue-500 text-blue-300";
-      if (score >= 70) return "bg-amber-900/50 border-amber-500 text-amber-300";
-      if (score >= 50)
-        return "bg-purple-900/50 border-purple-500 text-purple-300";
-      return "bg-rose-900/50 border-rose-500 text-rose-300";
-    }
-    // Default badge variant (colorblind)
-    if (score >= 90)
-      return "bg-blue-600/20 border border-blue-500/50 text-blue-300";
-    if (score >= 70)
-      return "bg-amber-600/20 border border-amber-500/50 text-amber-300";
-    if (score >= 50)
-      return "bg-purple-600/20 border border-purple-500/50 text-purple-300";
-    return "bg-rose-600/20 border border-rose-500/50 text-rose-300";
-  }
-
-  // Default colors
-  if (variant === "column") {
-    if (score >= 90) return "bg-green-900/50 border-green-500 text-green-300";
-    if (score >= 70)
-      return "bg-yellow-900/50 border-yellow-500 text-yellow-300";
-    return "bg-red-900/50 border-red-500 text-red-300";
-  }
-  // Default badge variant
-  if (score >= 90)
-    return "bg-green-600/20 border border-green-500/50 text-green-300";
-  if (score >= 70)
-    return "bg-yellow-600/20 border border-yellow-500/50 text-yellow-300";
-  return "bg-red-600/20 border border-red-500/50 text-red-300";
-};
+import { useThemeColors } from "../hooks/useThemeColors";
 
 /**
  * Comprehensive Critique Modal - Shows critique + side-by-side improvements
@@ -64,7 +19,7 @@ const ImprovementModal = ({
   onDismiss,
 }) => {
   const [isApplying, setIsApplying] = useState(false);
-  const { colorblindMode } = useAccessibility();
+  const { scoreColorByValue } = useThemeColors();
 
   const handleApply = async () => {
     setIsApplying(true);
@@ -98,10 +53,8 @@ const ImprovementModal = ({
               <Icon name="sparkles" size={20} className="text-green-400" />
               <h2 className="text-lg font-bold text-white">AI Critique</h2>
               <span
-                className={`px-3 py-1 rounded text-sm font-bold ${getScoreBadgeClass(
-                  critiqueScore,
-                  "badge",
-                  colorblindMode
+                className={`px-3 py-1 rounded text-sm font-bold border ${scoreColorByValue(
+                  critiqueScore
                 )}`}
               >
                 Score: {critiqueScore}/100
@@ -167,10 +120,8 @@ const ImprovementModal = ({
                     Original
                   </h3>
                   <span
-                    className={`px-2 py-0.5 rounded text-xs font-bold border ${getScoreBadgeClass(
-                      critiqueScore,
-                      "column",
-                      colorblindMode
+                    className={`px-2 py-0.5 rounded text-xs font-bold border ${scoreColorByValue(
+                      critiqueScore
                     )}`}
                   >
                     {critiqueScore}/100
@@ -183,10 +134,8 @@ const ImprovementModal = ({
                   </h3>
                   {improvedScore ? (
                     <span
-                      className={`px-2 py-0.5 rounded text-xs font-bold border ${getScoreBadgeClass(
-                        improvedScore,
-                        "column",
-                        colorblindMode
+                      className={`px-2 py-0.5 rounded text-xs font-bold border ${scoreColorByValue(
+                        improvedScore
                       )}`}
                     >
                       {improvedScore}/100

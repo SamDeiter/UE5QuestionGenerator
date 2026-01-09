@@ -9,8 +9,7 @@ import Icon from "./Icon";
 import DiffText from "./DiffText";
 import DOMPurify from "dompurify";
 import { QUALITY_PASS_THRESHOLD } from "../utils/constants";
-import { getScoreColorClasses } from "../utils/scoreColors";
-import { useAccessibility } from "../contexts/AccessibilityContext";
+import { useThemeColors } from "../hooks/useThemeColors";
 
 // Simple markdown to HTML converter with XSS protection
 const parseMarkdown = (text) => {
@@ -70,8 +69,8 @@ const CritiqueDisplay = ({
   const score = isNewFormat ? critique.score : null;
   const text = (isNewFormat ? critique.text : critique) || "";
 
-  // Get accessibility preference for colorblind mode
-  const { colorblindMode } = useAccessibility();
+  // Get colorblind-safe colors from centralized theme
+  const { scoreColorByValue } = useThemeColors();
 
   // Process text into structured sections
   const renderContent = () => {
@@ -162,7 +161,7 @@ const CritiqueDisplay = ({
     <div
       className={`mb-3 p-3 border rounded-lg animate-in fade-in slide-in-from-top-2 ${
         isNewFormat
-          ? getScoreColorClasses(score, colorblindMode)
+          ? scoreColorByValue(score)
           : "bg-red-950/30 border-red-500/30"
       }`}
     >
