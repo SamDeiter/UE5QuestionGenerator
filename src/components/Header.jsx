@@ -1,11 +1,23 @@
+/**
+ * Header - Main application header with responsive design
+ *
+ * Uses extracted sub-components:
+ * - HeaderStatusBar: Desktop status display (tokens, cost, connection, API)
+ * - HeaderUserInfo: User information with admin badge
+ * - HeaderMobileMenu: Mobile dropdown menu
+ */
 import { useState, useEffect, useRef } from "react";
 import Icon from "./Icon";
 import Button from "./ui/Button";
 import useConnectionStatus from "../hooks/useConnectionStatus";
 import { useAccessibility } from "../contexts/AccessibilityContext";
-import { signOutUser, triggerManualSync } from "../services/firebase";
 import { APP_VERSION, APP_MODES } from "../utils/constants";
 import { logger } from "../utils/logger";
+
+// Sub-components
+import HeaderStatusBar from "./Header/HeaderStatusBar";
+import HeaderUserInfo from "./Header/HeaderUserInfo";
+import HeaderMobileMenu from "./Header/HeaderMobileMenu";
 
 const getVersionDisplay = () => {
   const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
@@ -35,10 +47,8 @@ const Header = ({
   onStartTutorial,
   isAdmin,
   onSignOut,
-  user, // Add user prop for super admin check
+  user,
 }) => {
-  // Tutorial center state removed - was unused
-
   // Super Admin check - case-insensitive with trim
   const userEmail = user?.email?.toLowerCase();
   const envSuperAdmin =
@@ -68,6 +78,7 @@ const Header = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [mobileMenuOpen]);
+
   const isReview = appMode === APP_MODES.REVIEW;
   const isAnalytics = appMode === APP_MODES.ANALYTICS;
 
@@ -163,6 +174,8 @@ const Header = ({
             <p className="text-slate-400 text-xs mt-0.5">{getSubtitle()}</p>
           </div>
         </div>
+
+        {/* Desktop Status Bar */}
         <div className="hidden lg:flex items-center gap-2 text-xs font-mono">
           {/* Mode Badge */}
           <span
@@ -189,7 +202,7 @@ const Header = ({
             <Icon name="eye" size={12} />
             {colorblindMode ? "Colorblind ✓" : "Colorblind"}
           </Button>
-          {/* Tutorial Button - First */}
+          {/* Tutorial Button */}
           {onStartTutorial &&
             [
               APP_MODES.CREATE,
@@ -207,175 +220,23 @@ const Header = ({
                 Tutorial
               </Button>
             )}
-          {/* User Info */}
-          {creatorName && (
-            <div className="flex items-center h-7 gap-1.5 font-medium text-slate-300 px-2 bg-slate-800/50 rounded-lg whitespace-nowrap text-[10px]">
-              <Icon
-                name={isAdmin ? "shield-check" : "user"}
-                size={12}
-                className={isAdmin ? "text-orange-500" : "text-green-500"}
-              />
-              <span>{creatorName}</span>
-              {isAdmin && (
-                <span
-                  className={`text-[9px] font-semibold px-1 py-0.5 rounded border ml-0.5 ${
-                    isSuperAdmin
-                      ? "bg-purple-900/50 text-purple-400 border-purple-800"
-                      : "bg-orange-900/50 text-orange-400 border-orange-800"
-                  }`}
-                >
-                  {isSuperAdmin ? "SUPER" : "ADMIN"}
-                </span>
-              )}
-              <button
-                onClick={async () => {
-                  if (onSignOut) onSignOut();
-                  await signOutUser();
-                }}
-                className="ml-1 p-1 text-slate-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
-                title="Sign Out"
-                aria-label="Sign out of application"
-              >
-                <Icon name="log-out" size={12} />
-              </button>
-            </div>
-          )}
-          {/* Consolidated Status Box: Tokens | Cost | Connection | API Key | CLOUD v2.0-DEV */}
-          <div
-            className="flex items-center h-7 gap-1.5 px-2 rounded border border-slate-700 whitespace-nowrap text-[10px]"
-            role="status"
-            aria-live="polite"
-            title={`Input: ${tokenUsage.inputTokens || 0} | Output: ${
-              tokenUsage.outputTokens || 0
-            }`}
-          >
-            {/* Token Display */}
-            <div className="flex items-center gap-1 text-purple-400">
-              <Icon name="zap" size={10} />
-              <span className="font-semibold">{formattedTokens}</span>
-            </div>
-            <div className="w-px h-3 bg-slate-700"></div>
-            {/* Cost Display */}
-            <div className="flex items-center gap-1 text-emerald-400">
-              <span className="text-slate-500">$</span>
-              <span className="font-semibold">{formattedCost}</span>
-            </div>
-            {/* Connection Status (only if needed) */}
-            {(!connectionStatus.isOnline ||
-              connectionStatus.queuedCount > 0 ||
-              connectionStatus.syncInProgress) && (
-              <>
-                <div className="w-px h-3 bg-slate-700"></div>
-                {!connectionStatus.isOnline && (
-                  <div
-                    className="flex items-center gap-1 text-yellow-400 font-bold animate-pulse"
-                    title="You are offline. Changes will sync when connection is restored."
-                  >
-                    <Icon name="wifi-off" size={12} />
-                    <span>OFFLINE</span>
-                  </div>
-                )}
-                {connectionStatus.queuedCount > 0 && (
-                  <div className="flex items-center gap-1.5 px-1 bg-slate-800/80 rounded-lg group relative">
-                    <button
-                      onClick={triggerManualSync}
-                      className="flex items-center gap-0.5 text-orange-400 font-bold hover:text-orange-300 transition-colors py-0.5"
-                      aria-label={`${connectionStatus.queuedCount} items queued. Click to sync now.`}
-                    >
-                      <Icon name="upload-cloud" size={12} />
-                      <span>{connectionStatus.queuedCount}</span>
-                      <span className="text-[8px] ml-0.5">SYNC</span>
-                    </button>
-                    {/* Tooltip for queue details */}
-                    <div className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                      <div className="text-[10px] font-bold text-slate-300 border-b border-slate-800 pb-1.5 mb-2 flex justify-between items-center">
-                        PENDING SYNC
-                        <span className="text-orange-500 font-mono">
-                          {connectionStatus.queuedCount}
-                        </span>
-                      </div>
-                      <div className="space-y-1.5">
-                        {connectionStatus.queueDetails?.items
-                          ?.slice(0, 5)
-                          .map((item, idx) => (
-                            <div key={idx} className="flex flex-col gap-0.5">
-                              <div className="flex justify-between items-center">
-                                <span className="text-[9px] text-slate-400 truncate max-w-[100px]">
-                                  {item.text || item.id}
-                                </span>
-                                <span className="text-[8px] font-bold px-1 rounded bg-slate-800 text-slate-500 uppercase">
-                                  {item.status || "draft"}
-                                </span>
-                              </div>
-                              <div className="text-[8px] text-slate-600 font-mono">
-                                {item.timestamp
-                                  ? new Date(item.timestamp).toLocaleTimeString(
-                                      [],
-                                      { hour: "2-digit", minute: "2-digit" }
-                                    )
-                                  : "Pending..."}
-                              </div>
-                            </div>
-                          ))}
-                        {connectionStatus.queuedCount > 5 && (
-                          <div className="text-[8px] text-slate-500 italic pt-1 text-right">
-                            ...and {connectionStatus.queuedCount - 5} more
-                          </div>
-                        )}
-                      </div>
-                      <div className="mt-2 text-[8px] text-slate-500 pt-1.5 border-t border-slate-800 text-center uppercase tracking-widest font-bold">
-                        Click sync button to flush
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {connectionStatus.syncInProgress && (
-                  <div
-                    className="flex items-center gap-0.5 text-blue-400 font-bold px-1"
-                    title="Synchronization in progress..."
-                  >
-                    <Icon
-                      name="refresh-cw"
-                      size={12}
-                      className="animate-spin"
-                    />
-                    <span>SYNC</span>
-                  </div>
-                )}
-              </>
-            )}
-            <div className="w-px h-3 bg-slate-700"></div>
-            {/* API Key Status - Shortened */}
-            <span
-              className={`font-semibold ${
-                apiKeyStatus.includes("Loaded") ||
-                apiKeyStatus.includes("Auto") ||
-                apiKeyStatus.includes("Cloud")
-                  ? "text-green-400"
-                  : "text-red-400"
-              }`}
-            >
-              API: {apiKeyStatus}
-            </span>
-            <div className="w-px h-3 bg-slate-700"></div>
-            {/* Cloud/Local indicator (version moved to footer) */}
-            {(() => {
-              if (isCloudReady) {
-                return (
-                  <div className="flex items-center gap-1 font-semibold whitespace-nowrap">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-green-400">CLOUD</span>
-                  </div>
-                );
-              } else {
-                return (
-                  <div className="flex items-center gap-1 font-semibold whitespace-nowrap">
-                    <span className="text-orange-400">LOCAL</span>
-                  </div>
-                );
-              }
-            })()}
-          </div>
+          {/* User Info (compact) */}
+          <HeaderUserInfo
+            creatorName={creatorName}
+            isAdmin={isAdmin}
+            isSuperAdmin={isSuperAdmin}
+            onSignOut={onSignOut}
+            compact={true}
+          />
+          {/* Status Bar */}
+          <HeaderStatusBar
+            formattedTokens={formattedTokens}
+            formattedCost={formattedCost}
+            tokenUsage={tokenUsage}
+            connectionStatus={connectionStatus}
+            apiKeyStatus={apiKeyStatus}
+            isCloudReady={isCloudReady}
+          />
         </div>
 
         {/* Mobile Hamburger Button */}
@@ -394,158 +255,24 @@ const Header = ({
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div
-          id="mobile-menu"
+        <HeaderMobileMenu
           ref={menuRef}
-          className="lg:hidden absolute left-0 right-0 top-full bg-slate-900 border-b border-slate-700 shadow-xl z-30 animate-in slide-in-from-top-2 duration-200"
-          role="menu"
-        >
-          <div className="max-w-7xl mx-auto p-4 flex flex-col gap-3 text-xs font-mono">
-            {/* Mode Badge */}
-            <div className="flex items-center justify-between">
-              <span
-                className={`flex items-center h-7 px-2.5 rounded text-[11px] font-semibold uppercase tracking-wider border whitespace-nowrap ${getBadgeStyle()}`}
-              >
-                {getBadgeText()}
-              </span>
-              {/* Version/Cloud Status */}
-              {(() => {
-                const { version, isProd } = getVersionDisplay();
-                const versionColor = isProd ? "text-red-400" : "text-green-400";
-                return (
-                  <div className="flex items-center gap-1.5 font-semibold">
-                    {isCloudReady ? (
-                      <>
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        <span className="text-green-400">CLOUD</span>
-                      </>
-                    ) : (
-                      <span className="text-orange-400">LOCAL</span>
-                    )}
-                    <span className={versionColor}>{version}</span>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* User Info */}
-            {creatorName && (
-              <div className="flex items-center justify-between py-2 border-t border-slate-700">
-                <div className="flex items-center gap-2 font-medium text-slate-300">
-                  <Icon
-                    name={isAdmin ? "shield-check" : "user"}
-                    size={14}
-                    className={isAdmin ? "text-orange-500" : "text-green-500"}
-                  />
-                  <span>{creatorName}</span>
-                  {isAdmin && (
-                    <span
-                      className={`text-[11px] font-semibold px-1.5 py-0.5 rounded border ${
-                        isSuperAdmin
-                          ? "bg-purple-900/50 text-purple-400 border-purple-800"
-                          : "bg-orange-900/50 text-orange-400 border-orange-800"
-                      }`}
-                    >
-                      {isSuperAdmin ? "SUPER" : "ADMIN"}
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={async () => {
-                    setMobileMenuOpen(false);
-                    if (onSignOut) onSignOut();
-                    await signOutUser();
-                  }}
-                  className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
-                  aria-label="Sign out of application"
-                >
-                  <Icon name="log-out" size={16} />
-                </button>
-              </div>
-            )}
-
-            {/* Tutorial Button */}
-            {onStartTutorial &&
-              [
-                APP_MODES.CREATE,
-                APP_MODES.REVIEW,
-                APP_MODES.DATABASE,
-                APP_MODES.ANALYTICS,
-              ].includes(appMode) && (
-                <Button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onStartTutorial(appMode);
-                  }}
-                  size="sm"
-                  variant="primary"
-                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/50"
-                >
-                  <Icon name="help-circle" size={16} />
-                  Start Tutorial
-                </Button>
-              )}
-
-            {/* Stats Row */}
-            <div className="flex items-center justify-between py-2 border-t border-slate-700 text-[11px]">
-              <div className="flex items-center gap-3">
-                {/* Tokens */}
-                <div className="flex items-center gap-1 text-purple-400">
-                  <Icon name="zap" size={12} />
-                  <span className="font-semibold">{formattedTokens}</span>
-                  <span className="text-slate-500">tok</span>
-                </div>
-                {/* Cost */}
-                <div className="flex items-center gap-1 text-emerald-400">
-                  <span className="text-slate-500">$</span>
-                  <span className="font-semibold">{formattedCost}</span>
-                </div>
-              </div>
-              {/* API Status */}
-              <span
-                className={`font-semibold ${
-                  apiKeyStatus.includes("Loaded") ||
-                  apiKeyStatus.includes("Auto") ||
-                  apiKeyStatus.includes("Cloud")
-                    ? "text-green-400"
-                    : "text-red-400"
-                }`}
-              >
-                API: {apiKeyStatus}
-              </span>
-            </div>
-
-            {/* Connection Status (if offline or syncing) */}
-            {(!connectionStatus.isOnline ||
-              connectionStatus.queuedCount > 0 ||
-              connectionStatus.syncInProgress) && (
-              <div className="flex items-center gap-3 py-2 border-t border-slate-700">
-                {!connectionStatus.isOnline && (
-                  <div className="flex items-center gap-1.5 text-yellow-400 font-bold animate-pulse">
-                    <Icon name="wifi-off" size={14} />
-                    <span>OFFLINE</span>
-                  </div>
-                )}
-                {connectionStatus.queuedCount > 0 && (
-                  <div className="flex items-center gap-1 text-orange-400 font-bold">
-                    <Icon name="upload-cloud" size={14} />
-                    <span>{connectionStatus.queuedCount} queued</span>
-                  </div>
-                )}
-                {connectionStatus.syncInProgress && (
-                  <div className="flex items-center gap-1 text-blue-400 font-bold animate-pulse">
-                    <Icon
-                      name="refresh-cw"
-                      size={14}
-                      className="animate-spin"
-                    />
-                    <span>SYNCING</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+          isCloudReady={isCloudReady}
+          getVersionDisplay={getVersionDisplay}
+          getBadgeStyle={getBadgeStyle}
+          getBadgeText={getBadgeText}
+          creatorName={creatorName}
+          isAdmin={isAdmin}
+          isSuperAdmin={isSuperAdmin}
+          onSignOut={onSignOut}
+          appMode={appMode}
+          onStartTutorial={onStartTutorial}
+          formattedTokens={formattedTokens}
+          formattedCost={formattedCost}
+          apiKeyStatus={apiKeyStatus}
+          connectionStatus={connectionStatus}
+          onClose={() => setMobileMenuOpen(false)}
+        />
       )}
     </header>
   );
