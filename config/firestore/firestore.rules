@@ -63,7 +63,7 @@ service cloud.firestore {
               'reviewerName', 'reviewDuration', 'firestoreUpdatedAt',
               'critique', 'critiqueScore', 'suggestedRewrite', 'improvedScore', 'improvementsApplied',
               'humanVerified', 'humanVerifiedBy', 'humanVerifiedAt',
-              'internalNotes', 'reviewStartedAt'
+              'notes', 'reviewStartedAt'
             ]))
       );
       

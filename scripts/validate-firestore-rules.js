@@ -39,7 +39,7 @@ const ALLOWED_REVIEWER_FIELDS = [
   "humanVerified",
   "humanVerifiedBy",
   "humanVerifiedAt",
-  "internalNotes",
+  "notes",
   "reviewStartedAt",
 ];
 
