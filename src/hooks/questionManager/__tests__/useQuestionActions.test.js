@@ -6,12 +6,17 @@ import {
   saveQuestionToFirestore,
   deleteQuestionFromFirestore,
 } from "../../../services/firebase";
+import { saveQuestionAsReviewer } from "../../../services/firestoreSave";
 import { logQuestion } from "../../../utils/analyticsStore";
 
 // Mocks
 vi.mock("../../../services/firebase", () => ({
   saveQuestionToFirestore: vi.fn(),
   deleteQuestionFromFirestore: vi.fn(),
+}));
+
+vi.mock("../../../services/firestoreSave", () => ({
+  saveQuestionAsReviewer: vi.fn(),
 }));
 
 vi.mock("../../../utils/analyticsStore", () => ({
@@ -138,13 +143,14 @@ describe("useQuestionActions", () => {
       )
     );
 
-    saveQuestionToFirestore.mockResolvedValue({ success: true });
+    saveQuestionAsReviewer.mockResolvedValue({ success: true });
 
     await act(async () => {
       await result.current.handleUpdateStatus(1, QUESTION_STATUS.ACCEPTED);
     });
 
-    expect(saveQuestionToFirestore).toHaveBeenCalledWith(
+    expect(saveQuestionAsReviewer).toHaveBeenCalledWith(
+      "u1", // questionId
       expect.objectContaining({ status: "accepted" })
     );
     expect(mockShowMessage).toHaveBeenCalledWith(
