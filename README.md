@@ -3,6 +3,7 @@
 A powerful, AI-driven tool for generating, translating, and managing quiz questions for Unreal Engine 5 training. Built with React, Vite, Tailwind CSS, and Google Gemini AI.
 
 [![Deploy Status](https://img.shields.io/badge/deploy-GitHub%20Pages-blue)](https://samdeiter.github.io/UE5QuestionGenerator/)
+[![Tests](https://img.shields.io/badge/tests-354%20passing-brightgreen)](https://github.com/SamDeiter/UE5QuestionGenerator)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Live Demo
@@ -130,12 +131,21 @@ firebase deploy --only functions
 ├── src/
 │   ├── agents/          # Concurrent editing, session management
 │   ├── components/      # React components
+│   │   ├── Admin/       # Admin panel sub-components
+│   │   ├── Analytics/   # Chart components
+│   │   ├── Header/      # Header sub-components
+│   │   └── QuestionItem/# Question card sub-components
 │   ├── hooks/           # Custom React hooks
-│   ├── services/        # Firebase, Gemini API integrations
+│   ├── services/        # Firebase & API integrations
+│   │   ├── firebase.js  # Central hub (re-exports)
+│   │   ├── firebaseAuth.js
+│   │   ├── firebaseQueries.js
+│   │   └── firebaseSave.js
 │   └── utils/           # Helper functions, constants
 ├── functions/           # Firebase Cloud Functions
 ├── config/              # Firebase rules and configuration
 ├── docs/                # Documentation
+├── MAINTENANCE.md       # Project maintenance guide
 └── public/              # Static assets
 ```
 
