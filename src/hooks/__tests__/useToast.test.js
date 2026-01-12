@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-nested-functions */
 import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useToast } from "../useToast";

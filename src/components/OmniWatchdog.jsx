@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-nested-functions */
 import { useEffect, useState } from "react";
 import { auth } from "./services/firebase";
 

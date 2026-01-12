@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-nested-functions */
 /**
  * Translation Integration Tests
  *

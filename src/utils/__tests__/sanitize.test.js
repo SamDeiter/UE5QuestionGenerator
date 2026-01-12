@@ -38,8 +38,10 @@ describe("sanitize utilities", () => {
     });
 
     it("should strip javascript: URLs", () => {
+      /* eslint-disable sonarjs/code-eval -- Testing XSS sanitization requires javascript: strings */
       const result = sanitizeHTML('<a href="javascript:alert(1)">Bad Link</a>');
       expect(result.__html).not.toContain("javascript:");
+      /* eslint-enable sonarjs/code-eval */
     });
   });
 

@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-nested-functions */
 import { useState, useMemo } from "react";
 import {
   AreaChart,
@@ -26,6 +27,16 @@ import {
 import { getAnalytics } from "../utils/analyticsStore";
 import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
 import { QUALITY_THRESHOLDS } from "../utils/constants";
+
+// Helper to normalize tag comparison
+const normalizeTag = (t) => t.toLowerCase();
+
+// Helper to get progress bar color class
+const getProgressBarClass = (count) => {
+  if (count === 0) return "bg-transparent";
+  if (count < 3) return "bg-orange-500";
+  return "bg-emerald-500";
+};
 
 const MetricCard = ({ title, value, icon, color }) => {
   const colors = {
@@ -555,16 +566,14 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                 );
                 const coverageStats = tags
                   .map((tag) => {
-                    // Normalized match
-                    const normalize = (t) => t.toLowerCase();
                     const count = disciplineQuestions.filter((q) =>
                       (q.tags || []).some(
-                        (qt) => normalize(qt) === normalize(tag)
+                        (qt) => normalizeTag(qt) === normalizeTag(tag)
                       )
                     ).length;
                     return { tag, count };
                   })
-                  .sort((a, b) => b.count - a.count); // Most covered first
+                  .sort((a, b) => b.count - a.count);
 
                 return (
                   <div
@@ -607,13 +616,9 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
                             </div>
                             <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
                               <div
-                                className={`h-full ${
-                                  count === 0
-                                    ? "bg-transparent"
-                                    : count < 3
-                                    ? "bg-orange-500"
-                                    : "bg-emerald-500"
-                                }`}
+                                className={`h-full ${getProgressBarClass(
+                                  count
+                                )}`}
                                 style={{ width: `${coveragePercent}%` }}
                               />
                             </div>

@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-nested-functions */
 import { useEffect } from "react";
 import { logger } from "../../utils/logger";
 import { STORAGE_KEYS, QUESTION_SOURCES } from "../../utils/constants";

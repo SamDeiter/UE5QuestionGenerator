@@ -196,6 +196,7 @@ export const GENERATION_LIMITS = {
   BATCH_SIZE_PARALLEL_CRITIQUE: 3,
   ID_SUBSTRING_LENGTH: 4,
   MAX_RETRIES: 5,
+  ERROR_TRUNCATE_LENGTH: 50, // Max chars to show in error messages
 };
 
 // Processing Constants

@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-nested-functions */
 import { useState, useRef, useEffect } from "react";
 import Icon from "./Icon";
 import FilterButton from "./FilterButton";

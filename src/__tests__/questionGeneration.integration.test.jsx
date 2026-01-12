@@ -76,7 +76,6 @@ describe("Question Generation Integration Tests", () => {
   let mockShowMessage;
   let mockSetStatus;
   let mockSetShowNameModal;
-  let mockSetShowAdvancedConfig;
   let mockSetShowApiError;
   let mockSetShowHistory;
   let mockCheckAndStoreQuestions;
@@ -108,7 +107,6 @@ describe("Question Generation Integration Tests", () => {
     mockShowMessage = vi.fn();
     mockSetStatus = vi.fn();
     mockSetShowNameModal = vi.fn();
-    mockSetShowAdvancedConfig = vi.fn();
     mockSetShowApiError = vi.fn();
     mockSetShowHistory = vi.fn();
     mockHandleLanguageSwitch = vi.fn();

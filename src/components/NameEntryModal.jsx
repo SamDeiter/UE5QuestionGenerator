@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/pseudo-random */
 import { useState, useEffect } from "react";
 import Icon from "./Icon";
 

@@ -146,13 +146,7 @@ const DisciplineDetailPanel = ({ discipline, questions, color, onClose }) => {
             <span
               className="text-3xl font-bold"
               style={{
-                color: avgQuality
-                  ? avgQuality >= 70
-                    ? "#22c55e"
-                    : avgQuality >= 50
-                    ? "#eab308"
-                    : "#ef4444"
-                  : "#64748b",
+                color: getQualityColor(avgQuality),
               }}
             >
               {avgQuality ?? "—"}

@@ -1,0 +1,212 @@
+import { useCallback } from "react";
+import {
+  GENERATION_LIMITS,
+  PROCESSING,
+  QUESTION_STATUS,
+  TIME,
+  TOAST_DURATION,
+} from "../../utils/constants";
+import { deleteQuestionFromFirestore } from "../../services/firebase";
+import { saveQuestionAsReviewer } from "../../services/firestoreSave";
+import { logQuestion } from "../../utils/analyticsStore";
+import { completeReviewTracking } from "../../utils/normalizeQuestion";
+import { logger } from "../../utils/logger";
+
+/**
+ * Hook for managing status-related actions on questions.
+ * Handles accept, reject, and delete operations.
+ *
+ * @param {Object} params - Hook parameters
+ * @param {Array} params.allQuestions - Current questions array
+ * @param {Function} params.setAllQuestions - State setter for questions
+ * @param {Function} params.updateQuestionInState - Updates a single question in state
+ * @param {Function} params.showMessage - Toast notification function
+ * @param {Object} params.config - App configuration (creatorName, userEmail, etc.)
+ */
+export const useStatusActions = ({
+  allQuestions,
+  setAllQuestions,
+  updateQuestionInState,
+  showMessage,
+  config,
+}) => {
+  /**
+   * Handles status updates for questions (accept, reject, delete).
+   * Uses saveQuestionAsReviewer to ensure only allowed fields are sent.
+   */
+  const handleUpdateStatus = useCallback(
+    async (id, newStatus, rejectionReason = null) => {
+      const currentQ = allQuestions.find((q) => q.id === id);
+      if (!currentQ) return;
+
+      // Handle deletion separately
+      if (newStatus === QUESTION_STATUS.DELETED) {
+        try {
+          await deleteQuestionFromFirestore(currentQ.uniqueId || currentQ.id);
+          setAllQuestions((prev) => prev.filter((q) => q.id !== id));
+          logQuestion({
+            ...currentQ,
+            status: QUESTION_STATUS.DELETED,
+            deletionReason: rejectionReason || "Status update to deleted",
+            deletedAt: new Date().toISOString(),
+          });
+        } catch (err) {
+          logger.error("Failed to delete:", err);
+          if (showMessage) {
+            showMessage(
+              "Failed to delete question from cloud.",
+              TOAST_DURATION.MEDIUM
+            );
+          }
+        }
+        return;
+      }
+
+      let updatedQ = { ...currentQ, status: newStatus };
+
+      // Handle accept/reject - requires reviewer tracking
+      if (
+        newStatus === QUESTION_STATUS.ACCEPTED ||
+        newStatus === QUESTION_STATUS.REJECTED
+      ) {
+        const reviewerName = config.creatorName || config.userEmail;
+        if (!reviewerName) {
+          if (showMessage) {
+            showMessage(
+              "⚠️ Please set your Creator Name in settings before reviewing questions.",
+              TOAST_DURATION.EXTENDED
+            );
+          }
+          return;
+        }
+
+        if (!updatedQ.reviewStartedAt) {
+          const fallbackSeconds = PROCESSING.ESTIMATED_REVIEW_SECONDS;
+          const estimatedDurationMs = fallbackSeconds * TIME.SECOND;
+          updatedQ.reviewStartedAt = new Date(
+            Date.now() - estimatedDurationMs
+          ).toISOString();
+        }
+        updatedQ = completeReviewTracking(updatedQ, reviewerName);
+      }
+
+      updatedQ = {
+        ...updatedQ,
+        critique:
+          newStatus === QUESTION_STATUS.ACCEPTED ? null : updatedQ.critique,
+        rejectionReason:
+          newStatus === QUESTION_STATUS.REJECTED ? rejectionReason : null,
+        rejectedAt:
+          newStatus === QUESTION_STATUS.REJECTED
+            ? new Date().toISOString()
+            : null,
+        acceptedAt:
+          newStatus === QUESTION_STATUS.ACCEPTED
+            ? new Date().toISOString()
+            : updatedQ.acceptedAt,
+      };
+
+      // Build payload with only reviewer-allowed fields
+      const statusMetadata = {
+        status: updatedQ.status,
+        reviewStartedAt: updatedQ.reviewStartedAt,
+        reviewDuration: updatedQ.reviewDuration,
+        reviewerName: updatedQ.reviewerName,
+        reviewCompletedAt: updatedQ.reviewCompletedAt,
+        reviewedAt: updatedQ.reviewCompletedAt,
+        reviewedBy: config.userEmail,
+        acceptedAt: updatedQ.acceptedAt,
+        acceptedBy:
+          newStatus === QUESTION_STATUS.ACCEPTED ? config.userEmail : null,
+        rejectedAt: updatedQ.rejectedAt,
+        rejectedBy:
+          newStatus === QUESTION_STATUS.REJECTED ? config.userEmail : null,
+        rejectionReason: updatedQ.rejectionReason,
+        critique: updatedQ.critique,
+        critiqueScore: updatedQ.critiqueScore,
+        humanVerified: updatedQ.humanVerified,
+        humanVerifiedBy: updatedQ.humanVerifiedBy,
+        humanVerifiedAt: updatedQ.humanVerifiedAt,
+      };
+
+      try {
+        const result = await saveQuestionAsReviewer(
+          updatedQ.uniqueId,
+          statusMetadata
+        );
+        updateQuestionInState(id, updatedQ);
+
+        if (result.queued && showMessage) {
+          const truncateLen = GENERATION_LIMITS.ERROR_TRUNCATE_LENGTH;
+          const errorDetail = result.error
+            ? ` (${result.error.substring(0, truncateLen)})`
+            : "";
+          showMessage(
+            `⚠️ Connection issue - queued for retry.${errorDetail}`,
+            TOAST_DURATION.EXTENDED
+          );
+        } else if (
+          showMessage &&
+          (newStatus === QUESTION_STATUS.ACCEPTED ||
+            newStatus === QUESTION_STATUS.REJECTED)
+        ) {
+          showMessage(
+            `✓ Question ${newStatus} and saved to cloud`,
+            TOAST_DURATION.MEDIUM
+          );
+        }
+      } catch (err) {
+        const errorInfo = {
+          action: `Update status to ${newStatus}`,
+          message: err.message,
+          code: err.code,
+          questionId: id,
+        };
+        logger.error("Save failed:", errorInfo);
+
+        if (err.message?.startsWith("QUESTION_DELETED:")) {
+          setAllQuestions((prev) => prev.filter((q) => q.id !== id));
+        } else if (showMessage) {
+          showMessage(
+            `⚠️ Failed to save: ${err.message}. Please try again or report this issue.`,
+            TOAST_DURATION.EXTENDED
+          );
+        }
+      }
+    },
+    [
+      allQuestions,
+      config.creatorName,
+      config.userEmail,
+      setAllQuestions,
+      updateQuestionInState,
+      showMessage,
+    ]
+  );
+
+  /**
+   * Convenience method to accept a question.
+   */
+  const handleAccept = useCallback(
+    async (id) => {
+      await handleUpdateStatus(id, QUESTION_STATUS.ACCEPTED);
+    },
+    [handleUpdateStatus]
+  );
+
+  /**
+   * Convenience method to reject a question with a reason.
+   */
+  const handleReject = useCallback(
+    async (id, reason) => {
+      await handleUpdateStatus(id, QUESTION_STATUS.REJECTED, reason);
+    },
+    [handleUpdateStatus]
+  );
+
+  return {
+    handleUpdateStatus,
+    handleAccept,
+    handleReject,
+  };
+};

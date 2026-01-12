@@ -196,7 +196,7 @@ describe("Firestore Save Integration Tests", () => {
 
   describe("saveQuestionStatusUpdate", () => {
     it("should delegate to saveQuestionAsReviewer", async () => {
-      const result = await saveQuestionStatusUpdate("test-id", "accepted", {
+      await saveQuestionStatusUpdate("test-id", "accepted", {
         acceptedBy: "reviewer@test.com",
         reviewerName: "Test Reviewer",
       });

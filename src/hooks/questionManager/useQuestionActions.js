@@ -1,19 +1,10 @@
 import { useState, useCallback } from "react";
 import { filterDuplicateQuestions } from "../../utils/questionHelpers";
-import {
-  PROCESSING,
-  QUESTION_SOURCES,
-  QUESTION_STATUS,
-} from "../../utils/constants";
-import {
-  saveQuestionToFirestore,
-  deleteQuestionFromFirestore,
-} from "../../services/firebase";
-import { saveQuestionAsReviewer } from "../../services/firestoreSave";
-import { logQuestion } from "../../utils/analyticsStore";
-import { completeReviewTracking } from "../../utils/normalizeQuestion";
+import { QUESTION_SOURCES } from "../../utils/constants";
+import { saveQuestionToFirestore } from "../../services/firebase";
 import { getAgents } from "../../agents";
 import { logger } from "../../utils/logger";
+import { useStatusActions } from "./useStatusActions";
 
 /**
  * Hook for managing interactive actions on questions.
@@ -84,146 +75,14 @@ export const useQuestionActions = (
     [setAllQuestions]
   );
 
-  // Status handler
-  const handleUpdateStatus = useCallback(
-    async (id, newStatus, rejectionReason = null) => {
-      // Linear search instead of map lookup
-      const currentQ = allQuestions.find((q) => q.id === id);
-      if (!currentQ) return;
-
-      if (newStatus === QUESTION_STATUS.DELETED) {
-        try {
-          await deleteQuestionFromFirestore(currentQ.uniqueId || currentQ.id);
-          setAllQuestions((prev) => prev.filter((q) => q.id !== id));
-          logQuestion({
-            ...currentQ,
-            status: QUESTION_STATUS.DELETED,
-            deletionReason: rejectionReason || "Status update to deleted",
-            deletedAt: new Date().toISOString(),
-          });
-        } catch (err) {
-          logger.error("Failed to delete:", err);
-          if (showMessage)
-            showMessage("Failed to delete question from cloud.", 3000);
-        }
-        return;
-      }
-
-      let updatedQ = { ...currentQ, status: newStatus };
-      if (
-        newStatus === QUESTION_STATUS.ACCEPTED ||
-        newStatus === QUESTION_STATUS.REJECTED
-      ) {
-        // Require a reviewer name - use creatorName, or userEmail as fallback
-        const reviewerName = config.creatorName || config.userEmail;
-        if (!reviewerName) {
-          if (showMessage) {
-            showMessage(
-              "⚠️ Please set your Creator Name in settings before reviewing questions.",
-              5000
-            );
-          }
-          return; // Don't proceed without a reviewer name
-        }
-
-        if (!updatedQ.reviewStartedAt) {
-          const estimatedDurationMs =
-            (PROCESSING.ESTIMATED_REVIEW_SECONDS || 30) * 1000;
-          updatedQ.reviewStartedAt = new Date(
-            Date.now() - estimatedDurationMs
-          ).toISOString();
-        }
-        updatedQ = completeReviewTracking(updatedQ, reviewerName);
-      }
-
-      updatedQ = {
-        ...updatedQ,
-        critique:
-          newStatus === QUESTION_STATUS.ACCEPTED ? null : updatedQ.critique,
-        rejectionReason:
-          newStatus === QUESTION_STATUS.REJECTED ? rejectionReason : null,
-        rejectedAt:
-          newStatus === QUESTION_STATUS.REJECTED
-            ? new Date().toISOString()
-            : null,
-        acceptedAt:
-          newStatus === QUESTION_STATUS.ACCEPTED
-            ? new Date().toISOString()
-            : updatedQ.acceptedAt,
-      };
-
-      // Use typed save function that filters to reviewer-allowed fields only
-      const statusMetadata = {
-        status: updatedQ.status,
-        reviewStartedAt: updatedQ.reviewStartedAt,
-        reviewDuration: updatedQ.reviewDuration,
-        reviewerName: updatedQ.reviewerName,
-        reviewCompletedAt: updatedQ.reviewCompletedAt,
-        reviewedAt: updatedQ.reviewCompletedAt,
-        reviewedBy: config.userEmail,
-        acceptedAt: updatedQ.acceptedAt,
-        acceptedBy:
-          newStatus === QUESTION_STATUS.ACCEPTED ? config.userEmail : null,
-        rejectedAt: updatedQ.rejectedAt,
-        rejectedBy:
-          newStatus === QUESTION_STATUS.REJECTED ? config.userEmail : null,
-        rejectionReason: updatedQ.rejectionReason,
-        critique: updatedQ.critique,
-        critiqueScore: updatedQ.critiqueScore,
-        humanVerified: updatedQ.humanVerified,
-        humanVerifiedBy: updatedQ.humanVerifiedBy,
-        humanVerifiedAt: updatedQ.humanVerifiedAt,
-      };
-
-      try {
-        const result = await saveQuestionAsReviewer(
-          updatedQ.uniqueId,
-          statusMetadata
-        );
-        updateQuestionInState(id, updatedQ);
-        if (result.queued && showMessage) {
-          // Enhanced message with more detail
-          const errorDetail = result.error
-            ? ` (${result.error.substring(0, 50)})`
-            : "";
-          showMessage(
-            `⚠️ Connection issue - queued for retry.${errorDetail}`,
-            8000
-          );
-        } else if (
-          showMessage &&
-          (newStatus === QUESTION_STATUS.ACCEPTED ||
-            newStatus === QUESTION_STATUS.REJECTED)
-        ) {
-          showMessage(`✓ Question ${newStatus} and saved to cloud`, 2000);
-        }
-      } catch (err) {
-        const errorInfo = {
-          action: `Update status to ${newStatus}`,
-          message: err.message,
-          code: err.code,
-          questionId: id,
-        };
-        logger.error("Save failed:", errorInfo);
-
-        if (err.message?.startsWith("QUESTION_DELETED:")) {
-          setAllQuestions((prev) => prev.filter((q) => q.id !== id));
-        } else if (showMessage) {
-          showMessage(
-            `⚠️ Failed to save: ${err.message}. Please try again or report this issue.`,
-            8000
-          );
-        }
-      }
-    },
-    [
-      allQuestions,
-      config.creatorName,
-      setAllQuestions,
-      updateQuestionInState,
-      showMessage,
-    ]
-  );
+  // Delegate status actions to specialized hook
+  const { handleUpdateStatus, handleAccept, handleReject } = useStatusActions({
+    allQuestions,
+    setAllQuestions,
+    updateQuestionInState,
+    showMessage,
+    config,
+  });
 
   const handleUpdateQuestion = useCallback(
     async (id, updates) => {
@@ -351,6 +210,8 @@ export const useQuestionActions = (
     updateQuestionInState,
     updateAllVariantsInState,
     handleUpdateStatus,
+    handleAccept,
+    handleReject,
     handleUpdateQuestion,
     replaceQuestions,
     bulkDeleteQuestions,

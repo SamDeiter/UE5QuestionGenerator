@@ -8,51 +8,13 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { REVIEWER_ALLOWED_FIELDS } from "../src/utils/constants.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Fields that reviewers can update (must match firestore.rules)
-// SOURCE OF TRUTH: src/utils/constants.js - REVIEWER_ALLOWED_FIELDS
-// If updating this list, also update constants.js and firestore.rules
-const ALLOWED_REVIEWER_FIELDS = [
-  // Version and timestamps
-  "version",
-  "updatedAt",
-  "firestoreUpdatedAt",
-  // Scoring fields
-  "aiScore",
-  "scoredAt",
-  "scoreSource",
-  // Status fields
-  "status",
-  "rejectionReason",
-  "rejectionCategory",
-  "rejectionNotes",
-  "rejectedAt",
-  "rejectedBy",
-  "acceptedAt",
-  "acceptedBy",
-  // Review tracking
-  "reviewedBy",
-  "reviewedAt",
-  "reviewCompletedAt",
-  "reviewerName",
-  "reviewDuration",
-  "reviewStartedAt",
-  // Critique and improvement
-  "critique",
-  "critiqueScore",
-  "suggestedRewrite",
-  "improvedScore",
-  "improvementsApplied",
-  // Human verification
-  "humanVerified",
-  "humanVerifiedBy",
-  "humanVerifiedAt",
-  // Notes
-  "notes",
-];
+// Use the centralized source of truth for allowed fields
+const ALLOWED_REVIEWER_FIELDS = REVIEWER_ALLOWED_FIELDS;
 
 // Fields set in handleUpdateStatus (useQuestionActions.js)
 const FIELDS_SET_IN_UPDATE_STATUS = [

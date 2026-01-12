@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/pseudo-random */
 import { useState, useMemo } from "react";
 import Icon from "./Icon";
 import QuizPreview from "./QuizPreview";

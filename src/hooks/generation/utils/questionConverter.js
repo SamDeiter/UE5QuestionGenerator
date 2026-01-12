@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/pseudo-random */
 /**
  * Intelligently converts a Multiple Choice question to True/False format.
  * Creates a statement from the question + correct answer, randomly makes it TRUE or FALSE.
@@ -27,7 +28,7 @@ export const convertMCtoTF = (mcQuestion, difficulty) => {
   // Determine truthiness and target answer based on question type
   // NOTE: Using Math.random here is acceptable - this is for educational quiz variety,
   // not cryptographic security. No security implications.
-  // eslint-disable-next-line sonarjs/pseudo-random
+   
   const randomBool = Math.random() > 0.5;
 
   // Declare variables with proper initial values based on condition
@@ -40,6 +41,7 @@ export const convertMCtoTF = (mcQuestion, difficulty) => {
   const getTargetAnswer = () => {
     if (isBooleanAnswer) return correctAnswerText;
     if (makeItTrue) return correctAnswerText;
+     
     return (
       wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)] ||
       "incorrect"

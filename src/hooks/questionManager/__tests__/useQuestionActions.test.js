@@ -2,10 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionActions } from "../useQuestionActions";
 import { QUESTION_STATUS } from "../../../utils/constants";
-import {
-  saveQuestionToFirestore,
-  deleteQuestionFromFirestore,
-} from "../../../services/firebase";
+import { deleteQuestionFromFirestore } from "../../../services/firebase";
 import { saveQuestionAsReviewer } from "../../../services/firestoreSave";
 import { logQuestion } from "../../../utils/analyticsStore";
 
