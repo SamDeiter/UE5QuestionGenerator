@@ -172,7 +172,15 @@ const QuestionItem = ({
       {/* Lock Status Banner */}
       {isLocked && appMode === APP_MODES.REVIEW && (
         <div className="mb-3 bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-3 flex items-center gap-3">
-          {/* ... content ... */}
+          <Icon name="lock" size={20} className="text-yellow-400" />
+          <div>
+            <span className="text-yellow-200 font-medium">
+              Locked by {lockedBy?.email || "another user"}
+            </span>
+            <p className="text-xs text-yellow-400/70">
+              Wait for them to finish or move to another question.
+            </p>
+          </div>
         </div>
       )}
 
@@ -186,7 +194,14 @@ const QuestionItem = ({
           )}`}
           title={getLockTooltip(hasLock, isLocked, lockedBy?.email)}
         >
-          {/* ... content ... */}
+          <Icon
+            name={hasLock ? "edit-3" : isLocked ? "lock" : "unlock"}
+            size={12}
+            className={lockColor(hasLock, isLocked, "icon")}
+          />
+          <span className={lockColor(hasLock, isLocked, "icon")}>
+            {hasLock ? "Editing" : isLocked ? "Locked" : "Available"}
+          </span>
         </div>
       )}
 
