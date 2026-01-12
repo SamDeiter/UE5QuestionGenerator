@@ -203,8 +203,14 @@ const QuestionItem = ({
             lockedBy={lockedBy}
             onCritique={() => onCritique?.(q)}
             onFix={() => onApplyRewrite && onApplyRewrite(q)}
-            onVerify={() => {
-              // ... verification logic ...
+            onVerify={async () => {
+              if (!onUpdateQuestion) return;
+              await onUpdateQuestion(q.id, {
+                humanVerified: true,
+                humanVerifiedBy: userEmail || "Unknown",
+                humanVerifiedAt: new Date().toISOString(),
+              });
+              if (showMessage) showMessage("✅ Question verified!", 2000);
             }}
             onAccept={() => {
               if (!q.humanVerified) {
