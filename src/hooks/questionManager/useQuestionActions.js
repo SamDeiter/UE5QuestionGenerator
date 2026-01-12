@@ -5,6 +5,7 @@ import { saveQuestionToFirestore } from "../../services/firebase";
 import { getAgents } from "../../agents";
 import { logger } from "../../utils/logger";
 import { useStatusActions } from "./useStatusActions";
+import { useConflictResolution } from "./useConflictResolution";
 
 /**
  * Hook for managing interactive actions on questions.
@@ -16,18 +17,45 @@ export const useQuestionActions = (
   showMessage,
   config
 ) => {
-  // Conflict resolution state
-  const [conflictData, setConflictData] = useState(null);
-  const [showConflictModal, setShowConflictModal] = useState(false);
-
   // Delete confirmation state
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [showClearModal, setShowClearModal] = useState(false);
 
-  // Version tracking for concurrent editing
-  const [questionVersions, setQuestionVersions] = useState(new Map());
-
   // CRUD Helpers
+  const updateQuestionInState = useCallback(
+    (id, updates) => {
+      setAllQuestions((prev) => {
+        const idx = prev.findIndex((q) => q.id === id);
+        if (idx === -1) return prev;
+        const updated =
+          typeof updates === "function" ? updates(prev[idx]) : updates;
+        const newList = [...prev];
+        newList[idx] = { ...updated, _source: prev[idx]._source };
+        return newList;
+      });
+    },
+    [setAllQuestions]
+  );
+
+  // Delegate conflict resolution to specialized hook
+  const {
+    conflictData,
+    setConflictData,
+    showConflictModal,
+    setShowConflictModal,
+    questionVersions,
+    setQuestionVersions,
+    getVersion,
+    updateVersion,
+    handleVersionConflict,
+    handleConflictResolve,
+  } = useConflictResolution({
+    updateQuestionInState,
+    setAllQuestions,
+    showMessage,
+    config,
+  });
+
   const addQuestions = useCallback(
     async (newItems, source = QUESTION_SOURCES.SESSION) => {
       // Determine target source - handle legacy boolean values
@@ -48,21 +76,6 @@ export const useQuestionActions = (
       });
     },
     [backupToCloud, setAllQuestions]
-  );
-
-  const updateQuestionInState = useCallback(
-    (id, updates) => {
-      setAllQuestions((prev) => {
-        const idx = prev.findIndex((q) => q.id === id);
-        if (idx === -1) return prev;
-        const updated =
-          typeof updates === "function" ? updates(prev[idx]) : updates;
-        const newList = [...prev];
-        newList[idx] = { ...updated, _source: prev[idx]._source };
-        return newList;
-      });
-    },
-    [setAllQuestions]
   );
 
   const updateAllVariantsInState = useCallback(
@@ -94,7 +107,7 @@ export const useQuestionActions = (
 
       try {
         if (agents?.saveGuardAgent) {
-          const baseVersion = questionVersions.get(id) || currentQ.version || 1;
+          const baseVersion = getVersion(id, currentQ.version || 1);
           const result = await agents.saveGuardAgent.saveQuestion(
             currentQ.id,
             updates,
@@ -105,21 +118,13 @@ export const useQuestionActions = (
 
           if (!result.success) {
             if (result.errorType === "VERSION_CONFLICT") {
-              setConflictData({
-                serverQuestion: result.serverQuestion,
-                serverVersion: result.serverVersion,
-                localChanges: updates,
-                expectedVersion: baseVersion,
-              });
-              setShowConflictModal(true);
+              handleVersionConflict(result, updates, baseVersion);
               return;
             }
             throw new Error(result.error);
           }
 
-          setQuestionVersions((prev) =>
-            new Map(prev).set(id, result.newVersion)
-          );
+          updateVersion(id, result.newVersion);
           updateQuestionInState(id, {
             ...updatedQ,
             version: result.newVersion,
@@ -138,9 +143,11 @@ export const useQuestionActions = (
     },
     [
       allQuestions,
-      questionVersions,
       config.userId,
       config.userEmail,
+      getVersion,
+      updateVersion,
+      handleVersionConflict,
       setAllQuestions,
       updateQuestionInState,
       showMessage,
@@ -194,7 +201,7 @@ export const useQuestionActions = (
         }
       }
     },
-    [allQuestions, saveQuestionToFirestore, updateQuestionInState, showMessage]
+    [allQuestions, updateQuestionInState, showMessage]
   );
 
   const clearQuestions = useCallback(() => {
@@ -217,14 +224,18 @@ export const useQuestionActions = (
     bulkDeleteQuestions,
     moveQuestion,
     clearQuestions,
+    // Conflict resolution (delegated to useConflictResolution)
     conflictData,
     setConflictData,
     showConflictModal,
     setShowConflictModal,
+    handleConflictResolve,
+    // Delete confirmation state
     deleteConfirmId,
     setDeleteConfirmId,
     showClearModal,
     setShowClearModal,
+    // Version tracking (delegated to useConflictResolution)
     questionVersions,
     setQuestionVersions,
   };
