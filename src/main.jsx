@@ -4,6 +4,7 @@ import App from "./App.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import ModalProvider from "./contexts/ModalProvider.jsx";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext.jsx";
+import { ErrorReporterProvider } from "./contexts/ErrorReporterContext.jsx";
 import "./index.css";
 
 // Import cleanup utility to expose window.cleanupProductionDatabase for console access
@@ -14,9 +15,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
       <AccessibilityProvider>
-        <ModalProvider>
-          <App />
-        </ModalProvider>
+        <ErrorReporterProvider>
+          <ModalProvider>
+            <App />
+          </ModalProvider>
+        </ErrorReporterProvider>
       </AccessibilityProvider>
     </ErrorBoundary>
   </React.StrictMode>

@@ -154,9 +154,16 @@ export const useQuestionActions = (
       try {
         const result = await saveQuestionToFirestore(updatedQ);
         updateQuestionInState(id, updatedQ);
-        if (result.queued && showMessage)
-          showMessage("⚠️ Connection issue - queued.", 6000);
-        else if (
+        if (result.queued && showMessage) {
+          // Enhanced message with more detail
+          const errorDetail = result.error
+            ? ` (${result.error.substring(0, 50)})`
+            : "";
+          showMessage(
+            `⚠️ Connection issue - queued for retry.${errorDetail}`,
+            8000
+          );
+        } else if (
           showMessage &&
           (newStatus === QUESTION_STATUS.ACCEPTED ||
             newStatus === QUESTION_STATUS.REJECTED)
@@ -164,10 +171,21 @@ export const useQuestionActions = (
           showMessage(`✓ Question ${newStatus} and saved to cloud`, 2000);
         }
       } catch (err) {
+        const errorInfo = {
+          action: `Update status to ${newStatus}`,
+          message: err.message,
+          code: err.code,
+          questionId: id,
+        };
+        logger.error("Save failed:", errorInfo);
+
         if (err.message?.startsWith("QUESTION_DELETED:")) {
           setAllQuestions((prev) => prev.filter((q) => q.id !== id));
         } else if (showMessage) {
-          showMessage(`⚠️ Failed to save: ${err.message}`, 5000);
+          showMessage(
+            `⚠️ Failed to save: ${err.message}. Please try again or report this issue.`,
+            8000
+          );
         }
       }
     },
