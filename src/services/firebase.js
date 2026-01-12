@@ -1,11 +1,11 @@
-import { app, auth, googleProvider, firebaseConfig } from "./firebaseAuth";
 import {
-  signInWithPopup,
-  signOut,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-} from "firebase/auth";
+  app,
+  auth,
+  firebaseConfig,
+  refreshAuthToken,
+  markAuthActivity,
+  isAuthPotentiallyStale,
+} from "./firebaseAuth";
 import { logEvent } from "firebase/analytics";
 import {
   getFirestore,
@@ -212,129 +212,6 @@ if (typeof window !== "undefined") {
     }
   }, 30000); // Check every 30 seconds
 }
-
-/**
- * FIX 2: Refresh auth token proactively before critical saves
- * Firebase tokens expire after ~1 hour. This forces a refresh.
- * @returns {Promise<boolean>} true if token refreshed successfully
- */
-export const refreshAuthToken = async () => {
-  try {
-    if (!auth.currentUser) {
-      logger.warn("[Auth] No current user - cannot refresh token");
-      return false;
-    }
-    // Force token refresh
-    await auth.currentUser.getIdToken(true);
-    logger.log("[Auth] Token refreshed successfully");
-    return true;
-  } catch (error) {
-    logger.error("[Auth] Token refresh failed:", error);
-    return false;
-  }
-};
-
-/**
- * Check if auth token is likely expired (heuristic based on last activity)
- * @returns {boolean} true if token might be stale
- */
-let lastAuthActivity = Date.now();
-export const markAuthActivity = () => {
-  lastAuthActivity = Date.now();
-};
-
-export const isAuthPotentiallyStale = () => {
-  const STALE_THRESHOLD_MS = TIMING.STALE_AUTH_MS;
-  return Date.now() - lastAuthActivity > STALE_THRESHOLD_MS;
-};
-
-/**
- * Get detailed queue status for UI display
- * @returns {Object} Queue status with item count and oldest item age
- */
-export const getQueueDetails = () => {
-  if (offlineQueue.length === 0) return { count: 0, oldestAge: 0 };
-
-  const oldestTimestamp = Math.min(
-    ...offlineQueue.map((item) => item.timestamp)
-  );
-  const oldestAge = Math.round((Date.now() - oldestTimestamp) / 1000 / 60); // minutes
-
-  return {
-    count: offlineQueue.length,
-    oldestAge,
-    items: offlineQueue.map((item) => ({
-      id: item.question?.uniqueId?.slice(0, 8),
-      text: item.question?.text?.slice(0, 30),
-      status: item.question?.status,
-      timestamp: item.timestamp,
-      age: Math.round((Date.now() - item.timestamp) / 1000 / 60),
-    })),
-  };
-};
-
-export const signInWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
-  } catch (error) {
-    logger.error("Error signing in with Google:", error);
-    throw error;
-  }
-};
-
-export const signOutUser = async () => {
-  try {
-    await signOut(auth);
-  } catch (error) {
-    logger.error("Error signing out:", error);
-    throw error;
-  }
-};
-
-// Email/Password Authentication
-export const signUpWithEmail = async (email, password) => {
-  try {
-    const result = await createUserWithEmailAndPassword(auth, email, password);
-    return result.user;
-  } catch (error) {
-    // Only log unexpected errors (not user mistakes like "email already in use")
-    if (
-      error.code !== "auth/email-already-in-use" &&
-      error.code !== "auth/weak-password"
-    ) {
-      logger.error("Error signing up with email:", error);
-    }
-    throw error;
-  }
-};
-
-export const signInWithEmail = async (email, password) => {
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    return result.user;
-  } catch (error) {
-    // Only log unexpected errors (not user mistakes like "invalid credentials")
-    if (
-      error.code !== "auth/invalid-credential" &&
-      error.code !== "auth/wrong-password" &&
-      error.code !== "auth/user-not-found"
-    ) {
-      logger.error("Error signing in with email:", error);
-    }
-    throw error;
-  }
-};
-
-// Password Reset
-export const resetPassword = async (email) => {
-  try {
-    await sendPasswordResetEmail(auth, email);
-  } catch (error) {
-    logger.error("Error sending password reset email:", error);
-    throw error;
-  }
-};
 
 // --- Firestore Helpers ---
 
@@ -935,3 +812,15 @@ export const getCustomTags = async () => {
 };
 
 export { app, analytics, auth };
+
+// Re-export auth functions from firebaseAuth.js for backward compatibility
+export {
+  signInWithGoogle,
+  signOutUser,
+  signUpWithEmail,
+  signInWithEmail,
+  resetPassword,
+  refreshAuthToken,
+  markAuthActivity,
+  isAuthPotentiallyStale,
+} from "./firebaseAuth";

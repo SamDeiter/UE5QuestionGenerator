@@ -1,6 +1,15 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { logger } from "../utils/logger";
+import { TIMING } from "../utils/constants";
 
 // Your web app's Firebase configuration
 // SECURITY: Firebase config REQUIRES environment variables - no fallbacks
@@ -29,5 +38,132 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
+
+// --- Authentication Functions ---
+
+/**
+ * Sign in with Google popup
+ * @returns {Promise<User>} Firebase user object
+ */
+export const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (error) {
+    logger.error("Error signing in with Google:", error);
+    throw error;
+  }
+};
+
+/**
+ * Sign out current user
+ */
+export const signOutUser = async () => {
+  try {
+    await signOut(auth);
+  } catch (error) {
+    logger.error("Error signing out:", error);
+    throw error;
+  }
+};
+
+/**
+ * Sign up with email and password
+ * @param {string} email - User email
+ * @param {string} password - User password
+ * @returns {Promise<User>} Firebase user object
+ */
+export const signUpWithEmail = async (email, password) => {
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    return result.user;
+  } catch (error) {
+    // Only log unexpected errors (not user mistakes like "email already in use")
+    if (
+      error.code !== "auth/email-already-in-use" &&
+      error.code !== "auth/weak-password"
+    ) {
+      logger.error("Error signing up with email:", error);
+    }
+    throw error;
+  }
+};
+
+/**
+ * Sign in with email and password
+ * @param {string} email - User email
+ * @param {string} password - User password
+ * @returns {Promise<User>} Firebase user object
+ */
+export const signInWithEmail = async (email, password) => {
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    return result.user;
+  } catch (error) {
+    // Only log unexpected errors (not user mistakes like "invalid credentials")
+    if (
+      error.code !== "auth/invalid-credential" &&
+      error.code !== "auth/wrong-password" &&
+      error.code !== "auth/user-not-found"
+    ) {
+      logger.error("Error signing in with email:", error);
+    }
+    throw error;
+  }
+};
+
+/**
+ * Send password reset email
+ * @param {string} email - User email
+ */
+export const resetPassword = async (email) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error) {
+    logger.error("Error sending password reset email:", error);
+    throw error;
+  }
+};
+
+// --- Token Management ---
+
+/**
+ * Refresh auth token proactively before critical saves
+ * Firebase tokens expire after ~1 hour. This forces a refresh.
+ * @returns {Promise<boolean>} true if token refreshed successfully
+ */
+export const refreshAuthToken = async () => {
+  try {
+    if (!auth.currentUser) {
+      logger.warn("[Auth] No current user - cannot refresh token");
+      return false;
+    }
+    // Force token refresh
+    await auth.currentUser.getIdToken(true);
+    logger.log("[Auth] Token refreshed successfully");
+    return true;
+  } catch (error) {
+    logger.error("[Auth] Token refresh failed:", error);
+    return false;
+  }
+};
+
+/**
+ * Track when auth was last used (heuristic for token staleness)
+ */
+let lastAuthActivity = Date.now();
+
+export const markAuthActivity = () => {
+  lastAuthActivity = Date.now();
+};
+
+/**
+ * Check if auth token is likely expired (heuristic based on last activity)
+ * @returns {boolean} true if token might be stale
+ */
+export const isAuthPotentiallyStale = () => {
+  const STALE_THRESHOLD_MS = TIMING.STALE_AUTH_MS;
+  return Date.now() - lastAuthActivity > STALE_THRESHOLD_MS;
+};
 
 export { app, auth, googleProvider, firebaseConfig };
