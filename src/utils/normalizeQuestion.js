@@ -8,7 +8,7 @@ import { logger } from "../utils/logger";
  * NOTE: Uses Math.random for UUID fallback (non-security).
  * Regex patterns are for text normalization - input is app-controlled.
  */
-/* eslint-disable sonarjs/pseudo-random, sonarjs/slow-regex */
+/* eslint-disable sonarjs/pseudo-random */
 
 /**
  * Generate a UUID, with fallback for environments where crypto.randomUUID isn't available
@@ -20,7 +20,7 @@ const generateUUID = () => {
   }
   // Fallback UUID v4 implementation
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    // eslint-disable-next-line sonarjs/pseudo-random
+     
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);

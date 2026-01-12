@@ -4,7 +4,7 @@
  * NOTE: Uses Math.random for unique ID generation (non-security).
  * Regex patterns are for filename parsing - input is filename paths, no DoS risk.
  */
-/* eslint-disable sonarjs/pseudo-random, sonarjs/slow-regex */
+/* eslint-disable sonarjs/pseudo-random */
 import { FIELD_DELIMITER, LANGUAGE_FLAGS, LANGUAGE_CODES } from "./constants";
 import { parseCSVLine } from "./stringHelpers";
 import { validateFile, validateCSVContent } from "./security";

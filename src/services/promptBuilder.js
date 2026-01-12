@@ -4,7 +4,7 @@
  * NOTE: Any regex patterns are for prompt template processing.
  * Input is application-controlled (config values) - no DoS risk.
  */
-/* eslint-disable sonarjs/slow-regex */
+ 
 import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
 
 /**

@@ -9,6 +9,7 @@ import {
   saveQuestionToFirestore,
   deleteQuestionFromFirestore,
 } from "../../services/firebase";
+import { saveQuestionAsReviewer } from "../../services/firestoreSave";
 import { logQuestion } from "../../utils/analyticsStore";
 import { completeReviewTracking } from "../../utils/normalizeQuestion";
 import { getAgents } from "../../agents";
@@ -151,20 +152,15 @@ export const useQuestionActions = (
             : updatedQ.acceptedAt,
       };
 
-      // CRITICAL FIX: Only send reviewer-allowed fields to Firestore
-      // This prevents permission-denied errors when other fields have type mismatches
-      const reviewerAllowedFields = {
-        uniqueId: updatedQ.uniqueId, // Required for document ID
-        // Status fields
+      // Use typed save function that filters to reviewer-allowed fields only
+      const statusMetadata = {
         status: updatedQ.status,
-        // Review tracking fields
         reviewStartedAt: updatedQ.reviewStartedAt,
         reviewDuration: updatedQ.reviewDuration,
         reviewerName: updatedQ.reviewerName,
         reviewCompletedAt: updatedQ.reviewCompletedAt,
-        reviewedAt: updatedQ.reviewCompletedAt, // Alias
+        reviewedAt: updatedQ.reviewCompletedAt,
         reviewedBy: config.userEmail,
-        // Accept/Reject fields
         acceptedAt: updatedQ.acceptedAt,
         acceptedBy:
           newStatus === QUESTION_STATUS.ACCEPTED ? config.userEmail : null,
@@ -172,17 +168,18 @@ export const useQuestionActions = (
         rejectedBy:
           newStatus === QUESTION_STATUS.REJECTED ? config.userEmail : null,
         rejectionReason: updatedQ.rejectionReason,
-        // Critique fields (cleared on accept)
         critique: updatedQ.critique,
         critiqueScore: updatedQ.critiqueScore,
-        // Human verification
         humanVerified: updatedQ.humanVerified,
         humanVerifiedBy: updatedQ.humanVerifiedBy,
         humanVerifiedAt: updatedQ.humanVerifiedAt,
       };
 
       try {
-        const result = await saveQuestionToFirestore(reviewerAllowedFields);
+        const result = await saveQuestionAsReviewer(
+          updatedQ.uniqueId,
+          statusMetadata
+        );
         updateQuestionInState(id, updatedQ);
         if (result.queued && showMessage) {
           // Enhanced message with more detail

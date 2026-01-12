@@ -248,3 +248,45 @@ export const APP_MODES = {
   PLAYGROUND: "playground",
   TRANSLATE: "translate",
 };
+
+// Firestore Security - Reviewer Allowed Fields
+// IMPORTANT: This list must match what's in config/firestore/firestore.rules
+// Run `node scripts/validate-firestore-rules.js` to verify sync
+export const REVIEWER_ALLOWED_FIELDS = [
+  // Version and timestamps
+  "version",
+  "updatedAt",
+  "firestoreUpdatedAt",
+  // Status fields
+  "status",
+  "rejectionReason",
+  "rejectionCategory",
+  "rejectionNotes",
+  "rejectedAt",
+  "rejectedBy",
+  "acceptedAt",
+  "acceptedBy",
+  // Review tracking
+  "reviewedBy",
+  "reviewedAt",
+  "reviewCompletedAt",
+  "reviewerName",
+  "reviewDuration",
+  "reviewStartedAt",
+  // AI scoring
+  "aiScore",
+  "scoredAt",
+  "scoreSource",
+  // Critique and improvement
+  "critique",
+  "critiqueScore",
+  "suggestedRewrite",
+  "improvedScore",
+  "improvementsApplied",
+  // Human verification
+  "humanVerified",
+  "humanVerifiedBy",
+  "humanVerifiedAt",
+  // Notes
+  "notes",
+];

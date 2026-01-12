@@ -200,7 +200,7 @@ export function useToast() {
     (msg, typeOrDuration = "info", duration) => {
       // Backward compatibility: if second arg is number, treat as duration
       const isNumberArg = typeof typeOrDuration === "number";
-      let finalDuration = isNumberArg ? typeOrDuration : duration;
+      const finalDuration = isNumberArg ? typeOrDuration : duration;
       let type = isNumberArg ? "info" : typeOrDuration;
       let priority = "medium";
 

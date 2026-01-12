@@ -13,7 +13,7 @@ const NameEntryModal = ({ onSave }) => {
       "Texture Titan",
     ];
     // Pick a random placeholder for fun UI variety (non-security)
-    // eslint-disable-next-line sonarjs/pseudo-random
+     
     setSillyPlaceholder(
       `e.g. ${sillyNames[Math.floor(Math.random() * sillyNames.length)]}`
     );

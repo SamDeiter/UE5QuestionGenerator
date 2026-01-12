@@ -55,7 +55,7 @@ const fetchWithRetry = async (url, options, setStatus = () => {}) => {
             : Math.pow(2, retries) * 5000;
 
           // Add jitter (random 0-1000ms) to prevent thundering herd
-          // eslint-disable-next-line sonarjs/pseudo-random
+           
           waitTime += Math.random() * 1000;
 
           // Update global rate limit state (for UI display)

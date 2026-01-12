@@ -36,7 +36,7 @@ export const convertMCtoTF = (mcQuestion, difficulty) => {
     : randomBool;
 
   // Determine target answer based on question type and mode
-  // eslint-disable-next-line sonarjs/pseudo-random
+   
   const getTargetAnswer = () => {
     if (isBooleanAnswer) return correctAnswerText;
     if (makeItTrue) return correctAnswerText;

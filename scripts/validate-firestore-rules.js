@@ -13,6 +13,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Fields that reviewers can update (must match firestore.rules)
+// SOURCE OF TRUTH: src/utils/constants.js - REVIEWER_ALLOWED_FIELDS
+// If updating this list, also update constants.js and firestore.rules
 const ALLOWED_REVIEWER_FIELDS = [
   // Version and timestamps
   "version",
