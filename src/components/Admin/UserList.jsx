@@ -82,7 +82,7 @@ const UserList = ({
       return;
 
     setBulkRevoking(true);
-    let successCount = 0;
+    let _successCount = 0;
     let failCount = 0;
 
     for (const uid of selectedUsers) {
@@ -90,7 +90,7 @@ const UserList = ({
       if (user) {
         try {
           await handleRevokeUser(uid, user.email, true); // true = suppress individual confirmation
-          successCount++;
+          _successCount++;
         } catch (error) {
           logger.error(`Failed to revoke ${user.email}:`, error);
           failCount++;

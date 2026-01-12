@@ -14,7 +14,7 @@ import { logger } from "../../utils/logger";
  */
 export const useConflictResolution = ({
   updateQuestionInState,
-  setAllQuestions,
+  _setAllQuestions,
   showMessage,
   config,
 }) => {
