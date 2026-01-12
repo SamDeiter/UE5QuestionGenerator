@@ -381,11 +381,16 @@ const saveQuestionToFirestoreInternal = async (question) => {
     firestoreUpdatedAt: Timestamp.now(),
   });
 
-  // Add creatorId if missing and user is signed in
-  if (auth.currentUser && !payload.creatorId) {
-    payload.creatorId = auth.currentUser.uid;
-    payload.creatorEmail = auth.currentUser.email;
-  }
+  // NOTE: Removed creatorId/creatorEmail addition here
+  // This was breaking reviewer saves since those fields aren't in the
+  // allowed reviewer fields list in Firestore rules.
+  // If a question needs creatorId, it should be set at creation time.
+
+  // DEBUG: Log exactly what we're sending
+  logger.log(
+    `🔍 [DEBUG] Saving to Firestore. Fields being sent:`,
+    Object.keys(payload)
+  );
 
   // Set the document (overwrite if exists, create if new)
   await setDoc(docRef, payload, { merge: true });
