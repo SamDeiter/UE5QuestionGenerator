@@ -7,7 +7,6 @@
 /* eslint-disable sonarjs/slow-regex */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Icon from "./Icon";
-import { sanitizeText } from "../utils/sanitize";
 import {
   generateGUID,
   createSeededRandom,
@@ -15,6 +14,12 @@ import {
   reportToSCORM,
 } from "../utils/quizUtils";
 import { logger } from "../utils/logger";
+
+// Sub-components
+import QuizStartScreen from "./QuizPreview/QuizStartScreen";
+import QuizResultsScreen from "./QuizPreview/QuizResultsScreen";
+import QuizHeader from "./QuizPreview/QuizHeader";
+import QuizQuestion from "./QuizPreview/QuizQuestion";
 
 /**
  * QuizPreview - Simplified interactive quiz component
@@ -27,10 +32,10 @@ import { logger } from "../utils/logger";
  */
 const QuizPreview = ({ questions, config, onClose }) => {
   // Core quiz state
-  const [quizGuid, setQuizGuid] = useState(null); // Unique GUID for this quiz instance
-  const [quizQuestions, setQuizQuestions] = useState([]); // Built once at start
+  const [quizGuid, setQuizGuid] = useState(null);
+  const [quizQuestions, setQuizQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState({}); // Simple: { questionId: "A" }
+  const [answers, setAnswers] = useState({});
   const [wrongStreak, setWrongStreak] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(config.timeLimit * 60);
@@ -42,7 +47,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
   const [focusedOptionIndex, setFocusedOptionIndex] = useState(0);
   const [announceMessage, setAnnounceMessage] = useState("");
 
-  // Derived state - must be before useEffect hooks that use them
+  // Derived state
   const currentQuestion = quizQuestions[currentIndex];
   const totalQuestions = quizQuestions.length;
   const questionId = currentQuestion?.id || currentQuestion?.uniqueId;
@@ -51,8 +56,6 @@ const QuizPreview = ({ questions, config, onClose }) => {
 
   /**
    * Build a balanced question list at quiz start
-   * Uses seeded randomization for reproducibility
-   * Interleaves Easy, Medium, Hard to avoid clustering
    */
   const buildBalancedQuestionList = useCallback(
     (guid) => {
@@ -93,7 +96,6 @@ const QuizPreview = ({ questions, config, onClose }) => {
         if (shuffledHard[i]) distributed.push(shuffledHard[i]);
       }
 
-      // Take only what we need
       return distributed.slice(0, config.questionCount || distributed.length);
     },
     [questions, config.questionCount]
@@ -115,14 +117,13 @@ const QuizPreview = ({ questions, config, onClose }) => {
     if (!quizStarted || showResults) return;
 
     const handleKeydown = (e) => {
-      // Block common cheating shortcuts
       if (
         (e.ctrlKey || e.metaKey) &&
-        (e.key === "c" || // Copy
-          e.key === "v" || // Paste
-          e.key === "f" || // Find
-          e.key === "p" || // Print
-          e.key === "s") // Save
+        (e.key === "c" ||
+          e.key === "v" ||
+          e.key === "f" ||
+          e.key === "p" ||
+          e.key === "s")
       ) {
         e.preventDefault();
         logger.log("Anti-cheat: Blocked keyboard shortcut");
@@ -155,6 +156,85 @@ const QuizPreview = ({ questions, config, onClose }) => {
     };
   }, [quizStarted, showResults, quizGuid, currentIndex]);
 
+  // Get options for display (static A, B, C, D - always in order)
+  const getOptions = useCallback((question) => {
+    if (!question?.options) return {};
+    return Object.entries(question.options)
+      .filter(([, value]) => value)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .reduce((acc, [key, value]) => {
+        let displayValue = value;
+        if (value === "TRUE") displayValue = "True";
+        if (value === "FALSE") displayValue = "False";
+        acc[key] = displayValue;
+        return acc;
+      }, {});
+  }, []);
+
+  // Handle answer selection
+  const handleAnswer = useCallback(
+    (selectedKey) => {
+      if (!currentQuestion) return;
+
+      const qId = currentQuestion.id || currentQuestion.uniqueId;
+      const isCorrect = selectedKey === currentQuestion.correct;
+
+      setAnswers((prev) => ({ ...prev, [qId]: selectedKey }));
+
+      if (isCorrect) {
+        setWrongStreak(0);
+      } else {
+        setWrongStreak((prev) => prev + 1);
+      }
+    },
+    [currentQuestion]
+  );
+
+  // Handle next question with confidence boost
+  const handleNext = useCallback(() => {
+    if (!isAnswered) {
+      setShowAnswerWarning(true);
+      return;
+    }
+
+    setShowAnswerWarning(false);
+
+    if (currentIndex + 1 >= totalQuestions) {
+      setShowResults(true);
+      return;
+    }
+
+    // Confidence boost: if 2+ wrong in a row, try to give an easy question next
+    if (wrongStreak >= 2) {
+      const answeredIds = new Set(Object.keys(answers));
+      const upcomingQuestions = quizQuestions.slice(currentIndex + 1);
+
+      const easyIndex = upcomingQuestions.findIndex(
+        (q) =>
+          (q.difficulty || "").toLowerCase().includes("easy") &&
+          !answeredIds.has(q.id || q.uniqueId)
+      );
+
+      if (easyIndex > 0) {
+        const newQuestions = [...quizQuestions];
+        const easyQ = newQuestions[currentIndex + 1 + easyIndex];
+        const nextQ = newQuestions[currentIndex + 1];
+        newQuestions[currentIndex + 1] = easyQ;
+        newQuestions[currentIndex + 1 + easyIndex] = nextQ;
+        setQuizQuestions(newQuestions);
+      }
+    }
+
+    setCurrentIndex((prev) => prev + 1);
+  }, [
+    currentIndex,
+    totalQuestions,
+    wrongStreak,
+    answers,
+    quizQuestions,
+    isAnswered,
+  ]);
+
   // Accessibility: Keyboard navigation for quiz questions
   useEffect(() => {
     if (!quizStarted || showResults || !currentQuestion) return;
@@ -162,7 +242,6 @@ const QuizPreview = ({ questions, config, onClose }) => {
     const optionKeys = Object.keys(getOptions(currentQuestion));
 
     const handleKeyDown = (e) => {
-      // Arrow key navigation between options
       if (e.key === "ArrowDown" || e.key === "ArrowRight") {
         e.preventDefault();
         setFocusedOptionIndex((prev) => {
@@ -185,16 +264,12 @@ const QuizPreview = ({ questions, config, onClose }) => {
           );
           return newIndex;
         });
-      }
-      // Enter or Space to select focused option
-      else if ((e.key === "Enter" || e.key === " ") && !selectedAnswer) {
+      } else if ((e.key === "Enter" || e.key === " ") && !selectedAnswer) {
         e.preventDefault();
         const selectedKey = optionKeys[focusedOptionIndex];
         handleAnswer(selectedKey);
         setAnnounceMessage(`Selected option ${selectedKey}`);
-      }
-      // N key for Next Question (when answer is selected)
-      else if (e.key === "n" && selectedAnswer) {
+      } else if (e.key === "n" && selectedAnswer) {
         e.preventDefault();
         handleNext();
       }
@@ -252,62 +327,6 @@ const QuizPreview = ({ questions, config, onClose }) => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Handle answer selection
-  const handleAnswer = useCallback(
-    (selectedKey) => {
-      if (!currentQuestion) return;
-
-      const questionId = currentQuestion.id || currentQuestion.uniqueId;
-      const isCorrect = selectedKey === currentQuestion.correct;
-
-      // Store just the key
-      setAnswers((prev) => ({ ...prev, [questionId]: selectedKey }));
-
-      // Update wrong streak
-      if (isCorrect) {
-        setWrongStreak(0);
-      } else {
-        setWrongStreak((prev) => prev + 1);
-      }
-    },
-    [currentQuestion]
-  );
-
-  // Handle next question with confidence boost
-  const handleNext = useCallback(() => {
-    setShowAnswerWarning(false);
-
-    if (currentIndex + 1 >= totalQuestions) {
-      setShowResults(true);
-      return;
-    }
-
-    // Confidence boost: if 2+ wrong in a row, try to give an easy question next
-    if (wrongStreak >= 2) {
-      const answeredIds = new Set(Object.keys(answers));
-      const upcomingQuestions = quizQuestions.slice(currentIndex + 1);
-
-      // Find first easy question in upcoming that hasn't been answered
-      const easyIndex = upcomingQuestions.findIndex(
-        (q) =>
-          (q.difficulty || "").toLowerCase().includes("easy") &&
-          !answeredIds.has(q.id || q.uniqueId)
-      );
-
-      if (easyIndex > 0) {
-        // Swap the easy question to be next
-        const newQuestions = [...quizQuestions];
-        const easyQ = newQuestions[currentIndex + 1 + easyIndex];
-        const nextQ = newQuestions[currentIndex + 1];
-        newQuestions[currentIndex + 1] = easyQ;
-        newQuestions[currentIndex + 1 + easyIndex] = nextQ;
-        setQuizQuestions(newQuestions);
-      }
-    }
-
-    setCurrentIndex((prev) => prev + 1);
-  }, [currentIndex, totalQuestions, wrongStreak, answers, quizQuestions]);
-
   // Calculate results
   const results = useMemo(() => {
     let correct = 0;
@@ -326,22 +345,6 @@ const QuizPreview = ({ questions, config, onClose }) => {
     return { correct, total, percentage, passed };
   }, [answers, quizQuestions, config.passingScore]);
 
-  // Get options for display (static A, B, C, D - always in order)
-  const getOptions = (question) => {
-    if (!question?.options) return {};
-    return Object.entries(question.options)
-      .filter(([, value]) => value)
-      .sort(([a], [b]) => a.localeCompare(b)) // Ensure A, B, C, D order
-      .reduce((acc, [key, value]) => {
-        // Normalize TRUE/FALSE to proper capitalization
-        let displayValue = value;
-        if (value === "TRUE") displayValue = "True";
-        if (value === "FALSE") displayValue = "False";
-        acc[key] = displayValue;
-        return acc;
-      }, {});
-  };
-
   // Report results to SCORM when quiz completes
   useEffect(() => {
     if (showResults && quizGuid && quizStartTime) {
@@ -350,175 +353,24 @@ const QuizPreview = ({ questions, config, onClose }) => {
     }
   }, [showResults, results, quizGuid, quizStartTime]);
 
-  // ========== UI RENDERING (unchanged from before) ==========
+  // ========== UI RENDERING ==========
 
   // Start screen
   if (!quizStarted) {
     return (
-      <div
-        className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4 select-none"
-        onContextMenu={(e) => e.preventDefault()}
-      >
-        <div className="max-w-lg w-full text-center">
-          <div className="mb-8">
-            {/* Unreal Engine Logo */}
-            <img
-              src="/UE5QuestionGenerator/logos/UE-Secondary-Logo-2023-Horizontal-White.svg"
-              alt="Unreal Engine"
-              className="h-12 mx-auto mb-6"
-            />
-            <h2 className="text-2xl font-bold text-white mb-2">
-              Assessment Preview
-            </h2>
-            <p className="text-slate-400">
-              Test your knowledge with{" "}
-              {config.questionCount || questions.length} questions
-            </p>
-          </div>
-
-          {/* Quiz info */}
-          <div className="bg-slate-800 rounded-lg p-6 mb-8 text-left">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Questions</span>
-                <span className="text-white font-medium">
-                  {config.questionCount || questions.length}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Time Limit</span>
-                <span className="text-white font-medium">
-                  {config.timeLimit} minutes
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Passing Score</span>
-                <span className="text-white font-medium">
-                  {config.passingScore}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Instructions */}
-          <div
-            className="bg-slate-800/50 rounded-lg p-4 mb-8 text-left"
-            role="region"
-            aria-label="Assessment instructions"
-          >
-            <h3 className="text-sm font-semibold text-slate-300 mb-3">
-              How This Assessment Works
-            </h3>
-            <ul className="text-sm text-slate-400 space-y-2">
-              <li className="flex items-start gap-2">
-                <span className="text-blue-400">•</span>
-                Read each question carefully before selecting your answer
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-400">•</span>
-                Click on your chosen answer to select it
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-400">•</span>
-                Use the &quot;Next Question&quot; button to proceed
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-400">•</span>
-                Keep an eye on the timer in the top right
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-400">•</span>
-                Your results will be shown at the end
-              </li>
-            </ul>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
-            >
-              Go Back
-            </button>
-            <button
-              onClick={() => setQuizStarted(true)}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
-            >
-              Start Assessment
-            </button>
-          </div>
-        </div>
-      </div>
+      <QuizStartScreen
+        questions={questions}
+        config={config}
+        onClose={onClose}
+        onStart={() => setQuizStarted(true)}
+      />
     );
   }
 
   // Results screen
   if (showResults) {
     return (
-      <div
-        className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4 select-none"
-        onContextMenu={(e) => e.preventDefault()}
-      >
-        <div className="max-w-lg w-full text-center">
-          {/* UE Branding */}
-          <img
-            src="/UE5QuestionGenerator/logos/UE-Secondary-Logo-2023-Horizontal-White.svg"
-            alt="Unreal Engine"
-            className="h-8 mx-auto mb-8 opacity-60"
-          />
-
-          <div
-            className={`text-6xl mb-4 ${
-              results.passed ? "text-green-400" : "text-red-400"
-            }`}
-          >
-            {results.passed ? (
-              <Icon name="check-circle" size={64} className="mx-auto" />
-            ) : (
-              <Icon name="x-circle" size={64} className="mx-auto" />
-            )}
-          </div>
-
-          <h2 className="text-2xl font-bold text-white mb-2">
-            {results.passed ? "Assessment Passed!" : "Assessment Not Passed"}
-          </h2>
-
-          <p className="text-slate-400 mb-8">
-            You scored {results.percentage}% ({results.correct} of{" "}
-            {results.total} correct)
-          </p>
-
-          <div className="bg-slate-800 rounded-lg p-6 mb-8">
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div>
-                <div className="text-3xl font-bold text-white">
-                  {results.correct}
-                </div>
-                <div className="text-sm text-slate-400">Correct</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-white">
-                  {results.total - results.correct}
-                </div>
-                <div className="text-sm text-slate-400">Incorrect</div>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
-          >
-            Close Preview
-          </button>
-
-          <p className="text-xs text-slate-500 mt-6">
-            © 2025 Epic Games, Inc. Unreal and its logo are registered
-            trademarks.
-          </p>
-        </div>
-      </div>
+      <QuizResultsScreen results={results} config={config} onClose={onClose} />
     );
   }
 
@@ -570,171 +422,27 @@ const QuizPreview = ({ questions, config, onClose }) => {
         {announceMessage}
       </div>
 
-      {/* Header */}
-      <div className="bg-slate-800 border-b border-slate-700 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {/* UE Icon */}
-            <img
-              src="/UE5QuestionGenerator/logos/UE-Icon-2023-White.svg"
-              alt="Unreal Engine"
-              className="h-6 w-6 opacity-80"
-            />
-            <span className="text-white font-semibold">
-              Question {currentIndex + 1} of {totalQuestions}
-            </span>
-          </div>
+      <QuizHeader
+        currentIndex={currentIndex}
+        totalQuestions={totalQuestions}
+        timeRemaining={timeRemaining}
+        formatTime={formatTime}
+        onClose={onClose}
+      />
 
-          <div className="flex items-center gap-4">
-            <div
-              className={`flex items-center gap-2 ${
-                timeRemaining < 60 ? "text-red-400" : "text-slate-300"
-              }`}
-            >
-              <Icon name="clock" size={18} />
-              <span className="font-mono">{formatTime(timeRemaining)}</span>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-white transition-colors"
-              aria-label="Close quiz"
-            >
-              <Icon name="x" size={24} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div
-        className="h-1 bg-slate-700"
-        role="progressbar"
-        aria-valuenow={currentIndex + 1}
-        aria-valuemin={1}
-        aria-valuemax={totalQuestions}
-      >
-        <div
-          className="h-full bg-blue-500 transition-all duration-300"
-          style={{
-            width: `${((currentIndex + 1) / totalQuestions) * 100}%`,
-          }}
-        />
-      </div>
-
-      {/* Question content */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-2xl mx-auto">
-          {/* Question type badge */}
-          <div className="mb-4">
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                currentQuestion.type === "True/False" ||
-                Object.keys(options).length === 2
-                  ? "bg-purple-900/50 text-purple-300 border border-purple-700"
-                  : "bg-blue-900/50 text-blue-300 border border-blue-700"
-              }`}
-            >
-              {currentQuestion.type === "True/False" ||
-              Object.keys(options).length === 2
-                ? "✓✗ True/False"
-                : "◎ Multiple Choice"}
-            </span>
-          </div>
-
-          <h2
-            className="text-xl text-white mb-6 leading-relaxed"
-            dangerouslySetInnerHTML={sanitizeText(currentQuestion.question)}
-          />
-
-          {/* Calming instruction */}
-          <p className="text-sm text-slate-400 mb-4">
-            {currentQuestion.type === "True/False" ||
-            Object.keys(options).length === 2
-              ? "Select True or False:"
-              : "Select the best answer:"}
-          </p>
-
-          {/* Keyboard navigation hint */}
-          <p className="text-xs text-slate-500 mb-4 italic">
-            Use arrow keys to navigate, Enter/Space to select, N for next
-            question
-          </p>
-
-          {/* Options */}
-          <div className="space-y-4" role="listbox" aria-label="Answer options">
-            {Object.entries(options).map(([key, text], index) => {
-              const isSelected = selectedAnswer === key;
-              const isFocused = index === focusedOptionIndex;
-
-              return (
-                <button
-                  key={key}
-                  onClick={() => !isAnswered && handleAnswer(key)}
-                  disabled={isAnswered}
-                  role="option"
-                  aria-selected={isSelected}
-                  aria-label={`Option ${key}: ${text}${
-                    isSelected ? ", selected" : ""
-                  }`}
-                  className={`w-full text-left p-4 rounded-lg border-2 transition-all focus:outline-none ${
-                    isFocused
-                      ? "ring-4 ring-yellow-400 ring-offset-2 ring-offset-slate-900"
-                      : ""
-                  } ${
-                    isSelected
-                      ? "border-blue-500 bg-blue-900/30"
-                      : "border-slate-600 hover:border-slate-500 bg-slate-800"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <span
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                        isSelected
-                          ? "bg-blue-500 text-white"
-                          : "bg-slate-700 text-slate-300"
-                      }`}
-                    >
-                      {key}
-                    </span>
-                    <span
-                      className="text-white flex-1"
-                      dangerouslySetInnerHTML={sanitizeText(text)}
-                    />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Next button - always visible */}
-          <div className="mt-8 text-center">
-            {/* Warning message */}
-            {!isAnswered && showAnswerWarning && (
-              <p className="text-red-400 text-sm mb-3 animate-bounce">
-                ⚠️ Please select an answer before continuing
-              </p>
-            )}
-            <button
-              onClick={() => {
-                if (!isAnswered) {
-                  setShowAnswerWarning(true);
-                  return;
-                }
-                handleNext();
-              }}
-              className={`px-8 py-3 rounded-lg font-semibold transition-colors ${
-                isAnswered
-                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                  : "bg-slate-700 hover:bg-slate-600 text-slate-300"
-              }`}
-            >
-              {currentIndex + 1 >= totalQuestions
-                ? "See Results"
-                : "Next Question"}
-            </button>
-          </div>
-        </div>
-      </div>
+      <QuizQuestion
+        currentQuestion={currentQuestion}
+        options={options}
+        selectedAnswer={selectedAnswer}
+        isAnswered={isAnswered}
+        focusedOptionIndex={focusedOptionIndex}
+        showAnswerWarning={showAnswerWarning}
+        currentIndex={currentIndex}
+        totalQuestions={totalQuestions}
+        announceMessage={announceMessage}
+        onAnswerSelect={handleAnswer}
+        onNext={handleNext}
+      />
     </div>
   );
 };
