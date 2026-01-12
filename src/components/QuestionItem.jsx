@@ -14,6 +14,7 @@ import QuestionMetadata from "./QuestionItem/QuestionMetadata";
 import LanguageControls from "./QuestionItem/LanguageControls";
 
 import CritiqueSection from "./QuestionItem/CritiqueSection";
+import QuestionActions from "./QuestionItem/QuestionActions";
 import ValidationWarnings from "./QuestionItem/ValidationWarnings";
 import ExplanationDisplay from "./QuestionItem/ExplanationDisplay";
 import SourceContextCard from "./QuestionItem/SourceContextCard";
@@ -109,10 +110,24 @@ const QuestionItem = ({
   };
 
   // Lock tooltip helper
-  const getLockTooltip = (hasLock, isLocked, lockedByEmail) => {
-    if (hasLock) return "You have the edit lock";
-    if (isLocked) return `Locked by ${lockedByEmail || "another user"}`;
+  const getLockTooltip = (hasLockVal, isLockedVal, lockedByEmail) => {
+    if (hasLockVal) return "You have the edit lock";
+    if (isLockedVal) return `Locked by ${lockedByEmail || "another user"}`;
     return "Available for editing";
+  };
+
+  // Lock icon name helper (avoids nested ternary)
+  const getLockIcon = (hasLockVal, isLockedVal) => {
+    if (hasLockVal) return "edit-3";
+    if (isLockedVal) return "lock";
+    return "unlock";
+  };
+
+  // Lock label text helper (avoids nested ternary)
+  const getLockLabel = (hasLockVal, isLockedVal) => {
+    if (hasLockVal) return "Editing";
+    if (isLockedVal) return "Locked";
+    return "Available";
   };
 
   // Auto-open improvement modal when critique arrives
@@ -196,12 +211,12 @@ const QuestionItem = ({
           title={getLockTooltip(hasLock, isLocked, lockedBy?.email)}
         >
           <Icon
-            name={hasLock ? "edit-3" : isLocked ? "lock" : "unlock"}
+            name={getLockIcon(hasLock, isLocked)}
             size={12}
             className={lockColor(hasLock, isLocked, "icon")}
           />
           <span className={lockColor(hasLock, isLocked, "icon")}>
-            {hasLock ? "Editing" : isLocked ? "Locked" : "Available"}
+            {getLockLabel(hasLock, isLocked)}
           </span>
         </div>
       )}
@@ -237,6 +252,21 @@ const QuestionItem = ({
             }}
             isProcessing={isProcessing}
           />
+        )}
+
+        {/* Reject Button - Rendered for Review Mode */}
+        {appMode === APP_MODES.REVIEW && (
+          <div className="mt-3">
+            <QuestionActions
+              q={q}
+              isLocked={isLocked}
+              lockedBy={lockedBy}
+              onUpdateStatus={onUpdateStatus}
+              onDelete={onDelete}
+              appMode={appMode}
+              showMessage={showMessage}
+            />
+          </div>
         )}
 
         {isAdmin && (
