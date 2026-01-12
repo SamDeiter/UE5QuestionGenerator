@@ -60,7 +60,10 @@ service cloud.firestore {
               'rejectionReason', 'rejectionCategory', 'rejectionNotes', 
               'rejectedAt', 'rejectedBy', 'acceptedAt', 'acceptedBy',
               'reviewedBy', 'reviewedAt', 'reviewCompletedAt', 
-              'reviewerName', 'reviewDuration', 'firestoreUpdatedAt'
+              'reviewerName', 'reviewDuration', 'firestoreUpdatedAt',
+              'critique', 'critiqueScore', 'suggestedRewrite', 'improvedScore', 'improvementsApplied',
+              'humanVerified', 'humanVerifiedBy', 'humanVerifiedAt',
+              'internalNotes', 'reviewStartedAt'
             ]))
       );
       
