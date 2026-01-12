@@ -71,6 +71,9 @@ const FIELDS_SET_IN_IMPROVEMENTS = [
   "improvementsApplied",
 ];
 
+// Fields set in QuestionNotesField.jsx
+const FIELDS_SET_IN_NOTES = ["notes"];
+
 function validateFields(fieldsUsed, description) {
   const missing = [];
   for (const field of fieldsUsed) {
@@ -142,6 +145,7 @@ function main() {
   allPassed =
     validateFields(FIELDS_SET_IN_IMPROVEMENTS, "Improvement modal fields") &&
     allPassed;
+  allPassed = validateFields(FIELDS_SET_IN_NOTES, "Notes field") && allPassed;
 
   console.log("");
 
