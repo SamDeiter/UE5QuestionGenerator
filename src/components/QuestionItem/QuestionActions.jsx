@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import Icon from "../Icon";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 // Rejection reason options with categories for analytics
 const REJECTION_REASONS = [
@@ -96,6 +97,7 @@ const QuestionActions = ({
   appMode,
   showMessage,
 }) => {
+  const { colorblindMode } = useAccessibility();
   const [rejectMenuOpen, setRejectMenuOpen] = useState(false);
   const rejectMenuRef = useRef(null);
 
@@ -116,7 +118,7 @@ const QuestionActions = ({
   // Get accept button styling based on score
   // Get accept button tooltip
 
-  // Determine button styling based on state
+  // Determine button styling based on state - colorblind-safe alternatives
   const getButtonClass = () => {
     const baseClass =
       "px-4 py-2 rounded-lg transition-all flex items-center gap-2 font-bold text-sm";
@@ -124,9 +126,15 @@ const QuestionActions = ({
       return `${baseClass} bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed border-2 border-slate-700`;
     }
     if (q.status === "rejected") {
-      return `${baseClass} bg-red-600 text-white shadow-lg shadow-red-900/50 ring-2 ring-red-500`;
+      // Colorblind mode: use rose instead of red
+      return colorblindMode
+        ? `${baseClass} bg-rose-600 text-white shadow-lg shadow-rose-900/50 ring-2 ring-rose-500`
+        : `${baseClass} bg-red-600 text-white shadow-lg shadow-red-900/50 ring-2 ring-red-500`;
     }
-    return `${baseClass} bg-red-900/40 text-red-300 hover:bg-red-800/60 hover:text-red-200 border-2 border-red-700/50 hover:border-red-500`;
+    // Colorblind mode: use rose instead of red
+    return colorblindMode
+      ? `${baseClass} bg-rose-900/40 text-rose-300 hover:bg-rose-800/60 hover:text-rose-200 border-2 border-rose-700/50 hover:border-rose-500`
+      : `${baseClass} bg-red-900/40 text-red-300 hover:bg-red-800/60 hover:text-red-200 border-2 border-red-700/50 hover:border-red-500`;
   };
 
   // Determine title based on state
@@ -201,9 +209,23 @@ const QuestionActions = ({
             </button>
 
             {rejectMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-slate-800 border-2 border-red-700/50 rounded-lg shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 -translate-x-0 md:-translate-x-48">
-                <div className="px-3 py-2 bg-red-900/40 border-b border-red-700/50">
-                  <span className="text-sm font-bold text-red-300 flex items-center gap-2">
+              <div
+                className={`absolute right-0 top-full mt-2 w-64 bg-slate-800 border-2 ${
+                  colorblindMode ? "border-rose-700/50" : "border-red-700/50"
+                } rounded-lg shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 -translate-x-0 md:-translate-x-48`}
+              >
+                <div
+                  className={`px-3 py-2 ${
+                    colorblindMode
+                      ? "bg-rose-900/40 border-b border-rose-700/50"
+                      : "bg-red-900/40 border-b border-red-700/50"
+                  }`}
+                >
+                  <span
+                    className={`text-sm font-bold ${
+                      colorblindMode ? "text-rose-300" : "text-red-300"
+                    } flex items-center gap-2`}
+                  >
                     <Icon name="alert-octagon" size={16} />
                     Why is this question bad?
                   </span>
@@ -220,12 +242,22 @@ const QuestionActions = ({
                         if (showMessage)
                           showMessage(`❌ Rejected: ${reason.label}`, 3000);
                       }}
-                      className="w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-red-900/40 hover:text-white flex items-center gap-3 transition-colors border-l-2 border-transparent hover:border-red-500"
+                      className={`w-full text-left px-3 py-2.5 text-sm text-slate-200 ${
+                        colorblindMode
+                          ? "hover:bg-rose-900/40"
+                          : "hover:bg-red-900/40"
+                      } hover:text-white flex items-center gap-3 transition-colors border-l-2 border-transparent ${
+                        colorblindMode
+                          ? "hover:border-rose-500"
+                          : "hover:border-red-500"
+                      }`}
                     >
                       <Icon
                         name={reason.icon}
                         size={16}
-                        className="text-red-400"
+                        className={
+                          colorblindMode ? "text-rose-400" : "text-red-400"
+                        }
                       />
                       <span className="flex-1">{reason.label}</span>
                       <span className="text-xs text-slate-500 uppercase">
