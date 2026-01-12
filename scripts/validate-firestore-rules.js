@@ -14,9 +14,15 @@ const __dirname = path.dirname(__filename);
 
 // Fields that reviewers can update (must match firestore.rules)
 const ALLOWED_REVIEWER_FIELDS = [
+  // Version and timestamps
+  "version",
+  "updatedAt",
+  "firestoreUpdatedAt",
+  // Scoring fields
   "aiScore",
   "scoredAt",
   "scoreSource",
+  // Status fields
   "status",
   "rejectionReason",
   "rejectionCategory",
@@ -25,22 +31,25 @@ const ALLOWED_REVIEWER_FIELDS = [
   "rejectedBy",
   "acceptedAt",
   "acceptedBy",
+  // Review tracking
   "reviewedBy",
   "reviewedAt",
   "reviewCompletedAt",
   "reviewerName",
   "reviewDuration",
-  "firestoreUpdatedAt",
+  "reviewStartedAt",
+  // Critique and improvement
   "critique",
   "critiqueScore",
   "suggestedRewrite",
   "improvedScore",
   "improvementsApplied",
+  // Human verification
   "humanVerified",
   "humanVerifiedBy",
   "humanVerifiedAt",
+  // Notes
   "notes",
-  "reviewStartedAt",
 ];
 
 // Fields set in handleUpdateStatus (useQuestionActions.js)

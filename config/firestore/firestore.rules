@@ -56,14 +56,22 @@ service cloud.firestore {
         ((isAdmin() || isReviewer())
          && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly([
-              'aiScore', 'scoredAt', 'scoreSource', 'status', 
-              'rejectionReason', 'rejectionCategory', 'rejectionNotes', 
+              // Version and timestamps
+              'version', 'updatedAt', 'firestoreUpdatedAt',
+              // Scoring fields
+              'aiScore', 'scoredAt', 'scoreSource', 
+              // Status and rejection fields
+              'status', 'rejectionReason', 'rejectionCategory', 'rejectionNotes', 
               'rejectedAt', 'rejectedBy', 'acceptedAt', 'acceptedBy',
+              // Review tracking fields
               'reviewedBy', 'reviewedAt', 'reviewCompletedAt', 
-              'reviewerName', 'reviewDuration', 'firestoreUpdatedAt',
+              'reviewerName', 'reviewDuration', 'reviewStartedAt',
+              // Critique and improvement fields
               'critique', 'critiqueScore', 'suggestedRewrite', 'improvedScore', 'improvementsApplied',
+              // Human verification fields
               'humanVerified', 'humanVerifiedBy', 'humanVerifiedAt',
-              'notes', 'reviewStartedAt'
+              // Notes
+              'notes'
             ]))
       );
       
