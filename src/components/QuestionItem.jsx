@@ -5,6 +5,7 @@ import {
   QUESTION_STATUS,
   QUESTION_DIFFICULTY,
 } from "../utils/constants";
+import Icon from "./Icon";
 import Card from "./ui/Card";
 import ReviewProgressBar from "./ReviewProgressBar";
 
