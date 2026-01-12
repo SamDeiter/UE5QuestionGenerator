@@ -10,14 +10,8 @@ import { invalidateQuestionsCache } from "./firebaseQueries";
 import { logEvent } from "firebase/analytics";
 import {
   getFirestore,
-  getDoc,
   doc,
   setDoc,
-  query,
-  where,
-  getDocs,
-  collection,
-  deleteDoc,
   Timestamp,
   writeBatch,
 } from "firebase/firestore";
@@ -439,149 +433,6 @@ export const batchSaveQuestions = async (questions) => {
   return results;
 };
 
-/**
- * Deletes all questions from Firestore.
- * WARNING: This is a destructive operation that cannot be undone.
- * @returns {Promise<number>} Number of documents deleted.
- */
-export const clearAllQuestionsFromFirestore = async () => {
-  try {
-    let q;
-    if (auth.currentUser) {
-      q = query(
-        collection(getDb(), "questions"),
-        where("creatorId", "==", auth.currentUser.uid)
-      );
-    } else {
-      q = collection(getDb(), "questions");
-    }
-
-    const querySnapshot = await getDocs(q);
-    let deletedCount = 0;
-
-    // Delete each document
-    const deletePromises = [];
-    querySnapshot.forEach((docSnapshot) => {
-      deletePromises.push(deleteDoc(docSnapshot.ref));
-      deletedCount++;
-    });
-
-    await Promise.all(deletePromises);
-    logger.log(`Deleted ${deletedCount} questions from Firestore.`);
-    return deletedCount;
-  } catch (error) {
-    logger.error("Error clearing questions from Firestore:", error);
-    throw error;
-  }
-};
-
-/**
- * Deletes all questions with status 'deleted' from Firestore.
- * This is used to clean up ghost questions that cause count discrepancies.
- * @returns {Promise<number>} Number of documents deleted.
- */
-export const deleteSoftDeletedQuestionsFromFirestore = async () => {
-  try {
-    const q = query(
-      collection(getDb(), "questions"),
-      where("status", "==", "deleted")
-    );
-
-    const querySnapshot = await getDocs(q);
-    let deletedCount = 0;
-
-    const deletePromises = [];
-    querySnapshot.forEach((docSnapshot) => {
-      deletePromises.push(deleteDoc(docSnapshot.ref));
-      deletedCount++;
-    });
-
-    await Promise.all(deletePromises);
-    logger.log(
-      `Successfully cleaned up ${deletedCount} soft-deleted questions.`
-    );
-    return deletedCount;
-  } catch (error) {
-    logger.error("Error cleaning up soft-deleted questions:", error);
-    throw error;
-  }
-};
-
-/**
- * Deletes a single question from Firestore by uniqueId.
- * @param {string} uniqueId - The uniqueId of the question to delete
- * @returns {Promise<void>}
- */
-export const deleteQuestionFromFirestore = async (uniqueId) => {
-  try {
-    if (!uniqueId) {
-      logger.error("Cannot delete question: missing uniqueId");
-      return;
-    }
-    const docRef = doc(getDb(), "questions", uniqueId);
-    await deleteDoc(docRef);
-    logger.log(`Question ${uniqueId} deleted from Firestore.`);
-  } catch (error) {
-    logger.error("Error deleting question from Firestore:", error);
-    throw error;
-  }
-};
-
-/**
- * Saves custom tags for the current user to Firestore.
- * @param {Object} customTags - Object mapping discipline names to arrays of custom tags
- * @returns {Promise<void>}
- */
-export const saveCustomTags = async (customTags) => {
-  try {
-    if (!auth.currentUser) {
-      logger.warn("No user signed in, cannot save custom tags");
-      return;
-    }
-
-    const docRef = doc(getDb(), "userSettings", auth.currentUser.uid);
-    await setDoc(
-      docRef,
-      {
-        customTags,
-        updatedAt: Timestamp.now(),
-      },
-      { merge: true }
-    );
-
-    logger.log("Custom tags saved to Firestore");
-  } catch (error) {
-    logger.error("Error saving custom tags:", error);
-    throw error;
-  }
-};
-
-/**
- * Retrieves custom tags for the current user from Firestore.
- * @returns {Promise<Object>} Object mapping discipline names to arrays of custom tags
- */
-export const getCustomTags = async () => {
-  try {
-    if (!auth.currentUser) {
-      logger.warn("No user signed in, returning empty custom tags");
-      return {};
-    }
-
-    // Get the specific user's document
-    const userDocRef = doc(getDb(), "userSettings", auth.currentUser.uid);
-    const userDocSnap = await getDoc(userDocRef);
-
-    if (userDocSnap.exists()) {
-      return userDocSnap.data().customTags || {};
-    }
-
-    return {};
-  } catch (error) {
-    logger.error("Error getting custom tags:", error);
-    return {};
-  }
-};
-
 export { app, analytics, auth };
 
 // Re-export auth functions from firebaseAuth.js for backward compatibility
@@ -603,4 +454,9 @@ export {
   subscribeToAllQuestions,
   getQuestionsPaginated,
   invalidateQuestionsCache,
+  clearAllQuestionsFromFirestore,
+  deleteSoftDeletedQuestionsFromFirestore,
+  deleteQuestionFromFirestore,
+  saveCustomTags,
+  getCustomTags,
 } from "./firebaseQueries";
