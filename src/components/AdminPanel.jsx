@@ -201,17 +201,17 @@ const AdminPanel = ({
   // PERFORMANCE: No blocking loading spinner - UI renders immediately
 
   return (
-    <div className="p-4">
+    <div className="p-3">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <Icon name="shield" size={20} />
+      <div className="flex items-center justify-between mb-3">
+        <h1 className="text-lg font-bold text-white flex items-center gap-2">
+          <Icon name="shield" size={18} />
           Admin Panel
         </h1>
       </div>
 
-      {/* Grid layout for compact cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+      {/* Stack layout with compact spacing */}
+      <div className="space-y-1.5">
         {/* Feature Access Overview */}
         <CollapsibleSection
           title="Feature Access Overview"
