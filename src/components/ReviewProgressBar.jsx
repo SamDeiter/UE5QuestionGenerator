@@ -174,7 +174,7 @@ const ReviewProgressBar = ({
   ];
 
   return (
-    <div className="py-4 px-6 bg-slate-900/70 border border-slate-700/50 rounded-lg">
+    <div className="py-6 px-6 bg-slate-900/70 border border-slate-700/50 rounded-lg">
       <div className="flex items-center justify-between">
         {steps.map((step, index) => (
           <div key={step.num} className="flex items-center flex-1">

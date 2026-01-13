@@ -353,7 +353,7 @@ exports.generateCritique = functions
           /"score"\s*:\s*(\d+)/i, // "score": 75
           /\bscore\s*[:\-=]\s*(\d+)/i, // score: 75, score = 75
           /(\d+)\s*\/\s*100/i, // 75/100
-           
+
           /^(\d{1,3})(?!\d)/m, // Just a number at start of line (0-999)
         ];
 
@@ -1001,13 +1001,21 @@ exports.setupInitialAdmin = functions
     const userId = context.auth.uid;
     const db = admin.firestore();
 
-    // Only allow specific emails to become initial admin
+    // Only allow specific emails or @epicgames.com domain to become admin
     const ALLOWED_INITIAL_ADMINS = [
       process.env.SUPER_ADMIN_EMAIL || "",
       // [personal email] removed - regular user (non-admin)
     ];
 
-    if (!ALLOWED_INITIAL_ADMINS.includes(userEmail.toLowerCase())) {
+    // DOMAIN WHITELIST: @epicgames.com emails automatically get admin access
+    const ADMIN_DOMAINS = ["epicgames.com"];
+    const emailDomain = userEmail.toLowerCase().split("@")[1];
+    const isDomainAdmin = ADMIN_DOMAINS.includes(emailDomain);
+    const isExplicitAdmin = ALLOWED_INITIAL_ADMINS.includes(
+      userEmail.toLowerCase()
+    );
+
+    if (!isDomainAdmin && !isExplicitAdmin) {
       throw new functions.https.HttpsError(
         "permission-denied",
         "Not authorized for initial admin setup"

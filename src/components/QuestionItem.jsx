@@ -292,6 +292,9 @@ const QuestionItem = ({
           />
         )}
 
+        {/* Validation Warnings - Show before reject button */}
+        <ValidationWarnings q={q} />
+
         {/* Reject Button - Rendered for Review Mode */}
         {appMode === APP_MODES.REVIEW && (
           <div className="mt-3">
@@ -307,8 +310,6 @@ const QuestionItem = ({
           </div>
         )}
       </div>
-
-      <ValidationWarnings q={q} />
 
       <div className="pl-6">
         <QuestionContent
