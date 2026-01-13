@@ -11,6 +11,7 @@ import { saveQuestionAsReviewer } from "../../services/firestoreSave";
 import { logQuestion } from "../../utils/analyticsStore";
 import { completeReviewTracking } from "../../utils/normalizeQuestion";
 import { logger } from "../../utils/logger";
+import { logAuditEvent, AUDIT_ACTIONS } from "../../services/auditService";
 
 /**
  * Hook for managing status-related actions on questions.
@@ -150,6 +151,17 @@ export const useStatusActions = ({
           (newStatus === QUESTION_STATUS.ACCEPTED ||
             newStatus === QUESTION_STATUS.REJECTED)
         ) {
+          // Log to audit trail
+          const auditAction =
+            newStatus === QUESTION_STATUS.ACCEPTED
+              ? AUDIT_ACTIONS.QUESTION_ACCEPTED
+              : AUDIT_ACTIONS.QUESTION_REJECTED;
+          logAuditEvent(updatedQ.uniqueId || id, auditAction, {
+            oldValue: currentQ.status,
+            newValue: newStatus,
+            rejectionReason: rejectionReason || null,
+          });
+
           showMessage(
             `✓ Question ${newStatus} and saved to cloud`,
             TOAST_DURATION.MEDIUM

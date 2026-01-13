@@ -28,6 +28,7 @@ import { useAuth } from "../hooks/useAuth";
 
 import { saveTrainingPair } from "../services/trainingDataService";
 import { logger } from "../utils/logger";
+import { logAuditEvent, AUDIT_ACTIONS } from "../services/auditService";
 
 // Helper functions (updated to use constants where appropriate, though display text might differ)
 // ...
@@ -270,6 +271,16 @@ const QuestionItem = ({
                 humanVerifiedBy: userEmail || "Unknown",
                 humanVerifiedAt: new Date().toISOString(),
               });
+              // Log to audit trail
+              logAuditEvent(
+                q.uniqueId || q.id,
+                AUDIT_ACTIONS.QUESTION_VERIFIED,
+                {
+                  oldValue: q.humanVerified,
+                  newValue: true,
+                  verifiedBy: userEmail,
+                }
+              );
               if (showMessage) showMessage("✅ Question verified!", 2000);
             }}
             onAccept={() => {
