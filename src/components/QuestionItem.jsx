@@ -241,20 +241,18 @@ const QuestionItem = ({
           onOpenCritiqueModal={() => setShowImprovementModal(true)}
         />
 
-        {/* Language Flags - Admin only */}
-        {isAdmin && (
-          <LanguageControls
-            q={displayQuestion}
-            availableVariants={availableVariants || []}
-            onSwitchLanguage={handleLocalLanguageSwitch}
-            onTranslateSingle={onTranslateSingle}
-            isProcessing={isProcessing}
-            userRole={userRole}
-            isLocked={isLocked}
-            lockedBy={lockedBy}
-            appMode={appMode}
-          />
-        )}
+        {/* Language Flags - All authenticated users */}
+        <LanguageControls
+          q={displayQuestion}
+          availableVariants={availableVariants || []}
+          onSwitchLanguage={handleLocalLanguageSwitch}
+          onTranslateSingle={onTranslateSingle}
+          isProcessing={isProcessing}
+          userRole={userRole}
+          isLocked={isLocked}
+          lockedBy={lockedBy}
+          appMode={appMode}
+        />
 
         {/* Review Progress Bar */}
         {appMode === APP_MODES.REVIEW && (
