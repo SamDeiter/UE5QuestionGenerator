@@ -82,14 +82,21 @@ const QuestionMetadata = ({ q, onAutoTag, isProcessing }) => {
         {q.tags && q.tags.length > 0 && (
           <div className="flex items-center gap-1 text-[9px] text-slate-500 flex-1">
             <span className="text-slate-600">Tags:</span>
-            {[...new Set(q.tags)].map((tag, idx) => (
-              <span
-                key={`${idx}-${tag}`}
-                className="px-1.5 py-0.5 rounded bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:text-slate-300 transition-colors"
-              >
-                {tag}
-              </span>
-            ))}
+            {[...new Set(q.tags)].map((tag, idx) => {
+              // Clean tag: remove markdown # prefixes and trim
+              const cleanTag = String(tag)
+                .replace(/^#+\s*/, "")
+                .trim();
+              if (!cleanTag) return null;
+              return (
+                <span
+                  key={`${idx}-${cleanTag}`}
+                  className="px-1.5 py-0.5 rounded bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:text-slate-300 transition-colors"
+                >
+                  {cleanTag}
+                </span>
+              );
+            })}
             {/* AI Score as a Tag (as user requested) */}
             {q.critiqueScore !== undefined && q.critiqueScore !== null && (
               <span className="px-1.5 py-0.5 rounded bg-indigo-950/40 text-indigo-300 border border-indigo-700/50 font-bold">

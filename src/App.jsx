@@ -15,6 +15,7 @@ import InviteSignUp from "./components/InviteSignUp";
 import ApiKeyModal from "./components/ApiKeyModal";
 import ConflictModal from "./components/ConflictModal";
 import { getInviteFromUrl } from "./services/inviteService";
+import { refreshAuthToken } from "./services/firebaseAuth";
 
 // Lazy load heavy components (loaded on-demand)
 const LandingPage = lazy(() => import("./components/LandingPage"));
@@ -118,6 +119,34 @@ const App = () => {
       };
       initAgents();
     }
+  }, [user, authLoading]);
+
+  // ========================================================================
+  // AUTOMATIC TOKEN REFRESH - Refresh auth token every 30 minutes
+  // ========================================================================
+  useEffect(() => {
+    if (!user || authLoading) return;
+
+    // Refresh token immediately on mount
+    refreshAuthToken().then((success) => {
+      if (success) {
+        logger.log("🔄 Initial auth token refreshed");
+      }
+    });
+
+    // Set up periodic refresh every 30 minutes
+    const REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes in ms
+    const intervalId = setInterval(() => {
+      refreshAuthToken().then((success) => {
+        if (success) {
+          logger.log("🔄 Auth token auto-refreshed");
+        } else {
+          logger.warn("⚠️ Auth token refresh failed");
+        }
+      });
+    }, REFRESH_INTERVAL);
+
+    return () => clearInterval(intervalId);
   }, [user, authLoading]);
 
   // ========================================================================
