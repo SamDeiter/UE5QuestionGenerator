@@ -9,6 +9,7 @@ import { useState } from "react";
 import { createInvite, revokeInvite } from "../services/inviteService";
 import Icon from "./Icon";
 import { logger } from "../utils/logger";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 /**
  * InviteCreator - Form for creating new invite codes
@@ -136,6 +137,15 @@ const InviteCreator = ({ onInviteCreated }) => {
  * InviteDisplay - Shows a created invite with copy functionality
  */
 const InviteDisplay = ({ invite, onRevoke }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe colors
+  const successBg = cb
+    ? "bg-blue-900/20 border-blue-700"
+    : "bg-green-900/20 border-green-700";
+  const successText = cb ? "text-blue-400" : "text-green-400";
+
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
@@ -145,9 +155,11 @@ const InviteDisplay = ({ invite, onRevoke }) => {
   };
 
   return (
-    <div className="bg-green-900/20 border border-green-700 rounded-lg p-4 space-y-3">
+    <div className={`${successBg} rounded-lg p-4 space-y-3`}>
       <div className="flex items-center justify-between">
-        <span className="text-green-400 font-mono text-lg">{invite.code}</span>
+        <span className={`${successText} font-mono text-lg`}>
+          {invite.code}
+        </span>
         <span className="text-xs text-slate-400">
           Expires: {new Date(invite.expiresAt).toLocaleDateString()}
         </span>

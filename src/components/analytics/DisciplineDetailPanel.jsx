@@ -1,5 +1,6 @@
 import Icon from "../Icon";
 import { CATEGORY_KEYS } from "../../utils/constants";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 // Difficulty colors (shared with parent)
 const DIFFICULTY_COLORS = {
@@ -28,6 +29,15 @@ const getQualityColor = (score) => {
  * @param {Function} props.onClose - Close handler
  */
 const DisciplineDetailPanel = ({ discipline, questions, color, onClose }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe colors
+  const acceptedColor = cb ? "text-blue-400" : "text-green-400";
+  const acceptedBg = cb ? "bg-blue-500" : "bg-green-500";
+  const rejectedColor = cb ? "text-rose-400" : "text-red-400";
+  const rejectedBg = cb ? "bg-rose-500" : "bg-red-500";
+
   const disciplineQuestions = questions.filter(
     (q) => q.discipline === discipline
   );
@@ -118,9 +128,9 @@ const DisciplineDetailPanel = ({ discipline, questions, color, onClose }) => {
           <h4 className="text-sm font-medium text-slate-400 mb-3">Status</h4>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <div className={`w-2 h-2 rounded-full ${acceptedBg}`} />
               <span className="text-xs text-slate-300 flex-1">Accepted</span>
-              <span className="text-sm font-bold text-green-400">
+              <span className={`text-sm font-bold ${acceptedColor}`}>
                 {accepted}
               </span>
             </div>
@@ -132,9 +142,11 @@ const DisciplineDetailPanel = ({ discipline, questions, color, onClose }) => {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-red-500" />
+              <div className={`w-2 h-2 rounded-full ${rejectedBg}`} />
               <span className="text-xs text-slate-300 flex-1">Rejected</span>
-              <span className="text-sm font-bold text-red-400">{rejected}</span>
+              <span className={`text-sm font-bold ${rejectedColor}`}>
+                {rejected}
+              </span>
             </div>
           </div>
         </div>
@@ -159,7 +171,7 @@ const DisciplineDetailPanel = ({ discipline, questions, color, onClose }) => {
           {disciplineQuestions.length > 0 && (
             <div className="mt-3 h-2 bg-slate-800 rounded-full overflow-hidden">
               <div
-                className="h-full bg-green-500 transition-all"
+                className={`h-full ${acceptedBg} transition-all`}
                 style={{
                   width: `${(accepted / disciplineQuestions.length) * 100}%`,
                 }}
