@@ -86,6 +86,9 @@ const ReviewerAnalytics = ({
                   Rejected
                 </th>
                 <th className="text-center p-2 text-xs text-cyan-400 font-bold">
+                  Accept %
+                </th>
+                <th className="text-center p-2 text-xs text-cyan-400 font-bold">
                   Avg Time
                 </th>
                 <th className="text-center p-2 text-xs text-cyan-400 font-bold">
@@ -99,7 +102,7 @@ const ReviewerAnalytics = ({
             <tbody>
               {reviewerAnalytics.reviewerStats.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center p-4 text-slate-500">
+                  <td colSpan="8" className="text-center p-4 text-slate-500">
                     No reviewer activity data found
                   </td>
                 </tr>
@@ -156,6 +159,15 @@ const ReviewerAnalytics = ({
                           }
                         })()}
                         {reviewer.name}
+                        {/* Top Performer Badge - highest review count */}
+                        {idx === 0 && reviewer.totalQuestionsReviewed > 0 && (
+                          <span
+                            className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-400 rounded"
+                            title="Top Reviewer"
+                          >
+                            🏆
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="p-2 text-center text-slate-300">
@@ -166,6 +178,27 @@ const ReviewerAnalytics = ({
                     </td>
                     <td className="p-2 text-center text-red-400">
                       {reviewer.rejectedCount}
+                    </td>
+                    {/* Acceptance Rate % */}
+                    <td className="p-2 text-center">
+                      {(() => {
+                        const total =
+                          reviewer.acceptedCount + reviewer.rejectedCount;
+                        if (total === 0)
+                          return <span className="text-slate-500">--</span>;
+                        const rate = Math.round(
+                          (reviewer.acceptedCount / total) * 100
+                        );
+                        const color =
+                          rate >= 80
+                            ? "text-green-400"
+                            : rate >= 60
+                            ? "text-amber-400"
+                            : "text-red-400";
+                        return (
+                          <span className={`font-bold ${color}`}>{rate}%</span>
+                        );
+                      })()}
                     </td>
                     <td className="p-2 text-center text-slate-300">
                       {formatDuration(reviewer.averageReviewTimeSeconds)}
