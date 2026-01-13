@@ -69,7 +69,7 @@ const REJECTION_REASONS = [
   {
     id: "broken_link",
     label: "Broken Link",
-    icon: "link-off",
+    icon: "unlink",
     category: "source",
   },
 
