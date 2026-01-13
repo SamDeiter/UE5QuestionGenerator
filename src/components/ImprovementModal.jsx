@@ -3,6 +3,7 @@ import Icon from "./Icon";
 import { sanitizeText } from "../utils/sanitize";
 import { logger } from "../utils/logger";
 import { useThemeColors } from "../hooks/useThemeColors";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 /**
  * Comprehensive Critique Modal - Shows critique + side-by-side improvements
@@ -20,6 +21,14 @@ const ImprovementModal = ({
 }) => {
   const [isApplying, setIsApplying] = useState(false);
   const { scoreColorByValue } = useThemeColors();
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe colors
+  const successIcon = cb ? "text-blue-400" : "text-green-400";
+  const successBtnClasses = cb
+    ? "bg-blue-600 text-white hover:bg-blue-500 shadow-blue-900/50"
+    : "bg-green-600 text-white hover:bg-green-500 shadow-green-900/50";
 
   const handleApply = async () => {
     setIsApplying(true);
@@ -61,7 +70,7 @@ const ImprovementModal = ({
         <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 border-b border-green-600/30 px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Icon name="sparkles" size={20} className="text-green-400" />
+              <Icon name="sparkles" size={20} className={successIcon} />
               <h2 className="text-lg font-bold text-white">AI Critique</h2>
               <span
                 className={`px-3 py-1 rounded text-sm font-bold border ${scoreColorByValue(
@@ -102,8 +111,10 @@ const ImprovementModal = ({
           {changesExplanation && (
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Icon name="zap" size={16} className="text-green-400" />
-                <div className="text-sm font-bold text-green-400 uppercase tracking-wide">
+                <Icon name="zap" size={16} className={successIcon} />
+                <div
+                  className={`text-sm font-bold ${successIcon} uppercase tracking-wide`}
+                >
                   Suggested Improvement
                 </div>
               </div>
@@ -139,7 +150,9 @@ const ImprovementModal = ({
                   </span>
                 </div>
                 <div className="flex items-center justify-between px-2">
-                  <h3 className="text-xs font-bold text-green-400 flex items-center gap-1.5 uppercase tracking-wide">
+                  <h3
+                    className={`text-xs font-bold ${successIcon} flex items-center gap-1.5 uppercase tracking-wide`}
+                  >
                     <Icon name="check-circle" size={14} />
                     Improved
                   </h3>
@@ -151,7 +164,7 @@ const ImprovementModal = ({
                     >
                       {improvedScore}/100
                       {scoreDelta > 0 && (
-                        <span className="ml-1 text-green-400">
+                        <span className={`ml-1 ${successIcon}`}>
                           (+{scoreDelta})
                         </span>
                       )}
@@ -327,7 +340,7 @@ const ImprovementModal = ({
                   handleApply();
                 }}
                 disabled={isApplying}
-                className="px-4 py-1.5 rounded-lg font-bold text-xs bg-green-600 text-white hover:bg-green-500 shadow-lg shadow-green-900/50 transition-all disabled:opacity-50 pointer-events-auto cursor-pointer"
+                className={`px-4 py-1.5 rounded-lg font-bold text-xs ${successBtnClasses} shadow-lg transition-all disabled:opacity-50 pointer-events-auto cursor-pointer`}
               >
                 {isApplying ? "Applying..." : "Apply Improvements"}
               </button>
