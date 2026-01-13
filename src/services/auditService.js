@@ -5,7 +5,8 @@
  * Creates entries in the 'auditLog' collection.
  */
 
-import { getDb, getAuth } from "./firebase";
+import { getDb } from "./firebase";
+import { getAuth } from "firebase/auth";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { logger } from "../utils/logger";
 
