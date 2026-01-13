@@ -19,6 +19,10 @@ vi.mock("../../utils/secureStorage", () => ({
   getSecureItem: () => "TestUser",
 }));
 
+vi.mock("../../contexts/AccessibilityContext", () => ({
+  useAccessibility: () => ({ colorblindMode: false }),
+}));
+
 vi.mock("../../utils/logger", () => ({
   logger: { log: vi.fn(), warn: vi.fn() },
 }));

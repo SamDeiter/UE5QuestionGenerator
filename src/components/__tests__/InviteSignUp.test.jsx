@@ -68,6 +68,11 @@ vi.mock("firebase/functions", () => ({
   httpsCallable: vi.fn(() => vi.fn().mockResolvedValue({ data: {} })),
 }));
 
+// Mock AccessibilityContext for colorblind support
+vi.mock("../../contexts/AccessibilityContext", () => ({
+  useAccessibility: () => ({ colorblindMode: false }),
+}));
+
 describe("InviteSignUp Component", () => {
   const mockOnSuccess = vi.fn();
   const mockOnCancel = vi.fn();
