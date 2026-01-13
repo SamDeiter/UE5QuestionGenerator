@@ -86,6 +86,12 @@ const REJECTION_REASONS = [
     icon: "type",
     category: "quality",
   },
+  {
+    id: "insufficient_tags",
+    label: "Not Enough Tags",
+    icon: "tag",
+    category: "quality",
+  },
 ];
 
 const QuestionActions = ({
