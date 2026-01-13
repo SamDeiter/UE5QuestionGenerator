@@ -110,7 +110,53 @@ const ReviewerAnalytics = ({
                     className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors"
                   >
                     <td className="p-2 text-white font-medium">
-                      {reviewer.name}
+                      <div className="flex items-center gap-2">
+                        {/* Activity Status Icon */}
+                        {(() => {
+                          const lastDate = reviewer.lastReviewDate
+                            ? new Date(reviewer.lastReviewDate)
+                            : null;
+                          const now = new Date();
+                          const daysSinceActive = lastDate
+                            ? Math.floor(
+                                (now - lastDate) / (1000 * 60 * 60 * 24)
+                              )
+                            : 999;
+
+                          if (daysSinceActive === 0) {
+                            // Active today
+                            return (
+                              <span
+                                className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
+                                title="Active today"
+                              />
+                            );
+                          } else if (daysSinceActive <= 7) {
+                            // Active this week
+                            return (
+                              <span
+                                className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0"
+                                title={`Active ${daysSinceActive} day${
+                                  daysSinceActive !== 1 ? "s" : ""
+                                } ago`}
+                              />
+                            );
+                          } else {
+                            // Inactive
+                            return (
+                              <span
+                                className="w-2.5 h-2.5 rounded-full bg-slate-500 flex-shrink-0"
+                                title={
+                                  lastDate
+                                    ? `Last active ${daysSinceActive} days ago`
+                                    : "No activity"
+                                }
+                              />
+                            );
+                          }
+                        })()}
+                        {reviewer.name}
+                      </div>
                     </td>
                     <td className="p-2 text-center text-slate-300">
                       {reviewer.totalQuestionsReviewed}
