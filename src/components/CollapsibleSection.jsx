@@ -1,5 +1,6 @@
 import React from "react";
 import Icon from "./Icon";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 /**
  * CollapsibleSection - A reusable component for sections that can be toggled open/closed.
@@ -10,7 +11,7 @@ import Icon from "./Icon";
  * @param {boolean} props.isCollapsed - Whether the section is currently collapsed.
  * @param {function} props.onToggle - Callback function when the header is clicked.
  * @param {React.ReactNode} props.children - The content to display when the section is not collapsed.
- * @param {string} [props.variant='indigo'] - Visual variant ('indigo', 'blue', 'slate', 'purple').
+ * @param {string} [props.variant='indigo'] - Visual variant ('indigo', 'blue', 'slate', 'purple', 'green').
  * @param {string} [props.className=''] - Additional CSS classes for the container.
  * @param {string} [props.headerClassName=''] - Additional CSS classes for the header.
  * @param {boolean} [props.showChevron=true] - Whether to show the expand/collapse chevron.
@@ -26,6 +27,8 @@ const CollapsibleSection = ({
   headerClassName = "",
   showChevron = true,
 }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
   // Map variants to colors
   const variants = {
     indigo: {
@@ -45,8 +48,8 @@ const CollapsibleSection = ({
       text: "text-purple-400",
     },
     green: {
-      border: "border-green-500/30",
-      text: "text-green-400",
+      border: cb ? "border-blue-500/30" : "border-green-500/30",
+      text: cb ? "text-blue-400" : "text-green-400",
     },
   };
 
