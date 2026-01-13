@@ -42,10 +42,27 @@ const SystemHealth = ({ isCollapsed, onToggle }) => {
       await deleteDoc(testDocRef);
       results.firestoreWrite = {
         status: "pass",
-        message: "Write/delete successful",
+        message: "Write/delete to QuestionsAPIAccess ✓",
       };
     } catch (error) {
-      results.firestoreWrite = { status: "fail", message: error.message };
+      // Parse Firebase error for more detail
+      const errorCode = error.code || "unknown";
+      const collection = "QuestionsAPIAccess";
+      let detailedMessage = `[${collection}] `;
+
+      if (errorCode === "permission-denied") {
+        detailedMessage += `Permission denied. Check Firestore rules for ${collection}. Required: userId === auth.uid`;
+      } else if (errorCode.includes("not-found")) {
+        detailedMessage += "Collection or document not found";
+      } else {
+        detailedMessage += error.message || "Unknown error";
+      }
+
+      results.firestoreWrite = {
+        status: "fail",
+        message: detailedMessage,
+        errorCode: errorCode,
+      };
     }
     setTestResults({ ...results });
 
@@ -204,10 +221,27 @@ const SystemHealth = ({ isCollapsed, onToggle }) => {
                     Firestore Write
                   </span>
                 </div>
-                <span className="text-xs text-slate-400">
-                  {testResults.firestoreWrite.message}
-                </span>
+                {testResults.firestoreWrite.status === "pass" && (
+                  <span className="text-xs text-green-400">
+                    {testResults.firestoreWrite.message}
+                  </span>
+                )}
               </div>
+              {testResults.firestoreWrite.status === "fail" && (
+                <div className="mt-2 text-xs text-red-300 bg-red-950/50 rounded p-2">
+                  <div className="font-bold text-red-400 mb-1">
+                    Error Details:
+                  </div>
+                  <div className="break-words">
+                    {testResults.firestoreWrite.message}
+                  </div>
+                  {testResults.firestoreWrite.errorCode && (
+                    <div className="mt-1 text-red-400/70">
+                      Code: {testResults.firestoreWrite.errorCode}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div
