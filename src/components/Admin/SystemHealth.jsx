@@ -27,28 +27,27 @@ const SystemHealth = ({ isCollapsed, onToggle }) => {
     };
     setTestResults({ ...results });
 
-    // Test 1: Firestore Write Permission
+    // Test 1: Firestore Write Permission (using userSettings - owner-based access)
     try {
-      const testDocRef = doc(
-        getDb(),
-        "QuestionsAPIAccess",
-        `health-check-${auth.currentUser?.uid}`
+      const userId = auth.currentUser?.uid;
+      const testDocRef = doc(getDb(), "userSettings", userId);
+      await setDoc(
+        testDocRef,
+        {
+          healthCheck: true,
+          lastChecked: new Date().toISOString(),
+        },
+        { merge: true }
       );
-      await setDoc(testDocRef, {
-        userId: auth.currentUser?.uid,
-        type: "health-check",
-        timestamp: new Date().toISOString(),
-      });
-      await deleteDoc(testDocRef);
       results.firestoreWrite = {
         status: "pass",
-        message: "Write/delete to QuestionsAPIAccess ✓",
+        message: "Write to userSettings ✓",
       };
     } catch (error) {
       // Parse Firebase error for more detail
       const errorCode = error.code || "";
       const errorMsg = error.message || "Unknown error";
-      const collection = "QuestionsAPIAccess";
+      const collection = "userSettings";
       let detailedMessage = `[${collection}] `;
 
       // Check for permission denied in various formats
