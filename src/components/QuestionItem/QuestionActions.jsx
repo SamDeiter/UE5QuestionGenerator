@@ -181,7 +181,7 @@ const QuestionActions = ({
         // REVIEW MODE: Only show Reject button (Critique/Verify/Accept handled by ReviewProgressBar)
         <>
           {/* REJECT BUTTON - Made more prominent */}
-          <div className="relative" ref={rejectMenuRef}>
+          <div className="relative w-full" ref={rejectMenuRef}>
             <button
               onClick={() => {
                 if (isLocked) {
