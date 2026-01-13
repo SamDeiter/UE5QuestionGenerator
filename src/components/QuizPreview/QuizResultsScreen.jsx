@@ -2,8 +2,16 @@
  * QuizResultsScreen - The results/summary screen after quiz completion
  */
 import Icon from "../Icon";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 const QuizResultsScreen = ({ results, config, onClose }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe colors for pass/fail
+  const passColor = cb ? "text-blue-400" : "text-green-400";
+  const failColor = cb ? "text-rose-400" : "text-red-400";
+
   return (
     <div
       className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4 select-none"
@@ -18,9 +26,7 @@ const QuizResultsScreen = ({ results, config, onClose }) => {
         />
 
         <div
-          className={`text-6xl mb-4 ${
-            results.passed ? "text-green-400" : "text-red-400"
-          }`}
+          className={`text-6xl mb-4 ${results.passed ? passColor : failColor}`}
         >
           {results.passed ? (
             <Icon name="check-circle" size={64} className="mx-auto" />

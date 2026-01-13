@@ -1,13 +1,14 @@
 import Icon from "../Icon";
 import { getDisplayUrl } from "../../utils/questionHelpers";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
-const getVerificationBadge = (status) => {
+const getVerificationBadge = (status, cb = false) => {
   switch (status) {
     case true:
       return {
         icon: "check-circle",
-        color: "text-green-400",
-        bg: "bg-green-950/50",
+        color: cb ? "text-blue-400" : "text-green-400",
+        bg: cb ? "bg-blue-950/50" : "bg-green-950/50",
         label: "Verified Source",
         title: "URL matched grounding search results",
       };
@@ -30,8 +31,8 @@ const getVerificationBadge = (status) => {
     case "missing":
       return {
         icon: "x-circle",
-        color: "text-red-400",
-        bg: "bg-red-950/50",
+        color: cb ? "text-rose-400" : "text-red-400",
+        bg: cb ? "bg-rose-950/50" : "bg-red-950/50",
         label: "No Source",
         title: "No source URL provided",
       };
@@ -39,8 +40,8 @@ const getVerificationBadge = (status) => {
     default:
       return {
         icon: "alert-triangle",
-        color: "text-red-400",
-        bg: "bg-red-950/50",
+        color: cb ? "text-rose-400" : "text-red-400",
+        bg: cb ? "bg-rose-950/50" : "bg-red-950/50",
         label: "Invalid",
         title: "Source URL is invalid or from forbidden domain",
       };
@@ -48,7 +49,9 @@ const getVerificationBadge = (status) => {
 };
 
 const QuestionMetadata = ({ q, onAutoTag, isProcessing }) => {
-  const verification = getVerificationBadge(q.sourceVerified);
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+  const verification = getVerificationBadge(q.sourceVerified, cb);
   const hasLowTags = !q.tags || q.tags.length < 3;
 
   return (
@@ -56,7 +59,11 @@ const QuestionMetadata = ({ q, onAutoTag, isProcessing }) => {
       {/* Answer Mismatch Warning - Most Critical */}
       {q.answerMismatch && (
         <div
-          className="flex items-center gap-2 px-3 py-2 rounded bg-red-900/50 border border-red-500 text-red-300 mb-2 animate-pulse"
+          className={`flex items-center gap-2 px-3 py-2 rounded ${
+            cb
+              ? "bg-rose-900/50 border-rose-500 text-rose-300"
+              : "bg-red-900/50 border-red-500 text-red-300"
+          } border mb-2 animate-pulse`}
           title="The marked correct answer doesn't appear in the source excerpt - this question may be WRONG!"
         >
           <Icon name="alert-octagon" size={16} />

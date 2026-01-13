@@ -1,10 +1,14 @@
 import Icon from "./Icon";
 import { QUALITY_PASS_THRESHOLD } from "../utils/constants";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 // Helper functions to compute step styling without nested ternaries
-const getCircleClass = (step) => {
-  if (step.completed) return "bg-green-600 text-white";
-  if (step.failed) return "bg-red-600 text-white";
+// cb = colorblind mode flag
+const getCircleClass = (step, cb = false) => {
+  if (step.completed)
+    return cb ? "bg-blue-600 text-white" : "bg-green-600 text-white";
+  if (step.failed)
+    return cb ? "bg-rose-600 text-white" : "bg-red-600 text-white";
   if (step.active)
     return "bg-orange-500 text-white animate-pulse shadow-lg shadow-orange-500/50 group-hover:bg-orange-400";
   if (step.ready)
@@ -12,25 +16,25 @@ const getCircleClass = (step) => {
   return "bg-slate-700 text-slate-400 border-2 border-slate-600";
 };
 
-const getLabelClass = (step) => {
-  if (step.completed) return "text-green-400";
-  if (step.failed) return "text-red-400";
+const getLabelClass = (step, cb = false) => {
+  if (step.completed) return cb ? "text-blue-400" : "text-green-400";
+  if (step.failed) return cb ? "text-rose-400" : "text-red-400";
   if (step.active) return "text-orange-400";
   if (step.ready) return "text-blue-400";
   return "text-slate-500";
 };
 
-const getSublabelClass = (step) => {
-  if (step.completed) return "text-green-400/70";
-  if (step.failed) return "text-red-400/70";
+const getSublabelClass = (step, cb = false) => {
+  if (step.completed) return cb ? "text-blue-400/70" : "text-green-400/70";
+  if (step.failed) return cb ? "text-rose-400/70" : "text-red-400/70";
   if (step.active) return "text-orange-400/70";
   if (step.ready) return "text-blue-400/70";
   return "text-slate-600";
 };
 
-const getLineClass = (step) => {
-  if (step.completed) return "bg-green-600";
-  if (step.failed) return "bg-red-600/50";
+const getLineClass = (step, cb = false) => {
+  if (step.completed) return cb ? "bg-blue-600" : "bg-green-600";
+  if (step.failed) return cb ? "bg-rose-600/50" : "bg-red-600/50";
   return "bg-slate-700";
 };
 
@@ -61,6 +65,8 @@ const ReviewProgressBar = ({
   onFix,
   isProcessing,
 }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode; // shorthand for helper functions
   const q = question;
 
   // Determine step states
@@ -209,7 +215,8 @@ const ReviewProgressBar = ({
               {/* Circle */}
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${getCircleClass(
-                  step
+                  step,
+                  cb
                 )}`}
               >
                 {renderCircleContent(step, q.critiqueScore)}
@@ -217,10 +224,12 @@ const ReviewProgressBar = ({
 
               {/* Label */}
               <div className="flex flex-col">
-                <span className={`text-sm font-bold ${getLabelClass(step)}`}>
+                <span
+                  className={`text-sm font-bold ${getLabelClass(step, cb)}`}
+                >
                   {step.label}
                 </span>
-                <span className={`text-xs ${getSublabelClass(step)}`}>
+                <span className={`text-xs ${getSublabelClass(step, cb)}`}>
                   {step.sublabel}
                 </span>
               </div>
@@ -229,7 +238,10 @@ const ReviewProgressBar = ({
             {/* Connecting Line */}
             {index < steps.length - 1 && (
               <div
-                className={`flex-1 h-0.5 mx-4 rounded ${getLineClass(step)}`}
+                className={`flex-1 h-0.5 mx-4 rounded ${getLineClass(
+                  step,
+                  cb
+                )}`}
               />
             )}
           </div>
@@ -238,14 +250,24 @@ const ReviewProgressBar = ({
 
       {/* Help Text */}
       {critiqueFail && (
-        <div className="mt-3 text-center text-xs text-red-400/80 bg-red-950/30 py-2 rounded flex items-center justify-center gap-2">
+        <div
+          className={`mt-3 text-center text-xs ${
+            cb
+              ? "text-rose-400/80 bg-rose-950/30"
+              : "text-red-400/80 bg-red-950/30"
+          } py-2 rounded flex items-center justify-center gap-2`}
+        >
           <Icon name="alert-triangle" size={12} />
           <span>Score below {QUALITY_PASS_THRESHOLD}.</span>
           {onFix && q.suggestedRewrite ? (
             <button
               onClick={onFix}
               disabled={isProcessing}
-              className="px-2 py-0.5 bg-red-800 hover:bg-red-700 text-white text-[10px] font-bold rounded shadow-sm border border-red-600 transition-colors uppercase"
+              className={`px-2 py-0.5 ${
+                cb
+                  ? "bg-rose-800 hover:bg-rose-700 border-rose-600"
+                  : "bg-red-800 hover:bg-red-700 border-red-600"
+              } text-white text-[10px] font-bold rounded shadow-sm border transition-colors uppercase`}
             >
               Fix & Re-run
             </button>
@@ -255,7 +277,13 @@ const ReviewProgressBar = ({
         </div>
       )}
       {critiquePass && !isVerified && (
-        <div className="mt-3 text-center text-xs text-green-400/80 bg-green-950/30 py-2 rounded">
+        <div
+          className={`mt-3 text-center text-xs ${
+            cb
+              ? "text-blue-400/80 bg-blue-950/30"
+              : "text-green-400/80 bg-green-950/30"
+          } py-2 rounded`}
+        >
           <Icon name="check-circle" size={12} className="inline mr-1" />
           <strong>Good score!</strong> Click <strong>Verify</strong> to check
           the source and answer before accepting.
