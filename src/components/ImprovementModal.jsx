@@ -34,6 +34,17 @@ const ImprovementModal = ({
   const scoreDelta =
     improvedScore && critiqueScore ? improvedScore - critiqueScore : 0;
 
+  // Helper to clean corrupted Unicode (Bengali text etc.) from options
+  const cleanOptionText = (text) => {
+    if (!text) return "(empty)";
+    return (
+      text
+        .replace(/[\u0980-\u09FF]+/g, "") // Remove Bengali Unicode
+        .replace(/<\/?[a-zA-Z][^>]*>/g, "") // Remove HTML tags
+        .trim() || "(empty)"
+    );
+  };
+
   const originalTags = originalQuestion?.tags || [];
   const improvedTags = improvedQuestion?.tags || [];
   const newTags = improvedQuestion
@@ -210,7 +221,7 @@ const ImprovementModal = ({
                           {letter})
                         </span>
                         <span className="text-white">
-                          {originalOpt || "(empty)"}
+                          {cleanOptionText(originalOpt)}
                         </span>
                       </div>
 
@@ -226,7 +237,7 @@ const ImprovementModal = ({
                           {letter})
                         </span>
                         <span className="text-white">
-                          {improvedOpt || "(empty)"}
+                          {cleanOptionText(improvedOpt)}
                         </span>
                       </div>
                     </div>
