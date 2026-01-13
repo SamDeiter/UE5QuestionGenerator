@@ -119,12 +119,22 @@ export default [
 
   // Test files configuration
   {
-    files: ["**/*.test.{js,jsx}", "**/*.spec.{js,jsx}"],
+    files: [
+      "**/*.test.{js,jsx}",
+      "**/*.spec.{js,jsx}",
+      "**/__tests__/**/*.{js,jsx}",
+    ],
     languageOptions: {
       globals: {
         ...globals.jest,
         ...globals.node,
       },
+    },
+    rules: {
+      // Test assertions naturally use literal numbers for expected values
+      "no-magic-numbers": "off",
+      // Allow long test files
+      "max-lines-per-function": "off",
     },
   },
 
