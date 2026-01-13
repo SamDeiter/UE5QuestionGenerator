@@ -6,8 +6,12 @@ import {
 } from "../services/firebase";
 import Icon from "./Icon";
 import { logger } from "../utils/logger";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 const SignIn = () => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showEmailAuth, setShowEmailAuth] = useState(false);
@@ -268,13 +272,25 @@ const SignIn = () => {
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm">
+          <div
+            className={`${
+              cb
+                ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                : "bg-red-500/10 border-red-500/20 text-red-400"
+            } border p-3 rounded-lg text-sm`}
+          >
             {error}
           </div>
         )}
 
         {resetSuccess && (
-          <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-3 rounded-lg text-sm">
+          <div
+            className={`${
+              cb
+                ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                : "bg-green-500/10 border-green-500/20 text-green-400"
+            } border p-3 rounded-lg text-sm`}
+          >
             Password reset email sent! Check your inbox and spam folder.
           </div>
         )}
