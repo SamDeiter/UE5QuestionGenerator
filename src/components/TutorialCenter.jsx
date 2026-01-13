@@ -1,8 +1,15 @@
 import Icon from "./Icon";
 import { TUTORIAL_SCENARIOS } from "../utils/tutorialSteps";
 import { isScenarioCompleted } from "../utils/tutorial/tutorialHelpers";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 const TutorialCenter = ({ onStartTutorial, onClose }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe completed color
+  const completedColor = cb ? "text-blue-400" : "text-green-400";
+
   const scenarios = Object.values(TUTORIAL_SCENARIOS);
 
   return (
@@ -38,7 +45,7 @@ const TutorialCenter = ({ onStartTutorial, onClose }) => {
               >
                 <div
                   className={`flex-shrink-0 ${
-                    completed ? "text-green-400" : "text-indigo-400"
+                    completed ? completedColor : "text-indigo-400"
                   }`}
                 >
                   <Icon
@@ -68,7 +75,9 @@ const TutorialCenter = ({ onStartTutorial, onClose }) => {
                   </div>
                 </div>
                 {completed && (
-                  <span className="text-xs text-green-400 font-medium flex-shrink-0">
+                  <span
+                    className={`text-xs ${completedColor} font-medium flex-shrink-0`}
+                  >
                     ✓ Completed
                   </span>
                 )}

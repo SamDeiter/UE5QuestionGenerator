@@ -6,6 +6,7 @@ import Icon from "../Icon";
 import Button from "../ui/Button";
 import HeaderUserInfo from "./HeaderUserInfo";
 import { APP_MODES } from "../../utils/constants";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 const HeaderMobileMenu = forwardRef(
   (
@@ -28,8 +29,16 @@ const HeaderMobileMenu = forwardRef(
     },
     ref
   ) => {
+    const { colorblindMode } = useAccessibility();
+    const cb = colorblindMode;
+
+    // Colorblind-safe colors
+    const successColor = cb ? "text-blue-400" : "text-green-400";
+    const successBg = cb ? "bg-blue-500" : "bg-green-500";
+    const errorColor = cb ? "text-rose-400" : "text-red-400";
+
     const { version, isProd } = getVersionDisplay();
-    const versionColor = isProd ? "text-red-400" : "text-green-400";
+    const versionColor = isProd ? errorColor : successColor;
 
     return (
       <div
@@ -50,8 +59,10 @@ const HeaderMobileMenu = forwardRef(
             <div className="flex items-center gap-1.5 font-semibold">
               {isCloudReady ? (
                 <>
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-green-400">CLOUD</span>
+                  <div
+                    className={`w-2 h-2 ${successBg} rounded-full animate-pulse`}
+                  />
+                  <span className={successColor}>CLOUD</span>
                 </>
               ) : (
                 <span className="text-orange-400">LOCAL</span>
@@ -113,8 +124,8 @@ const HeaderMobileMenu = forwardRef(
                 apiKeyStatus.includes("Loaded") ||
                 apiKeyStatus.includes("Auto") ||
                 apiKeyStatus.includes("Cloud")
-                  ? "text-green-400"
-                  : "text-red-400"
+                  ? successColor
+                  : errorColor
               }`}
             >
               API: {apiKeyStatus}
