@@ -224,7 +224,7 @@ const QuestionActions = ({
 
             {rejectMenuOpen && (
               <div
-                className={`absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 bg-slate-800 border-2 ${
+                className={`absolute inset-x-0 mx-auto top-full mt-2 w-72 bg-slate-800 border-2 ${
                   colorblindMode ? "border-rose-700/50" : "border-red-700/50"
                 } rounded-lg shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200`}
               >
