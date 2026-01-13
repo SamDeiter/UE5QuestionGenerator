@@ -180,8 +180,14 @@ const QuestionContent = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
           {Object.entries(displayedQ.options || {}).map(([key, val]) => {
             const isCorrect = displayedQ.correct === key;
-            // SAFEGUARD: If option text is missing/empty, show placeholder to maintain layout
-            const optionText = val && val.trim() ? val : "(Empty)";
+            // SAFEGUARD: Clean corrupted Unicode (Bengali text "ভাষা" etc. bleeding in)
+            let optionText = val && val.trim() ? val : "(Empty)";
+            // Remove common corrupted patterns: Bengali text, HTML tags
+            optionText =
+              optionText
+                .replace(/[\u0980-\u09FF]+/g, "") // Remove Bengali Unicode block
+                .replace(/<\/?[a-zA-Z][^>]*>/g, "") // Remove HTML tags
+                .trim() || "(Empty)";
             return (
               <div
                 key={key}
