@@ -3,6 +3,7 @@
  */
 import Icon from "../Icon";
 import { triggerManualSync } from "../../services/firebase";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 const HeaderStatusBar = ({
   formattedTokens,
@@ -12,6 +13,14 @@ const HeaderStatusBar = ({
   apiKeyStatus,
   isCloudReady,
 }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe colors
+  const successText = cb ? "text-blue-400" : "text-green-400";
+  const errorText = cb ? "text-rose-400" : "text-red-400";
+  const successBg = cb ? "bg-blue-500" : "bg-green-500";
+
   return (
     <div
       className="flex items-center h-7 gap-1.5 px-2 rounded border border-slate-700 whitespace-nowrap text-[10px]"
@@ -119,8 +128,8 @@ const HeaderStatusBar = ({
           apiKeyStatus.includes("Loaded") ||
           apiKeyStatus.includes("Auto") ||
           apiKeyStatus.includes("Cloud")
-            ? "text-green-400"
-            : "text-red-400"
+            ? successText
+            : errorText
         }`}
       >
         API: {apiKeyStatus}
@@ -129,8 +138,10 @@ const HeaderStatusBar = ({
       {/* Cloud/Local indicator */}
       {isCloudReady ? (
         <div className="flex items-center gap-1 font-semibold whitespace-nowrap">
-          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-green-400">CLOUD</span>
+          <div
+            className={`w-1.5 h-1.5 ${successBg} rounded-full animate-pulse`}
+          ></div>
+          <span className={successText}>CLOUD</span>
         </div>
       ) : (
         <div className="flex items-center gap-1 font-semibold whitespace-nowrap">

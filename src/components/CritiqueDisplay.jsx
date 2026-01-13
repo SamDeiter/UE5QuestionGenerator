@@ -10,6 +10,7 @@ import DiffText from "./DiffText";
 import DOMPurify from "dompurify";
 import { QUALITY_PASS_THRESHOLD } from "../utils/constants";
 import { useThemeColors } from "../hooks/useThemeColors";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 // Simple markdown to HTML converter with XSS protection
 const parseMarkdown = (text) => {
@@ -56,6 +57,14 @@ const CritiqueDisplay = ({
 }) => {
   // Get colorblind-safe colors from centralized theme (must be before any returns)
   const { scoreColorByValue } = useThemeColors();
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe colors for correct answers
+  const correctColor = cb ? "text-blue-400" : "text-green-400";
+  const correctBg = cb
+    ? "bg-blue-900/50 text-blue-300"
+    : "bg-green-900/50 text-green-300";
 
   if (!critique) return null;
 
@@ -304,7 +313,7 @@ const CritiqueDisplay = ({
                     <div
                       key={letter}
                       className={`flex items-start gap-2 ${
-                        isCorrect ? "text-green-400 font-bold" : ""
+                        isCorrect ? `${correctColor} font-bold` : ""
                       }`}
                     >
                       <span
@@ -322,7 +331,7 @@ const CritiqueDisplay = ({
                         ) : (
                           <span
                             className={
-                              isCorrect ? "text-green-400" : "text-slate-300"
+                              isCorrect ? correctColor : "text-slate-300"
                             }
                           >
                             {newVal}
@@ -346,7 +355,9 @@ const CritiqueDisplay = ({
                       {originalQuestion.correct}
                     </span>
                     <span className="mx-1">→</span>
-                    <span className="bg-green-900/50 text-green-300 font-bold px-1.5 py-0.5 rounded">
+                    <span
+                      className={`${correctBg} font-bold px-1.5 py-0.5 rounded`}
+                    >
                       {suggestedRewrite.correct}
                     </span>
                   </span>
