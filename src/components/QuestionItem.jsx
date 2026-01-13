@@ -25,6 +25,7 @@ import QuestionHeader from "./QuestionItem/QuestionHeader";
 
 import { useEditLock } from "../hooks/useEditLock";
 import { useAuth } from "../hooks/useAuth";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 import { saveTrainingPair } from "../services/trainingDataService";
 import { logger } from "../utils/logger";
@@ -52,6 +53,8 @@ const QuestionItem = ({
   isAdmin,
 }) => {
   const { user } = useAuth();
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
   const userId = user?.uid;
   const userEmail = user?.email;
 
@@ -98,12 +101,20 @@ const QuestionItem = ({
   const lockColor = (hasLock, isLocked, type) => {
     if (hasLock) {
       return type === "container"
-        ? "bg-green-900/30 border border-green-500/50"
+        ? cb
+          ? "bg-blue-900/30 border border-blue-500/50"
+          : "bg-green-900/30 border border-green-500/50"
+        : cb
+        ? "text-blue-400"
         : "text-green-400";
     }
     if (isLocked) {
       return type === "container"
-        ? "bg-red-900/30 border border-red-500/50"
+        ? cb
+          ? "bg-rose-900/30 border border-rose-500/50"
+          : "bg-red-900/30 border border-red-500/50"
+        : cb
+        ? "text-rose-400"
         : "text-red-400";
     }
     return type === "container"
@@ -230,11 +241,15 @@ const QuestionItem = ({
           getDiffBadgeColor={(d) => {
             const diff = d?.toLowerCase();
             if (diff === "beginner" || diff === "easy")
-              return "bg-green-950 text-green-400 border-green-800";
+              return cb
+                ? "bg-blue-950 text-blue-400 border-blue-800"
+                : "bg-green-950 text-green-400 border-green-800";
             if (diff === "intermediate" || diff === "medium")
               return "bg-yellow-950 text-yellow-400 border-yellow-800";
             if (diff === "expert" || diff === "hard")
-              return "bg-red-950 text-red-400 border-red-800";
+              return cb
+                ? "bg-rose-950 text-rose-400 border-rose-800"
+                : "bg-red-950 text-red-400 border-red-800";
             return "bg-slate-800 text-slate-400 border-slate-700";
           }}
           appMode={appMode}
