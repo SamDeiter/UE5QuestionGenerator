@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import Icon from "../Icon";
 import { useAccessibility } from "../../contexts/AccessibilityContext";

@@ -46,22 +46,36 @@ const SystemHealth = ({ isCollapsed, onToggle }) => {
       };
     } catch (error) {
       // Parse Firebase error for more detail
-      const errorCode = error.code || "unknown";
+      const errorCode = error.code || "";
+      const errorMsg = error.message || "Unknown error";
       const collection = "QuestionsAPIAccess";
       let detailedMessage = `[${collection}] `;
 
-      if (errorCode === "permission-denied") {
-        detailedMessage += `Permission denied. Check Firestore rules for ${collection}. Required: userId === auth.uid`;
-      } else if (errorCode.includes("not-found")) {
+      // Check for permission denied in various formats
+      const isPermissionDenied =
+        errorCode === "permission-denied" ||
+        errorCode.includes("permission") ||
+        errorMsg.toLowerCase().includes("permission") ||
+        errorMsg.toLowerCase().includes("insufficient");
+
+      if (isPermissionDenied) {
+        detailedMessage += `Permission denied. Firestore rule requires: userId === auth.uid. Your UID: ${auth.currentUser?.uid?.slice(
+          0,
+          8
+        )}...`;
+      } else if (
+        errorCode.includes("not-found") ||
+        errorMsg.includes("not found")
+      ) {
         detailedMessage += "Collection or document not found";
       } else {
-        detailedMessage += error.message || "Unknown error";
+        detailedMessage += errorMsg;
       }
 
       results.firestoreWrite = {
         status: "fail",
         message: detailedMessage,
-        errorCode: errorCode,
+        errorCode: errorCode || "unknown",
       };
     }
     setTestResults({ ...results });
