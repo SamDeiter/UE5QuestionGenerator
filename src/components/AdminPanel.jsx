@@ -240,6 +240,148 @@ const AdminPanel = ({
 
       {/* Stack layout with compact spacing */}
       <div className="space-y-1.5">
+
+
+        {/* System Health Diagnostic */}
+        <React.Suspense
+          fallback={
+            <div className="p-4 text-center text-slate-500">
+              <Icon name="loader" className="animate-spin mb-2" />
+              <p>Loading System Health...</p>
+            </div>
+          }
+        >
+          <SystemHealth
+            isCollapsed={collapsed.systemHealth}
+            onToggle={() => toggleSection("systemHealth")}
+          />
+        </React.Suspense>
+
+        {/* Invite Management - Extracted Component */}
+        <React.Suspense
+          fallback={
+            <div className="p-4 text-center text-slate-500">
+              <Icon name="loader" className="animate-spin mb-2" />
+              <p>Loading Invite Management...</p>
+            </div>
+          }
+        >
+          <InviteManagement
+            invites={invites}
+            onRefresh={refreshInvites}
+            showMessage={showMessage}
+            isCollapsed={collapsed.inviteManagement}
+            isLoading={invitesLoading}
+            onToggle={() => {
+              toggleSection("inviteManagement");
+              // PERFORMANCE: Load invites when section is expanded
+              if (collapsed.inviteManagement) loadInvites();
+            }}
+          />
+        </React.Suspense>
+
+        {/* Registered Users List */}
+        <React.Suspense
+          fallback={
+            <div className="p-4 text-center text-slate-500">
+              <Icon name="loader" className="animate-spin mb-2" />
+              <p>Loading Users...</p>
+            </div>
+          }
+        >
+          <UserList
+            users={users}
+            isCollapsed={collapsed.registeredUsers}
+            isLoading={usersLoading}
+            onToggle={() => {
+              toggleSection("registeredUsers");
+              // PERFORMANCE: Load users when section is expanded
+              if (collapsed.registeredUsers) loadUsers();
+            }}
+            handleChangeRole={handleChangeRole}
+            handleRevokeUser={handleRevokeUser}
+          />
+        </React.Suspense>
+
+
+        {/* Reviewer Activity Analytics */}
+        <React.Suspense
+          fallback={
+            <div className="p-8 text-center text-slate-400">
+              <Icon name="loader" className="animate-spin mb-2 mx-auto" />
+              Loading Analytics...
+            </div>
+          }
+        >
+          <ReviewerAnalytics
+            reviewerAnalytics={reviewerAnalytics}
+            analyticsLoading={analyticsLoading}
+            loadReviewerAnalytics={loadReviewerAnalytics}
+            formatDuration={formatDuration}
+            formatAnalyticsDate={formatAnalyticsDate}
+            formatDate={formatAnalyticsDate}
+            isCollapsed={collapsed.reviewerActivity}
+            onToggle={() => {
+              toggleSection("reviewerActivity");
+              if (collapsed.reviewerActivity) loadReviewerAnalytics();
+            }}
+          />
+        </React.Suspense>
+
+
+        {/* Audit Logs */}
+        <React.Suspense
+          fallback={
+            <div className="p-4 text-center text-slate-500">
+              <Icon name="loader" className="animate-spin mb-2" />
+              <p>Loading Audit Logs...</p>
+            </div>
+          }
+        >
+          <AuditLogs
+            isCollapsed={collapsed.auditLogs}
+            onToggle={() => toggleSection("auditLogs")}
+          />
+        </React.Suspense>
+
+
+        {/* Custom Tags - Extracted Component */}
+        <React.Suspense
+          fallback={
+            <div className="p-4 text-center text-slate-500">
+              <Icon name="loader" className="animate-spin mb-2" />
+              <p>Loading Custom Tags...</p>
+            </div>
+          }
+        >
+          <CustomTagsEditor
+            customTags={customTags}
+            onSaveCustomTags={onSaveCustomTags}
+            isCollapsed={collapsed.customTags}
+            onToggle={() => toggleSection("customTags")}
+          />
+        </React.Suspense>
+
+
+        {/* API Configuration */}
+        <React.Suspense
+          fallback={
+            <div className="p-4 text-center text-slate-500">
+              Loading Config...
+            </div>
+          }
+        >
+          <ApiConfig
+            config={config}
+            onChange={safeHandleChange}
+            showApiKey={showApiKey}
+            setShowApiKey={setShowApiKey}
+            isCollapsed={collapsed.apiConfig}
+            onToggle={() => toggleSection("apiConfig")}
+            uiLabels={UI_LABELS}
+          />
+        </React.Suspense>
+
         {/* Feature Access Overview */}
         <CollapsibleSection
           title="Feature Access Overview"
@@ -326,140 +468,24 @@ const AdminPanel = ({
             </div>
           </div>
         </CollapsibleSection>
-        {/* Invite Management - Extracted Component */}
+
+
+        {/* Environment Info - Extracted Component */}
         <React.Suspense
           fallback={
             <div className="p-4 text-center text-slate-500">
               <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading Invite Management...</p>
+              <p>Loading Environment Info...</p>
             </div>
           }
         >
-          <InviteManagement
-            invites={invites}
-            onRefresh={refreshInvites}
+          <EnvironmentInfo
             showMessage={showMessage}
-            isCollapsed={collapsed.inviteManagement}
-            isLoading={invitesLoading}
-            onToggle={() => {
-              toggleSection("inviteManagement");
-              // PERFORMANCE: Load invites when section is expanded
-              if (collapsed.inviteManagement) loadInvites();
-            }}
-          />
-        </React.Suspense>
-        {/* Registered Users List */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading Users...</p>
-            </div>
-          }
-        >
-          <UserList
-            users={users}
-            isCollapsed={collapsed.registeredUsers}
-            isLoading={usersLoading}
-            onToggle={() => {
-              toggleSection("registeredUsers");
-              // PERFORMANCE: Load users when section is expanded
-              if (collapsed.registeredUsers) loadUsers();
-            }}
-            handleChangeRole={handleChangeRole}
-            handleRevokeUser={handleRevokeUser}
+            isCollapsed={collapsed.envInfo}
+            onToggle={() => toggleSection("envInfo")}
           />
         </React.Suspense>
 
-        {/* Reviewer Activity Analytics */}
-        <React.Suspense
-          fallback={
-            <div className="p-8 text-center text-slate-400">
-              <Icon name="loader" className="animate-spin mb-2 mx-auto" />
-              Loading Analytics...
-            </div>
-          }
-        >
-          <ReviewerAnalytics
-            reviewerAnalytics={reviewerAnalytics}
-            analyticsLoading={analyticsLoading}
-            loadReviewerAnalytics={loadReviewerAnalytics}
-            formatDuration={formatDuration}
-            formatAnalyticsDate={formatAnalyticsDate}
-            formatDate={formatAnalyticsDate}
-            isCollapsed={collapsed.reviewerActivity}
-            onToggle={() => {
-              toggleSection("reviewerActivity");
-              if (collapsed.reviewerActivity) loadReviewerAnalytics();
-            }}
-          />
-        </React.Suspense>
-
-        {/* API Configuration */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              Loading Config...
-            </div>
-          }
-        >
-          <ApiConfig
-            config={config}
-            onChange={safeHandleChange}
-            showApiKey={showApiKey}
-            setShowApiKey={setShowApiKey}
-            isCollapsed={collapsed.apiConfig}
-            onToggle={() => toggleSection("apiConfig")}
-            uiLabels={UI_LABELS}
-          />
-        </React.Suspense>
-
-        {/* Custom Tags - Extracted Component */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading Custom Tags...</p>
-            </div>
-          }
-        >
-          <CustomTagsEditor
-            customTags={customTags}
-            onSaveCustomTags={onSaveCustomTags}
-            isCollapsed={collapsed.customTags}
-            onToggle={() => toggleSection("customTags")}
-          />
-        </React.Suspense>
-
-        {/* System Health Diagnostic */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading System Health...</p>
-            </div>
-          }
-        >
-          <SystemHealth
-            isCollapsed={collapsed.systemHealth}
-            onToggle={() => toggleSection("systemHealth")}
-          />
-        </React.Suspense>
-
-        {/* Audit Logs */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading Audit Logs...</p>
-            </div>
-          }
-        >
-          <AuditLogs
-            isCollapsed={collapsed.auditLogs}
-            onToggle={() => toggleSection("auditLogs")}
-          />
-        </React.Suspense>
 
         {/* Training Data Export - Super Admin Only */}
         {isSuperAdmin && (
@@ -479,21 +505,6 @@ const AdminPanel = ({
           </React.Suspense>
         )}
 
-        {/* Environment Info - Extracted Component */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading Environment Info...</p>
-            </div>
-          }
-        >
-          <EnvironmentInfo
-            showMessage={showMessage}
-            isCollapsed={collapsed.envInfo}
-            onToggle={() => toggleSection("envInfo")}
-          />
-        </React.Suspense>
         {/* Database Management - Super Admin Only */}
         {isSuperAdmin && (
           <DatabaseManagement
