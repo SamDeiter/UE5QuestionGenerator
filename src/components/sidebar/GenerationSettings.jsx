@@ -6,6 +6,7 @@ import InfoTooltip from "../InfoTooltip";
 import { getMergedTags } from "../../utils/tagTaxonomy";
 import CoverageGapSuggester from "./CoverageGapSuggester";
 import { TARGET_PER_CATEGORY } from "../../utils/constants";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 /**
  * GenerationSettings - Configuration panel with progressive disclosure
@@ -21,19 +22,23 @@ const GenerationSettings = ({
   showMessage,
   setShowGenSettings,
 }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
   const [showAdvanced, setShowAdvanced] = useState(false);
   const availableTags = getMergedTags(config.discipline, customTags);
 
   // Helper for progress colors to avoid nested ternaries
   const getProgressColorClass = (value, target) => {
-    if (value >= target) return "text-green-400";
+    if (value >= target) return cb ? "text-blue-400" : "text-green-400";
     if (value >= target - 5) return "text-yellow-400";
     return "text-slate-400";
   };
 
   const getTagCountColorClass = (count) => {
     if (count === 0) return "text-slate-500";
-    if (count >= 5) return "text-green-400 font-bold";
+    if (count >= 5)
+      return cb ? "text-blue-400 font-bold" : "text-green-400 font-bold";
     return "text-orange-300";
   };
 
@@ -144,7 +149,11 @@ const GenerationSettings = ({
                       BASIC SETTINGS - Always visible
                       ═══════════════════════════════════════════════════════════════ */}
         <div className="space-y-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800">
-          <h3 className="text-[10px] font-bold uppercase text-green-400 tracking-wider flex items-center gap-1">
+          <h3
+            className={`text-[10px] font-bold uppercase ${
+              cb ? "text-blue-400" : "text-green-400"
+            } tracking-wider flex items-center gap-1`}
+          >
             <Icon name="check-circle" size={12} /> Basic Settings
           </h3>
 
@@ -258,7 +267,9 @@ const GenerationSettings = ({
                     <span
                       className={
                         row.mc + row.tf >= TARGET_PER_CATEGORY * 2
-                          ? "text-green-400"
+                          ? cb
+                            ? "text-blue-400"
+                            : "text-green-400"
                           : "text-slate-500"
                       }
                     >
@@ -287,7 +298,9 @@ const GenerationSettings = ({
                         <div
                           className={`h-full transition-all ${
                             row.mc >= TARGET_PER_CATEGORY
-                              ? "bg-green-500"
+                              ? cb
+                                ? "bg-blue-500"
+                                : "bg-green-500"
                               : "bg-blue-500"
                           }`}
                           style={{
@@ -318,7 +331,9 @@ const GenerationSettings = ({
                         <div
                           className={`h-full transition-all ${
                             row.tf >= TARGET_PER_CATEGORY
-                              ? "bg-green-500"
+                              ? cb
+                                ? "bg-blue-500"
+                                : "bg-green-500"
                               : "bg-purple-500"
                           }`}
                           style={{
