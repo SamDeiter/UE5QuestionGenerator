@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 const ProgressStats = ({
   allQuestionsMap,
@@ -8,6 +9,9 @@ const ProgressStats = ({
   TARGET_TOTAL,
   overallPercentage,
 }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
   const [showProgress, setShowProgress] = useState(true);
 
   return (
@@ -52,7 +56,11 @@ const ProgressStats = ({
             </div>
           )}
           {TARGET_TOTAL <= totalApproved && (
-            <div className="flex items-center gap-1 pt-2 text-xs text-green-400">
+            <div
+              className={`flex items-center gap-1 pt-2 text-xs ${
+                cb ? "text-blue-400" : "text-green-400"
+              }`}
+            >
               <Icon name="check-circle" size={12} />
               <span className="font-bold">Quota Complete!</span>
             </div>
