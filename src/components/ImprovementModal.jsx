@@ -255,14 +255,19 @@ const ImprovementModal = ({
                     {/* Original Tags */}
                     <div className="flex flex-wrap gap-1.5">
                       {originalTags.length > 0 ? (
-                        originalTags.map((tag, idx) => (
-                          <span
-                            key={idx}
-                            className="px-2 py-1 bg-slate-700/50 border border-slate-600/50 rounded text-xs text-slate-300"
-                          >
-                            #{tag}
-                          </span>
-                        ))
+                        originalTags.map((tag, idx) => {
+                          const cleanTag = String(tag)
+                            .replace(/^#+\s*/, "")
+                            .trim();
+                          return (
+                            <span
+                              key={idx}
+                              className="px-2 py-1 bg-slate-700/50 border border-slate-600/50 rounded text-xs text-slate-300"
+                            >
+                              #{cleanTag}
+                            </span>
+                          );
+                        })
                       ) : (
                         <span className="text-xs text-slate-500 italic">
                           No tags
@@ -275,6 +280,9 @@ const ImprovementModal = ({
                       {improvedTags.length > 0 ? (
                         improvedTags.map((tag, idx) => {
                           const isNew = newTags.includes(tag);
+                          const cleanTag = String(tag)
+                            .replace(/^#+\s*/, "")
+                            .trim();
                           return (
                             <span
                               key={idx}
@@ -284,7 +292,7 @@ const ImprovementModal = ({
                                   : "bg-slate-700/50 border border-slate-600/50 text-slate-300"
                               }`}
                             >
-                              #{tag}
+                              #{cleanTag}
                             </span>
                           );
                         })
