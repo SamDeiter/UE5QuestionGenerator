@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { logger } from "../../utils/logger";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 const UserList = ({
   users,
@@ -11,6 +12,14 @@ const UserList = ({
   handleChangeRole,
   handleRevokeUser,
 }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe danger colors
+  const dangerBg = cb
+    ? "bg-rose-600 hover:bg-rose-500 disabled:bg-slate-600"
+    : "bg-red-600 hover:bg-red-500 disabled:bg-slate-600";
+
   // Multi-select state for bulk actions
   const [selectedUsers, setSelectedUsers] = useState(new Set());
   const [bulkRevoking, setBulkRevoking] = useState(false);
@@ -127,7 +136,7 @@ const UserList = ({
             <button
               onClick={handleBulkRevoke}
               disabled={bulkRevoking}
-              className="px-3 py-1 bg-red-600 hover:bg-red-500 disabled:bg-slate-600 text-white text-xs rounded transition-all flex items-center gap-1"
+              className={`px-3 py-1 ${dangerBg} text-white text-xs rounded transition-all flex items-center gap-1`}
             >
               {bulkRevoking ? (
                 <Icon name="loader" className="animate-spin" size={12} />
@@ -221,7 +230,7 @@ const UserList = ({
 
                 <button
                   onClick={() => handleRevokeUser(user.uid, user.email)}
-                  className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded transition-all"
+                  className={`px-3 py-1 ${dangerBg} text-white text-xs rounded transition-all`}
                   title="Revoke Access"
                 >
                   <Icon name="x" size={12} />

@@ -12,6 +12,7 @@ import {
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { logger } from "../utils/logger";
 import { MAINTENANCE } from "../utils/constants";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 /**
  * DangerZoneModal - Separate modal for destructive operations
@@ -24,6 +25,9 @@ const DangerZoneModal = ({
   onClearData,
   isAdmin = false,
 }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
   const [isResetting, setIsResetting] = useState(false);
   const [showFactoryResetConfirm, setShowFactoryResetConfirm] = useState(false);
   const [showFactoryResetPrompt, setShowFactoryResetPrompt] = useState(false);
@@ -318,7 +322,11 @@ const DangerZoneModal = ({
                     )}
                   </button>
                   {migrationResult && (
-                    <p className="text-xs text-green-400 mt-2 text-center">
+                    <p
+                      className={`text-xs ${
+                        cb ? "text-blue-400" : "text-green-400"
+                      } mt-2 text-center`}
+                    >
                       ✓ {migrationResult.message}
                     </p>
                   )}
