@@ -80,14 +80,14 @@ describe("QuestionItem", () => {
     availableVariants: [],
   };
 
-  it("should render LanguageControls if isAdmin is true", () => {
+  it("should render LanguageControls for all authenticated users", () => {
     render(<QuestionItem {...defaultProps} isAdmin={true} />);
     expect(screen.getByTestId("lang-controls")).toBeInTheDocument();
-    expect(screen.getByTestId("card")).toBeInTheDocument(); // It's wrapped in Card
   });
 
-  it("should NOT render LanguageControls if isAdmin is false", () => {
+  it("should render LanguageControls for non-admin users too", () => {
+    // LanguageControls was made available to all users (no longer admin-only)
     render(<QuestionItem {...defaultProps} isAdmin={false} />);
-    expect(screen.queryByTestId("lang-controls")).not.toBeInTheDocument();
+    expect(screen.getByTestId("lang-controls")).toBeInTheDocument();
   });
 });

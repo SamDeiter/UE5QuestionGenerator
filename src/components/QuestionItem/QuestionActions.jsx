@@ -92,6 +92,12 @@ const REJECTION_REASONS = [
     icon: "tag",
     category: "quality",
   },
+  {
+    id: "tf_in_question",
+    label: "True/False in Question",
+    icon: "help-circle",
+    category: "quality",
+  },
 ];
 
 const QuestionActions = ({
@@ -127,7 +133,7 @@ const QuestionActions = ({
   // Determine button styling based on state - colorblind-safe alternatives
   const getButtonClass = () => {
     const baseClass =
-      "px-4 py-2 rounded-lg transition-all flex items-center gap-2 font-bold text-sm";
+      "px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2 font-bold text-sm w-full";
     if (isLocked) {
       return `${baseClass} bg-slate-800 text-slate-600 opacity-50 cursor-not-allowed border-2 border-slate-700`;
     }
@@ -158,7 +164,9 @@ const QuestionActions = ({
   if (appMode === "database") return null;
 
   return (
-    <div className="flex items-center gap-2">
+    <div
+      className={appMode === "review" ? "w-full" : "flex items-center gap-2"}
+    >
       {appMode === "create" ? (
         // CREATE MODE: Only show Delete (Discard) button
         <button
