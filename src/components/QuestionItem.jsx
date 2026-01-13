@@ -6,7 +6,6 @@ import {
   QUESTION_DIFFICULTY,
 } from "../utils/constants";
 import Icon from "./Icon";
-import Card from "./ui/Card";
 import ReviewProgressBar from "./ReviewProgressBar";
 
 import QuestionContent from "./QuestionItem/QuestionContent";
@@ -97,29 +96,28 @@ const QuestionItem = ({
     setShowImprovementModal(false);
   }, [q.id]);
 
-  // Lock status color helper
-  const lockColor = (hasLock, isLocked, type) => {
-    if (hasLock) {
-      return type === "container"
-        ? cb
+  // Lock status color helper - refactored to avoid nested ternaries
+  const lockColor = (hasLockArg, isLockedArg, type) => {
+    if (hasLockArg) {
+      if (type === "container") {
+        return cb
           ? "bg-blue-900/30 border border-blue-500/50"
-          : "bg-green-900/30 border border-green-500/50"
-        : cb
-        ? "text-blue-400"
-        : "text-green-400";
+          : "bg-green-900/30 border border-green-500/50";
+      }
+      return cb ? "text-blue-400" : "text-green-400";
     }
-    if (isLocked) {
-      return type === "container"
-        ? cb
+    if (isLockedArg) {
+      if (type === "container") {
+        return cb
           ? "bg-rose-900/30 border border-rose-500/50"
-          : "bg-red-900/30 border border-red-500/50"
-        : cb
-        ? "text-rose-400"
-        : "text-red-400";
+          : "bg-red-900/30 border border-red-500/50";
+      }
+      return cb ? "text-rose-400" : "text-red-400";
     }
-    return type === "container"
-      ? "bg-slate-800/50 border border-slate-600/50"
-      : "text-slate-400";
+    if (type === "container") {
+      return "bg-slate-800/50 border border-slate-600/50";
+    }
+    return "text-slate-400";
   };
 
   // Lock tooltip helper

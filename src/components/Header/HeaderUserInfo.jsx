@@ -1,10 +1,9 @@
 /**
  * HeaderUserInfo - Displays user information with admin badge and sign out
  */
-import { useState } from "react";
 import Icon from "../Icon";
 import { signOutUser } from "../../services/firebase";
-import { refreshAuthToken } from "../../services/firebaseAuth";
+import { logger } from "../../utils/logger";
 
 const HeaderUserInfo = ({
   creatorName,
@@ -15,8 +14,6 @@ const HeaderUserInfo = ({
   onMenuClose = null,
   showMessage = null,
 }) => {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
   if (!creatorName) return null;
 
   const handleSignOut = async () => {
@@ -24,27 +21,10 @@ const HeaderUserInfo = ({
     if (onSignOut) onSignOut();
     // Clear any cached state
     localStorage.removeItem("ue5_session_agent_id");
-    await signOutUser();
-  };
-
-  const handleRefreshSession = async () => {
-    setIsRefreshing(true);
     try {
-      const success = await refreshAuthToken();
-      if (success && showMessage) {
-        showMessage("✅ Session refreshed successfully", 3000);
-      } else if (!success && showMessage) {
-        showMessage("⚠️ Session refresh failed - try logging out", 4000);
-      }
+      await signOutUser();
     } catch (error) {
-      if (showMessage) {
-        showMessage(
-          "❌ Session refresh error - please log out and back in",
-          4000
-        );
-      }
-    } finally {
-      setIsRefreshing(false);
+      logger.error("Sign out failed:", error);
     }
   };
 

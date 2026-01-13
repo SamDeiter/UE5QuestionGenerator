@@ -42,23 +42,6 @@ const QuestionHeader = ({
   const displayDifficulty = normalizeDifficulty(q.difficulty);
   const lang = q.language || "English";
 
-  // Language to flag emoji mapping
-  const getLanguageFlag = (language) => {
-    const flags = {
-      English: "🇺🇸",
-      Spanish: "🇪🇸",
-      French: "🇫🇷",
-      German: "🇩🇪",
-      Japanese: "🇯🇵",
-      Korean: "🇰🇷",
-      Chinese: "🇨🇳",
-      Portuguese: "🇧🇷",
-      Italian: "🇮🇹",
-      Russian: "🇷🇺",
-    };
-    return flags[language] || "🌐";
-  };
-
   // Colorblind-safe AI Improvement button classes from centralized theme
   const aiImprovementClasses = actionColor("success");
 

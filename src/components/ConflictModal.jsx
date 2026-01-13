@@ -22,20 +22,25 @@ const ConflictModal = ({ isOpen, onClose, conflictData, onResolve }) => {
   const [showDiff, setShowDiff] = useState(false);
 
   // Colorblind-safe colors - must use full class strings for Tailwind JIT
-  const discardCardClasses =
-    selectedOption === "DISCARD"
-      ? cb
-        ? "border-blue-500 bg-blue-900/20"
-        : "border-green-500 bg-green-900/20"
-      : cb
-      ? "border-slate-700 bg-slate-800/30 hover:border-blue-500/50"
-      : "border-slate-700 bg-slate-800/30 hover:border-green-500/50";
-  const discardRadioClasses =
-    selectedOption === "DISCARD"
-      ? cb
-        ? "border-blue-500 bg-blue-500"
-        : "border-green-500 bg-green-500"
-      : "border-slate-600";
+  // Using explicit if-else to avoid nested ternary linting errors
+  let discardCardClasses =
+    "border-slate-700 bg-slate-800/30 hover:border-green-500/50";
+  if (selectedOption === "DISCARD") {
+    discardCardClasses = cb
+      ? "border-blue-500 bg-blue-900/20"
+      : "border-green-500 bg-green-900/20";
+  } else if (cb) {
+    discardCardClasses =
+      "border-slate-700 bg-slate-800/30 hover:border-blue-500/50";
+  }
+
+  let discardRadioClasses = "border-slate-600";
+  if (selectedOption === "DISCARD") {
+    discardRadioClasses = cb
+      ? "border-blue-500 bg-blue-500"
+      : "border-green-500 bg-green-500";
+  }
+
   const discardTitleColor = cb ? "text-blue-400" : "text-green-400";
   const discardBadgeClasses = cb
     ? "bg-blue-500/20 text-blue-400 border-blue-500/30"

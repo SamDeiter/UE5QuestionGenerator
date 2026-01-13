@@ -21,8 +21,8 @@ const cleanOptionText = (text) => {
     text
       // Remove Bengali Unicode characters (corrupted text)
       .replace(/[\u0980-\u09FF]+/g, "")
-      // Remove HTML tags
-      .replace(/<[^>]*>/g, "")
+      // Remove HTML tags - use non-greedy match to prevent backtracking
+      .replace(/<[^<>]*>/g, "")
       .trim()
   );
 };

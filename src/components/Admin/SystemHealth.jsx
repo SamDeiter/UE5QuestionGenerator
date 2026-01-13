@@ -10,7 +10,7 @@
 import React, { useState } from "react";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
-import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { getDb, auth } from "../../services/firebase";
 import { checkUserRegistration } from "../../services/inviteService";
 import { useAccessibility } from "../../contexts/AccessibilityContext";

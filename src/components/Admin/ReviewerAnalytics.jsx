@@ -17,7 +17,7 @@ const ReviewerAnalytics = ({
   // Colorblind-safe color mappings
   const acceptedColor = colorblindMode ? "text-blue-400" : "text-green-400";
   const rejectedColor = colorblindMode ? "text-rose-400" : "text-red-400";
-  const warningColor = colorblindMode ? "text-amber-400" : "text-amber-400";
+  const warningColor = "text-amber-400"; // Same for both modes
   const activeGreen = colorblindMode ? "bg-blue-500" : "bg-green-500";
   const activeAmber = colorblindMode ? "bg-purple-500" : "bg-amber-500";
 
@@ -228,12 +228,10 @@ const ReviewerAnalytics = ({
                         const rate = Math.round(
                           (reviewer.acceptedCount / total) * 100
                         );
-                        const color =
-                          rate >= 80
-                            ? acceptedColor
-                            : rate >= 60
-                            ? warningColor
-                            : rejectedColor;
+                        // Get color based on rate thresholds
+                        let color = rejectedColor; // Default for low rates
+                        if (rate >= 80) color = acceptedColor;
+                        else if (rate >= 60) color = warningColor;
                         return (
                           <span className={`font-bold ${color}`}>{rate}%</span>
                         );

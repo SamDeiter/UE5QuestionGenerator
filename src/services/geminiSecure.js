@@ -146,8 +146,8 @@ export const generateTagsSecure = async (apiKey, questionText) => {
     try {
       return JSON.parse(cleanText);
     } catch {
-      // Try to find JSON array within the text
-      const arrayMatch = cleanText.match(/\[[\s\S]*?\]/);
+      // Try to find JSON array within the text - use explicit character class to prevent backtracking
+      const arrayMatch = cleanText.match(/\[[^[\]]*\]/);
       if (arrayMatch) {
         return JSON.parse(arrayMatch[0]);
       }

@@ -42,6 +42,18 @@ const GenerationSettings = ({
     return "text-orange-300";
   };
 
+  // Helper for quota status text color - avoids nested ternary
+  const getQuotaTextColor = (quotaMet) => {
+    if (!quotaMet) return "text-slate-500";
+    return cb ? "text-blue-400" : "text-green-400";
+  };
+
+  // Helper for progress bar color when quota met - avoids nested ternary
+  const getQuotaBarColor = (quotaMet, defaultColor) => {
+    if (!quotaMet) return defaultColor;
+    return cb ? "bg-blue-500" : "bg-green-500";
+  };
+
   // Compute counts for each tag to show coverage
   const tagCounts = React.useMemo(() => {
     const counts = {};
@@ -265,13 +277,9 @@ const GenerationSettings = ({
                       {row.name}
                     </span>
                     <span
-                      className={
+                      className={getQuotaTextColor(
                         row.mc + row.tf >= TARGET_PER_CATEGORY * 2
-                          ? cb
-                            ? "text-blue-400"
-                            : "text-green-400"
-                          : "text-slate-500"
-                      }
+                      )}
                     >
                       {row.mc + row.tf >= TARGET_PER_CATEGORY * 2
                         ? `✓ ${row.mc + row.tf}`
@@ -296,13 +304,10 @@ const GenerationSettings = ({
                       </div>
                       <div className="h-1.5 bg-slate-800 rounded overflow-hidden">
                         <div
-                          className={`h-full transition-all ${
-                            row.mc >= TARGET_PER_CATEGORY
-                              ? cb
-                                ? "bg-blue-500"
-                                : "bg-green-500"
-                              : "bg-blue-500"
-                          }`}
+                          className={`h-full transition-all ${getQuotaBarColor(
+                            row.mc >= TARGET_PER_CATEGORY,
+                            "bg-blue-500"
+                          )}`}
                           style={{
                             width: `${Math.min(
                               100,
@@ -329,13 +334,10 @@ const GenerationSettings = ({
                       </div>
                       <div className="h-1.5 bg-slate-800 rounded overflow-hidden">
                         <div
-                          className={`h-full transition-all ${
-                            row.tf >= TARGET_PER_CATEGORY
-                              ? cb
-                                ? "bg-blue-500"
-                                : "bg-green-500"
-                              : "bg-purple-500"
-                          }`}
+                          className={`h-full transition-all ${getQuotaBarColor(
+                            row.tf >= TARGET_PER_CATEGORY,
+                            "bg-purple-500"
+                          )}`}
                           style={{
                             width: `${Math.min(
                               100,
