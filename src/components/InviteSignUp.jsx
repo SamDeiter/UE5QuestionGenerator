@@ -12,6 +12,7 @@ import {
 } from "../services/firebase";
 import Icon from "./Icon";
 import EmailLogin from "./EmailLogin";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 /**
  * InviteSignUp - Registration with invite code validation
@@ -21,6 +22,17 @@ import EmailLogin from "./EmailLogin";
  * @param {Function} props.onCancel - Called when user cancels
  */
 const InviteSignUp = ({ onSuccess, onCancel }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe colors
+  const successClasses = cb
+    ? "text-blue-400 bg-blue-900/20"
+    : "text-green-400 bg-green-900/20";
+  const errorClasses = cb
+    ? "text-rose-400 bg-rose-900/20"
+    : "text-red-400 bg-red-900/20";
+
   const [inviteCode, setInviteCode] = useState("");
   const [validationStatus, setValidationStatus] = useState(null);
   const [validationError, setValidationError] = useState("");
@@ -180,7 +192,9 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
             </div>
           )}
           {validationStatus === "valid" && (
-            <div className="flex items-center gap-2 text-green-400 bg-green-900/20 p-3 rounded-lg">
+            <div
+              className={`flex items-center gap-2 ${successClasses} p-3 rounded-lg`}
+            >
               <Icon name="check-circle" size={16} />
               <span>
                 Valid invite! Role: <strong>{inviteRole}</strong>
@@ -188,13 +202,17 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
             </div>
           )}
           {validationError && (
-            <div className="flex items-center gap-2 text-red-400 bg-red-900/20 p-3 rounded-lg">
+            <div
+              className={`flex items-center gap-2 ${errorClasses} p-3 rounded-lg`}
+            >
               <Icon name="x-circle" size={16} />
               <span>{validationError}</span>
             </div>
           )}
           {authError && (
-            <div className="flex items-center gap-2 text-red-400 bg-red-900/20 p-3 rounded-lg">
+            <div
+              className={`flex items-center gap-2 ${errorClasses} p-3 rounded-lg`}
+            >
               <Icon name="alert-triangle" size={16} />
               <span>{authError}</span>
             </div>

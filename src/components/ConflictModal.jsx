@@ -12,20 +12,48 @@
 import React, { useState } from "react";
 import Icon from "./Icon";
 import CollapsibleSection from "./CollapsibleSection";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 const ConflictModal = ({ isOpen, onClose, conflictData, onResolve }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
   const [selectedOption, setSelectedOption] = useState(null);
   const [showDiff, setShowDiff] = useState(false);
+
+  // Colorblind-safe colors - must use full class strings for Tailwind JIT
+  const discardCardClasses =
+    selectedOption === "DISCARD"
+      ? cb
+        ? "border-blue-500 bg-blue-900/20"
+        : "border-green-500 bg-green-900/20"
+      : cb
+      ? "border-slate-700 bg-slate-800/30 hover:border-blue-500/50"
+      : "border-slate-700 bg-slate-800/30 hover:border-green-500/50";
+  const discardRadioClasses =
+    selectedOption === "DISCARD"
+      ? cb
+        ? "border-blue-500 bg-blue-500"
+        : "border-green-500 bg-green-500"
+      : "border-slate-600";
+  const discardTitleColor = cb ? "text-blue-400" : "text-green-400";
+  const discardBadgeClasses = cb
+    ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
+    : "bg-green-500/20 text-green-400 border-green-500/30";
 
   /**
    * Returns styles for the resolution button based on selected option
    */
   const getResolveButtonStyles = () => {
     if (selectedOption === "DISCARD") {
-      return "bg-green-600 hover:bg-green-500 text-white";
+      return cb
+        ? "bg-blue-600 hover:bg-blue-500 text-white"
+        : "bg-green-600 hover:bg-green-500 text-white";
     }
     if (selectedOption === "OVERWRITE") {
-      return "bg-red-600 hover:bg-red-500 text-white";
+      return cb
+        ? "bg-rose-600 hover:bg-rose-500 text-white"
+        : "bg-red-600 hover:bg-red-500 text-white";
     }
     return "bg-slate-700 text-slate-400 cursor-not-allowed";
   };
@@ -161,20 +189,12 @@ const ConflictModal = ({ isOpen, onClose, conflictData, onResolve }) => {
 
             {/* Option 1: Discard (Recommended) */}
             <div
-              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                selectedOption === "DISCARD"
-                  ? "border-green-500 bg-green-900/20"
-                  : "border-slate-700 bg-slate-800/30 hover:border-green-500/50"
-              }`}
+              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${discardCardClasses}`}
               onClick={() => setSelectedOption("DISCARD")}
             >
               <div className="flex items-start gap-3">
                 <div
-                  className={`w-5 h-5 rounded-full border-2 mt-1 flex items-center justify-center ${
-                    selectedOption === "DISCARD"
-                      ? "border-green-500 bg-green-500"
-                      : "border-slate-600"
-                  }`}
+                  className={`w-5 h-5 rounded-full border-2 mt-1 flex items-center justify-center ${discardRadioClasses}`}
                 >
                   {selectedOption === "DISCARD" && (
                     <Icon name="check" size={12} className="text-white" />
@@ -182,10 +202,12 @@ const ConflictModal = ({ isOpen, onClose, conflictData, onResolve }) => {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-green-400">
+                    <h4 className={`font-bold ${discardTitleColor}`}>
                       Reload and Discard My Changes
                     </h4>
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30">
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full border ${discardBadgeClasses}`}
+                    >
                       RECOMMENDED
                     </span>
                   </div>
