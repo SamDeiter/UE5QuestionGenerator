@@ -7,8 +7,22 @@
 import React from "react";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 const EnvironmentInfo = ({ showMessage, isCollapsed, onToggle }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe colors
+  const devColor = cb ? "text-blue-400" : "text-green-400";
+  const prodColor = cb ? "text-rose-400" : "text-red-400";
+  const devBtnClasses = cb
+    ? "bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 border-blue-700/50"
+    : "bg-green-900/30 hover:bg-green-900/50 text-green-300 border-green-700/50";
+  const prodBtnClasses = cb
+    ? "bg-rose-900/30 hover:bg-rose-900/50 text-rose-300 border-rose-700/50"
+    : "bg-red-900/30 hover:bg-red-900/50 text-red-300 border-red-700/50";
+
   return (
     <CollapsibleSection
       title="Environment Info"
@@ -29,8 +43,8 @@ const EnvironmentInfo = ({ showMessage, isCollapsed, onToggle }) => {
           <span
             className={`font-bold ${
               import.meta.env.VITE_FIREBASE_PROJECT_ID?.includes("prod")
-                ? "text-red-400"
-                : "text-green-400"
+                ? prodColor
+                : devColor
             }`}
           >
             {import.meta.env.VITE_FIREBASE_PROJECT_ID?.includes("prod")
@@ -52,7 +66,7 @@ const EnvironmentInfo = ({ showMessage, isCollapsed, onToggle }) => {
               3000
             );
           }}
-          className="flex-1 px-2 py-1.5 bg-green-900/30 hover:bg-green-900/50 text-green-300 text-xs font-bold rounded border border-green-700/50 transition-colors flex items-center justify-center gap-1"
+          className={`flex-1 px-2 py-1.5 ${devBtnClasses} text-xs font-bold rounded border transition-colors flex items-center justify-center gap-1`}
         >
           <Icon name="clipboard" size={12} />
           Switch to DEV
@@ -65,7 +79,7 @@ const EnvironmentInfo = ({ showMessage, isCollapsed, onToggle }) => {
               3000
             );
           }}
-          className="flex-1 px-2 py-1.5 bg-red-900/30 hover:bg-red-900/50 text-red-300 text-xs font-bold rounded border border-red-700/50 transition-colors flex items-center justify-center gap-1"
+          className={`flex-1 px-2 py-1.5 ${prodBtnClasses} text-xs font-bold rounded border transition-colors flex items-center justify-center gap-1`}
         >
           <Icon name="clipboard" size={12} />
           Switch to PROD

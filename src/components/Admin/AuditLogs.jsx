@@ -13,6 +13,7 @@ import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { getDb } from "../../services/firebase";
 import { logger } from "../../utils/logger";
 import { useThemeColors } from "../../hooks/useThemeColors";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 // Constants for query limits
 const LOGS_PER_COLLECTION = 25;
@@ -23,6 +24,8 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const { eventColor } = useThemeColors();
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
 
   const loadAuditLogs = async () => {
     setIsLoading(true);
@@ -132,7 +135,13 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
       case "invite":
         return <Icon name="mail" size={14} className="text-blue-400" />;
       case "system":
-        return <Icon name="shield" size={14} className="text-green-400" />;
+        return (
+          <Icon
+            name="shield"
+            size={14}
+            className={cb ? "text-blue-400" : "text-green-400"}
+          />
+        );
       default:
         return <Icon name="activity" size={14} className="text-slate-400" />;
     }
@@ -187,7 +196,13 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
 
         {/* Error State */}
         {error && (
-          <div className="p-3 rounded bg-red-900/30 border border-red-500/30 text-red-300 text-sm">
+          <div
+            className={`p-3 rounded ${
+              cb
+                ? "bg-rose-900/30 border-rose-500/30 text-rose-300"
+                : "bg-red-900/30 border-red-500/30 text-red-300"
+            } border text-sm`}
+          >
             <Icon name="alert-circle" size={14} className="inline mr-2" />
             {error}
           </div>
