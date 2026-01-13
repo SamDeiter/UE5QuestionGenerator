@@ -1,6 +1,7 @@
 import React from "react";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
+import { useThemeColors } from "../../hooks/useThemeColors";
 
 const ReviewerAnalytics = ({
   reviewerAnalytics,
@@ -11,6 +12,15 @@ const ReviewerAnalytics = ({
   isCollapsed,
   onToggle,
 }) => {
+  const { colorblindMode } = useThemeColors();
+
+  // Colorblind-safe color mappings
+  const acceptedColor = colorblindMode ? "text-blue-400" : "text-green-400";
+  const rejectedColor = colorblindMode ? "text-rose-400" : "text-red-400";
+  const warningColor = colorblindMode ? "text-amber-400" : "text-amber-400";
+  const activeGreen = colorblindMode ? "bg-blue-500" : "bg-green-500";
+  const activeAmber = colorblindMode ? "bg-purple-500" : "bg-amber-500";
+
   const renderContent = () => {
     if (!reviewerAnalytics && !analyticsLoading) {
       return (
@@ -159,7 +169,7 @@ const ReviewerAnalytics = ({
                             // Active today
                             return (
                               <span
-                                className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
+                                className={`w-2.5 h-2.5 rounded-full ${activeGreen} animate-pulse flex-shrink-0`}
                                 title="Active today"
                               />
                             );
@@ -167,7 +177,7 @@ const ReviewerAnalytics = ({
                             // Active this week
                             return (
                               <span
-                                className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0"
+                                className={`w-2.5 h-2.5 rounded-full ${activeAmber} flex-shrink-0`}
                                 title={`Active ${daysSinceActive} day${
                                   daysSinceActive !== 1 ? "s" : ""
                                 } ago`}
@@ -202,10 +212,10 @@ const ReviewerAnalytics = ({
                     <td className="p-2 text-center text-slate-300">
                       {reviewer.totalQuestionsReviewed}
                     </td>
-                    <td className="p-2 text-center text-green-400">
+                    <td className={`p-2 text-center ${acceptedColor}`}>
                       {reviewer.acceptedCount}
                     </td>
-                    <td className="p-2 text-center text-red-400">
+                    <td className={`p-2 text-center ${rejectedColor}`}>
                       {reviewer.rejectedCount}
                     </td>
                     {/* Acceptance Rate % */}
@@ -220,10 +230,10 @@ const ReviewerAnalytics = ({
                         );
                         const color =
                           rate >= 80
-                            ? "text-green-400"
+                            ? acceptedColor
                             : rate >= 60
-                            ? "text-amber-400"
-                            : "text-red-400";
+                            ? warningColor
+                            : rejectedColor;
                         return (
                           <span className={`font-bold ${color}`}>{rate}%</span>
                         );
