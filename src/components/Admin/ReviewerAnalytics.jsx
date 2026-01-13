@@ -68,6 +68,35 @@ const ReviewerAnalytics = ({
           </div>
         </div>
 
+        {/* Rejection Reasons Breakdown */}
+        {reviewerAnalytics.metadata.rejectionReasons &&
+          Object.keys(reviewerAnalytics.metadata.rejectionReasons).length >
+            0 && (
+            <div className="bg-slate-700/50 p-3 rounded border border-red-500/20 mb-4">
+              <div className="text-xs text-red-400 font-bold mb-2 flex items-center gap-2">
+                <span>📊</span> Rejection Reasons Breakdown
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(reviewerAnalytics.metadata.rejectionReasons)
+                  .sort(([, a], [, b]) => b - a) // Sort by count descending
+                  .map(([reason, count]) => {
+                    const label = reason
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase());
+                    return (
+                      <div
+                        key={reason}
+                        className="flex items-center gap-1.5 bg-red-950/50 px-2 py-1 rounded text-xs"
+                      >
+                        <span className="text-red-400 font-bold">{count}</span>
+                        <span className="text-slate-300">{label}</span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
         {/* Reviewer Stats Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

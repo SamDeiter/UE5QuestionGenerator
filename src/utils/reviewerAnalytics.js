@@ -108,6 +108,7 @@ export const aggregateReviewerStats = (questions) => {
         reviewDurations: [], // Track individual durations for avg calculation
         acceptedCount: 0,
         rejectedCount: 0,
+        rejectionReasons: {}, // Track rejection reasons
         firstReviewDate: null,
         lastReviewDate: null,
       });
@@ -123,6 +124,10 @@ export const aggregateReviewerStats = (questions) => {
       stats.acceptedCount += 1;
     } else if (q.status === "rejected") {
       stats.rejectedCount += 1;
+      // Track rejection reason
+      const reason = q.rejectionReason || "other";
+      stats.rejectionReasons[reason] =
+        (stats.rejectionReasons[reason] || 0) + 1;
     }
 
     // Add review duration if available
@@ -232,12 +237,24 @@ export const getReviewerAnalytics = async () => {
     const reviewedQuestions = await fetchReviewedQuestions();
     const reviewerStats = aggregateReviewerStats(reviewedQuestions);
 
+    // Aggregate overall rejection reasons
+    const overallRejectionReasons = {};
+    reviewerStats.forEach((stats) => {
+      Object.entries(stats.rejectionReasons || {}).forEach(
+        ([reason, count]) => {
+          overallRejectionReasons[reason] =
+            (overallRejectionReasons[reason] || 0) + count;
+        }
+      );
+    });
+
     return {
       reviewerStats,
       metadata: {
         totalQuestionsReviewed: reviewedQuestions.length,
         totalReviewers: reviewerStats.length,
         lastUpdated: new Date().toISOString(),
+        rejectionReasons: overallRejectionReasons,
       },
     };
   } catch (error) {
