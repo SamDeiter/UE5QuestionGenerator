@@ -1,0 +1,309 @@
+C:\Users\Sam Deiter\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\auth\_default.py:108: UserWarning: Your application has authenticated using end user credentials from Google Cloud SDK without a quota project. You might receive a "quota exceeded" or "API not enabled" error. See the following page for troubleshooting: https://cloud.google.com/docs/authentication/adc-troubleshooting/user-creds. 
+  warnings.warn(_CLOUD_SDK_CREDENTIALS_WARNING)
+C:\Users\Sam Deiter\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\cloud\firestore_v1\base_collection.py:304: UserWarning: Detected filter using positional arguments. Prefer using the 'filter' keyword argument instead.
+  return query.where(field_path, op_string, value)
+
+======================================================================
+SEARCHING REVIEWER ISSUE DIAGNOSTIC REPORT
+======================================================================
+Generated: 2026-01-13T10:46:07.965742
+
+ Firebase initialized with Application Default Credentials for project: ue5-questions-prod
+
+------------------------------------------------------------
+USER: Sean Spitzer (sean.spitzer@epicgames.com)
+------------------------------------------------------------
+
+ 1. REGISTERED USER STATUS:
+    Found! Document ID: DeK9qKRBZUV8EJFGFC5FaVyc1Xy2
+    Role: reviewer
+    UID: DeK9qKRBZUV8EJFGFC5FaVyc1Xy2
+    Registered: 1768318479.113
+    Invite Code: MANUAL_FIX
+
+ 2. AUDIT LOG ACTIVITY (Last 7 Days):
+   Found 300 events:
+
+    lock_acquired: 116x
+    lock_released: 170x
+    lock_stolen: 14x
+
+    PROBLEM DETECTED:
+    User acquired 300 locks but had 0 successful saves.
+    This indicates saves are FAILING silently!
+
+ 3. QUESTIONS ATTRIBUTED TO USER:
+   By reviewerName: 0 questions
+   By acceptedBy: 0 questions
+
+ 4. RECOVERABLE WORK (Pending questions touched but not saved):
+   ! RECOVERABLE: Question 1765914169928.0808 (614d4ea0-01a0-4cbe-9ee6-966cd631793f) is still PENDING.
+   ! RECOVERABLE: Question 1765913560637.8235 (653a5db5-50b7-4cc4-b90b-dff85885f8ce) is still PENDING.
+   ! RECOVERABLE: Question 1765914365948.9443 (54fad9dc-4d80-4755-a1ef-01a1c6a7c5c7) is still PENDING.
+   ! RECOVERABLE: Question 1765838430725.9475 (67629967-102d-4261-af70-4379d9ff65f9) is still PENDING.
+   ! RECOVERABLE: Question 1765838221736.1555 (54403cbd-32e8-4158-a19c-3104e4949ac6) is still PENDING.
+   ! RECOVERABLE: Question 1765838391006.3982 (fc51bb6c-4add-402b-a2b0-76e9b1ceba83) is still PENDING.
+   ! RECOVERABLE: Question 1765853735593.157 (71ba76d5-5567-45b0-be43-6a1826ec52f4) is still PENDING.
+   ! RECOVERABLE: Question 1765853828064.0842 (55629491-c30a-46f0-9b57-7cca01b90678) is still PENDING.
+   ! RECOVERABLE: Question 1765839861798.4714 (ec29a244-c1be-45ef-8958-dc7ec36a01f0) is still PENDING.
+   ! RECOVERABLE: Question 1765914234944.3105 (d63b009a-85aa-4b37-9731-e45e798d9ad0) is still PENDING.
+   ! RECOVERABLE: Question 1765852946719.7808 (7bc7a23b-ebda-450a-89f5-faa0fa687a62) is still PENDING.
+   ! RECOVERABLE: Question 1765834626583.213 (ca4e9c79-d45a-4bb6-8bc9-3f05e2ee4365) is still PENDING.
+   ! RECOVERABLE: Question 1765914404753.29 (3fde991a-7569-4e45-aa4a-781cfe25ef6c) is still PENDING.
+   ! RECOVERABLE: Question 1765853663771.8904 (5fd1f08a-4888-430c-b7c6-19ae371aba52) is still PENDING.
+   ! RECOVERABLE: Question 1765839825588.5037 (d1837678-26ea-4196-b228-f913185d6887) is still PENDING.
+   ! RECOVERABLE: Question 1765914350253.4468 (9b58ec73-0aa0-4a76-9604-8efd3df146e8) is still PENDING.
+   ! RECOVERABLE: Question 1765853043980.9897 (63754440-e6f0-4258-8f89-8ebc48b8a683) is still PENDING.
+   ! RECOVERABLE: Question 1765853074721.8794 (f08de773-cc89-4f9a-9558-13e33b2d98db) is still PENDING.
+   ! RECOVERABLE: Question 1765839825579.0288 (27099812-209e-40a7-8b4b-d942484639af) is still PENDING.
+   ! RECOVERABLE: Question 1765852677734.232 (36985434-b760-46fa-8205-2fd58a5fb06f) is still PENDING.
+   ! RECOVERABLE: Question 1765838391000.0798 (72098919-26a7-40f7-b84e-1d8e19456cc2) is still PENDING.
+   ! RECOVERABLE: Question 1765914125488.1775 (39d24bb9-1eb1-427e-ac43-732413b630d9) is still PENDING.
+   ! RECOVERABLE: Question 1765838199882.184 (3f629f89-2d87-4d21-b19c-9bf06f73c8f3) is still PENDING.
+   ! RECOVERABLE: Question 1765853828066.639 (8300fc8e-381b-4b0f-8211-adbb3d6b4cc6) is still PENDING.
+   ! RECOVERABLE: Question 1765852963634.9087 (8045aefa-0aea-4534-8108-17f1020980f1) is still PENDING.
+   ! RECOVERABLE: Question 1765838430734.9 (b931e1b8-cdc6-4f11-8ae1-2c1d11ade302) is still PENDING.
+   ! RECOVERABLE: Question 1765838252329.6323 (975d71fb-4645-45db-8165-13efd975c35d) is still PENDING.
+   ! RECOVERABLE: Question 1765852149813.0479 (5d84705a-c787-44bc-a615-725ec8d3fe92) is still PENDING.
+   ! RECOVERABLE: Question 1765853735589.2998 (b33abeee-ac8f-48a4-a371-fbe5776846d0) is still PENDING.
+   ! RECOVERABLE: Question 1765834594395.8247 (2ac71968-d160-40e0-8c75-80e3b4dfb0d6) is still PENDING.
+   ! RECOVERABLE: Question 1765852088161.315 (c30dce10-19ee-47e0-ae70-3baee41c1e1b) is still PENDING.
+   ! RECOVERABLE: Question 1765834569842.2517 (6fc390e0-21f5-4351-8ac3-959ae04452d7) is still PENDING.
+   ! RECOVERABLE: Question 1765839825573.0684 (0f4284c5-2ae8-4e7c-be32-a77ba6f6f3d6) is still PENDING.
+   ! RECOVERABLE: Question 1765914125487.6218 (f9a3c5eb-c7c6-4afe-b9a0-f91f99bba264) is still PENDING.
+   ! RECOVERABLE: Question 1765838221730.3157 (dba98cb0-3833-4b6c-b904-7b3e507e5801) is still PENDING.
+   ! RECOVERABLE: Question 1765853711006.5876 (1cc92896-9d8d-41be-8851-624da6651f17) is still PENDING.
+   ! RECOVERABLE: Question 1765838199880.4429 (53873f7e-b0dd-4407-9e57-4eecf39aaa4a) is still PENDING.
+   ! RECOVERABLE: Question 1765852088159.5369 (cb6c065c-f000-47d7-b338-6bbe5a5a9910) is still PENDING.
+   ! RECOVERABLE: Question 1765914350257.136 (58cbfb05-4091-46fa-b8d9-9221cb916e24) is still PENDING.
+   ! RECOVERABLE: Question 1765839825571.3938 (aa5d81d3-2ff6-468c-8589-6045ea90adaf) is still PENDING.
+   ! RECOVERABLE: Question 1765838390995.7217 (aecfbbff-dd98-489e-9d65-f5cb365191f4) is still PENDING.
+   ! RECOVERABLE: Question 1765838221729.0388 (b0b4365d-3eb4-411d-9267-e91ea3417523) is still PENDING.
+   ! RECOVERABLE: Question 1765852201948.2544 (d2610262-a030-4c85-a7a9-a952c96b3b70) is still PENDING.
+   ! RECOVERABLE: Question 1765838391005.4014 (ac7f249c-02aa-46bd-aca4-5ef4a24448aa) is still PENDING.
+   ! RECOVERABLE: Question 1765914125494.6833 (abdb4f08-e0db-41cd-9ebe-e8464ee56fad) is still PENDING.
+   ! RECOVERABLE: Question 1765914169925.8088 (a2c5a39e-9f0c-4741-aa73-84078498ac6f) is still PENDING.
+   ! RECOVERABLE: Question 1766163891255.4631 (bdfe90a2-4955-4958-bdc7-92ae6ce112e1) is still PENDING.
+   ! RECOVERABLE: Question 1765838252322.425 (643e31eb-e4cb-4bce-8b61-f3b95b6d18cd) is still PENDING.
+   ! RECOVERABLE: Question 1765838390991.5747 (417a37d8-3894-4925-9b69-b19851fdc0c2) is still PENDING.
+   ! RECOVERABLE: Question 1765834569844.631 (c783e7e5-64db-46d5-b9af-486f3fd34d4f) is still PENDING.
+   ! RECOVERABLE: Question 1765914476714.009 (5e62a61c-5c7c-41af-b25a-cf834ecdb951) is still PENDING.
+   ! RECOVERABLE: Question 1765838430722.613 (0fba9d22-a6cc-415d-929b-44ed30df0a07) is still PENDING.
+   ! RECOVERABLE: Question 1765914476718.7341 (117735c2-96c7-4eb7-a630-87d10649ada3) is still PENDING.
+   ! RECOVERABLE: Question 1765839861803.4668 (221db616-b480-48e1-9b25-0263f827559e) is still PENDING.
+   ! RECOVERABLE: Question 1765838199874.9204 (c835764d-c3c4-4d51-a4e3-6f9e9435840b) is still PENDING.
+   ! RECOVERABLE: Question 1765914141644.7097 (c65d41e1-075d-40a6-9c9d-897bad6301d8) is still PENDING.
+   ! RECOVERABLE: Question 1765838430735.677 (fc413d66-fc9d-4641-97be-c3e7167389f5) is still PENDING.
+   ! RECOVERABLE: Question 1765914096292.8687 (b4305f38-126a-462e-baa4-6d897fd5901b) is still PENDING.
+   ! RECOVERABLE: Question 1765838430721.0073 (f52815bc-0e00-4ee2-ad18-a890e96fe9a0) is still PENDING.
+   ! RECOVERABLE: Question 1765914125489.173 (e4c9711e-bc58-4552-8c04-c769d9a615fe) is still PENDING.
+   ! RECOVERABLE: Question 1765852201947.9727 (547b252b-b076-4bff-9bf1-4c68db3265f5) is still PENDING.
+   ! RECOVERABLE: Question 1765839861799.3186 (f4a4c6bd-629b-4541-8774-07fec2e731e5) is still PENDING.
+   ! RECOVERABLE: Question 1765839861804.6768 (e3c66294-64e1-4483-b7b2-e185bbd4287f) is still PENDING.
+   ! RECOVERABLE: Question 1765834626585.64 (9a7dbb8a-5e93-455f-99b9-a7790e627a7d) is still PENDING.
+   ! RECOVERABLE: Question 1765913560647.7327 (2dbdbb0a-e5cf-46fa-ba99-f5fa07a60288) is still PENDING.
+   ! RECOVERABLE: Question 1765838489624.4143 (9971b4a0-e51c-4bea-9b27-8cd31cf4f368) is still PENDING.
+   ! RECOVERABLE: Question 1765914234947.3289 (ea018ae3-5ec4-4793-8156-592164ba69d7) is still PENDING.
+   ! RECOVERABLE: Question 1765838390992.3298 (a3fb835c-cd94-43b2-8bc0-07d384f302f2) is still PENDING.
+   ! RECOVERABLE: Question 1765852149814.3845 (7efddd9a-c73b-4c8c-b31e-993e210d0a77) is still PENDING.
+   ! RECOVERABLE: Question 1765838489622.8315 (1713a815-8f54-45a6-83ee-fdd85eb72481) is still PENDING.
+   ! RECOVERABLE: Question 1765853735591.0398 (26f40a11-fd92-40b8-906e-59d83c02c64b) is still PENDING.
+   ! RECOVERABLE: Question 1765853721395.8923 (80bd8830-50a2-47c4-b72d-4c505f96f2dd) is still PENDING.
+   ! RECOVERABLE: Question 1765914234952.406 (107f6a6f-d9ce-469d-b20a-c89e3b7e1e79) is still PENDING.
+   ! RECOVERABLE: Question 1765914125495.061 (ca44016e-f595-4b8a-a9bb-0508019238aa) is still PENDING.
+   ! RECOVERABLE: Question 1765839861809.4968 (52b06bec-3f61-44f9-b396-619887935bf0) is still PENDING.
+   ! RECOVERABLE: Question 1765852088160.9946 (63341c14-89db-46a5-9508-b1de4860b180) is still PENDING.
+   ! RECOVERABLE: Question 1765913560645.2947 (b8be3df3-198d-4688-ba56-0259468e9161) is still PENDING.
+   ! RECOVERABLE: Question 1765852664022.7488 (8e38c1e1-0576-4206-9bf6-ce7bf2251230) is still PENDING.
+   ! RECOVERABLE: Question 1765914096293.8179 (ee1e9a89-eafa-4f72-b4be-586f693c38ed) is still PENDING.
+   ! RECOVERABLE: Question 1765838641656.9368 (2d193b5f-acbc-452b-9640-e37a6512606c) is still PENDING.
+   ! RECOVERABLE: Question 1765838199877.5752 (9a4fc389-c7c3-4514-a821-1bb6bcf8c4b2) is still PENDING.
+   ! RECOVERABLE: Question 1765838430733.8933 (560b5650-dbb0-4580-9b87-cb4ddb314a74) is still PENDING.
+   ! RECOVERABLE: Question 1765914476717.5083 (5fc50a0f-39b3-468e-a9ed-899862bdfac0) is still PENDING.
+   ! RECOVERABLE: Question 1765834569843.2173 (8835d508-08a5-4dd7-8351-a10cacbddc39) is still PENDING.
+   ! RECOVERABLE: Question 1765838221728.2397 (170b5cf3-885a-45c4-9198-37e649425049) is still PENDING.
+   ! RECOVERABLE: Question 1765914350254.6797 (ed9fe45e-a83b-4560-a7ea-c240c13a40a2) is still PENDING.
+   ! RECOVERABLE: Question 1765839861807.5923 (5bb53356-c636-47ce-ac56-a5ff03296d83) is still PENDING.
+   ! RECOVERABLE: Question 1765839861797.9463 (968e03c2-22d7-4392-abe6-2590aa4984d9) is still PENDING.
+   ! RECOVERABLE: Question 1766088551706.5823 (84f86be4-48f2-4798-a2c2-2d49d7e6dc0d) is still PENDING.
+   ! RECOVERABLE: Question 1765834626580.669 (5a3ecc4f-a516-46e7-b220-fa6ae17560e7) is still PENDING.
+   ! RECOVERABLE: Question 1765838221735.3933 (3eb9bc53-9b3d-4054-84c8-2346bb3e93c6) is still PENDING.
+   ! RECOVERABLE: Question 1765852149811.726 (13732243-46ca-41d5-b100-8aa4dd4ac9e6) is still PENDING.
+   ! RECOVERABLE: Question 1765914096294.6943 (53eae1c3-dc75-4502-a6bf-43745c662973) is still PENDING.
+   ! RECOVERABLE: Question 1765838430728.614 (34dde105-5ad3-4993-b517-ff8ac0b041f0) is still PENDING.
+   ! RECOVERABLE: Question 1765839861801.867 (cf5cc3e5-946d-486b-bc0d-9d225f6e2791) is still PENDING.
+   ! RECOVERABLE: Question 1765838282622.5735 (3aca880d-0c62-4dc6-bed2-05ce39705e47) is still PENDING.
+   ! RECOVERABLE: Question 1765853711005.358 (94f2521d-e03f-4517-8f70-3e36dc325d37) is still PENDING.
+   ! RECOVERABLE: Question 1765838391002.6174 (6e53c826-395d-4ef3-b620-dc0ad7309718) is still PENDING.
+   ! RECOVERABLE: Question 1765834626584.2366 (fda0d925-a245-4462-a38a-52f74ee50ffc) is still PENDING.
+   ! RECOVERABLE: Question 1765838641652.4983 (246bd774-d024-4717-a2d0-8a120eb6d2e1) is still PENDING.
+   ! RECOVERABLE: Question 1765852165175.8723 (67fc0be4-1dd4-4e20-a749-8bb508cd315f) is still PENDING.
+   ! RECOVERABLE: Question 1765914096297.2878 (780c8c25-f2bb-4dcd-98ae-58967e254ce4) is still PENDING.
+   ! RECOVERABLE: Question 1765914350256.9746 (e9bab094-0ea2-47f1-b448-7358c3ac3c6d) is still PENDING.
+   ! RECOVERABLE: Question 1765834569838.305 (3d09ae22-4818-42c4-a6b5-a71773d5e510) is still PENDING.
+   ! RECOVERABLE: Question 1765838430730.7178 (2164e565-97d6-48e5-b44b-5eac6db1f378) is still PENDING.
+   ! RECOVERABLE: Question 1765914096295.5515 (44f81aca-7a47-41ce-9e88-de03922793ae) is still PENDING.
+   ! RECOVERABLE: Question 1765914476711.6777 (66c4ce43-21f8-4761-827b-2368a7d6ce33) is still PENDING.
+   ! RECOVERABLE: Question 1765914096298.9966 (f0d4c8eb-2377-45d6-925b-52ea0f7b3a8d) is still PENDING.
+   ! RECOVERABLE: Question 1765838221734.8647 (4ef94e6f-5fa9-4a50-b479-6c497b3b3b26) is still PENDING.
+   ! RECOVERABLE: Question 1765914365952.2698 (526479d2-9fbe-4c4b-b594-cd4bd99ae81d) is still PENDING.
+   ! RECOVERABLE: Question 1765838430723.346 (25d9b07e-7797-4508-a6a9-c14555db11a8) is still PENDING.
+   ! RECOVERABLE: Question 1765839825577.5146 (17a54396-3303-4782-a5e2-331b66487f7a) is still PENDING.
+   ! RECOVERABLE: Question 1765853674296.4705 (2788c2d6-6e94-4461-a750-496f02c24081) is still PENDING.
+   ! RECOVERABLE: Question 1765852149812.738 (3df8d422-e7da-4ef1-90cf-82131c240754) is still PENDING.
+   ! RECOVERABLE: Question 1765839825582.2527 (5ff6ceeb-43c3-483b-b02b-227a26d36b5e) is still PENDING.
+   ! RECOVERABLE: Question 1765838390993.93 (535346b4-d592-4d7f-8b82-07c1669ca778) is still PENDING.
+   ! RECOVERABLE: Question 1765914350255.8623 (768d6d3e-1acf-4a31-bd32-403d47f68ec5) is still PENDING.
+   ! RECOVERABLE: Question 1765839825585.551 (15f30d38-1dc0-4a9e-a93a-b45c2b321287) is still PENDING.
+   ! RECOVERABLE: Question 1765852186812.313 (6175c0f5-4af4-4adb-bd84-dfb3e2d4141a) is still PENDING.
+   ! RECOVERABLE: Question 1765852165178.0176 (c371b36b-c36d-4ff3-890e-e09201a30553) is still PENDING.
+   ! RECOVERABLE: Question 1765838179292.2603 (2a92329a-544e-4c0b-981d-1b758c74ee2f) is still PENDING.
+   ! RECOVERABLE: Question 1765839861793.5886 (1a1a2693-eb87-4a95-83a1-ce8e6542e24f) is still PENDING.
+   ! RECOVERABLE: Question 1767976930814 (055d0c00-1c55-47a2-a6f7-65a302b0238b) is still PENDING.
+   ! RECOVERABLE: Question 1765838252323.8687 (17d3d65b-f184-4469-930f-195578465e2f) is still PENDING.
+   ! RECOVERABLE: Question 1765914548228.1877 (f9fa9af2-b8a0-43a2-bcc7-facc5f53bc94) is still PENDING.
+   ! RECOVERABLE: Question 1765852201946.2842 (8d2f64e1-9de7-4e26-860e-158e1510fb9e) is still PENDING.
+   ! RECOVERABLE: Question 1765852677732.997 (744b44df-468b-4bbf-956b-adfacb3ebd64) is still PENDING.
+   ! RECOVERABLE: Question 1765838489621.1191 (b5f812ae-3273-472a-9cbe-2733deb13f4c) is still PENDING.
+   ! RECOVERABLE: Question 1765834626576.1338 (2e8674f9-69f9-4305-b3ac-2532debc4606) is still PENDING.
+   ! RECOVERABLE: Question 1765838430724.834 (88d60f7e-f02a-4267-a0eb-11ddca20c6ea) is still PENDING.
+   ! RECOVERABLE: Question 1765914125492.589 (eaef4a57-ff92-4391-b010-a4d36c9fd3d3) is still PENDING.
+   ! RECOVERABLE: Question 1765838282626.0586 (212a234c-aba8-4a6c-9a13-8fbfae638322) is still PENDING.
+   ! RECOVERABLE: Question 1765853622631.5461 (6c68974e-614e-4ae2-bfa9-4000a399f4ef) is still PENDING.
+   ! RECOVERABLE: Question 1765834626581.5151 (2471e985-64cf-4348-8018-6d7130a5021a) is still PENDING.
+   ! RECOVERABLE: Question 1765838282624.8867 (1ddf9110-e5dd-4351-96f9-43c7d55e0b3e) is still PENDING.
+   ! RECOVERABLE: Question 1765852946720.4795 (a66c51d3-b801-4e03-8467-e4711589a941) is still PENDING.
+   ! RECOVERABLE: Question 1765852939254.6072 (b04ce289-2df1-48e1-80db-074d4dc1e054) is still PENDING.
+   ! RECOVERABLE: Question 1765839825578.5554 (35731f22-efbc-4f5f-b674-a3544e23c049) is still PENDING.
+   ! RECOVERABLE: Question 1765914169923.9146 (7f7ca5b5-8dc5-461f-b536-47ab38cdce6f) is still PENDING.
+   ! RECOVERABLE: Question 1765914350258.975 (343495ec-afcf-4e1f-9578-883f9f4008be) is still PENDING.
+   ! RECOVERABLE: Question 1765834626579.6577 (dfedcf76-166f-4e48-8efb-4c79b658771d) is still PENDING.
+   ! RECOVERABLE: Question 1765853631419.4402 (5462e9c6-7fa0-4a58-ab59-2569abf2d45c) is still PENDING.
+   ! RECOVERABLE: Question 1765838430720.4143 (0f925e2b-a9c4-492c-ac95-a4a8b40f5373) is still PENDING.
+   ! RECOVERABLE: Question 1765838390997.5366 (21e4de6e-58ed-42bc-b57d-1fa5d6d511c3) is still PENDING.
+   ! RECOVERABLE: Question 1765839825583.1875 (4c6933c6-bce5-4622-84ec-8bdcd58de94d) is still PENDING.
+   ! RECOVERABLE: Question 1765852165180.3545 (1bdbbe5a-9474-4ab1-8727-3e838d710dcf) is still PENDING.
+   ! RECOVERABLE: Question 1765853043981.645 (5fa808d3-0646-4744-91bb-e41f45bf3739) is still PENDING.
+   ! RECOVERABLE: Question 1765838489618.5583 (1ff2b718-6656-4397-b97e-027e9c65d2ae) is still PENDING.
+   ! RECOVERABLE: Question 1765838430719.105 (b58867ad-2039-4aae-977f-226871c26116) is still PENDING.
+   ! RECOVERABLE: Question 1765852664019.1714 (a18f89c0-b18d-409e-8929-7b73168e1dd3) is still PENDING.
+   ! RECOVERABLE: Question 1765839861794.9038 (fbb634d8-c505-4d04-80c8-489bee02fedf) is still PENDING.
+   ! RECOVERABLE: Question 1765838489623.612 (64e90dea-1086-4645-8f54-beac5ff71a5b) is still PENDING.
+   ! RECOVERABLE: Question 1765914365949.153 (a42f8be8-2178-4b02-844b-3d7f0b9a05a0) is still PENDING.
+   ! RECOVERABLE: Question 1765839861796.4963 (0ea99119-2484-4f3b-8bea-79d8b80ed7fa) is still PENDING.
+   ! RECOVERABLE: Question 1765839861791.098 (e21c3d67-dd43-4b69-8685-11510dcc278c) is still PENDING.
+   ! RECOVERABLE: Question 1765838430731.0527 (183e6b78-3a0c-4364-a8f1-060b47206065) is still PENDING.
+   ! RECOVERABLE: Question 1765838179299.388 (970a978d-d746-4874-9523-bb5b2a5500b6) is still PENDING.
+   ! RECOVERABLE: Question 1765852165179.2725 (a52e3e12-3445-400f-ae81-5f368031ec67) is still PENDING.
+   ! RECOVERABLE: Question 1765838282620.1492 (338e39dd-3d64-430d-b316-54c2a5466447) is still PENDING.
+   ! RECOVERABLE: Question 1765852677735.3096 (ab221ae6-ad9e-4349-8acc-4bec4dca84ef) is still PENDING.
+   ! RECOVERABLE: Question 1765839825570.9238 (441ea79b-4c81-4e26-8854-16b2be34b93d) is still PENDING.
+   ! RECOVERABLE: Question 1765838430732.16 (f984aab7-846e-4cc4-8052-7c42e08d0ad6) is still PENDING.
+   ! RECOVERABLE: Question 1765838199881.6343 (cc5987ed-d9c8-4224-b857-36ba39747217) is still PENDING.
+   ! RECOVERABLE: Question 1765852186816.7976 (40627f14-aff7-4ce1-a8d4-d9bf21da38af) is still PENDING.
+   ! RECOVERABLE: Question 1765839861800.695 (a7cb7877-4044-4a0e-8221-6a5e8e2d6a67) is still PENDING.
+   ! RECOVERABLE: Question 1765838390996.7437 (984565c1-a1a5-426f-95ad-c9b04ccec37c) is still PENDING.
+   ! RECOVERABLE: Question 1765914125491.6729 (a414f399-24d3-424d-8fd3-ab644677aaa1) is still PENDING.
+   ! RECOVERABLE: Question 1765838282629.2908 (3b8564c5-dc46-43a3-b2f2-ec404d1ea335) is still PENDING.
+   ! RECOVERABLE: Question 1765838430736.7236 (d6a993b0-7472-486b-ae42-eb4da88934c8) is still PENDING.
+   ! RECOVERABLE: Question 1765839825576.1296 (24d8ddd9-1811-47dc-a0e8-f6b2917093a1) is still PENDING.
+   ! RECOVERABLE: Question 1765852149815.5059 (ac1e9d41-d111-4259-b721-f6b7dfc9230c) is still PENDING.
+   ! RECOVERABLE: Question 1765853669412.6013 (c52486bc-de00-4cac-90f3-728b2bfa1111) is still PENDING.
+   ! RECOVERABLE: Question 1765838179296.1343 (9882cdb9-759b-4aee-9a6b-4b94878b66bf) is still PENDING.
+   ! RECOVERABLE: Question 1765838252321.778 (f72ed103-f84b-494c-b737-f5e35f9b9f08) is still PENDING.
+   ! RECOVERABLE: Question 1765853721396.3 (19c2f208-42ac-4b57-846e-2163d1b8dc4e) is still PENDING.
+   ! RECOVERABLE: Question 1765838430729.6165 (59c736ce-b35b-47b7-a4f7-e466bf68f951) is still PENDING.
+   ! RECOVERABLE: Question 1765853017533.3916 (3299ed44-5ef6-4058-b47a-aa45960f070c) is still PENDING.
+   ! RECOVERABLE: Question 1765914365950.0095 (1348a00c-0e38-4b68-ac66-4c717010b540) is still PENDING.
+   ! RECOVERABLE: Question 1765914476721.2783 (2e7cb2e3-a8c4-4127-9bcb-3658d5da780d) is still PENDING.
+   ! RECOVERABLE: Question 1765839825580.0706 (2b4747d3-a392-470f-857f-349e62f330e4) is still PENDING.
+   ! RECOVERABLE: Question 1765838252326.9448 (2be67ddc-adcb-4a60-a74c-7302f8a7f262) is still PENDING.
+   ! RECOVERABLE: Question 1765914169924.9858 (f0cf520d-278d-46c0-858d-4f226216fe8e) is still PENDING.
+   ! RECOVERABLE: Question 1765914125493.0452 (c05d9301-d689-4280-b9d6-3fbf246310bf) is still PENDING.
+   ! RECOVERABLE: Question 1765838199875.8237 (47d280eb-1135-4270-abf2-8304ff865004) is still PENDING.
+   ! RECOVERABLE: Question 1765914141646.1814 (51dd8b17-af31-4eb7-9ec9-fc1418f8243f) is still PENDING.
+   ! RECOVERABLE: Question 1765913560640.6128 (81a4aa4f-ee72-47d1-8736-da6c31d59168) is still PENDING.
+   ! RECOVERABLE: Question 1765853828067.1384 (d835a93d-f5b6-4d82-8ecb-11adcad2b1e0) is still PENDING.
+   ! RECOVERABLE: Question 1765838221731.3828 (382e5150-745a-4899-9261-6b651d37f1b6) is still PENDING.
+   ! RECOVERABLE: Question 1765852165177.9944 (0eb5bfb0-81e6-47b8-be87-f2421fd38c2b) is still PENDING.
+   ! RECOVERABLE: Question 1765838430726.9307 (a3bce7c8-6146-493d-bac5-765e1be5f052) is still PENDING.
+   ! RECOVERABLE: Question 1765838390999.2227 (2eff84a6-ef61-4abd-83e3-92cffa090434) is still PENDING.
+   ! RECOVERABLE: Question 1765838390988.979 (1259a070-2d85-4d66-b084-0803e0dce265) is still PENDING.
+   ! RECOVERABLE: Question 1765839861810.0608 (7816ce3e-21ae-42ec-8ea7-7da6f4cad8b6) is still PENDING.
+
+------------------------------------------------------------
+USER: Stephane Biava (biavastephane@gmail.com)
+------------------------------------------------------------
+
+ 1. REGISTERED USER STATUS:
+    Found! Document ID: ddPwyduCeFOHxHvdD57JNsfsTCL2
+    Role: reviewer
+    UID: ddPwyduCeFOHxHvdD57JNsfsTCL2
+    Registered: 1766164583.054
+    Invite Code: FNSKUDTLRUXQ
+
+ 2. AUDIT LOG ACTIVITY (Last 7 Days):
+   Found 109 events:
+
+    lock_acquired: 33x
+    lock_released: 70x
+    lock_stolen: 6x
+
+    PROBLEM DETECTED:
+    User acquired 109 locks but had 0 successful saves.
+    This indicates saves are FAILING silently!
+
+ 3. QUESTIONS ATTRIBUTED TO USER:
+   By reviewerName: 0 questions
+   By acceptedBy: 0 questions
+
+ 4. RECOVERABLE WORK (Pending questions touched but not saved):
+   ! RECOVERABLE: Question 1765814610718.479 (03cd528e-a914-481c-a4c8-29f91181a464) is still PENDING.
+   ! RECOVERABLE: Question 1765817884357.745 (001b3bd0-a0f8-4163-814f-0ea3c38f66fa) is still PENDING.
+   ! RECOVERABLE: Question 1765815260486.2913 (0c3cb35b-b771-4f0b-a414-dc975ad69c27) is still PENDING.
+   ! RECOVERABLE: Question 1765814352509.841 (01e94eb4-969c-4462-8b49-c63470141698) is still PENDING.
+   ! RECOVERABLE: Question 1765817775808.5806 (04d5569e-b5c3-4d16-9303-dcc0d0a54116) is still PENDING.
+   ! RECOVERABLE: Question 1765817180412.3926 (0d8a6426-fd1d-4306-b6b7-d2f870953287) is still PENDING.
+   ! RECOVERABLE: Question 1765816175672.2664 (05eca083-e55d-41c0-9425-c7d76a6ccef8) is still PENDING.
+   ! RECOVERABLE: Question 1765816157273.696 (09c5da0e-a8cd-4a9a-a44e-ab06f085d48a) is still PENDING.
+   ! RECOVERABLE: Question 1765817350893.575 (0e40c2fb-9db5-4d0a-9956-025d9c911896) is still PENDING.
+   ! RECOVERABLE: Question 1765817180407.9004 (05d5e581-7bf7-4d74-afc5-9f3486753ab7) is still PENDING.
+   ! RECOVERABLE: Question 1765817002890.6343 (03e32e8b-6d62-4cf0-a7c2-cc5a01147fb4) is still PENDING.
+   ! RECOVERABLE: Question 1765815260491.497 (019ce94a-4255-46e7-96a5-3c5ba3a1b402) is still PENDING.
+   ! RECOVERABLE: Question 1765814610713.1606 (0d0760f7-63d3-4457-81e0-7e14c794f75e) is still PENDING.
+
+======================================================================
+ DIAGNOSTIC SUMMARY
+======================================================================
+
+POTENTIAL ROOT CAUSES:
+
+1.  Role Not Set Properly
+   - If role field is missing or not 'reviewer'/'admin', Firestore rules reject saves.
+   - Fix: Update registeredUsers document to add role: 'reviewer'
+
+2.  Firestore Rules Caching
+   - Firestore rules cache registeredUsers lookups.
+   - If user registered AFTER cache was populated, saves fail.
+   - Fix: User signs out and back in, or wait ~5 minutes.
+
+3.  Document ID Mismatch
+   - consumeInvite uses auth.uid as document ID.
+   - If UID changed or there's a document mismatch, role lookup fails.
+   - Fix: Ensure document ID matches user's current UID.
+
+4.  Silent Permission Errors
+   - Client-side code may be swallowing Firestore permission errors.
+   - User sees success but save was actually rejected.
+   - Fix: Add better error logging in firestoreSave.js
+
+RECOMMENDED ACTIONS:
+1. Verify each user's role in Firebase Console > Firestore > registeredUsers
+2. If role is missing, add: role: "reviewer"
+3. Ask user to sign out and back in
+4. Check browser console for any permission errors
+
+ Diagnostic complete.
+
+To attempt automatic fixes, run: python diagnose_reviewer_issues.py --fix
+

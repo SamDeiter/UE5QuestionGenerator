@@ -1,6 +1,8 @@
 import Icon from "../Icon";
+import FlagIcon from "../FlagIcon";
 import ScoreBadge from "../ScoreBadge";
 import { useThemeColors } from "../../hooks/useThemeColors";
+import { LANGUAGE_CODES } from "../../utils/constants";
 
 /**
  * Normalize difficulty value - handles legacy "BALANCED ALL" and other invalid values
@@ -40,6 +42,23 @@ const QuestionHeader = ({
   const displayDifficulty = normalizeDifficulty(q.difficulty);
   const lang = q.language || "English";
 
+  // Language to flag emoji mapping
+  const getLanguageFlag = (language) => {
+    const flags = {
+      English: "🇺🇸",
+      Spanish: "🇪🇸",
+      French: "🇫🇷",
+      German: "🇩🇪",
+      Japanese: "🇯🇵",
+      Korean: "🇰🇷",
+      Chinese: "🇨🇳",
+      Portuguese: "🇧🇷",
+      Italian: "🇮🇹",
+      Russian: "🇷🇺",
+    };
+    return flags[language] || "🌐";
+  };
+
   // Colorblind-safe AI Improvement button classes from centralized theme
   const aiImprovementClasses = actionColor("success");
 
@@ -55,7 +74,7 @@ const QuestionHeader = ({
                 : "bg-indigo-950 text-indigo-300 border-indigo-800 shadow-[0_0_10px_-2px_rgba(99,102,241,0.5)]"
             }`}
           >
-            <Icon name="globe" size={12} />
+            <FlagIcon code={LANGUAGE_CODES[lang] || "US"} size={14} />
             {lang}
           </span>
 
@@ -125,25 +144,25 @@ const QuestionHeader = ({
                 {q.creatorName || "N/A"}
               </span>
             </div>
-            {q.reviewerName && q.reviewerName !== q.creatorName && (
-              <div
-                className="flex items-center gap-1 text-xs text-slate-500"
-                title="Reviewer"
-              >
-                <Icon name="check" size={12} />
-                <span className="font-bold text-indigo-400">
-                  {q.reviewerName}
-                </span>
-              </div>
-            )}
+            {/* Show reviewer - use reviewerName OR humanVerifiedBy */}
+            {(() => {
+              const reviewer = q.reviewerName || q.humanVerifiedBy;
+              if (reviewer && reviewer !== q.creatorName) {
+                return (
+                  <div
+                    className="flex items-center gap-1 text-xs text-slate-500"
+                    title="Reviewer"
+                  >
+                    <Icon name="check" size={12} />
+                    <span className="font-bold text-indigo-400">
+                      {reviewer}
+                    </span>
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
-          {/* AI Score as a Tag (as user requested) */}
-          {q.critiqueScore !== undefined && q.critiqueScore !== null && (
-            <span className="px-1.5 py-0.5 rounded bg-indigo-950/40 text-indigo-300 border border-indigo-700/50 font-bold">
-              AI Score: {q.critiqueScore}
-            </span>
-          )}
-        </div>
       </div>
 
       <div className="flex items-center gap-2">

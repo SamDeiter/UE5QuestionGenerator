@@ -2,6 +2,10 @@ import { useState, useCallback } from "react";
 import { filterDuplicateQuestions } from "../../utils/questionHelpers";
 import { QUESTION_SOURCES } from "../../utils/constants";
 import { saveQuestionToFirestore } from "../../services/firebase";
+import {
+  refreshAuthToken,
+  isAuthPotentiallyStale,
+} from "../../services/firebaseAuth";
 import { getAgents } from "../../agents";
 import { logger } from "../../utils/logger";
 import { useStatusActions } from "./useStatusActions";
@@ -105,6 +109,12 @@ export const useQuestionActions = (
       const updatedQ = { ...currentQ, ...updates };
       const agents = getAgents();
 
+      // HARDENING: Refresh auth token if potentially stale to prevent save failures
+      if (isAuthPotentiallyStale()) {
+        logger.log("[Auth] Token may be stale, refreshing before save...");
+        await refreshAuthToken();
+      }
+
       try {
         if (agents?.saveGuardAgent) {
           const baseVersion = getVersion(id, currentQ.version || 1);
@@ -184,6 +194,12 @@ export const useQuestionActions = (
         _source: targetSource,
         modifiedAt: new Date().toISOString(),
       };
+
+      // HARDENING: Refresh auth token if potentially stale
+      if (isAuthPotentiallyStale()) {
+        logger.log("[Auth] Token may be stale, refreshing before move...");
+        await refreshAuthToken();
+      }
 
       try {
         await saveQuestionToFirestore(updatedQ);

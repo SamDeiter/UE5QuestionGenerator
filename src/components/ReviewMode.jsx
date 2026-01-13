@@ -124,7 +124,8 @@ const ReviewMode = ({
           appMode="review"
           showMessage={showMessage}
           onKickBack={onKickBack}
-          userRole={userRole} // NEW
+          userRole={userRole}
+          isAdmin={userRole === "admin"}
         />
       </div>
     </div>

@@ -46,7 +46,8 @@ const QuestionList = ({
             isProcessing={isProcessing}
             appMode={appMode}
             showMessage={showMessage}
-            userRole={userRole} // NEW
+            userRole={userRole}
+            isAdmin={userRole === "admin"}
           />
         </div>
       )}

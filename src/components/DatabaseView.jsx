@@ -366,7 +366,8 @@ const DatabaseView = ({
                   isProcessing={false}
                   appMode="database"
                   showMessage={showMessage}
-                  userRole={userRole} // NEW
+                  userRole={userRole}
+                  isAdmin={isAdmin}
                 />
               </div>
             ))}

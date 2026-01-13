@@ -21,6 +21,7 @@ import SourceContextCard from "./QuestionItem/SourceContextCard";
 import ImprovementModal from "./ImprovementModal";
 
 import QuestionNotesField from "./QuestionItem/QuestionNotesField";
+import QuestionHeader from "./QuestionItem/QuestionHeader";
 
 import { useEditLock } from "../hooks/useEditLock";
 import { useAuth } from "../hooks/useAuth";
@@ -222,9 +223,37 @@ const QuestionItem = ({
       )}
 
       <div className="flex flex-col gap-2 mb-3 pl-6">
-        <div className="flex justify-between items-start">
-          {/* ... content ... */}
-        </div>
+        <QuestionHeader
+          q={displayQuestion}
+          originalQ={q}
+          getDiffBadgeColor={(d) => {
+            const diff = d?.toLowerCase();
+            if (diff === "beginner" || diff === "easy")
+              return "bg-green-950 text-green-400 border-green-800";
+            if (diff === "intermediate" || diff === "medium")
+              return "bg-yellow-950 text-yellow-400 border-yellow-800";
+            if (diff === "expert" || diff === "hard")
+              return "bg-red-950 text-red-400 border-red-800";
+            return "bg-slate-800 text-slate-400 border-slate-700";
+          }}
+          appMode={appMode}
+          onOpenCritiqueModal={() => setShowImprovementModal(true)}
+        />
+
+        {/* Language Flags - Admin only */}
+        {isAdmin && (
+          <LanguageControls
+            q={displayQuestion}
+            availableVariants={availableVariants || []}
+            onSwitchLanguage={handleLocalLanguageSwitch}
+            onTranslateSingle={onTranslateSingle}
+            isProcessing={isProcessing}
+            userRole={userRole}
+            isLocked={isLocked}
+            lockedBy={lockedBy}
+            appMode={appMode}
+          />
+        )}
 
         {/* Review Progress Bar */}
         {appMode === APP_MODES.REVIEW && (
@@ -267,22 +296,6 @@ const QuestionItem = ({
               showMessage={showMessage}
             />
           </div>
-        )}
-
-        {isAdmin && (
-          <Card className="mt-4 bg-slate-900/50 border-slate-800/50">
-            <LanguageControls
-              q={displayQuestion}
-              availableVariants={availableVariants}
-              isLocked={isLocked}
-              lockedBy={lockedBy}
-              onSwitchLanguage={handleLocalLanguageSwitch}
-              onTranslateSingle={onTranslateSingle}
-              isProcessing={isProcessing}
-              userRole={userRole}
-              appMode={appMode}
-            />
-          </Card>
         )}
       </div>
 

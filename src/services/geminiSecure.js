@@ -85,9 +85,7 @@ export const generateCritiqueSecure = async (
   // Try Cloud Functions first (most secure)
   if (isUserAuthenticated()) {
     try {
-      logger.log(
-        "🔒 [CritiqueSecure DEBUG] Using Cloud Function for critique"
-      );
+      logger.log("🔒 [CritiqueSecure DEBUG] Using Cloud Function for critique");
       const result = await generateCritiqueViaCloudFunction(question, model);
       logger.log(
         "🔒 [CritiqueSecure DEBUG] Cloud Function returned score:",
@@ -141,9 +139,22 @@ export const generateTagsSecure = async (apiKey, questionText) => {
       "gemini-2.0-flash-exp" // Model
     );
 
-    // Parse result
-    const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
-    return JSON.parse(cleanText);
+    // Parse result - try multiple extraction methods
+    let cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
+
+    // Try direct parse first
+    try {
+      return JSON.parse(cleanText);
+    } catch {
+      // Try to find JSON array within the text
+      const arrayMatch = cleanText.match(/\[[\s\S]*?\]/);
+      if (arrayMatch) {
+        return JSON.parse(arrayMatch[0]);
+      }
+      // If LLM returned conversational text, return empty array
+      logger.warn("Tagging: Could not extract JSON array, returning empty");
+      return [];
+    }
   } catch (error) {
     logger.warn("Secure Tagging failed:", error);
     return [];
