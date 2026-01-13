@@ -1,4 +1,5 @@
 import Icon from "./Icon";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 /**
  * Get color scheme based on warning state
@@ -59,6 +60,15 @@ const LowScoreWarningModal = ({
   onDismiss,
   isProcessing = false,
 }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe colors
+  const successColor = cb ? "text-blue-400" : "text-green-400";
+  const successBtnClasses = cb
+    ? "bg-blue-600 text-white hover:bg-blue-500 shadow-blue-900/50"
+    : "bg-green-600 text-white hover:bg-green-500 shadow-green-900/50";
+
   const isLastChance = attemptsLeft === 1;
   const isFinalRejection = attemptsLeft <= 0;
   const colors = getColorScheme(isFinalRejection, isLastChance);
@@ -113,7 +123,7 @@ const LowScoreWarningModal = ({
             </div>
             <div className="text-slate-600 text-2xl">→</div>
             <div className="text-center">
-              <div className="text-5xl font-black text-green-400">
+              <div className={`text-5xl font-black ${successColor}`}>
                 {passingScore}+
               </div>
               <div className="text-xs text-slate-500 uppercase tracking-wider mt-1">
@@ -177,7 +187,7 @@ const LowScoreWarningModal = ({
               <ul className="list-disc list-inside space-y-1 text-slate-400">
                 <li>
                   Click{" "}
-                  <strong className="text-green-400">
+                  <strong className={successColor}>
                     &quot;Apply Improvements&quot;
                   </strong>{" "}
                   to use the AI-suggested fixes
@@ -216,7 +226,7 @@ const LowScoreWarningModal = ({
             <button
               onClick={onApplyImprovements}
               disabled={isProcessing}
-              className="px-4 py-2 rounded-lg font-bold text-sm bg-green-600 text-white hover:bg-green-500 shadow-lg shadow-green-900/50 transition-all disabled:opacity-50 flex items-center gap-2"
+              className={`px-4 py-2 rounded-lg font-bold text-sm ${successBtnClasses} shadow-lg transition-all disabled:opacity-50 flex items-center gap-2`}
             >
               <Icon name="zap" size={16} />
               {isProcessing ? "Applying..." : "Apply Improvements"}

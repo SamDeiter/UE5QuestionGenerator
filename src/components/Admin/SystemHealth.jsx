@@ -13,8 +13,12 @@ import CollapsibleSection from "../CollapsibleSection";
 import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { getDb, auth } from "../../services/firebase";
 import { checkUserRegistration } from "../../services/inviteService";
+import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 const SystemHealth = ({ isCollapsed, onToggle }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
   const [testResults, setTestResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -117,13 +121,14 @@ const SystemHealth = ({ isCollapsed, onToggle }) => {
   };
 
   const getStatusIcon = (status) => {
+    const passColor = cb ? "text-blue-400" : "text-green-400";
+    const failColor = cb ? "text-rose-400" : "text-red-400";
+
     switch (status) {
       case "pass":
-        return (
-          <Icon name="check-circle" size={16} className="text-green-400" />
-        );
+        return <Icon name="check-circle" size={16} className={passColor} />;
       case "fail":
-        return <Icon name="x-circle" size={16} className="text-red-400" />;
+        return <Icon name="x-circle" size={16} className={failColor} />;
       case "warn":
         return (
           <Icon name="alert-circle" size={16} className="text-yellow-400" />
@@ -142,9 +147,13 @@ const SystemHealth = ({ isCollapsed, onToggle }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case "pass":
-        return "bg-green-900/30 border-green-500/30";
+        return cb
+          ? "bg-blue-900/30 border-blue-500/30"
+          : "bg-green-900/30 border-green-500/30";
       case "fail":
-        return "bg-red-900/30 border-red-500/30";
+        return cb
+          ? "bg-rose-900/30 border-rose-500/30"
+          : "bg-red-900/30 border-red-500/30";
       case "warn":
         return "bg-yellow-900/30 border-yellow-500/30";
       default:

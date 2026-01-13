@@ -2,12 +2,24 @@ import { useState } from "react";
 import Icon from "./Icon";
 import CollapsibleSection from "./CollapsibleSection";
 import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 /**
  * TagManager Component
  * Allows users to create, edit, and delete custom tags for each discipline
  */
 const TagManager = ({ discipline, customTags, onSaveCustomTags }) => {
+  const { colorblindMode } = useAccessibility();
+  const cb = colorblindMode;
+
+  // Colorblind-safe colors
+  const saveColor = cb
+    ? "text-blue-400 hover:text-blue-300"
+    : "text-green-400 hover:text-green-300";
+  const cancelColor = cb
+    ? "text-rose-400 hover:text-rose-300"
+    : "text-red-400 hover:text-red-300";
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [editingTag, setEditingTag] = useState(null);
@@ -156,14 +168,14 @@ const TagManager = ({ discipline, customTags, onSaveCustomTags }) => {
                       />
                       <button
                         onClick={handleSaveEdit}
-                        className="p-1 text-green-400 hover:text-green-300"
+                        className={`p-1 ${saveColor}`}
                         title="Save"
                       >
                         <Icon name="check" size={14} />
                       </button>
                       <button
                         onClick={handleCancelEdit}
-                        className="p-1 text-red-400 hover:text-red-300"
+                        className={`p-1 ${cancelColor}`}
                         title="Cancel"
                       >
                         <Icon name="x" size={14} />
