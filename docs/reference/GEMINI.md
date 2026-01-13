@@ -29,17 +29,19 @@ When delegating a task, provide a focused, goal-oriented prompt.
 ### 🎯 Feature Implementation Prompt
 
 > "As the lead architect, I need you to implement the **Database View** feature.
-> 1.  Create a new React component at `src/views/DatabaseView.jsx`.
-> 2.  Fetch all question documents from the Firestore collection `/questions`.
-> 3.  Display the data in a table using a maximum of 5 columns (Question Text, Type, Difficulty, Language, Last Modified Date).
-> 4.  The entire view must use **Tailwind CSS** for styling and be fully accessible (ARIA labels). **Use Planning Mode.**"
+>
+> 1. Create a new React component at `src/views/DatabaseView.jsx`.
+> 2. Fetch all question documents from the Firestore collection `/questions`.
+> 3. Display the data in a table using a maximum of 5 columns (Question Text, Type, Difficulty, Language, Last Modified Date).
+> 4. The entire view must use **Tailwind CSS** for styling and be fully accessible (ARIA labels). **Use Planning Mode.**"
 
 ### 🛡️ Security / Refactoring Prompt
 
 > "The current API key management in `App.jsx` is insecure.
-> 1.  Refactor all direct Gemini API calls to use a new Firebase Function endpoint: `/api/generate_question`.
-> 2.  Ensure the client-side code passes the necessary Firebase Authentication token with the request.
-> 3.  **Do not** expose the raw `VITE_GEMINI_API_KEY` in any client-side code."
+>
+> 1. Refactor all direct Gemini API calls to use a new Firebase Function endpoint: `/api/generate_question`.
+> 2. Ensure the client-side code passes the necessary Firebase Authentication token with the request.
+> 3. **Do not** expose the raw `VITE_GEMINI_API_KEY` in any client-side code."
 
 ### 📝 Documentation Prompt
 
@@ -52,15 +54,28 @@ One of the core strengths of Antigravity is the use of **Artifacts**.
 * **Review Policy**: The recommended default is **"Agent Decides"** for simple tasks, but set to **"Always Proceed"** only for routine, low-risk changes like dependency updates.
 * **Providing Feedback**: If an **Implementation Plan** or a **Code Diff** looks incorrect, leave a Google-Doc-style comment directly on the Artifact. The agent will read this feedback and adjust its execution **without needing to be stopped and restarted.**
 * **Verification**: Always review the **Screenshots** and **Browser Recordings** (if enabled) in the Manager View to ensure the functional requirement was met before merging the branch.
+
 ## 5. Coding Standards & Tools
 
-*   **Python for File Edits**: When making changes to files (especially complex refactors or multi-line edits), **always prioritize using Python scripts** over direct text replacement tools. This ensures robustness against encoding issues and complex pattern matching.
-
+* **Python for File Edits**: When making changes to files (especially complex refactors or multi-line edits), **always prioritize using Python scripts** over direct text replacement tools. This ensures robustness against encoding issues and complex pattern matching.
 
 ## 6. Critical Project Documentation
 
 To ensure you have full context before starting any task, **ALWAYS** check these reference files if they are available:
 
-*   **`AGENTS.md`**: Contains specific instructions, persona definitions, and strict rules for each Agent role. You must follow the directives in this file.
-*   **`ANCHOR_MANIFEST.md`**: Serves as the "map" of the project. It lists key files, their purposes, and known issues. Consult this to understand where to find code and where to place new files.
-*   **`docs/CODE_QUALITY.md`**: DEFINES THE CODE SANITATION PLAN. Consult this for linting rules and sanitation workflows.
+* **`AGENTS.md`**: Contains specific instructions, persona definitions, and strict rules for each Agent role. You must follow the directives in this file.
+* **`ANCHOR_MANIFEST.md`**: Serves as the "map" of the project. It lists key files, their purposes, and known issues. Consult this to understand where to find code and where to place new files.
+* **`docs/CODE_QUALITY.md`**: DEFINES THE CODE SANITATION PLAN. Consult this for linting rules and sanitation workflows.
+
+## 7. Deployment Rules
+
+> [!IMPORTANT]
+> **ALWAYS bump the version number in `package.json` before every deploy to production.**
+> GitHub Pages CDN aggressively caches old bundles. Without a version bump, users may see stale code even after deployment.
+
+**Pre-deploy checklist:**
+
+1. Bump version in `package.json` (e.g., `2.2.10` → `2.2.11`)
+2. Commit the change
+3. Run `npm run deploy`
+4. Push to main: `git push origin main`
