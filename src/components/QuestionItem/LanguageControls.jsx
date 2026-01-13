@@ -49,7 +49,11 @@ const LanguageControls = ({
   const allLanguages = Object.keys(LANGUAGE_FLAGS);
 
   return (
-    <div className="flex flex-wrap gap-2 items-center pt-1 mb-3">
+    <div
+      className="flex flex-wrap gap-2 items-center pt-1 mb-3"
+      data-component="LanguageControls"
+      data-question-id={q?.id}
+    >
       {allLanguages.map((lang) => {
         const isCurrent = (q.language || "English").trim() === lang;
         const langCode =
