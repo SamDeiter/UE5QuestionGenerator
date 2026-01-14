@@ -129,11 +129,16 @@ const QuestionHeader = ({
           )}
 
           {/* AI Score Badges - Show original and improved scores */}
-          {(q.critiqueScore ?? q.qualityScore ?? null) !== null && (
+          {/* Check critiqueScore -> qualityScore -> aiScore (all possible score fields) */}
+          {(q.critiqueScore ?? q.qualityScore ?? q.aiScore ?? null) !==
+            null && (
             <div className="flex items-center gap-1">
-              <ScoreBadge score={q.critiqueScore ?? q.qualityScore} />
+              <ScoreBadge
+                score={q.critiqueScore ?? q.qualityScore ?? q.aiScore}
+              />
               {q.improvedScore &&
-                q.improvedScore !== (q.critiqueScore ?? q.qualityScore) && (
+                q.improvedScore !==
+                  (q.critiqueScore ?? q.qualityScore ?? q.aiScore) && (
                   <>
                     <Icon
                       name="arrow-right"
