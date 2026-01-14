@@ -11,7 +11,13 @@
  */
 import { useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth, getCustomTags, saveCustomTags } from "../services/firebase";
+import {
+  auth,
+  getCustomTags,
+  saveCustomTags,
+  getDb,
+} from "../services/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { getTokenUsage } from "../utils/analyticsStore";
 import {
   checkUserRegistration,
@@ -46,6 +52,9 @@ export function useAuth(showMessage) {
   const [showTerms, setShowTerms] = useState(false);
   const [showAgeGate, setShowAgeGate] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Permission error state (write probe failed)
+  const [permissionError, setPermissionError] = useState(false);
 
   // ========================================================================
   // EFFECTS
@@ -84,6 +93,28 @@ export function useAuth(showMessage) {
           setIsRegistered(regStatus.registered);
           setUserRole(regStatus.role || "user");
           setIsAdmin(regStatus.role === "admin");
+
+          // WRITE PROBE: Verify actual Firestore write access
+          // This catches Ghost Reviewers who appear registered but can't save
+          if (regStatus.registered) {
+            try {
+              const db = getDb();
+              await setDoc(
+                doc(db, "userSettings", currentUser.uid),
+                { lastVerified: serverTimestamp() },
+                { merge: true }
+              );
+              logger.log(
+                "✅ Write probe successful - Firestore access verified"
+              );
+              setPermissionError(false);
+            } catch (probeError) {
+              logger.error("❌ Write probe failed:", probeError);
+              if (probeError.code === "permission-denied") {
+                setPermissionError(true);
+              }
+            }
+          }
         } catch (error) {
           logger.error("Failed to check registration:", error);
           // SECURITY: On error, default to no access (fail closed)
@@ -192,5 +223,8 @@ export function useAuth(showMessage) {
     setShowAgeGate,
     termsAccepted,
     setTermsAccepted,
+
+    // Permission error (write probe failed)
+    permissionError,
   };
 }
