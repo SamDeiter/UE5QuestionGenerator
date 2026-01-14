@@ -127,19 +127,7 @@ const QuestionHeader = ({
 
           {/* AI Score Badge - Only shows AFTER AI critique has been run */}
           {q.critiqueScore !== null && q.critiqueScore !== undefined && (
-            <div className="flex items-center gap-1">
-              <ScoreBadge score={q.critiqueScore} />
-              {q.improvedScore && q.improvedScore !== q.critiqueScore && (
-                <>
-                  <Icon
-                    name="arrow-right"
-                    size={10}
-                    className="text-slate-400"
-                  />
-                  <ScoreBadge score={q.improvedScore} improved />
-                </>
-              )}
-            </div>
+            <ScoreBadge score={q.critiqueScore} />
           )}
 
           {/* Human Verified Badge */}
