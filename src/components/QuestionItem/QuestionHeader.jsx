@@ -56,9 +56,6 @@ const QuestionHeader = ({
   const lang = q.language || "English";
   const [isEditingDifficulty, setIsEditingDifficulty] = useState(false);
 
-  // Colorblind-safe AI Improvement button classes from centralized theme
-  const aiImprovementClasses = actionColor("success");
-
   const handleDifficultyChange = async (newDifficulty) => {
     if (onUpdateQuestion && newDifficulty !== q.difficulty) {
       await onUpdateQuestion(q.id, { difficulty: newDifficulty });
@@ -149,18 +146,6 @@ const QuestionHeader = ({
                   </>
                 )}
             </div>
-          )}
-
-          {/* AI Improvement Badge - Shows when improvements are available */}
-          {q.suggestedRewrite && (
-            <button
-              onClick={() => onOpenCritiqueModal?.()}
-              className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105 ${aiImprovementClasses}`}
-              title="AI Improvements Available - Click to review"
-            >
-              <Icon name="sparkles" size={12} />
-              AI IMPROVEMENT
-            </button>
           )}
 
           {/* Human Verified Badge */}
