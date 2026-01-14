@@ -45,6 +45,7 @@ const QuestionItem = ({
   onSwitchLanguage,
   onDelete,
   onUpdateQuestion,
+  onKickBack, // NEW: Handler for kicking question back to review
   availableVariants,
   isProcessing,
   showMessage,
@@ -253,7 +254,7 @@ const QuestionItem = ({
           appMode={appMode}
           onOpenCritiqueModal={() => setShowImprovementModal(true)}
           onUpdateQuestion={onUpdateQuestion}
-          onKickBack={onUpdateStatus}
+          onKickBack={onKickBack}
           onCritique={onCritique}
         />
 
