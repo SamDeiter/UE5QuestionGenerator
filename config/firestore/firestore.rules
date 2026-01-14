@@ -45,9 +45,9 @@ service cloud.firestore {
         && (!request.resource.data.keys().hasAny(['version']) || request.resource.data.version == 1);
       
       // Update: Must be authenticated, version must increment, updatedBy must match auth
-      // Special case: Admins can update specific fields without version check
+      // Special case: Admins can update any fields
       allow update: if isSignedIn() && (
-        // Standard update: Owner updates their question with version increment
+        // Standard update: Owner updates their own question with version increment
         (resource.data.creatorId == request.auth.uid 
          && request.resource.data.creatorId == request.auth.uid
          && versionNotRegressing())

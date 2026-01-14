@@ -135,16 +135,15 @@ export const useQuestionCritique = ({
         }
 
         // CRITICAL: Persist critique results (including tags) to Firestore
-        // Only send the fields that changed to comply with Firestore rules
+        // Use saveQuestionToFirestore which handles offline queue and permissions
         try {
-          const { doc, updateDoc } = await import("firebase/firestore");
-          const { getDb } = await import("../../services/firebase");
-          const db = getDb();
-          // IMPORTANT: Convert ID to string - IDs can be numbers which breaks Firestore doc()
-          const questionRef = doc(db, "questions", String(q.id));
+          const { saveQuestionToFirestore } = await import(
+            "../../services/firebase"
+          );
 
-          // Only update the critique-related fields (matches Firestore rules whitelist)
-          const critiqueFieldsOnly = {
+          // Merge critique fields into the full question object
+          const updatedQuestion = {
+            ...q,
             critique: text,
             critiqueScore: score,
             improvedScore: improvedScore,
@@ -163,7 +162,10 @@ export const useQuestionCritique = ({
               : {}),
           };
 
-          await updateDoc(questionRef, critiqueFieldsOnly);
+          logger.log(
+            `[Critique] Saving to Firestore via saveQuestionToFirestore: ${q.id}`
+          );
+          await saveQuestionToFirestore(updatedQuestion);
           logger.log(
             `[Critique] Saved critique fields for ${q.id} including ${suggestedTags.length} tags`
           );
