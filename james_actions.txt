@@ -1,8 +1,0 @@
---- Searching all audit-log events for james.hill@epicgames.com ---
-
---- Event Totals ---
-  lock_released: 148
-  lock_acquired: 143
-  lock_stolen: 11
-
-Total unique questions touched: 154

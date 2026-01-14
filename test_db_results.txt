@@ -1,2 +1,0 @@
---- Checking TEST DB: ue5questionssoure for edward.bennett@epicgames.com ---
-Error querying test DB: 'charmap' codec can't encode character '\u274c' in position 0: character maps to <undefined>
