@@ -46,6 +46,7 @@ const QuestionHeader = ({
   originalQ, // NEW: The base question record
   getDiffBadgeColor,
   onKickBack,
+  onCritique, // NEW: Allow re-critique from database view
   appMode,
   onOpenCritiqueModal,
   onUpdateQuestion, // NEW: Callback to save difficulty changes
@@ -193,7 +194,18 @@ const QuestionHeader = ({
       </div>
 
       <div className="flex items-center gap-2">
-        {/* DATABASE MODE: Show Kick Back to Review button */}
+        {/* DATABASE MODE: Show Re-Critique and Kick Back buttons */}
+        {appMode === "database" && onCritique && (
+          <button
+            onClick={() => onCritique(originalQ || q)}
+            className="px-3 py-1.5 rounded-lg transition-all bg-purple-900/30 text-purple-300 hover:bg-purple-800/50 hover:text-purple-200 border border-purple-700/50 flex items-center gap-2 text-xs font-medium"
+            title="Run AI Critique again to generate tags and improvements"
+            aria-label="Re-run AI Critique"
+          >
+            <Icon name="sparkles" size={14} />
+            Re-Critique
+          </button>
+        )}
         {appMode === "database" && (
           <button
             onClick={() => onKickBack(originalQ || q)}

@@ -13,6 +13,7 @@ const DatabaseView = ({
   questions,
   onUpdateQuestion,
   onKickBack,
+  onCritique, // NEW: Enable re-critique in database view
   showMessage,
   filterMode = "all", // Default to 'all' if not provided
   sortBy = "default", // Default to 'default' if not provided
@@ -354,7 +355,7 @@ const DatabaseView = ({
                   onUpdateStatus={() => {}}
                   onExplain={() => {}}
                   onVariate={() => {}}
-                  onCritique={() => {}}
+                  onCritique={() => onCritique?.(q)}
                   onTranslateSingle={() => {}}
                   onSwitchLanguage={(targetLang) =>
                     handleSwitchLanguage(q, targetLang)
