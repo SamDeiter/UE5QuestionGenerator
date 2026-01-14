@@ -4,7 +4,7 @@
  * NOTE: Any regex patterns are for prompt template processing.
  * Input is application-controlled (config values) - no DoS risk.
  */
- 
+
 import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
 
 /**
@@ -374,7 +374,17 @@ For T/F questions, you MUST:
 ❌ External: YouTube, Reddit, Forums, Wikis, vertexaisearch URLs
 
 **IF UNCERTAIN:** Leave SourceURL empty. A missing URL is better than broken.
-**SourceExcerpt:** REQUIRED — copy the exact sentence from docs that proves the answer.
+
+**SourceExcerpt:** REQUIRED — This MUST be a REAL quote from official documentation. 
+⚠️ **CRITICAL ANTI-HALLUCINATION RULES:**
+1. **COPY verbatim** — Extract the exact sentence from the documentation page at SourceURL
+2. **DO NOT paraphrase** — Never rewrite or summarize the documentation in your own words
+3. **DO NOT fabricate** — If you cannot find a direct quote, leave SourceExcerpt empty
+4. **VERIFY first** — Only include excerpts from pages you can actually cite with a URL
+5. If empty SourceURL, SourceExcerpt MUST also be empty
+
+**EXAMPLE GOOD EXCERPT:** "Nanite is Unreal Engine 5's virtualized geometry system which uses..." (copied verbatim)
+**EXAMPLE BAD EXCERPT:** "Nanite allows for high-poly meshes to be rendered efficiently" (paraphrased/invented)
 
 
 ### 4. Database Output Format
