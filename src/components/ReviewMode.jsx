@@ -42,16 +42,25 @@ const ReviewMode = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  // Auto-adjust index if out of bounds (e.g. after accepting an item and list shrinks)
-  React.useEffect(() => {
-    if (questions && questions.length > 0 && currentIndex >= questions.length) {
-      setCurrentIndex(questions.length - 1);
+
+  // Create effective questions list - just use the passed questions
+  // The pin is just for preventing auto-advance, not for modifying the list
+  const effectiveQuestions = questions;
+
+  // Simple bounds check - only adjust if we're out of bounds
+  useEffect(() => {
+    if (
+      effectiveQuestions &&
+      effectiveQuestions.length > 0 &&
+      currentIndex >= effectiveQuestions.length
+    ) {
+      setCurrentIndex(effectiveQuestions.length - 1);
     }
-  }, [questions, currentIndex, setCurrentIndex]);
+  }, [effectiveQuestions, currentIndex, setCurrentIndex]);
 
-  if (!questions || questions.length === 0) return null;
+  if (!effectiveQuestions || effectiveQuestions.length === 0) return null;
 
-  const currentQuestion = questions[currentIndex];
+  const currentQuestion = effectiveQuestions[currentIndex];
 
   if (!currentQuestion) {
     return (
@@ -61,7 +70,18 @@ const ReviewMode = ({
     );
   }
   const canGoPrev = currentIndex > 0;
-  const canGoNext = currentIndex < questions.length - 1;
+  const canGoNext = currentIndex < effectiveQuestions.length - 1;
+
+  // Handle navigation
+  const handlePrev = () => {
+    setCurrentIndex((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) =>
+      Math.min(prev + 1, effectiveQuestions.length - 1)
+    );
+  };
 
   return (
     <div className="flex flex-col items-center justify-start h-full max-w-4xl mx-auto w-full pt-4">
@@ -70,7 +90,7 @@ const ReviewMode = ({
         data-tour="review-nav"
       >
         <button
-          onClick={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
+          onClick={handlePrev}
           disabled={!canGoPrev}
           className="flex items-center gap-2 px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold"
           data-tour="prev-button"
@@ -84,13 +104,13 @@ const ReviewMode = ({
           <span className="text-lg">
             <span className="text-white font-bold">{currentIndex + 1}</span>{" "}
             <span className="text-slate-600">/</span>{" "}
-            <span className="text-slate-400 font-bold">{questions.length}</span>
+            <span className="text-slate-400 font-bold">
+              {effectiveQuestions.length}
+            </span>
           </span>
         </div>
         <button
-          onClick={() =>
-            setCurrentIndex((prev) => Math.min(prev + 1, questions.length - 1))
-          }
+          onClick={handleNext}
           disabled={!canGoNext}
           className="flex items-center gap-2 px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold"
           data-tour="next-button"

@@ -48,7 +48,9 @@ export const createFilteredQuestions = (
   difficulty,
   type,
   language,
-  selectedTags = []
+  selectedTags = [],
+  scoreTier = "", // '', 'exceptional', 'very-good', 'good', 'adequate', 'needs-work'
+  reviewerFilter = "" // Filter by specific reviewer name (humanVerifiedBy)
 ) => {
   // Determine source: either current session or all history
   const sourceQuestions = showHistory
@@ -119,6 +121,61 @@ export const createFilteredQuestions = (
       );
 
       if (!matches) return false;
+    }
+
+    // 7. Score Tier Filter - Filter by AI critique score ranges
+    // Helps reviewers find questions that need human attention
+    if (scoreTier) {
+      const score = q.critiqueScore;
+      // If no score, only show in 'needs-work' (questions without scores need review)
+      if (score === null || score === undefined) {
+        if (scoreTier !== "needs-work") return false;
+      } else {
+        switch (scoreTier) {
+          case "exceptional": // 90-100
+            if (score < 90) return false;
+            break;
+          case "very-good": // 80-89
+            if (score < 80 || score >= 90) return false;
+            break;
+          case "good": // 70-79
+            if (score < 70 || score >= 80) return false;
+            break;
+          case "adequate": // 60-69
+            if (score < 60 || score >= 70) return false;
+            break;
+          case "needs-work": // Under 70 (requires human review)
+            if (score >= 70) return false;
+            break;
+          default:
+            break;
+        }
+      }
+    }
+
+    // 8. Reviewer Filter - Filter by who verified/accepted the question
+    // NORMALIZE: Handle concatenated names like "Sam DeiterSam Deiter"
+    if (reviewerFilter) {
+      const normalizeReviewer = (name) => {
+        if (!name) return "";
+        const cleaned = name.trim();
+        // Check if name is doubled (e.g., "Sam DeiterSam Deiter")
+        const half = Math.floor(cleaned.length / 2);
+        if (
+          cleaned.length > 5 &&
+          cleaned.substring(0, half) === cleaned.substring(half)
+        ) {
+          return cleaned.substring(0, half);
+        }
+        return cleaned;
+      };
+
+      // Check if ANY reviewer field matches (after normalization)
+      const reviewers = [q.humanVerifiedBy, q.acceptedBy, q.reviewerName]
+        .map(normalizeReviewer)
+        .filter((r) => r);
+
+      if (!reviewers.includes(reviewerFilter)) return false;
     }
 
     return true;

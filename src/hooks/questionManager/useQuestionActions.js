@@ -102,11 +102,18 @@ export const useQuestionActions = (
   });
 
   const handleUpdateQuestion = useCallback(
-    async (id, updates) => {
+    async (id, updates, editSource = "human") => {
       const currentQ = allQuestions.find((q) => q.id === id);
       if (!currentQ) return;
 
-      const updatedQ = { ...currentQ, ...updates };
+      // Add edit tracking metadata for audit trail
+      const editMetadata = {
+        lastEditedBy: config.userEmail || config.creatorName || "Unknown",
+        lastEditedAt: new Date().toISOString(),
+        lastEditSource: editSource, // "human" or "ai"
+      };
+
+      const updatedQ = { ...currentQ, ...updates, ...editMetadata };
       const agents = getAgents();
 
       // HARDENING: Refresh auth token if potentially stale to prevent save failures

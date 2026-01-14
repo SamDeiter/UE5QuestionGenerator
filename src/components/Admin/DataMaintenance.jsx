@@ -29,17 +29,18 @@ import { logger } from "../../utils/logger";
 
 const db = getFirestore(app);
 
-// Rate limiting constant - 6.5 seconds between API calls
-const API_RATE_LIMIT_MS = 6500;
+// Rate limiting constant - 4 seconds between API calls (15/min, under Cloud Function 20/min limit)
+const API_RATE_LIMIT_MS = 4000;
 
 /**
- * Backfill AI critique scores for verified questions that are missing scores.
- * PRESERVES humanVerified data - only updates critiqueScore and critique fields.
+ * Backfill AI critique scores for accepted questions that are missing scores.
+ * Also ensures humanVerified is set for consistency.
+ * PRESERVES existing humanVerifiedBy if present.
  */
 async function backfillAIScoresForVerified(onProgress, dryRun = false) {
-  // Find questions that are verified/accepted but missing critiqueScore
+  // Find ALL accepted questions - we'll filter for missing scores in JS
   const snapshot = await getDocs(
-    query(collection(db, "questions"), where("humanVerified", "==", true))
+    query(collection(db, "questions"), where("status", "==", "accepted"))
   );
 
   const needsScore = [];
@@ -53,12 +54,13 @@ async function backfillAIScoresForVerified(onProgress, dryRun = false) {
         options: data.options,
         correct: data.correct || data.correctLetter,
         sourceExcerpt: data.sourceExcerpt,
-        verifiedBy: data.humanVerifiedBy || "Unknown",
+        verifiedBy: data.humanVerifiedBy || data.acceptedBy || "Unknown",
+        wasVerified: data.humanVerified === true, // Track if already verified
       });
     }
   });
 
-  onProgress(`Found ${needsScore.length} verified questions without AI Score`);
+  onProgress(`Found ${needsScore.length} accepted questions without AI Score`);
 
   if (dryRun || needsScore.length === 0) {
     return { updated: 0, failed: 0, total: needsScore.length, dryRun };
@@ -70,41 +72,151 @@ async function backfillAIScoresForVerified(onProgress, dryRun = false) {
   for (const q of needsScore) {
     try {
       onProgress(
-        `Critiquing question ${updated + failed + 1}/${
+        `Critiquing ${updated + failed + 1}/${
           needsScore.length
-        } (verified by ${q.verifiedBy})...`
+        }: "${q.question?.substring(0, 40)}..." (by ${q.verifiedBy})`
       );
 
       // Run AI critique to get score
-      const { score, text } = await generateCritiqueSecure(null, {
+      const result = await generateCritiqueSecure(null, {
         question: q.question,
         options: q.options,
         correct: q.correct,
         sourceExcerpt: q.sourceExcerpt,
       });
 
+      const score = result?.score;
+      const text = result?.text;
+
       if (score !== null && score !== undefined) {
         const ref = doc(db, "questions", String(q.id));
-        await updateDoc(ref, {
+        // Ensure consistent state: score + humanVerified
+        const updateData = {
           critiqueScore: score,
-          critique: text,
+          critique: text || "",
           _scoreBackfilledAt: new Date().toISOString(),
-          // NOTE: We do NOT touch humanVerified, humanVerifiedBy, humanVerifiedAt
-        });
+        };
+        // Only set humanVerified if not already set (preserve Greg's timestamps)
+        if (!q.wasVerified) {
+          updateData.humanVerified = true;
+          updateData.humanVerifiedBy = q.verifiedBy;
+          updateData.humanVerifiedAt = new Date().toISOString();
+          updateData._verifiedByBackfill = true;
+        }
+        await updateDoc(ref, updateData);
         updated++;
+        logger.log(`✅ Backfilled score ${score} for question ${q.id}`);
       } else {
         failed++;
+        logger.warn(`⚠️ No score returned for question ${q.id}`);
       }
-
-      // Rate limit - avoid API throttling
-      await new Promise((resolve) => setTimeout(resolve, API_RATE_LIMIT_MS));
     } catch (error) {
-      logger.error("Critique failed for question:", q.id, error);
+      logger.error(`❌ Critique failed for question ${q.id}:`, error.message);
       failed++;
+      // Continue to next question - don't stop the whole process
     }
+
+    // Rate limit - avoid API throttling
+    await new Promise((resolve) => setTimeout(resolve, API_RATE_LIMIT_MS));
   }
 
   return { updated, failed, total: needsScore.length, dryRun: false };
+}
+
+/**
+ * Restore kicked-back questions: Add AI scores AND set back to accepted.
+ * For questions that were verified by reviewers but kicked back due to missing scores.
+ * Preserves the original verifier's name and restores to accepted status.
+ */
+async function restoreVerifiedWithScores(onProgress, dryRun = false) {
+  // Find all pending questions that were kicked back (have kickedBackReason)
+  const snapshot = await getDocs(
+    query(collection(db, "questions"), where("status", "==", "pending"))
+  );
+
+  const needsRestore = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    // Find questions that were kicked back AND don't have a score yet
+    if (
+      data.kickedBackReason &&
+      (data.critiqueScore === null || data.critiqueScore === undefined)
+    ) {
+      needsRestore.push({
+        id: docSnap.id,
+        question: data.question,
+        options: data.options,
+        correct: data.correct || data.correctLetter,
+        sourceExcerpt: data.sourceExcerpt,
+        // Preserve original verifier info from before kickback
+        originalVerifier:
+          data.kickedBackBy ||
+          data.acceptedBy ||
+          data.reviewerName ||
+          "Unknown",
+      });
+    }
+  });
+
+  onProgress(`Found ${needsRestore.length} kicked-back questions to restore`);
+
+  if (dryRun || needsRestore.length === 0) {
+    return { updated: 0, failed: 0, total: needsRestore.length, dryRun };
+  }
+
+  let updated = 0;
+  let failed = 0;
+
+  for (const q of needsRestore) {
+    try {
+      onProgress(
+        `Restoring ${updated + failed + 1}/${
+          needsRestore.length
+        }: "${q.question?.substring(0, 40)}..." (by ${q.originalVerifier})`
+      );
+
+      // Run AI critique to get score
+      const result = await generateCritiqueSecure(null, {
+        question: q.question,
+        options: q.options,
+        correct: q.correct,
+        sourceExcerpt: q.sourceExcerpt,
+      });
+
+      const score = result?.score;
+      const text = result?.text;
+
+      if (score !== null && score !== undefined) {
+        const ref = doc(db, "questions", String(q.id));
+        // RESTORE: Add score + set to accepted + preserve verifier
+        await updateDoc(ref, {
+          critiqueScore: score,
+          critique: text || "",
+          status: "accepted", // Restore to accepted
+          humanVerified: true,
+          humanVerifiedBy: q.originalVerifier,
+          humanVerifiedAt: new Date().toISOString(),
+          _restoredAt: new Date().toISOString(),
+          _restoredWithScore: true,
+        });
+        updated++;
+        logger.log(
+          `✅ Restored question ${q.id} with score ${score}, verified by ${q.originalVerifier}`
+        );
+      } else {
+        failed++;
+        logger.warn(`⚠️ No score returned for question ${q.id}`);
+      }
+    } catch (error) {
+      logger.error(`❌ Restore failed for question ${q.id}:`, error.message);
+      failed++;
+    }
+
+    // Rate limit - avoid API throttling
+    await new Promise((resolve) => setTimeout(resolve, API_RATE_LIMIT_MS));
+  }
+
+  return { updated, failed, total: needsRestore.length, dryRun: false };
 }
 
 /**
@@ -487,6 +599,34 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
     }
   };
 
+  const handleRestoreKickedBack = async (dryRun = false) => {
+    setProcessing(true);
+    setProgress("Finding kicked-back questions to restore...");
+    setLastResult(null);
+
+    try {
+      const result = await restoreVerifiedWithScores(setProgress, dryRun);
+      setLastResult(result);
+      if (dryRun) {
+        showMessage(
+          `🔍 DRY RUN: ${result.total} kicked-back questions would be restored`,
+          5000
+        );
+      } else {
+        showMessage(
+          `✅ Restored ${result.updated} questions to accepted with AI scores (${result.failed} failed)`,
+          5000
+        );
+      }
+    } catch (error) {
+      logger.error("Restore failed:", error);
+      showMessage(`❌ Failed: ${error.message}`, 5000);
+    } finally {
+      setProcessing(false);
+      setProgress("");
+    }
+  };
+
   return (
     <CollapsibleSection
       title="Data Maintenance"
@@ -565,6 +705,34 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
               className="px-3 py-1.5 text-xs bg-indigo-700 hover:bg-indigo-600 text-white rounded font-bold disabled:opacity-50"
             >
               Add AI Scores
+            </button>
+          </div>
+        </div>
+
+        {/* RESTORE KICKED-BACK QUESTIONS - Main tool for Greg's questions */}
+        <div className="p-3 bg-emerald-950/30 rounded border-2 border-emerald-700/50">
+          <h4 className="text-sm font-bold text-emerald-200 mb-2 flex items-center gap-2">
+            <Icon name="refresh-cw" size={14} className="text-emerald-400" />
+            Restore Kicked-Back Questions
+          </h4>
+          <p className="text-xs text-emerald-300/80 mb-3">
+            Add AI scores to kicked-back questions AND restore them to accepted.
+            Preserves original verifier name (e.g., Greg Berridge).
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleRestoreKickedBack(true)}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded disabled:opacity-50"
+            >
+              Dry Run (Count)
+            </button>
+            <button
+              onClick={() => handleRestoreKickedBack(false)}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded font-bold disabled:opacity-50"
+            >
+              Restore to Accepted
             </button>
           </div>
         </div>

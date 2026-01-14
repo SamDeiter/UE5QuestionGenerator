@@ -164,7 +164,10 @@ const MetricsDashboard = ({ questions }) => {
 
         {activeTab === "trends" && (
           <div className="animate-in fade-in duration-300">
-            <TrendCharts generations={analyticsData.generations} />
+            <TrendCharts
+              generations={analyticsData.generations}
+              questions={questions}
+            />
           </div>
         )}
       </div>

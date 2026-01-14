@@ -29,6 +29,9 @@ const ContextToolbar = ({
   setFilterTags,
   filterScoreTier: _filterScoreTier = "",
   setFilterScoreTier: _setFilterScoreTier,
+  filterByReviewer = "",
+  setFilterByReviewer,
+  uniqueReviewers = [], // Dynamic list of all reviewers from question data
   customTags = {},
   isAdmin = false, // Admin-only features
   handleChange, // Added prop for config updates
@@ -259,6 +262,51 @@ const ContextToolbar = ({
           <Icon name="user-check" size={14} />
           {filterByCreator ? "My Reviews Only" : "All Reviewers"}
         </button>
+
+        {/* Low Score Filter - Show questions needing human review */}
+        <button
+          onClick={() => {
+            if (_filterScoreTier === "needs-work") {
+              _setFilterScoreTier("");
+            } else {
+              _setFilterScoreTier("needs-work");
+            }
+          }}
+          className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 border ${
+            _filterScoreTier === "needs-work"
+              ? "bg-red-600/20 text-red-300 border-red-500/50"
+              : "bg-transparent text-slate-400 border-transparent hover:bg-slate-800"
+          }`}
+          title="Show questions with score under 70 that need human review"
+        >
+          <Icon name="alert-triangle" size={14} />
+          {_filterScoreTier === "needs-work"
+            ? "Low Scores Active"
+            : "Low Scores"}
+        </button>
+
+        {/* Reviewer Filter Dropdown */}
+        <div className="relative">
+          <select
+            value={filterByReviewer}
+            onChange={(e) =>
+              setFilterByReviewer && setFilterByReviewer(e.target.value)
+            }
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all border cursor-pointer ${
+              filterByReviewer
+                ? "bg-purple-600/20 text-purple-300 border-purple-500/50"
+                : "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700"
+            }`}
+            title="Filter by who verified the question"
+          >
+            <option value="">All Verifiers</option>
+            {uniqueReviewers.map((reviewer) => (
+              <option key={reviewer} value={reviewer}>
+                {reviewer}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="h-4 w-px bg-slate-700"></div>
 

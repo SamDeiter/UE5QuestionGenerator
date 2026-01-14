@@ -18,6 +18,8 @@ const ImprovementModal = ({
   improvedScore, // Score the question would get AFTER applying improvements
   onApply,
   onDismiss,
+  isContentLocked = false, // If true, hide Apply button (verified content)
+  lockedByName = null, // Who verified this content
 }) => {
   const [isApplying, setIsApplying] = useState(false);
   const { scoreColorByValue } = useThemeColors();
@@ -323,7 +325,16 @@ const ImprovementModal = ({
         </div>
 
         <div className="border-t border-slate-700 bg-slate-900/90 px-4 py-2 flex items-center justify-center gap-2.5 relative z-10 pointer-events-auto">
-          <div className="flex gap-2.5">
+          <div className="flex gap-2.5 items-center">
+            {/* Locked content indicator */}
+            {isContentLocked && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-900/30 border border-amber-600/50 rounded-lg">
+                <Icon name="lock" size={14} className="text-amber-400" />
+                <span className="text-xs text-amber-300 font-medium">
+                  Content verified by {lockedByName || "reviewer"} - Locked
+                </span>
+              </div>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -331,9 +342,14 @@ const ImprovementModal = ({
               }}
               className="px-4 py-1.5 rounded-lg font-bold text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition-all pointer-events-auto cursor-pointer"
             >
-              {changesExplanation ? "Keep Original" : "Close"}
+              {changesExplanation
+                ? lockedByName
+                  ? `Keep ${lockedByName.split(" ")[0]}'s version`
+                  : "Keep Original"
+                : "Close"}
             </button>
-            {changesExplanation && (
+            {/* Only show Apply button if content is NOT locked */}
+            {changesExplanation && !isContentLocked && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();

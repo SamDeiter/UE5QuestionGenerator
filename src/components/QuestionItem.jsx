@@ -142,18 +142,46 @@ const QuestionItem = ({
     return "Available";
   };
 
-  // Auto-open improvement modal when critique arrives
+  // Auto-open improvement modal when critique arrives or updates
+  // Track the last seen critiqueScore to detect re-critiques DURING THIS SESSION
+  const lastSeenCritiqueScoreRef = useRef(q.critiqueScore); // Initialize with current score
+  const hasInitializedRef = useRef(false);
+
   useEffect(() => {
+    // Skip the initial render - we only want to detect CHANGES during the session
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      lastSeenCritiqueScoreRef.current = q.critiqueScore;
+      return;
+    }
+
+    // Detect if critique was just updated (score changed during this session)
+    const critiqueJustUpdated =
+      q.critiqueScore !== undefined &&
+      q.critiqueScore !== lastSeenCritiqueScoreRef.current;
+
+    // Update ref to current score
+    if (q.critiqueScore !== undefined) {
+      lastSeenCritiqueScoreRef.current = q.critiqueScore;
+    }
+
+    // Open modal if: critique exists AND (has rewrite OR critique just updated)
     if (
       q.critique &&
-      q.suggestedRewrite &&
+      (q.suggestedRewrite || critiqueJustUpdated) &&
       !q.improvementsApplied &&
-      lastProcessedCritiqueRef.current !== `dismissed-${q.id}` &&
+      !lastProcessedCritiqueRef.current?.startsWith(`dismissed-${q.id}`) &&
       !lastProcessedCritiqueRef.current?.startsWith(`applied-${q.id}`)
     ) {
       setShowImprovementModal(true);
     }
-  }, [q.critique, q.suggestedRewrite, q.id, q.improvementsApplied]);
+  }, [
+    q.critique,
+    q.suggestedRewrite,
+    q.id,
+    q.improvementsApplied,
+    q.critiqueScore,
+  ]);
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -404,12 +432,26 @@ const QuestionItem = ({
             }
             critiqueText={q.suggestedRewrite?.critiqueText || q.critique || ""}
             critiqueScore={q.critiqueScore || 0} // Original question's score
-            improvedScore={q.improvedScore || 0} // Score AFTER applying improvements
+            improvedScore={
+              q.improvedScore || q.suggestedRewrite?.critiqueScore || 0
+            } // Score AFTER applying improvements
+            isContentLocked={
+              q.humanVerified === true &&
+              (!q.critiqueScore || q.critiqueScore >= 70)
+            } // Lock only high-score verified questions
+            lockedByName={q.humanVerifiedBy} // Who verified this question
             onApply={async (improved) => {
               // FIRST: Mark as processed to prevent useEffect from re-opening
               lastProcessedCritiqueRef.current = `applied-${
                 q.id
               }-${Date.now()}`;
+
+              // ALSO: Update the score ref to prevent score-change detection
+              lastSeenCritiqueScoreRef.current =
+                q.improvedScore || q.critiqueScore;
+
+              // IMMEDIATELY close modal to prevent re-open race
+              setShowImprovementModal(false);
 
               // CAPTURE TRAINING DATA: Save original vs. improved for fine-tuning
               if (improved) {

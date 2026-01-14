@@ -52,6 +52,7 @@ export function useFiltering({
   const [filterByCreator, setFilterByCreator] = useState(false);
   const [filterTags, setFilterTags] = useState([]);
   const [filterScoreTier, setFilterScoreTier] = useState(""); // '', 'exceptional', 'very-good', 'good', 'adequate', 'needs-work'
+  const [filterByReviewer, setFilterByReviewer] = useState(""); // Filter by specific reviewer name
 
   // PERSISTED NAVIGATION: Survive page refreshes
   const [currentReviewIndex, setCurrentReviewIndex] = useState(() => {
@@ -143,7 +144,8 @@ export function useFiltering({
       appMode === "review" ? null : type, // Review mode: ignore type filter
       language,
       filterTags,
-      filterScoreTier
+      filterScoreTier,
+      filterByReviewer
     );
 
     // STABILITY: Only return new array if the question IDs or important content changed
@@ -208,6 +210,7 @@ export function useFiltering({
     language,
     filterTags,
     filterScoreTier,
+    filterByReviewer,
   ]);
 
   // 2. Calculate counts based on UNIQUE questions per status
@@ -268,6 +271,39 @@ export function useFiltering({
 
     return { pending, accepted, rejected, other, all };
   }, [contextFilteredQuestions, language, allQuestionsMap]);
+
+  // 2b. Compute unique reviewers from ALL questions for the filter dropdown
+  // Uses base questions (not contextFilteredQuestions) so dropdown always shows all reviewers
+  // NORMALIZE: Clean up duplicate names like "Sam DeiterSam Deiter"
+  const uniqueReviewers = useMemo(() => {
+    const reviewerSet = new Set();
+    const normalizeReviewer = (name) => {
+      if (!name || name === "Unknown" || name.trim() === "") return null;
+      // Fix concatenated names like "Sam DeiterSam Deiter"
+      const cleaned = name.trim();
+      // Check if name is doubled (e.g., "Sam DeiterSam Deiter")
+      const half = Math.floor(cleaned.length / 2);
+      if (
+        cleaned.length > 5 &&
+        cleaned.substring(0, half) === cleaned.substring(half)
+      ) {
+        return cleaned.substring(0, half);
+      }
+      return cleaned;
+    };
+
+    // Use base questions, not contextFilteredQuestions
+    questions.forEach((q) => {
+      // Check all possible reviewer fields
+      [q.humanVerifiedBy, q.acceptedBy, q.reviewerName].forEach((r) => {
+        const normalized = normalizeReviewer(r);
+        if (normalized) {
+          reviewerSet.add(normalized);
+        }
+      });
+    });
+    return Array.from(reviewerSet).sort();
+  }, [questions]);
 
   // 3. Now apply the status filter for the actual view
   const filteredQuestions = useMemo(() => {
@@ -436,7 +472,7 @@ export function useFiltering({
 
   // 3. Handle restoration on mount or mode change
   // TRIGGER: Now runs AFTER potential resets in the same render cycle
-   
+
   useEffect(() => {
     if (
       appMode === "review" &&
@@ -501,6 +537,8 @@ export function useFiltering({
     setSortBy,
     filterScoreTier,
     setFilterScoreTier,
+    filterByReviewer,
+    setFilterByReviewer,
     lastUniqueId,
     setLastUniqueId,
 
@@ -509,5 +547,6 @@ export function useFiltering({
     contextCounts,
     filteredQuestions,
     uniqueFilteredQuestions,
+    uniqueReviewers,
   };
 }

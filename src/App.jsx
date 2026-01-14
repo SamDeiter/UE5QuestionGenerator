@@ -277,6 +277,8 @@ const App = () => {
     setFilterTags,
     filterScoreTier,
     setFilterScoreTier,
+    filterByReviewer,
+    setFilterByReviewer,
     currentReviewIndex,
     setCurrentReviewIndex,
     sortBy,
@@ -284,6 +286,7 @@ const App = () => {
     contextCounts,
     filteredQuestions,
     uniqueFilteredQuestions,
+    uniqueReviewers,
   } = useFiltering({
     questions: unifiedQuestions,
     historicalQuestions: [], // We are using the unified list as source of truth
@@ -720,6 +723,9 @@ const App = () => {
             setFilterTags,
             filterScoreTier,
             setFilterScoreTier,
+            filterByReviewer,
+            setFilterByReviewer,
+            uniqueReviewers,
             customTags,
             searchTerm,
             setSearchTerm,
