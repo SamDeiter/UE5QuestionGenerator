@@ -49,18 +49,6 @@ const QuestionHeader = ({
     <div className="flex justify-between items-start">
       <div className="flex flex-col gap-1">
         <div className="flex gap-1.5 items-center flex-wrap">
-          {/* Language Badge - Flag only */}
-          <span
-            className={`px-1.5 py-0.5 rounded text-xs font-bold border flex items-center ${
-              lang === "English"
-                ? "bg-slate-800 border-slate-700"
-                : "bg-indigo-950 border-indigo-800 shadow-[0_0_10px_-2px_rgba(99,102,241,0.5)]"
-            }`}
-            title={lang}
-          >
-            <FlagIcon code={LANGUAGE_CODES[lang] || "US"} size={14} />
-          </span>
-
           <span
             className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(
               displayDifficulty
