@@ -284,6 +284,17 @@ export const subscribeToConnectionStatus = (callback) => {
  */
 export const saveQuestionToFirestore = async (question) => {
   try {
+    // CRITICAL: Verify user is authenticated before attempting save
+    if (!auth.currentUser) {
+      logger.error("❌ [Save] Cannot save - user not authenticated!");
+      // Don't queue if not authenticated - this is a critical error
+      return {
+        success: false,
+        queued: false,
+        error: "Not authenticated - please sign in again",
+      };
+    }
+
     if (!isOnline) {
       logger.log(`📴 Offline - queuing ${question.uniqueId} for later sync`);
       offlineQueue = offlineQueue.filter(
@@ -353,6 +364,17 @@ export const saveQuestionToFirestore = async (question) => {
 export const batchSaveQuestions = async (questions) => {
   if (!questions || questions.length === 0) {
     return { success: 0, failed: 0, queued: 0 };
+  }
+
+  // CRITICAL: Verify user is authenticated before attempting batch save
+  if (!auth.currentUser) {
+    logger.error("❌ [BatchSave] Cannot save - user not authenticated!");
+    return {
+      success: 0,
+      failed: questions.length,
+      queued: 0,
+      error: "Not authenticated - please sign in again",
+    };
   }
 
   if (!isOnline) {
