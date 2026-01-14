@@ -153,9 +153,14 @@ const QuestionContent = ({
             dangerouslySetInnerHTML={{
               __html: sanitizeText(displayedQ.question),
             }}
-            onClick={() =>
-              isAdmin && appMode !== "database" && setIsEditing(true)
-            }
+            onClick={() => {
+              if (isAdmin && appMode !== "database") {
+                // CRITICAL: Initialize editedText BEFORE entering edit mode
+                // This prevents the textarea from showing empty/stale text
+                setEditedText(displayedQ.question || q.question);
+                setIsEditing(true);
+              }
+            }}
             title={
               isAdmin && appMode !== "database"
                 ? "Click to edit (Admin only)"
