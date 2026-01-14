@@ -76,8 +76,9 @@ function parseRulesFile() {
   const content = fs.readFileSync(rulesPath, "utf-8");
 
   // Extract the hasOnly array for reviewer fields
+  // Pattern: isReviewer() followed by && ... .hasOnly([...])
   const match = content.match(
-    /isReviewer\(\)\)[\s\S]*?\.hasOnly\(\[([\s\S]*?)\]\)/
+    /isReviewer\(\)[\s\S]*?\.hasOnly\(\[([\s\S]*?)\]\)/
   );
 
   if (!match) {
