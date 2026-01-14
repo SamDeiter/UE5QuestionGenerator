@@ -1,8 +1,9 @@
+import { useState } from "react";
 import Icon from "../Icon";
 import FlagIcon from "../FlagIcon";
 import ScoreBadge from "../ScoreBadge";
 import { useThemeColors } from "../../hooks/useThemeColors";
-import { LANGUAGE_CODES } from "../../utils/constants";
+import { LANGUAGE_CODES, QUESTION_DIFFICULTY } from "../../utils/constants";
 
 /**
  * Normalize difficulty value - handles legacy "BALANCED ALL" and other invalid values
@@ -30,6 +31,16 @@ const normalizeDifficulty = (difficulty) => {
   return difficulty; // Return as-is if we can't normalize
 };
 
+const DIFFICULTY_OPTIONS = [
+  { value: QUESTION_DIFFICULTY.BEGINNER, label: "Beginner", color: "emerald" },
+  {
+    value: QUESTION_DIFFICULTY.INTERMEDIATE,
+    label: "Intermediate",
+    color: "amber",
+  },
+  { value: QUESTION_DIFFICULTY.EXPERT, label: "Expert", color: "red" },
+];
+
 const QuestionHeader = ({
   q,
   originalQ, // NEW: The base question record
@@ -37,26 +48,70 @@ const QuestionHeader = ({
   onKickBack,
   appMode,
   onOpenCritiqueModal,
+  onUpdateQuestion, // NEW: Callback to save difficulty changes
 }) => {
   const { actionColor } = useThemeColors();
   const displayDifficulty = normalizeDifficulty(q.difficulty);
   const lang = q.language || "English";
+  const [isEditingDifficulty, setIsEditingDifficulty] = useState(false);
 
   // Colorblind-safe AI Improvement button classes from centralized theme
   const aiImprovementClasses = actionColor("success");
+
+  const handleDifficultyChange = async (newDifficulty) => {
+    if (onUpdateQuestion && newDifficulty !== q.difficulty) {
+      await onUpdateQuestion(q.id, { difficulty: newDifficulty });
+    }
+    setIsEditingDifficulty(false);
+  };
 
   return (
     <div className="flex justify-between items-start">
       <div className="flex flex-col gap-1">
         <div className="flex gap-1.5 items-center flex-wrap">
-          <span
-            className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(
-              displayDifficulty
-            )} flex items-center gap-1`}
-          >
-            <Icon name="zap" size={12} />
-            {displayDifficulty}
-          </span>
+          {/* Difficulty Badge - Now Clickable */}
+          {isEditingDifficulty ? (
+            <select
+              value={displayDifficulty}
+              onChange={(e) => handleDifficultyChange(e.target.value)}
+              onBlur={() => setIsEditingDifficulty(false)}
+              autoFocus
+              className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-slate-800 text-white border border-slate-600 cursor-pointer focus:ring-2 focus:ring-blue-500"
+            >
+              {DIFFICULTY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <button
+              onClick={() => onUpdateQuestion && setIsEditingDifficulty(true)}
+              className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(
+                displayDifficulty
+              )} flex items-center gap-1 ${
+                onUpdateQuestion
+                  ? "cursor-pointer hover:opacity-80 transition-opacity"
+                  : ""
+              }`}
+              title={
+                onUpdateQuestion
+                  ? "Click to change difficulty"
+                  : displayDifficulty
+              }
+              disabled={!onUpdateQuestion}
+            >
+              <Icon name="zap" size={12} />
+              {displayDifficulty}
+              {onUpdateQuestion && (
+                <Icon
+                  name="chevron-down"
+                  size={10}
+                  className="ml-0.5 opacity-50"
+                />
+              )}
+            </button>
+          )}
           <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">
             {q.type === "True/False" ? "T/F" : "MC"}
           </span>

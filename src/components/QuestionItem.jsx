@@ -252,6 +252,8 @@ const QuestionItem = ({
           }}
           appMode={appMode}
           onOpenCritiqueModal={() => setShowImprovementModal(true)}
+          onUpdateQuestion={onUpdateQuestion}
+          onKickBack={onUpdateStatus}
         />
 
         {/* Language Flags - All authenticated users */}

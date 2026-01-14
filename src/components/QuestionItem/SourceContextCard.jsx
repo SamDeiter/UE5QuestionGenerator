@@ -2,18 +2,33 @@ import React from "react";
 import DOMPurify from "dompurify";
 import Icon from "../Icon";
 
+/**
+ * Validates if a URL is a legitimate Epic Games documentation link
+ */
+const isValidDocUrl = (url) => {
+  if (!url || typeof url !== "string") return false;
+
+  // Must be HTTPS
+  if (!url.startsWith("https://")) return false;
+
+  // Must be from Epic Games documentation
+  const validDomains = [
+    "dev.epicgames.com/documentation",
+    "docs.unrealengine.com",
+    "dev.epicgames.com/community",
+  ];
+
+  return validDomains.some((domain) => url.includes(domain));
+};
+
 const SourceContextCard = ({ sourceUrl, sourceExcerpt }) => {
-  if (!sourceExcerpt && !sourceUrl) {
+  // Validate the URL
+  const hasValidUrl = isValidDocUrl(sourceUrl);
+
+  // Don't render if no valid content
+  if (!sourceExcerpt && !hasValidUrl) {
     return null;
   }
-
-  // Highlight matching terms between question and excerpt
-  const highlightExcerpt = () => {
-    if (!sourceExcerpt) return "";
-
-    // Simple highlighting - could be enhanced
-    return sourceExcerpt;
-  };
 
   return (
     <div className="bg-slate-950/50 border border-blue-700/30 rounded-lg p-4 mb-3">
@@ -26,14 +41,14 @@ const SourceContextCard = ({ sourceUrl, sourceExcerpt }) => {
         <p
           className="text-slate-400 text-sm italic leading-relaxed mb-3"
           dangerouslySetInnerHTML={{
-            __html: `"${DOMPurify.sanitize(highlightExcerpt(), {
+            __html: `"${DOMPurify.sanitize(sourceExcerpt, {
               ALLOWED_TAGS: [],
             })}"`,
           }}
         />
       )}
 
-      {sourceUrl && (
+      {hasValidUrl ? (
         <a
           href={sourceUrl}
           target="_blank"
@@ -42,7 +57,15 @@ const SourceContextCard = ({ sourceUrl, sourceExcerpt }) => {
         >
           <Icon name="external-link" size={12} /> View Full Documentation
         </a>
-      )}
+      ) : sourceUrl ? (
+        // Show disabled state for invalid URLs
+        <div
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/50 text-slate-500 text-xs rounded-md border border-slate-700 cursor-not-allowed"
+          title="Documentation link unavailable"
+        >
+          <Icon name="link-off" size={12} /> Documentation Unavailable
+        </div>
+      ) : null}
     </div>
   );
 };
