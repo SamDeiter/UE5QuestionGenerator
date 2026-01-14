@@ -57,7 +57,7 @@ service cloud.firestore {
          && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly([
               // Version and timestamps
-              'version', 'updatedAt', 'firestoreUpdatedAt',
+              'version', 'updatedAt', 'firestoreUpdatedAt', 'modifiedAt',
               // Scoring fields
               'aiScore', 'scoredAt', 'scoreSource', 
               // Status and rejection fields
@@ -68,8 +68,13 @@ service cloud.firestore {
               'reviewerName', 'reviewDuration', 'reviewStartedAt',
               // Critique and improvement fields
               'critique', 'critiqueScore', 'suggestedRewrite', 'improvedScore', 'improvementsApplied',
+              'rewriteChanges', 'critiqueAttempts', 'previousCritiqueScore',
               // Human verification fields
               'humanVerified', 'humanVerifiedBy', 'humanVerifiedAt',
+              // Kick back fields
+              'kickedBackAt', 'kickedBackBy', 'kickedBackReason',
+              // Tags and difficulty (for re-critique and manual updates)
+              'tags', 'difficulty',
               // Notes
               'notes'
             ]))
