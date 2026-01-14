@@ -87,6 +87,61 @@ async function backfillHumanVerified(onProgress, dryRun = false) {
 }
 
 /**
+ * Backfill humanVerifiedBy for questions that have humanVerified=true but missing the verifier name
+ */
+async function backfillVerifierNames(onProgress, dryRun = false) {
+  const snapshot = await getDocs(
+    query(collection(db, "questions"), where("humanVerified", "==", true))
+  );
+
+  const needsUpdate = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    // Only update if humanVerifiedBy is missing but we have a fallback
+    if (!data.humanVerifiedBy) {
+      const fallbackName = data.acceptedBy || data.creatorEmail || null;
+      if (fallbackName) {
+        needsUpdate.push({
+          id: docSnap.id,
+          verifierName: fallbackName,
+        });
+      }
+    }
+  });
+
+  onProgress(
+    `Found ${needsUpdate.length} verified questions missing humanVerifiedBy`
+  );
+
+  if (dryRun || needsUpdate.length === 0) {
+    return { updated: 0, total: needsUpdate.length, dryRun };
+  }
+
+  // Batch update
+  const batchSize = 500;
+  let updated = 0;
+
+  for (let i = 0; i < needsUpdate.length; i += batchSize) {
+    const batch = writeBatch(db);
+    const chunk = needsUpdate.slice(i, i + batchSize);
+
+    chunk.forEach((item) => {
+      const ref = doc(db, "questions", String(item.id));
+      batch.update(ref, {
+        humanVerifiedBy: item.verifierName,
+        _verifierBackfilledAt: new Date().toISOString(),
+      });
+    });
+
+    await batch.commit();
+    updated += chunk.length;
+    onProgress(`Updated ${updated}/${needsUpdate.length}...`);
+  }
+
+  return { updated, total: needsUpdate.length, dryRun: false };
+}
+
+/**
  * Backfill tags for questions with fewer than 3 tags
  */
 async function backfillTags(onProgress, dryRun = false) {
@@ -212,6 +267,31 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
     }
   };
 
+  const handleBackfillVerifierNames = async (dryRun = false) => {
+    setProcessing(true);
+    setProgress("Checking verified questions for missing verifier names...");
+    setLastResult(null);
+
+    try {
+      const result = await backfillVerifierNames(setProgress, dryRun);
+      setLastResult(result);
+      if (dryRun) {
+        showMessage(
+          `🔍 DRY RUN: ${result.total} questions would be updated`,
+          5000
+        );
+      } else {
+        showMessage(`✅ Updated ${result.updated} verifier names`, 5000);
+      }
+    } catch (error) {
+      logger.error("Verifier backfill failed:", error);
+      showMessage(`❌ Failed: ${error.message}`, 5000);
+    } finally {
+      setProcessing(false);
+      setProgress("");
+    }
+  };
+
   return (
     <CollapsibleSection
       title="Data Maintenance"
@@ -260,6 +340,34 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
               onClick={() => handleBackfillHumanVerified(false)}
               disabled={processing}
               className="px-3 py-1.5 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded font-bold disabled:opacity-50"
+            >
+              Run Backfill
+            </button>
+          </div>
+        </div>
+
+        {/* Backfill Verifier Names */}
+        <div className="p-3 bg-slate-800/50 rounded border border-slate-700">
+          <h4 className="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
+            <Icon name="user-check" size={14} className="text-cyan-400" />
+            Backfill Verifier Names
+          </h4>
+          <p className="text-xs text-slate-400 mb-3">
+            Populate missing humanVerifiedBy field using acceptedBy as fallback.
+            Run Dry Run first to see count.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleBackfillVerifierNames(true)}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded disabled:opacity-50"
+            >
+              Dry Run (Count)
+            </button>
+            <button
+              onClick={() => handleBackfillVerifierNames(false)}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-cyan-700 hover:bg-cyan-600 text-white rounded font-bold disabled:opacity-50"
             >
               Run Backfill
             </button>
