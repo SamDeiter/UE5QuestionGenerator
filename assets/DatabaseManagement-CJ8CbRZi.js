@@ -1,5 +1,5 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/index-DnzXyln0.js","assets/ui-components-D32JNNGO.js","assets/vendor-react-C5vGbBff.js","assets/vendor-icons-DJesxG0r.js","assets/agents-logic-DkpRB--7.js","assets/vendor-firebase-DI6Ofeub.js","assets/vendor-charts-Cxanh-16.js","assets/index-X6fewpO2.css"])))=>i.map(i=>d[i]);
-import{j as n,I as i,_ as c,af as u,am as m}from"./ui-components-D32JNNGO.js";import"./vendor-icons-DJesxG0r.js";import{C as f}from"./index-DnzXyln0.js";import{l as o}from"./agents-logic-DkpRB--7.js";import"./vendor-react-C5vGbBff.js";import"./vendor-firebase-DI6Ofeub.js";import"./vendor-charts-Cxanh-16.js";const E=({showMessage:e,isCollapsed:s,onToggle:l})=>n.jsxs(f,{title:"Database Management",icon:"database",isCollapsed:s,onToggle:l,variant:"red",children:[n.jsx("p",{className:"text-xs text-slate-400 mb-4",children:"⚠️ Danger Zone: These operations permanently delete data and cannot be undone."}),n.jsxs("div",{className:"space-y-3",children:[n.jsxs("button",{onClick:async()=>{if(confirm(`🔗 Link Existing Translations?
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/index-DB-mq0Nt.js","assets/ui-components-XJFlwTSl.js","assets/vendor-react-C5vGbBff.js","assets/vendor-icons-DJesxG0r.js","assets/agents-logic-DkpRB--7.js","assets/vendor-firebase-DI6Ofeub.js","assets/vendor-charts-Cxanh-16.js","assets/index-X6fewpO2.css"])))=>i.map(i=>d[i]);
+import{j as n,I as i,_ as c,af as u,am as m}from"./ui-components-XJFlwTSl.js";import"./vendor-icons-DJesxG0r.js";import{C as f}from"./index-DB-mq0Nt.js";import{l as o}from"./agents-logic-DkpRB--7.js";import"./vendor-react-C5vGbBff.js";import"./vendor-firebase-DI6Ofeub.js";import"./vendor-charts-Cxanh-16.js";const E=({showMessage:e,isCollapsed:s,onToggle:l})=>n.jsxs(f,{title:"Database Management",icon:"database",isCollapsed:s,onToggle:l,variant:"red",children:[n.jsx("p",{className:"text-xs text-slate-400 mb-4",children:"⚠️ Danger Zone: These operations permanently delete data and cannot be undone."}),n.jsxs("div",{className:"space-y-3",children:[n.jsxs("button",{onClick:async()=>{if(confirm(`🔗 Link Existing Translations?
 
 This will:
 1. Find all translated questions (Chinese, Japanese, Korean, etc.)
@@ -9,7 +9,7 @@ This will:
 
 This is SAFE and won't delete any data.
 
-Proceed?`))try{e("🔄 Starting translation migration...",1e4);const{migrateTranslationsViaCloudFunction:t}=await c(async()=>{const{migrateTranslationsViaCloudFunction:a}=await import("./index-DnzXyln0.js").then(d=>d.k);return{migrateTranslationsViaCloudFunction:a}},__vite__mapDeps([0,1,2,3,4,5,6,7])),r=await t();if(r.success){const{stats:a}=r;e(`✅ Migration complete!
+Proceed?`))try{e("🔄 Starting translation migration...",1e4);const{migrateTranslationsViaCloudFunction:t}=await c(async()=>{const{migrateTranslationsViaCloudFunction:a}=await import("./index-DB-mq0Nt.js").then(d=>d.k);return{migrateTranslationsViaCloudFunction:a}},__vite__mapDeps([0,1,2,3,4,5,6,7])),r=await t();if(r.success){const{stats:a}=r;e(`✅ Migration complete!
 
 📊 Statistics:
 - Total questions: ${a.totalQuestions}
