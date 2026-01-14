@@ -134,6 +134,52 @@ export const useQuestionCritique = ({
           updateQuestionInState(q.id, critiqueUpdate);
         }
 
+        // CRITICAL: Persist critique results (including tags) to Firestore
+        // Only send the fields that changed to comply with Firestore rules
+        try {
+          const { doc, updateDoc, getFirestore } = await import(
+            "firebase/firestore"
+          );
+          const { getFirebaseApp } = await import("../../services/firebase");
+          const db = getFirestore(getFirebaseApp());
+          const questionRef = doc(db, "questions", q.id);
+
+          // Only update the critique-related fields (matches Firestore rules whitelist)
+          const critiqueFieldsOnly = {
+            critique: text,
+            critiqueScore: score,
+            improvedScore: improvedScore,
+            suggestedRewrite: updatedRewrite,
+            rewriteChanges: changes,
+            critiqueAttempts: newAttemptCount,
+            tags: suggestedTags.length > 0 ? suggestedTags : q.tags || [],
+            firestoreUpdatedAt: new Date().toISOString(),
+            version: (q.version || 1) + 1,
+            ...(score < PASSING_SCORE && newAttemptCount >= MAX_ATTEMPTS
+              ? {
+                  status: "rejected",
+                  rejectionReason: "low_score_after_retries",
+                  rejectedAt: new Date().toISOString(),
+                }
+              : {}),
+          };
+
+          await updateDoc(questionRef, critiqueFieldsOnly);
+          logger.log(
+            `[Critique] Saved critique fields for ${q.id} including ${suggestedTags.length} tags`
+          );
+        } catch (saveError) {
+          logger.error(
+            "[Critique] Failed to save critique results to Firestore:",
+            saveError
+          );
+          // Don't fail silently - notify user
+          showMessage(
+            "⚠️ Critique saved locally but failed to sync to database",
+            TOAST_DURATION.LONG
+          );
+        }
+
         if (score < PASSING_SCORE && newAttemptCount >= MAX_ATTEMPTS) {
           showMessage(
             `\u26D4 Auto-rejected: Score ${score}/100 after ${newAttemptCount} attempts. Quality too low.`,
