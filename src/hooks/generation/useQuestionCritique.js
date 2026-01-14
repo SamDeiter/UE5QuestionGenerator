@@ -137,11 +137,9 @@ export const useQuestionCritique = ({
         // CRITICAL: Persist critique results (including tags) to Firestore
         // Only send the fields that changed to comply with Firestore rules
         try {
-          const { doc, updateDoc, getFirestore } = await import(
-            "firebase/firestore"
-          );
-          const { getFirebaseApp } = await import("../../services/firebase");
-          const db = getFirestore(getFirebaseApp());
+          const { doc, updateDoc } = await import("firebase/firestore");
+          const { getDb } = await import("../../services/firebase");
+          const db = getDb();
           const questionRef = doc(db, "questions", q.id);
 
           // Only update the critique-related fields (matches Firestore rules whitelist)
