@@ -125,26 +125,20 @@ const QuestionHeader = ({
             </span>
           )}
 
-          {/* AI Score Badges - Show original and improved scores */}
-          {/* Check critiqueScore -> qualityScore -> aiScore (all possible score fields) */}
-          {(q.critiqueScore ?? q.qualityScore ?? q.aiScore ?? null) !==
-            null && (
+          {/* AI Score Badge - Only shows AFTER AI critique has been run */}
+          {q.critiqueScore !== null && q.critiqueScore !== undefined && (
             <div className="flex items-center gap-1">
-              <ScoreBadge
-                score={q.critiqueScore ?? q.qualityScore ?? q.aiScore}
-              />
-              {q.improvedScore &&
-                q.improvedScore !==
-                  (q.critiqueScore ?? q.qualityScore ?? q.aiScore) && (
-                  <>
-                    <Icon
-                      name="arrow-right"
-                      size={10}
-                      className="text-slate-400"
-                    />
-                    <ScoreBadge score={q.improvedScore} improved />
-                  </>
-                )}
+              <ScoreBadge score={q.critiqueScore} />
+              {q.improvedScore && q.improvedScore !== q.critiqueScore && (
+                <>
+                  <Icon
+                    name="arrow-right"
+                    size={10}
+                    className="text-slate-400"
+                  />
+                  <ScoreBadge score={q.improvedScore} improved />
+                </>
+              )}
             </div>
           )}
 
