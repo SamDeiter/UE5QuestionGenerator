@@ -304,13 +304,13 @@ const AnalyticsView = ({
           </div>
 
           <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-            {/* Time Range Selector */}
-            <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700 overflow-x-auto">
+            {/* Time Range Selector - more compact */}
+            <div className="flex bg-slate-800 rounded-lg p-0.5 border border-slate-700 flex-shrink-0">
               {TIME_RANGES.map((range) => (
                 <button
                   key={range.id}
                   onClick={() => setTimeRange(range.id)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors ${
+                  className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                     timeRange === range.id
                       ? "bg-emerald-600 text-white shadow-sm"
                       : "text-slate-400 hover:text-white hover:bg-slate-700"
@@ -321,9 +321,9 @@ const AnalyticsView = ({
               ))}
             </div>
 
-            {/* Date Range Display */}
+            {/* Date Range Display - hidden on small screens */}
             {timeRange !== "all" && (
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-slate-500 hidden md:block whitespace-nowrap">
                 {(() => {
                   const range = TIME_RANGES.find((r) => r.id === timeRange);
                   if (range && range.days) {
