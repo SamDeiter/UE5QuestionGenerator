@@ -14,11 +14,20 @@ vi.mock("firebase/auth", () => ({
   getAuth: vi.fn(() => ({})),
 }));
 
+// Mock Firestore for write probe
+const mockSetDoc = vi.fn();
+vi.mock("firebase/firestore", () => ({
+  doc: vi.fn(() => ({})),
+  setDoc: (...args) => mockSetDoc(...args),
+  serverTimestamp: vi.fn(() => "mock-timestamp"),
+}));
+
 // Mock Firebase service
 vi.mock("../../services/firebase", () => ({
   auth: {},
   getCustomTags: vi.fn(() => Promise.resolve({})),
   saveCustomTags: vi.fn(() => Promise.resolve()),
+  getDb: vi.fn(() => ({})),
 }));
 
 // Mock invite service
@@ -174,5 +183,67 @@ describe("useAuth", () => {
     // But NOT registered
     expect(result.current.isRegistered).toBe(false);
     // This is the "Ghost Reviewer" state that triggers the warning banner
+  });
+
+  it("should set permissionError=false when write probe succeeds", async () => {
+    const mockUser = {
+      uid: "probe-success-uid",
+      email: "success@epicgames.com",
+    };
+
+    onAuthStateChanged.mockImplementation((auth, callback) => {
+      callback(mockUser);
+      return () => {};
+    });
+
+    checkUserRegistration.mockResolvedValue({
+      registered: true,
+      role: "admin",
+    });
+
+    // Write probe succeeds
+    mockSetDoc.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useAuth(mockShowMessage));
+
+    await waitFor(() => {
+      expect(result.current.registrationLoading).toBe(false);
+    });
+
+    // Probe should have been called
+    expect(mockSetDoc).toHaveBeenCalled();
+    // permissionError should be false
+    expect(result.current.permissionError).toBe(false);
+  });
+
+  it("should set permissionError=true when write probe fails with permission-denied", async () => {
+    const mockUser = { uid: "probe-fail-uid", email: "fail@epicgames.com" };
+
+    onAuthStateChanged.mockImplementation((auth, callback) => {
+      callback(mockUser);
+      return () => {};
+    });
+
+    checkUserRegistration.mockResolvedValue({
+      registered: true,
+      role: "admin",
+    });
+
+    // Write probe fails with permission-denied
+    mockSetDoc.mockRejectedValue({ code: "permission-denied" });
+
+    const { result } = renderHook(() => useAuth(mockShowMessage));
+
+    await waitFor(() => {
+      expect(result.current.registrationLoading).toBe(false);
+    });
+
+    // Wait for the probe to complete
+    await waitFor(() => {
+      expect(result.current.permissionError).toBe(true);
+    });
+
+    // permissionError should be true - blocking banner will show
+    expect(result.current.permissionError).toBe(true);
   });
 });
