@@ -1,4 +1,0 @@
-Searching collection: QuestionsAPIAccess
-Searching collection: admins
-Searching collection: apiUsage
-Searching collection: audit-log

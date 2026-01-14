@@ -5,35 +5,102 @@ import {
   Cell,
   BarChart,
   Bar,
-  AreaChart,
-  Area,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
 } from "recharts";
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
 import StatCard from "./StatCard";
 import EmptyState from "../EmptyState";
 
 /**
- * OverviewTab - Dashboard overview with summary stats and charts
- *
- * @param {Object} props
- * @param {Object} props.summary - Summary statistics for the period
- * @param {Array} props.statusData - Question status distribution data
- * @param {Array} props.difficultyData - Difficulty distribution data
- * @param {Array} props.recentGenerations - Recent generation trend data
+ * OverviewTab - Dashboard overview with pipeline funnel and charts
  */
 const OverviewTab = ({
   summary,
   statusData,
   difficultyData,
-  recentGenerations,
+  pipelineMetrics = {},
+  translationLanguages = {},
 }) => {
+  // Build funnel data for pipeline visualization
+  const funnelData = [
+    { name: "Generated", value: pipelineMetrics.total || 0, fill: "#3b82f6" },
+    {
+      name: "Critiqued",
+      value: pipelineMetrics.critiqued || 0,
+      fill: "#8b5cf6",
+    },
+    { name: "Verified", value: pipelineMetrics.verified || 0, fill: "#f59e0b" },
+    { name: "Accepted", value: pipelineMetrics.accepted || 0, fill: "#22c55e" },
+  ];
+
+  // Translation coverage
+  const englishCount = translationLanguages["English"] || 0;
+  const translatedCount = Object.entries(translationLanguages)
+    .filter(([lang]) => lang !== "English")
+    .reduce((sum, [, count]) => sum + count, 0);
+  const translationPercent =
+    englishCount > 0 ? Math.round((translatedCount / englishCount) * 100) : 0;
+
   return (
     <div className="space-y-6">
+      {/* Pipeline Funnel - Review Workflow */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+        <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+          <Icon name="git-branch" size={16} className="text-blue-400" />
+          Review Pipeline
+        </h3>
+        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
+          {funnelData.map((stage, idx) => (
+            <div key={stage.name} className="flex items-center gap-2 min-w-0">
+              <div
+                className="flex flex-col items-center px-4 py-3 rounded-lg min-w-[100px]"
+                style={{
+                  backgroundColor: `${stage.fill}20`,
+                  borderColor: stage.fill,
+                  borderWidth: 1,
+                }}
+              >
+                <span
+                  className="text-2xl font-bold"
+                  style={{ color: stage.fill }}
+                >
+                  {stage.value}
+                </span>
+                <span className="text-xs text-slate-400 whitespace-nowrap">
+                  {stage.name}
+                </span>
+              </div>
+              {idx < funnelData.length - 1 && (
+                <Icon
+                  name="chevron-right"
+                  size={20}
+                  className="text-slate-600 flex-shrink-0"
+                />
+              )}
+            </div>
+          ))}
+          {/* Translations as bonus stage */}
+          <div className="flex items-center gap-2 min-w-0">
+            <Icon
+              name="chevron-right"
+              size={20}
+              className="text-slate-600 flex-shrink-0"
+            />
+            <div className="flex flex-col items-center px-4 py-3 rounded-lg min-w-[100px] bg-indigo-950/50 border border-indigo-800">
+              <span className="text-2xl font-bold text-indigo-400">
+                {translatedCount}
+              </span>
+              <span className="text-xs text-slate-400 whitespace-nowrap">
+                Translated
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Summary Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
@@ -49,14 +116,14 @@ const OverviewTab = ({
           color="emerald"
         />
         <StatCard
-          title="Avg Quality"
-          value={summary.averageQuality || 0}
-          icon="star"
-          color="amber"
+          title="Translation Coverage"
+          value={`${translationPercent}%`}
+          icon="globe"
+          color="indigo"
         />
         <StatCard
           title="Total Cost"
-          value={`$${(summary.estimatedCost || 0).toFixed(4)}`}
+          value={`$${(summary.estimatedCost || 0).toFixed(2)}`}
           icon="dollar-sign"
           color="purple"
         />
@@ -155,77 +222,32 @@ const OverviewTab = ({
         </div>
       </div>
 
-      {/* Generation Trend */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-        <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
-          <Icon name="trending-up" size={16} className="text-blue-400" />
-          Recent Generation Activity
-        </h3>
-        <div className="h-64">
-          {recentGenerations.length > 0 ? (
-            <SafeResponsiveContainer
-              width="100%"
-              height="100%"
-              minWidth={0}
-              minHeight={0}
-            >
-              <AreaChart
-                data={recentGenerations}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="colorTokens" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient
-                    id="colorQuestions"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis
-                  dataKey="name"
-                  stroke="#94a3b8"
-                  tick={{ fontSize: 11 }}
-                />
-                <YAxis stroke="#94a3b8" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1e293b",
-                    border: "1px solid #334155",
-                  }}
-                />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="tokens"
-                  stroke="#3b82f6"
-                  fillOpacity={1}
-                  fill="url(#colorTokens)"
-                  name="Tokens"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="questions"
-                  stroke="#22c55e"
-                  fillOpacity={1}
-                  fill="url(#colorQuestions)"
-                  name="Questions"
-                />
-              </AreaChart>
-            </SafeResponsiveContainer>
-          ) : (
-            <EmptyState message="Generate some questions to see trends" />
-          )}
+      {/* Translation Coverage by Language */}
+      {Object.keys(translationLanguages).length > 1 && (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+          <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+            <Icon name="globe" size={16} className="text-indigo-400" />
+            Questions by Language
+          </h3>
+          <div className="flex flex-wrap gap-3">
+            {Object.entries(translationLanguages)
+              .sort((a, b) => b[1] - a[1])
+              .map(([lang, count]) => (
+                <div
+                  key={lang}
+                  className={`px-4 py-2 rounded-lg border ${
+                    lang === "English"
+                      ? "bg-blue-950/50 border-blue-800 text-blue-300"
+                      : "bg-slate-800 border-slate-700 text-slate-300"
+                  }`}
+                >
+                  <span className="font-bold">{count}</span>
+                  <span className="text-xs ml-2 opacity-70">{lang}</span>
+                </div>
+              ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

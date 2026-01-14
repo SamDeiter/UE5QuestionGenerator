@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
 import Icon from "./Icon";
-import { format } from "date-fns";
 import { getAnalytics, getTokenStats } from "../utils/analyticsStore";
 import { TAGS_BY_DISCIPLINE } from "../utils/tagTaxonomy";
 
@@ -11,15 +10,6 @@ import QualityTab from "./analytics/QualityTab";
 
 // Define discipline list from tagTaxonomy
 const DISCIPLINES = Object.keys(TAGS_BY_DISCIPLINE);
-
-const TIME_RANGES = [
-  { id: "24h", label: "24h", days: 1 },
-  { id: "7d", label: "7d", days: 7 },
-  { id: "15d", label: "15d", days: 15 },
-  { id: "30d", label: "30d", days: 30 },
-  { id: "90d", label: "90d", days: 90 },
-  { id: "all", label: "All", days: null },
-];
 
 // Color palettes - using highly distinct, contrasting colors
 const DISCIPLINE_COLORS = {
@@ -54,7 +44,6 @@ const AnalyticsView = ({
   allQuestionsMap = new Map(),
 }) => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [timeRange, setTimeRange] = useState("all");
   const analytics = getAnalytics();
   const tokenStats = getTokenStats();
 
@@ -106,24 +95,11 @@ const AnalyticsView = ({
     recentGenerations,
     filteredSummary,
     filteredQuestions,
+    pipelineMetrics,
+    translationLanguages,
   } = useMemo(() => {
-    let questions = allQuestions;
-    let generations = analytics.generations || [];
-
-    // Filter by Time Range
-    if (timeRange !== "all") {
-      const range = TIME_RANGES.find((r) => r.id === timeRange);
-      if (range && range.days) {
-        const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - range.days);
-        questions = questions.filter(
-          (q) => new Date(q.created || q.timestamp || q.dateAdded) >= cutoff
-        );
-        generations = generations.filter(
-          (g) => new Date(g.timestamp) >= cutoff
-        );
-      }
-    }
+    const questions = allQuestions;
+    const generations = analytics.generations || [];
 
     // Calculate summary for the filtered view
     const filteredSummary = {
@@ -259,6 +235,28 @@ const AnalyticsView = ({
       quality: gen.averageQuality || 0,
     }));
 
+    // Pipeline metrics - track workflow stages
+    const englishQuestions = questions.filter(
+      (q) => !q.language || q.language === "English"
+    );
+    const pipelineMetrics = {
+      total: englishQuestions.length,
+      critiqued: englishQuestions.filter((q) => q.critiqueScore != null).length,
+      verified: englishQuestions.filter((q) => q.humanVerified === true).length,
+      accepted: statusCounts.accepted,
+      // Count translations (non-English questions)
+      translated: questions.filter(
+        (q) => q.language && q.language !== "English"
+      ).length,
+    };
+
+    // Get unique languages for translation coverage
+    const translationLanguages = {};
+    questions.forEach((q) => {
+      const lang = q.language || "English";
+      translationLanguages[lang] = (translationLanguages[lang] || 0) + 1;
+    });
+
     return {
       disciplineData,
       difficultyData,
@@ -266,9 +264,11 @@ const AnalyticsView = ({
       qualityDistribution,
       recentGenerations,
       filteredSummary,
-      filteredQuestions: questions, // Time-filtered questions for consistent counting
+      filteredQuestions: questions,
+      pipelineMetrics,
+      translationLanguages,
     };
-  }, [analytics, timeRange, allQuestions]);
+  }, [analytics, allQuestions]);
 
   const summary = filteredSummary || analytics.summary || {};
 
@@ -303,43 +303,7 @@ const AnalyticsView = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-            {/* Time Range Selector - more compact */}
-            <div className="flex bg-slate-800 rounded-lg p-0.5 border border-slate-700 flex-shrink-0">
-              {TIME_RANGES.map((range) => (
-                <button
-                  key={range.id}
-                  onClick={() => setTimeRange(range.id)}
-                  className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                    timeRange === range.id
-                      ? "bg-emerald-600 text-white shadow-sm"
-                      : "text-slate-400 hover:text-white hover:bg-slate-700"
-                  }`}
-                >
-                  {range.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Date Range Display - hidden on small screens */}
-            {timeRange !== "all" && (
-              <div className="text-xs text-slate-500 hidden md:block whitespace-nowrap">
-                {(() => {
-                  const range = TIME_RANGES.find((r) => r.id === timeRange);
-                  if (range && range.days) {
-                    const endDate = new Date();
-                    const startDate = new Date();
-                    startDate.setDate(startDate.getDate() - range.days);
-                    return `${format(startDate, "MMM d")} - ${format(
-                      endDate,
-                      "MMM d, yyyy"
-                    )}`;
-                  }
-                  return "";
-                })()}
-              </div>
-            )}
-
+          <div className="flex items-center gap-4 w-full md:w-auto justify-end">
             {/* Tab Navigation */}
             <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1">
               {tabs.map((tab) => (
@@ -370,6 +334,8 @@ const AnalyticsView = ({
             statusData={statusData}
             difficultyData={difficultyData}
             recentGenerations={recentGenerations}
+            pipelineMetrics={pipelineMetrics}
+            translationLanguages={translationLanguages}
           />
         )}
 
