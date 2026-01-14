@@ -165,8 +165,10 @@ const QuestionItem = ({
       lastSeenCritiqueScoreRef.current = q.critiqueScore;
     }
 
-    // Open modal if: critique exists AND (has rewrite OR critique just updated)
+    // Open modal if: in REVIEW mode AND critique exists AND (has rewrite OR critique just updated)
+    // NEVER auto-open in database mode - users should click to view
     if (
+      appMode === APP_MODES.REVIEW &&
       q.critique &&
       (q.suggestedRewrite || critiqueJustUpdated) &&
       !q.improvementsApplied &&
@@ -176,6 +178,7 @@ const QuestionItem = ({
       setShowImprovementModal(true);
     }
   }, [
+    appMode,
     q.critique,
     q.suggestedRewrite,
     q.id,
