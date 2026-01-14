@@ -171,14 +171,23 @@ const QuestionHeader = ({
             {/* Show reviewer - use reviewerName OR humanVerifiedBy */}
             {(() => {
               const reviewer = q.reviewerName || q.humanVerifiedBy;
-              if (reviewer && reviewer !== q.creatorName) {
+              // Always show verifier for verified questions
+              if (q.humanVerified && reviewer) {
+                const isSelfVerified =
+                  reviewer === q.creatorName ||
+                  reviewer === q.creatorEmail ||
+                  reviewer.includes(q.creatorName?.split(" ")[0] || "---");
                 return (
                   <div
                     className="flex items-center gap-1 text-xs text-slate-500"
-                    title="Reviewer"
+                    title={isSelfVerified ? "Self-verified" : "Verified by"}
                   >
                     <Icon name="check" size={12} />
-                    <span className="font-bold text-indigo-400">
+                    <span
+                      className={`font-bold ${
+                        isSelfVerified ? "text-slate-400" : "text-indigo-400"
+                      }`}
+                    >
                       {reviewer}
                     </span>
                   </div>
