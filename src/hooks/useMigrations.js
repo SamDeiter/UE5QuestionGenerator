@@ -53,15 +53,14 @@ export function useMigrations({
       ) {
         hasAutoAcceptMigratedRef.current = true;
         try {
-          logger.log(
-            "🔄 Running migration: fixing auto-accepted questions..."
-          );
+          logger.log("🔄 Running migration: fixing auto-accepted questions...");
 
           // Dynamic imports to avoid bundling firebase if not needed
-          const { db } = await import("../services/firebase");
+          const { getDb } = await import("../services/firebase");
           const { collection, getDocs, doc, updateDoc } = await import(
             "firebase/firestore"
           );
+          const db = getDb();
 
           const questionsRef = collection(db, "questions");
           const snapshot = await getDocs(questionsRef);
@@ -123,9 +122,10 @@ export function useMigrations({
             "🔄 Running migration: adding firestoreUpdatedAt to questions..."
           );
 
-          const { db } = await import("../services/firebase");
+          const { getDb } = await import("../services/firebase");
           const { collection, getDocs, doc, updateDoc, Timestamp } =
             await import("firebase/firestore");
+          const db = getDb();
 
           const questionsRef = collection(db, "questions");
           const snapshot = await getDocs(questionsRef);

@@ -140,7 +140,7 @@ export const generateTagsSecure = async (apiKey, questionText) => {
     );
 
     // Parse result - try multiple extraction methods
-    let cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
+    const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
 
     // Try direct parse first
     try {
