@@ -116,6 +116,8 @@ export const useQuestionCritique = ({
           suggestedRewrite: updatedRewrite,
           rewriteChanges: changes,
           critiqueAttempts: newAttemptCount,
+          // Save generated tags immediately
+          tags: suggestedTags.length > 0 ? suggestedTags : item.tags,
           ...(score < PASSING_SCORE && newAttemptCount >= MAX_ATTEMPTS
             ? {
                 status: "rejected",
@@ -174,6 +176,8 @@ export const useQuestionCritique = ({
         question: q.suggestedRewrite.question,
         options: q.suggestedRewrite.options,
         correct: q.suggestedRewrite.correct,
+        // Include suggested tags if available
+        tags: q.suggestedRewrite.tags || q.tags || [],
         suggestedRewrite: null,
         rewriteChanges: null,
         critique: null,
