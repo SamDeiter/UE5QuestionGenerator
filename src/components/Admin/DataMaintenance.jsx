@@ -19,12 +19,93 @@ import {
 } from "firebase/firestore";
 import { app } from "../../services/firebase";
 import { auth } from "../../services/firebaseAuth";
-import { generateTagsSecure } from "../../services/geminiSecure";
+import {
+  generateTagsSecure,
+  generateCritiqueSecure,
+} from "../../services/geminiSecure";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { logger } from "../../utils/logger";
 
 const db = getFirestore(app);
+
+// Rate limiting constant - 6.5 seconds between API calls
+const API_RATE_LIMIT_MS = 6500;
+
+/**
+ * Backfill AI critique scores for verified questions that are missing scores.
+ * PRESERVES humanVerified data - only updates critiqueScore and critique fields.
+ */
+async function backfillAIScoresForVerified(onProgress, dryRun = false) {
+  // Find questions that are verified/accepted but missing critiqueScore
+  const snapshot = await getDocs(
+    query(collection(db, "questions"), where("humanVerified", "==", true))
+  );
+
+  const needsScore = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    // Only include questions without a critique score
+    if (data.critiqueScore === null || data.critiqueScore === undefined) {
+      needsScore.push({
+        id: docSnap.id,
+        question: data.question,
+        options: data.options,
+        correct: data.correct || data.correctLetter,
+        sourceExcerpt: data.sourceExcerpt,
+        verifiedBy: data.humanVerifiedBy || "Unknown",
+      });
+    }
+  });
+
+  onProgress(`Found ${needsScore.length} verified questions without AI Score`);
+
+  if (dryRun || needsScore.length === 0) {
+    return { updated: 0, failed: 0, total: needsScore.length, dryRun };
+  }
+
+  let updated = 0;
+  let failed = 0;
+
+  for (const q of needsScore) {
+    try {
+      onProgress(
+        `Critiquing question ${updated + failed + 1}/${
+          needsScore.length
+        } (verified by ${q.verifiedBy})...`
+      );
+
+      // Run AI critique to get score
+      const { score, text } = await generateCritiqueSecure(null, {
+        question: q.question,
+        options: q.options,
+        correct: q.correct,
+        sourceExcerpt: q.sourceExcerpt,
+      });
+
+      if (score !== null && score !== undefined) {
+        const ref = doc(db, "questions", String(q.id));
+        await updateDoc(ref, {
+          critiqueScore: score,
+          critique: text,
+          _scoreBackfilledAt: new Date().toISOString(),
+          // NOTE: We do NOT touch humanVerified, humanVerifiedBy, humanVerifiedAt
+        });
+        updated++;
+      } else {
+        failed++;
+      }
+
+      // Rate limit - avoid API throttling
+      await new Promise((resolve) => setTimeout(resolve, API_RATE_LIMIT_MS));
+    } catch (error) {
+      logger.error("Critique failed for question:", q.id, error);
+      failed++;
+    }
+  }
+
+  return { updated, failed, total: needsScore.length, dryRun: false };
+}
 
 /**
  * Backfill humanVerified for all accepted questions
@@ -378,6 +459,34 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
     }
   };
 
+  const handleBackfillAIScores = async (dryRun = false) => {
+    setProcessing(true);
+    setProgress("Finding verified questions without AI Score...");
+    setLastResult(null);
+
+    try {
+      const result = await backfillAIScoresForVerified(setProgress, dryRun);
+      setLastResult(result);
+      if (dryRun) {
+        showMessage(
+          `🔍 DRY RUN: ${result.total} verified questions need AI scores`,
+          5000
+        );
+      } else {
+        showMessage(
+          `✅ Added AI scores to ${result.updated} questions (${result.failed} failed). Verification data preserved!`,
+          5000
+        );
+      }
+    } catch (error) {
+      logger.error("AI Score backfill failed:", error);
+      showMessage(`❌ Failed: ${error.message}`, 5000);
+    } finally {
+      setProcessing(false);
+      setProgress("");
+    }
+  };
+
   return (
     <CollapsibleSection
       title="Data Maintenance"
@@ -428,6 +537,34 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
               className="px-3 py-1.5 text-xs bg-red-700 hover:bg-red-600 text-white rounded font-bold disabled:opacity-50"
             >
               Kick Back to Pending
+            </button>
+          </div>
+        </div>
+
+        {/* BACKFILL AI SCORES FOR VERIFIED - Preserves Greg's work */}
+        <div className="p-3 bg-indigo-950/30 rounded border-2 border-indigo-700/50">
+          <h4 className="text-sm font-bold text-indigo-200 mb-2 flex items-center gap-2">
+            <Icon name="star" size={14} className="text-indigo-400" />
+            Backfill AI Scores (Preserve Verification)
+          </h4>
+          <p className="text-xs text-indigo-300/80 mb-3">
+            Run AI critique on verified questions to get scores WITHOUT changing
+            the humanVerified data. Greg's reviews will be preserved!
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleBackfillAIScores(true)}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded disabled:opacity-50"
+            >
+              Dry Run (Count)
+            </button>
+            <button
+              onClick={() => handleBackfillAIScores(false)}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-indigo-700 hover:bg-indigo-600 text-white rounded font-bold disabled:opacity-50"
+            >
+              Add AI Scores
             </button>
           </div>
         </div>
