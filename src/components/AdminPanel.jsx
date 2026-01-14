@@ -35,6 +35,7 @@ const TrainingDataExport = React.lazy(() =>
 );
 const SystemHealth = React.lazy(() => import("./Admin/SystemHealth"));
 const AuditLogs = React.lazy(() => import("./Admin/AuditLogs"));
+const DataMaintenance = React.lazy(() => import("./Admin/DataMaintenance"));
 
 const functions = getFunctions(app, "us-central1");
 
@@ -68,6 +69,7 @@ const AdminPanel = ({
     trainingData: true,
     envInfo: true,
     databaseMgmt: true,
+    dataMaintenance: true,
   });
 
   const toggleSection = (section) => {
@@ -240,8 +242,6 @@ const AdminPanel = ({
 
       {/* Stack layout with compact spacing */}
       <div className="space-y-1.5">
-
-
         {/* Feature Access Overview */}
         <CollapsibleSection
           title="Feature Access Overview"
@@ -329,7 +329,6 @@ const AdminPanel = ({
           </div>
         </CollapsibleSection>
 
-
         {/* System Health Diagnostic */}
         <React.Suspense
           fallback={
@@ -391,7 +390,6 @@ const AdminPanel = ({
           />
         </React.Suspense>
 
-
         {/* Reviewer Activity Analytics */}
         <React.Suspense
           fallback={
@@ -416,7 +414,6 @@ const AdminPanel = ({
           />
         </React.Suspense>
 
-
         {/* Audit Logs */}
         <React.Suspense
           fallback={
@@ -431,7 +428,6 @@ const AdminPanel = ({
             onToggle={() => toggleSection("auditLogs")}
           />
         </React.Suspense>
-
 
         {/* Custom Tags - Extracted Component */}
         <React.Suspense
@@ -449,7 +445,6 @@ const AdminPanel = ({
             onToggle={() => toggleSection("customTags")}
           />
         </React.Suspense>
-
 
         {/* API Configuration */}
         <React.Suspense
@@ -470,7 +465,6 @@ const AdminPanel = ({
           />
         </React.Suspense>
 
-
         {/* Environment Info - Extracted Component */}
         <React.Suspense
           fallback={
@@ -486,7 +480,6 @@ const AdminPanel = ({
             onToggle={() => toggleSection("envInfo")}
           />
         </React.Suspense>
-
 
         {/* Training Data Export - Super Admin Only */}
         {isSuperAdmin && (
@@ -513,6 +506,24 @@ const AdminPanel = ({
             isCollapsed={collapsed.databaseMgmt}
             onToggle={() => toggleSection("databaseMgmt")}
           />
+        )}
+
+        {/* Data Maintenance - Super Admin Only */}
+        {isSuperAdmin && (
+          <React.Suspense
+            fallback={
+              <div className="p-4 text-center text-slate-500">
+                <Icon name="loader" className="animate-spin mb-2" />
+                <p>Loading Data Maintenance...</p>
+              </div>
+            }
+          >
+            <DataMaintenance
+              showMessage={showMessage}
+              isCollapsed={collapsed.dataMaintenance}
+              onToggle={() => toggleSection("dataMaintenance")}
+            />
+          </React.Suspense>
         )}
       </div>
     </div>
