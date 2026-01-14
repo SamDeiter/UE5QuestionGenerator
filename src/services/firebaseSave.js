@@ -89,6 +89,41 @@ const removeUndefined = (obj) => {
 };
 
 /**
+ * Enforce required fields - auto-populate missing metadata
+ * @param {Object} question - Question to enforce fields on
+ * @returns {Object} Question with enforced fields
+ */
+const enforceRequiredFields = (question) => {
+  const currentEmail = auth.currentUser?.email;
+  const currentName = auth.currentUser?.displayName || currentEmail;
+  const now = new Date().toISOString();
+
+  // Ensure creator info is set
+  if (!question.creatorEmail && currentEmail) {
+    question.creatorEmail = currentEmail;
+  }
+  if (!question.creatorName && currentName) {
+    question.creatorName = currentName;
+  }
+
+  // If accepted, ensure acceptedBy is set
+  if (question.status === "accepted" && !question.acceptedBy && currentEmail) {
+    question.acceptedBy = currentEmail;
+    question.acceptedAt = question.acceptedAt || now;
+    logger.log(`[FieldEnforce] Auto-set acceptedBy: ${currentEmail}`);
+  }
+
+  // If humanVerified, ensure humanVerifiedBy is set
+  if (question.humanVerified && !question.humanVerifiedBy && currentEmail) {
+    question.humanVerifiedBy = currentEmail;
+    question.humanVerifiedAt = question.humanVerifiedAt || now;
+    logger.log(`[FieldEnforce] Auto-set humanVerifiedBy: ${currentEmail}`);
+  }
+
+  return question;
+};
+
+/**
  * Internal save function (used by queue processor)
  */
 const saveQuestionToFirestoreInternal = async (question) => {
@@ -97,9 +132,12 @@ const saveQuestionToFirestoreInternal = async (question) => {
     return;
   }
 
-  const docRef = doc(getDb(), "questions", question.uniqueId);
+  // Enforce required fields before save
+  const enforcedQuestion = enforceRequiredFields({ ...question });
+
+  const docRef = doc(getDb(), "questions", enforcedQuestion.uniqueId);
   const payload = removeUndefined({
-    ...question,
+    ...enforcedQuestion,
     firestoreUpdatedAt: Timestamp.now(),
   });
 
@@ -109,7 +147,7 @@ const saveQuestionToFirestoreInternal = async (question) => {
   );
 
   await setDoc(docRef, payload, { merge: true });
-  logger.log(`Question ${question.uniqueId} saved to Firestore.`);
+  logger.log(`Question ${enforcedQuestion.uniqueId} saved to Firestore.`);
 
   invalidateQuestionsCache();
 
