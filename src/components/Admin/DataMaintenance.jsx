@@ -143,8 +143,8 @@ async function backfillTags(onProgress, dryRun = false) {
         updated++;
       }
 
-      // Rate limit - 500ms between calls
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Rate limit - 6.5 seconds between calls (9 per minute to stay under 10/min limit)
+      await new Promise((resolve) => setTimeout(resolve, 6500));
     } catch (error) {
       logger.error("Tag generation failed:", error);
       failed++;

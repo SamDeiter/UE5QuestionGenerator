@@ -78,6 +78,8 @@ service cloud.firestore {
               'kickedBackAt', 'kickedBackBy', 'kickedBackReason',
               // Tags and difficulty (for re-critique and manual updates)
               'tags', 'difficulty',
+              // Backfill metadata fields
+              '_backfilledHumanVerified', '_backfilledAt', 'tagsBackfilledAt',
               // Notes
               'notes'
             ]))
