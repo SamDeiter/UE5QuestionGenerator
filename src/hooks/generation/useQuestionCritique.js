@@ -140,7 +140,8 @@ export const useQuestionCritique = ({
           const { doc, updateDoc } = await import("firebase/firestore");
           const { getDb } = await import("../../services/firebase");
           const db = getDb();
-          const questionRef = doc(db, "questions", q.id);
+          // IMPORTANT: Convert ID to string - IDs can be numbers which breaks Firestore doc()
+          const questionRef = doc(db, "questions", String(q.id));
 
           // Only update the critique-related fields (matches Firestore rules whitelist)
           const critiqueFieldsOnly = {
