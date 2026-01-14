@@ -168,15 +168,22 @@ const QuestionHeader = ({
                 {q.creatorName || "N/A"}
               </span>
             </div>
-            {/* Show reviewer - use reviewerName OR humanVerifiedBy */}
+            {/* Show reviewer - use reviewerName OR humanVerifiedBy with fallback chain */}
             {(() => {
-              const reviewer = q.reviewerName || q.humanVerifiedBy;
+              // Fallback chain: reviewerName -> humanVerifiedBy -> acceptedBy -> creatorEmail -> "Unknown"
+              const reviewer =
+                q.reviewerName ||
+                q.humanVerifiedBy ||
+                q.acceptedBy ||
+                q.creatorEmail;
               // Always show verifier for verified questions
-              if (q.humanVerified && reviewer) {
+              if (q.humanVerified) {
+                const displayName = reviewer || "Unknown";
                 const isSelfVerified =
-                  reviewer === q.creatorName ||
-                  reviewer === q.creatorEmail ||
-                  reviewer.includes(q.creatorName?.split(" ")[0] || "---");
+                  reviewer &&
+                  (reviewer === q.creatorName ||
+                    reviewer === q.creatorEmail ||
+                    reviewer.includes(q.creatorName?.split(" ")[0] || "---"));
                 return (
                   <div
                     className="flex items-center gap-1 text-xs text-slate-500"
@@ -188,7 +195,7 @@ const QuestionHeader = ({
                         isSelfVerified ? "text-slate-400" : "text-indigo-400"
                       }`}
                     >
-                      {reviewer}
+                      {displayName}
                     </span>
                   </div>
                 );
