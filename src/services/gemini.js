@@ -330,6 +330,17 @@ export const generateCritique = async (apiKey, q) => {
       result.improvedScore
     );
 
+    // VALIDATION: Ensure correct answer was not changed by AI
+    if (result.rewrite && result.rewrite.correct !== q.correct) {
+      logger.warn(
+        `[Critique] AI changed correct answer from "${q.correct}" to "${result.rewrite.correct}" - reverting!`
+      );
+      result.rewrite.correct = q.correct; // Force original answer
+      result.changes =
+        (result.changes || "") +
+        " [ANSWER PRESERVED: AI attempted to change correct answer, reverted to original]";
+    }
+
     return {
       score: result.originalScore || result.score || finalScore, // Handle both new and legacy formats
       text: result.critique || result.text,

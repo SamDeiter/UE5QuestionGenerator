@@ -84,23 +84,45 @@ export const useQuestionCritique = ({
         }
 
         const updatedRewrite = rewrite
-          ? {
-              question: rewrite.question || q.question,
-              options: {
-                A: rewrite.optionA || q.options?.A || "",
-                B: rewrite.optionB || q.options?.B || "",
-                C: rewrite.optionC || q.options?.C || "",
-                D: rewrite.optionD || q.options?.D || "",
-              },
-              correct: rewrite.correctLetter || q.correct || "A",
-              improvements,
-              critiqueScore: improvedScore,
-              critiqueText: text,
-              tags: suggestedTags,
-              changesExplanation:
-                rewrite.explanation ||
-                "AI-suggested improvements to enhance question quality",
-            }
+          ? (() => {
+              // Handle both nested (rewrite.options.A) and flat (rewrite.optionA) formats
+              const opts = rewrite.options || {};
+              const newQuestion = rewrite.question || q.question;
+              const newOptions = {
+                A: opts.A || rewrite.optionA || q.options?.A || "",
+                B: opts.B || rewrite.optionB || q.options?.B || "",
+                C: opts.C || rewrite.optionC || q.options?.C || "",
+                D: opts.D || rewrite.optionD || q.options?.D || "",
+              };
+              const newCorrect =
+                rewrite.correct || rewrite.correctLetter || q.correct || "A";
+
+              // Check if rewrite is identical to original
+              const isIdentical =
+                newQuestion === q.question &&
+                newOptions.A === (q.options?.A || "") &&
+                newOptions.B === (q.options?.B || "") &&
+                newOptions.C === (q.options?.C || "") &&
+                newOptions.D === (q.options?.D || "");
+
+              if (isIdentical) {
+                // No real changes - return null to indicate no rewrite needed
+                return null;
+              }
+
+              return {
+                question: newQuestion,
+                options: newOptions,
+                correct: newCorrect,
+                improvements,
+                critiqueScore: improvedScore,
+                critiqueText: text,
+                tags: suggestedTags,
+                changesExplanation:
+                  rewrite.explanation ||
+                  "AI-suggested improvements to enhance question quality",
+              };
+            })()
           : null;
 
         const previousAttempts = q.critiqueAttempts || 0;
