@@ -211,7 +211,7 @@ const ViewRouter = ({
     if (appMode === APP_MODES.TRANSLATE && isAdmin) {
       return (
         <TranslationManagementView
-          questions={questions} // Use all raw questions for custom management filtering
+          questions={databaseQuestions} // Use all database questions for translation management
           allQuestionsMap={allQuestionsMap}
           translationMap={translationMap}
           onTranslateSingle={handleTranslateSingle}

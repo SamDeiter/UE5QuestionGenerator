@@ -1,7 +1,7 @@
 {
   "name": "ue5-question-generator",
   "private": true,
-  "version": "2.2.75",
+  "version": "2.2.76",
   "homepage": "https://samdeiter.github.io/UE5QuestionGenerator/",
   "type": "module",
   "scripts": {
