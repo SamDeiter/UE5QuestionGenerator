@@ -299,6 +299,11 @@ const QuestionItem = ({
               if (showMessage) showMessage("✅ Question verified!", 2000);
             }}
             onAccept={() => {
+              // PIPELINE ENFORCEMENT: Critique is required before accept
+              if (q.critiqueScore === null || q.critiqueScore === undefined) {
+                if (showMessage) showMessage("⚠️ Run AI Critique first", 3000);
+                return;
+              }
               if (!q.humanVerified) {
                 if (showMessage) showMessage("⚠️ Please verify first", 3000);
                 return;

@@ -87,6 +87,64 @@ async function backfillHumanVerified(onProgress, dryRun = false) {
 }
 
 /**
+ * Kick back accepted questions that are missing critiqueScore to pending
+ * This fixes the pipeline bug where questions were accepted without AI critique
+ */
+async function kickBackMissingScores(onProgress, dryRun = false) {
+  const snapshot = await getDocs(
+    query(collection(db, "questions"), where("status", "==", "accepted"))
+  );
+
+  const needsKickBack = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    // Find accepted questions WITHOUT a critique score
+    if (data.critiqueScore === null || data.critiqueScore === undefined) {
+      needsKickBack.push({
+        id: docSnap.id,
+        question: data.question?.substring(0, 50) + "...",
+      });
+    }
+  });
+
+  onProgress(
+    `Found ${needsKickBack.length} accepted questions without AI Score`
+  );
+
+  if (dryRun || needsKickBack.length === 0) {
+    return { updated: 0, total: needsKickBack.length, dryRun };
+  }
+
+  // Batch update in groups of 500
+  const batchSize = 500;
+  let updated = 0;
+
+  for (let i = 0; i < needsKickBack.length; i += batchSize) {
+    const batch = writeBatch(db);
+    const chunk = needsKickBack.slice(i, i + batchSize);
+
+    chunk.forEach((item) => {
+      const ref = doc(db, "questions", String(item.id));
+      batch.update(ref, {
+        status: "pending",
+        humanVerified: false,
+        humanVerifiedBy: null,
+        humanVerifiedAt: null,
+        kickedBackAt: new Date().toISOString(),
+        kickedBackBy: auth.currentUser?.email || "System",
+        kickedBackReason: "Missing AI critique score - pipeline fix",
+      });
+    });
+
+    await batch.commit();
+    updated += chunk.length;
+    onProgress(`Kicked back ${updated}/${needsKickBack.length}...`);
+  }
+
+  return { updated, total: needsKickBack.length, dryRun: false };
+}
+
+/**
  * Backfill humanVerifiedBy for questions that have humanVerified=true but missing the verifier name
  */
 async function backfillVerifierNames(onProgress, dryRun = false) {
@@ -292,6 +350,34 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
     }
   };
 
+  const handleKickBackMissingScores = async (dryRun = false) => {
+    setProcessing(true);
+    setProgress("Finding accepted questions without AI Score...");
+    setLastResult(null);
+
+    try {
+      const result = await kickBackMissingScores(setProgress, dryRun);
+      setLastResult(result);
+      if (dryRun) {
+        showMessage(
+          `🔍 DRY RUN: ${result.total} questions would be kicked back to pending`,
+          5000
+        );
+      } else {
+        showMessage(
+          `✅ Kicked back ${result.updated} questions to pending for re-review`,
+          5000
+        );
+      }
+    } catch (error) {
+      logger.error("Kick back failed:", error);
+      showMessage(`❌ Failed: ${error.message}`, 5000);
+    } finally {
+      setProcessing(false);
+      setProgress("");
+    }
+  };
+
   return (
     <CollapsibleSection
       title="Data Maintenance"
@@ -317,6 +403,34 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
               : `✅ Updated ${lastResult.updated} questions`}
           </div>
         )}
+
+        {/* FIX MISSING AI SCORES - Pipeline Fix (CRITICAL) */}
+        <div className="p-3 bg-red-950/30 rounded border-2 border-red-700/50">
+          <h4 className="text-sm font-bold text-red-200 mb-2 flex items-center gap-2">
+            <Icon name="alert-triangle" size={14} className="text-red-400" />
+            Fix Missing AI Scores (Pipeline Fix)
+          </h4>
+          <p className="text-xs text-red-300/80 mb-3">
+            Find accepted questions without AI critique scores and kick them
+            back to pending for re-review. This fixes the pipeline bug.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleKickBackMissingScores(true)}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded disabled:opacity-50"
+            >
+              Dry Run (Count)
+            </button>
+            <button
+              onClick={() => handleKickBackMissingScores(false)}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-red-700 hover:bg-red-600 text-white rounded font-bold disabled:opacity-50"
+            >
+              Kick Back to Pending
+            </button>
+          </div>
+        </div>
 
         {/* Backfill HumanVerified */}
         <div className="p-3 bg-slate-800/50 rounded border border-slate-700">
