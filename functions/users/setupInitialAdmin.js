@@ -1007,8 +1007,8 @@ exports.setupInitialAdmin = functions
       // [personal email] removed - regular user (non-admin)
     ];
 
-    // DOMAIN WHITELIST: @epicgames.com emails automatically get admin access
-    const ADMIN_DOMAINS = ["epicgames.com"];
+    // DOMAIN WHITELIST: @epicgames.com and @xa.epicgames.com emails automatically get admin access
+    const ADMIN_DOMAINS = ["epicgames.com", "xa.epicgames.com"];
     const emailDomain = userEmail.toLowerCase().split("@")[1];
     const isDomainAdmin = ADMIN_DOMAINS.includes(emailDomain);
     const isExplicitAdmin = ALLOWED_INITIAL_ADMINS.includes(

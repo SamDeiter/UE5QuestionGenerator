@@ -1,0 +1,80 @@
+{
+  "creatorEmail": "sam.deiter@epicgames.com",
+  "type": "True/False",
+  "scoreSource": "Strict_AI_Batch_Import",
+  "_migratedDifficulty": "Medium",
+  "sourceExcerpt": "Nanite virtualized geometry gives you the ability to import film-quality source art\u2014containing billions of polygons\u2014directly into Unreal Engine.",
+  "status": "pending",
+  "discipline": "Tech Art",
+  "options": {
+    "A": "TRUE",
+    "B": "FALSE"
+  },
+  "answerMismatch": false,
+  "creatorName": "Sam Deiter",
+  "uniqueId": "7a8e12b3-f05a-438f-b393-b80ca6fe3c96",
+  "generationTime": 29210,
+  "humanVerifiedAt": null,
+  "aiScore": 75,
+  "improvementsApplied": false,
+  "humanVerifiedBy": null,
+  "question": "When using Nanite, it is generally better to increase the polycount of your source assets significantly beyond what was traditionally considered optimal for LOD0, as Nanite handles the complexity efficiently.",
+  "suggestedRewrite": null,
+  "rewriteChanges": null,
+  "tags": [
+    "#Nanite",
+    "#Polycount",
+    "#MeshOptimization"
+  ],
+  "critique": null,
+  "sourceVerified": "assumed",
+  "id": 1765807588165.6807,
+  "estimatedCost": 7.44375e-05,
+  "model": "gemini-2.0-flash",
+  "humanVerified": false,
+  "creatorId": "AF4rHG5PHzXCUBZMftJ1cySdz442",
+  "difficulty": "Intermediate",
+  "firestoreUpdatedAt": {
+    "nanoseconds": 523000000,
+    "seconds": 1766169717
+  },
+  "_migratedAt": "2025-12-15T21:12:08.950Z",
+  "groundingSources": null,
+  "language": "English",
+  "invalidUrl": false,
+  "qualityScore": 90,
+  "migrationSource": "qualityScore_fallback",
+  "scoredAt": {
+    "nanoseconds": 37000000,
+    "seconds": 1765934380
+  },
+  "correct": "A",
+  "_validation": {
+    "isValid": true,
+    "warnings": [
+      "Missing CorrectLetter or SourceExcerpt"
+    ],
+    "confidence": 0,
+    "isCriticalFailure": false,
+    "details": {
+      "answer": {
+        "warning": "Missing CorrectLetter or SourceExcerpt",
+        "isValid": false,
+        "details": {
+          "correctLetter": null,
+          "hasExcerpt": true
+        },
+        "confidence": 0
+      },
+      "url": {
+        "warning": null,
+        "isValid": true,
+        "confidence": 100
+      }
+    }
+  },
+  "_migrationVersion": "2.3.0",
+  "critiqueScore": null,
+  "previousCritiqueScore": null,
+  "sourceUrl": "https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine"
+}

@@ -94,4 +94,8 @@ export const AUDIT_ACTIONS = {
   BULK_REJECT: "BULK_REJECT",
   BULK_DELETE: "BULK_DELETE",
   BULK_CRITIQUE: "BULK_CRITIQUE",
+  // Pre-save review lifecycle events (for debugging permission issues)
+  REVIEW_ATTEMPT: "REVIEW_ATTEMPT",
+  REVIEW_SUCCESS: "REVIEW_SUCCESS",
+  REVIEW_FAILED: "REVIEW_FAILED",
 };

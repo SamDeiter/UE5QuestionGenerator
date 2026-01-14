@@ -641,6 +641,14 @@ const App = () => {
         user={user}
       />
 
+      {/* Registration Warning Banner - Ghost Reviewer Detection */}
+      {user && !_isRegistered && !registrationLoading && (
+        <div className="bg-amber-500 text-black px-4 py-2 text-center text-sm font-medium">
+          ⚠️ Your account is not fully registered. Some features (Accept/Reject)
+          may not work. Please contact an admin for access.
+        </div>
+      )}
+
       <Suspense fallback={<LoadingSpinner />}>
         <MainLayout
           appMode={appMode}

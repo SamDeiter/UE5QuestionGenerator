@@ -130,6 +130,13 @@ export const useStatusActions = ({
         humanVerifiedAt: updatedQ.humanVerifiedAt,
       };
 
+      // Log REVIEW_ATTEMPT before save (captures attempts even if save fails)
+      logAuditEvent(updatedQ.uniqueId || id, AUDIT_ACTIONS.REVIEW_ATTEMPT, {
+        attemptedStatus: newStatus,
+        reviewerEmail: config.userEmail,
+        reviewerName: config.creatorName,
+      });
+
       try {
         const result = await saveQuestionAsReviewer(
           updatedQ.uniqueId,
@@ -151,12 +158,8 @@ export const useStatusActions = ({
           (newStatus === QUESTION_STATUS.ACCEPTED ||
             newStatus === QUESTION_STATUS.REJECTED)
         ) {
-          // Log to audit trail
-          const auditAction =
-            newStatus === QUESTION_STATUS.ACCEPTED
-              ? AUDIT_ACTIONS.QUESTION_ACCEPTED
-              : AUDIT_ACTIONS.QUESTION_REJECTED;
-          logAuditEvent(updatedQ.uniqueId || id, auditAction, {
+          // Log success to audit trail
+          logAuditEvent(updatedQ.uniqueId || id, AUDIT_ACTIONS.REVIEW_SUCCESS, {
             oldValue: currentQ.status,
             newValue: newStatus,
             rejectionReason: rejectionReason || null,
@@ -176,8 +179,26 @@ export const useStatusActions = ({
         };
         logger.error("Save failed:", errorInfo);
 
+        // Log failure to audit trail
+        logAuditEvent(updatedQ.uniqueId || id, AUDIT_ACTIONS.REVIEW_FAILED, {
+          attemptedStatus: newStatus,
+          errorCode: err.code,
+          errorMessage: err.message,
+        });
+
         if (err.message?.startsWith("QUESTION_DELETED:")) {
           setAllQuestions((prev) => prev.filter((q) => q.id !== id));
+        } else if (
+          err.code === "permission-denied" ||
+          err.message?.includes("PERMISSION_DENIED")
+        ) {
+          // Specific error for permission issues (Ghost Reviewer detection)
+          if (showMessage) {
+            showMessage(
+              "🚫 Permission denied: Your account may not be fully registered. Please contact an admin.",
+              TOAST_DURATION.EXTENDED
+            );
+          }
         } else if (showMessage) {
           showMessage(
             `⚠️ Failed to save: ${err.message}. Please try again or report this issue.`,

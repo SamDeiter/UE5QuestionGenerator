@@ -1,0 +1,25 @@
+Searching collection: QuestionsAPIAccess
+Searching collection: admins
+Searching collection: apiUsage
+Searching collection: audit-log
+MATCH FOUND in audit-log!
+   Doc ID: ADkCKUODb7qQ5bNdehNN
+   Sample fields: {}
+MATCH FOUND in audit-log!
+   Doc ID: qbvLWr0TCbprqfeZg1dX
+   Sample fields: {}
+MATCH FOUND in audit-log!
+   Doc ID: wteF1oeZIyhip5cE9FMG
+   Sample fields: {}
+MATCH FOUND in audit-log!
+   Doc ID: xLiyKOd6aSORshrsj7P8
+   Sample fields: {}
+Searching collection: edit-locks
+Searching collection: invites
+Searching collection: questions
+MATCH FOUND in questions!
+   Doc ID: abddac38-2f89-4495-8ada-6d5b5f7720c8
+   Sample fields: {'status': 'pending', 'uniqueId': 'abddac38-2f89-4495-8ada-6d5b5f7720c8', 'humanVerifiedBy': None, 'id': 1765807713339.7207}
+Searching collection: registeredUsers
+Searching collection: training_data
+Searching collection: userSettings

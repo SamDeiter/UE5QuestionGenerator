@@ -1,6 +1,22 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import QuestionItem from "../QuestionItem";
+import { AccessibilityProvider } from "../../contexts/AccessibilityContext";
+
+// Polyfill matchMedia
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
 
 // Mock hooks
 vi.mock("../../hooks/useAuth", () => ({
@@ -19,9 +35,14 @@ vi.mock("../../utils/secureStorage", () => ({
   getSecureItem: () => "TestUser",
 }));
 
-vi.mock("../../contexts/AccessibilityContext", () => ({
-  useAccessibility: () => ({ colorblindMode: false }),
-}));
+// We still mock useAccessibility but it needs a Provider to avoid the error
+vi.mock("../../contexts/AccessibilityContext", async () => {
+  const actual = await vi.importActual("../../contexts/AccessibilityContext");
+  return {
+    ...actual,
+    useAccessibility: () => ({ colorblindMode: false }),
+  };
+});
 
 vi.mock("../../utils/logger", () => ({
   logger: { log: vi.fn(), warn: vi.fn() },
@@ -85,13 +106,21 @@ describe("QuestionItem", () => {
   };
 
   it("should render LanguageControls for all authenticated users", () => {
-    render(<QuestionItem {...defaultProps} isAdmin={true} />);
+    render(
+      <AccessibilityProvider>
+        <QuestionItem {...defaultProps} isAdmin={true} />
+      </AccessibilityProvider>
+    );
     expect(screen.getByTestId("lang-controls")).toBeInTheDocument();
   });
 
   it("should render LanguageControls for non-admin users too", () => {
     // LanguageControls was made available to all users (no longer admin-only)
-    render(<QuestionItem {...defaultProps} isAdmin={false} />);
+    render(
+      <AccessibilityProvider>
+        <QuestionItem {...defaultProps} isAdmin={false} />
+      </AccessibilityProvider>
+    );
     expect(screen.getByTestId("lang-controls")).toBeInTheDocument();
   });
 });
