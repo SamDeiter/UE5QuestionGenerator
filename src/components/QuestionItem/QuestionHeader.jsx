@@ -219,10 +219,13 @@ const QuestionHeader = ({
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Show Re-Critique for low-score questions (<70 or no score) in Database and Review modes */}
+        {/* Show Re-Critique ONLY for already-critiqued low-score questions (<70) in Database and Review modes */}
+        {/* Pending questions that haven't been critiqued should use ReviewProgressBar's Critique button */}
         {(appMode === "database" || appMode === "review") &&
           onCritique &&
-          (!q.critiqueScore || q.critiqueScore < 70) && (
+          q.critiqueScore !== null &&
+          q.critiqueScore !== undefined &&
+          q.critiqueScore < 70 && (
             <button
               onClick={() => onCritique(originalQ || q)}
               className="px-3 py-1.5 rounded-lg transition-all bg-purple-900/30 text-purple-300 hover:bg-purple-800/50 hover:text-purple-200 border border-purple-700/50 flex items-center gap-2 text-xs font-medium"
