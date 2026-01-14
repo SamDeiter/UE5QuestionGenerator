@@ -16,6 +16,7 @@ import ApiKeyModal from "./components/ApiKeyModal";
 import ConflictModal from "./components/ConflictModal";
 import { getInviteFromUrl } from "./services/inviteService";
 import { refreshAuthToken } from "./services/firebaseAuth";
+import { subscribeToToasts } from "./services/toastEvents";
 
 // Lazy load heavy components (loaded on-demand)
 const LandingPage = lazy(() => import("./components/LandingPage"));
@@ -81,6 +82,16 @@ const App = () => {
     setTermsAccepted,
     permissionError,
   } = useAuth(showMessage);
+
+  // ========================================================================
+  // GLOBAL TOAST EVENT SUBSCRIPTION - Allow services to trigger UI notifications
+  // ========================================================================
+  useEffect(() => {
+    const unsubscribe = subscribeToToasts((message, type, duration) => {
+      showMessage(message, type, duration);
+    });
+    return unsubscribe;
+  }, [showMessage]);
 
   // ... (rest of the file)
 

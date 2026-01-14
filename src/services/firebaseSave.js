@@ -24,6 +24,7 @@ import {
   isAuthPotentiallyStale,
 } from "./firebaseAuth";
 import { invalidateQuestionsCache } from "./firebaseQueries";
+import { toastError, toastWarning } from "./toastEvents";
 
 // --- Lazy-load Firestore ---
 let _db = null;
@@ -325,6 +326,7 @@ export const saveQuestionToFirestore = async (question) => {
     // CRITICAL: Verify user is authenticated before attempting save
     if (!auth.currentUser) {
       logger.error("❌ [Save] Cannot save - user not authenticated!");
+      toastError("Session expired - please sign in again", 8000);
       // Don't queue if not authenticated - this is a critical error
       return {
         success: false,
@@ -407,6 +409,7 @@ export const batchSaveQuestions = async (questions) => {
   // CRITICAL: Verify user is authenticated before attempting batch save
   if (!auth.currentUser) {
     logger.error("❌ [BatchSave] Cannot save - user not authenticated!");
+    toastError("Session expired - please sign in again", 8000);
     return {
       success: 0,
       failed: questions.length,
