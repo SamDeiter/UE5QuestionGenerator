@@ -55,7 +55,7 @@ const fetchWithRetry = async (url, options, setStatus = () => {}) => {
             : Math.pow(2, retries) * 5000;
 
           // Add jitter (random 0-1000ms) to prevent thundering herd
-           
+
           waitTime += Math.random() * 1000;
 
           // Update global rate limit state (for UI display)
@@ -261,6 +261,13 @@ export const generateCritique = async (apiKey, q) => {
     1. originalScore: Score for the question AS PROVIDED (the current version)
     2. improvedScore: Score for your IMPROVED rewrite (should be higher)
     
+    ⚠️ CRITICAL RULE - PRESERVE THE CORRECT ANSWER:
+    - The correct answer letter "${q.correct}" is VERIFIED CORRECT. Do NOT change which option is the correct answer.
+    - You may improve the WORDING of the correct answer, but option "${q.correct}" MUST remain the correct choice.
+    - You may reorder or improve distractors, but the original correct answer MUST stay correct.
+    - ONLY change the correct answer if there is a FACTUAL ERROR (e.g., technically wrong information).
+    - If you must change the correct answer due to a factual error, explain this in the "changes" field.
+    
     MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this EXACT structure:
     {
         "originalScore": 75,  // REQUIRED: Score (0-100) for ORIGINAL question
@@ -268,7 +275,7 @@ export const generateCritique = async (apiKey, q) => {
         "rewrite": {
             "question": "string", // Improved question text
             "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
-            "correct": "string" // Correct letter (A, B, C, or D)
+            "correct": "${q.correct}" // MUST remain "${q.correct}" unless factual error exists
         },
         "improvedScore": 92,  // REQUIRED: Score (0-100) for IMPROVED version (must be > originalScore)
         "changes": "string" // Brief explanation of what was changed and why
@@ -315,10 +322,7 @@ export const generateCritique = async (apiKey, q) => {
       typeof result.score === "number"
         ? result.score
         : parseInt(result.score || 0);
-    logger.log(
-      "[Critique DEBUG] JSON parsed successfully. Score:",
-      finalScore
-    );
+    logger.log("[Critique DEBUG] JSON parsed successfully. Score:", finalScore);
     logger.log(
       "[Critique DEBUG] Scores - Original:",
       result.originalScore || result.score,

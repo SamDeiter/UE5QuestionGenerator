@@ -177,18 +177,17 @@ const CritiqueModal = ({
                   </div>
                 )}
 
-                {/* No Changes Detected */}
+                {/* No Changes Detected - make this prominent */}
                 {!questionChanged &&
                   optionChanges.length === 0 &&
                   rewrite.correct === q.correct && (
-                    <div className="text-xs text-slate-400 text-center py-2">
-                      <Icon
-                        name="check-circle"
-                        size={14}
-                        className="inline mr-1"
-                      />
-                      No structural changes suggested - question is already
-                      well-formed
+                    <div className="flex items-center gap-2 text-xs text-amber-200 bg-amber-950/30 border border-amber-700/50 rounded p-3">
+                      <Icon name="info" size={14} className="flex-shrink-0" />
+                      <span>
+                        No changes detected. The AI analysis found no
+                        improvements to suggest - this question may already be
+                        well-formed.
+                      </span>
                     </div>
                   )}
               </div>
