@@ -52,8 +52,11 @@ service cloud.firestore {
          && request.resource.data.creatorId == request.auth.uid
          && versionNotRegressing())
         ||
-        // Admin or Reviewer override: Can update specific review-related fields
-        ((isAdmin() || isReviewer())
+        // Admin FULL override: Admins can update any fields
+        isAdmin()
+        ||
+        // Reviewer override: Can update specific review-related fields only
+        (isReviewer()
          && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly([
               // Version and timestamps
