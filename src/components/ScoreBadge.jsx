@@ -14,7 +14,7 @@ const TIER_META = {
  * ScoreBadge - Color-coded badge for AI quality scores
  * Uses centralized theme colors with automatic colorblind mode support
  */
-const ScoreBadge = ({ score }) => {
+const ScoreBadge = ({ score, improved = false }) => {
   const { getScoreTier, scoreColor } = useThemeColors();
 
   if (score === null || score === undefined) {
@@ -23,14 +23,21 @@ const ScoreBadge = ({ score }) => {
 
   const tier = getScoreTier(score);
   const meta = TIER_META[tier];
-  const colorClasses = scoreColor(tier);
+  // Use green styling for improved scores, otherwise normal tier colors
+  const colorClasses = improved
+    ? "bg-green-900/50 text-green-200 border-green-600/50"
+    : scoreColor(tier);
 
   return (
     <div
       className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-bold ${colorClasses}`}
-      title={`AI Score: ${score}/100 - ${meta.label}`}
+      title={
+        improved
+          ? `Improved Score: ${score}/100`
+          : `AI Score: ${score}/100 - ${meta.label}`
+      }
     >
-      <span className="text-sm">{meta.icon}</span>
+      <span className="text-sm">{improved ? "→" : meta.icon}</span>
       <span>{score}</span>
     </div>
   );

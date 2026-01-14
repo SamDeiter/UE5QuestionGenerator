@@ -128,9 +128,22 @@ const QuestionHeader = ({
             </span>
           )}
 
-          {/* AI Score Badge - Restore visibility */}
-          {q.critiqueScore !== undefined && q.critiqueScore !== null && (
-            <ScoreBadge score={q.critiqueScore} />
+          {/* AI Score Badges - Show original and improved scores */}
+          {(q.critiqueScore ?? q.qualityScore ?? null) !== null && (
+            <div className="flex items-center gap-1">
+              <ScoreBadge score={q.critiqueScore ?? q.qualityScore} />
+              {q.improvedScore &&
+                q.improvedScore !== (q.critiqueScore ?? q.qualityScore) && (
+                  <>
+                    <Icon
+                      name="arrow-right"
+                      size={10}
+                      className="text-slate-400"
+                    />
+                    <ScoreBadge score={q.improvedScore} improved />
+                  </>
+                )}
+            </div>
           )}
 
           {/* AI Improvement Badge - Shows when improvements are available */}
