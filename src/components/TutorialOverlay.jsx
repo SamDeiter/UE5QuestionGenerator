@@ -376,6 +376,13 @@ const TutorialOverlay = ({
                 </button>
               )}
               <button
+                onClick={onSkip}
+                className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                aria-label="Skip all tutorial steps"
+              >
+                Skip All
+              </button>
+              <button
                 onClick={isLastStep ? onComplete : onNext}
                 className="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-lg shadow-indigo-900/50 transition-all flex items-center gap-2"
                 aria-label={isLastStep ? "Finish tutorial" : "Next step"}
