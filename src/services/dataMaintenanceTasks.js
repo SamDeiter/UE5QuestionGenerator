@@ -388,22 +388,29 @@ export async function backfillAverageScores(onProgress, dryRun = false) {
   if (dryRun || needsUpdate.length === 0)
     return { updated: 0, total: needsUpdate.length, dryRun };
 
-  const batchSize = BATCH_SIZE_DEFAULT;
   let updated = 0;
-  for (let i = 0; i < needsUpdate.length; i += batchSize) {
-    const batch = writeBatch(db);
-    const chunk = needsUpdate.slice(i, i + batchSize);
-    chunk.forEach((item) => {
-      batch.update(doc(db, "questions", String(item.id)), {
+  let failed = 0;
+  for (const item of needsUpdate) {
+    try {
+      onProgress(
+        `Applying average (${item.score}) to doc by ${item.reviewerName}...`
+      );
+      const ref = doc(db, "questions", String(item.id));
+      await updateDoc(ref, {
         critiqueScore: item.score,
         _backfilledAverage: true,
         _backfilledAt: new Date().toISOString(),
         _basedOnCount: item.totalScored,
       });
-    });
-    await batch.commit();
-    updated += chunk.length;
-    onProgress(`Applied averages: ${updated}/${needsUpdate.length}...`);
+      updated++;
+    } catch (error) {
+      if (error.code === "not-found") {
+        logger.warn(`Document ${item.id} not found during backfill, skipping.`);
+      } else {
+        logger.error(`Failed to backfill score for ${item.id}:`, error);
+        failed++;
+      }
+    }
   }
-  return { updated, total: needsUpdate.length, dryRun: false };
+  return { updated, failed, total: needsUpdate.length, dryRun: false };
 }

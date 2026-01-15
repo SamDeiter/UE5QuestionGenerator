@@ -7,571 +7,23 @@
  */
 
 import { useState } from "react";
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  writeBatch,
-  updateDoc,
-} from "firebase/firestore";
+import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { app } from "../../services/firebase";
-import { auth } from "../../services/firebaseAuth";
-import {
-  generateTagsSecure,
-  generateCritiqueSecure,
-} from "../../services/geminiSecure";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { logger } from "../../utils/logger";
-import { normalizeStatus } from "../../utils/questionHelpers";
 import { TOAST_DURATION } from "../../utils/constants";
+import * as tasks from "../../services/dataMaintenanceTasks";
 import {
   clearAllQuestionsFromFirestore,
   deleteSoftDeletedQuestionsFromFirestore,
 } from "../../services/firebaseQueries";
-import { calculateReviewerAverageScore } from "../../utils/reviewerAnalytics";
 
 const db = getFirestore(app);
 
-// Magic Number Constants
-const TEXT_TRUNCATE_LIMIT = 40;
-const RECENT_LIMIT = 50;
-const SHORT_LIMIT = 5;
-const LIST_LIMIT = 3;
-const COOLDOWN_WAIT_MS = 6500;
-const BATCH_SIZE_DEFAULT = 500;
-const DEFAULT_LIMIT = 10;
+// Magic Number Constants - Simplified
 const MAX_SUSPICIOUS_LOGS = 10;
-
-// Rate limiting constant - 4 seconds between API calls (15/min, under Cloud Function 20/min limit)
-const API_RATE_LIMIT_MS = 4000;
-
-/**
- * Repair question statuses: Normalize statuses (e.g., "Approved" -> "accepted")
- * and backfill missing firestoreUpdatedAt timestamps.
- */
-async function repairStatuses(onProgress, dryRun = false) {
-  const snapshot = await getDocs(collection(db, "questions"));
-
-  const questionsToFix = [];
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    const currentStatus = data.status;
-    const normalizedStatus = normalizeStatus(currentStatus);
-    const needsTimestamp = !data.firestoreUpdatedAt;
-
-    if (currentStatus !== normalizedStatus || needsTimestamp) {
-      questionsToFix.push({
-        id: docSnap.id,
-        currentStatus,
-        normalizedStatus,
-        needsTimestamp,
-      });
-    }
-  });
-
-  onProgress(
-    `Found ${questionsToFix.length} questions with status/timestamp issues`
-  );
-
-  if (dryRun || questionsToFix.length === 0) {
-    return { updated: 0, total: questionsToFix.length, dryRun };
-  }
-
-  const batchSize = BATCH_SIZE_DEFAULT;
-  let updated = 0;
-
-  for (let i = 0; i < questionsToFix.length; i += batchSize) {
-    const batch = writeBatch(db);
-    const chunk = questionsToFix.slice(i, i + batchSize);
-
-    chunk.forEach((item) => {
-      const ref = doc(db, "questions", String(item.id));
-      const updates = { status: item.normalizedStatus };
-      if (item.needsTimestamp) {
-        updates.firestoreUpdatedAt = new Date().toISOString();
-      }
-      batch.update(ref, updates);
-    });
-
-    await batch.commit();
-    updated += chunk.length;
-    onProgress(`Repaired ${updated}/${questionsToFix.length}...`);
-  }
-
-  return { updated, total: questionsToFix.length, dryRun: false };
-}
-
-/**
- * Backfill AI critique scores for accepted questions that are missing scores.
- */
-async function backfillAIScoresForVerified(onProgress, dryRun = false) {
-  const snapshot = await getDocs(
-    query(collection(db, "questions"), where("status", "==", "accepted"))
-  );
-
-  const needsScore = [];
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    if (data.critiqueScore === null || data.critiqueScore === undefined) {
-      needsScore.push({
-        id: docSnap.id,
-        question: data.question,
-        options: data.options,
-        correct: data.correct || data.correctLetter,
-        sourceExcerpt: data.sourceExcerpt,
-        verifiedBy: data.humanVerifiedBy || data.acceptedBy || "Unknown",
-        wasVerified: data.humanVerified === true,
-      });
-    }
-  });
-
-  onProgress(`Found ${needsScore.length} accepted questions without AI Score`);
-
-  if (dryRun || needsScore.length === 0) {
-    return { updated: 0, failed: 0, total: needsScore.length, dryRun };
-  }
-
-  let updated = 0;
-  let failed = 0;
-
-  for (const q of needsScore) {
-    try {
-      onProgress(
-        `Critiquing ${updated + failed + 1}/${
-          needsScore.length
-        }: "${q.question?.substring(0, TEXT_TRUNCATE_LIMIT)}..." (by ${
-          q.verifiedBy
-        })`
-      );
-
-      const result = await generateCritiqueSecure(null, {
-        question: q.question,
-        options: q.options,
-        correct: q.correct,
-        sourceExcerpt: q.sourceExcerpt,
-      });
-
-      const score = result?.score;
-      const text = result?.text;
-
-      if (score !== null && score !== undefined) {
-        const ref = doc(db, "questions", String(q.id));
-        await updateDoc(ref, {
-          critiqueScore: score,
-          critique: text || "",
-          _backfilledScore: true,
-          _backfilledAt: new Date().toISOString(),
-        });
-        updated++;
-      } else {
-        failed++;
-      }
-    } catch (error) {
-      logger.error(`❌ Failed for ${q.id}:`, error.message);
-      failed++;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, API_RATE_LIMIT_MS));
-  }
-
-  return { updated, failed, total: needsScore.length, dryRun: false };
-}
-
-/**
- * Restore kicked-back questions with AI scores.
- */
-async function restoreKickedBack(onProgress, dryRun = false) {
-  const snapshot = await getDocs(
-    query(collection(db, "questions"), where("status", "==", "pending"))
-  );
-
-  const needsRestore = [];
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    if (
-      data.kickedBackReason &&
-      (data.critiqueScore === null || data.critiqueScore === undefined)
-    ) {
-      needsRestore.push({
-        id: docSnap.id,
-        question: data.question,
-        options: data.options,
-        correct: data.correct || data.correctLetter,
-        sourceExcerpt: data.sourceExcerpt,
-        originalVerifier:
-          data.kickedBackBy ||
-          data.acceptedBy ||
-          data.reviewerName ||
-          "Unknown",
-      });
-    }
-  });
-
-  onProgress(`Found ${needsRestore.length} kicked-back questions to restore`);
-
-  if (dryRun || needsRestore.length === 0) {
-    return { updated: 0, failed: 0, total: needsRestore.length, dryRun };
-  }
-
-  let updated = 0;
-  let failed = 0;
-
-  for (const q of needsRestore) {
-    try {
-      onProgress(
-        `Restoring ${updated + failed + 1}/${
-          needsRestore.length
-        }: "${q.question?.substring(0, TEXT_TRUNCATE_LIMIT)}..." (by ${
-          q.originalVerifier
-        })`
-      );
-
-      const result = await generateCritiqueSecure(null, {
-        question: q.question,
-        options: q.options,
-        correct: q.correct,
-        sourceExcerpt: q.sourceExcerpt,
-      });
-
-      const score = result?.score;
-      const text = result?.text;
-
-      if (score !== null && score !== undefined) {
-        const ref = doc(db, "questions", String(q.id));
-        await updateDoc(ref, {
-          critiqueScore: score,
-          critique: text || "",
-          status: "accepted",
-          humanVerified: true,
-          humanVerifiedBy: q.originalVerifier,
-          humanVerifiedAt: new Date().toISOString(),
-          _restoredAt: new Date().toISOString(),
-          _restoredWithScore: true,
-        });
-        updated++;
-      } else {
-        failed++;
-      }
-    } catch (error) {
-      logger.error(`❌ Restore failed for ${q.id}:`, error.message);
-      failed++;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, API_RATE_LIMIT_MS));
-  }
-
-  return { updated, failed, total: needsRestore.length, dryRun: false };
-}
-
-/**
- * Backfill humanVerified for all accepted questions
- */
-async function backfillHumanVerified(onProgress, dryRun = false) {
-  const userEmail = auth.currentUser?.email || "Unknown";
-
-  const snapshot = await getDocs(
-    query(collection(db, "questions"), where("status", "==", "accepted"))
-  );
-
-  const needsUpdate = [];
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    if (!data.humanVerified) {
-      needsUpdate.push({
-        id: docSnap.id,
-        acceptedBy: data.acceptedBy || data.creatorEmail || userEmail,
-        acceptedAt:
-          data.acceptedAt ||
-          data.firestoreUpdatedAt?.toDate?.()?.toISOString() ||
-          new Date().toISOString(),
-      });
-    }
-  });
-
-  onProgress(
-    `Found ${needsUpdate.length} accepted questions without humanVerified`
-  );
-
-  if (dryRun || needsUpdate.length === 0) {
-    return { updated: 0, total: needsUpdate.length, dryRun };
-  }
-
-  const batchSize = BATCH_SIZE_DEFAULT;
-  let updated = 0;
-
-  for (let i = 0; i < needsUpdate.length; i += batchSize) {
-    const batch = writeBatch(db);
-    const chunk = needsUpdate.slice(i, i + batchSize);
-
-    chunk.forEach((item) => {
-      const ref = doc(db, "questions", String(item.id));
-      batch.update(ref, {
-        humanVerified: true,
-        humanVerifiedBy: item.acceptedBy,
-        humanVerifiedAt: item.acceptedAt,
-        _backfilledHumanVerified: true,
-        _backfilledAt: new Date().toISOString(),
-      });
-    });
-
-    await batch.commit();
-    updated += chunk.length;
-    onProgress(`Updated ${updated}/${needsUpdate.length}...`);
-  }
-
-  return { updated, total: needsUpdate.length, dryRun: false };
-}
-
-/**
- * Kick back accepted questions that are missing critiqueScore to pending
- */
-async function kickBackMissingScores(onProgress, dryRun = false) {
-  const snapshot = await getDocs(
-    query(collection(db, "questions"), where("status", "==", "accepted"))
-  );
-
-  const needsKickBack = [];
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    if (data.critiqueScore === null || data.critiqueScore === undefined) {
-      needsKickBack.push({
-        id: docSnap.id,
-        question: data.question?.substring(0, RECENT_LIMIT) + "...",
-      });
-    }
-  });
-
-  onProgress(
-    `Found ${needsKickBack.length} accepted questions without AI Score`
-  );
-
-  if (dryRun || needsKickBack.length === 0) {
-    return { updated: 0, total: needsKickBack.length, dryRun };
-  }
-
-  const batchSize = BATCH_SIZE_DEFAULT;
-  let updated = 0;
-
-  for (let i = 0; i < needsKickBack.length; i += batchSize) {
-    const batch = writeBatch(db);
-    const chunk = needsKickBack.slice(i, i + batchSize);
-
-    chunk.forEach((item) => {
-      const ref = doc(db, "questions", String(item.id));
-      batch.update(ref, {
-        status: "pending",
-        humanVerified: false,
-        humanVerifiedBy: null,
-        humanVerifiedAt: null,
-        kickedBackAt: new Date().toISOString(),
-        kickedBackBy: auth.currentUser?.email || "System",
-        kickedBackReason: "Missing AI critique score - pipeline fix",
-      });
-    });
-
-    await batch.commit();
-    updated += chunk.length;
-    onProgress(`Kicked back ${updated}/${needsKickBack.length}...`);
-  }
-
-  return { updated, total: needsKickBack.length, dryRun: false };
-}
-
-/**
- * Backfill humanVerifiedBy for questions missing verifier names
- */
-async function backfillVerifierNames(onProgress, dryRun = false) {
-  const snapshot = await getDocs(
-    query(collection(db, "questions"), where("humanVerified", "==", true))
-  );
-
-  const needsUpdate = [];
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    if (!data.humanVerifiedBy) {
-      const fallbackName = data.acceptedBy || data.creatorEmail || null;
-      if (fallbackName) {
-        needsUpdate.push({
-          id: docSnap.id,
-          verifierName: fallbackName,
-        });
-      }
-    }
-  });
-
-  onProgress(
-    `Found ${needsUpdate.length} verified questions missing humanVerifiedBy`
-  );
-
-  if (dryRun || needsUpdate.length === 0) {
-    return { updated: 0, total: needsUpdate.length, dryRun };
-  }
-
-  const batchSize = BATCH_SIZE_DEFAULT;
-  let updated = 0;
-
-  for (let i = 0; i < needsUpdate.length; i += batchSize) {
-    const batch = writeBatch(db);
-    const chunk = needsUpdate.slice(i, i + batchSize);
-
-    chunk.forEach((item) => {
-      const ref = doc(db, "questions", String(item.id));
-      batch.update(ref, {
-        humanVerifiedBy: item.verifierName,
-        _verifierBackfilledAt: new Date().toISOString(),
-      });
-    });
-
-    await batch.commit();
-    updated += chunk.length;
-    onProgress(`Updated ${updated}/${needsUpdate.length}...`);
-  }
-
-  return { updated, total: needsUpdate.length, dryRun: false };
-}
-
-/**
- * Backfill tags for questions with fewer than 3 tags
- */
-async function backfillTags(onProgress, dryRun = false) {
-  const snapshot = await getDocs(
-    query(collection(db, "questions"), where("status", "==", "accepted"))
-  );
-
-  const needsTags = [];
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    const tags = Array.isArray(data.tags) ? data.tags : [];
-    if (tags.length < LIST_LIMIT) {
-      needsTags.push({
-        id: docSnap.id,
-        question: data.question,
-        options: data.options,
-        currentTags: tags,
-      });
-    }
-  });
-
-  onProgress(`Found ${needsTags.length} questions with < 3 tags`);
-
-  if (dryRun || needsTags.length === 0) {
-    return { updated: 0, total: needsTags.length, dryRun };
-  }
-
-  let updated = 0;
-  let failed = 0;
-
-  for (const q of needsTags) {
-    try {
-      onProgress(
-        `Generating tags for question ${updated + 1}/${needsTags.length}...`
-      );
-
-      const newTags = await generateTagsSecure(q.question, q.options);
-
-      if (newTags && newTags.length > 0) {
-        const mergedTags = [
-          ...new Set([
-            ...q.currentTags,
-            ...newTags.map((t) => t.replace(/^#/, "")),
-          ]),
-        ].slice(0, SHORT_LIMIT);
-
-        const ref = doc(db, "questions", String(q.id));
-        await updateDoc(ref, {
-          tags: mergedTags,
-          tagsBackfilledAt: new Date().toISOString(),
-        });
-        updated++;
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, COOLDOWN_WAIT_MS));
-    } catch (error) {
-      logger.error("Tag generation failed:", error);
-      failed++;
-    }
-  }
-
-  return { updated, failed, total: needsTags.length, dryRun: false };
-}
-
-/**
- * Backfill average scores for rejected questions
- */
-async function backfillAverageScores(onProgress, dryRun = false) {
-  const snapshot = await getDocs(collection(db, "questions"));
-  const allQuestions = [];
-  snapshot.forEach((docSnap) =>
-    allQuestions.push({ id: docSnap.id, ...docSnap.data() })
-  );
-
-  const needsUpdate = [];
-  const reviewerCache = new Map();
-
-  allQuestions.forEach((q) => {
-    if (
-      q.status === "rejected" &&
-      (q.critiqueScore === null || q.critiqueScore === undefined)
-    ) {
-      const reviewerName =
-        q.reviewerName ||
-        q.acceptedBy ||
-        q.creatorEmail ||
-        q.creatorName ||
-        "Unknown";
-      if (!reviewerCache.has(reviewerName)) {
-        reviewerCache.set(
-          reviewerName,
-          calculateReviewerAverageScore(reviewerName, allQuestions)
-        );
-      }
-      const { averageScore, totalScored } = reviewerCache.get(reviewerName);
-      if (totalScored >= 10 && averageScore !== null) {
-        needsUpdate.push({
-          id: q.id,
-          score: averageScore,
-          reviewerName,
-          totalScored,
-        });
-      }
-    }
-  });
-
-  onProgress(
-    `Found ${needsUpdate.length} rejected questions to backfill average scores`
-  );
-
-  if (dryRun || needsUpdate.length === 0) {
-    return { updated: 0, total: needsUpdate.length, dryRun };
-  }
-
-  const batchSize = BATCH_SIZE_DEFAULT;
-  let updated = 0;
-
-  for (let i = 0; i < needsUpdate.length; i += batchSize) {
-    const batch = writeBatch(db);
-    const chunk = needsUpdate.slice(i, i + batchSize);
-    chunk.forEach((item) => {
-      const ref = doc(db, "questions", String(item.id));
-      batch.update(ref, {
-        critiqueScore: item.score,
-        _backfilledAverage: true,
-        _backfilledAt: new Date().toISOString(),
-        _basedOnCount: item.totalScored,
-      });
-    });
-    await batch.commit();
-    updated += chunk.length;
-    onProgress(`Updated ${updated}/${needsUpdate.length}...`);
-  }
-
-  return { updated, total: needsUpdate.length, dryRun: false };
-}
-
+const DEFAULT_LIMIT = 10;
 // Sub-component for individual maintenance actions
 const MaintenanceActionCard = ({
   title,
@@ -743,12 +195,12 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             description="Find accepted questions without AI scores and kick back to pending."
             onDryRun={(dr) =>
               runMaintenanceTask("Kick Back", () =>
-                kickBackMissingScores(setProgress, dr)
+                tasks.kickBackMissingScores(setProgress, dr)
               )
             }
             onExecute={(dr) =>
               runMaintenanceTask("Kick Back", () =>
-                kickBackMissingScores(setProgress, dr)
+                tasks.kickBackMissingScores(setProgress, dr)
               )
             }
             executeLabel="Kick Back"
@@ -763,12 +215,12 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             description="Add scores to kicked-back questions and restore to accepted."
             onDryRun={(dr) =>
               runMaintenanceTask("Restore", () =>
-                restoreKickedBack(setProgress, dr)
+                tasks.restoreKickedBack(setProgress, dr)
               )
             }
             onExecute={(dr) =>
               runMaintenanceTask("Restore", () =>
-                restoreKickedBack(setProgress, dr)
+                tasks.restoreKickedBack(setProgress, dr)
               )
             }
             executeLabel="Restore All"
@@ -782,12 +234,12 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             description="Normalize statuses and backfill firestoreUpdatedAt timestamps."
             onDryRun={(dr) =>
               runMaintenanceTask("Repair Statuses", () =>
-                repairStatuses(setProgress, dr)
+                tasks.repairStatuses(setProgress, dr)
               )
             }
             onExecute={(dr) =>
               runMaintenanceTask("Repair Statuses", () =>
-                repairStatuses(setProgress, dr)
+                tasks.repairStatuses(setProgress, dr)
               )
             }
             executeLabel="Run Repair"
@@ -801,12 +253,12 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             description="Add AI scores to verified questions while preserving human reviews."
             onDryRun={(dr) =>
               runMaintenanceTask("Backfill AI Scores", () =>
-                backfillAIScoresForVerified(setProgress, dr)
+                tasks.backfillAIScoresForVerified(setProgress, dr)
               )
             }
             onExecute={(dr) =>
               runMaintenanceTask("Backfill AI Scores", () =>
-                backfillAIScoresForVerified(setProgress, dr)
+                tasks.backfillAIScoresForVerified(setProgress, dr)
               )
             }
             executeLabel="Run Backfill"
@@ -820,12 +272,12 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             description="Mark all accepted questions as humanVerified."
             onDryRun={(dr) =>
               runMaintenanceTask("Backfill HumanVerified", () =>
-                backfillHumanVerified(setProgress, dr)
+                tasks.backfillHumanVerified(setProgress, dr)
               )
             }
             onExecute={(dr) =>
               runMaintenanceTask("Backfill HumanVerified", () =>
-                backfillHumanVerified(setProgress, dr)
+                tasks.backfillHumanVerified(setProgress, dr)
               )
             }
             executeLabel="Run Backfill"
@@ -839,12 +291,12 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             description="Populate missing humanVerifiedBy using acceptedBy."
             onDryRun={(dr) =>
               runMaintenanceTask("Backfill Names", () =>
-                backfillVerifierNames(setProgress, dr)
+                tasks.backfillVerifierNames(setProgress, dr)
               )
             }
             onExecute={(dr) =>
               runMaintenanceTask("Backfill Names", () =>
-                backfillVerifierNames(setProgress, dr)
+                tasks.backfillVerifierNames(setProgress, dr)
               )
             }
             executeLabel="Run Backfill"
@@ -858,12 +310,12 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             description="Generate AI tags for questions with < 3 tags."
             onDryRun={(dr) =>
               runMaintenanceTask("Backfill Tags", () =>
-                backfillTags(setProgress, dr)
+                tasks.backfillTags(setProgress, dr)
               )
             }
             onExecute={(dr) =>
               runMaintenanceTask("Backfill Tags", () =>
-                backfillTags(setProgress, dr)
+                tasks.backfillTags(setProgress, dr)
               )
             }
             executeLabel="Run Backfill"
@@ -877,12 +329,12 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             description="Apply reviewer average scores to rejected questions missing a score."
             onDryRun={(dr) =>
               runMaintenanceTask("Backfill Averages", () =>
-                backfillAverageScores(setProgress, dr)
+                tasks.backfillAverageScores(setProgress, dr)
               )
             }
             onExecute={(dr) =>
               runMaintenanceTask("Backfill Averages", () =>
-                backfillAverageScores(setProgress, dr)
+                tasks.backfillAverageScores(setProgress, dr)
               )
             }
             executeLabel="Run Backfill"
