@@ -546,299 +546,307 @@ const App = () => {
 
   return (
     <div className="flex flex-col h-screen bg-slate-950 font-sans text-slate-200">
-      <Suspense fallback={null}>
-        {/* Crash Recovery Prompt - highest priority */}
-        <CrashRecoveryPrompt
-          isOpen={showRecoveryPrompt}
-          recoveryData={recoveryData}
-          isRecovering={isRecovering}
-          onRecover={handleRecover}
-          onDismiss={dismissRecovery}
-        />
-        <GlobalModals
-          visibility={{
-            showNameModal,
-            showClearModal,
-            showBulkExportModal,
-            showSettings,
-            showAnalytics,
-            showDangerZone,
-            showApiKeyModal,
-            showTerms,
-            showAgeGate,
-            tutorialActive,
-            deleteConfirmId,
-            showAdvancedConfig,
-            showApiKey,
-          }}
-          state={{
-            config,
-            isProcessing,
-            status,
-            translationProgress,
-            allQuestionsMap,
-            appMode,
-            currentStep,
-            tutorialSteps,
-            activeScenario,
-            metrics: {
-              totalApproved: approvedCount,
-              totalQuestions: questions.length,
-            },
-            isApiReady,
-            customTags,
-            isAdmin,
-          }}
-          handlers={{
-            handleNameSave,
-            handleDeleteAllQuestions,
-            handleBulkExport,
-            confirmDelete,
-            setDeleteConfirmId,
-            onCloseBulkExport: () => setShowBulkExportModal(false),
-            onCloseSettings: () => setShowSettings(false),
-            onCloseAnalytics: () => setShowAnalytics(false),
-            onCloseDangerZone: () => setShowDangerZone(false),
-            onCloseApiKey: () => setShowApiKeyModal(false),
-            handleChange,
-            handleSaveApiKey,
-            setShowTerms,
-            setTermsAccepted,
-            setShowAgeGate,
-            setShowClearModal,
-            handleTutorialNext,
-            handleTutorialPrev,
-            handleTutorialSkip,
-            handleTutorialComplete,
-            onResetSettings: () =>
-              setConfig({ ...config, ...useAppConfig.defaultConfig }),
-            onHardReset: () => {
-              localStorage.clear();
-              window.location.reload();
-            },
-            fileInputRef,
-            handleFileChange,
-            setShowAdvancedConfig,
-            setShowApiKey,
-            handleDetectTopics,
-            onSaveCustomTags: handleSaveCustomTags,
-            window: window,
-          }}
-        />
-      </Suspense>
-
-      <Header
-        apiKeyStatus={apiKeyStatus}
-        isCloudReady={isAuthReady}
-        onHome={handleGoHome}
-        creatorName={config.creatorName}
-        appMode={appMode}
-        tokenUsage={firestoreTokenUsage}
-        onRestartTutorial={handleRestartTutorial}
-        onStartTutorial={handleStartTutorial}
-        isAdmin={isAdmin}
-        user={user}
-      />
-
-      {/* Registration Warning Banner - Ghost Reviewer Detection */}
-      {user && !_isRegistered && !registrationLoading && (
-        <div className="bg-amber-500 text-black px-4 py-2 text-center text-sm font-medium">
-          ⚠️ Your account is not fully registered. Some features (Accept/Reject)
-          may not work. Please contact an admin for access.
-        </div>
-      )}
-
-      {/* Blocking Permission Error Banner - Write Probe Failed */}
-      {permissionError && (
-        <div className="bg-red-600 text-white px-4 py-3 text-center font-bold">
-          🚫 CRITICAL: Your account cannot save data to the database. Your work
-          will NOT be saved. Please contact{" "}
-          <a
-            href="mailto:sam.deiter@epicgames.com"
-            className="underline text-white"
-          >
-            sam.deiter@epicgames.com
-          </a>{" "}
-          immediately.
-        </div>
-      )}
-
-      <Suspense fallback={<LoadingSpinner />}>
-        {appMode === APP_MODES.LANDING ? (
-          <LandingPage
-            onSelectMode={handleModeSelect}
-            apiKeyStatus={apiKeyStatus}
-            isCloudReady={isAuthReady}
-            onOpenSettings={() => {
-              logger.log("🚀 Configure Now clicked!");
-              setShowApiKeyModal(true);
-            }}
-            isAdmin={isAdmin}
-            onStartTutorial={() => handleStartTutorial("welcome")}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-indigo-600 focus:text-white focus:px-4 focus:py-2 focus:rounded"
+      >
+        Skip to main content
+      </a>
+      <main id="main-content" className="flex flex-col flex-1 overflow-hidden">
+        <Suspense fallback={null}>
+          {/* Crash Recovery Prompt - highest priority */}
+          <CrashRecoveryPrompt
+            isOpen={showRecoveryPrompt}
+            recoveryData={recoveryData}
+            isRecovering={isRecovering}
+            onRecover={handleRecover}
+            onDismiss={dismissRecovery}
           />
-        ) : (
-          <MainLayout
-            appMode={appMode}
-            setAppMode={setAppMode}
-            effectiveApiKey={effectiveApiKey}
-            isAdmin={isAdmin}
-            sidebarProps={{
-              showGenSettings,
-              setShowGenSettings,
+          <GlobalModals
+            visibility={{
+              showNameModal,
+              showClearModal,
+              showBulkExportModal,
+              showSettings,
+              showAnalytics,
+              showDangerZone,
+              showApiKeyModal,
+              showTerms,
+              showAgeGate,
+              tutorialActive,
+              deleteConfirmId,
+              showAdvancedConfig,
+              showApiKey,
+            }}
+            state={{
               config,
-              handleChange,
-              allQuestionsMap,
-              approvedCounts,
-              overallPercentage,
-              totalApproved,
-              isTargetMet,
-              maxBatchSize,
-              batchSizeWarning,
-              handleGenerate,
-              isGenerating,
-              isApiReady,
-              handleBulkTranslateMissing,
               isProcessing,
-              setShowSettings,
-              handleSelectCategory,
-              customTags,
               status,
-              showMessage,
+              translationProgress,
+              allQuestionsMap,
+              appMode,
+              currentStep,
+              tutorialSteps,
+              activeScenario,
+              metrics: {
+                totalApproved: approvedCount,
+                totalQuestions: questions.length,
+              },
+              isApiReady,
+              customTags,
               isAdmin,
             }}
-            handleModeSelect={handleModeSelect}
-            handleViewDatabase={handleViewDatabase}
-            pendingCount={totalPendingQuestions}
-            toolbarProps={{
-              mode: appMode,
-              counts: contextCounts,
-              filterMode,
-              setFilterMode,
-              filterByCreator,
-              setFilterByCreator,
-              filterTags,
-              setFilterTags,
-              filterScoreTier,
-              setFilterScoreTier,
-              filterByReviewer,
-              setFilterByReviewer,
-              uniqueReviewers,
-              customTags,
-              searchTerm,
-              setSearchTerm,
-              sortBy,
-              setSortBy,
-              isProcessing,
-              status,
-              isAuthReady,
-              config,
-              onLoadSheets: handleLoadFromSheets,
-              onLoadFirestore: handleLoadFromFirestore,
-              onBulkExport: () => setShowBulkExportModal(true),
-              onClearPending: handleClearPending,
-              onBulkAcceptHighScores:
-                appMode === APP_MODES.REVIEW
-                  ? handleBulkAcceptHighScores
-                  : undefined,
-              onBulkCritiqueAll:
-                appMode === APP_MODES.REVIEW
-                  ? handleBulkCritiqueAll
-                  : undefined,
-              onTrimExcess: handleTrimExcess,
-              onAutoTagAll: handleAutoTagAll,
-              effectiveApiKey: effectiveApiKey,
+            handlers={{
+              handleNameSave,
+              handleDeleteAllQuestions,
+              handleBulkExport,
+              confirmDelete,
+              setDeleteConfirmId,
+              onCloseBulkExport: () => setShowBulkExportModal(false),
+              onCloseSettings: () => setShowSettings(false),
+              onCloseAnalytics: () => setShowAnalytics(false),
+              onCloseDangerZone: () => setShowDangerZone(false),
+              onCloseApiKey: () => setShowApiKeyModal(false),
               handleChange,
+              handleSaveApiKey,
+              setShowTerms,
+              setTermsAccepted,
+              setShowAgeGate,
+              setShowClearModal,
+              handleTutorialNext,
+              handleTutorialPrev,
+              handleTutorialSkip,
+              handleTutorialComplete,
+              onResetSettings: () =>
+                setConfig({ ...config, ...useAppConfig.defaultConfig }),
+              onHardReset: () => {
+                localStorage.clear();
+                window.location.reload();
+              },
+              fileInputRef,
+              handleFileChange,
+              setShowAdvancedConfig,
+              setShowApiKey,
+              handleDetectTopics,
+              onSaveCustomTags: handleSaveCustomTags,
+              window: window,
             }}
-            showHistory={showHistory}
-            uniqueFilteredQuestions={uniqueFilteredQuestions}
-            questions={questions}
-            status={status}
-            databaseQuestions={databaseQuestions}
-            config={config}
-            isProcessing={isProcessing}
-            allQuestionsMap={allQuestionsMap}
-            viewRouterHandlers={viewRouterHandlers}
-            viewRouterState={{
-              currentReviewIndex,
-              translationMap,
-              filterByCreator,
-              filteredQuestions,
-              questions,
-              status,
-              filterMode,
-              sortBy,
-              searchTerm,
-              showHistory,
-              currentUser: user,
-              userRole,
-            }}
-            viewRouterSetters={{
-              setCurrentReviewIndex,
-              setFilterByCreator,
-              showMessage,
-            }}
-            handleGoHome={handleGoHome}
-            onStartTutorial={handleStartTutorial}
           />
+        </Suspense>
+
+        <Header
+          apiKeyStatus={apiKeyStatus}
+          isCloudReady={isAuthReady}
+          onHome={handleGoHome}
+          creatorName={config.creatorName}
+          appMode={appMode}
+          tokenUsage={firestoreTokenUsage}
+          onRestartTutorial={handleRestartTutorial}
+          onStartTutorial={handleStartTutorial}
+          isAdmin={isAdmin}
+          user={user}
+        />
+
+        {/* Registration Warning Banner - Ghost Reviewer Detection */}
+        {user && !_isRegistered && !registrationLoading && (
+          <div className="bg-amber-500 text-black px-4 py-2 text-center text-sm font-medium">
+            ⚠️ Your account is not fully registered. Some features
+            (Accept/Reject) may not work. Please contact an admin for access.
+          </div>
         )}
-      </Suspense>
 
-      {/* API Key Modal - Simple popup for Configure Now button */}
+        {/* Blocking Permission Error Banner - Write Probe Failed */}
+        {permissionError && (
+          <div className="bg-red-600 text-white px-4 py-3 text-center font-bold">
+            🚫 CRITICAL: Your account cannot save data to the database. Your
+            work will NOT be saved. Please contact{" "}
+            <a
+              href="mailto:sam.deiter@epicgames.com"
+              className="underline text-white"
+            >
+              sam.deiter@epicgames.com
+            </a>{" "}
+            immediately.
+          </div>
+        )}
 
-      {/* Footer */}
-      <Footer />
+        <Suspense fallback={<LoadingSpinner />}>
+          {appMode === APP_MODES.LANDING ? (
+            <LandingPage
+              onSelectMode={handleModeSelect}
+              apiKeyStatus={apiKeyStatus}
+              isCloudReady={isAuthReady}
+              onOpenSettings={() => {
+                logger.log("🚀 Configure Now clicked!");
+                setShowApiKeyModal(true);
+              }}
+              isAdmin={isAdmin}
+              onStartTutorial={() => handleStartTutorial("welcome")}
+            />
+          ) : (
+            <MainLayout
+              appMode={appMode}
+              setAppMode={setAppMode}
+              effectiveApiKey={effectiveApiKey}
+              isAdmin={isAdmin}
+              sidebarProps={{
+                showGenSettings,
+                setShowGenSettings,
+                config,
+                handleChange,
+                allQuestionsMap,
+                approvedCounts,
+                overallPercentage,
+                totalApproved,
+                isTargetMet,
+                maxBatchSize,
+                batchSizeWarning,
+                handleGenerate,
+                isGenerating,
+                isApiReady,
+                handleBulkTranslateMissing,
+                isProcessing,
+                setShowSettings,
+                handleSelectCategory,
+                customTags,
+                status,
+                showMessage,
+                isAdmin,
+              }}
+              handleModeSelect={handleModeSelect}
+              handleViewDatabase={handleViewDatabase}
+              pendingCount={totalPendingQuestions}
+              toolbarProps={{
+                mode: appMode,
+                counts: contextCounts,
+                filterMode,
+                setFilterMode,
+                filterByCreator,
+                setFilterByCreator,
+                filterTags,
+                setFilterTags,
+                filterScoreTier,
+                setFilterScoreTier,
+                filterByReviewer,
+                setFilterByReviewer,
+                uniqueReviewers,
+                customTags,
+                searchTerm,
+                setSearchTerm,
+                sortBy,
+                setSortBy,
+                isProcessing,
+                status,
+                isAuthReady,
+                config,
+                onLoadSheets: handleLoadFromSheets,
+                onLoadFirestore: handleLoadFromFirestore,
+                onBulkExport: () => setShowBulkExportModal(true),
+                onClearPending: handleClearPending,
+                onBulkAcceptHighScores:
+                  appMode === APP_MODES.REVIEW
+                    ? handleBulkAcceptHighScores
+                    : undefined,
+                onBulkCritiqueAll:
+                  appMode === APP_MODES.REVIEW
+                    ? handleBulkCritiqueAll
+                    : undefined,
+                onTrimExcess: handleTrimExcess,
+                onAutoTagAll: handleAutoTagAll,
+                effectiveApiKey: effectiveApiKey,
+                handleChange,
+              }}
+              showHistory={showHistory}
+              uniqueFilteredQuestions={uniqueFilteredQuestions}
+              questions={questions}
+              status={status}
+              databaseQuestions={databaseQuestions}
+              config={config}
+              isProcessing={isProcessing}
+              allQuestionsMap={allQuestionsMap}
+              viewRouterHandlers={viewRouterHandlers}
+              viewRouterState={{
+                currentReviewIndex,
+                translationMap,
+                filterByCreator,
+                filteredQuestions,
+                questions,
+                status,
+                filterMode,
+                sortBy,
+                searchTerm,
+                showHistory,
+                currentUser: user,
+                userRole,
+              }}
+              viewRouterSetters={{
+                setCurrentReviewIndex,
+                setFilterByCreator,
+                showMessage,
+              }}
+              handleGoHome={handleGoHome}
+              onStartTutorial={handleStartTutorial}
+            />
+          )}
+        </Suspense>
 
-      {/* TOAST NOTIFICATIONS */}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+        {/* API Key Modal - Simple popup for Configure Now button */}
 
-      {/* CONCURRENT EDITING CONFLICT MODAL */}
-      {showConflictModal && conflictData && (
-        <ConflictModal
-          isOpen={showConflictModal}
-          onClose={() => setShowConflictModal(false)}
-          conflictData={conflictData}
-          onResolve={async (action) => {
-            if (action === "DISCARD") {
-              // Reload the latest version from server
-              const { loadAgent } = await import("./agents").then((m) =>
-                m.getAgents()
-              );
-              if (loadAgent) {
-                const result = await loadAgent.loadQuestion(
-                  conflictData.serverQuestion.id
+        {/* Footer */}
+        <Footer />
+
+        {/* TOAST NOTIFICATIONS */}
+        <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+        {/* CONCURRENT EDITING CONFLICT MODAL */}
+        {showConflictModal && conflictData && (
+          <ConflictModal
+            isOpen={showConflictModal}
+            onClose={() => setShowConflictModal(false)}
+            conflictData={conflictData}
+            onResolve={async (action) => {
+              if (action === "DISCARD") {
+                // Reload the latest version from server
+                const { loadAgent } = await import("./agents").then((m) =>
+                  m.getAgents()
                 );
-                if (result.success) {
-                  handleUpdateQuestion(result.question.id, result.question);
-                  showMessage(
-                    "✓ Reloaded latest version",
-                    TOAST_DURATION.MEDIUM
+                if (loadAgent) {
+                  const result = await loadAgent.loadQuestion(
+                    conflictData.serverQuestion.id
                   );
+                  if (result.success) {
+                    handleUpdateQuestion(result.question.id, result.question);
+                    showMessage(
+                      "✓ Reloaded latest version",
+                      TOAST_DURATION.MEDIUM
+                    );
+                  }
+                }
+              } else if (action === "OVERWRITE") {
+                // Force save local changes
+                const { saveGuardAgent } = await import("./agents").then((m) =>
+                  m.getAgents()
+                );
+                if (saveGuardAgent) {
+                  await saveGuardAgent.saveQuestion(
+                    conflictData.serverQuestion.id,
+                    conflictData.localChanges,
+                    conflictData.serverVersion, // Use server version to force overwrite
+                    user?.uid || "unknown",
+                    user?.email || "unknown@example.com"
+                  );
+                  showMessage("✓ Overwrote server changes", 2000);
                 }
               }
-            } else if (action === "OVERWRITE") {
-              // Force save local changes
-              const { saveGuardAgent } = await import("./agents").then((m) =>
-                m.getAgents()
-              );
-              if (saveGuardAgent) {
-                await saveGuardAgent.saveQuestion(
-                  conflictData.serverQuestion.id,
-                  conflictData.localChanges,
-                  conflictData.serverVersion, // Use server version to force overwrite
-                  user?.uid || "unknown",
-                  user?.email || "unknown@example.com"
-                );
-                showMessage("✓ Overwrote server changes", 2000);
-              }
-            }
-            setShowConflictModal(false);
-          }}
-        />
-      )}
+              setShowConflictModal(false);
+            }}
+          />
+        )}
 
-      {/* TUTORIAL OVERLAY */}
+        {/* TUTORIAL OVERLAY */}
 
-      {/* COMPLIANCE MODALS */}
+        {/* COMPLIANCE MODALS */}
+      </main>
     </div>
   );
 };
