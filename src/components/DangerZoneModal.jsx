@@ -13,6 +13,7 @@ import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { logger } from "../utils/logger";
 import { MAINTENANCE } from "../utils/constants";
 import { useAccessibility } from "../contexts/AccessibilityContext";
+import { normalizeStatus } from "../utils/questionHelpers";
 
 /**
  * DangerZoneModal - Separate modal for destructive operations
@@ -35,6 +36,8 @@ const DangerZoneModal = ({
   const [migrationResult, setMigrationResult] = useState(null);
   const [isNuking, setIsNuking] = useState(false);
   const [nukeProgress, setNukeProgress] = useState({ current: 0, total: 0 });
+  const [isRepairing, setIsRepairing] = useState(false);
+  const [repairResult, setRepairResult] = useState(null);
 
   const handleFactoryResetClick = () => {
     setShowFactoryResetConfirm(true);
@@ -187,6 +190,65 @@ const DangerZoneModal = ({
     }
   };
 
+  const handleRepairDatabase = async () => {
+    if (
+      !confirm(
+        'This will audit all questions and repair statuses (e.g., "Approved" -> "accepted") and missing timestamps. Continue?'
+      )
+    ) {
+      return;
+    }
+
+    setIsRepairing(true);
+    setRepairResult(null);
+
+    try {
+      const querySnapshot = await getDocs(collection(getDb(), "questions"));
+      const questionsToFix = [];
+
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const currentStatus = data.status;
+        const normalizedStatus = normalizeStatus(currentStatus);
+        const needsTimestamp = !data.firestoreUpdatedAt;
+
+        if (currentStatus !== normalizedStatus || needsTimestamp) {
+          questionsToFix.push({
+            id: docSnap.id,
+            status: normalizedStatus,
+            needsTimestamp,
+          });
+        }
+      });
+
+      if (questionsToFix.length === 0) {
+        setRepairResult({ message: "Database is already healthy!" });
+        setIsRepairing(false);
+        return;
+      }
+
+      let fixedCount = 0;
+      for (const item of questionsToFix) {
+        const docRef = doc(getDb(), "questions", item.id);
+        const updates = { status: item.status };
+        if (item.needsTimestamp) {
+          updates.firestoreUpdatedAt = new Date().toISOString();
+        }
+        await updateDoc(docRef, updates);
+        fixedCount++;
+      }
+
+      setRepairResult({
+        message: `Successfully repaired ${fixedCount} questions!`,
+      });
+    } catch (error) {
+      logger.error("Repair failed:", error);
+      alert("Repair failed: " + error.message);
+    } finally {
+      setIsRepairing(false);
+    }
+  };
+
   // Admin-only: Nuke ALL questions from Firestore (any user's questions)
   const handleNukeAllQuestions = async () => {
     if (!auth.currentUser) {
@@ -332,6 +394,42 @@ const DangerZoneModal = ({
                   )}
                   <p className="text-[9px] text-blue-400/60 mt-1">
                     Adds your name to questions showing "N/A"
+                  </p>
+                </div>
+
+                {/* Audit & Repair */}
+                <div className="bg-emerald-900/20 p-3 rounded border border-emerald-900/50 mb-3">
+                  <p className="text-xs text-emerald-300 mb-2 font-semibold">
+                    🛡️ Health & Integrity
+                  </p>
+                  <button
+                    onClick={handleRepairDatabase}
+                    disabled={isRepairing}
+                    className="w-full px-4 py-2 bg-emerald-900/20 hover:bg-emerald-900/40 text-emerald-400 text-xs font-bold rounded border border-emerald-900/50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isRepairing ? (
+                      <>
+                        <Icon
+                          name="loader"
+                          size={14}
+                          className="animate-spin"
+                        />{" "}
+                        Repairing...
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="check-shield" size={14} /> Repair Statuses &
+                        Timestamps
+                      </>
+                    )}
+                  </button>
+                  {repairResult && (
+                    <p className="text-[10px] text-emerald-400 mt-2 text-center">
+                      ✓ {repairResult.message}
+                    </p>
+                  )}
+                  <p className="text-[9px] text-emerald-400/60 mt-1">
+                    Fixes "Other" statuses and misaligned timestamps.
                   </p>
                 </div>
 

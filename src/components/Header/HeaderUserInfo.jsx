@@ -10,6 +10,7 @@ const HeaderUserInfo = ({
   isAdmin,
   isSuperAdmin,
   onSignOut,
+  formattedCost = null,
   compact = false,
   onMenuClose = null,
   showMessage = null,
@@ -50,6 +51,12 @@ const HeaderUserInfo = ({
               {isSuperAdmin ? "SUPER" : "ADMIN"}
             </span>
           )}
+          {formattedCost !== null && (
+            <div className="flex items-center gap-1 border-l border-slate-700 pl-2 ml-1 text-emerald-400">
+              <span className="text-slate-500 text-[10px]">$</span>
+              <span className="font-bold">{formattedCost}</span>
+            </div>
+          )}
         </div>
         <button
           onClick={handleSignOut}
@@ -81,6 +88,12 @@ const HeaderUserInfo = ({
         >
           {isSuperAdmin ? "SUPER" : "ADMIN"}
         </span>
+      )}
+      {formattedCost !== null && (
+        <div className="flex items-center gap-1 border-l border-slate-700 pl-1.5 ml-0.5 text-emerald-400">
+          <span className="text-slate-500">$</span>
+          <span className="font-bold">{formattedCost}</span>
+        </div>
       )}
       <button
         onClick={handleSignOut}

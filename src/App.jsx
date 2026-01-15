@@ -54,6 +54,7 @@ import { initializeAgents } from "./agents";
 import { TOAST_DURATION, APP_MODES } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import { logger } from "./utils/logger";
+import { getTokenUsageFromQuestions } from "./utils/analyticsStore";
 
 const App = () => {
   // ========================================================================
@@ -239,6 +240,12 @@ const App = () => {
     moveQuestion,
   } = useQuestionManager(config, showMessage);
 
+  // Calculate token usage from Firestore questions (aggregates estimatedCost from all questions)
+  const firestoreTokenUsage = useMemo(
+    () => getTokenUsageFromQuestions(databaseQuestions),
+    [databaseQuestions]
+  );
+
   // 2.5. Crash Recovery - detect and restore from cloud backup
   const {
     showRecoveryPrompt,
@@ -391,8 +398,10 @@ const App = () => {
       }
 
       hasAutoLoadedRef.current = true;
-      logger.log("📊 Auto-loading database for difficulty chart...");
-      handleLoadFromFirestore(true); // Silent auto-recovery
+      logger.log("📊 Auto-loading full database...");
+
+      // Load all questions immediately (IndexedDB persistence handles caching)
+      handleLoadFromFirestore(true);
     }
   }, [user, authLoading, handleLoadFromFirestore]);
 
@@ -535,31 +544,6 @@ const App = () => {
     );
   }
 
-  if (appMode === APP_MODES.LANDING) {
-    return (
-      <Suspense fallback={<LoadingSpinner />}>
-        <LandingPage
-          onSelectMode={handleModeSelect}
-          apiKeyStatus={apiKeyStatus}
-          isCloudReady={isAuthReady}
-          onOpenSettings={() => {
-            logger.log("🚀 Configure Now clicked!");
-            setShowApiKeyModal(true);
-          }}
-          isAdmin={isAdmin} // Pass admin status
-          onStartTutorial={() => handleStartTutorial("welcome")} // Start welcome tour
-        />
-        {/* API Key Modal for Configure Now button */}
-        <ApiKeyModal
-          isOpen={showApiKeyModal}
-          onClose={() => setShowApiKeyModal(false)}
-          onSave={handleSaveApiKey}
-          currentKey={config.apiKey}
-        />
-      </Suspense>
-    );
-  }
-
   return (
     <div className="flex flex-col h-screen bg-slate-950 font-sans text-slate-200">
       <Suspense fallback={null}>
@@ -649,7 +633,7 @@ const App = () => {
         onHome={handleGoHome}
         creatorName={config.creatorName}
         appMode={appMode}
-        tokenUsage={tokenUsage}
+        tokenUsage={firestoreTokenUsage}
         onRestartTutorial={handleRestartTutorial}
         onStartTutorial={handleStartTutorial}
         isAdmin={isAdmin}
@@ -680,107 +664,123 @@ const App = () => {
       )}
 
       <Suspense fallback={<LoadingSpinner />}>
-        <MainLayout
-          appMode={appMode}
-          setAppMode={setAppMode}
-          effectiveApiKey={effectiveApiKey}
-          isAdmin={isAdmin}
-          sidebarProps={{
-            showGenSettings,
-            setShowGenSettings,
-            config,
-            handleChange,
-            allQuestionsMap,
-            approvedCounts,
-            overallPercentage,
-            totalApproved,
-            isTargetMet,
-            maxBatchSize,
-            batchSizeWarning,
-            handleGenerate,
-            isGenerating,
-            isApiReady,
-            handleBulkTranslateMissing,
-            isProcessing,
-            setShowSettings,
-            handleSelectCategory,
-            customTags,
-            status,
-            showMessage,
-            isAdmin,
-          }}
-          handleModeSelect={handleModeSelect}
-          handleViewDatabase={handleViewDatabase}
-          pendingCount={totalPendingQuestions} // Show pending questions needing review
-          toolbarProps={{
-            mode: appMode,
-            counts: contextCounts,
-            filterMode,
-            setFilterMode,
-            filterByCreator,
-            setFilterByCreator,
-            filterTags,
-            setFilterTags,
-            filterScoreTier,
-            setFilterScoreTier,
-            filterByReviewer,
-            setFilterByReviewer,
-            uniqueReviewers,
-            customTags,
-            searchTerm,
-            setSearchTerm,
-            sortBy,
-            setSortBy,
-            isProcessing,
-            status,
-            isAuthReady,
-            config,
-            onLoadSheets: handleLoadFromSheets,
-            onLoadFirestore: handleLoadFromFirestore,
-            onBulkExport: () => setShowBulkExportModal(true),
-            onClearPending: handleClearPending,
-            onBulkAcceptHighScores:
-              appMode === APP_MODES.REVIEW
-                ? handleBulkAcceptHighScores
-                : undefined,
-            onBulkCritiqueAll:
-              appMode === APP_MODES.REVIEW ? handleBulkCritiqueAll : undefined,
-            onTrimExcess: handleTrimExcess,
-            onAutoTagAll: handleAutoTagAll, // Added
-            effectiveApiKey: effectiveApiKey,
-            handleChange, // Pass config handler for Discipline selector
-          }}
-          showHistory={showHistory}
-          uniqueFilteredQuestions={uniqueFilteredQuestions}
-          questions={questions}
-          status={status}
-          databaseQuestions={databaseQuestions}
-          config={config}
-          isProcessing={isProcessing}
-          allQuestionsMap={allQuestionsMap}
-          viewRouterHandlers={viewRouterHandlers}
-          viewRouterState={{
-            currentReviewIndex,
-            translationMap,
-            filterByCreator,
-            filteredQuestions,
-            questions,
-            status,
-            filterMode,
-            sortBy,
-            searchTerm,
-            showHistory,
-            currentUser: user,
-            userRole, // Add role for component restrictions
-          }}
-          viewRouterSetters={{
-            setCurrentReviewIndex,
-            setFilterByCreator,
-            showMessage,
-          }}
-          handleGoHome={handleGoHome}
-          onStartTutorial={handleStartTutorial}
-        />
+        {appMode === APP_MODES.LANDING ? (
+          <LandingPage
+            onSelectMode={handleModeSelect}
+            apiKeyStatus={apiKeyStatus}
+            isCloudReady={isAuthReady}
+            onOpenSettings={() => {
+              logger.log("🚀 Configure Now clicked!");
+              setShowApiKeyModal(true);
+            }}
+            isAdmin={isAdmin}
+            onStartTutorial={() => handleStartTutorial("welcome")}
+          />
+        ) : (
+          <MainLayout
+            appMode={appMode}
+            setAppMode={setAppMode}
+            effectiveApiKey={effectiveApiKey}
+            isAdmin={isAdmin}
+            sidebarProps={{
+              showGenSettings,
+              setShowGenSettings,
+              config,
+              handleChange,
+              allQuestionsMap,
+              approvedCounts,
+              overallPercentage,
+              totalApproved,
+              isTargetMet,
+              maxBatchSize,
+              batchSizeWarning,
+              handleGenerate,
+              isGenerating,
+              isApiReady,
+              handleBulkTranslateMissing,
+              isProcessing,
+              setShowSettings,
+              handleSelectCategory,
+              customTags,
+              status,
+              showMessage,
+              isAdmin,
+            }}
+            handleModeSelect={handleModeSelect}
+            handleViewDatabase={handleViewDatabase}
+            pendingCount={totalPendingQuestions}
+            toolbarProps={{
+              mode: appMode,
+              counts: contextCounts,
+              filterMode,
+              setFilterMode,
+              filterByCreator,
+              setFilterByCreator,
+              filterTags,
+              setFilterTags,
+              filterScoreTier,
+              setFilterScoreTier,
+              filterByReviewer,
+              setFilterByReviewer,
+              uniqueReviewers,
+              customTags,
+              searchTerm,
+              setSearchTerm,
+              sortBy,
+              setSortBy,
+              isProcessing,
+              status,
+              isAuthReady,
+              config,
+              onLoadSheets: handleLoadFromSheets,
+              onLoadFirestore: handleLoadFromFirestore,
+              onBulkExport: () => setShowBulkExportModal(true),
+              onClearPending: handleClearPending,
+              onBulkAcceptHighScores:
+                appMode === APP_MODES.REVIEW
+                  ? handleBulkAcceptHighScores
+                  : undefined,
+              onBulkCritiqueAll:
+                appMode === APP_MODES.REVIEW
+                  ? handleBulkCritiqueAll
+                  : undefined,
+              onTrimExcess: handleTrimExcess,
+              onAutoTagAll: handleAutoTagAll,
+              effectiveApiKey: effectiveApiKey,
+              handleChange,
+            }}
+            showHistory={showHistory}
+            uniqueFilteredQuestions={uniqueFilteredQuestions}
+            questions={questions}
+            status={status}
+            databaseQuestions={databaseQuestions}
+            config={config}
+            isProcessing={isProcessing}
+            allQuestionsMap={allQuestionsMap}
+            viewRouterHandlers={viewRouterHandlers}
+            viewRouterState={{
+              currentReviewIndex,
+              translationMap,
+              filterByCreator,
+              filteredQuestions,
+              questions,
+              status,
+              filterMode,
+              sortBy,
+              searchTerm,
+              showHistory,
+              currentUser: user,
+              userRole,
+            }}
+            viewRouterSetters={{
+              setCurrentReviewIndex,
+              setFilterByCreator,
+              showMessage,
+            }}
+            handleGoHome={handleGoHome}
+            onStartTutorial={handleStartTutorial}
+          />
+        )}
       </Suspense>
 
       {/* API Key Modal - Simple popup for Configure Now button */}

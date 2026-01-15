@@ -8,6 +8,7 @@
 import { textSimilarity } from "./stringHelpers";
 import { normalizeQuestion } from "./normalizeQuestion";
 import { logger } from "../utils/logger";
+import { QUESTION_STATUS } from "./constants";
 /**
  * Strips code fences and conversational prefixes from AI text.
  */
@@ -26,6 +27,25 @@ export const cleanJsonResponse = (text) => {
   cleaned = cleaned.replace(prefixRegex, "").trim();
 
   return cleaned;
+};
+/**
+ * Normalizes question status to canonical lowercase forms.
+ * Maps 'Approved' -> 'accepted', 'Success' -> 'accepted', etc.
+ */
+export const normalizeStatus = (status) => {
+  if (!status) return QUESTION_STATUS.PENDING;
+  const s = status.toString().toLowerCase().trim();
+
+  if (s === "accepted" || s === "approved" || s === "success")
+    return QUESTION_STATUS.ACCEPTED;
+  if (s === "rejected" || s === "error" || s === "denied")
+    return QUESTION_STATUS.REJECTED;
+  if (s === "deleted" || s === "removed") return QUESTION_STATUS.DELETED;
+  if (s === "pending" || s === "new" || s === "draft")
+    return QUESTION_STATUS.PENDING;
+
+  // Fallback: If unknown, treat as pending for safety
+  return QUESTION_STATUS.PENDING;
 };
 
 /**

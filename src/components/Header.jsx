@@ -114,7 +114,7 @@ const Header = ({
     (tokenUsage.inputTokens || 0) + (tokenUsage.outputTokens || 0);
   const formattedTokens =
     totalTokens >= 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : totalTokens;
-  const formattedCost = (tokenUsage.totalCost || 0).toFixed(4);
+  const formattedCost = (tokenUsage.totalCost || 0).toFixed(6);
 
   const getTitle = () => {
     if (isReview) return "Review & Audit Console";
@@ -176,7 +176,7 @@ const Header = ({
         </div>
 
         {/* Desktop Status Bar */}
-        <div className="hidden lg:flex items-center gap-2 text-xs font-mono">
+        <div className="hidden md:flex items-center gap-2 text-xs font-mono">
           {/* Mode Badge */}
           <span
             className={`flex items-center h-7 px-2 rounded text-[10px] font-semibold uppercase tracking-wider border whitespace-nowrap ${getBadgeStyle()}`}
@@ -226,6 +226,7 @@ const Header = ({
             isAdmin={isAdmin}
             isSuperAdmin={isSuperAdmin}
             onSignOut={onSignOut}
+            formattedCost={formattedCost}
             compact={true}
           />
           {/* Status Bar */}
@@ -243,7 +244,7 @@ const Header = ({
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+          className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-expanded={mobileMenuOpen}
           aria-controls="mobile-menu"

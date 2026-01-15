@@ -87,19 +87,22 @@ const QualityTab = ({ qualityDistribution, tokenStats, summary }) => {
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-emerald-900/30 rounded-lg">
-              <Icon
-                name="check-circle"
-                size={20}
-                className="text-emerald-400"
-              />
+              <Icon name="dollar-sign" size={20} className="text-emerald-400" />
             </div>
             <span className="text-sm font-medium text-slate-300">
-              URL Success Rate
+              Avg Cost / Question
             </span>
           </div>
-          <p className="text-3xl font-bold text-emerald-400">100%</p>
+          <p className="text-3xl font-bold text-emerald-400">
+            $
+            {summary.totalQuestions > 0
+              ? ((summary.estimatedCost || 0) / summary.totalQuestions).toFixed(
+                  4
+                )
+              : "0.0000"}
+          </p>
           <p className="text-xs text-slate-500 mt-1">
-            536 verified URLs in database
+            Standardizing across {summary.totalQuestions} items
           </p>
         </div>
 
@@ -109,14 +112,14 @@ const QualityTab = ({ qualityDistribution, tokenStats, summary }) => {
               <Icon name="award" size={20} className="text-purple-400" />
             </div>
             <span className="text-sm font-medium text-slate-300">
-              Generations
+              Lifetime Cost
             </span>
           </div>
           <p className="text-3xl font-bold text-white">
-            {summary.totalGenerations || 0}
+            ${(summary.estimatedCost || 0).toFixed(4)}
           </p>
           <p className="text-xs text-slate-500 mt-1">
-            Total generation batches run
+            Total for all {summary.totalGenerations || 0} batches
           </p>
         </div>
       </div>

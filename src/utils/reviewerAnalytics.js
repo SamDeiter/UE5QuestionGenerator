@@ -91,14 +91,36 @@ export const fetchReviewedQuestions = async () => {
 export const aggregateReviewerStats = (questions) => {
   const reviewerMap = new Map();
 
+  /**
+   * Normalize reviewer name - fix duplicated names like "Sam DeiterSam Deiter"
+   */
+  const normalizeReviewerName = (name) => {
+    if (!name || typeof name !== "string") return "Unknown";
+    const trimmed = name.trim();
+
+    // Detect and fix duplicated names: "NameName" or "Name Name" (exact duplicate)
+    const halfLen = Math.floor(trimmed.length / 2);
+    const firstHalf = trimmed.substring(0, halfLen);
+    const secondHalf = trimmed.substring(halfLen);
+
+    if (firstHalf === secondHalf && firstHalf.length > 0) {
+      logger.log(`🔧 Fixed duplicated name: "${trimmed}" -> "${firstHalf}"`);
+      return firstHalf;
+    }
+
+    return trimmed;
+  };
+
   questions.forEach((q) => {
     // Use reviewerName, acceptedBy name, or email as fallback for reviewer identification
-    const reviewerName =
+    const rawName =
       q.reviewerName ||
       q.acceptedBy ||
       q.creatorEmail ||
       q.creatorName ||
       "Unknown";
+
+    const reviewerName = normalizeReviewerName(rawName);
 
     if (!reviewerMap.has(reviewerName)) {
       reviewerMap.set(reviewerName, {
@@ -130,10 +152,35 @@ export const aggregateReviewerStats = (questions) => {
         (stats.rejectionReasons[reason] || 0) + 1;
     }
 
-    // Add review duration if available
+    // Add review duration if available (with HARDENED validation)
     if (q.reviewDuration && q.reviewDuration > 0) {
-      stats.totalReviewTimeSeconds += q.reviewDuration;
-      stats.reviewDurations.push(q.reviewDuration);
+      let durationSeconds = q.reviewDuration;
+
+      // HARDENING: Detect if value is likely in milliseconds instead of seconds
+      // A review taking > 1 hour (3600s) is suspicious; if > 100000 it's likely ms
+      if (durationSeconds > 100000) {
+        // Likely stored in milliseconds - convert to seconds
+        durationSeconds = Math.round(durationSeconds / 1000);
+        logger.log(
+          `⚠️ Converted likely millisecond duration for ${reviewerName}: ${q.reviewDuration} -> ${durationSeconds}s`
+        );
+      }
+
+      // HARDENING: Cap at reasonable maximum (1 hour = 3600 seconds per question)
+      // Reviews taking longer than 1 hour are likely stale/abandoned sessions
+      const MAX_REVIEW_SECONDS = 3600; // 1 hour
+      if (durationSeconds > MAX_REVIEW_SECONDS) {
+        logger.log(
+          `⚠️ Capping excessive duration for ${reviewerName}: ${durationSeconds}s -> ${MAX_REVIEW_SECONDS}s`
+        );
+        durationSeconds = MAX_REVIEW_SECONDS;
+      }
+
+      // HARDENING: Skip durations less than 1 second (likely bogus data)
+      if (durationSeconds >= 1) {
+        stats.totalReviewTimeSeconds += durationSeconds;
+        stats.reviewDurations.push(durationSeconds);
+      }
     }
 
     // Track date range

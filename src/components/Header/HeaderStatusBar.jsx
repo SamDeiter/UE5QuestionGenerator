@@ -36,11 +36,6 @@ const HeaderStatusBar = ({
         <span className="font-semibold">{formattedTokens}</span>
       </div>
       <div className="w-px h-3 bg-slate-700"></div>
-      {/* Cost Display */}
-      <div className="flex items-center gap-1 text-emerald-400">
-        <span className="text-slate-500">$</span>
-        <span className="font-semibold">{formattedCost}</span>
-      </div>
       {/* Connection Status (only if needed) */}
       {(!connectionStatus.isOnline ||
         connectionStatus.queuedCount > 0 ||

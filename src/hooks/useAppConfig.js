@@ -136,7 +136,23 @@ export const useAppConfig = () => {
   };
 
   const handleNameSave = (name) => {
-    setConfig((prev) => ({ ...prev, creatorName: name, reviewerName: name }));
+    // Sanitize: Trim and remove duplication if the user somehow pasted it twice (e.g. "Sam Sam")
+    let cleanName = name.trim();
+    if (cleanName.includes(" ") && cleanName.length > 5) {
+      const parts = cleanName.split(" ");
+      // If the second half equals the first half exactly (e.g. "Sam Deiter Sam Deiter")
+      const mid = Math.floor(parts.length / 2);
+      const firstHalf = parts.slice(0, mid).join(" ");
+      const secondHalf = parts.slice(mid).join(" ");
+      if (firstHalf === secondHalf && firstHalf.length > 2) {
+        cleanName = firstHalf;
+      }
+    }
+    setConfig((prev) => ({
+      ...prev,
+      creatorName: cleanName,
+      reviewerName: cleanName,
+    }));
     setShowNameModal(false);
   };
 

@@ -434,6 +434,33 @@ export const getTokenUsage = () => {
 };
 
 /**
+ * Calculates token usage from loaded questions (Firestore data)
+ * This aggregates estimatedCost from all questions, regardless of localStorage generations
+ * @param {Array} questions - Array of question objects from Firestore
+ * @returns {object} { inputTokens, outputTokens, totalCost }
+ */
+export const getTokenUsageFromQuestions = (questions) => {
+  if (!questions || !Array.isArray(questions)) {
+    return { inputTokens: 0, outputTokens: 0, totalCost: 0 };
+  }
+
+  const totalCost = questions.reduce((sum, q) => {
+    return sum + (q.estimatedCost || 0);
+  }, 0);
+
+  // Estimate tokens based on average (rough approximation)
+  // Using average of 500 input + 200 output tokens per question
+  const avgInputPerQuestion = 500;
+  const avgOutputPerQuestion = 200;
+
+  return {
+    inputTokens: questions.length * avgInputPerQuestion,
+    outputTokens: questions.length * avgOutputPerQuestion,
+    totalCost,
+  };
+};
+
+/**
  * Logs a critique action (apply or reject)
  * @param {Object} actionData - Action data
  * @param {string} actionData.questionId - Question ID

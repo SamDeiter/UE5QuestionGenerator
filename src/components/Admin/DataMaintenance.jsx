@@ -26,11 +26,67 @@ import {
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { logger } from "../../utils/logger";
+import { normalizeStatus } from "../../utils/questionHelpers";
 
 const db = getFirestore(app);
 
 // Rate limiting constant - 4 seconds between API calls (15/min, under Cloud Function 20/min limit)
 const API_RATE_LIMIT_MS = 4000;
+/**
+ * Repair question statuses: Normalize statuses (e.g., "Approved" -> "accepted")
+ * and backfill missing firestoreUpdatedAt timestamps.
+ */
+async function repairStatuses(onProgress, dryRun = false) {
+  const snapshot = await getDocs(collection(db, "questions"));
+
+  const questionsToFix = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const currentStatus = data.status;
+    const normalizedStatus = normalizeStatus(currentStatus);
+    const needsTimestamp = !data.firestoreUpdatedAt;
+
+    if (currentStatus !== normalizedStatus || needsTimestamp) {
+      questionsToFix.push({
+        id: docSnap.id,
+        currentStatus,
+        normalizedStatus,
+        needsTimestamp,
+      });
+    }
+  });
+
+  onProgress(
+    `Found ${questionsToFix.length} questions with status/timestamp issues`
+  );
+
+  if (dryRun || questionsToFix.length === 0) {
+    return { updated: 0, total: questionsToFix.length, dryRun };
+  }
+
+  const batchSize = 500;
+  let updated = 0;
+
+  for (let i = 0; i < questionsToFix.length; i += batchSize) {
+    const batch = writeBatch(db);
+    const chunk = questionsToFix.slice(i, i + batchSize);
+
+    chunk.forEach((item) => {
+      const ref = doc(db, "questions", String(item.id));
+      const updates = { status: item.normalizedStatus };
+      if (item.needsTimestamp) {
+        updates.firestoreUpdatedAt = new Date().toISOString();
+      }
+      batch.update(ref, updates);
+    });
+
+    await batch.commit();
+    updated += chunk.length;
+    onProgress(`Repaired ${updated}/${questionsToFix.length}...`);
+  }
+
+  return { updated, total: questionsToFix.length, dryRun: false };
+}
 
 /**
  * Backfill AI critique scores for accepted questions that are missing scores.
@@ -627,6 +683,28 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
     }
   };
 
+  const handleRepairStatuses = async (dryRun = false) => {
+    setProcessing(true);
+    setProgress("Auditing question statuses and timestamps...");
+    setLastResult(null);
+
+    try {
+      const result = await repairStatuses(setProgress, dryRun);
+      setLastResult(result);
+      if (dryRun) {
+        showMessage(`🔍 DRY RUN: ${result.total} questions need repair`, 5000);
+      } else {
+        showMessage(`✅ Repaired ${result.updated} questions!`, 5000);
+      }
+    } catch (error) {
+      logger.error("Repair failed:", error);
+      showMessage(`❌ Failed: ${error.message}`, 5000);
+    } finally {
+      setProcessing(false);
+      setProgress("");
+    }
+  };
+
   return (
     <CollapsibleSection
       title="Data Maintenance"
@@ -652,6 +730,34 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
               : `✅ Updated ${lastResult.updated} questions`}
           </div>
         )}
+        {/* STATUS REPAIR TOOL (CRITICAL) - Fixes "Other" Statuses */}
+        <div className="p-3 bg-emerald-950/30 rounded border-2 border-emerald-700/50">
+          <h4 className="text-sm font-bold text-emerald-200 mb-2 flex items-center gap-2">
+            <Icon name="shield-check" size={14} className="text-emerald-400" />
+            🛡️ Repair Statuses & Timestamps
+          </h4>
+          <p className="text-xs text-emerald-300/80 mb-3">
+            Fix non-standard statuses (e.g., "Approved" → "accepted") and
+            backfill missing firestoreUpdatedAt timestamps. Resolves "Other"
+            status issues.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleRepairStatuses(true)}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 rounded disabled:opacity-50"
+            >
+              Dry Run (Count)
+            </button>
+            <button
+              onClick={() => handleRepairStatuses(false)}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded font-bold disabled:opacity-50"
+            >
+              Repair All
+            </button>
+          </div>
+        </div>
 
         {/* FIX MISSING AI SCORES - Pipeline Fix (CRITICAL) */}
         <div className="p-3 bg-red-950/30 rounded border-2 border-red-700/50">

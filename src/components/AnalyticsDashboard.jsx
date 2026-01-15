@@ -180,7 +180,7 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
             <MetricCard
               title="Est. Cost"
               value={`$${(analyticsData.summary?.estimatedCost || 0).toFixed(
-                4
+                6
               )}`}
               icon={<PieChart size={18} />}
               color="orange"

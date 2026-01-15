@@ -77,6 +77,7 @@ const HeaderMobileMenu = forwardRef(
             isAdmin={isAdmin}
             isSuperAdmin={isSuperAdmin}
             onSignOut={onSignOut}
+            formattedCost={formattedCost}
             compact={false}
             onMenuClose={onClose}
           />
@@ -111,11 +112,6 @@ const HeaderMobileMenu = forwardRef(
                 <Icon name="zap" size={12} />
                 <span className="font-semibold">{formattedTokens}</span>
                 <span className="text-slate-500">tok</span>
-              </div>
-              {/* Cost */}
-              <div className="flex items-center gap-1 text-emerald-400">
-                <span className="text-slate-500">$</span>
-                <span className="font-semibold">{formattedCost}</span>
               </div>
             </div>
             {/* API Status */}

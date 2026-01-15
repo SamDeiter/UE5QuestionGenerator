@@ -22,7 +22,7 @@ const LandingPage = ({
   const errorText = cb ? "text-rose-400" : "text-red-400";
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-white p-4 relative overflow-hidden">
+    <div className="flex flex-col items-center justify-center flex-1 bg-slate-950 text-white p-4 relative overflow-hidden">
       {/* API Key Missing Banner */}
       {!apiKeyStatus.includes("Loaded") &&
         !apiKeyStatus.includes("Auto") &&

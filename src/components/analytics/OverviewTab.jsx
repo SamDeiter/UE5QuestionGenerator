@@ -116,14 +116,14 @@ const OverviewTab = ({
           color="emerald"
         />
         <StatCard
-          title="Translation Coverage"
-          value={`${translationPercent}%`}
-          icon="globe"
+          title="Tokens (In / Out)"
+          value={`${summary.inputTokens || 0} / ${summary.outputTokens || 0}`}
+          icon="zap"
           color="indigo"
         />
         <StatCard
           title="Total Cost"
-          value={`$${(summary.estimatedCost || 0).toFixed(2)}`}
+          value={`$${(summary.estimatedCost || 0).toFixed(4)}`}
           icon="dollar-sign"
           color="purple"
         />

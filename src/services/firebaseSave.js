@@ -12,6 +12,7 @@ import {
   setDoc,
   Timestamp,
   writeBatch,
+  enableMultiTabIndexedDbPersistence,
 } from "firebase/firestore";
 import { logEvent } from "firebase/analytics";
 import { logger } from "../utils/logger";
@@ -24,13 +25,37 @@ import {
   isAuthPotentiallyStale,
 } from "./firebaseAuth";
 import { invalidateQuestionsCache } from "./firebaseQueries";
-import { toastError, toastWarning } from "./toastEvents";
+import { toastError } from "./toastEvents";
 
-// --- Lazy-load Firestore ---
+// --- Lazy-load Firestore with Persistence ---
 let _db = null;
+let _persistenceInitialized = false;
+
 export const getDb = () => {
   if (!_db) {
     _db = getFirestore(app);
+
+    // Enable persistence in a non-blocking way
+    if (!_persistenceInitialized && typeof window !== "undefined") {
+      _persistenceInitialized = true;
+      enableMultiTabIndexedDbPersistence(_db)
+        .then(() => {
+          logger.log("✅ Firestore multi-tab persistence enabled");
+        })
+        .catch((err) => {
+          if (err.code === "failed-precondition") {
+            // Multiple tabs open, persistence can only be enabled in one tab at a time.
+            logger.warn("⚠️ Firestore persistence failed: Multiple tabs open");
+          } else if (err.code === "unimplemented") {
+            // The current browser does not support all of the features required to enable persistence
+            logger.warn(
+              "⚠️ Firestore persistence failed: Browser not supported"
+            );
+          } else {
+            logger.error("❌ Firestore persistence error:", err);
+          }
+        });
+    }
   }
   return _db;
 };

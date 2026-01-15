@@ -8,7 +8,7 @@ import {
   saveQuestionToFirestore,
   getAllQuestionsFromFirestore,
 } from "../services/firebase";
-import { downloadFile } from "../utils/questionHelpers";
+import { downloadFile, normalizeStatus } from "../utils/questionHelpers";
 import { formatDate } from "../utils/dateHelpers";
 import { logger } from "../utils/logger";
 import {
@@ -222,17 +222,25 @@ export const useExport = (
         sourceExcerpt: q.sourceExcerpt || "",
         creatorName: q.creator || q.creatorName || "",
         reviewerName: q.reviewer || q.reviewerName || "",
+        status: normalizeStatus(q.Status || q.status),
       }));
 
-      // Validate loaded questions and set status
+      // Validate loaded questions and set status (only if status was pending or missing)
       const questionsWithValidation = loadedQuestions.map((q) => {
         const validation = validateQuestion(q);
+        // CRITICAL: Only overwrite status if it's pending (likely meaning it was just created or reset)
+        // If it's already 'accepted' or 'rejected' in the source, we respect that.
+        let finalStatus = q.status;
+        if (q.status === QUESTION_STATUS.PENDING) {
+          finalStatus = validation.isCriticalFailure
+            ? QUESTION_STATUS.REJECTED
+            : QUESTION_STATUS.ACCEPTED;
+        }
+
         return {
           ...q,
           _validation: validation,
-          status: validation.isCriticalFailure
-            ? QUESTION_STATUS.REJECTED
-            : QUESTION_STATUS.ACCEPTED,
+          status: finalStatus,
         };
       });
 
@@ -277,20 +285,19 @@ export const useExport = (
     setIsProcessing,
     setStatus,
     setShowExportMenu,
-    setShowExportMenu,
     setAppMode,
     replaceQuestions,
   ]);
 
   const handleLoadFromFirestore = useCallback(
-    async (silent = false) => {
+    async (silent = false, limit = 5000) => {
       setIsProcessing(true);
       setStatus(silent ? "" : "Loading from Firestore...");
       if (setShowExportMenu) setShowExportMenu(false);
 
       try {
         // Use getAllQuestionsFromFirestore for shared database view (all authenticated users can see all questions)
-        const data = await getAllQuestionsFromFirestore();
+        const data = await getAllQuestionsFromFirestore(5000, false, limit);
 
         // PERFORMANCE: Load once to prevent re-render loops
         const loadedQuestions = data.map((q, index) => ({

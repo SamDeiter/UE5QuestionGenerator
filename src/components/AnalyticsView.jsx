@@ -45,7 +45,23 @@ const AnalyticsView = ({
 }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const analytics = getAnalytics();
-  const tokenStats = getTokenStats();
+  const rawTokenStats = getTokenStats();
+
+  // Calculate token usage from Firestore questions (aggregates estimated from all questions)
+  const firestoreTokenStats = useMemo(() => {
+    const questions = Array.from(allQuestionsMap?.values() || []).flat();
+    const total = questions.length * 700; // 500 input + 200 output avg
+    return {
+      total,
+      avgInput: questions.length > 0 ? 500 : 0,
+      avgOutput: questions.length > 0 ? 200 : 0,
+      inputTokens: questions.length * 500,
+      outputTokens: questions.length * 200,
+    };
+  }, [allQuestionsMap]);
+
+  const tokenStats =
+    rawTokenStats.total > 0 ? rawTokenStats : firestoreTokenStats;
 
   // PERFORMANCE: Stable reference for allQuestions - only update when map size actually changes
   const mapSize = allQuestionsMap?.size || 0;
@@ -102,15 +118,37 @@ const AnalyticsView = ({
     const generations = analytics.generations || [];
 
     // Calculate summary for the filtered view
+    // First try to get cost from questions (Firestore data), fallback to generations (localStorage)
+    const questionsCost = questions.reduce(
+      (sum, q) => sum + (q.estimatedCost || 0),
+      0
+    );
+    const generationsCost = generations.reduce(
+      (sum, g) => sum + (g.estimatedCost || 0),
+      0
+    );
+    // Estimate tokens from questions (avg 500 input + 200 output per question)
+    const questionsInputTokens = questions.length * 500;
+    const questionsOutputTokens = questions.length * 200;
+
     const filteredSummary = {
       totalQuestions: questions.length,
       totalGenerations: generations.length,
       acceptanceRate: 0,
       averageQuality: 0,
-      estimatedCost: generations.reduce(
-        (sum, g) => sum + (g.estimatedCost || 0),
-        0
-      ),
+      // Use question costs if available, otherwise generation costs
+      estimatedCost: questionsCost > 0 ? questionsCost : generationsCost,
+      inputTokens:
+        questionsCost > 0
+          ? questionsInputTokens
+          : generations.reduce((sum, g) => sum + (g.tokensUsed?.input || 0), 0),
+      outputTokens:
+        questionsCost > 0
+          ? questionsOutputTokens
+          : generations.reduce(
+              (sum, g) => sum + (g.tokensUsed?.output || 0),
+              0
+            ),
     };
 
     // Recalculate Acceptance Rate

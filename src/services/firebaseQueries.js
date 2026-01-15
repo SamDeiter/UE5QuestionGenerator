@@ -5,7 +5,6 @@
  * These functions are separated from the main firebase.js to improve modularity.
  */
 import {
-  getFirestore,
   query,
   where,
   getDocs,
@@ -17,16 +16,8 @@ import {
 } from "firebase/firestore";
 import { logger } from "../utils/logger";
 import { TIMING } from "../utils/constants";
-import { app, auth, firebaseConfig } from "./firebaseAuth";
-
-// Lazy-load Firestore (shared with firebase.js)
-let _db = null;
-const getDb = () => {
-  if (!_db) {
-    _db = getFirestore(app);
-  }
-  return _db;
-};
+import { auth, firebaseConfig } from "./firebaseAuth";
+import { getDb } from "./firebaseSave";
 
 // --- Cache Management ---
 let _questionsCache = null;
@@ -94,7 +85,8 @@ export const getQuestionsFromFirestore = async () => {
  */
 export const getAllQuestionsFromFirestore = async (
   maxResults = 5000,
-  forceRefresh = false
+  forceRefresh = false,
+  customLimit = null
 ) => {
   try {
     // Require authentication
@@ -107,6 +99,7 @@ export const getAllQuestionsFromFirestore = async (
     const now = Date.now();
     if (
       !forceRefresh &&
+      !customLimit && // Don't use cache if a custom limit is requested (partial load)
       _questionsCache &&
       now - _questionsCacheTimestamp < CACHE_TTL_MS
     ) {
@@ -118,7 +111,8 @@ export const getAllQuestionsFromFirestore = async (
       return _questionsCache;
     }
 
-    logger.log("🔄 Fetching questions from Firestore...");
+    const fetchLimit = customLimit || maxResults;
+    logger.log(`🔄 Fetching ${fetchLimit} questions from Firestore...`);
     logger.log(`📍 Firebase Project: ${firebaseConfig.projectId}`);
     const startTime = performance.now();
 
@@ -126,7 +120,7 @@ export const getAllQuestionsFromFirestore = async (
     const allQuery = query(
       collection(getDb(), "questions"),
       orderBy("firestoreUpdatedAt", "desc"),
-      limit(maxResults)
+      limit(fetchLimit)
     );
     const snapshot = await getDocs(allQuery);
 
@@ -147,9 +141,11 @@ export const getAllQuestionsFromFirestore = async (
     );
     logger.log("📊 Discipline Breakdown:", disciplineCounts);
 
-    // Update cache
-    _questionsCache = questions;
-    _questionsCacheTimestamp = now;
+    // Only update cache if we performed a full fetch (no custom limit)
+    if (!customLimit) {
+      _questionsCache = questions;
+      _questionsCacheTimestamp = now;
+    }
 
     return questions;
   } catch (error) {
