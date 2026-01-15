@@ -926,6 +926,97 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             </button>
           </div>
         </div>
+
+        {/* Source URL Audit */}
+        <div className="p-3 bg-slate-800/50 rounded border border-slate-700">
+          <h4 className="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
+            <Icon name="link" size={14} className="text-orange-400" />
+            Source URL Audit
+          </h4>
+          <p className="text-xs text-slate-400 mb-3">
+            Scan all questions for broken or invalid source URLs. Click "Run
+            Audit" to analyze.
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={async () => {
+                setProcessing(true);
+                setProgress({
+                  current: 0,
+                  total: 0,
+                  message: "Loading questions...",
+                });
+                try {
+                  const snapshot = await getDocs(collection(db, "questions"));
+                  const urlStats = {
+                    valid: 0,
+                    invalid: 0,
+                    missing: 0,
+                    suspicious: [],
+                  };
+
+                  snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const url = data.sourceUrl || data.SourceURL;
+
+                    if (!url || url.trim() === "") {
+                      urlStats.missing++;
+                    } else if (
+                      !url.startsWith("https://dev.epicgames.com/documentation")
+                    ) {
+                      urlStats.invalid++;
+                      if (urlStats.suspicious.length < 10) {
+                        urlStats.suspicious.push({
+                          id: docSnap.id,
+                          url,
+                          reason: "Wrong domain",
+                        });
+                      }
+                    } else if (url.includes("--")) {
+                      urlStats.invalid++;
+                      if (urlStats.suspicious.length < 10) {
+                        urlStats.suspicious.push({
+                          id: docSnap.id,
+                          url,
+                          reason: "Double hyphen",
+                        });
+                      }
+                    } else {
+                      urlStats.valid++;
+                    }
+                  });
+
+                  const msg = `✅ Valid: ${urlStats.valid} | ⚠️ Invalid: ${urlStats.invalid} | ❌ Missing: ${urlStats.missing}`;
+                  setProgress({
+                    current: snapshot.size,
+                    total: snapshot.size,
+                    message: msg,
+                  });
+
+                  if (urlStats.suspicious.length > 0) {
+                    logger.log("Suspicious URLs found:", urlStats.suspicious);
+                    alert(
+                      `Source Audit Complete:\n${msg}\n\nSuspicious URLs logged to console (F12).`
+                    );
+                  } else {
+                    alert(`Source Audit Complete:\n${msg}`);
+                  }
+                } catch (err) {
+                  setProgress({
+                    current: 0,
+                    total: 0,
+                    message: `Error: ${err.message}`,
+                  });
+                }
+                setProcessing(false);
+              }}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-orange-700 hover:bg-orange-600 text-white rounded font-bold disabled:opacity-50"
+            >
+              Run Audit
+            </button>
+          </div>
+        </div>
       </div>
     </CollapsibleSection>
   );

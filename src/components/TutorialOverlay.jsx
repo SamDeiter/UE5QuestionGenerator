@@ -337,7 +337,7 @@ const TutorialOverlay = ({
             </div>
           )}
 
-          <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-3 mt-2 pt-4 border-t border-slate-800">
             <div className="flex items-center gap-2">
               <div
                 className="flex gap-1"
@@ -360,16 +360,19 @@ const TutorialOverlay = ({
                   />
                 ))}
               </div>
-              <span className="text-xs text-slate-500 ml-1" aria-live="polite">
+              <span
+                className="text-xs text-slate-500 whitespace-nowrap"
+                aria-live="polite"
+              >
                 {currentStepIndex + 1} / {steps.length}
               </span>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-shrink-0">
               {currentStepIndex > 0 && (
                 <button
                   onClick={onPrev}
-                  className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded transition-colors whitespace-nowrap"
                   aria-label="Previous step"
                 >
                   Back
@@ -377,14 +380,14 @@ const TutorialOverlay = ({
               )}
               <button
                 onClick={onSkip}
-                className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-600 rounded transition-colors whitespace-nowrap"
                 aria-label="Skip all tutorial steps"
               >
                 Skip All
               </button>
               <button
                 onClick={isLastStep ? onComplete : onNext}
-                className="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-lg shadow-indigo-900/50 transition-all flex items-center gap-2"
+                className="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-lg shadow-indigo-900/50 transition-all flex items-center gap-2 whitespace-nowrap"
                 aria-label={isLastStep ? "Finish tutorial" : "Next step"}
               >
                 {isLastStep ? "Finish" : "Next"}{" "}

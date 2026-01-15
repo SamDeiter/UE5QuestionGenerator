@@ -187,8 +187,8 @@ export const TUTORIAL_SCENARIOS = {
         title: "API Cost Monitoring",
         content:
           "Track token usage by operation (Generation, Critique, Translation). Monitor spending to stay on budget.",
-        target: '[data-tour="cost-chart"]',
-        position: "bottom",
+        target: null,
+        position: "center",
         scenarioId: "analytics",
         order: 1,
       },
@@ -197,8 +197,8 @@ export const TUTORIAL_SCENARIOS = {
         title: "Optimize Your Workflow",
         content:
           "Use **Flash models** for speed, batch translations, and limit critiques to reduce costs.",
-        target: '[data-tour="optimization-panel"]',
-        position: "bottom",
+        target: null,
+        position: "center",
         scenarioId: "analytics",
         order: 2,
       },
