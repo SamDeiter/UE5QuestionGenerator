@@ -418,7 +418,7 @@ const DangerZoneModal = ({
                       </>
                     ) : (
                       <>
-                        <Icon name="check-shield" size={14} /> Repair Statuses &
+                        <Icon name="shield-check" size={14} /> Repair Statuses &
                         Timestamps
                       </>
                     )}

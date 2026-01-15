@@ -93,38 +93,64 @@ const TutorialOverlay = ({
       }
     };
 
-    // Initial check
-    updatePosition();
+    // Initial check and scroll
+    const initialScroll = () => {
+      const element = document.querySelector(step.target);
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
+        });
+        updatePosition();
+      }
+    };
 
-    // Scroll into view ONCE when step changes
-    const element = document.querySelector(step.target);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-    } else if (step.target) {
+    initialScroll();
+
+    if (step.target) {
       // Poll for element existence (handles conditionally rendered elements)
       pollInterval = setInterval(updatePosition, 100);
 
-      // Try scrolling again after a delay if found
-      setTimeout(() => {
+      // Try scrolling again after a delay if found (handles late transitions)
+      const secondaryScroll = setTimeout(() => {
         const el = document.querySelector(step.target);
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (el) {
+          el.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest",
+          });
+          updatePosition();
+        }
       }, 500);
+
+      // Final attempt for mobile/slow connections
+      const finalScroll = setTimeout(() => {
+        const el = document.querySelector(step.target);
+        if (el) {
+          el.scrollIntoView({ behavior: "auto", block: "center" });
+          updatePosition();
+        }
+      }, 1500);
+
+      // Throttled event listeners
+      const throttledUpdate = throttle(
+        updatePosition,
+        TUTORIAL.RESIZE_THROTTLE || 100
+      );
+      window.addEventListener("resize", throttledUpdate);
+      window.addEventListener("scroll", throttledUpdate, true);
+
+      return () => {
+        if (pollInterval) clearInterval(pollInterval);
+        clearTimeout(secondaryScroll);
+        clearTimeout(finalScroll);
+        if (resizeObserver) resizeObserver.disconnect();
+        window.removeEventListener("resize", throttledUpdate);
+        window.removeEventListener("scroll", throttledUpdate, true);
+      };
     }
-
-    // Throttled event listeners
-    const throttledUpdate = throttle(
-      updatePosition,
-      TUTORIAL.RESIZE_THROTTLE || 100
-    );
-    window.addEventListener("resize", throttledUpdate);
-    window.addEventListener("scroll", throttledUpdate, true);
-
-    return () => {
-      if (pollInterval) clearInterval(pollInterval);
-      if (resizeObserver) resizeObserver.disconnect();
-      window.removeEventListener("resize", throttledUpdate);
-      window.removeEventListener("scroll", throttledUpdate, true);
-    };
   }, [currentStepIndex, step.target, step.id, activeScenario]);
 
   const isLastStep = currentStepIndex === steps.length - 1;

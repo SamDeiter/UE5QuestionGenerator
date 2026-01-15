@@ -1,28 +1,193 @@
-import * as LucideIcons from 'lucide-react';
+import {
+  Activity,
+  AlertCircle,
+  AlertOctagon,
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Award,
+  BarChart2,
+  Bomb,
+  BookOpen,
+  Check,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Clipboard,
+  ClipboardList,
+  Clock,
+  CloudDownload,
+  CloudLightning,
+  Copy,
+  CornerUpLeft,
+  Cpu,
+  Database,
+  DollarSign,
+  Download,
+  Edit,
+  Edit2,
+  ExternalLink,
+  Eye,
+  FileText,
+  Filter,
+  Folder,
+  GitBranch,
+  GitCompare,
+  Globe,
+  Hash,
+  HelpCircle,
+  Inbox,
+  Info,
+  Key,
+  Languages,
+  Layers,
+  Lightbulb,
+  Link,
+  List,
+  ListChecks,
+  Loader,
+  Lock,
+  LogOut,
+  Mail,
+  MessageSquare,
+  PieChart,
+  Play,
+  Plug,
+  Plus,
+  PlusCircle,
+  RefreshCw,
+  Save,
+  Search,
+  Settings,
+  Shield,
+  ShieldCheck,
+  Sliders,
+  Sparkles,
+  Star,
+  Table,
+  Tag,
+  Target,
+  Terminal,
+  Trash,
+  Trash2,
+  UploadCloud,
+  User,
+  UserCheck,
+  Wand,
+  WifiOff,
+  X,
+  XCircle,
+  Zap,
+} from "lucide-react";
 import { logger } from "../utils/logger";
 
+const ICON_MAP = {
+  activity: Activity,
+  "alert-circle": AlertCircle,
+  "alert-octagon": AlertOctagon,
+  "alert-triangle": AlertTriangle,
+  "arrow-left": ArrowLeft,
+  "arrow-right": ArrowRight,
+  award: Award,
+  "bar-chart-2": BarChart2,
+  bomb: Bomb,
+  "book-open": BookOpen,
+  check: Check,
+  "check-circle": CheckCircle,
+  "check-shield": ShieldCheck,
+  "chevron-down": ChevronDown,
+  "chevron-right": ChevronRight,
+  "chevron-up": ChevronUp,
+  clipboard: Clipboard,
+  "clipboard-list": ClipboardList,
+  clock: Clock,
+  "cloud-download": CloudDownload,
+  "cloud-lightning": CloudLightning,
+  copy: Copy,
+  "corner-up-left": CornerUpLeft,
+  cpu: Cpu,
+  database: Database,
+  "dollar-sign": DollarSign,
+  download: Download,
+  edit: Edit,
+  "edit-2": Edit2,
+  "external-link": ExternalLink,
+  eye: Eye,
+  "file-text": FileText,
+  filter: Filter,
+  folder: Folder,
+  "git-branch": GitBranch,
+  "git-compare": GitCompare,
+  globe: Globe,
+  hash: Hash,
+  "help-circle": HelpCircle,
+  inbox: Inbox,
+  info: Info,
+  key: Key,
+  languages: Languages,
+  layers: Layers,
+  lightbulb: Lightbulb,
+  link: Link,
+  list: List,
+  "list-checks": ListChecks,
+  loader: Loader,
+  lock: Lock,
+  "log-out": LogOut,
+  mail: Mail,
+  "message-square": MessageSquare,
+  "pie-chart": PieChart,
+  play: Play,
+  plug: Plug,
+  plus: Plus,
+  "plus-circle": PlusCircle,
+  "refresh-cw": RefreshCw,
+  save: Save,
+  search: Search,
+  settings: Settings,
+  shield: Shield,
+  "shield-check": ShieldCheck,
+  sliders: Sliders,
+  sparkles: Sparkles,
+  star: Star,
+  table: Table,
+  tag: Tag,
+  target: Target,
+  terminal: Terminal,
+  trash: Trash,
+  "trash-2": Trash2,
+  "upload-cloud": UploadCloud,
+  user: User,
+  "user-check": UserCheck,
+  wand: Wand,
+  "wifi-off": WifiOff,
+  x: X,
+  "x-circle": XCircle,
+  zap: Zap,
+};
+
 const Icon = ({ name, size = 16, className = "", ariaLabel, role }) => {
-    // Convert kebab-case to PascalCase for Lucide component name
-    const pascalName = name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+  // Direct lookup in the icon map for speed and tree-shakability
+  const LucideIcon = ICON_MAP[name.toLowerCase()];
 
-    // Access the icon component from the imported object
-    // Note: lucide-react exports icons as named exports, so we use the namespace import
-    const LucideIcon = LucideIcons[pascalName];
-
-    if (!LucideIcon) {
-        logger.warn(`Icon "${name}" (mapped to "${pascalName}") not found in lucide-react.`);
-        return <span style={{ width: size, height: size, display: 'inline-block' }} />;
-    }
-
-    return (
-        <LucideIcon
-            size={size}
-            className={className}
-            aria-label={ariaLabel}
-            aria-hidden={!ariaLabel}
-            role={role || (ariaLabel ? 'img' : 'presentation')}
-        />
+  if (!LucideIcon) {
+    logger.warn(
+      `Icon "${name}" not found in refactored ICON_MAP. Please add it.`
     );
+    return (
+      <span style={{ width: size, height: size, display: "inline-block" }} />
+    );
+  }
+
+  return (
+    <LucideIcon
+      size={size}
+      className={className}
+      aria-label={ariaLabel}
+      aria-hidden={!ariaLabel}
+      role={role || (ariaLabel ? "img" : "presentation")}
+    />
+  );
 };
 
 export default Icon;
