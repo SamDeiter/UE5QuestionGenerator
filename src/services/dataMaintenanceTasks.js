@@ -345,7 +345,7 @@ export async function backfillAverageScores(onProgress, dryRun = false) {
   const snapshot = await getDocs(collection(db, "questions"));
   const allQuestions = [];
   snapshot.forEach((docSnap) =>
-    allQuestions.push({ id: docSnap.id, ...docSnap.data() })
+    allQuestions.push({ ...docSnap.data(), id: docSnap.id })
   );
 
   const needsUpdate = [];
