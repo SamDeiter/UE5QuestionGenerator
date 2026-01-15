@@ -388,6 +388,7 @@ const QuestionItem = ({
           isVerified={q.humanVerified}
           verifiedBy={q.humanVerifiedBy}
           verifiedAt={q.humanVerifiedAt}
+          showMessage={showMessage}
           onVerify={async () => {
             if (!onUpdateQuestion) return;
             await onUpdateQuestion(q.id, {

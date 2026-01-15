@@ -3,6 +3,7 @@ import DOMPurify from "dompurify";
 import Icon from "../Icon";
 import { logger } from "../../utils/logger";
 import { formatDate } from "../../utils/reviewerAnalytics";
+import { TOAST_DURATION } from "../../utils/constants";
 
 /**
  * Validates if a URL is a legitimate Epic Games documentation link
@@ -32,6 +33,7 @@ const SourceContextCard = ({
   verifiedBy,
   verifiedAt,
   onVerify,
+  showMessage,
 }) => {
   // Validate the URL
   const hasValidUrl = isValidDocUrl(sourceUrl);
@@ -58,7 +60,15 @@ const SourceContextCard = ({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 hover:text-orange-300 text-xs font-semibold rounded-md border border-orange-500/40 transition-all hover:border-orange-500/60 cursor-pointer"
             onClick={(e) => {
-              // Note: We don't call e.preventDefault() because we WANT to open the link
+              // Copy to clipboard
+              if (sourceExcerpt) {
+                navigator.clipboard.writeText(sourceExcerpt)
+                  .then(() => {
+                    if (showMessage) showMessage("📋 Excerpt copied to clipboard!", TOAST_DURATION.SHORT);
+                  })
+                  .catch(err => logger.error("Failed to copy excerpt:", err));
+              }
+
               logger.log(`[SourceContextCard] Navigating to: ${cleanUrl}`);
               if (onVerify && !isVerified) {
                 onVerify();
