@@ -12,6 +12,9 @@ import { logQuestion } from "../../utils/analyticsStore";
 import { completeReviewTracking } from "../../utils/normalizeQuestion";
 import { logger } from "../../utils/logger";
 import { logAuditEvent, AUDIT_ACTIONS } from "../../services/auditService";
+import { calculateReviewerAverageScore } from "../../utils/reviewerAnalytics";
+
+const AUTO_SCORE_THRESHOLD = 10;
 
 /**
  * Hook for managing status-related actions on questions.
@@ -106,6 +109,33 @@ export const useStatusActions = ({
             ? new Date().toISOString()
             : updatedQ.acceptedAt,
       };
+
+      // AUTO-SCORING: If rejected and no score exists, apply reviewer average if threshold met
+      if (
+        newStatus === QUESTION_STATUS.REJECTED &&
+        (updatedQ.critiqueScore === null ||
+          updatedQ.critiqueScore === undefined)
+      ) {
+        const reviewerName = config.creatorName || config.userEmail;
+        const { averageScore, totalScored } = calculateReviewerAverageScore(
+          reviewerName,
+          allQuestions
+        );
+
+        if (totalScored >= AUTO_SCORE_THRESHOLD && averageScore !== null) {
+          logger.log(
+            `[AutoScore] Applying average score ${averageScore} for reviewer ${reviewerName} (based on ${totalScored} reviews)`
+          );
+          updatedQ.critiqueScore = averageScore;
+          // Optionally notify user
+          if (showMessage) {
+            showMessage(
+              `📊 Applied your average score of ${averageScore}`,
+              TOAST_DURATION.SHORT
+            );
+          }
+        }
+      }
 
       // Build payload with only reviewer-allowed fields
       const statusMetadata = {

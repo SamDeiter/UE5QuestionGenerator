@@ -224,6 +224,47 @@ export const aggregateReviewerStats = (questions) => {
 };
 
 /**
+ * Calculates a specific reviewer's average critique score
+ * @param {string} reviewerName - Name/Email of the reviewer
+ * @param {Array} questions - Array of all questions
+ * @returns {Object} Object with averageScore and totalScored count
+ */
+export const calculateReviewerAverageScore = (reviewerName, questions) => {
+  if (!reviewerName || !questions || questions.length === 0) {
+    return { averageScore: null, totalScored: 0 };
+  }
+
+  const reviewerQuestions = questions.filter((q) => {
+    const name =
+      q.reviewerName ||
+      q.acceptedBy ||
+      q.creatorEmail ||
+      q.creatorName ||
+      "Unknown";
+    return (
+      name === reviewerName &&
+      q.critiqueScore !== undefined &&
+      q.critiqueScore !== null
+    );
+  });
+
+  if (reviewerQuestions.length === 0) {
+    return { averageScore: null, totalScored: 0 };
+  }
+
+  const totalScore = reviewerQuestions.reduce(
+    (sum, q) => sum + q.critiqueScore,
+    0
+  );
+  const averageScore = Math.round(totalScore / reviewerQuestions.length);
+
+  return {
+    averageScore,
+    totalScored: reviewerQuestions.length,
+  };
+};
+
+/**
  * Calculate review velocity (questions per day)
  * @param {number} totalQuestions - Total questions reviewed
  * @param {Date} startDate - First review date
