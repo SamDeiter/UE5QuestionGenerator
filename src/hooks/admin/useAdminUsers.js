@@ -54,7 +54,8 @@ export const useAdminUsers = (showMessage) => {
         await revokeUserFn({ userId });
         setUsers((prevUsers) => prevUsers.filter((u) => u.uid !== userId));
         showMessage(`✅ Access revoked for ${email}`, TOAST_DURATION.LONG);
-        setTimeout(() => refreshUsers(), 500);
+        const REFRESH_DELAY_MS = 500;
+        setTimeout(() => refreshUsers(), REFRESH_DELAY_MS);
       } catch (error) {
         logger.error("❌ Revoke user error:", error);
         showMessage(

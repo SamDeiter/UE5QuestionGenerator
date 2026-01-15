@@ -27,6 +27,7 @@ import {
   Download,
   Edit,
   Edit2,
+  Edit3,
   ExternalLink,
   Eye,
   FileText,
@@ -77,6 +78,7 @@ import {
   User,
   UserCheck,
   Users,
+  Unlock,
   Wand,
   WifiOff,
   Wrench,
@@ -116,6 +118,7 @@ const ICON_MAP = {
   download: Download,
   edit: Edit,
   "edit-2": Edit2,
+  "edit-3": Edit3,
   "external-link": ExternalLink,
   eye: Eye,
   "file-text": FileText,
@@ -137,6 +140,7 @@ const ICON_MAP = {
   "list-checks": ListChecks,
   loader: Loader,
   lock: Lock,
+  unlock: Unlock,
   "log-out": LogOut,
   mail: Mail,
   menu: Menu,
@@ -174,7 +178,15 @@ const ICON_MAP = {
   zap: Zap,
 };
 
-const Icon = ({ name, size = 16, className = "", ariaLabel, role }) => {
+const DEFAULT_ICON_SIZE = 16;
+
+const Icon = ({
+  name,
+  size = DEFAULT_ICON_SIZE,
+  className = "",
+  ariaLabel,
+  role,
+}) => {
   // Direct lookup in the icon map for speed and tree-shakability
   const LucideIcon = ICON_MAP[name.toLowerCase()];
 

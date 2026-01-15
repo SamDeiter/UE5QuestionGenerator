@@ -4,6 +4,7 @@ import {
   APP_MODES,
   QUESTION_STATUS,
   QUESTION_DIFFICULTY,
+  TOAST_DURATION,
 } from "../utils/constants";
 import Icon from "./Icon";
 import ReviewProgressBar from "./ReviewProgressBar";
@@ -59,7 +60,8 @@ const QuestionItem = ({
   const userEmail = user?.email;
 
   const handleLockExpired = useCallback(() => {
-    if (showMessage) showMessage("⚠️ Edit lock expired - refreshing...", 3000);
+    if (showMessage)
+      showMessage("⚠️ Edit lock expired - refreshing...", TOAST_DURATION.LONG);
   }, [showMessage]);
 
   // Auto-lock on view (review mode)
@@ -327,16 +329,19 @@ const QuestionItem = ({
                   verifiedBy: userEmail,
                 }
               );
-              if (showMessage) showMessage("✅ Question verified!", 2000);
+              if (showMessage)
+                showMessage("✅ Question verified!", TOAST_DURATION.SHORT);
             }}
             onAccept={() => {
               // PIPELINE ENFORCEMENT: Critique is required before accept
               if (q.critiqueScore === null || q.critiqueScore === undefined) {
-                if (showMessage) showMessage("⚠️ Run AI Critique first", 3000);
+                if (showMessage)
+                  showMessage("⚠️ Run AI Critique first", TOAST_DURATION.LONG);
                 return;
               }
               if (!q.humanVerified) {
-                if (showMessage) showMessage("⚠️ Please verify first", 3000);
+                if (showMessage)
+                  showMessage("⚠️ Please verify first", TOAST_DURATION.LONG);
                 return;
               }
               onUpdateStatus(q.id, QUESTION_STATUS.ACCEPTED);
@@ -380,6 +385,24 @@ const QuestionItem = ({
         <SourceContextCard
           sourceUrl={q.sourceUrl}
           sourceExcerpt={q.sourceExcerpt}
+          isVerified={q.humanVerified}
+          verifiedBy={q.humanVerifiedBy}
+          verifiedAt={q.humanVerifiedAt}
+          onVerify={async () => {
+            if (!onUpdateQuestion) return;
+            await onUpdateQuestion(q.id, {
+              humanVerified: true,
+              humanVerifiedBy: userEmail || "Unknown",
+              humanVerifiedAt: new Date().toISOString(),
+            });
+            logAuditEvent(q.uniqueId || q.id, AUDIT_ACTIONS.QUESTION_VERIFIED, {
+              oldValue: q.humanVerified,
+              newValue: true,
+              verifiedBy: userEmail,
+              source: "source_context_card"
+            });
+            if (showMessage) showMessage("✅ Source verified!", TOAST_DURATION.SHORT);
+          }}
           question={q.question}
         />
 
@@ -487,7 +510,7 @@ const QuestionItem = ({
               if (showMessage) {
                 showMessage(
                   "✅ Improvement applied! Now verify and accept.",
-                  3000
+                  TOAST_DURATION.LONG
                 );
               }
             }}
