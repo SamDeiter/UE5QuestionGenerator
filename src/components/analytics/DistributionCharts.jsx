@@ -64,9 +64,31 @@ const DistributionCharts = ({ questions }) => {
     .map(([name, value]) => ({ name, value }))
     .filter((item) => item.value > 0);
 
+  // Normalize discipline names to merge duplicates
+  const normalizeDiscipline = (discipline) => {
+    if (!discipline) return "General";
+    const d = discipline.toString().trim().toLowerCase();
+
+    // Merge similar disciplines
+    if (d.includes("tech art") || d === "technical art") return "Tech Art";
+    if (d.includes("animation") || d.includes("rigging")) return "Animation";
+    if (d.includes("look dev") || d.includes("lookdev")) return "Look Dev";
+    if (d.includes("world") || d.includes("level design"))
+      return "Worldbuilding";
+    if (d.includes("vfx") || d.includes("effects") || d.includes("niagara"))
+      return "VFX";
+    if (d.includes("game dev") || d.includes("gameplay")) return "Game Dev";
+    if (d.includes("program") || d.includes("blueprint") || d.includes("c++"))
+      return "Programming";
+
+    // Return original with proper casing if no match
+    return discipline.trim();
+  };
+
   // Process data for Discipline Bar Chart
   const disciplineCounts = questions.reduce((acc, q) => {
-    acc[q.discipline] = (acc[q.discipline] || 0) + 1;
+    const normalized = normalizeDiscipline(q.discipline);
+    acc[normalized] = (acc[normalized] || 0) + 1;
     return acc;
   }, {});
 
@@ -126,9 +148,12 @@ const DistributionCharts = ({ questions }) => {
 
       {/* Discipline Distribution */}
       <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-        <h3 className="text-sm font-bold text-slate-300 mb-4 text-center">
+        <h3 className="text-sm font-bold text-slate-300 mb-1 text-center">
           Questions by Discipline
         </h3>
+        <p className="text-xs text-slate-500 mb-3 text-center">
+          Total questions generated per content area
+        </p>
         <div className="h-64">
           <SafeResponsiveContainer
             width="100%"
@@ -139,7 +164,7 @@ const DistributionCharts = ({ questions }) => {
             <BarChart
               data={disciplineData}
               layout="vertical"
-              margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+              margin={{ top: 5, right: 50, left: 100, bottom: 5 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -151,18 +176,35 @@ const DistributionCharts = ({ questions }) => {
                 type="category"
                 dataKey="name"
                 stroke="#94a3b8"
-                width={100}
-                tick={{ fontSize: 10 }}
+                width={95}
+                tick={{ fontSize: 11, fill: "#cbd5e1" }}
+                tickLine={false}
               />
               <Tooltip
-                cursor={{ fill: "#334155", opacity: 0.4 }}
-                contentStyle={{
-                  backgroundColor: "#1e293b",
-                  borderColor: "#334155",
-                  color: "#f1f5f9",
+                cursor={{ fill: "#475569", opacity: 0.3 }}
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload;
+                    return (
+                      <div className="bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 shadow-xl">
+                        <p className="text-white font-bold text-sm mb-1">
+                          {data.name}
+                        </p>
+                        <p className="text-pink-300 text-lg font-mono">
+                          {data.value} questions
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
                 }}
               />
-              <Bar cursor="default" dataKey="value" radius={[0, 4, 4, 0]}>
+              <Bar
+                cursor="default"
+                dataKey="value"
+                radius={[0, 4, 4, 0]}
+                label={{ position: "right", fill: "#94a3b8", fontSize: 10 }}
+              >
                 {disciplineData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
@@ -340,21 +382,52 @@ const DistributionCharts = ({ questions }) => {
 
       {/* Reviewer Activity */}
       <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 md:col-span-2">
-        <h3 className="text-sm font-bold text-slate-300 mb-4 text-center">
+        <h3 className="text-sm font-bold text-slate-300 mb-1 text-center">
           Reviewer Activity
         </h3>
+        <p className="text-xs text-slate-500 mb-3 text-center">
+          Questions reviewed/verified by each team member
+        </p>
         <div className="h-64">
           {(() => {
+            // Normalize reviewer name - fix duplicates like "Sam DeiterSam Deiter"
+            const normalizeReviewerName = (name) => {
+              if (!name || typeof name !== "string") return null;
+              const trimmed = name.trim();
+
+              // Filter out invalid names
+              const invalidNames = ["unknown", "user", "undefined", "null", ""];
+              if (invalidNames.includes(trimmed.toLowerCase())) return null;
+
+              // Detect and fix duplicated names: "NameName" pattern
+              const halfLen = Math.floor(trimmed.length / 2);
+              const firstHalf = trimmed.substring(0, halfLen);
+              const secondHalf = trimmed.substring(halfLen);
+
+              if (firstHalf === secondHalf && firstHalf.length > 2) {
+                return firstHalf;
+              }
+
+              return trimmed;
+            };
+
             const reviewerCounts = questions.reduce((acc, q) => {
-              const reviewer =
+              const rawReviewer =
                 q.humanVerifiedBy || q.acceptedBy || q.reviewerName;
-              if (reviewer && reviewer !== "Unknown") {
+              const reviewer = normalizeReviewerName(rawReviewer);
+              if (reviewer) {
                 acc[reviewer] = (acc[reviewer] || 0) + 1;
               }
               return acc;
             }, {});
             const reviewerData = Object.entries(reviewerCounts)
-              .map(([name, value]) => ({ name, value }))
+              .map(([name, value]) => ({
+                name,
+                value,
+                // Truncate display name for axis, keep full for tooltip
+                displayName:
+                  name.length > 15 ? name.substring(0, 12) + "..." : name,
+              }))
               .sort((a, b) => b.value - a.value);
             if (reviewerData.length === 0) {
               return (
@@ -363,6 +436,25 @@ const DistributionCharts = ({ questions }) => {
                 </div>
               );
             }
+
+            // Custom tooltip component for better readability
+            const CustomTooltip = ({ active, payload }) => {
+              if (active && payload && payload.length) {
+                const data = payload[0].payload;
+                return (
+                  <div className="bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 shadow-xl">
+                    <p className="text-white font-bold text-sm mb-1">
+                      {data.name}
+                    </p>
+                    <p className="text-violet-300 text-lg font-mono">
+                      {data.value} questions
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            };
+
             return (
               <SafeResponsiveContainer
                 width="100%"
@@ -373,7 +465,7 @@ const DistributionCharts = ({ questions }) => {
                 <BarChart
                   data={reviewerData}
                   layout="vertical"
-                  margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+                  margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -383,17 +475,15 @@ const DistributionCharts = ({ questions }) => {
                   <XAxis type="number" stroke="#94a3b8" />
                   <YAxis
                     type="category"
-                    dataKey="name"
+                    dataKey="displayName"
                     stroke="#94a3b8"
-                    width={80}
-                    tick={{ fontSize: 10 }}
+                    width={115}
+                    tick={{ fontSize: 11, fill: "#cbd5e1" }}
+                    tickLine={false}
                   />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1e293b",
-                      borderColor: "#334155",
-                      color: "#f1f5f9",
-                    }}
+                    content={<CustomTooltip />}
+                    cursor={{ fill: "#475569", opacity: 0.3 }}
                   />
                   <Bar dataKey="value" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
                 </BarChart>
