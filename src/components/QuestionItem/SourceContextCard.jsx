@@ -1,29 +1,85 @@
 import React from "react";
 import DOMPurify from "dompurify";
 import Icon from "../Icon";
-import { logger } from "../../utils/logger";
 import { formatDate } from "../../utils/reviewerAnalytics";
-import { TOAST_DURATION } from "../../utils/constants";
+import { isEpicLink } from "../../utils/urlValidator";
 
-/**
- * Validates if a URL is a legitimate Epic Games documentation link
- */
-const isValidDocUrl = (url) => {
-  if (!url || typeof url !== "string") return false;
+const SourceContextActions = ({
+  sourceUrl,
+  isVerified,
+  verifiedBy,
+  verifiedAt,
+  onVerifyDocs,
+  onVerifySearch,
+  canVerify,
+}) => {
+  const hasValidUrl = isEpicLink(sourceUrl);
+  const isVerifyDisabled = !canVerify && !isVerified;
+  const cleanUrl = sourceUrl?.trim() || "";
 
-  const trimmedUrl = url.trim();
+  const getDocsButtonStyles = () => {
+    if (isVerifyDisabled)
+      return "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed opacity-60";
+    if (hasValidUrl)
+      return "bg-yellow-500/20 text-yellow-400 border-yellow-500/40 hover:bg-yellow-500/30";
+    return "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30 opacity-50";
+  };
 
-  // Must be HTTPS
-  if (!trimmedUrl.startsWith("https://")) return false;
+  const getSearchButtonStyles = () => {
+    if (isVerifyDisabled)
+      return "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed opacity-60";
+    return "bg-blue-500/20 text-blue-400 border-blue-500/40 hover:bg-blue-500/30";
+  };
 
-  // Must be from Epic Games documentation
-  const validDomains = [
-    "dev.epicgames.com/documentation",
-    "docs.unrealengine.com",
-    "dev.epicgames.com/community",
-  ];
+  return (
+    <div className="flex flex-col gap-3">
+      {isVerified && verifiedBy && (
+        <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium animate-in fade-in slide-in-from-left-1 duration-300">
+          <Icon name="check-circle" size={14} />
+          Verified by {verifiedBy} on {formatDate(verifiedAt)}
+        </div>
+      )}
 
-  return validDomains.some((domain) => trimmedUrl.includes(domain));
+      <div className="flex flex-wrap gap-2">
+        {/* BUTTON 1: OFFICIAL DOCS */}
+        <button
+          type="button"
+          disabled={isVerifyDisabled}
+          onClick={(e) => {
+            e.preventDefault();
+            onVerifyDocs?.();
+          }}
+          className={`flex-1 min-w-[140px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md border transition-all ${getDocsButtonStyles()}`}
+          title={
+            hasValidUrl
+              ? `Open Docs: ${cleanUrl}`
+              : "Documentation link is missing or generic"
+          }
+        >
+          <Icon
+            name={hasValidUrl ? "external-link" : "alert-circle"}
+            size={14}
+          />
+          {hasValidUrl ? "Epic Documentation" : "Docs Link Broken"}
+        </button>
+
+        {/* BUTTON 2: GOOGLE SEARCH */}
+        <button
+          type="button"
+          disabled={isVerifyDisabled}
+          onClick={(e) => {
+            e.preventDefault();
+            onVerifySearch?.();
+          }}
+          className={`flex-1 min-w-[140px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md border transition-all ${getSearchButtonStyles()}`}
+          title="Search the excerpt text on Google"
+        >
+          <Icon name="search" size={14} />
+          Search Excerpt
+        </button>
+      </div>
+    </div>
+  );
 };
 
 const SourceContextCard = ({
@@ -32,69 +88,15 @@ const SourceContextCard = ({
   isVerified,
   verifiedBy,
   verifiedAt,
-  onVerify,
-  showMessage,
+  onVerifyDocs,
+  onVerifySearch,
+  canVerify = true,
 }) => {
-  // Validate the URL
-  const hasValidUrl = isValidDocUrl(sourceUrl);
+  const hasValidUrl = isEpicLink(sourceUrl);
 
-  // Don't render if no valid content
   if (!sourceExcerpt && !hasValidUrl) {
     return null;
   }
-
-  const renderAction = () => {
-    if (hasValidUrl) {
-      const cleanUrl = sourceUrl.trim();
-      return (
-        <div className="flex flex-col gap-2">
-          {isVerified && verifiedBy && (
-            <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium animate-in fade-in slide-in-from-left-1 duration-300">
-              <Icon name="check-circle" size={14} />
-              AI was verified by {verifiedBy} on {formatDate(verifiedAt)}
-            </div>
-          )}
-          <a
-            href={cleanUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 hover:text-orange-300 text-xs font-semibold rounded-md border border-orange-500/40 transition-all hover:border-orange-500/60 cursor-pointer"
-            onClick={(e) => {
-              // Copy to clipboard
-              if (sourceExcerpt) {
-                navigator.clipboard.writeText(sourceExcerpt)
-                  .then(() => {
-                    if (showMessage) showMessage("📋 Excerpt copied to clipboard!", TOAST_DURATION.SHORT);
-                  })
-                  .catch(err => logger.error("Failed to copy excerpt:", err));
-              }
-
-              logger.log(`[SourceContextCard] Navigating to: ${cleanUrl}`);
-              if (onVerify && !isVerified) {
-                onVerify();
-              }
-            }}
-            title={`Check official documentation: ${cleanUrl}`}
-          >
-            <Icon name="external-link" size={12} /> {isVerified ? 'Re-Verify Source' : 'Verify Source'}
-          </a>
-        </div>
-      );
-    }
-
-    if (sourceUrl) {
-      return (
-        <div
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-900/30 text-red-400 text-xs rounded-md border border-red-700/50 cursor-not-allowed"
-          title="This link may be broken or from an unsupported domain"
-        >
-          <Icon name="alert-circle" size={12} /> Broken/Invalid Link
-        </div>
-      );
-    }
-
-    return null;
-  };
 
   return (
     <div className="bg-slate-950/50 border border-blue-700/30 rounded-lg p-4 mb-3">
@@ -126,20 +128,31 @@ const SourceContextCard = ({
               })}"`,
             }}
           />
-                    {!isVerified ? (
+          {!isVerified ? (
             <p className="text-slate-600 text-xs mt-1">
-              ⚠️ AI-generated excerpt — click "Verify Source" to confirm this text
-              appears on the page
+              ⚠️ AI-generated excerpt — click verification buttons below to
+              confirm this text appears on the page
             </p>
           ) : (
             <p className="text-emerald-500/70 text-xs mt-1 flex items-center gap-1">
-              <Icon name="check" size={12} /> Source content verified by reviewer
+              <Icon name="check" size={12} /> Source content verified by
+              reviewer
             </p>
           )}
         </div>
       )}
 
-      <div className="flex gap-2 flex-wrap">{renderAction()}</div>
+      <div className="flex gap-2 flex-wrap">
+        <SourceContextActions
+          sourceUrl={sourceUrl}
+          isVerified={isVerified}
+          verifiedBy={verifiedBy}
+          verifiedAt={verifiedAt}
+          onVerifyDocs={onVerifyDocs}
+          onVerifySearch={onVerifySearch}
+          canVerify={canVerify}
+        />
+      </div>
     </div>
   );
 };

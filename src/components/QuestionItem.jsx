@@ -5,6 +5,7 @@ import {
   QUESTION_STATUS,
   QUESTION_DIFFICULTY,
   TOAST_DURATION,
+  QUALITY_THRESHOLDS,
 } from "../utils/constants";
 import Icon from "./Icon";
 import ReviewProgressBar from "./ReviewProgressBar";
@@ -24,11 +25,12 @@ import QuestionNotesField from "./QuestionItem/QuestionNotesField";
 import QuestionHeader from "./QuestionItem/QuestionHeader";
 
 import { useEditLock } from "../hooks/useEditLock";
+import { logger } from "../utils/logger";
+import { isEpicLink } from "../utils/urlValidator";
 import { useAuth } from "../hooks/useAuth";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 
 import { saveTrainingPair } from "../services/trainingDataService";
-import { logger } from "../utils/logger";
 import { logAuditEvent, AUDIT_ACTIONS } from "../services/auditService";
 
 // Helper functions (updated to use constants where appropriate, though display text might differ)
@@ -39,7 +41,7 @@ const QuestionItem = ({
   appMode,
   onUpdateStatus,
   onExplain,
-  onVariate,
+  _onVariate,
   onCritique,
   onApplyRewrite,
   onTranslateSingle,
@@ -145,8 +147,9 @@ const QuestionItem = ({
   };
 
   // Auto-open improvement modal when critique arrives or updates
-  // Track the last seen critiqueScore to detect re-critiques DURING THIS SESSION
-  const lastSeenCritiqueScoreRef = useRef(q.critiqueScore); // Initialize with current score
+  // Track the last seen critiqueScore/attempts to detect re-critiques DURING THIS SESSION
+  const lastSeenCritiqueScoreRef = useRef(q.critiqueScore);
+  const lastSeenAttemptsRef = useRef(q.critiqueAttempts || 0);
   const hasInitializedRef = useRef(false);
 
   useEffect(() => {
@@ -154,30 +157,37 @@ const QuestionItem = ({
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true;
       lastSeenCritiqueScoreRef.current = q.critiqueScore;
+      lastSeenAttemptsRef.current = q.critiqueAttempts || 0;
       return;
     }
 
-    // Detect if critique was just updated (score changed during this session)
+    // Detect if critique was just updated
+    // Check score change OR attempts count increase (for re-critiques with same score)
+    const currentAttempts = q.critiqueAttempts || 0;
+    const attemptsChanged = currentAttempts > lastSeenAttemptsRef.current;
+
     const critiqueJustUpdated =
-      q.critiqueScore !== undefined &&
-      q.critiqueScore !== lastSeenCritiqueScoreRef.current;
+      attemptsChanged ||
+      (q.critiqueScore !== undefined &&
+        q.critiqueScore !== lastSeenCritiqueScoreRef.current);
 
-    // Update ref to current score
-    if (q.critiqueScore !== undefined) {
+    // If updated, reset the "dismissed" flag to allow modal to show again
+    if (critiqueJustUpdated) {
+      lastProcessedCritiqueRef.current = null;
+      lastSeenAttemptsRef.current = currentAttempts;
       lastSeenCritiqueScoreRef.current = q.critiqueScore;
-    }
 
-    // Open modal if: in REVIEW mode AND critique exists AND (has rewrite OR critique just updated)
-    // NEVER auto-open in database mode - users should click to view
-    if (
-      appMode === APP_MODES.REVIEW &&
-      q.critique &&
-      (q.suggestedRewrite || critiqueJustUpdated) &&
-      !q.improvementsApplied &&
-      !lastProcessedCritiqueRef.current?.startsWith(`dismissed-${q.id}`) &&
-      !lastProcessedCritiqueRef.current?.startsWith(`applied-${q.id}`)
-    ) {
-      setShowImprovementModal(true);
+      // TRIGGER: Only auto-open if the critique actually just arrived/updated
+      // OR if we have a suggestion that hasn't been handled yet
+      if (
+        appMode === APP_MODES.REVIEW &&
+        q.critique &&
+        !q.improvementsApplied &&
+        !lastProcessedCritiqueRef.current?.startsWith(`dismissed-${q.id}`) &&
+        !lastProcessedCritiqueRef.current?.startsWith(`applied-${q.id}`)
+      ) {
+        setShowImprovementModal(true);
+      }
     }
   }, [
     appMode,
@@ -186,8 +196,112 @@ const QuestionItem = ({
     q.id,
     q.improvementsApplied,
     q.critiqueScore,
+    q.critiqueAttempts,
   ]);
 
+  const handleOpenDocs = useCallback(async () => {
+    const urlToOpen = q.sourceUrl || q.SourceURL || q.SourceUrl;
+    const hasValidUrl = isEpicLink(urlToOpen);
+
+    if (hasValidUrl) {
+      window.open(urlToOpen.trim(), "_blank", "noopener,noreferrer");
+    }
+
+    if (!q.humanVerified && onUpdateStatus) {
+      // For legacy compatibility, we use onUpdateStatus if humanVerified isn't handled via onUpdateQuestion in some contexts
+      // But typically we should use onUpdateQuestion
+      if (onUpdateQuestion) {
+        await onUpdateQuestion(q.id, {
+          humanVerified: true,
+          humanVerifiedBy: userEmail || "Unknown",
+          humanVerifiedAt: new Date().toISOString(),
+        });
+      }
+      logAuditEvent(q.uniqueId || q.id, AUDIT_ACTIONS.QUESTION_VERIFIED, {
+        oldValue: q.humanVerified,
+        newValue: true,
+        verifiedBy: userEmail,
+        method: "epic_docs",
+      });
+      if (showMessage)
+        showMessage("✅ Verified via Epic Docs", TOAST_DURATION.SHORT);
+    }
+  }, [
+    q.sourceUrl,
+    q.SourceURL,
+    q.SourceUrl,
+    q.humanVerified,
+    onUpdateQuestion,
+    onUpdateStatus,
+    userEmail,
+    q.id,
+    q.uniqueId,
+    showMessage,
+  ]);
+
+  const handleOpenSearch = useCallback(async () => {
+    if (q.sourceExcerpt) {
+      // Copy to clipboard
+      navigator.clipboard
+        .writeText(q.sourceExcerpt)
+        .catch((err) => logger.error("Clipboard fail:", err));
+
+      // Open Google
+      const query = encodeURIComponent(q.sourceExcerpt);
+      window.open(
+        `https://www.google.com/search?q=${query}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    }
+
+    if (!q.humanVerified && onUpdateQuestion) {
+      await onUpdateQuestion(q.id, {
+        humanVerified: true,
+        humanVerifiedBy: userEmail || "Unknown",
+        humanVerifiedAt: new Date().toISOString(),
+      });
+      logAuditEvent(q.uniqueId || q.id, AUDIT_ACTIONS.QUESTION_VERIFIED, {
+        oldValue: q.humanVerified,
+        newValue: true,
+        verifiedBy: userEmail,
+        method: "google_search",
+      });
+      if (showMessage)
+        showMessage("✅ Verified via Google Search", TOAST_DURATION.SHORT);
+    }
+  }, [
+    q.sourceExcerpt,
+    q.humanVerified,
+    onUpdateQuestion,
+    userEmail,
+    q.id,
+    q.uniqueId,
+    showMessage,
+  ]);
+
+  const handleFix = useCallback(() => {
+    if (onApplyRewrite) {
+      onApplyRewrite(q);
+    }
+  }, [onApplyRewrite, q]);
+
+  const handleAccept = useCallback(() => {
+    // PIPELINE ENFORCEMENT: Critique is required before accept
+    if (q.critiqueScore === null || q.critiqueScore === undefined) {
+      if (showMessage)
+        showMessage("⚠️ Run AI Critique first", TOAST_DURATION.LONG);
+      return;
+    }
+    if (!q.humanVerified) {
+      if (showMessage)
+        showMessage("⚠️ Please verify first", TOAST_DURATION.LONG);
+      return;
+    }
+    onUpdateStatus(q.id, QUESTION_STATUS.ACCEPTED);
+  }, [q.critiqueScore, q.humanVerified, q.id, onUpdateStatus, showMessage]);
+
+  // Status style helper
   const getStatusStyle = (status) => {
     switch (status) {
       case QUESTION_STATUS.ACCEPTED:
@@ -202,7 +316,6 @@ const QuestionItem = ({
   const getGradient = (d) => {
     // Normalize to handle "Easy" vs "Beginner" legacy data
     const difficulty = d?.toLowerCase();
-    // We can't strictly switch on keys if data is messy, but let's try to align
     if (
       difficulty === "easy" ||
       difficulty === QUESTION_DIFFICULTY.BEGINNER.toLowerCase()
@@ -311,41 +424,9 @@ const QuestionItem = ({
             isLocked={isLocked}
             lockedBy={lockedBy}
             onCritique={() => onCritique?.(q)}
-            onFix={() => onApplyRewrite && onApplyRewrite(q)}
-            onVerify={async () => {
-              if (!onUpdateQuestion) return;
-              await onUpdateQuestion(q.id, {
-                humanVerified: true,
-                humanVerifiedBy: userEmail || "Unknown",
-                humanVerifiedAt: new Date().toISOString(),
-              });
-              // Log to audit trail
-              logAuditEvent(
-                q.uniqueId || q.id,
-                AUDIT_ACTIONS.QUESTION_VERIFIED,
-                {
-                  oldValue: q.humanVerified,
-                  newValue: true,
-                  verifiedBy: userEmail,
-                }
-              );
-              if (showMessage)
-                showMessage("✅ Question verified!", TOAST_DURATION.SHORT);
-            }}
-            onAccept={() => {
-              // PIPELINE ENFORCEMENT: Critique is required before accept
-              if (q.critiqueScore === null || q.critiqueScore === undefined) {
-                if (showMessage)
-                  showMessage("⚠️ Run AI Critique first", TOAST_DURATION.LONG);
-                return;
-              }
-              if (!q.humanVerified) {
-                if (showMessage)
-                  showMessage("⚠️ Please verify first", TOAST_DURATION.LONG);
-                return;
-              }
-              onUpdateStatus(q.id, QUESTION_STATUS.ACCEPTED);
-            }}
+            onVerify={handleOpenDocs}
+            onAccept={handleAccept}
+            onFix={handleFix}
             isProcessing={isProcessing}
           />
         )}
@@ -383,39 +464,26 @@ const QuestionItem = ({
         />
 
         <SourceContextCard
-          sourceUrl={q.sourceUrl}
+          sourceUrl={q.sourceUrl || q.SourceURL || q.SourceUrl}
           sourceExcerpt={q.sourceExcerpt}
           isVerified={q.humanVerified}
           verifiedBy={q.humanVerifiedBy}
           verifiedAt={q.humanVerifiedAt}
+          onVerifyDocs={handleOpenDocs}
+          onVerifySearch={handleOpenSearch}
           showMessage={showMessage}
-          onVerify={async () => {
-            if (!onUpdateQuestion) return;
-            await onUpdateQuestion(q.id, {
-              humanVerified: true,
-              humanVerifiedBy: userEmail || "Unknown",
-              humanVerifiedAt: new Date().toISOString(),
-            });
-            logAuditEvent(q.uniqueId || q.id, AUDIT_ACTIONS.QUESTION_VERIFIED, {
-              oldValue: q.humanVerified,
-              newValue: true,
-              verifiedBy: userEmail,
-              source: "source_context_card"
-            });
-            if (showMessage) showMessage("✅ Source verified!", TOAST_DURATION.SHORT);
-          }}
-          question={q.question}
+          canVerify={q.critiqueScore >= (QUALITY_THRESHOLDS?.PASS || 70)}
         />
 
         <CritiqueSection
           q={q}
           appMode={appMode}
-          isProcessing={isProcessing}
+          onSwitchLanguage={onSwitchLanguage}
           onApplyRewrite={onApplyRewrite}
-          onUpdateQuestion={onUpdateQuestion}
-          onUpdateStatus={onUpdateStatus}
           onExplain={onExplain}
-          onVariate={onVariate}
+          onVerify={handleOpenDocs}
+          availableVariants={availableVariants}
+          isProcessing={isProcessing}
           showMessage={showMessage}
         />
 
@@ -531,6 +599,10 @@ const arePropsEqual = (prevProps, nextProps) => {
   if (prevProps.q?.suggestedRewrite !== nextProps.q?.suggestedRewrite)
     return false;
   if (prevProps.q?.status !== nextProps.q?.status) return false;
+  if (prevProps.q?.humanVerified !== nextProps.q?.humanVerified) return false;
+  if (prevProps.q?.improvementsApplied !== nextProps.q?.improvementsApplied)
+    return false;
+  if (prevProps.isProcessing !== nextProps.isProcessing) return false;
 
   // Standard shallow comparison for other props
   const prevKeys = Object.keys(prevProps);

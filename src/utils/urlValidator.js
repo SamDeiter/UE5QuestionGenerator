@@ -107,6 +107,21 @@ export function validateURL(url) {
  * @param {Array} questions - Array of question objects with SourceURL field
  * @returns {Array} Questions with urlValidation field added
  */
+/**
+ * Simple check for Epic Games domains
+ * @param {string} url - The URL to check
+ * @returns {boolean}
+ */
+export function isEpicLink(url) {
+  if (!url || typeof url !== "string") return false;
+  const trimmedUrl = url.trim();
+  if (!trimmedUrl.startsWith("https://")) return false;
+  return (
+    trimmedUrl.includes("epicgames.com") ||
+    trimmedUrl.includes("unrealengine.com")
+  );
+}
+
 export function validateURLsBatch(questions) {
   return questions.map((q) => ({
     ...q,

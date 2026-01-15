@@ -1,6 +1,7 @@
 import Icon from "./Icon";
 import { QUALITY_PASS_THRESHOLD } from "../utils/constants";
 import { useAccessibility } from "../contexts/AccessibilityContext";
+import { isEpicLink } from "../utils/urlValidator";
 
 // Helper functions to compute step styling without nested ternaries
 // cb = colorblind mode flag
@@ -9,8 +10,14 @@ const getCircleClass = (step, cb = false) => {
     return cb ? "bg-blue-600 text-white" : "bg-green-600 text-white";
   if (step.failed)
     return cb ? "bg-rose-600 text-white" : "bg-red-600 text-white";
-  if (step.active)
+  if (step.active) {
+    if (step.num === 2) {
+      if (step.broken)
+        return "bg-red-600 text-white animate-pulse shadow-lg shadow-red-500/50";
+      return "bg-yellow-500 text-slate-900 animate-pulse shadow-lg shadow-yellow-500/50";
+    }
     return "bg-orange-500 text-white animate-pulse shadow-lg shadow-orange-500/50 group-hover:bg-orange-400";
+  }
   if (step.ready)
     return "bg-blue-600/70 text-white cursor-pointer hover:bg-blue-500";
   return "bg-slate-700 text-slate-400 border-2 border-slate-600";
@@ -19,7 +26,12 @@ const getCircleClass = (step, cb = false) => {
 const getLabelClass = (step, cb = false) => {
   if (step.completed) return cb ? "text-blue-400" : "text-green-400";
   if (step.failed) return cb ? "text-rose-400" : "text-red-400";
-  if (step.active) return "text-orange-400";
+  if (step.active) {
+    if (step.num === 2) {
+      return step.broken ? "text-red-400" : "text-yellow-400";
+    }
+    return "text-orange-400";
+  }
   if (step.ready) return "text-blue-400";
   return "text-slate-500";
 };
@@ -95,6 +107,8 @@ const ReviewProgressBar = ({
       unclear: "Question or answers are unclear",
       duplicate: "Duplicate of another question",
       off_topic: "Not relevant to the topic",
+      hallucination: "Contains AI Hallucination",
+      ai_overview: "Contains Google AI Overview content",
       other: "Rejected by reviewer",
     };
     const reasonText =
@@ -148,8 +162,9 @@ const ReviewProgressBar = ({
         : "Run AI analysis",
       completed: hasCritique && critiquePass,
       failed: critiqueFail,
-      active: !hasCritique,
-      ready: false,
+      // Active if analysis hasn't run or hasn't passed/been applied yet
+      active: !hasCritique || (critiqueFail && !q.improvementsApplied),
+      ready: true,
       icon: "zap",
       onClick: onCritique,
     },
@@ -158,11 +173,16 @@ const ReviewProgressBar = ({
       label: "Verify",
       sublabel: isVerified ? "Source confirmed" : "Check source & answer",
       completed: isVerified,
-      // For high scores, Verify is the next step (flash it)
-      active: hasCritique && !isVerified,
-      ready: false,
-      locked: !hasCritique, // FIX: Locked until critique EXISTS (not just passes)
-      icon: "eye",
+      // Active ONLY if analysis passed/applied AND not yet verified
+      active: critiquePass && !isVerified,
+      ready: critiquePass,
+      locked: !critiquePass, // Re-locked: must finish critique/refinement first
+      broken: !isEpicLink(q.sourceUrl || q.SourceURL || q.SourceUrl),
+      icon: isVerified
+        ? "check"
+        : isEpicLink(q.sourceUrl || q.SourceURL || q.SourceUrl)
+        ? "eye"
+        : "alert-circle",
       onClick: onVerify,
     },
     {
@@ -170,10 +190,10 @@ const ReviewProgressBar = ({
       label: "Accept",
       sublabel: "Approve for export",
       completed: false,
-      // Accept becomes active AFTER verification
-      active: isVerified && !isAccepted,
-      ready: false,
-      locked: !isVerified, // Must verify first
+      // Active ONLY AFTER human verification AND critique pass
+      active: isVerified && critiquePass && !isAccepted,
+      ready: isVerified && critiquePass,
+      locked: !isVerified || !critiquePass, // Locked until BOTH are done
       icon: "check-circle",
       onClick: onAccept,
     },
@@ -204,7 +224,7 @@ const ReviewProgressBar = ({
                                     : ""
                                 }
                                 ${
-                                  step.locked || isLocked
+                                  isLocked || step.locked || isProcessing
                                     ? "opacity-40 cursor-not-allowed"
                                     : ""
                                 }
@@ -289,11 +309,18 @@ const ReviewProgressBar = ({
           the source and answer before accepting.
         </div>
       )}
-      {isVerified && !isAccepted && (
+      {isVerified && !critiquePass && !critiqueFail && (
+        <div className="mt-3 text-center text-xs text-orange-400/80 bg-orange-950/30 py-2 rounded animate-pulse">
+          <Icon name="zap" size={12} className="inline mr-1" />
+          <strong>Source verified!</strong> Now run <strong>Critique</strong> to
+          validate the question quality.
+        </div>
+      )}
+      {isVerified && critiquePass && !isAccepted && (
         <div className="mt-3 text-center text-xs text-blue-400/80 bg-blue-950/30 py-2 rounded animate-pulse">
           <Icon name="check-circle" size={12} className="inline mr-1" />
-          <strong>Verified!</strong> Click <strong>Accept</strong> to approve
-          this question for export.
+          <strong>Ready!</strong> Click <strong>Accept</strong> to approve this
+          question for export.
         </div>
       )}
     </div>

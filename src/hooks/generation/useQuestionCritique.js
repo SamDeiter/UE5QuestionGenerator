@@ -3,7 +3,7 @@ import {
   generateCritiqueSecure as generateCritique,
   generateTagsSecure,
 } from "../../services/geminiSecure";
-import { QUALITY_THRESHOLDS, TOAST_DURATION } from "../../utils/constants";
+import { TOAST_DURATION } from "../../utils/constants";
 import { logger } from "../../utils/logger";
 
 /**
@@ -24,6 +24,52 @@ export const useQuestionCritique = ({
    */
   const handleCritique = useCallback(
     async (q) => {
+      // Validate question object has required properties
+      if (!q) {
+        logger.error("[Critique] Question object is undefined or null");
+        showMessage(
+          "Critique failed: Invalid question data",
+          TOAST_DURATION.LONG
+        );
+        return;
+      }
+
+      if (!q.question) {
+        logger.error(
+          "[Critique] Question object missing 'question' property:",
+          q
+        );
+        showMessage(
+          "Critique failed: Question text is missing",
+          TOAST_DURATION.LONG
+        );
+        return;
+      }
+
+      if (!q.options || typeof q.options !== "object") {
+        logger.error(
+          "[Critique] Question object missing 'options' property:",
+          q
+        );
+        showMessage(
+          "Critique failed: Question options are missing",
+          TOAST_DURATION.LONG
+        );
+        return;
+      }
+
+      if (!q.correct) {
+        logger.error(
+          "[Critique] Question object missing 'correct' property:",
+          q
+        );
+        showMessage(
+          "Critique failed: Correct answer is missing",
+          TOAST_DURATION.LONG
+        );
+        return;
+      }
+
       if (!isApiReady) {
         showMessage(
           "API key is required for critique. Please enter it in the settings panel.",
@@ -127,8 +173,6 @@ export const useQuestionCritique = ({
 
         const previousAttempts = q.critiqueAttempts || 0;
         const newAttemptCount = previousAttempts + 1;
-        const PASSING_SCORE = QUALITY_THRESHOLDS.PASS;
-        const MAX_ATTEMPTS = 3;
 
         const critiqueUpdate = (item) => ({
           ...item,
@@ -140,13 +184,6 @@ export const useQuestionCritique = ({
           critiqueAttempts: newAttemptCount,
           // Save generated tags immediately
           tags: suggestedTags.length > 0 ? suggestedTags : item.tags,
-          ...(score < PASSING_SCORE && newAttemptCount >= MAX_ATTEMPTS
-            ? {
-                status: "rejected",
-                rejectionReason: "low_score_after_retries",
-                rejectedAt: new Date().toISOString(),
-              }
-            : {}),
         });
 
         if (q.uniqueId) {
@@ -175,13 +212,6 @@ export const useQuestionCritique = ({
             tags: suggestedTags.length > 0 ? suggestedTags : q.tags || [],
             firestoreUpdatedAt: new Date().toISOString(),
             version: (q.version || 1) + 1,
-            ...(score < PASSING_SCORE && newAttemptCount >= MAX_ATTEMPTS
-              ? {
-                  status: "rejected",
-                  rejectionReason: "low_score_after_retries",
-                  rejectedAt: new Date().toISOString(),
-                }
-              : {}),
           };
 
           logger.log(
@@ -203,17 +233,10 @@ export const useQuestionCritique = ({
           );
         }
 
-        if (score < PASSING_SCORE && newAttemptCount >= MAX_ATTEMPTS) {
-          showMessage(
-            `\u26D4 Auto-rejected: Score ${score}/100 after ${newAttemptCount} attempts. Quality too low.`,
-            TOAST_DURATION.EXTENDED
-          );
-        } else {
-          showMessage(
-            `Critique Ready! Score: ${score}/100`,
-            TOAST_DURATION.MEDIUM
-          );
-        }
+        showMessage(
+          `Critique Ready! Score: ${score}/100`,
+          TOAST_DURATION.MEDIUM
+        );
       } catch (e) {
         logger.error("Critique failed:", e);
         setStatus("Fail");

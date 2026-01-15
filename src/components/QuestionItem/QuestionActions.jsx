@@ -1,7 +1,7 @@
-
 import { useState, useRef, useEffect } from "react";
 import Icon from "../Icon";
 import { useAccessibility } from "../../contexts/AccessibilityContext";
+import { TOAST_DURATION } from "../../utils/constants";
 
 // Rejection reason options with categories for analytics
 const REJECTION_REASONS = [
@@ -60,11 +60,31 @@ const REJECTION_REASONS = [
     category: "duplicate",
   },
 
+  // AI Issues
+  {
+    id: "hallucination",
+    label: "AI Hallucination",
+    icon: "bot",
+    category: "accuracy",
+  },
+  {
+    id: "ai_overview",
+    label: "Google AI Overview",
+    icon: "search",
+    category: "accuracy",
+  },
+
   // Source Issues
   {
     id: "bad_source",
     label: "Bad/Missing Source",
     icon: "link-2",
+    category: "source",
+  },
+  {
+    id: "source_not_found",
+    label: "Source Excerpt NOT on Page",
+    icon: "file-minus",
     category: "source",
   },
   {
@@ -113,6 +133,52 @@ const QuestionActions = ({
   const { colorblindMode } = useAccessibility();
   const [rejectMenuOpen, setRejectMenuOpen] = useState(false);
   const rejectMenuRef = useRef(null);
+  const [sortedReasons, setSortedReasons] = useState(REJECTION_REASONS);
+
+  // Load and sort reasons based on usage frequency
+  useEffect(() => {
+    try {
+      const counts = JSON.parse(
+        localStorage.getItem("ue5_rejection_counts") || "{}"
+      );
+
+      // Sort reasons: higher count first
+      const sorted = [...REJECTION_REASONS].sort((a, b) => {
+        const countA = counts[a.id] || 0;
+        const countB = counts[b.id] || 0;
+        return countB - countA; // Descending
+      });
+
+      setSortedReasons(sorted);
+    } catch (err) {
+      console.warn("Failed to load rejection counts", err);
+    }
+  }, [rejectMenuOpen]); // Re-sort every time menu opens
+
+  const handleRejection = (reasonId) => {
+    // 1. Update counts in localStorage
+    try {
+      const counts = JSON.parse(
+        localStorage.getItem("ue5_rejection_counts") || "{}"
+      );
+      counts[reasonId] = (counts[reasonId] || 0) + 1;
+      localStorage.setItem("ue5_rejection_counts", JSON.stringify(counts));
+    } catch (err) {
+      console.warn("Failed to update rejection counts", err);
+    }
+
+    // 2. Perform rejection
+    onUpdateStatus(q.id, "rejected", reasonId);
+    setRejectMenuOpen(false);
+
+    // 3. Find label for toast
+    const reason = REJECTION_REASONS.find((r) => r.id === reasonId);
+    if (showMessage)
+      showMessage(
+        `❌ Rejected: ${reason?.label || reasonId}`,
+        TOAST_DURATION.LONG
+      );
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -191,7 +257,7 @@ const QuestionActions = ({
                       `⚠️ Question locked by ${
                         lockedBy?.userEmail || "another user"
                       }`,
-                      3000
+                      TOAST_DURATION.LONG
                     );
                   return;
                 }
@@ -246,16 +312,12 @@ const QuestionActions = ({
                   </span>
                 </div>
                 <div className="py-1 max-h-72 overflow-y-auto">
-                  {REJECTION_REASONS.map((reason) => (
+                  {sortedReasons.map((reason) => (
                     <button
                       key={reason.id}
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Note: rejectionCategory and qualityIssues are now tracked via normalizeQuestion
-                        onUpdateStatus(q.id, "rejected", reason.id);
-                        setRejectMenuOpen(false);
-                        if (showMessage)
-                          showMessage(`❌ Rejected: ${reason.label}`, 3000);
+                        handleRejection(reason.id);
                       }}
                       className={`w-full text-left px-3 py-2.5 text-sm text-slate-200 ${
                         colorblindMode
@@ -283,8 +345,7 @@ const QuestionActions = ({
                 </div>
                 <div className="px-3 py-2 bg-slate-900/50 border-t border-slate-700">
                   <span className="text-xs text-slate-400">
-                    💡 Tip: Use Internal Notes below for detailed feedback. Keep
-                    it brief!
+                    💡 Tip: User actions auto-sort this list!
                   </span>
                 </div>
               </div>

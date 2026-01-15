@@ -72,6 +72,31 @@ export const generateCritiqueViaCloudFunction = async (
   model = "gemini-1.5-flash"
 ) => {
   try {
+    // Defensive validation - catch malformed data before Cloud Function call
+    if (!question || typeof question !== "object") {
+      throw new Error(
+        "Invalid question object: received undefined or non-object"
+      );
+    }
+
+    if (!question.question) {
+      throw new Error(
+        `Invalid question: missing 'question' text property. Keys present: ${Object.keys(
+          question
+        ).join(", ")}`
+      );
+    }
+
+    if (!question.options || typeof question.options !== "object") {
+      throw new Error(
+        "Invalid question: missing or invalid 'options' property"
+      );
+    }
+
+    if (!question.correct) {
+      throw new Error("Invalid question: missing 'correct' answer property");
+    }
+
     const generateCritique = httpsCallable(functions, "generateCritique");
 
     const result = await generateCritique({

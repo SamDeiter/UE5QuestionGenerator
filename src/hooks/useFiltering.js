@@ -406,24 +406,29 @@ export function useFiltering({
       return;
     }
 
-    // DISABLED: This was causing position jumps when switching filters
-    // The "same question" may be at a different index in a different filter's list
-    // if (
-    //   listRefChanged &&
-    //   lastKnownUniqueIdRef.current &&
-    //   lastKnownUniqueIdRef.current !== currentUniqueId
-    // ) {
-    //   const preservedIndex = uniqueFilteredQuestions.findIndex(
-    //     (q) => q.uniqueId === lastKnownUniqueIdRef.current
-    //   );
-    //
-    //   if (preservedIndex !== -1 && preservedIndex !== currentReviewIndex) {
-    //     setCurrentReviewIndex(preservedIndex);
-    //     lastKnownIndexRef.current = preservedIndex;
-    //     lastKnownListRef.current = uniqueFilteredQuestions;
-    //     return;
-    //   }
-    // }
+    // STABILITY: Preserve current question position when the question list updates
+    // This handles AI critiques, language switches, and remote syncs
+    const listRefChanged = uniqueFilteredQuestions !== lastKnownListRef.current;
+
+    if (
+      listRefChanged &&
+      lastKnownUniqueIdRef.current &&
+      lastKnownUniqueIdRef.current !== currentUniqueId
+    ) {
+      const preservedIndex = uniqueFilteredQuestions.findIndex(
+        (q) => q.uniqueId === lastKnownUniqueIdRef.current
+      );
+
+      if (preservedIndex !== -1 && preservedIndex !== currentReviewIndex) {
+        logger.log(
+          `🎯 [useFiltering] Preserving index: Shifted from ${currentReviewIndex} to ${preservedIndex} to follow ID ${lastKnownUniqueIdRef.current}`
+        );
+        setCurrentReviewIndex(preservedIndex);
+        lastKnownIndexRef.current = preservedIndex;
+        lastKnownListRef.current = uniqueFilteredQuestions;
+        return;
+      }
+    }
 
     // D. Update tracking for next run
     if (currentUniqueId) {

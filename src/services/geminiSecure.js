@@ -82,6 +82,42 @@ export const generateCritiqueSecure = async (
   question,
   model = "gemini-1.5-flash"
 ) => {
+  // Validate question object before proceeding
+  if (!question) {
+    throw new Error("Critique failed: Question object is undefined or null");
+  }
+
+  if (!question.question) {
+    logger.error("[CritiqueSecure] Missing 'question' property. Received:", {
+      id: question.id,
+      keys: Object.keys(question),
+    });
+    throw new Error(
+      "Critique failed: Question text is missing. Check the 'question' property on the object."
+    );
+  }
+
+  if (!question.options || typeof question.options !== "object") {
+    logger.error(
+      "[CritiqueSecure] Missing or invalid 'options' property. Received:",
+      {
+        id: question.id,
+        options: question.options,
+      }
+    );
+    throw new Error(
+      "Critique failed: Question options are missing or invalid."
+    );
+  }
+
+  if (!question.correct) {
+    logger.error("[CritiqueSecure] Missing 'correct' property. Received:", {
+      id: question.id,
+      correct: question.correct,
+    });
+    throw new Error("Critique failed: Correct answer is missing.");
+  }
+
   // Try Cloud Functions first (most secure)
   if (isUserAuthenticated()) {
     try {
