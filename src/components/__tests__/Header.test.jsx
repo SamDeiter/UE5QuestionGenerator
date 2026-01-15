@@ -114,9 +114,10 @@ describe("Header Component", () => {
       expect(screen.getByText("2.0k")).toBeInTheDocument();
     });
 
-    it("displays cost formatted to 4 decimal places", () => {
+    it("displays cost formatted to 6 decimal places", () => {
       render(<Header {...defaultProps} />);
-      expect(screen.getByText("0.0025")).toBeInTheDocument();
+      // Cost is displayed with $ prefix and 6 decimal places in HeaderUserInfo
+      expect(screen.getByText(/0\.002500/)).toBeInTheDocument();
     });
 
     it("displays creator name", () => {
