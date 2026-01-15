@@ -196,11 +196,11 @@ const OverviewTab = ({
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                   <XAxis
                     dataKey="name"
-                    stroke="#94a3b8"
+                    stroke="#e2e8f0"
                     tick={{ fontSize: 10, angle: -45, textAnchor: "end" }}
                     height={60}
                   />
-                  <YAxis stroke="#94a3b8" />
+                  <YAxis stroke="#e2e8f0" />
                   <Tooltip
                     cursor={false}
                     contentStyle={{

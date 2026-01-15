@@ -106,15 +106,15 @@ const TrendCharts = ({ generations, questions = [] }) => {
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="date" stroke="#94a3b8" tick={{ fontSize: 9 }} />
-                <YAxis stroke="#94a3b8" />
+                <XAxis dataKey="date" stroke="#e2e8f0" tick={{ fontSize: 9 }} />
+                <YAxis stroke="#e2e8f0" />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#1e293b",
                     borderColor: "#334155",
                     color: "#f1f5f9",
                   }}
-                  labelStyle={{ color: "#94a3b8" }}
+                  labelStyle={{ color: "#e2e8f0" }}
                 />
                 <Legend />
                 <Bar
@@ -147,15 +147,15 @@ const TrendCharts = ({ generations, questions = [] }) => {
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="date" stroke="#94a3b8" tick={{ fontSize: 9 }} />
-                <YAxis stroke="#94a3b8" domain={[0, 100]} />
+                <XAxis dataKey="date" stroke="#e2e8f0" tick={{ fontSize: 9 }} />
+                <YAxis stroke="#e2e8f0" domain={[0, 100]} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#1e293b",
                     borderColor: "#334155",
                     color: "#f1f5f9",
                   }}
-                  labelStyle={{ color: "#94a3b8" }}
+                  labelStyle={{ color: "#e2e8f0" }}
                 />
                 <Legend />
                 <Line
@@ -202,10 +202,10 @@ const TrendCharts = ({ generations, questions = [] }) => {
                 </defs>
                 <XAxis
                   dataKey="name"
-                  stroke="#94a3b8"
+                  stroke="#e2e8f0"
                   tick={{ fontSize: 10 }}
                 />
-                <YAxis stroke="#94a3b8" />
+                <YAxis stroke="#e2e8f0" />
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                 <Tooltip
                   contentStyle={{
@@ -213,7 +213,7 @@ const TrendCharts = ({ generations, questions = [] }) => {
                     borderColor: "#334155",
                     color: "#f1f5f9",
                   }}
-                  labelStyle={{ color: "#94a3b8" }}
+                  labelStyle={{ color: "#e2e8f0" }}
                 />
                 <Area
                   type="monotone"

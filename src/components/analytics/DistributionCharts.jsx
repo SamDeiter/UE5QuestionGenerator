@@ -171,11 +171,11 @@ const DistributionCharts = ({ questions }) => {
                 stroke="#334155"
                 horizontal={false}
               />
-              <XAxis type="number" stroke="#94a3b8" />
+              <XAxis type="number" stroke="#e2e8f0" />
               <YAxis
                 type="category"
                 dataKey="name"
-                stroke="#94a3b8"
+                stroke="#e2e8f0"
                 width={95}
                 tick={{ fontSize: 11, fill: "#cbd5e1" }}
                 tickLine={false}
@@ -203,7 +203,7 @@ const DistributionCharts = ({ questions }) => {
                 cursor="default"
                 dataKey="value"
                 radius={[0, 4, 4, 0]}
-                label={{ position: "right", fill: "#94a3b8", fontSize: 10 }}
+                label={{ position: "right", fill: "#e2e8f0", fontSize: 10 }}
               >
                 {disciplineData.map((entry, index) => (
                   <Cell
@@ -266,10 +266,10 @@ const DistributionCharts = ({ questions }) => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                   <XAxis
                     dataKey="name"
-                    stroke="#94a3b8"
+                    stroke="#e2e8f0"
                     tick={{ fontSize: 10 }}
                   />
-                  <YAxis stroke="#94a3b8" />
+                  <YAxis stroke="#e2e8f0" />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#1e293b",
@@ -473,11 +473,11 @@ const DistributionCharts = ({ questions }) => {
                     stroke="#334155"
                     horizontal={false}
                   />
-                  <XAxis type="number" stroke="#94a3b8" />
+                  <XAxis type="number" stroke="#e2e8f0" />
                   <YAxis
                     type="category"
                     dataKey="name"
-                    stroke="#94a3b8"
+                    stroke="#e2e8f0"
                     width={145}
                     tick={{ fontSize: 11, fill: "#cbd5e1" }}
                     tickLine={false}
@@ -491,7 +491,7 @@ const DistributionCharts = ({ questions }) => {
                     dataKey="value"
                     fill="#8B5CF6"
                     radius={[0, 4, 4, 0]}
-                    label={{ position: "right", fill: "#94a3b8", fontSize: 10 }}
+                    label={{ position: "right", fill: "#e2e8f0", fontSize: 10 }}
                   />
                 </BarChart>
               </SafeResponsiveContainer>

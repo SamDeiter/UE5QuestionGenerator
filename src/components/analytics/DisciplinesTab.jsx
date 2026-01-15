@@ -75,11 +75,11 @@ const DisciplinesTab = ({ disciplineData, allQuestions, disciplines }) => {
                   stroke="#334155"
                   horizontal={false}
                 />
-                <XAxis type="number" stroke="#94a3b8" />
+                <XAxis type="number" stroke="#e2e8f0" />
                 <YAxis
                   type="category"
                   dataKey="fullName"
-                  stroke="#94a3b8"
+                  stroke="#e2e8f0"
                   width={110}
                   tick={{ fontSize: 11 }}
                 />

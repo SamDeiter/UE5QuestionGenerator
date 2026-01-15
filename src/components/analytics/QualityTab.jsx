@@ -41,8 +41,8 @@ const QualityTab = ({ qualityDistribution, tokenStats, summary }) => {
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="range" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
+                <XAxis dataKey="range" stroke="#e2e8f0" />
+                <YAxis stroke="#e2e8f0" />
                 <Tooltip
                   cursor={false}
                   contentStyle={{
