@@ -1,57 +1,106 @@
+:root {
+  --font-inter: "Inter", sans-serif;
+
+  /* Color Palette */
+  --color-primary: #3b82f6; /* Blue 500 */
+  --color-secondary: #8b5cf6; /* Violet 500 */
+  --color-accent: #06b6d4; /* Cyan 500 */
+  --color-success: #10b981; /* Emerald 500 */
+  --color-danger: #ef4444; /* Red 500 */
+
+  /* Backgrounds & Glassmorphism */
+  --bg-dark: #020617; /* Slate 950 */
+  --bg-glass: rgba(15, 23, 42, 0.6);
+  --bg-glass-hover: rgba(15, 23, 42, 0.8);
+  --border-glass: rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(12px);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  /* Gradients */
+  --grad-primary: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  --grad-glass: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Ensure emoji fonts render properly */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+    "Helvetica Neue", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji",
+    sans-serif;
+  background-color: var(--bg-dark);
+  color: white;
+}
+
+/* Glassmorphism Utility */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-glass);
 }
 
 /* Custom Scrollbar for dark theme */
 ::-webkit-scrollbar {
-    width: 8px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #0f172a;
+  background: #0f172a;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #334155;
-    border-radius: 4px;
+  background: #334155;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #475569;
+  background: #475569;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-in {
-    animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.3s ease-out forwards;
 }
 /* Accessibility: Visible Focus Indicators */
 :focus-visible {
-    outline: 2px solid #6366f1; /* Indigo-500 */
-    outline-offset: 2px;
+  outline: 2px solid #6366f1; /* Indigo-500 */
+  outline-offset: 2px;
 }
 
 /* Accessibility: Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-    *, ::before, ::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -130,21 +130,54 @@ const ViewRouter = ({
 
   /**
    * Render the appropriate view based on appMode
-   * Uses early returns instead of nested ternaries for clarity
    */
   const renderView = () => {
-    if (appMode === APP_MODES.ANALYTICS) {
+    // Review mode with questions is special-cased because it's the most common and complex
+    if (appMode === APP_MODES.REVIEW) {
+      if (uniqueFilteredQuestions.length > 0) {
+        return (
+          <ReviewMode
+            questions={uniqueFilteredQuestions}
+            currentIndex={currentReviewIndex}
+            setCurrentIndex={setCurrentReviewIndex}
+            onUpdateStatus={handleUpdateStatus}
+            onExplain={handleExplain}
+            onVariate={handleVariate}
+            onCritique={handleCritique}
+            onApplyRewrite={handleApplyRewrite}
+            onTranslateSingle={handleTranslateSingle}
+            onSwitchLanguage={handleLanguageSwitch}
+            onDelete={handleDelete}
+            onUpdateQuestion={handleManualUpdate}
+            translationMap={translationMap}
+            onStartTutorial={() => onStartTutorial(APP_MODES.REVIEW)}
+            onKickBack={handleKickBackToReview}
+            userRole={userRole}
+            allQuestionsMap={allQuestionsMap}
+          />
+        );
+      }
       return (
+        <EmptyReviewState
+          onNavigateToCreate={onNavigateToCreate}
+          hasQuestionsInOtherFilters={
+            filteredQuestions.length > 0 || questions.length > 0
+          }
+          isAdmin={isAdmin}
+        />
+      );
+    }
+
+    // Map other modes to components
+    const viewMap = {
+      [APP_MODES.ANALYTICS]: (
         <AnalyticsView
           onBack={onNavigateHome}
           onStartTutorial={() => onStartTutorial(APP_MODES.ANALYTICS)}
           allQuestionsMap={allQuestionsMap}
         />
-      );
-    }
-
-    if (appMode === APP_MODES.DATABASE) {
-      return (
+      ),
+      [APP_MODES.DATABASE]: (
         <DatabaseView
           questions={databaseQuestions}
           sheetUrl={config.sheetUrl}
@@ -162,36 +195,27 @@ const ViewRouter = ({
           isAdmin={isAdmin}
           userRole={userRole}
         />
-      );
-    }
-
-    if (appMode === APP_MODES.TEST && isAdmin) {
-      return (
+      ),
+      [APP_MODES.TEST]: isAdmin && (
         <TestView
           questions={[...questions, ...databaseQuestions]}
           config={config}
           isAdmin={isAdmin}
           showMessage={showMessage}
         />
-      );
-    }
-
-    if (appMode === APP_MODES.PLAYGROUND && isAdmin) {
-      return (
+      ),
+      [APP_MODES.PLAYGROUND]: isAdmin && (
         <PromptPlayground
           config={config}
           apiKeyReady={!!effectiveApiKey}
           effectiveApiKey={effectiveApiKey}
         />
-      );
-    }
-
-    if (appMode === APP_MODES.ADMIN && isAdmin) {
-      return (
+      ),
+      [APP_MODES.ADMIN]: isAdmin && (
         <AdminPanel
           showMessage={showMessage}
           config={config}
-          handleChange={handlers.handleConfigChange}
+          handleChange={handlers.handleChange}
           showApiKey={state.showApiKey}
           setShowApiKey={setters.setShowApiKey}
           files={state.files}
@@ -205,13 +229,10 @@ const ViewRouter = ({
           onSaveCustomTags={handlers.handleSaveCustomTags}
           currentUser={state.currentUser}
         />
-      );
-    }
-
-    if (appMode === APP_MODES.TRANSLATE && isAdmin) {
-      return (
+      ),
+      [APP_MODES.TRANSLATE]: isAdmin && (
         <TranslationManagementView
-          questions={databaseQuestions} // Use all database questions for translation management
+          questions={databaseQuestions}
           allQuestionsMap={allQuestionsMap}
           translationMap={translationMap}
           onTranslateSingle={handleTranslateSingle}
@@ -223,46 +244,13 @@ const ViewRouter = ({
           showMessage={showMessage}
           userRole={userRole}
         />
-      );
-    }
+      ),
+    };
 
-    if (appMode === APP_MODES.REVIEW && uniqueFilteredQuestions.length > 0) {
-      return (
-        <ReviewMode
-          questions={uniqueFilteredQuestions}
-          currentIndex={currentReviewIndex}
-          setCurrentIndex={setCurrentReviewIndex}
-          onUpdateStatus={handleUpdateStatus}
-          onExplain={handleExplain}
-          onVariate={handleVariate}
-          onCritique={handleCritique}
-          onApplyRewrite={handleApplyRewrite}
-          onTranslateSingle={handleTranslateSingle}
-          onSwitchLanguage={handleLanguageSwitch}
-          onDelete={handleDelete}
-          onUpdateQuestion={handleManualUpdate}
-          translationMap={translationMap}
-          onStartTutorial={() => onStartTutorial(APP_MODES.REVIEW)}
-          onKickBack={handleKickBackToReview}
-          userRole={userRole}
-          allQuestionsMap={allQuestionsMap}
-        />
-      );
-    }
+    const selectedView = viewMap[appMode];
+    if (selectedView) return selectedView;
 
-    if (appMode === APP_MODES.REVIEW && uniqueFilteredQuestions.length === 0) {
-      return (
-        <EmptyReviewState
-          onNavigateToCreate={onNavigateToCreate}
-          hasQuestionsInOtherFilters={
-            filteredQuestions.length > 0 || questions.length > 0
-          }
-          isAdmin={isAdmin}
-        />
-      );
-    }
-
-    // Default: QuestionList for create mode
+    // Default: QuestionList for create mode or any unmapped modes
     return (
       <QuestionList
         questions={uniqueFilteredQuestions}

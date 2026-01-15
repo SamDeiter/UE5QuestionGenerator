@@ -1,26 +1,20 @@
-/**
- * Admin Panel - User Management
- *
- * Allows admins to:
- * - View all registered users
- * - Generate invite codes
- * - Revoke user access
- * - Promote/demote users
- */
-
 import React, { useState } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
-import { app } from "../services/firebase";
-import Icon from "./Icon";
-import CollapsibleSection from "./CollapsibleSection";
 import { UI_LABELS } from "../utils/constants";
-
 import {
-  getReviewerAnalytics,
   formatDuration,
   formatDate as formatAnalyticsDate,
 } from "../utils/reviewerAnalytics";
-import { logger } from "../utils/logger";
+
+// Components
+import AdminHeader from "./Admin/AdminHeader";
+import AdminStats from "./Admin/AdminStats";
+import AdminFeatureAccess from "./Admin/AdminFeatureAccess";
+import AdminSection from "./Admin/AdminSection";
+
+// Hooks
+import { useAdminPanelLogic } from "../hooks/admin/useAdminPanelLogic";
+
+// Lazy Loaded Admin Components
 const ReviewerAnalytics = React.lazy(() => import("./Admin/ReviewerAnalytics"));
 const DatabaseManagement = React.lazy(() =>
   import("./Admin/DatabaseManagement")
@@ -37,8 +31,6 @@ const SystemHealth = React.lazy(() => import("./Admin/SystemHealth"));
 const AuditLogs = React.lazy(() => import("./Admin/AuditLogs"));
 const DataMaintenance = React.lazy(() => import("./Admin/DataMaintenance"));
 
-const functions = getFunctions(app, "us-central1");
-
 const AdminPanel = ({
   showMessage,
   config,
@@ -48,22 +40,40 @@ const AdminPanel = ({
   _isApiReady,
   customTags,
   onSaveCustomTags,
-  currentUser, // Add currentUser prop
+  currentUser,
 }) => {
-  // Super Admin check - case-insensitive with trim
+  // Super Admin check
   const userEmail = currentUser?.email?.toLowerCase();
   const envSuperAdmin =
     import.meta.env.VITE_SUPER_ADMIN_EMAIL?.trim()?.toLowerCase();
   const isSuperAdmin = userEmail === envSuperAdmin && envSuperAdmin;
 
+  // Panel Logic Hook
+  const {
+    users,
+    usersLoaded,
+    usersLoading,
+    invites,
+    invitesLoaded,
+    invitesLoading,
+    reviewerAnalytics,
+    analyticsLoading,
+    loadUsers,
+    loadInvites,
+    loadReviewerAnalytics,
+    refreshInvites,
+    handleRevokeUser,
+    handleChangeRole,
+  } = useAdminPanelLogic(showMessage);
+
   // Collapsible sections state
   const [collapsed, setCollapsed] = useState({
     featureAccess: true,
-    inviteManagement: true, // Merged: generateInvite + activeInvites
+    inviteManagement: true,
     registeredUsers: true,
-    reviewerActivity: true, // NEW: Reviewer Activity Analytics section
-    systemHealth: true, // NEW: System Health diagnostics
-    auditLogs: true, // NEW: Audit Trail
+    reviewerActivity: true,
+    systemHealth: true,
+    auditLogs: true,
     apiConfig: true,
     customTags: true,
     trainingData: true,
@@ -76,283 +86,42 @@ const AdminPanel = ({
     setCollapsed((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const [users, setUsers] = useState([]);
-  const [invites, setInvites] = useState([]);
-  const [reviewerAnalytics, setReviewerAnalytics] = useState(null);
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
-
-  // PERFORMANCE: Separate loading states for load-on-expand pattern
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [usersLoaded, setUsersLoaded] = useState(false);
-  const [invitesLoading, setInvitesLoading] = useState(false);
-  const [invitesLoaded, setInvitesLoaded] = useState(false);
-
-  // Safe wrapper for handleChange to prevent React warnings
+  // Safe wrapper for handleChange
   const safeHandleChange = handleChange || (() => {});
-
-  // PERFORMANCE: Load users only when section is expanded (load-on-expand pattern)
-  const loadUsers = async () => {
-    if (usersLoaded || usersLoading) return; // Already loaded or loading
-    setUsersLoading(true);
-    try {
-      const listUsersFn = httpsCallable(functions, "listRegisteredUsers");
-      const result = await listUsersFn({});
-      setUsers(result.data.users || []);
-      setUsersLoaded(true);
-    } catch (error) {
-      logger.error("Failed to load users:", error);
-      showMessage(`❌ Failed to load users: ${error.message}`, 5000);
-    } finally {
-      setUsersLoading(false);
-    }
-  };
-
-  // PERFORMANCE: Load invites only when section is expanded
-  const loadInvites = async () => {
-    if (invitesLoaded || invitesLoading) return; // Already loaded or loading
-    setInvitesLoading(true);
-    try {
-      const listInvitesFn = httpsCallable(functions, "listInvites");
-      const result = await listInvitesFn({});
-      setInvites(result.data.invites || []);
-      setInvitesLoaded(true);
-    } catch (error) {
-      logger.error("Failed to load invites:", error);
-      showMessage(`❌ Failed to load invites: ${error.message}`, 5000);
-    } finally {
-      setInvitesLoading(false);
-    }
-  };
-
-  // Refresh function for after mutations (invites/users)
-  const refreshUsers = () => {
-    setUsersLoaded(false);
-    loadUsers();
-  };
-  const refreshInvites = () => {
-    setInvitesLoaded(false);
-    loadInvites();
-  };
-
-  const handleRevokeUser = async (userId, email) => {
-    if (
-      !confirm(
-        `Revoke access for ${email}? They will be logged out and unable to access the app.`
-      )
-    )
-      return;
-
-    try {
-      const revokeUserFn = httpsCallable(functions, "revokeUserAccess");
-      await revokeUserFn({ userId });
-
-      // Immediately remove user from UI (optimistic update)
-      setUsers((prevUsers) => prevUsers.filter((u) => u.uid !== userId));
-
-      showMessage(`✅ Access revoked for ${email}`, 3000);
-
-      // Wait a moment for server-side deletion to complete before refreshing
-      setTimeout(() => refreshUsers(), 500);
-    } catch (error) {
-      logger.error("❌ Revoke user error:", error);
-      showMessage(`❌ Failed to revoke user: ${error.message}`, 5000);
-      // Reload data to restore UI state if revocation failed
-      refreshUsers();
-    }
-  };
-
-  const handleChangeRole = async (userId, currentRole, email) => {
-    // Simple toggle between admin and reviewer (no user role)
-    const newRole = currentRole === "admin" ? "reviewer" : "admin";
-    if (!confirm(`Change ${email} from ${currentRole} to ${newRole}?`)) return;
-
-    try {
-      const changeRoleFn = httpsCallable(functions, "changeUserRole");
-      await changeRoleFn({ userId, role: newRole });
-
-      // Immediately update user role in UI (optimistic update)
-      setUsers((prevUsers) =>
-        prevUsers.map((u) => (u.uid === userId ? { ...u, role: newRole } : u))
-      );
-
-      showMessage(`✅ ${email} is now ${newRole}`, 3000);
-
-      // Refresh data from server to ensure consistency
-      refreshUsers();
-    } catch (error) {
-      showMessage(`❌ Failed to change role: ${error.message}`, 5000);
-      // Reload data to restore UI state if role change failed
-      refreshUsers();
-    }
-  };
-
-  // NEW: Load reviewer activity analytics
-  const loadReviewerAnalytics = async () => {
-    setAnalyticsLoading(true);
-    try {
-      const data = await getReviewerAnalytics();
-      setReviewerAnalytics(data);
-    } catch (error) {
-      logger.error("Failed to load reviewer analytics:", error);
-      showMessage(`❌ Failed to load analytics: ${error.message}`, 5000);
-    } finally {
-      setAnalyticsLoading(false);
-    }
-  };
-
-  // PERFORMANCE: No blocking loading spinner - UI renders immediately
 
   return (
     <div className="p-3">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h1 className="text-lg font-bold text-white flex items-center gap-2">
-          <Icon name="shield" size={18} />
-          Admin Panel
-        </h1>
-      </div>
+      <AdminHeader />
 
-      {/* Dashboard Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-        <div className="bg-gradient-to-br from-blue-900/40 to-blue-950/40 p-3 rounded-lg border border-blue-500/30">
-          <div className="text-xs text-blue-400/80 mb-1">Users</div>
-          <div className="text-xl font-bold text-blue-300">
-            {usersLoaded ? users.length : "–"}
-          </div>
-        </div>
-        <div className="bg-gradient-to-br from-purple-900/40 to-purple-950/40 p-3 rounded-lg border border-purple-500/30">
-          <div className="text-xs text-purple-400/80 mb-1">Invites</div>
-          <div className="text-xl font-bold text-purple-300">
-            {invitesLoaded ? invites.filter((i) => !i.used).length : "–"}
-          </div>
-        </div>
-        <div className="bg-gradient-to-br from-cyan-900/40 to-cyan-950/40 p-3 rounded-lg border border-cyan-500/30">
-          <div className="text-xs text-cyan-400/80 mb-1">Reviewers</div>
-          <div className="text-xl font-bold text-cyan-300">
-            {reviewerAnalytics?.metadata?.totalReviewers ?? "–"}
-          </div>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-950/40 p-3 rounded-lg border border-emerald-500/30">
-          <div className="text-xs text-emerald-400/80 mb-1">Reviewed</div>
-          <div className="text-xl font-bold text-emerald-300">
-            {reviewerAnalytics?.metadata?.totalQuestionsReviewed ?? "–"}
-          </div>
-        </div>
-      </div>
+      <AdminStats
+        usersLoaded={usersLoaded}
+        usersCount={users.length}
+        invitesLoaded={invitesLoaded}
+        activeInvitesCount={invites.filter((i) => !i.used).length}
+        totalReviewers={reviewerAnalytics?.metadata?.totalReviewers}
+        totalQuestionsReviewed={
+          reviewerAnalytics?.metadata?.totalQuestionsReviewed
+        }
+      />
 
-      {/* Stack layout with compact spacing */}
       <div className="space-y-1.5">
-        {/* Feature Access Overview */}
-        <CollapsibleSection
-          title="Feature Access Overview"
-          icon="eye"
+        <AdminFeatureAccess
           isCollapsed={collapsed.featureAccess}
           onToggle={() => toggleSection("featureAccess")}
-          variant="blue"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-800/50 p-4 rounded border border-blue-500/30">
-              <h3 className="text-sm font-bold text-blue-400 mb-3">
-                🔍 Reviewers (Limited Access)
-              </h3>
-              <ul className="space-y-2 text-xs text-slate-300">
-                <li className="flex items-center gap-2">
-                  <Icon
-                    name="list-checks"
-                    size={12}
-                    className="text-blue-400"
-                  />
-                  Review Mode (view & approve questions)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="database" size={12} className="text-blue-400" />
-                  Database View (Extended Access)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon
-                    name="bar-chart-2"
-                    size={12}
-                    className="text-blue-400"
-                  />
-                  Analytics Dashboard
-                </li>
-                <li className="flex items-center gap-2 text-slate-500">
-                  <Icon name="x" size={12} className="text-red-400" />
-                  <span className="line-through">Create Questions</span>
-                </li>
-                <li className="flex items-center gap-2 text-slate-500">
-                  <Icon name="x" size={12} className="text-red-400" />
-                  <span className="line-through">Admin Panel</span>
-                </li>
-              </ul>
-            </div>
+        />
 
-            <div className="bg-slate-800/50 p-4 rounded border border-purple-500/30">
-              <h3 className="text-sm font-bold text-purple-400 mb-3">
-                👑 Admins (Full Access)
-              </h3>
-              <ul className="space-y-2 text-xs text-slate-300">
-                <li className="flex items-center gap-2">
-                  <Icon name="check" size={12} className="text-purple-400" />
-                  All Reviewer Features
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon
-                    name="plus-circle"
-                    size={12}
-                    className="text-purple-400"
-                  />
-                  Create Mode (generate questions)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon
-                    name="clipboard-list"
-                    size={12}
-                    className="text-purple-400"
-                  />
-                  Test View (experimental features)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="terminal" size={12} className="text-purple-400" />
-                  Prompt Lab (AI testing)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="shield" size={12} className="text-purple-400" />
-                  Admin Panel (user management)
-                </li>
-                <li className="flex items-center gap-2">
-                  <Icon name="database" size={12} className="text-purple-400" />
-                  Database Editing (full CRUD)
-                </li>
-              </ul>
-            </div>
-          </div>
-        </CollapsibleSection>
+        {/* System Health Diagnostic - Super Admin Only */}
+        {isSuperAdmin && (
+          <AdminSection label="System Health">
+            <SystemHealth
+              isCollapsed={collapsed.systemHealth}
+              onToggle={() => toggleSection("systemHealth")}
+            />
+          </AdminSection>
+        )}
 
-        {/* System Health Diagnostic */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading System Health...</p>
-            </div>
-          }
-        >
-          <SystemHealth
-            isCollapsed={collapsed.systemHealth}
-            onToggle={() => toggleSection("systemHealth")}
-          />
-        </React.Suspense>
-
-        {/* Invite Management - Extracted Component */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading Invite Management...</p>
-            </div>
-          }
-        >
+        {/* Invite Management */}
+        <AdminSection label="Invite Management">
           <InviteManagement
             invites={invites}
             onRefresh={refreshInvites}
@@ -361,44 +130,28 @@ const AdminPanel = ({
             isLoading={invitesLoading}
             onToggle={() => {
               toggleSection("inviteManagement");
-              // PERFORMANCE: Load invites when section is expanded
               if (collapsed.inviteManagement) loadInvites();
             }}
           />
-        </React.Suspense>
+        </AdminSection>
 
         {/* Registered Users List */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading Users...</p>
-            </div>
-          }
-        >
+        <AdminSection label="Users">
           <UserList
             users={users}
             isCollapsed={collapsed.registeredUsers}
             isLoading={usersLoading}
             onToggle={() => {
               toggleSection("registeredUsers");
-              // PERFORMANCE: Load users when section is expanded
               if (collapsed.registeredUsers) loadUsers();
             }}
             handleChangeRole={handleChangeRole}
             handleRevokeUser={handleRevokeUser}
           />
-        </React.Suspense>
+        </AdminSection>
 
         {/* Reviewer Activity Analytics */}
-        <React.Suspense
-          fallback={
-            <div className="p-8 text-center text-slate-400">
-              <Icon name="loader" className="animate-spin mb-2 mx-auto" />
-              Loading Analytics...
-            </div>
-          }
-        >
+        <AdminSection label="Analytics">
           <ReviewerAnalytics
             reviewerAnalytics={reviewerAnalytics}
             analyticsLoading={analyticsLoading}
@@ -412,48 +165,30 @@ const AdminPanel = ({
               if (collapsed.reviewerActivity) loadReviewerAnalytics();
             }}
           />
-        </React.Suspense>
+        </AdminSection>
 
-        {/* Audit Logs */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading Audit Logs...</p>
-            </div>
-          }
-        >
-          <AuditLogs
-            isCollapsed={collapsed.auditLogs}
-            onToggle={() => toggleSection("auditLogs")}
-          />
-        </React.Suspense>
+        {/* Audit Logs - Super Admin Only */}
+        {isSuperAdmin && (
+          <AdminSection label="Audit Logs">
+            <AuditLogs
+              isCollapsed={collapsed.auditLogs}
+              onToggle={() => toggleSection("auditLogs")}
+            />
+          </AdminSection>
+        )}
 
-        {/* Custom Tags - Extracted Component */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading Custom Tags...</p>
-            </div>
-          }
-        >
+        {/* Custom Tags */}
+        <AdminSection label="Custom Tags">
           <CustomTagsEditor
             customTags={customTags}
             onSaveCustomTags={onSaveCustomTags}
             isCollapsed={collapsed.customTags}
             onToggle={() => toggleSection("customTags")}
           />
-        </React.Suspense>
+        </AdminSection>
 
         {/* API Configuration */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              Loading Config...
-            </div>
-          }
-        >
+        <AdminSection label="Config">
           <ApiConfig
             config={config}
             onChange={safeHandleChange}
@@ -463,67 +198,50 @@ const AdminPanel = ({
             onToggle={() => toggleSection("apiConfig")}
             uiLabels={UI_LABELS}
           />
-        </React.Suspense>
+        </AdminSection>
 
-        {/* Environment Info - Extracted Component */}
-        <React.Suspense
-          fallback={
-            <div className="p-4 text-center text-slate-500">
-              <Icon name="loader" className="animate-spin mb-2" />
-              <p>Loading Environment Info...</p>
-            </div>
-          }
-        >
-          <EnvironmentInfo
-            showMessage={showMessage}
-            isCollapsed={collapsed.envInfo}
-            onToggle={() => toggleSection("envInfo")}
-          />
-        </React.Suspense>
+        {/* Environment Info - Super Admin Only */}
+        {isSuperAdmin && (
+          <AdminSection label="Environment Info">
+            <EnvironmentInfo
+              showMessage={showMessage}
+              isCollapsed={collapsed.envInfo}
+              onToggle={() => toggleSection("envInfo")}
+            />
+          </AdminSection>
+        )}
 
         {/* Training Data Export - Super Admin Only */}
         {isSuperAdmin && (
-          <React.Suspense
-            fallback={
-              <div className="p-4 text-center text-slate-500">
-                <Icon name="loader" className="animate-spin mb-2" />
-                <p>Loading Training Data...</p>
-              </div>
-            }
-          >
+          <AdminSection label="Training Data">
             <TrainingDataExport
               isCollapsed={collapsed.trainingData}
               onToggle={() => toggleSection("trainingData")}
               showMessage={showMessage}
             />
-          </React.Suspense>
+          </AdminSection>
         )}
 
         {/* Database Management - Super Admin Only */}
         {isSuperAdmin && (
-          <DatabaseManagement
-            showMessage={showMessage}
-            isCollapsed={collapsed.databaseMgmt}
-            onToggle={() => toggleSection("databaseMgmt")}
-          />
+          <AdminSection label="Database Management">
+            <DatabaseManagement
+              showMessage={showMessage}
+              isCollapsed={collapsed.databaseMgmt}
+              onToggle={() => toggleSection("databaseMgmt")}
+            />
+          </AdminSection>
         )}
 
         {/* Data Maintenance - Super Admin Only */}
         {isSuperAdmin && (
-          <React.Suspense
-            fallback={
-              <div className="p-4 text-center text-slate-500">
-                <Icon name="loader" className="animate-spin mb-2" />
-                <p>Loading Data Maintenance...</p>
-              </div>
-            }
-          >
+          <AdminSection label="Data Maintenance">
             <DataMaintenance
               showMessage={showMessage}
               isCollapsed={collapsed.dataMaintenance}
               onToggle={() => toggleSection("dataMaintenance")}
             />
-          </React.Suspense>
+          </AdminSection>
         )}
       </div>
     </div>

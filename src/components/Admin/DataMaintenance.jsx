@@ -27,6 +27,7 @@ import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { logger } from "../../utils/logger";
 import { normalizeStatus } from "../../utils/questionHelpers";
+import { TOAST_DURATION } from "../../utils/constants";
 
 const db = getFirestore(app);
 
@@ -532,14 +533,17 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
       if (dryRun) {
         showMessage(
           `🔍 DRY RUN: ${result.total} questions would be updated`,
-          5000
+          TOAST_DURATION.EXTENDED
         );
       } else {
-        showMessage(`✅ Updated ${result.updated} questions`, 5000);
+        showMessage(
+          `✅ Updated ${result.updated} questions`,
+          TOAST_DURATION.EXTENDED
+        );
       }
     } catch (error) {
       logger.error("Backfill failed:", error);
-      showMessage(`❌ Failed: ${error.message}`, 5000);
+      showMessage(`❌ Failed: ${error.message}`, TOAST_DURATION.EXTENDED);
     } finally {
       setProcessing(false);
       setProgress("");
@@ -557,17 +561,17 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
       if (dryRun) {
         showMessage(
           `🔍 DRY RUN: ${result.total} questions would be updated`,
-          5000
+          TOAST_DURATION.EXTENDED
         );
       } else {
         showMessage(
           `✅ Updated ${result.updated}, Failed ${result.failed || 0}`,
-          5000
+          TOAST_DURATION.EXTENDED
         );
       }
     } catch (error) {
       logger.error("Backfill failed:", error);
-      showMessage(`❌ Failed: ${error.message}`, 5000);
+      showMessage(`❌ Failed: ${error.message}`, TOAST_DURATION.EXTENDED);
     } finally {
       setProcessing(false);
       setProgress("");
@@ -585,14 +589,17 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
       if (dryRun) {
         showMessage(
           `🔍 DRY RUN: ${result.total} questions would be updated`,
-          5000
+          TOAST_DURATION.EXTENDED
         );
       } else {
-        showMessage(`✅ Updated ${result.updated} verifier names`, 5000);
+        showMessage(
+          `✅ Updated ${result.updated} verifier names`,
+          TOAST_DURATION.EXTENDED
+        );
       }
     } catch (error) {
       logger.error("Verifier backfill failed:", error);
-      showMessage(`❌ Failed: ${error.message}`, 5000);
+      showMessage(`❌ Failed: ${error.message}`, TOAST_DURATION.EXTENDED);
     } finally {
       setProcessing(false);
       setProgress("");
@@ -610,17 +617,17 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
       if (dryRun) {
         showMessage(
           `🔍 DRY RUN: ${result.total} questions would be kicked back to pending`,
-          5000
+          TOAST_DURATION.EXTENDED
         );
       } else {
         showMessage(
           `✅ Kicked back ${result.updated} questions to pending for re-review`,
-          5000
+          TOAST_DURATION.EXTENDED
         );
       }
     } catch (error) {
       logger.error("Kick back failed:", error);
-      showMessage(`❌ Failed: ${error.message}`, 5000);
+      showMessage(`❌ Failed: ${error.message}`, TOAST_DURATION.EXTENDED);
     } finally {
       setProcessing(false);
       setProgress("");
@@ -638,17 +645,17 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
       if (dryRun) {
         showMessage(
           `🔍 DRY RUN: ${result.total} verified questions need AI scores`,
-          5000
+          TOAST_DURATION.EXTENDED
         );
       } else {
         showMessage(
           `✅ Added AI scores to ${result.updated} questions (${result.failed} failed). Verification data preserved!`,
-          5000
+          TOAST_DURATION.EXTENDED
         );
       }
     } catch (error) {
       logger.error("AI Score backfill failed:", error);
-      showMessage(`❌ Failed: ${error.message}`, 5000);
+      showMessage(`❌ Failed: ${error.message}`, TOAST_DURATION.EXTENDED);
     } finally {
       setProcessing(false);
       setProgress("");
@@ -666,17 +673,17 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
       if (dryRun) {
         showMessage(
           `🔍 DRY RUN: ${result.total} kicked-back questions would be restored`,
-          5000
+          TOAST_DURATION.EXTENDED
         );
       } else {
         showMessage(
           `✅ Restored ${result.updated} questions to accepted with AI scores (${result.failed} failed)`,
-          5000
+          TOAST_DURATION.EXTENDED
         );
       }
     } catch (error) {
       logger.error("Restore failed:", error);
-      showMessage(`❌ Failed: ${error.message}`, 5000);
+      showMessage(`❌ Failed: ${error.message}`, TOAST_DURATION.EXTENDED);
     } finally {
       setProcessing(false);
       setProgress("");
@@ -692,17 +699,39 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
       const result = await repairStatuses(setProgress, dryRun);
       setLastResult(result);
       if (dryRun) {
-        showMessage(`🔍 DRY RUN: ${result.total} questions need repair`, 5000);
+        showMessage(
+          `🔍 DRY RUN: ${result.total} questions need repair`,
+          TOAST_DURATION.EXTENDED
+        );
       } else {
-        showMessage(`✅ Repaired ${result.updated} questions!`, 5000);
+        showMessage(
+          `✅ Repaired ${result.updated} questions!`,
+          TOAST_DURATION.EXTENDED
+        );
       }
     } catch (error) {
       logger.error("Repair failed:", error);
-      showMessage(`❌ Failed: ${error.message}`, 5000);
+      showMessage(`❌ Failed: ${error.message}`, TOAST_DURATION.EXTENDED);
     } finally {
       setProcessing(false);
       setProgress("");
     }
+  };
+
+  // Defensive rendering for lastResult and progress
+  const progressText =
+    typeof progress === "string" ? progress : JSON.stringify(progress);
+
+  const getResultText = () => {
+    if (!lastResult || typeof lastResult !== "object")
+      return String(lastResult);
+    if (lastResult.dryRun) {
+      return `🔍 DRY RUN: Would update ${lastResult.total || 0} questions`;
+    }
+    const failedText = lastResult.failed
+      ? ` (${lastResult.failed} failed)`
+      : "";
+    return `✅ Updated ${lastResult.updated || 0} questions${failedText}`;
   };
 
   return (
@@ -718,16 +747,14 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
         {processing && (
           <div className="flex items-center gap-2 p-3 bg-amber-950/30 border border-amber-500/30 rounded">
             <Icon name="loader" className="animate-spin text-amber-400" />
-            <span className="text-sm text-amber-200">{progress}</span>
+            <span className="text-sm text-amber-200">{progressText}</span>
           </div>
         )}
 
         {/* Last result */}
         {lastResult && !processing && (
           <div className="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded text-sm text-emerald-200">
-            {lastResult.dryRun
-              ? `🔍 DRY RUN: Would update ${lastResult.total} questions`
-              : `✅ Updated ${lastResult.updated} questions`}
+            {getResultText()}
           </div>
         )}
         {/* STATUS REPAIR TOOL (CRITICAL) - Fixes "Other" Statuses */}
@@ -941,11 +968,7 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             <button
               onClick={async () => {
                 setProcessing(true);
-                setProgress({
-                  current: 0,
-                  total: 0,
-                  message: "Loading questions...",
-                });
+                setProgress("Loading questions...");
                 try {
                   const snapshot = await getDocs(collection(db, "questions"));
                   const urlStats = {
@@ -987,11 +1010,7 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
                   });
 
                   const msg = `✅ Valid: ${urlStats.valid} | ⚠️ Invalid: ${urlStats.invalid} | ❌ Missing: ${urlStats.missing}`;
-                  setProgress({
-                    current: snapshot.size,
-                    total: snapshot.size,
-                    message: msg,
-                  });
+                  setProgress(msg);
 
                   if (urlStats.suspicious.length > 0) {
                     logger.log("Suspicious URLs found:", urlStats.suspicious);
@@ -1002,11 +1021,7 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
                     alert(`Source Audit Complete:\n${msg}`);
                   }
                 } catch (err) {
-                  setProgress({
-                    current: 0,
-                    total: 0,
-                    message: `Error: ${err.message}`,
-                  });
+                  setProgress(`Error: ${err.message}`);
                 }
                 setProcessing(false);
               }}

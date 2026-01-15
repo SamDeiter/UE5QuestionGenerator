@@ -1,56 +1,54 @@
-# Implementation Plan: "Other" Status Triage and Loading Speed Optimization
+# Implementation Plan for Admin Panel Cleanup
 
-## Objective
+## Overview
 
-1. Identify the origin of 121 "Other" status questions (e.g., "deleted", "Success", "Error") and implement measures to triage and prevent them.
-2. Improve site loading speed by optimizing data fetching and enabling local persistence.
+The goal is to modernize the admin panel UI, improve code quality, ensure accessibility, and maintain SCORM 1.2 compatibility. The plan follows Antigravity’s three‑phase workflow (Planning → Execution → Verification) and adheres to all mandatory reviews (Security, Quality, Accessibility).
 
-## Proposed Changes
+## Phase A: Planning & Artifacts (Completed)
 
-### 1. Investigation of Import Logic
+- **Task List**: `task.md` created with granular tasks.
+- **Implementation Plan**: This document (generated now).
+- **Human Approval Required**: Await user confirmation before any code changes.
 
-- **File**: `src/services/googleSheets.js`
-- **Action**: Analyze how status is mapped during import. Look for potential column mismatch or script artifacts.
-- **File**: `Code.gs` (Google Apps Script)
-- **Action**: Check if any automation in the sheet itself is writing "Success" or "Error" into the status column.
+## Phase B: Execution Steps (Atomic Commits)
 
-### 2. Enhancing Diagnostic Logs
+| Step | Description | Files Affected | Sub‑tasks | Tests | Commit Message |
+|------|-------------|----------------|----------|-------|----------------|
+| 1 | **Audit Existing Components** – Identify dead code, duplicated logic, and styling inconsistencies. | `src/components/Admin/AdminPanel.jsx`, `src/components/Admin/AdminInviteManager.jsx` | Run ESLint, search for `console.log`, unused imports. | None (static analysis) | `chore: audit admin components` |
+| 2 | **Design Refresh – CSS Tokens** – Add design tokens for glassmorphism, gradients, dark‑mode, and typography (Inter). | `src/index.css` | Define `--color-primary`, `--bg-glass`, `--shadow-elevated`. Import Google Font in `index.html`. | Visual regression test (Storybook snapshot). | `feat: add design tokens & Inter font` |
+| 3 | **Refactor AdminPanel** – Split into smaller components (<150 lines). Create `AdminHeader.jsx`, `AdminSidebar.jsx`, `AdminContent.jsx`. | New files under `src/components/Admin/` | Extract UI sections, move state to hooks. | Unit tests for each component. | `refactor: split AdminPanel into sub‑components` |
+| 4 | **Refactor AdminInviteManager** – Move business logic to custom hook `useAdminInvite`. | New hook `src/hooks/admin/useAdminInvite.js` | API calls, loading state, error handling. | Hook unit tests with mock fetch. | `refactor: extract invite logic to hook` |
+| 5 | **Accessibility Improvements** – Add ARIA labels, keyboard navigation, focus outlines, ensure color contrast. | Updated component files, CSS tokens. | Use axe-core for automated audit. | Accessibility test suite. | `feat: improve admin panel accessibility` |
+| 6 | **SCORM 1.2 Compatibility Check** – Verify any new assets (fonts, images) are referenced in `scormmanifest.xml`. | `scormmanifest.xml` (if exists) | Add `<resource>` entries for new CSS/JS. | None (manual verification). | `chore: update SCORM manifest` |
+| 7 | **Testing** – Write Jest/Vitest tests for new components and hooks. Achieve ≥90% coverage. | `src/__tests__/admin/*` | Mock API, snapshot testing. | Run `npm test`. | `test: add admin panel unit tests` |
+| 8 | **Documentation** – Update `README.md` and create `docs/admin_panel_cleanup.md` with before/after screenshots and design rationale. | `README.md`, `docs/admin_panel_cleanup.md` | Generate screenshots via browser sub‑agent. | None. | `docs: add admin panel cleanup walkthrough` |
+| 9 | **Git Workflow** – After each step, commit, push, and tag version bump in `package.json`. | `package.json` | Increment patch version. | None. | `chore: bump version to x.x.x` |
 
-- **File**: `src/hooks/useFiltering.js`
-- **Action**: Ensure that non-standard statuses are logged with their `uniqueId` to facilitate manual triage.
+## Phase C: Verification (Deliverables)
 
-### 3. Cleanup Script
+- **Walkthrough**: `walkthrough.md` summarizing changes, screenshots, and performance metrics.
+- **Browser Recordings**: Video of admin panel UI before and after.
+- **Screenshots**: High‑resolution before/after images.
+- **Test Results**: Output of `npm test` with coverage report.
+- **Accessibility Report**: Axe audit JSON with zero violations.
 
-- **File**: `scripts/cleanup_other_statuses.py` (New)
-- **Action**: A Python script using Firebase Admin SDK (if available) or service account to list and potentially bulk-delete these records if they are confirmed as orphans.
+## Security Review Checklist
 
-### 4. Import Hardening
+- No API keys or secrets are hard‑coded; all env vars accessed via `import.meta.env`.
+- Input sanitization for invite email fields using a whitelist regex.
+- All network requests use HTTPS.
 
-- **File**: `src/utils/questionHelpers.js`
-- **Action**: Add a strict status validation/normalization step during parsing.
+## Quality Review Checklist
 
-### 5. Site Loading Speed Optimization
+- Code follows PEP‑8‑style for JS/TS (eslint‑airbnb) and the project’s `code-style-guide.md`.
+- Lint passes with `npm run lint`.
+- Unit test coverage ≥90%.
 
-- **File**: `src/services/firebaseSave.js` or `src/services/firebaseAuth.js`
-- **Action**: Enable Firestore IndexedDB persistence to cache data locally.
-- **File**: `src/App.jsx`
-- **Action**: Modify the auto-load logic to fetch questions incrementally or defer the full fetch if not in Database/Analytics mode.
-- **File**: `src/services/firebaseQueries.js`
-- **Action**: Implement paginated fetching (`getQuestionsPaginated`) for the initial load.
-- **File**: `src/hooks/useFiltering.js`
-- **Action**: Further optimize `useMemo` hooks to avoid expensive recalculations of the entire dataset when only config changes.
+## Accessibility Review Checklist
 
-## Risk Assessment
+- All interactive elements have `role` and `aria-label` where needed.
+- Keyboard focus order logical.
+- Contrast ratios ≥4.5:1 (AA).
 
-- **Risk**: Accidentally deleting valid questions that were incorrectly tagged.
-- **Mitigation**: Always perform a 'dry run' list first and present the findings to the user before deletion.
-- **Risk**: Breaking existing imports if status mapping is fragile.
-- **Mitigation**: Ensure normalization handles "Success" by mapping it to "accepted" (if that's what it means) or "pending".
-- **Risk**: Pagination might cause temporary data inconsistency (e.g., total counts not matching visible items).
-- **Mitigation**: Ensure summary counts (metadata) are fetched separately or derived from the full local cache if persistence is enabled.
-
-## Verification Plan
-
-- **Performance**: Run Lighthouse before and after the fix.
-- **Automated**: Run unit tests on `questionHelpers.js`.
-- **Manual**: Use the "Other" filter in the app (if running) or via the cleanup script to verify the counts.
+---
+**Next Step**: Await your approval to proceed with the execution phase.

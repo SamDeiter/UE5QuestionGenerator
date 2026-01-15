@@ -17,6 +17,7 @@ import {
   downloadAllTrainingData,
 } from "../../services/trainingDataService";
 import { logger } from "../../utils/logger";
+import { TOAST_DURATION } from "../../utils/constants";
 
 const TrainingDataExport = ({ isCollapsed, onToggle, showMessage }) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -30,13 +31,16 @@ const TrainingDataExport = ({ isCollapsed, onToggle, showMessage }) => {
       if (showMessage) {
         showMessage(
           `✅ Exported ${result.count} correction pairs as JSONL`,
-          3000
+          TOAST_DURATION.LONG
         );
       }
     } catch (error) {
       logger.error("Export failed:", error);
       if (showMessage) {
-        showMessage(`❌ Export failed: ${error.message}`, 5000);
+        showMessage(
+          `❌ Export failed: ${error.message}`,
+          TOAST_DURATION.EXTENDED
+        );
       }
     } finally {
       setIsExporting(false);
@@ -52,13 +56,16 @@ const TrainingDataExport = ({ isCollapsed, onToggle, showMessage }) => {
       if (showMessage) {
         showMessage(
           `✅ Exported ${result.count} total records (${result.corrections} corrections, ${result.rejected} rejected)`,
-          5000
+          TOAST_DURATION.EXTENDED
         );
       }
     } catch (error) {
       logger.error("Export failed:", error);
       if (showMessage) {
-        showMessage(`❌ Export failed: ${error.message}`, 5000);
+        showMessage(
+          `❌ Export failed: ${error.message}`,
+          TOAST_DURATION.EXTENDED
+        );
       }
     } finally {
       setIsExporting(false);

@@ -1,6 +1,22 @@
 import Icon from "./Icon";
 
 /**
+ * Generic loading spinner for Suspense fallbacks.
+ *
+ * @param {string} [label='Loading'] - Accessible label for screen readers.
+ */
+export const LoadingSpinner = ({ label = "Loading" }) => (
+  <div
+    className="p-4 text-center text-slate-500"
+    role="status"
+    aria-live="polite"
+  >
+    <Icon name="loader" className="animate-spin mb-2" />
+    <p>{label}...</p>
+  </div>
+);
+
+/**
  * Full-page loading spinner for auth/route loading states.
  * Centers a large animated spinner in the viewport.
  */
