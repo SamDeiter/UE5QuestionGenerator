@@ -32,6 +32,7 @@ import {
   clearAllQuestionsFromFirestore,
   deleteSoftDeletedQuestionsFromFirestore,
 } from "../../services/firebaseQueries";
+import { calculateReviewerAverageScore } from "../../utils/reviewerAnalytics";
 
 const db = getFirestore(app);
 
@@ -498,6 +499,79 @@ async function backfillTags(onProgress, dryRun = false) {
   return { updated, failed, total: needsTags.length, dryRun: false };
 }
 
+/**
+ * Backfill average scores for rejected questions
+ */
+async function backfillAverageScores(onProgress, dryRun = false) {
+  const snapshot = await getDocs(collection(db, "questions"));
+  const allQuestions = [];
+  snapshot.forEach((docSnap) =>
+    allQuestions.push({ id: docSnap.id, ...docSnap.data() })
+  );
+
+  const needsUpdate = [];
+  const reviewerCache = new Map();
+
+  allQuestions.forEach((q) => {
+    if (
+      q.status === "rejected" &&
+      (q.critiqueScore === null || q.critiqueScore === undefined)
+    ) {
+      const reviewerName =
+        q.reviewerName ||
+        q.acceptedBy ||
+        q.creatorEmail ||
+        q.creatorName ||
+        "Unknown";
+      if (!reviewerCache.has(reviewerName)) {
+        reviewerCache.set(
+          reviewerName,
+          calculateReviewerAverageScore(reviewerName, allQuestions)
+        );
+      }
+      const { averageScore, totalScored } = reviewerCache.get(reviewerName);
+      if (totalScored >= 10 && averageScore !== null) {
+        needsUpdate.push({
+          id: q.id,
+          score: averageScore,
+          reviewerName,
+          totalScored,
+        });
+      }
+    }
+  });
+
+  onProgress(
+    `Found ${needsUpdate.length} rejected questions to backfill average scores`
+  );
+
+  if (dryRun || needsUpdate.length === 0) {
+    return { updated: 0, total: needsUpdate.length, dryRun };
+  }
+
+  const batchSize = BATCH_SIZE_DEFAULT;
+  let updated = 0;
+
+  for (let i = 0; i < needsUpdate.length; i += batchSize) {
+    const batch = writeBatch(db);
+    const chunk = needsUpdate.slice(i, i + batchSize);
+    chunk.forEach((item) => {
+      const ref = doc(db, "questions", String(item.id));
+      batch.update(ref, {
+        critiqueScore: item.score,
+        _backfilledAverage: true,
+        _backfilledAt: new Date().toISOString(),
+        _basedOnCount: item.totalScored,
+      });
+    });
+    await batch.commit();
+    updated += chunk.length;
+    onProgress(`Updated ${updated}/${needsUpdate.length}...`);
+  }
+
+  return { updated, total: needsUpdate.length, dryRun: false };
+}
+
 // Sub-component for individual maintenance actions
 const MaintenanceActionCard = ({
   title,
@@ -790,6 +864,25 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             onExecute={(dr) =>
               runMaintenanceTask("Backfill Tags", () =>
                 backfillTags(setProgress, dr)
+              )
+            }
+            executeLabel="Run Backfill"
+            processing={processing}
+          />
+
+          <MaintenanceActionCard
+            title="Backfill Average Scores"
+            icon="calculator"
+            iconColor="text-pink-400"
+            description="Apply reviewer average scores to rejected questions missing a score."
+            onDryRun={(dr) =>
+              runMaintenanceTask("Backfill Averages", () =>
+                backfillAverageScores(setProgress, dr)
+              )
+            }
+            onExecute={(dr) =>
+              runMaintenanceTask("Backfill Averages", () =>
+                backfillAverageScores(setProgress, dr)
               )
             }
             executeLabel="Run Backfill"
