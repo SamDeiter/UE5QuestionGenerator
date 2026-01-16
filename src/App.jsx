@@ -12,7 +12,7 @@ import ToastContainer from "./components/ToastContainer";
 import Footer from "./components/Footer";
 import SignIn from "./components/SignIn";
 import InviteSignUp from "./components/InviteSignUp";
-import ApiKeyModal from "./components/ApiKeyModal";
+// ApiKeyModal moved to GlobalModals - lazy loaded when needed
 import ConflictModal from "./components/ConflictModal";
 import { getInviteFromUrl } from "./services/inviteService";
 import { refreshAuthToken } from "./services/firebaseAuth";
@@ -75,7 +75,7 @@ const App = () => {
     markAsRegistered,
     customTags,
     handleSaveCustomTags,
-    tokenUsage,
+    // tokenUsage available from useAuth but not currently needed
     showTerms,
     setShowTerms,
     showAgeGate,

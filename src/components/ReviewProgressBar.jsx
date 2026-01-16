@@ -178,11 +178,12 @@ const ReviewProgressBar = ({
       ready: critiquePass,
       locked: !critiquePass, // Re-locked: must finish critique/refinement first
       broken: !isEpicLink(q.sourceUrl || q.SourceURL || q.SourceUrl),
-      icon: isVerified
-        ? "check"
-        : isEpicLink(q.sourceUrl || q.SourceURL || q.SourceUrl)
-        ? "eye"
-        : "alert-circle",
+      icon: (() => {
+        if (isVerified) return "check";
+        return isEpicLink(q.sourceUrl || q.SourceURL || q.SourceUrl)
+          ? "eye"
+          : "alert-circle";
+      })(),
       onClick: onVerify,
     },
     {

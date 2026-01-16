@@ -1,9 +1,8 @@
 import { useState } from "react";
 import Icon from "../Icon";
-import FlagIcon from "../FlagIcon";
+// FlagIcon available but emoji used instead for simplicity
 import ScoreBadge from "../ScoreBadge";
-import { useThemeColors } from "../../hooks/useThemeColors";
-import { LANGUAGE_CODES, QUESTION_DIFFICULTY } from "../../utils/constants";
+import { QUESTION_DIFFICULTY } from "../../utils/constants";
 
 /**
  * Normalize difficulty value - handles legacy "BALANCED ALL" and other invalid values
@@ -51,9 +50,9 @@ const QuestionHeader = ({
   onOpenCritiqueModal,
   onUpdateQuestion, // NEW: Callback to save difficulty changes
 }) => {
-  const { actionColor } = useThemeColors();
+  // Theme colors available via useThemeColors() if needed
   const displayDifficulty = normalizeDifficulty(q.difficulty);
-  const lang = q.language || "English";
+  // Language available via q.language if needed
   const [isEditingDifficulty, setIsEditingDifficulty] = useState(false);
 
   const handleDifficultyChange = async (newDifficulty) => {

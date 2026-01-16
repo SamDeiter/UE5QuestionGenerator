@@ -1,0 +1,1575 @@
+
+> ue5-question-generator@2.3.2 lint
+> eslint .
+
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\ai\generateCritique.js
+   25:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100                                                             max-lines-per-function
+   25:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+   39:21  warning  No magic number: 0.2                                                                                                              no-magic-numbers
+  147:75  warning  No magic number: 2                                                                                                                no-magic-numbers
+  166:17  warning  Async arrow function has too many lines (194). Maximum allowed is 100                                                             max-lines-per-function
+  166:39  warning  Refactor this function to reduce its Cognitive Complexity from 31 to the 20 allowed                                               sonarjs/cognitive-complexity
+  166:39  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                                                                complexity
+  321:35  warning  No magic number: 404                                                                                                              no-magic-numbers
+  358:11  error    Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  367:42  warning  No magic number: 100                                                                                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\ai\generateQuestions.js
+   25:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100  max-lines-per-function
+   25:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15     complexity
+   39:21  warning  No magic number: 0.2                                                   no-magic-numbers
+  147:75  warning  No magic number: 2                                                     no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\email\sendReviewerInvites.js
+   47:17  warning  Async arrow function has too many lines (152). Maximum allowed is 100                max-lines-per-function
+   47:39  warning  Refactor this function to reduce its Cognitive Complexity from 22 to the 20 allowed  sonarjs/cognitive-complexity
+   47:39  warning  Async arrow function has a complexity of 22. Maximum allowed is 15                   complexity
+  115:42  warning  No magic number: 1000                                                                no-magic-numbers
+  115:49  warning  No magic number: 60                                                                  no-magic-numbers
+  115:54  warning  No magic number: 60                                                                  no-magic-numbers
+  115:59  warning  No magic number: 24                                                                  no-magic-numbers
+  125:32  error    Extract this nested ternary operation into an independent statement                  sonarjs/no-nested-conditional
+  213:60  warning  No magic number: 100                                                                 no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\invites\consumeInvite.js
+   20:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100                                                             max-lines-per-function
+   20:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+   34:21  warning  No magic number: 0.2                                                                                                              no-magic-numbers
+  142:75  warning  No magic number: 2                                                                                                                no-magic-numbers
+  160:17  warning  Async arrow function has too many lines (194). Maximum allowed is 100                                                             max-lines-per-function
+  160:39  warning  Refactor this function to reduce its Cognitive Complexity from 31 to the 20 allowed                                               sonarjs/cognitive-complexity
+  160:39  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                                                                complexity
+  315:35  warning  No magic number: 404                                                                                                              no-magic-numbers
+  352:11  error    Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  361:42  warning  No magic number: 100                                                                                                              no-magic-numbers
+  408:30  warning  No magic number: 60                                                                                                               no-magic-numbers
+  408:35  warning  No magic number: 1000                                                                                                             no-magic-numbers
+  425:38  warning  No magic number: 10                                                                                                               no-magic-numbers
+  485:17  warning  Async arrow function has too many lines (114). Maximum allowed is 100                                                             max-lines-per-function
+  485:39  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed                                               sonarjs/cognitive-complexity
+  485:39  warning  Async arrow function has a complexity of 25. Maximum allowed is 15                                                                complexity
+  500:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  503:32  warning  No magic number: 8                                                                                                                no-magic-numbers
+  536:62  warning  No magic number: 60000                                                                                                            no-magic-numbers
+  545:36  warning  No magic number: 5                                                                                                                no-magic-numbers
+  549:39  warning  No magic number: 60                                                                                                               no-magic-numbers
+  549:44  warning  No magic number: 60                                                                                                               no-magic-numbers
+  549:49  warning  No magic number: 1000                                                                                                             no-magic-numbers
+  639:17  warning  Async arrow function has too many lines (116). Maximum allowed is 100                                                             max-lines-per-function
+  639:39  warning  Async arrow function has a complexity of 23. Maximum allowed is 15                                                                complexity
+  656:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\invites\createInvite.js
+   24:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100                                                             max-lines-per-function
+   24:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+   38:21  warning  No magic number: 0.2                                                                                                              no-magic-numbers
+  146:75  warning  No magic number: 2                                                                                                                no-magic-numbers
+  164:17  warning  Async arrow function has too many lines (194). Maximum allowed is 100                                                             max-lines-per-function
+  164:39  warning  Refactor this function to reduce its Cognitive Complexity from 31 to the 20 allowed                                               sonarjs/cognitive-complexity
+  164:39  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                                                                complexity
+  319:35  warning  No magic number: 404                                                                                                              no-magic-numbers
+  356:11  error    Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  365:42  warning  No magic number: 100                                                                                                              no-magic-numbers
+  412:30  warning  No magic number: 60                                                                                                               no-magic-numbers
+  412:35  warning  No magic number: 1000                                                                                                             no-magic-numbers
+  429:38  warning  No magic number: 10                                                                                                               no-magic-numbers
+  489:17  warning  Async arrow function has too many lines (114). Maximum allowed is 100                                                             max-lines-per-function
+  489:39  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed                                               sonarjs/cognitive-complexity
+  489:39  warning  Async arrow function has a complexity of 25. Maximum allowed is 15                                                                complexity
+  504:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  507:32  warning  No magic number: 8                                                                                                                no-magic-numbers
+  540:62  warning  No magic number: 60000                                                                                                            no-magic-numbers
+  549:36  warning  No magic number: 5                                                                                                                no-magic-numbers
+  553:39  warning  No magic number: 60                                                                                                               no-magic-numbers
+  553:44  warning  No magic number: 60                                                                                                               no-magic-numbers
+  553:49  warning  No magic number: 1000                                                                                                             no-magic-numbers
+  642:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+  659:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  771:39  warning  Async arrow function has a complexity of 17. Maximum allowed is 15                                                                complexity
+  790:23  warning  No magic number: 7                                                                                                                no-magic-numbers
+  814:22  warning  No magic number: 9                                                                                                                no-magic-numbers
+  817:23  warning  No magic number: 12                                                                                                               no-magic-numbers
+  823:68  warning  No magic number: 30                                                                                                               no-magic-numbers
+  837:41  warning  No magic number: 200                                                                                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\invites\revokeInvite.js
+   24:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100                                                             max-lines-per-function
+   24:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+   38:21  warning  No magic number: 0.2                                                                                                              no-magic-numbers
+  146:75  warning  No magic number: 2                                                                                                                no-magic-numbers
+  164:17  warning  Async arrow function has too many lines (194). Maximum allowed is 100                                                             max-lines-per-function
+  164:39  warning  Refactor this function to reduce its Cognitive Complexity from 31 to the 20 allowed                                               sonarjs/cognitive-complexity
+  164:39  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                                                                complexity
+  319:35  warning  No magic number: 404                                                                                                              no-magic-numbers
+  356:11  error    Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  365:42  warning  No magic number: 100                                                                                                              no-magic-numbers
+  412:30  warning  No magic number: 60                                                                                                               no-magic-numbers
+  412:35  warning  No magic number: 1000                                                                                                             no-magic-numbers
+  429:38  warning  No magic number: 10                                                                                                               no-magic-numbers
+  489:17  warning  Async arrow function has too many lines (114). Maximum allowed is 100                                                             max-lines-per-function
+  489:39  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed                                               sonarjs/cognitive-complexity
+  489:39  warning  Async arrow function has a complexity of 25. Maximum allowed is 15                                                                complexity
+  504:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  507:32  warning  No magic number: 8                                                                                                                no-magic-numbers
+  540:62  warning  No magic number: 60000                                                                                                            no-magic-numbers
+  549:36  warning  No magic number: 5                                                                                                                no-magic-numbers
+  553:39  warning  No magic number: 60                                                                                                               no-magic-numbers
+  553:44  warning  No magic number: 60                                                                                                               no-magic-numbers
+  553:49  warning  No magic number: 1000                                                                                                             no-magic-numbers
+  642:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+  659:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  770:39  warning  Async arrow function has a complexity of 17. Maximum allowed is 15                                                                complexity
+  789:23  warning  No magic number: 7                                                                                                                no-magic-numbers
+  813:22  warning  No magic number: 9                                                                                                                no-magic-numbers
+  816:23  warning  No magic number: 12                                                                                                               no-magic-numbers
+  822:68  warning  No magic number: 30                                                                                                               no-magic-numbers
+  836:41  warning  No magic number: 200                                                                                                              no-magic-numbers
+  903:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\invites\validateInvite.js
+   20:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100                                                             max-lines-per-function
+   20:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+   34:21  warning  No magic number: 0.2                                                                                                              no-magic-numbers
+  142:75  warning  No magic number: 2                                                                                                                no-magic-numbers
+  160:17  warning  Async arrow function has too many lines (194). Maximum allowed is 100                                                             max-lines-per-function
+  160:39  warning  Refactor this function to reduce its Cognitive Complexity from 31 to the 20 allowed                                               sonarjs/cognitive-complexity
+  160:39  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                                                                complexity
+  315:35  warning  No magic number: 404                                                                                                              no-magic-numbers
+  352:11  error    Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  361:42  warning  No magic number: 100                                                                                                              no-magic-numbers
+  408:30  warning  No magic number: 60                                                                                                               no-magic-numbers
+  408:35  warning  No magic number: 1000                                                                                                             no-magic-numbers
+  425:38  warning  No magic number: 10                                                                                                               no-magic-numbers
+  486:17  warning  Async arrow function has too many lines (114). Maximum allowed is 100                                                             max-lines-per-function
+  486:39  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed                                               sonarjs/cognitive-complexity
+  486:39  warning  Async arrow function has a complexity of 25. Maximum allowed is 15                                                                complexity
+  501:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  504:32  warning  No magic number: 8                                                                                                                no-magic-numbers
+  537:62  warning  No magic number: 60000                                                                                                            no-magic-numbers
+  546:36  warning  No magic number: 5                                                                                                                no-magic-numbers
+  550:39  warning  No magic number: 60                                                                                                               no-magic-numbers
+  550:44  warning  No magic number: 60                                                                                                               no-magic-numbers
+  550:49  warning  No magic number: 1000                                                                                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\migrations\importAIScores.js
+    23:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100                                                             max-lines-per-function
+    23:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+    37:21  warning  No magic number: 0.2                                                                                                              no-magic-numbers
+   145:75  warning  No magic number: 2                                                                                                                no-magic-numbers
+   163:17  warning  Async arrow function has too many lines (194). Maximum allowed is 100                                                             max-lines-per-function
+   163:39  warning  Refactor this function to reduce its Cognitive Complexity from 31 to the 20 allowed                                               sonarjs/cognitive-complexity
+   163:39  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                                                                complexity
+   318:35  warning  No magic number: 404                                                                                                              no-magic-numbers
+   355:11  error    Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+   364:42  warning  No magic number: 100                                                                                                              no-magic-numbers
+   411:30  warning  No magic number: 60                                                                                                               no-magic-numbers
+   411:35  warning  No magic number: 1000                                                                                                             no-magic-numbers
+   428:38  warning  No magic number: 10                                                                                                               no-magic-numbers
+   490:17  warning  Async arrow function has too many lines (114). Maximum allowed is 100                                                             max-lines-per-function
+   490:39  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed                                               sonarjs/cognitive-complexity
+   490:39  warning  Async arrow function has a complexity of 25. Maximum allowed is 15                                                                complexity
+   505:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+   508:32  warning  No magic number: 8                                                                                                                no-magic-numbers
+   541:62  warning  No magic number: 60000                                                                                                            no-magic-numbers
+   550:36  warning  No magic number: 5                                                                                                                no-magic-numbers
+   554:39  warning  No magic number: 60                                                                                                               no-magic-numbers
+   554:44  warning  No magic number: 60                                                                                                               no-magic-numbers
+   554:49  warning  No magic number: 1000                                                                                                             no-magic-numbers
+   643:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+   660:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+   771:39  warning  Async arrow function has a complexity of 17. Maximum allowed is 15                                                                complexity
+   790:23  warning  No magic number: 7                                                                                                                no-magic-numbers
+   814:22  warning  No magic number: 9                                                                                                                no-magic-numbers
+   817:23  warning  No magic number: 12                                                                                                               no-magic-numbers
+   823:68  warning  No magic number: 30                                                                                                               no-magic-numbers
+   837:41  warning  No magic number: 200                                                                                                              no-magic-numbers
+   903:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  1092:47  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1093:43  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1128:44  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1129:29  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1183:16  warning  No magic number: 100                                                                                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\migrations\migrateTranslations.js
+    23:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100                                                             max-lines-per-function
+    23:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+    37:21  warning  No magic number: 0.2                                                                                                              no-magic-numbers
+   145:75  warning  No magic number: 2                                                                                                                no-magic-numbers
+   163:17  warning  Async arrow function has too many lines (194). Maximum allowed is 100                                                             max-lines-per-function
+   163:39  warning  Refactor this function to reduce its Cognitive Complexity from 31 to the 20 allowed                                               sonarjs/cognitive-complexity
+   163:39  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                                                                complexity
+   318:35  warning  No magic number: 404                                                                                                              no-magic-numbers
+   355:11  error    Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+   364:42  warning  No magic number: 100                                                                                                              no-magic-numbers
+   411:30  warning  No magic number: 60                                                                                                               no-magic-numbers
+   411:35  warning  No magic number: 1000                                                                                                             no-magic-numbers
+   428:38  warning  No magic number: 10                                                                                                               no-magic-numbers
+   490:17  warning  Async arrow function has too many lines (114). Maximum allowed is 100                                                             max-lines-per-function
+   490:39  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed                                               sonarjs/cognitive-complexity
+   490:39  warning  Async arrow function has a complexity of 25. Maximum allowed is 15                                                                complexity
+   505:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+   508:32  warning  No magic number: 8                                                                                                                no-magic-numbers
+   541:62  warning  No magic number: 60000                                                                                                            no-magic-numbers
+   550:36  warning  No magic number: 5                                                                                                                no-magic-numbers
+   554:39  warning  No magic number: 60                                                                                                               no-magic-numbers
+   554:44  warning  No magic number: 60                                                                                                               no-magic-numbers
+   554:49  warning  No magic number: 1000                                                                                                             no-magic-numbers
+   643:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+   660:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+   771:39  warning  Async arrow function has a complexity of 17. Maximum allowed is 15                                                                complexity
+   790:23  warning  No magic number: 7                                                                                                                no-magic-numbers
+   814:22  warning  No magic number: 9                                                                                                                no-magic-numbers
+   817:23  warning  No magic number: 12                                                                                                               no-magic-numbers
+   823:68  warning  No magic number: 30                                                                                                               no-magic-numbers
+   837:41  warning  No magic number: 200                                                                                                              no-magic-numbers
+   903:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  1091:47  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1092:43  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1127:44  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1128:29  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1182:16  warning  No magic number: 100                                                                                                              no-magic-numbers
+  1231:16  warning  No magic number: 100                                                                                                              no-magic-numbers
+  1427:17  warning  Async arrow function has too many lines (125). Maximum allowed is 100                                                             max-lines-per-function
+  1543:29  warning  No magic number: 450                                                                                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\src\endpoints\importScores.js
+  35:45  warning  No magic number: 500  no-magic-numbers
+  36:41  warning  No magic number: 500  no-magic-numbers
+  60:52  warning  No magic number: 500  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\users\changeUserRole.js
+    23:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100                                                             max-lines-per-function
+    23:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+    37:21  warning  No magic number: 0.2                                                                                                              no-magic-numbers
+   145:75  warning  No magic number: 2                                                                                                                no-magic-numbers
+   163:17  warning  Async arrow function has too many lines (194). Maximum allowed is 100                                                             max-lines-per-function
+   163:39  warning  Refactor this function to reduce its Cognitive Complexity from 31 to the 20 allowed                                               sonarjs/cognitive-complexity
+   163:39  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                                                                complexity
+   318:35  warning  No magic number: 404                                                                                                              no-magic-numbers
+   355:11  error    Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+   364:42  warning  No magic number: 100                                                                                                              no-magic-numbers
+   411:30  warning  No magic number: 60                                                                                                               no-magic-numbers
+   411:35  warning  No magic number: 1000                                                                                                             no-magic-numbers
+   428:38  warning  No magic number: 10                                                                                                               no-magic-numbers
+   490:17  warning  Async arrow function has too many lines (114). Maximum allowed is 100                                                             max-lines-per-function
+   490:39  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed                                               sonarjs/cognitive-complexity
+   490:39  warning  Async arrow function has a complexity of 25. Maximum allowed is 15                                                                complexity
+   505:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+   508:32  warning  No magic number: 8                                                                                                                no-magic-numbers
+   541:62  warning  No magic number: 60000                                                                                                            no-magic-numbers
+   550:36  warning  No magic number: 5                                                                                                                no-magic-numbers
+   554:39  warning  No magic number: 60                                                                                                               no-magic-numbers
+   554:44  warning  No magic number: 60                                                                                                               no-magic-numbers
+   554:49  warning  No magic number: 1000                                                                                                             no-magic-numbers
+   643:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+   660:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+   771:39  warning  Async arrow function has a complexity of 17. Maximum allowed is 15                                                                complexity
+   790:23  warning  No magic number: 7                                                                                                                no-magic-numbers
+   814:22  warning  No magic number: 9                                                                                                                no-magic-numbers
+   817:23  warning  No magic number: 12                                                                                                               no-magic-numbers
+   823:68  warning  No magic number: 30                                                                                                               no-magic-numbers
+   837:41  warning  No magic number: 200                                                                                                              no-magic-numbers
+   903:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  1091:47  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1092:43  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1127:44  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1128:29  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1182:16  warning  No magic number: 100                                                                                                              no-magic-numbers
+  1231:16  warning  No magic number: 100                                                                                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\users\listRegisteredUsers.js
+    23:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100                                                             max-lines-per-function
+    23:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+    37:21  warning  No magic number: 0.2                                                                                                              no-magic-numbers
+   145:75  warning  No magic number: 2                                                                                                                no-magic-numbers
+   163:17  warning  Async arrow function has too many lines (194). Maximum allowed is 100                                                             max-lines-per-function
+   163:39  warning  Refactor this function to reduce its Cognitive Complexity from 31 to the 20 allowed                                               sonarjs/cognitive-complexity
+   163:39  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                                                                complexity
+   318:35  warning  No magic number: 404                                                                                                              no-magic-numbers
+   355:11  error    Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+   364:42  warning  No magic number: 100                                                                                                              no-magic-numbers
+   411:30  warning  No magic number: 60                                                                                                               no-magic-numbers
+   411:35  warning  No magic number: 1000                                                                                                             no-magic-numbers
+   428:38  warning  No magic number: 10                                                                                                               no-magic-numbers
+   490:17  warning  Async arrow function has too many lines (114). Maximum allowed is 100                                                             max-lines-per-function
+   490:39  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed                                               sonarjs/cognitive-complexity
+   490:39  warning  Async arrow function has a complexity of 25. Maximum allowed is 15                                                                complexity
+   505:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+   508:32  warning  No magic number: 8                                                                                                                no-magic-numbers
+   541:62  warning  No magic number: 60000                                                                                                            no-magic-numbers
+   550:36  warning  No magic number: 5                                                                                                                no-magic-numbers
+   554:39  warning  No magic number: 60                                                                                                               no-magic-numbers
+   554:44  warning  No magic number: 60                                                                                                               no-magic-numbers
+   554:49  warning  No magic number: 1000                                                                                                             no-magic-numbers
+   643:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+   660:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+   771:39  warning  Async arrow function has a complexity of 17. Maximum allowed is 15                                                                complexity
+   790:23  warning  No magic number: 7                                                                                                                no-magic-numbers
+   814:22  warning  No magic number: 9                                                                                                                no-magic-numbers
+   817:23  warning  No magic number: 12                                                                                                               no-magic-numbers
+   823:68  warning  No magic number: 30                                                                                                               no-magic-numbers
+   837:41  warning  No magic number: 200                                                                                                              no-magic-numbers
+   903:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  1091:47  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1092:43  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1127:44  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1128:29  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1183:16  warning  No magic number: 100                                                                                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\users\revokeUserAccess.js
+    23:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100                                                             max-lines-per-function
+    23:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+    37:21  warning  No magic number: 0.2                                                                                                              no-magic-numbers
+   145:75  warning  No magic number: 2                                                                                                                no-magic-numbers
+   163:17  warning  Async arrow function has too many lines (194). Maximum allowed is 100                                                             max-lines-per-function
+   163:39  warning  Refactor this function to reduce its Cognitive Complexity from 31 to the 20 allowed                                               sonarjs/cognitive-complexity
+   163:39  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                                                                complexity
+   318:35  warning  No magic number: 404                                                                                                              no-magic-numbers
+   355:11  error    Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+   364:42  warning  No magic number: 100                                                                                                              no-magic-numbers
+   411:30  warning  No magic number: 60                                                                                                               no-magic-numbers
+   411:35  warning  No magic number: 1000                                                                                                             no-magic-numbers
+   428:38  warning  No magic number: 10                                                                                                               no-magic-numbers
+   490:17  warning  Async arrow function has too many lines (114). Maximum allowed is 100                                                             max-lines-per-function
+   490:39  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed                                               sonarjs/cognitive-complexity
+   490:39  warning  Async arrow function has a complexity of 25. Maximum allowed is 15                                                                complexity
+   505:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+   508:32  warning  No magic number: 8                                                                                                                no-magic-numbers
+   541:62  warning  No magic number: 60000                                                                                                            no-magic-numbers
+   550:36  warning  No magic number: 5                                                                                                                no-magic-numbers
+   554:39  warning  No magic number: 60                                                                                                               no-magic-numbers
+   554:44  warning  No magic number: 60                                                                                                               no-magic-numbers
+   554:49  warning  No magic number: 1000                                                                                                             no-magic-numbers
+   643:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+   660:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+   771:39  warning  Async arrow function has a complexity of 17. Maximum allowed is 15                                                                complexity
+   790:23  warning  No magic number: 7                                                                                                                no-magic-numbers
+   814:22  warning  No magic number: 9                                                                                                                no-magic-numbers
+   817:23  warning  No magic number: 12                                                                                                               no-magic-numbers
+   823:68  warning  No magic number: 30                                                                                                               no-magic-numbers
+   837:41  warning  No magic number: 200                                                                                                              no-magic-numbers
+   903:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  1091:47  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1092:43  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1127:44  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1128:29  warning  No magic number: 500                                                                                                              no-magic-numbers
+  1182:16  warning  No magic number: 100                                                                                                              no-magic-numbers
+  1231:16  warning  No magic number: 100                                                                                                              no-magic-numbers
+  1427:17  warning  Async arrow function has too many lines (125). Maximum allowed is 100                                                             max-lines-per-function
+  1543:29  warning  No magic number: 450                                                                                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\users\setupInitialAdmin.js
+   23:17  warning  Async arrow function has too many lines (102). Maximum allowed is 100                                                             max-lines-per-function
+   23:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+   37:21  warning  No magic number: 0.2                                                                                                              no-magic-numbers
+  145:75  warning  No magic number: 2                                                                                                                no-magic-numbers
+  163:17  warning  Async arrow function has too many lines (194). Maximum allowed is 100                                                             max-lines-per-function
+  163:39  warning  Refactor this function to reduce its Cognitive Complexity from 31 to the 20 allowed                                               sonarjs/cognitive-complexity
+  163:39  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                                                                complexity
+  318:35  warning  No magic number: 404                                                                                                              no-magic-numbers
+  355:11  error    Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service  sonarjs/slow-regex
+  364:42  warning  No magic number: 100                                                                                                              no-magic-numbers
+  411:30  warning  No magic number: 60                                                                                                               no-magic-numbers
+  411:35  warning  No magic number: 1000                                                                                                             no-magic-numbers
+  428:38  warning  No magic number: 10                                                                                                               no-magic-numbers
+  490:17  warning  Async arrow function has too many lines (114). Maximum allowed is 100                                                             max-lines-per-function
+  490:39  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed                                               sonarjs/cognitive-complexity
+  490:39  warning  Async arrow function has a complexity of 25. Maximum allowed is 15                                                                complexity
+  505:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  508:32  warning  No magic number: 8                                                                                                                no-magic-numbers
+  541:62  warning  No magic number: 60000                                                                                                            no-magic-numbers
+  550:36  warning  No magic number: 5                                                                                                                no-magic-numbers
+  554:39  warning  No magic number: 60                                                                                                               no-magic-numbers
+  554:44  warning  No magic number: 60                                                                                                               no-magic-numbers
+  554:49  warning  No magic number: 1000                                                                                                             no-magic-numbers
+  643:39  warning  Async arrow function has a complexity of 18. Maximum allowed is 15                                                                complexity
+  660:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+  771:39  warning  Async arrow function has a complexity of 17. Maximum allowed is 15                                                                complexity
+  790:23  warning  No magic number: 7                                                                                                                no-magic-numbers
+  814:22  warning  No magic number: 9                                                                                                                no-magic-numbers
+  817:23  warning  No magic number: 12                                                                                                               no-magic-numbers
+  823:68  warning  No magic number: 30                                                                                                               no-magic-numbers
+  837:41  warning  No magic number: 200                                                                                                              no-magic-numbers
+  903:21  warning  No magic number: 16                                                                                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\utils\rateLimit.js
+  15:30  warning  No magic number: 60    no-magic-numbers
+  15:35  warning  No magic number: 1000  no-magic-numbers
+  32:38  warning  No magic number: 10    no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\App.jsx
+   15:8   warning  'ApiKeyModal' is defined but never used. Allowed unused vars must match /^_/u          no-unused-vars
+   15:8   error    Remove this unused import of 'ApiKeyModal'                                             sonarjs/unused-import
+   59:13  warning  Arrow function has too many lines (686). Maximum allowed is 100                        max-lines-per-function
+   78:5   warning  'tokenUsage' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+   78:5   error    Remove this useless assignment to variable "tokenUsage"                                sonarjs/no-dead-store
+  151:30  warning  No magic number: 30                                                                    no-magic-numbers
+  151:35  warning  No magic number: 60                                                                    no-magic-numbers
+  151:40  warning  No magic number: 1000                                                                  no-magic-numbers
+  839:61  warning  No magic number: 2000                                                                  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\agents\saveGuardAgent.js
+  42:3  warning  Async method 'saveQuestion' has too many lines (108). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\agents\sessionAgent.js
+  21:32  warning  No magic number: 16   no-magic-numbers
+  22:36  warning  No magic number: 0x3  no-magic-numbers
+  22:43  warning  No magic number: 0x8  no-magic-numbers
+  23:23  warning  No magic number: 16   no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AdminInviteManager.jsx
+   17:23  warning  Arrow function has too many lines (110). Maximum allowed is 100  max-lines-per-function
+   19:54  warning  No magic number: 7                                               no-magic-numbers
+  154:40  warning  No magic number: 2000                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AdminPanel.jsx
+  34:20  warning  Arrow function has too many lines (194). Maximum allowed is 100  max-lines-per-function
+  44:4   warning  Arrow function has a complexity of 17. Maximum allowed is 15     complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\AuditLogs.jsx
+  22:19  warning  Arrow function has too many lines (223). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\DataMaintenance.jsx
+  80:25  warning  Arrow function has too many lines (304). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\DatabaseManagement.jsx
+   10:28  warning  Arrow function has too many lines (133). Maximum allowed is 100  max-lines-per-function
+   36:67  warning  No magic number: 10000                                           no-magic-numbers
+   56:19  warning  No magic number: 10000                                           no-magic-numbers
+   60:67  warning  No magic number: 5000                                            no-magic-numbers
+   81:51  warning  No magic number: 3000                                            no-magic-numbers
+   86:60  warning  No magic number: 10000                                           no-magic-numbers
+   88:73  warning  No magic number: 5000                                            no-magic-numbers
+   90:64  warning  No magic number: 5000                                            no-magic-numbers
+  110:65  warning  No magic number: 10000                                           no-magic-numbers
+  114:17  warning  No magic number: 5000                                            no-magic-numbers
+  117:63  warning  No magic number: 5000                                            no-magic-numbers
+  136:66  warning  No magic number: 10000                                           no-magic-numbers
+  140:17  warning  No magic number: 5000                                            no-magic-numbers
+  143:58  warning  No magic number: 2000                                            no-magic-numbers
+  145:65  warning  No magic number: 5000                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\EnvironmentInfo.jsx
+  66:15  warning  No magic number: 3000  no-magic-numbers
+  79:15  warning  No magic number: 3000  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\InviteManagement.jsx
+   18:26  warning  Arrow function has too many lines (441). Maximum allowed is 100  max-lines-per-function
+   42:61  warning  No magic number: 5000                                            no-magic-numbers
+   46:57  warning  No magic number: 3000                                            no-magic-numbers
+   50:66  warning  No magic number: 5000                                            no-magic-numbers
+   59:39  warning  No magic number: 3000                                            no-magic-numbers
+   62:10  warning  No magic number: 500                                             no-magic-numbers
+   65:59  warning  No magic number: 5000                                            no-magic-numbers
+   77:7   warning  No magic number: 3000                                            no-magic-numbers
+  106:7   warning  No magic number: 3000                                            no-magic-numbers
+  141:61  warning  No magic number: 3000                                            no-magic-numbers
+  169:43  warning  No magic number: 3000                                            no-magic-numbers
+  175:11  warning  No magic number: 5000                                            no-magic-numbers
+  182:11  warning  No magic number: 5000                                            no-magic-numbers
+  188:64  warning  No magic number: 5000                                            no-magic-numbers
+  218:61  warning  No magic number: 3000                                            no-magic-numbers
+  220:48  warning  No magic number: 3000                                            no-magic-numbers
+  224:49  warning  No magic number: 5000                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\ReviewerAnalytics.jsx
+    6:27  warning  Arrow function has too many lines (270). Maximum allowed is 100  max-lines-per-function
+   24:25  warning  Arrow function has too many lines (243). Maximum allowed is 100  max-lines-per-function
+  164:53  warning  No magic number: 1000                                            no-magic-numbers
+  164:60  warning  No magic number: 60                                              no-magic-numbers
+  164:65  warning  No magic number: 60                                              no-magic-numbers
+  164:70  warning  No magic number: 24                                              no-magic-numbers
+  166:31  warning  No magic number: 999                                             no-magic-numbers
+  176:57  warning  No magic number: 7                                               no-magic-numbers
+  229:62  warning  No magic number: 100                                             no-magic-numbers
+  233:37  warning  No magic number: 80                                              no-magic-numbers
+  234:42  warning  No magic number: 60                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\SystemHealth.jsx
+  18:22  warning  Arrow function has too many lines (272). Maximum allowed is 100     max-lines-per-function
+  25:35  warning  Async arrow function has a complexity of 19. Maximum allowed is 15  complexity
+  67:11  warning  No magic number: 8                                                  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\TrainingDataExport.jsx
+  22:28  warning  Arrow function has too many lines (119). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Admin\UserList.jsx
+    7:18  warning  Arrow function has too many lines (211). Maximum allowed is 100                       max-lines-per-function
+   14:4   warning  Arrow function has a complexity of 19. Maximum allowed is 15                          complexity
+  105:11  warning  'failCount' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AgeGateModal.jsx
+  18:20  warning  No magic number: 18  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AnalyticsDashboard.jsx
+   37:15  warning  No magic number: 3                                               no-magic-numbers
+   64:28  warning  Arrow function has too many lines (550). Maximum allowed is 100  max-lines-per-function
+   88:47  warning  No magic number: 15                                              no-magic-numbers
+  175:19  warning  No magic number: 100                                             no-magic-numbers
+  183:17  warning  No magic number: 6                                               no-magic-numbers
+  210:68  warning  No magic number: -20                                             no-magic-numbers
+  328:32  warning  No magic number: 4                                               no-magic-numbers
+  328:35  warning  No magic number: 4                                               no-magic-numbers
+  360:69  warning  No magic number: 100                                             no-magic-numbers
+  379:32  warning  No magic number: 4                                               no-magic-numbers
+  379:35  warning  No magic number: 4                                               no-magic-numbers
+  442:52  warning  No magic number: 100                                             no-magic-numbers
+  501:61  warning  No magic number: 500                                             no-magic-numbers
+  501:68  warning  No magic number: 100                                             no-magic-numbers
+  502:27  warning  No magic number: 100                                             no-magic-numbers
+  592:36  warning  No magic number: 5                                               no-magic-numbers
+  592:41  warning  No magic number: 100                                             no-magic-numbers
+  593:27  warning  No magic number: 100                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AnalyticsView.jsx
+   41:23  warning  Arrow function has too many lines (309). Maximum allowed is 100  max-lines-per-function
+   53:38  warning  No magic number: 700                                             no-magic-numbers
+   56:40  warning  No magic number: 500                                             no-magic-numbers
+   57:41  warning  No magic number: 200                                             no-magic-numbers
+   58:39  warning  No magic number: 500                                             no-magic-numbers
+   59:40  warning  No magic number: 200                                             no-magic-numbers
+   80:54  warning  No magic number: 500                                             no-magic-numbers
+  116:15  warning  Arrow function has too many lines (162). Maximum allowed is 100  max-lines-per-function
+  131:53  warning  No magic number: 500                                             no-magic-numbers
+  132:54  warning  No magic number: 200                                             no-magic-numbers
+  163:48  warning  No magic number: 100                                             no-magic-numbers
+  269:49  warning  No magic number: -10                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\BlockingProcessModal.jsx
+  12:67  warning  No magic number: 100  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\BulkExportModal.jsx
+  14:25  warning  Arrow function has too many lines (335). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ConflictModal.jsx
+   17:23  warning  Arrow function has too many lines (256). Maximum allowed is 100  max-lines-per-function
+  124:64  warning  No magic number: 2                                               no-magic-numbers
+  132:62  warning  No magic number: 2                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ContextToolbar.jsx
+    7:24  warning  Arrow function has too many lines (520). Maximum allowed is 100  max-lines-per-function
+   38:4   warning  Arrow function has a complexity of 17. Maximum allowed is 15     complexity
+  162:31  warning  Arrow function has too many lines (232). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\CookieConsentBanner.jsx
+   9:29  warning  Arrow function has too many lines (147). Maximum allowed is 100  max-lines-per-function
+  34:46  warning  No magic number: 1000                                            no-magic-numbers
+  41:48  warning  No magic number: 500                                             no-magic-numbers
+  55:10  warning  No magic number: 500                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\CooldownTimer.jsx
+  29:8   warning  No magic number: 1000  no-magic-numbers
+  38:29  warning  No magic number: 100   no-magic-numbers
+  38:60  warning  No magic number: 100   no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\CrashRecoveryPrompt.jsx
+  7:29  warning  Arrow function has too many lines (106). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\CritiqueDisplay.jsx
+   46:25  warning  Arrow function has too many lines (292). Maximum allowed is 100  max-lines-per-function
+   57:4   warning  Arrow function has a complexity of 27. Maximum allowed is 15     complexity
+  139:53  warning  No magic number: 50                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\CritiqueModal.jsx
+  10:23  warning  Arrow function has too many lines (216). Maximum allowed is 100  max-lines-per-function
+  23:4   warning  Arrow function has a complexity of 25. Maximum allowed is 15     complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\DangerZoneModal.jsx
+   22:25  warning  Arrow function has too many lines (459). Maximum allowed is 100  max-lines-per-function
+  293:57  warning  No magic number: 10                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\DatabaseView.jsx
+   12:22  warning  Arrow function has too many lines (283). Maximum allowed is 100  max-lines-per-function
+   38:7   warning  No magic number: 5000                                            no-magic-numbers
+   97:53  warning  No magic number: 500                                             no-magic-numbers
+  275:35  warning  No magic number: 10                                              no-magic-numbers
+  288:15  warning  No magic number: 2000                                            no-magic-numbers
+  291:12  warning  No magic number: 100                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\DraftRestorationBanner.jsx
+   7:55  warning  No magic number: 60000  no-magic-numbers
+  10:27  warning  No magic number: 60     no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\EmailLogin.jsx
+  19:20  warning  Arrow function has too many lines (256). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\EmptyState.jsx
+  16:14  warning  No magic number: 48  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\FlagIcon.jsx
+  1:18  warning  Arrow function has too many lines (133). Maximum allowed is 100  max-lines-per-function
+  1:34  warning  No magic number: 16                                              no-magic-numbers
+  2:28  warning  Arrow function has too many lines (120). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\GlobalModals.jsx
+  22:22  warning  Arrow function has too many lines (134). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Header.jsx
+   40:16  warning  Arrow function has too many lines (225). Maximum allowed is 100  max-lines-per-function
+   51:4   warning  Arrow function has a complexity of 20. Maximum allowed is 15     complexity
+  116:20  warning  No magic number: 1000                                            no-magic-numbers
+  116:45  warning  No magic number: 1000                                            no-magic-numbers
+  117:61  warning  No magic number: 6                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Header\HeaderMobileMenu.jsx
+  12:3  warning  Arrow function has too many lines (140). Maximum allowed is 100  max-lines-per-function
+  31:5  warning  Arrow function has a complexity of 17. Maximum allowed is 15     complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Header\HeaderStatusBar.jsx
+   8:25  warning  Arrow function has too many lines (138). Maximum allowed is 100                  max-lines-per-function
+  10:3   warning  'formattedCost' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  15:4   warning  Arrow function has a complexity of 19. Maximum allowed is 15                     complexity
+  75:32  warning  No magic number: 5                                                               no-magic-numbers
+  96:51  warning  No magic number: 5                                                               no-magic-numbers
+  98:62  warning  No magic number: 5                                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Header\HeaderUserInfo.jsx
+  16:3  warning  'showMessage' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+  17:4  warning  Arrow function has a complexity of 19. Maximum allowed is 15                            complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ImprovementModal.jsx
+   12:26  warning  Arrow function has too many lines (342). Maximum allowed is 100      max-lines-per-function
+   23:4   warning  Arrow function has a complexity of 29. Maximum allowed is 15         complexity
+  349:19  error    Extract this nested ternary operation into an independent statement  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\InviteSignUp.jsx
+   24:22  warning  Arrow function has too many lines (296). Maximum allowed is 100                        max-lines-per-function
+   24:48  warning  Arrow function has a complexity of 19. Maximum allowed is 15                           complexity
+  348:7   warning  'GoogleIcon' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\LandingPage.jsx
+   7:21  warning  Arrow function has too many lines (235). Maximum allowed is 100  max-lines-per-function
+  14:4   warning  Arrow function has a complexity of 22. Maximum allowed is 15     complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\LoadingProgressModal.jsx
+  16:65  warning  No magic number: 100  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\LoadingSpinner.jsx
+  44:40  warning  No magic number: 16  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\LowScoreWarningModal.jsx
+  45:16  warning  No magic number: 70                                              no-magic-numbers
+  46:16  warning  No magic number: 50                                              no-magic-numbers
+  54:30  warning  Arrow function has too many lines (176). Maximum allowed is 100  max-lines-per-function
+  62:4   warning  Arrow function has a complexity of 17. Maximum allowed is 15     complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\MetricsDashboard.jsx
+    7:26  warning  Arrow function has too many lines (160). Maximum allowed is 100  max-lines-per-function
+  117:71  warning  No magic number: 100                                             no-magic-numbers
+  126:73  warning  No magic number: 100                                             no-magic-numbers
+  135:71  warning  No magic number: 100                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\OmniWatchdog.jsx
+   15:22  warning  Arrow function has too many lines (184). Maximum allowed is 100  max-lines-per-function
+   61:56  warning  No magic number: 5000                                            no-magic-numbers
+   88:50  warning  No magic number: 50                                              no-magic-numbers
+  119:10  warning  No magic number: 10000                                           no-magic-numbers
+  182:23  warning  No magic number: -3                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\PromptPlayground.jsx
+   9:26  warning  Arrow function has too many lines (191). Maximum allowed is 100  max-lines-per-function
+  16:72  warning  No magic number: 0.7                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem.jsx
+   38:22  warning  Arrow function has too many lines (527). Maximum allowed is 100     max-lines-per-function
+   56:4   warning  Arrow function has a complexity of 53. Maximum allowed is 15        complexity
+  325:55  warning  No magic number: 70                                                 no-magic-numbers
+  507:70  warning  No magic number: 70                                                 no-magic-numbers
+  567:55  warning  No magic number: 70                                                 no-magic-numbers
+  570:39  warning  Async arrow function has a complexity of 20. Maximum allowed is 15  complexity
+  652:46  warning  Arrow function has a complexity of 21. Maximum allowed is 15        complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\LanguageControls.jsx
+  28:26  warning  Arrow function has too many lines (119). Maximum allowed is 100  max-lines-per-function
+  57:32  warning  Arrow function has a complexity of 17. Maximum allowed is 15     complexity
+  60:53  warning  No magic number: 2                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionActions.jsx
+  124:25  warning  Arrow function has too many lines (208). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionContent.jsx
+    5:25  warning  Arrow function has too many lines (220). Maximum allowed is 100  max-lines-per-function
+   15:4   warning  Arrow function has a complexity of 22. Maximum allowed is 15     complexity
+   54:70  warning  No magic number: 3000                                            no-magic-numbers
+  178:41  warning  No magic number: 8                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionHeader.jsx
+    3:8   warning  'FlagIcon' is defined but never used. Allowed unused vars must match /^_/u              no-unused-vars
+    3:8   error    Remove this unused import of 'FlagIcon'                                                 sonarjs/unused-import
+    6:10  warning  'LANGUAGE_CODES' is defined but never used. Allowed unused vars must match /^_/u        no-unused-vars
+    6:10  error    Remove this unused import of 'LANGUAGE_CODES'                                           sonarjs/unused-import
+   44:24  warning  Arrow function has too many lines (225). Maximum allowed is 100                         max-lines-per-function
+   51:3   warning  'onOpenCritiqueModal' is defined but never used. Allowed unused args must match /^_/u   no-unused-vars
+   53:4   warning  Arrow function has a complexity of 28. Maximum allowed is 15                            complexity
+   54:11  warning  'actionColor' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+   54:11  error    Remove the declaration of the unused 'actionColor' variable                             sonarjs/no-unused-vars
+   54:11  error    Remove this useless assignment to variable "actionColor"                                sonarjs/no-dead-store
+   56:9   warning  'lang' is assigned a value but never used. Allowed unused vars must match /^_/u         no-unused-vars
+   56:9   error    Remove the declaration of the unused 'lang' variable                                    sonarjs/no-unused-vars
+   56:9   error    Remove this useless assignment to variable "lang"                                       sonarjs/no-dead-store
+  175:18  warning  Arrow function has a complexity of 18. Maximum allowed is 15                            complexity
+  243:29  warning  No magic number: 70                                                                     no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionMetadata.jsx
+   51:26  warning  Arrow function has too many lines (127). Maximum allowed is 100  max-lines-per-function
+   51:59  warning  Arrow function has a complexity of 25. Maximum allowed is 15     complexity
+   55:49  warning  No magic number: 3                                               no-magic-numbers
+  167:52  warning  No magic number: 5                                               no-magic-numbers
+  172:55  warning  No magic number: 1000                                            no-magic-numbers
+  172:69  warning  No magic number: 2                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\QuestionNotesField.jsx
+  18:38  warning  No magic number: 2000  no-magic-numbers
+  23:48  warning  No magic number: 3000  no-magic-numbers
+  56:31  warning  No magic number: 500   no-magic-numbers
+  58:38  warning  No magic number: 450   no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionItem\ValidationWarnings.jsx
+   4:36  warning  Arrow function has a complexity of 22. Maximum allowed is 15  complexity
+  21:52  warning  No magic number: 3                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuestionVariationCarousel.jsx
+  8:35  warning  Arrow function has too many lines (112). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuizPreview.jsx
+   33:21  warning  Arrow function has too many lines (340). Maximum allowed is 100  max-lines-per-function
+   41:73  warning  No magic number: 60                                              no-magic-numbers
+  208:24  warning  No magic number: 2                                               no-magic-numbers
+  318:8   warning  No magic number: 1000                                            no-magic-numbers
+  325:39  warning  No magic number: 60                                              no-magic-numbers
+  326:28  warning  No magic number: 60                                              no-magic-numbers
+  327:48  warning  No magic number: 2                                               no-magic-numbers
+  342:67  warning  No magic number: 100                                             no-magic-numbers
+  351:67  warning  No magic number: 1000                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuizPreview\QuizHeader.jsx
+  33:33  warning  No magic number: 60   no-magic-numbers
+  61:63  warning  No magic number: 100  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuizPreview\QuizQuestion.jsx
+   6:22  warning  Arrow function has too many lines (116). Maximum allowed is 100                    max-lines-per-function
+  15:3   warning  'announceMessage' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  27:47  warning  No magic number: 2                                                                 no-magic-numbers
+  33:45  warning  No magic number: 2                                                                 no-magic-numbers
+  47:43  warning  No magic number: 2                                                                 no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\QuizPreview\QuizResultsScreen.jsx
+  7:39  warning  'config' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ReviewMode.jsx
+   5:20  warning  Arrow function has too many lines (131). Maximum allowed is 100  max-lines-per-function
+  41:51  warning  No magic number: 500                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ReviewProgressBar.jsx
+   14:22  warning  No magic number: 2                                                                   no-magic-numbers
+   30:22  warning  No magic number: 2                                                                   no-magic-numbers
+   70:27  warning  Arrow function has too many lines (244). Maximum allowed is 100                      max-lines-per-function
+   79:4   warning  Refactor this function to reduce its Cognitive Complexity from 21 to the 20 allowed  sonarjs/cognitive-complexity
+   79:4   warning  Arrow function has a complexity of 45. Maximum allowed is 15                         complexity
+  183:11  error    Extract this nested ternary operation into an independent statement                  sonarjs/no-nested-conditional
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ScormExportModal.jsx
+  13:26  warning  Arrow function has too many lines (170). Maximum allowed is 100  max-lines-per-function
+  49:10  warning  No magic number: 1000                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\SignIn.jsx
+   11:16  warning  Arrow function has too many lines (272). Maximum allowed is 100  max-lines-per-function
+  105:25  warning  Arrow function has too many lines (142). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TagManager.jsx
+  11:20  warning  Arrow function has too many lines (198). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TermsOfUseModal.jsx
+  8:25  warning  Arrow function has too many lines (190). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TestView.jsx
+   12:18  warning  Arrow function has too many lines (418). Maximum allowed is 100  max-lines-per-function
+   46:63  warning  No magic number: 3000                                            no-magic-numbers
+   52:55  warning  No magic number: 2000                                            no-magic-numbers
+   82:61  warning  No magic number: 0.5                                             no-magic-numbers
+  245:31  warning  No magic number: 50                                              no-magic-numbers
+  245:63  warning  No magic number: 50                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\Toast.jsx
+    5:15  warning  Arrow function has too many lines (109). Maximum allowed is 100  max-lines-per-function
+   10:14  warning  No magic number: 5000                                            no-magic-numbers
+   13:4   warning  Arrow function has a complexity of 18. Maximum allowed is 15     complexity
+   27:27  warning  No magic number: 200                                             no-magic-numbers
+  101:35  warning  No magic number: 200                                             no-magic-numbers
+  118:41  warning  No magic number: 100                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TokenUsageDisplay.jsx
+  13:31  warning  No magic number: 6  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TranslationManagementView.jsx
+    8:35  warning  Arrow function has too many lines (194). Maximum allowed is 100                   max-lines-per-function
+   11:3   warning  'translationMap' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  135:71  warning  No magic number: 100                                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\TutorialOverlay.jsx
+    7:25  warning  Arrow function has too many lines (365). Maximum allowed is 100                      max-lines-per-function
+   22:13  warning  Arrow function has too many lines (105). Maximum allowed is 100                      max-lines-per-function
+   26:56  warning  No magic number: 20                                                                  no-magic-numbers
+   30:31  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed  sonarjs/cognitive-complexity
+   64:27  warning  No magic number: 10                                                                  no-magic-numbers
+   65:29  warning  No magic number: 10                                                                  no-magic-numbers
+   66:31  warning  No magic number: 20                                                                  no-magic-numbers
+   67:33  warning  No magic number: 20                                                                  no-magic-numbers
+   72:60  warning  No magic number: 100                                                                 no-magic-numbers
+  113:50  warning  No magic number: 100                                                                 no-magic-numbers
+  126:10  warning  No magic number: 500                                                                 no-magic-numbers
+  135:10  warning  No magic number: 1500                                                                no-magic-numbers
+  140:37  warning  No magic number: 100                                                                 no-magic-numbers
+  332:50  warning  No magic number: 2                                                                   no-magic-numbers
+  332:53  warning  No magic number: -2                                                                  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\VerifyConfirmModal.jsx
+  23:28  warning  Arrow function has too many lines (261). Maximum allowed is 100  max-lines-per-function
+  45:10  warning  No magic number: 1500                                            no-magic-numbers
+  63:10  warning  No magic number: 1500                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\ViewRouter.jsx
+   88:20  warning  Arrow function has too many lines (226). Maximum allowed is 100  max-lines-per-function
+  136:22  warning  Arrow function has too many lines (140). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\__tests__\QuestionItem.test.jsx
+  2:36  warning  'beforeEach' is defined but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  2:36  error    Remove this unused import of 'beforeEach'                                     sonarjs/unused-import
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\DisciplineDetailPanel.jsx
+   18:16  warning  No magic number: 70                                              no-magic-numbers
+   19:16  warning  No magic number: 50                                              no-magic-numbers
+   31:31  warning  Arrow function has too many lines (142). Maximum allowed is 100  max-lines-per-function
+  176:71  warning  No magic number: 100                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\DisciplinesTab.jsx
+  49:24  warning  Arrow function has too many lines (140). Maximum allowed is 100  max-lines-per-function
+  96:31  warning  No magic number: 4                                               no-magic-numbers
+  96:34  warning  No magic number: 4                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\DistributionCharts.jsx
+   25:28  warning  Arrow function has too many lines (447). Maximum allowed is 100  max-lines-per-function
+   68:44  warning  Arrow function has a complexity of 18. Maximum allowed is 15     complexity
+  126:41  warning  No magic number: 100                                             no-magic-numbers
+  205:29  warning  No magic number: 4                                               no-magic-numbers
+  205:32  warning  No magic number: 4                                               no-magic-numbers
+  238:33  warning  No magic number: 90                                              no-magic-numbers
+  239:33  warning  No magic number: 80                                              no-magic-numbers
+  240:33  warning  No magic number: 70                                              no-magic-numbers
+  241:33  warning  No magic number: 60                                              no-magic-numbers
+  280:49  warning  No magic number: 4                                               no-magic-numbers
+  280:52  warning  No magic number: 4                                               no-magic-numbers
+  326:45  warning  No magic number: 100                                             no-magic-numbers
+  355:59  warning  No magic number: 70                                              no-magic-numbers
+  402:57  warning  No magic number: 2                                               no-magic-numbers
+  406:64  warning  No magic number: 2                                               no-magic-numbers
+  438:40  warning  No magic number: 200                                             no-magic-numbers
+  438:67  warning  No magic number: 35                                              no-magic-numbers
+  493:33  warning  No magic number: 4                                               no-magic-numbers
+  493:36  warning  No magic number: 4                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\OverviewTab.jsx
+   20:21  warning  Arrow function has too many lines (226). Maximum allowed is 100                                max-lines-per-function
+   26:4   warning  Arrow function has a complexity of 17. Maximum allowed is 15                                   complexity
+   44:9   warning  'translationPercent' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+   44:9   error    Remove the declaration of the unused 'translationPercent' variable                             sonarjs/no-unused-vars
+   44:9   error    Remove this useless assignment to variable "translationPercent"                                sonarjs/no-dead-store
+   45:70  warning  No magic number: 100                                                                           no-magic-numbers
+  126:59  warning  No magic number: 4                                                                             no-magic-numbers
+  157:45  warning  No magic number: 100                                                                           no-magic-numbers
+  211:49  warning  No magic number: 4                                                                             no-magic-numbers
+  211:52  warning  No magic number: 4                                                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\QualityTab.jsx
+   22:20  warning  Arrow function has too many lines (104). Maximum allowed is 100  max-lines-per-function
+   54:47  warning  No magic number: 4                                               no-magic-numbers
+   54:50  warning  No magic number: 4                                               no-magic-numbers
+   79:34  warning  No magic number: 1000                                            no-magic-numbers
+   82:44  warning  No magic number: 1000                                            no-magic-numbers
+   83:38  warning  No magic number: 1000                                            no-magic-numbers
+  100:19  warning  No magic number: 4                                               no-magic-numbers
+  119:52  warning  No magic number: 4                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\SafeResponsiveContainer.jsx
+   9:61  warning  No magic number: 10   no-magic-numbers
+  38:21  warning  No magic number: 50   no-magic-numbers
+  38:25  warning  No magic number: 150  no-magic-numbers
+  38:30  warning  No magic number: 300  no-magic-numbers
+  47:57  warning  No magic number: 50   no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\TagCloudAnalytics.jsx
+  11:27  warning  Arrow function has too many lines (168). Maximum allowed is 100  max-lines-per-function
+  70:45  warning  No magic number: 2                                               no-magic-numbers
+  72:17  warning  No magic number: 50                                              no-magic-numbers
+  88:17  warning  No magic number: 0.85                                            no-magic-numbers
+  89:17  warning  No magic number: 0.7                                             no-magic-numbers
+  90:17  warning  No magic number: 0.55                                            no-magic-numbers
+  91:17  warning  No magic number: 0.4                                             no-magic-numbers
+  92:17  warning  No magic number: 0.25                                            no-magic-numbers
+  93:17  warning  No magic number: 0.1                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\TagConnectionGraph.jsx
+   11:28  warning  Arrow function has too many lines (288). Maximum allowed is 100  max-lines-per-function
+   48:32  warning  No magic number: 100                                             no-magic-numbers
+   51:15  warning  No magic number: 800                                             no-magic-numbers
+   52:24  warning  No magic number: 400                                             no-magic-numbers
+   52:57  warning  No magic number: 0.55                                            no-magic-numbers
+  154:17  warning  No magic number: 20                                              no-magic-numbers
+  175:35  warning  No magic number: 1200                                            no-magic-numbers
+  176:36  warning  No magic number: 1200                                            no-magic-numbers
+  177:25  warning  No magic number: 2                                               no-magic-numbers
+  178:25  warning  No magic number: 2                                               no-magic-numbers
+  180:37  warning  No magic number: 2                                               no-magic-numbers
+  180:41  warning  No magic number: 40                                              no-magic-numbers
+  184:22  warning  No magic number: 2                                               no-magic-numbers
+  184:69  warning  No magic number: 2                                               no-magic-numbers
+  214:38  warning  No magic number: 2                                               no-magic-numbers
+  215:39  warning  No magic number: 2                                               no-magic-numbers
+  253:11  warning  No magic number: 0.25                                            no-magic-numbers
+  253:17  warning  No magic number: 0.5                                             no-magic-numbers
+  253:22  warning  No magic number: 0.75                                            no-magic-numbers
+  258:65  warning  No magic number: 2                                               no-magic-numbers
+  258:69  warning  No magic number: 80                                              no-magic-numbers
+  274:42  warning  No magic number: 255                                             no-magic-numbers
+  275:50  warning  No magic number: 255                                             no-magic-numbers
+  278:27  warning  No magic number: 0.3                                             no-magic-numbers
+  278:41  warning  No magic number: 0.5                                             no-magic-numbers
+  279:43  warning  No magic number: 2                                               no-magic-numbers
+  304:28  warning  No magic number: 14                                              no-magic-numbers
+  304:58  warning  No magic number: 16                                              no-magic-numbers
+  309:42  warning  No magic number: 8                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\analytics\TrendCharts.jsx
+   13:3   warning  'Cell' is defined but never used. Allowed unused vars must match /^_/u  no-unused-vars
+   13:3   error    Remove this unused import of 'Cell'                                     sonarjs/unused-import
+   26:21  warning  Arrow function has too many lines (197). Maximum allowed is 100         max-lines-per-function
+   36:38  warning  No magic number: 100                                                    no-magic-numbers
+   77:14  warning  No magic number: -14                                                    no-magic-numbers
+  124:28  warning  No magic number: 4                                                      no-magic-numbers
+  124:31  warning  No magic number: 4                                                      no-magic-numbers
+  151:53  warning  No magic number: 100                                                    no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\sidebar\ActionFooter.jsx
+  39:22  warning  Arrow function has too many lines (119). Maximum allowed is 100  max-lines-per-function
+  49:4   warning  Arrow function has a complexity of 25. Maximum allowed is 15     complexity
+  91:25  warning  No magic number: 100                                             no-magic-numbers
+  94:27  warning  No magic number: 100                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\sidebar\BatchSizeControl.jsx
+  11:19  warning  No magic number: 6   no-magic-numbers
+  11:22  warning  No magic number: 12  no-magic-numbers
+  11:26  warning  No magic number: 18  no-magic-numbers
+  21:63  warning  No magic number: 50  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\sidebar\CoverageGapSuggester.jsx
+    4:30  warning  Arrow function has too many lines (117). Maximum allowed is 100  max-lines-per-function
+   37:47  warning  No magic number: 3                                               no-magic-numbers
+   52:79  warning  No magic number: 2                                               no-magic-numbers
+   63:35  warning  No magic number: 3                                               no-magic-numbers
+   64:34  warning  No magic number: 3                                               no-magic-numbers
+   95:9   warning  No magic number: 4000                                            no-magic-numbers
+  131:41  warning  No magic number: 3                                               no-magic-numbers
+  131:71  warning  No magic number: 3                                               no-magic-numbers
+  133:73  warning  No magic number: 3                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\sidebar\GenerationSettings.jsx
+   15:28  warning  Arrow function has too many lines (435). Maximum allowed is 100  max-lines-per-function
+   24:4   warning  Arrow function has a complexity of 20. Maximum allowed is 15     complexity
+   34:27  warning  No magic number: 5                                               no-magic-numbers
+   40:18  warning  No magic number: 5                                               no-magic-numbers
+  251:44  warning  No magic number: 6                                               no-magic-numbers
+  281:66  warning  No magic number: 2                                               no-magic-numbers
+  284:65  warning  No magic number: 2                                               no-magic-numbers
+  286:71  warning  No magic number: 2                                               no-magic-numbers
+  313:31  warning  No magic number: 100                                             no-magic-numbers
+  314:64  warning  No magic number: 100                                             no-magic-numbers
+  343:31  warning  No magic number: 100                                             no-magic-numbers
+  344:64  warning  No magic number: 100                                             no-magic-numbers
+  429:66  warning  No magic number: 5                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\sidebar\ProgressStats.jsx
+  46:43  warning  No magic number: 100  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\contexts\AccessibilityContext.jsx
+  23:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  61:6   warning  React Hook useEffect has a missing dependency: 'prefs.reducedMotion'. Either include it or remove the dependency array          react-hooks/exhaustive-deps
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\contexts\ErrorReporterContext.jsx
+   23:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   66:38  warning  Arrow function has too many lines (221). Maximum allowed is 100                                                                 max-lines-per-function
+   84:44  warning  No magic number: 10000                                                                                                          no-magic-numbers
+  267:28  warning  No magic number: 2000                                                                                                           no-magic-numbers
+  285:38  warning  No magic number: 5                                                                                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\useQuestionCritique.js
+   13:36  warning  Arrow function has too many lines (242). Maximum allowed is 100                      max-lines-per-function
+   26:5   warning  Async arrow function has too many lines (192). Maximum allowed is 100                max-lines-per-function
+   26:15  warning  Refactor this function to reduce its Cognitive Complexity from 22 to the 20 allowed  sonarjs/cognitive-complexity
+   26:15  warning  Async arrow function has a complexity of 36. Maximum allowed is 15                   complexity
+   90:36  warning  No magic number: 3                                                                   no-magic-numbers
+  118:26  warning  No magic number: 5                                                                   no-magic-numbers
+  133:17  warning  Arrow function has a complexity of 36. Maximum allowed is 15                         complexity
+  288:10  warning  No magic number: 300                                                                 no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\useQuestionGenerator.js
+  30:37  warning  Arrow function has too many lines (493). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\useQuestionTranslation.js
+   15:39  warning  Arrow function has too many lines (226). Maximum allowed is 100        max-lines-per-function
+  137:50  warning  Async arrow function has too many lines (107). Maximum allowed is 100  max-lines-per-function
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\generation\utils\questionConverter.js
+  32:38  warning  No magic number: 0.5  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\helpers\questionManagerHelpers.js
+  116:59  warning  No magic number: 1000  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useConflictResolution.js
+   15:38  warning  Arrow function has too many lines (113). Maximum allowed is 100  max-lines-per-function
+   78:59  warning  No magic number: 3000                                            no-magic-numbers
+   94:56  warning  No magic number: 2000                                            no-magic-numbers
+  112:60  warning  No magic number: 2000                                            no-magic-numbers
+  121:63  warning  No magic number: 4000                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionActions.js
+   17:35  warning  Arrow function has too many lines (215). Maximum allowed is 100                                                          max-lines-per-function
+  157:60  warning  No magic number: 4000                                                                                                    no-magic-numbers
+  161:5   warning  React Hook useCallback has a missing dependency: 'config.creatorName'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  218:55  warning  No magic number: 2000                                                                                                    no-magic-numbers
+  223:66  warning  No magic number: 3000                                                                                                    no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionDerivedData.js
+   13:39  warning  Arrow function has too many lines (130). Maximum allowed is 100  max-lines-per-function
+  137:20  warning  No magic number: 100                                             no-magic-numbers
+  137:58  warning  No magic number: 100                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useStatusActions.js
+  30:33  warning  Arrow function has too many lines (210). Maximum allowed is 100                      max-lines-per-function
+  42:5   warning  Async arrow function has too many lines (175). Maximum allowed is 100                max-lines-per-function
+  42:51  warning  Refactor this function to reduce its Cognitive Complexity from 43 to the 20 allowed  sonarjs/cognitive-complexity
+  42:51  warning  Async arrow function has a complexity of 45. Maximum allowed is 15                   complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useAppConfig.js
+    6:29  warning  Arrow function has too many lines (131). Maximum allowed is 100  max-lines-per-function
+   47:64  warning  No magic number: 5                                               no-magic-numbers
+  141:55  warning  No magic number: 5                                               no-magic-numbers
+  144:45  warning  No magic number: 2                                               no-magic-numbers
+  147:58  warning  No magic number: 2                                               no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useAuth.js
+   38:8   warning  Function 'useAuth' has too many lines (133). Maximum allowed is 100                  max-lines-per-function
+   65:70  warning  Refactor this function to reduce its Cognitive Complexity from 23 to the 20 allowed  sonarjs/cognitive-complexity
+  147:72  warning  No magic number: 5000                                                                no-magic-numbers
+  178:41  warning  No magic number: 2000                                                                no-magic-numbers
+  181:42  warning  No magic number: 3000                                                                no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useAutoSave.js
+  11:51  warning  No magic number: 10000  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useBulkTranslation.js
+  25:63  warning  No magic number: 3000  no-magic-numbers
+  65:11  warning  No magic number: 5000  no-magic-numbers
+  70:11  warning  No magic number: 5000  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useCrashRecovery.js
+   13:33  warning  Arrow function has too many lines (154). Maximum allowed is 100  max-lines-per-function
+   83:45  warning  No magic number: 2000                                            no-magic-numbers
+   94:8   warning  No magic number: 10000                                           no-magic-numbers
+  135:11  warning  No magic number: 5000                                            no-magic-numbers
+  148:56  warning  No magic number: 50                                              no-magic-numbers
+  170:39  warning  No magic number: 100                                             no-magic-numbers
+  190:9   warning  No magic number: 5000                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useDatabaseActions.js
+  35:9  warning  No magic number: 3000                                                                                                  no-magic-numbers
+  63:5  warning  React Hook useCallback has an unnecessary dependency: 'showMessage'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useEditLock.js
+   48:6   warning  No magic number: 2000                                                    no-magic-numbers
+   81:8   warning  Function 'useEditLock' has too many lines (247). Maximum allowed is 100  max-lines-per-function
+  189:49  warning  No magic number: 3                                                       no-magic-numbers
+  289:8   warning  No magic number: 30000                                                   no-magic-numbers
+  366:8   warning  No magic number: 1000                                                    no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useExport.js
+   21:26  warning  Arrow function has too many lines (409). Maximum allowed is 100        max-lines-per-function
+   46:39  warning  No magic number: 3000                                                  no-magic-numbers
+   72:37  warning  No magic number: 5000                                                  no-magic-numbers
+  107:39  warning  No magic number: 3000                                                  no-magic-numbers
+  124:37  warning  No magic number: 5000                                                  no-magic-numbers
+  141:73  warning  No magic number: 5000                                                  no-magic-numbers
+  153:55  warning  No magic number: 3000                                                  no-magic-numbers
+  170:9   warning  No magic number: 7000                                                  no-magic-numbers
+  176:9   warning  No magic number: 10000                                                 no-magic-numbers
+  194:67  warning  No magic number: 3000                                                  no-magic-numbers
+  204:51  warning  Arrow function has a complexity of 34. Maximum allowed is 15           complexity
+  264:11  warning  No magic number: 6000                                                  no-magic-numbers
+  269:11  warning  No magic number: 3000                                                  no-magic-numbers
+  276:9   warning  No magic number: 7000                                                  no-magic-numbers
+  293:36  warning  No magic number: 5000                                                  no-magic-numbers
+  300:57  warning  No magic number: 5000                                                  no-magic-numbers
+  318:13  warning  No magic number: 3000                                                  no-magic-numbers
+  324:62  warning  No magic number: 7000                                                  no-magic-numbers
+  341:5   warning  Async arrow function has too many lines (113). Maximum allowed is 100  max-lines-per-function
+  369:70  warning  No magic number: 3000                                                  no-magic-numbers
+  377:13  warning  No magic number: 5000                                                  no-magic-numbers
+  385:69  warning  No magic number: 5000                                                  no-magic-numbers
+  388:46  warning  No magic number: 5000                                                  no-magic-numbers
+  423:68  warning  No magic number: 4000                                                  no-magic-numbers
+  436:51  warning  No magic number: 2                                                     no-magic-numbers
+  461:9   warning  No magic number: 4000                                                  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useFileHandler.js
+   10:31  warning  Arrow function has too many lines (116). Maximum allowed is 100  max-lines-per-function
+   86:11  warning  No magic number: 6000                                            no-magic-numbers
+   89:74  warning  No magic number: 4000                                            no-magic-numbers
+   94:63  warning  No magic number: 3000                                            no-magic-numbers
+   97:57  warning  No magic number: 2                                               no-magic-numbers
+   97:74  warning  No magic number: 6000                                            no-magic-numbers
+  108:9   warning  No magic number: 5000                                            no-magic-numbers
+  128:39  warning  No magic number: 2000                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useFiltering.js
+   33:8   warning  Function 'useFiltering' has too many lines (366). Maximum allowed is 100                                                    max-lines-per-function
+  285:48  warning  No magic number: 2                                                                                                          no-magic-numbers
+  287:26  warning  No magic number: 5                                                                                                          no-magic-numbers
+  522:6   warning  React Hook useEffect has a missing dependency: 'uniqueFilteredQuestions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useMigrations.js
+   16:8   warning  Function 'useMigrations' has too many lines (134). Maximum allowed is 100  max-lines-per-function
+   92:15  warning  No magic number: 5000                                                      no-magic-numbers
+   94:61  warning  No magic number: 1000                                                      no-magic-numbers
+  162:15  warning  No magic number: 5000                                                      no-magic-numbers
+  164:61  warning  No magic number: 1000                                                      no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useProgressTracker.js
+  37:85  warning  No magic number: 100   no-magic-numbers
+  41:52  warning  No magic number: 5     no-magic-numbers
+  42:64  warning  No magic number: 1000  no-magic-numbers
+  43:66  warning  No magic number: 100   no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useRealtimeQuestions.js
+  102:7  warning  No magic number: 5000  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useReviewActions.js
+   20:33  warning  Arrow function has too many lines (139). Maximum allowed is 100  max-lines-per-function
+   45:53  warning  No magic number: 3000                                            no-magic-numbers
+   71:7   warning  No magic number: 4000                                            no-magic-numbers
+   85:66  warning  No magic number: 3000                                            no-magic-numbers
+   91:7   warning  No magic number: 3000                                            no-magic-numbers
+  101:7   warning  No magic number: 4000                                            no-magic-numbers
+  171:11  warning  No magic number: 3000                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useToast.js
+   54:8   warning  Function 'useToast' has too many lines (141). Maximum allowed is 100  max-lines-per-function
+  129:30  warning  No magic number: 3                                                    no-magic-numbers
+  176:65  warning  No magic number: 2000                                                 no-magic-numbers
+  200:46  warning  Arrow function has a complexity of 17. Maximum allowed is 15          complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useTutorial.js
+   32:28  warning  Arrow function has too many lines (198). Maximum allowed is 100                      max-lines-per-function
+   47:36  warning  Refactor this function to reduce its Cognitive Complexity from 24 to the 20 allowed  sonarjs/cognitive-complexity
+   47:36  warning  Arrow function has a complexity of 25. Maximum allowed is 15                         complexity
+  167:8   warning  No magic number: 100                                                                 no-magic-numbers
+  193:8   warning  No magic number: 100                                                                 no-magic-numbers
+  263:44  warning  No magic number: 2000                                                                no-magic-numbers
+  271:8   warning  No magic number: 500                                                                 no-magic-numbers
+  287:64  warning  No magic number: 2000                                                                no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\auditService.js
+  39:51  warning  No magic number: 200  no-magic-numbers
+  44:58  warning  No magic number: 8    no-magic-numbers
+  70:41  warning  No magic number: 100  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\cloudFunctions.js
+   27:17  warning  No magic number: 0.2  no-magic-numbers
+  117:48  warning  No magic number: 200  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\firebaseQueries.js
+   87:16  warning  No magic number: 5000  no-magic-numbers
+  108:46  warning  No magic number: 1000  no-magic-numbers
+  170:64  warning  No magic number: 5000  no-magic-numbers
+  225:16  warning  No magic number: 20    no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\firebaseSave.js
+  122:42  warning  Arrow function has a complexity of 16. Maximum allowed is 15                         complexity
+  192:38  warning  Refactor this function to reduce its Cognitive Complexity from 21 to the 20 allowed  sonarjs/cognitive-complexity
+  192:38  warning  Async arrow function has a complexity of 17. Maximum allowed is 15                   complexity
+  281:6   warning  No magic number: 3000                                                                no-magic-numbers
+  291:6   warning  No magic number: 30000                                                               no-magic-numbers
+  309:49  warning  No magic number: 50                                                                  no-magic-numbers
+  354:60  warning  No magic number: 8000                                                                no-magic-numbers
+  437:58  warning  No magic number: 8000                                                                no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\gemini.js
+   22:67  warning  Refactor this function to reduce its Cognitive Complexity from 28 to the 20 allowed  sonarjs/cognitive-complexity
+   22:67  warning  Async arrow function has a complexity of 17. Maximum allowed is 15                   complexity
+   31:69  warning  No magic number: 1000                                                                no-magic-numbers
+   48:33  warning  No magic number: 429                                                                 no-magic-numbers
+   54:42  warning  No magic number: 1000                                                                no-magic-numbers
+   55:24  warning  No magic number: 2                                                                   no-magic-numbers
+   55:38  warning  No magic number: 5000                                                                no-magic-numbers
+   59:39  warning  No magic number: 1000                                                                no-magic-numbers
+   68:28  warning  No magic number: 1000                                                                no-magic-numbers
+   74:63  warning  No magic number: 1000                                                                no-magic-numbers
+   82:33  warning  No magic number: 403                                                                 no-magic-numbers
+   89:33  warning  No magic number: 400                                                                 no-magic-numbers
+  109:58  warning  No magic number: 2000                                                                no-magic-numbers
+  120:17  warning  No magic number: 0.2                                                                 no-magic-numbers
+  122:3   warning  Async arrow function has a complexity of 20. Maximum allowed is 15                   complexity
+  220:33  warning  Async arrow function has too many lines (132). Maximum allowed is 100                max-lines-per-function
+  220:51  warning  Async arrow function has a complexity of 25. Maximum allowed is 15                   complexity
+  313:72  warning  No magic number: 500                                                                 no-magic-numbers
+  369:38  warning  No magic number: 100                                                                 no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\geminiSecure.js
+   29:17  warning  No magic number: 0.2  no-magic-numbers
+   64:49  warning  No magic number: 10   no-magic-numbers
+  174:7   warning  No magic number: 0.3  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\googleSheets.js
+   16:57  warning  No magic number: 100000  no-magic-numbers
+  112:6   warning  No magic number: 1000    no-magic-numbers
+  143:6   warning  No magic number: 1000    no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\portkey.js
+   73:17  warning  No magic number: 0.2  no-magic-numbers
+  202:28  warning  No magic number: 500  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\portkeySecure.js
+  41:17  warning  No magic number: 0.2  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\promptBuilder.js
+  28:38  warning  Arrow function has too many lines (325). Maximum allowed is 100  max-lines-per-function
+  33:3   warning  Arrow function has a complexity of 31. Maximum allowed is 15     complexity
+  36:50  warning  No magic number: 6                                               no-magic-numbers
+  58:50  warning  No magic number: 0.7                                             no-magic-numbers
+  60:14  warning  No magic number: 0.3                                             no-magic-numbers
+  62:21  warning  No magic number: 0.7                                             no-magic-numbers
+  82:17  warning  No magic number: 5                                               no-magic-numbers
+  91:61  warning  No magic number: 150                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\prompts\translationPrompts.js
+  35:3  warning  No magic number: 2  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\scormExporter.js
+   29:59  warning  No magic number: 36   no-magic-numbers
+   29:70  warning  No magic number: 2    no-magic-numbers
+   29:73  warning  No magic number: 9    no-magic-numbers
+   85:28  warning  No magic number: 60   no-magic-numbers
+   89:59  warning  No magic number: 2    no-magic-numbers
+  172:26  warning  No magic number: 5    no-magic-numbers
+  178:26  warning  No magic number: 100  no-magic-numbers
+  189:42  warning  No magic number: 2    no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\trainingDataService.js
+   84:55  warning  No magic number: 1000  no-magic-numbers
+  190:60  warning  No magic number: 500   no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\analyticsStore.js
+  103:46  warning  No magic number: 100  no-magic-numbers
+  246:29  warning  No magic number: 6    no-magic-numbers
+  261:55  warning  No magic number: 70   no-magic-numbers
+  269:51  warning  No magic number: 60   no-magic-numbers
+  302:58  warning  No magic number: 75   no-magic-numbers
+  378:52  warning  No magic number: -10  no-magic-numbers
+  495:69  warning  No magic number: 100  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\answerValidator.js
+   15:1   warning  Function 'extractKeyTerms' has too many lines (105). Maximum allowed is 100  max-lines-per-function
+  121:37  warning  No magic number: 2                                                           no-magic-numbers
+  131:8   warning  Function 'validateAnswer' has a complexity of 17. Maximum allowed is 15      complexity
+  185:46  warning  No magic number: 100                                                         no-magic-numbers
+  188:31  warning  No magic number: 50                                                          no-magic-numbers
+  191:20  warning  No magic number: 30                                                          no-magic-numbers
+  194:27  warning  No magic number: 50                                                          no-magic-numbers
+  196:27  warning  No magic number: 70                                                          no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\bulkDeleteDeleted.js
+  47:28  warning  No magic number: 10    no-magic-numbers
+  50:69  warning  No magic number: 60    no-magic-numbers
+  54:25  warning  No magic number: 10    no-magic-numbers
+  55:45  warning  No magic number: 10    no-magic-numbers
+  67:56  warning  No magic number: 3000  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\constants.js
+  158:17  warning  No magic number: 30    no-magic-numbers
+  158:22  warning  No magic number: 1000  no-magic-numbers
+  159:18  warning  No magic number: 45    no-magic-numbers
+  159:23  warning  No magic number: 60    no-magic-numbers
+  159:28  warning  No magic number: 1000  no-magic-numbers
+  165:11  warning  No magic number: 60    no-magic-numbers
+  165:16  warning  No magic number: 1000  no-magic-numbers
+  166:9   warning  No magic number: 60    no-magic-numbers
+  166:14  warning  No magic number: 60    no-magic-numbers
+  166:19  warning  No magic number: 1000  no-magic-numbers
+  167:8   warning  No magic number: 24    no-magic-numbers
+  167:13  warning  No magic number: 60    no-magic-numbers
+  167:18  warning  No magic number: 60    no-magic-numbers
+  167:23  warning  No magic number: 1000  no-magic-numbers
+  168:9   warning  No magic number: 7     no-magic-numbers
+  168:13  warning  No magic number: 24    no-magic-numbers
+  168:18  warning  No magic number: 60    no-magic-numbers
+  168:23  warning  No magic number: 60    no-magic-numbers
+  168:28  warning  No magic number: 1000  no-magic-numbers
+  169:10  warning  No magic number: 30    no-magic-numbers
+  169:15  warning  No magic number: 24    no-magic-numbers
+  169:20  warning  No magic number: 60    no-magic-numbers
+  169:25  warning  No magic number: 60    no-magic-numbers
+  169:30  warning  No magic number: 1000  no-magic-numbers
+  170:12  warning  No magic number: 90    no-magic-numbers
+  170:17  warning  No magic number: 24    no-magic-numbers
+  170:22  warning  No magic number: 60    no-magic-numbers
+  170:27  warning  No magic number: 60    no-magic-numbers
+  170:32  warning  No magic number: 1000  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\contextOptimizer.js
+   65:44  warning  No magic number: 1000  no-magic-numbers
+   93:73  warning  No magic number: 4     no-magic-numbers
+   97:42  warning  No magic number: 1000  no-magic-numbers
+  140:50  warning  No magic number: 4     no-magic-numbers
+  151:50  warning  No magic number: 4     no-magic-numbers
+  175:49  warning  No magic number: 4     no-magic-numbers
+  195:87  warning  No magic number: 100   no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\csrf.js
+  14:34  warning  No magic number: 32  no-magic-numbers
+  16:52  warning  No magic number: 16  no-magic-numbers
+  16:65  warning  No magic number: 2   no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\databaseCleanup.js
+   19:42  warning  Async arrow function has too many lines (109). Maximum allowed is 100  max-lines-per-function
+   82:35  warning  Arrow function has a complexity of 17. Maximum allowed is 15           complexity
+  118:28  warning  No magic number: 30                                                    no-magic-numbers
+  205:17  warning  No magic number: 30                                                    no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\dateHelpers.js
+  3:58  warning  No magic number: 2  no-magic-numbers
+  4:51  warning  No magic number: 2  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\diffUtils.js
+  57:62  warning  No magic number: 100  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\exportUtils.js
+  25:37  warning  Arrow function has a complexity of 21. Maximum allowed is 15  complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\externalCritique.js
+   27:59  warning  No magic number: 2     no-magic-numbers
+  136:66  warning  No magic number: 5000  no-magic-numbers
+  143:56  warning  No magic number: 5000  no-magic-numbers
+  161:57  warning  No magic number: 2     no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\fileProcessor.js
+   64:25  warning  No magic number: 5                                            no-magic-numbers
+   70:38  warning  Arrow function has a complexity of 39. Maximum allowed is 15  complexity
+   73:23  warning  No magic number: 10                                           no-magic-numbers
+   80:47  warning  No magic number: 5                                            no-magic-numbers
+  104:47  warning  No magic number: 5                                            no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\importScores.js
+  112:18  warning  No magic number: 90  no-magic-numbers
+  113:23  warning  No magic number: 80  no-magic-numbers
+  114:23  warning  No magic number: 70  no-magic-numbers
+  115:23  warning  No magic number: 60  no-magic-numbers
+  116:23  warning  No magic number: 50  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\lazyLoader.js
+  18:17  warning  No magic number: 100  no-magic-numbers
+  46:23  warning  No magic number: 100  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateFirestoreScores.js
+   13:42  warning  No magic number: 95    no-magic-numbers
+   14:37  warning  No magic number: 5     no-magic-numbers
+   14:40  warning  No magic number: 100   no-magic-numbers
+   15:31  warning  No magic number: 80    no-magic-numbers
+   16:37  warning  No magic number: 10    no-magic-numbers
+   16:41  warning  No magic number: 100   no-magic-numbers
+   17:31  warning  No magic number: 60    no-magic-numbers
+   18:37  warning  No magic number: 15    no-magic-numbers
+   18:41  warning  No magic number: 100   no-magic-numbers
+   20:37  warning  No magic number: 20    no-magic-numbers
+   20:41  warning  No magic number: 100   no-magic-numbers
+   81:70  warning  No magic number: 3000  no-magic-numbers
+   94:9   warning  No magic number: 5000  no-magic-numbers
+  102:59  warning  No magic number: 5000  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\migrateScores.js
+  15:42  warning  No magic number: 95   no-magic-numbers
+  17:37  warning  No magic number: 5    no-magic-numbers
+  17:40  warning  No magic number: 100  no-magic-numbers
+  18:31  warning  No magic number: 80   no-magic-numbers
+  20:37  warning  No magic number: 10   no-magic-numbers
+  20:41  warning  No magic number: 100  no-magic-numbers
+  21:31  warning  No magic number: 60   no-magic-numbers
+  23:37  warning  No magic number: 15   no-magic-numbers
+  23:41  warning  No magic number: 100  no-magic-numbers
+  26:37  warning  No magic number: 20   no-magic-numbers
+  26:41  warning  No magic number: 100  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\mockQuestionGenerator.js
+   47:34  warning  No magic number: 0.3                            no-magic-numbers
+   66:47  warning  No magic number: 0.5                            no-magic-numbers
+   72:50  warning  No magic number: 4                              no-magic-numbers
+   78:41  warning  No magic number: 4                              no-magic-numbers
+   83:27  warning  No magic number: 4                              no-magic-numbers
+   98:36  warning  No magic number: 0.5                            no-magic-numbers
+  116:43  warning  No magic number: 30                             no-magic-numbers
+  116:49  warning  No magic number: 70                             no-magic-numbers
+  127:19  warning  Number constants declarations must use 'const'  no-magic-numbers
+  141:74  warning  No magic number: 8                              no-magic-numbers
+  141:78  warning  No magic number: 10                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\normalizeQuestion.js
+   24:32  warning  No magic number: 16                                              no-magic-numbers
+   25:36  warning  No magic number: 0x3                                             no-magic-numbers
+   25:43  warning  No magic number: 0x8                                             no-magic-numbers
+   26:23  warning  No magic number: 16                                              no-magic-numbers
+   84:34  warning  Arrow function has too many lines (188). Maximum allowed is 100  max-lines-per-function
+   84:60  warning  Arrow function has a complexity of 78. Maximum allowed is 15     complexity
+  409:58  warning  No magic number: 1000                                            no-magic-numbers
+  430:17  warning  No magic number: 60                                              no-magic-numbers
+  432:24  warning  No magic number: 3600                                            no-magic-numbers
+  433:39  warning  No magic number: 60                                              no-magic-numbers
+  434:28  warning  No magic number: 60                                              no-magic-numbers
+  437:40  warning  No magic number: 3600                                            no-magic-numbers
+  438:40  warning  No magic number: 3600                                            no-magic-numbers
+  438:48  warning  No magic number: 60                                              no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\parserUtils.js
+   54:65  warning  No magic number: 0.85                                            no-magic-numbers
+   69:55  warning  No magic number: 50                                              no-magic-numbers
+   90:15  warning  No magic number: 0.85                                            no-magic-numbers
+  112:32  warning  Arrow function has a complexity of 20. Maximum allowed is 15     complexity
+  177:26  warning  No magic number: 60                                              no-magic-numbers
+  179:30  warning  No magic number: 30                                              no-magic-numbers
+  181:44  warning  No magic number: 20                                              no-magic-numbers
+  186:35  warning  No magic number: 50                                              no-magic-numbers
+  186:61  warning  No magic number: 50                                              no-magic-numbers
+  193:31  warning  Arrow function has too many lines (136). Maximum allowed is 100  max-lines-per-function
+  214:41  warning  Arrow function has a complexity of 17. Maximum allowed is 15     complexity
+  276:25  warning  No magic number: 4                                               no-magic-numbers
+  279:35  warning  Arrow function has a complexity of 27. Maximum allowed is 15     complexity
+  388:34  warning  No magic number: 0.5                                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\questionFilters.js
+   39:40  warning  Arrow function has too many lines (109). Maximum allowed is 100                      max-lines-per-function
+   60:37  warning  Refactor this function to reduce its Cognitive Complexity from 73 to the 20 allowed  sonarjs/cognitive-complexity
+   60:37  warning  Arrow function has a complexity of 49. Maximum allowed is 15                         complexity
+  136:25  warning  No magic number: 90                                                                  no-magic-numbers
+  139:25  warning  No magic number: 80                                                                  no-magic-numbers
+  139:40  warning  No magic number: 90                                                                  no-magic-numbers
+  142:25  warning  No magic number: 70                                                                  no-magic-numbers
+  142:40  warning  No magic number: 80                                                                  no-magic-numbers
+  145:25  warning  No magic number: 60                                                                  no-magic-numbers
+  145:40  warning  No magic number: 70                                                                  no-magic-numbers
+  148:26  warning  No magic number: 70                                                                  no-magic-numbers
+  163:50  warning  No magic number: 2                                                                   no-magic-numbers
+  165:28  warning  No magic number: 5                                                                   no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\questionValidator.js
+  29:27  warning  Number constants declarations must use 'const'  no-magic-numbers
+  45:31  warning  No magic number: 20                             no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\quizUtils.js
+  15:32  warning  No magic number: 16          no-magic-numbers
+  16:36  warning  No magic number: 0x3         no-magic-numbers
+  16:43  warning  No magic number: 0x8         no-magic-numbers
+  17:23  warning  No magic number: 16          no-magic-numbers
+  30:21  warning  No magic number: 5           no-magic-numbers
+  47:22  warning  No magic number: 1103515245  no-magic-numbers
+  47:35  warning  No magic number: 12345       no-magic-numbers
+  47:44  warning  No magic number: 0x7fffffff  no-magic-numbers
+  48:20  warning  No magic number: 0x7fffffff  no-magic-numbers
+  84:55  warning  No magic number: 100         no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\quotaEnforcement.js
+  122:64  warning  No magic number: 100  no-magic-numbers
+  133:60  warning  No magic number: 100  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\rateLimitState.js
+  23:47  warning  No magic number: 1000  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\reviewerAnalytics.js
+  102:49  warning  No magic number: 2                                            no-magic-numbers
+  114:25  warning  Arrow function has a complexity of 21. Maximum allowed is 15  complexity
+  161:29  warning  No magic number: 100000                                       no-magic-numbers
+  163:56  warning  No magic number: 1000                                         no-magic-numbers
+  277:40  warning  No magic number: 1000                                         no-magic-numbers
+  277:47  warning  No magic number: 60                                           no-magic-numbers
+  277:52  warning  No magic number: 60                                           no-magic-numbers
+  277:57  warning  No magic number: 24                                           no-magic-numbers
+  279:46  warning  No magic number: 2                                            no-magic-numbers
+  290:17  warning  No magic number: 60                                           no-magic-numbers
+  292:24  warning  No magic number: 3600                                         no-magic-numbers
+  293:39  warning  No magic number: 60                                           no-magic-numbers
+  294:28  warning  No magic number: 60                                           no-magic-numbers
+  297:40  warning  No magic number: 3600                                         no-magic-numbers
+  298:40  warning  No magic number: 3600                                         no-magic-numbers
+  298:48  warning  No magic number: 60                                           no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\security.js
+  10:23  warning  No magic number: 5     no-magic-numbers
+  10:27  warning  No magic number: 1024  no-magic-numbers
+  10:34  warning  No magic number: 1024  no-magic-numbers
+  79:22  warning  No magic number: 2     no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\stringHelpers.js
+  41:18  warning  No magic number: 500                                                                 no-magic-numbers
+  41:36  warning  No magic number: 500                                                                 no-magic-numbers
+  79:51  warning  Refactor this function to reduce its Cognitive Complexity from 24 to the 20 allowed  sonarjs/cognitive-complexity
+  79:51  warning  Arrow function has a complexity of 20. Maximum allowed is 15                         complexity
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\themeColors.js
+  316:16  warning  No magic number: 90  no-magic-numbers
+  317:16  warning  No magic number: 80  no-magic-numbers
+  318:16  warning  No magic number: 70  no-magic-numbers
+  319:16  warning  No magic number: 60  no-magic-numbers
+  401:16  warning  No magic number: 90  no-magic-numbers
+  402:16  warning  No magic number: 70  no-magic-numbers
+  403:16  warning  No magic number: 50  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\tokenCounter.js
+   50:36  warning  No magic number: 4        no-magic-numbers
+   63:38  warning  No magic number: 1000000  no-magic-numbers
+   64:40  warning  No magic number: 1000000  no-magic-numbers
+   75:16  warning  No magic number: 0.01     no-magic-numbers
+   76:28  warning  No magic number: 1000     no-magic-numbers
+   76:42  warning  No magic number: 3        no-magic-numbers
+   78:29  warning  No magic number: 4        no-magic-numbers
+   91:43  warning  No magic number: 100      no-magic-numbers
+  110:23  warning  No magic number: 90       no-magic-numbers
+  111:23  warning  No magic number: 70       no-magic-numbers
+  123:81  warning  No magic number: 2000     no-magic-numbers
+  188:69  warning  No magic number: 100      no-magic-numbers
+  189:75  warning  No magic number: 100      no-magic-numbers
+  190:68  warning  No magic number: 100      no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\tutorialAnalytics.js
+  49:27  warning  No magic number: 100  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\tutorial\domHelpers.js
+   37:52  warning  No magic number: 5000  no-magic-numbers
+  113:43  warning  No magic number: 100   no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\urlValidator.js
+  93:21  warning  No magic number: 10  no-magic-numbers
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\validation.js
+   11:44  warning  Refactor this function to reduce its Cognitive Complexity from 21 to the 20 allowed  sonarjs/cognitive-complexity
+   11:44  warning  Arrow function has a complexity of 17. Maximum allowed is 15                         complexity
+   19:40  warning  No magic number: 10                                                                  no-magic-numbers
+   22:40  warning  No magic number: 1000                                                                no-magic-numbers
+   35:48  warning  No magic number: 500                                                                 no-magic-numbers
+   44:43  warning  No magic number: 2                                                                   no-magic-numbers
+   44:74  warning  No magic number: 6                                                                   no-magic-numbers
+   48:61  warning  No magic number: 500                                                                 no-magic-numbers
+   56:63  warning  No magic number: 2000                                                                no-magic-numbers
+   84:48  warning  No magic number: 100                                                                 no-magic-numbers
+   93:43  warning  No magic number: 20                                                                  no-magic-numbers
+   93:72  warning  No magic number: 200                                                                 no-magic-numbers
+  132:28  warning  No magic number: 10000                                                               no-magic-numbers
+  133:40  warning  No magic number: 10000                                                               no-magic-numbers
+
+Γ£û 1218 problems (26 errors, 1192 warnings)
+

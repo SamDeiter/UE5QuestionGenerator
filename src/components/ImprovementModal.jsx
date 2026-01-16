@@ -345,11 +345,12 @@ const ImprovementModal = ({
               }}
               className="px-4 py-1.5 rounded-lg font-bold text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-600 transition-all pointer-events-auto cursor-pointer"
             >
-              {changesExplanation
-                ? lockedByName
-                  ? `Keep ${lockedByName.split(" ")[0]}'s version`
-                  : "Keep Original"
-                : "Close"}
+              {(() => {
+                if (!changesExplanation) return "Close";
+                if (lockedByName)
+                  return `Keep ${lockedByName.split(" ")[0]}'s version`;
+                return "Keep Original";
+              })()}
             </button>
             {/* Only show Apply button if content is NOT locked */}
             {changesExplanation && !isContentLocked && (
