@@ -27,7 +27,6 @@ import QuestionHeader from "./QuestionItem/QuestionHeader";
 
 import { useEditLock } from "../hooks/useEditLock";
 import { logger } from "../utils/logger";
-import { isEpicLink } from "../utils/urlValidator";
 import { useAuth } from "../hooks/useAuth";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 
@@ -201,44 +200,14 @@ const QuestionItem = ({
   ]);
 
   const handleOpenDocs = useCallback(() => {
-    // Opens the docs AND shows the verify confirmation modal
-    const urlToOpen = q.sourceUrl || q.SourceURL || q.SourceUrl;
-    const hasValidUrl = isEpicLink(urlToOpen);
-
-    if (hasValidUrl) {
-      window.open(urlToOpen.trim(), "_blank", "noopener,noreferrer");
-      // Show verify modal after opening docs
-      setShowVerifyModal("docs");
-    } else {
-      if (showMessage) {
-        showMessage("⚠️ No valid Epic Docs link found", TOAST_DURATION.MEDIUM);
-      }
-    }
-  }, [q.sourceUrl, q.SourceURL, q.SourceUrl, showMessage]);
+    // Just shows the verify modal - docs will be opened inside the modal
+    setShowVerifyModal(true);
+  }, []);
 
   const handleOpenSearch = useCallback(() => {
-    // Opens search AND shows the verify confirmation modal
-    if (q.sourceExcerpt) {
-      // Copy to clipboard
-      navigator.clipboard
-        .writeText(q.sourceExcerpt)
-        .catch((err) => logger.error("Clipboard fail:", err));
-
-      // Open Google
-      const query = encodeURIComponent(q.sourceExcerpt);
-      window.open(
-        `https://www.google.com/search?q=${query}`,
-        "_blank",
-        "noopener,noreferrer"
-      );
-      // Show verify modal after opening search
-      setShowVerifyModal("search");
-    } else {
-      if (showMessage) {
-        showMessage("⚠️ No source excerpt to search", TOAST_DURATION.MEDIUM);
-      }
-    }
-  }, [q.sourceExcerpt, showMessage]);
+    // Just shows the verify modal - search will be opened inside the modal
+    setShowVerifyModal(true);
+  }, []);
 
   // NEW: Verification handlers for Traffic Light outcomes
   const handleVerifyViaDocs = useCallback(() => {
