@@ -20,6 +20,7 @@ import ValidationWarnings from "./QuestionItem/ValidationWarnings";
 import ExplanationDisplay from "./QuestionItem/ExplanationDisplay";
 import SourceContextCard from "./QuestionItem/SourceContextCard";
 import ImprovementModal from "./ImprovementModal";
+import VerifyConfirmModal from "./VerifyConfirmModal";
 
 import QuestionNotesField from "./QuestionItem/QuestionNotesField";
 import QuestionHeader from "./QuestionItem/QuestionHeader";
@@ -79,6 +80,7 @@ const QuestionItem = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState("");
   const [showImprovementModal, setShowImprovementModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(null); // null or "docs" or "search"
   const lastProcessedCritiqueRef = useRef(null);
 
   // Display question (supports language variants)
@@ -199,19 +201,14 @@ const QuestionItem = ({
   ]);
 
   const handleOpenDocs = useCallback(() => {
-    // Only opens the docs - NO auto-verification
-    // Humans must explicitly click "Verify" button separately
+    // Opens the docs AND shows the verify confirmation modal
     const urlToOpen = q.sourceUrl || q.SourceURL || q.SourceUrl;
     const hasValidUrl = isEpicLink(urlToOpen);
 
     if (hasValidUrl) {
       window.open(urlToOpen.trim(), "_blank", "noopener,noreferrer");
-      if (showMessage) {
-        showMessage(
-          "📄 Docs opened - click Verify when confirmed",
-          TOAST_DURATION.MEDIUM
-        );
-      }
+      // Show verify modal after opening docs
+      setShowVerifyModal("docs");
     } else {
       if (showMessage) {
         showMessage("⚠️ No valid Epic Docs link found", TOAST_DURATION.MEDIUM);
@@ -220,8 +217,7 @@ const QuestionItem = ({
   }, [q.sourceUrl, q.SourceURL, q.SourceUrl, showMessage]);
 
   const handleOpenSearch = useCallback(() => {
-    // Only opens search - NO auto-verification
-    // Humans must explicitly click "Verify" button separately
+    // Opens search AND shows the verify confirmation modal
     if (q.sourceExcerpt) {
       // Copy to clipboard
       navigator.clipboard
@@ -235,12 +231,8 @@ const QuestionItem = ({
         "_blank",
         "noopener,noreferrer"
       );
-      if (showMessage) {
-        showMessage(
-          "🔍 Search opened - click Verify when confirmed",
-          TOAST_DURATION.MEDIUM
-        );
-      }
+      // Show verify modal after opening search
+      setShowVerifyModal("search");
     } else {
       if (showMessage) {
         showMessage("⚠️ No source excerpt to search", TOAST_DURATION.MEDIUM);
@@ -578,6 +570,20 @@ const QuestionItem = ({
               }
             }}
             onDismiss={handleModalDismiss}
+          />
+        )}
+
+        {/* Source Verification Modal */}
+        {showVerifyModal && !q.humanVerified && (
+          <VerifyConfirmModal
+            sourceUrl={q.sourceUrl || q.SourceURL || q.SourceUrl}
+            sourceExcerpt={q.sourceExcerpt}
+            verifyingMethod={showVerifyModal}
+            onConfirm={() => {
+              handleConfirmVerify();
+              setShowVerifyModal(null);
+            }}
+            onDismiss={() => setShowVerifyModal(null)}
           />
         )}
       </div>
