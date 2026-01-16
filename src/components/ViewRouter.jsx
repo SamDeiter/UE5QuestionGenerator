@@ -15,6 +15,7 @@ const TranslationManagementView = React.lazy(() =>
 );
 import QuestionList from "./QuestionList";
 import { APP_MODES } from "../utils/constants";
+import { createTutorialDemoQuestion } from "../utils/tutorialDemoQuestion";
 
 /**
  * EmptyReviewState - Illustrated empty state with CTA
@@ -100,6 +101,7 @@ const ViewRouter = ({
   onNavigateHome, // callback to go back to landing page
   onStartTutorial, // callback to start tutorial scenario
   allQuestionsMap, // all questions for analytics
+  activeScenario, // active tutorial scenario for demo card injection
 }) => {
   const {
     handleLoadFromSheets,
@@ -134,10 +136,20 @@ const ViewRouter = ({
   const renderView = () => {
     // Review mode with questions is special-cased because it's the most common and complex
     if (appMode === APP_MODES.REVIEW) {
-      if (uniqueFilteredQuestions.length > 0) {
+      // Check if tutorial is active for review mode - inject demo card if no real questions
+      const isReviewTutorialActive = activeScenario === "review";
+      const hasRealQuestions = uniqueFilteredQuestions.length > 0;
+
+      // Determine effective questions - use real questions, demo if tutorial active, or empty
+      let effectiveQuestions = uniqueFilteredQuestions;
+      if (!hasRealQuestions && isReviewTutorialActive) {
+        effectiveQuestions = [createTutorialDemoQuestion()];
+      }
+
+      if (effectiveQuestions.length > 0) {
         return (
           <ReviewMode
-            questions={uniqueFilteredQuestions}
+            questions={effectiveQuestions}
             currentIndex={currentReviewIndex}
             setCurrentIndex={setCurrentReviewIndex}
             onUpdateStatus={handleUpdateStatus}

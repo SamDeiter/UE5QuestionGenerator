@@ -130,6 +130,7 @@ const MainLayout = ({
   viewRouterSetters,
   handleGoHome,
   onStartTutorial,
+  activeScenario, // Tutorial state for demo card
 }) => {
   /**
    * Handle mode changes with proper cleanup and state management
@@ -194,6 +195,7 @@ const MainLayout = ({
               onNavigateHome={handleGoHome}
               onStartTutorial={onStartTutorial}
               allQuestionsMap={allQuestionsMap}
+              activeScenario={activeScenario}
             />
           </Suspense>
         </div>

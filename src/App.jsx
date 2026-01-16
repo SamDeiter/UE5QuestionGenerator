@@ -786,6 +786,7 @@ const App = () => {
               }}
               handleGoHome={handleGoHome}
               onStartTutorial={handleStartTutorial}
+              activeScenario={activeScenario}
             />
           )}
         </Suspense>
