@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import DOMPurify from "dompurify";
 import Icon from "../Icon";
 import { formatDate } from "../../utils/reviewerAnalytics";
@@ -11,24 +11,46 @@ const SourceContextActions = ({
   verifiedAt,
   onVerifyDocs,
   onVerifySearch,
+  onConfirmVerify,
   canVerify,
 }) => {
+  const [hasOpenedDocs, setHasOpenedDocs] = useState(false);
   const hasValidUrl = isEpicLink(sourceUrl);
   const isVerifyDisabled = !canVerify && !isVerified;
   const cleanUrl = sourceUrl?.trim() || "";
 
   const getDocsButtonStyles = () => {
-    if (isVerifyDisabled)
+    if (isVerifyDisabled) {
       return "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed opacity-60";
-    if (hasValidUrl)
+    }
+    if (hasValidUrl) {
       return "bg-yellow-500/20 text-yellow-400 border-yellow-500/40 hover:bg-yellow-500/30";
+    }
     return "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30 opacity-50";
   };
 
   const getSearchButtonStyles = () => {
-    if (isVerifyDisabled)
+    if (isVerifyDisabled) {
       return "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed opacity-60";
+    }
     return "bg-blue-500/20 text-blue-400 border-blue-500/40 hover:bg-blue-500/30";
+  };
+
+  const handleOpenDocs = (e) => {
+    e.preventDefault();
+    setHasOpenedDocs(true);
+    onVerifyDocs?.();
+  };
+
+  const handleOpenSearch = (e) => {
+    e.preventDefault();
+    setHasOpenedDocs(true);
+    onVerifySearch?.();
+  };
+
+  const handleConfirmVerify = (e) => {
+    e.preventDefault();
+    onConfirmVerify?.();
   };
 
   return (
@@ -45,10 +67,7 @@ const SourceContextActions = ({
         <button
           type="button"
           disabled={isVerifyDisabled}
-          onClick={(e) => {
-            e.preventDefault();
-            onVerifyDocs?.();
-          }}
+          onClick={handleOpenDocs}
           className={`flex-1 min-w-[140px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md border transition-all ${getDocsButtonStyles()}`}
           title={
             hasValidUrl
@@ -67,10 +86,7 @@ const SourceContextActions = ({
         <button
           type="button"
           disabled={isVerifyDisabled}
-          onClick={(e) => {
-            e.preventDefault();
-            onVerifySearch?.();
-          }}
+          onClick={handleOpenSearch}
           className={`flex-1 min-w-[140px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md border transition-all ${getSearchButtonStyles()}`}
           title="Search the excerpt text on Google"
         >
@@ -78,6 +94,19 @@ const SourceContextActions = ({
           Search Excerpt
         </button>
       </div>
+
+      {/* BUTTON 3: CONFIRM VERIFIED - Shows after opening docs, even if score is low */}
+      {hasOpenedDocs && !isVerified && (
+        <button
+          type="button"
+          onClick={handleConfirmVerify}
+          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold rounded-md border transition-all bg-emerald-600/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-600/40 hover:border-emerald-400 animate-in fade-in slide-in-from-bottom-2 duration-300"
+          title="Confirm that you have verified the source content"
+        >
+          <Icon name="check-circle" size={16} />
+          Confirm Verified
+        </button>
+      )}
     </div>
   );
 };
@@ -90,6 +119,7 @@ const SourceContextCard = ({
   verifiedAt,
   onVerifyDocs,
   onVerifySearch,
+  onConfirmVerify,
   canVerify = true,
 }) => {
   const hasValidUrl = isEpicLink(sourceUrl);
@@ -150,6 +180,7 @@ const SourceContextCard = ({
           verifiedAt={verifiedAt}
           onVerifyDocs={onVerifyDocs}
           onVerifySearch={onVerifySearch}
+          onConfirmVerify={onConfirmVerify}
           canVerify={canVerify}
         />
       </div>
