@@ -274,11 +274,17 @@ const QuestionItem = ({
     [q.id, onUpdateQuestion, onUpdateStatus, userEmail, showMessage]
   );
 
-  // NEW: Flag as unverified but don't reject - question stays pending with warning
+  // NEW: Flag as unverified but don't reject - question advances to Accept with warning
   const handleFlagUnverified = useCallback(
     (clickInfo = {}) => {
       if (!onUpdateQuestion) return;
       onUpdateQuestion(q.id, {
+        // Mark as verified so it advances to Accept step
+        humanVerified: true,
+        humanVerifiedBy: userEmail || "Unknown",
+        humanVerifiedAt: new Date().toISOString(),
+        verificationSource: "flagged_unverified",
+        // But also flag as source unverified
         sourceUnverified: true,
         sourceUnverifiedBy: userEmail || "Unknown",
         sourceUnverifiedAt: new Date().toISOString(),
@@ -288,7 +294,7 @@ const QuestionItem = ({
       });
       if (showMessage) {
         showMessage(
-          "🚩 Flagged - source not found but question kept for review",
+          "🚩 Flagged - source unverified, ready for Accept/Reject",
           TOAST_DURATION.LONG
         );
       }

@@ -145,7 +145,22 @@ const QuestionHeader = ({
             </span>
           )}
 
-          {/* Creator / Reviewer Info */}
+          {/* Source Unverified Warning Badge */}
+          {q.sourceUnverified && (
+            <span
+              className="px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 bg-amber-900/50 text-amber-400 border border-amber-700/50 animate-pulse"
+              title={`Source not found - flagged by ${
+                q.sourceUnverifiedBy || "Unknown"
+              }${
+                q.sourceUnverifiedAt
+                  ? ` on ${new Date(q.sourceUnverifiedAt).toLocaleDateString()}`
+                  : ""
+              }`}
+            >
+              <Icon name="flag" size={12} />
+              🚩 SOURCE UNVERIFIED
+            </span>
+          )}
           <div className="flex items-center gap-2 ml-1 border-l border-slate-700/50 pl-2">
             <div
               className="flex items-center gap-1 text-xs text-slate-500"
