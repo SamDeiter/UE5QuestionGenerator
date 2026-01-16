@@ -37,21 +37,29 @@ const VerifyConfirmModal = ({
 
   const handleOpenDocs = () => {
     if (hasValidUrl) {
-      window.open(cleanUrl, "_blank", "noopener,noreferrer");
       setClickedDocs(true);
+      // Delay so user sees the checkmark before page opens
+      setTimeout(() => {
+        window.open(cleanUrl, "_blank", "noopener,noreferrer");
+      }, 1500);
     }
   };
 
   const handleOpenSearch = () => {
     if (sourceExcerpt) {
+      // Copy to clipboard first
       navigator.clipboard.writeText(sourceExcerpt).catch(() => {});
-      const query = encodeURIComponent(sourceExcerpt);
-      window.open(
-        `https://www.google.com/search?q=${query}`,
-        "_blank",
-        "noopener,noreferrer"
-      );
       setClickedSearch(true);
+
+      // Delay so user sees "copied" message before page opens
+      const query = encodeURIComponent(sourceExcerpt);
+      setTimeout(() => {
+        window.open(
+          `https://www.google.com/search?q=${query}`,
+          "_blank",
+          "noopener,noreferrer"
+        );
+      }, 1500);
     }
   };
 
