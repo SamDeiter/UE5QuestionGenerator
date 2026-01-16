@@ -274,6 +274,28 @@ const QuestionItem = ({
     [q.id, onUpdateQuestion, onUpdateStatus, userEmail, showMessage]
   );
 
+  // NEW: Flag as unverified but don't reject - question stays pending with warning
+  const handleFlagUnverified = useCallback(
+    (clickInfo = {}) => {
+      if (!onUpdateQuestion) return;
+      onUpdateQuestion(q.id, {
+        sourceUnverified: true,
+        sourceUnverifiedBy: userEmail || "Unknown",
+        sourceUnverifiedAt: new Date().toISOString(),
+        sourceUnverifiedReason: "not_found_anywhere",
+        verificationClickedDocs: clickInfo.clickedDocs || false,
+        verificationClickedSearch: clickInfo.clickedSearch || false,
+      });
+      if (showMessage) {
+        showMessage(
+          "🚩 Flagged - source not found but question kept for review",
+          TOAST_DURATION.LONG
+        );
+      }
+    },
+    [q.id, onUpdateQuestion, userEmail, showMessage]
+  );
+
   const handleFix = useCallback(() => {
     if (onApplyRewrite) {
       onApplyRewrite(q);
@@ -606,6 +628,10 @@ const QuestionItem = ({
             }}
             onReject={(reasonId) => {
               handleRejectVerification(reasonId);
+              setShowVerifyModal(null);
+            }}
+            onFlagUnverified={(clickInfo) => {
+              handleFlagUnverified(clickInfo);
               setShowVerifyModal(null);
             }}
             onDismiss={() => setShowVerifyModal(null)}

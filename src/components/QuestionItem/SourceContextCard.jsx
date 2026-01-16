@@ -68,6 +68,7 @@ const SourceContextActions = ({
           type="button"
           disabled={isVerifyDisabled}
           onClick={handleOpenDocs}
+          data-tour="verify-button"
           className={`flex-1 min-w-[140px] inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md border transition-all ${getDocsButtonStyles()}`}
           title={
             hasValidUrl

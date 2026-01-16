@@ -136,13 +136,13 @@ const ViewRouter = ({
   const renderView = () => {
     // Review mode with questions is special-cased because it's the most common and complex
     if (appMode === APP_MODES.REVIEW) {
-      // Check if tutorial is active for review mode - inject demo card if no real questions
+      // Check if tutorial is active for review mode - ALWAYS use demo card during tutorial
       const isReviewTutorialActive = activeScenario === "review";
-      const hasRealQuestions = uniqueFilteredQuestions.length > 0;
 
-      // Determine effective questions - use real questions, demo if tutorial active, or empty
+      // During tutorial, always use demo card for consistent experience
+      // Otherwise, use real questions
       let effectiveQuestions = uniqueFilteredQuestions;
-      if (!hasRealQuestions && isReviewTutorialActive) {
+      if (isReviewTutorialActive) {
         effectiveQuestions = [createTutorialDemoQuestion()];
       }
 

@@ -26,6 +26,7 @@ const VerifyConfirmModal = ({
   onVerifyDocs,
   onVerifySearch,
   onReject,
+  onFlagUnverified, // NEW: Flag as unverified without rejecting
   onDismiss,
 }) => {
   const [showRejectMenu, setShowRejectMenu] = useState(false);
@@ -99,6 +100,11 @@ const VerifyConfirmModal = ({
   const handleReject = (reasonId) => {
     // Pass click tracking info to parent
     onReject(reasonId, { clickedDocs, clickedSearch });
+  };
+
+  // NEW: Flag as unverified but don't reject
+  const handleFlagUnverified = () => {
+    onFlagUnverified?.({ clickedDocs, clickedSearch });
   };
 
   return (
@@ -256,6 +262,22 @@ const VerifyConfirmModal = ({
                 </button>
               </div>
               <div className="space-y-2">
+                {/* Flag option - amber, non-destructive */}
+                <button
+                  type="button"
+                  onClick={handleFlagUnverified}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-amber-900/30 text-amber-300 border-amber-700/50 hover:bg-amber-800/50 hover:border-amber-500 text-left"
+                >
+                  <Icon name="flag" size={14} className="flex-shrink-0" />
+                  🚩 Cannot find in docs or search (flag for review)
+                </button>
+
+                <div className="border-t border-red-700/30 my-2 pt-2">
+                  <span className="text-xs text-red-400/60 uppercase tracking-wide">
+                    Or reject outright:
+                  </span>
+                </div>
+
                 {REJECTION_REASONS.map((reason) => (
                   <button
                     key={reason.id}

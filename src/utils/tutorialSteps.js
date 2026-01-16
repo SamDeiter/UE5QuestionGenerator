@@ -94,11 +94,11 @@ export const TUTORIAL_SCENARIOS = {
     steps: [
       {
         id: "review-card",
-        title: "Question Card",
+        title: "Question Card Overview",
         content:
-          "Each card shows the question, answers, difficulty, and source excerpt. Use **arrow keys** or buttons to navigate.",
-        target: '[data-tour="review-card"]',
-        position: "right",
+          "Each card shows the **question**, **answers**, **difficulty**, and **source excerpt**. Look for the Source Context section below.",
+        target: null, // No target - centers without scrolling
+        position: "center",
         scenarioId: "review",
         order: 0,
       },
@@ -106,7 +106,7 @@ export const TUTORIAL_SCENARIOS = {
         id: "critique",
         title: "Step 1: AI Critique",
         content:
-          "Click **Critique** for AI quality scoring (70+ = Pass). Low scores show a warning before accepting.",
+          "Click the **Critique** button to get AI quality scoring. Scores of 70+ pass. Low scores show a warning before accepting.",
         target: '[data-tour="critique-button"]',
         position: "bottom",
         scenarioId: "review",
@@ -116,7 +116,7 @@ export const TUTORIAL_SCENARIOS = {
         id: "verify",
         title: "Step 2: Verify Source",
         content:
-          "Click **Verify Source** to open the verification modal. Check **Epic Docs** or **Google Search**, then select where you found the excerpt.",
+          "Click **Verify Source** to open this modal. Use **Epic Documentation** to check the official docs, or **Search Excerpt** to Google the text.",
         target: '[data-tour="verify-button"]',
         position: "bottom",
         scenarioId: "review",
@@ -126,7 +126,7 @@ export const TUTORIAL_SCENARIOS = {
         id: "accept-reject",
         title: "Step 3: Accept or Reject",
         content:
-          "**Accept** verified questions or **Cannot Verify** to reject with a reason (Source Not Found, AI Hallucination, etc.).",
+          "After checking the source, click **Found in Epic Docs**, **Found in Google Search**, or **Cannot Verify** to complete review.",
         target: '[data-tour="review-actions"]',
         position: "left",
         scenarioId: "review",
