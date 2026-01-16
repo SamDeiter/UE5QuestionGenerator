@@ -189,4 +189,55 @@ describe("VerifyConfirmModal", () => {
       expect(screen.getByText("Docs Link Broken")).toBeInTheDocument();
     });
   });
+
+  describe("Flag Unverified Feature", () => {
+    const propsWithFlag = {
+      ...mockProps,
+      onFlagUnverified: vi.fn(),
+    };
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it("shows flag unverified button in rejection menu", () => {
+      render(<VerifyConfirmModal {...propsWithFlag} />);
+
+      // Open reject menu
+      fireEvent.click(screen.getByText(/Cannot Verify/));
+
+      // Should show the flag option
+      expect(
+        screen.getByText(/Cannot find in docs or search/)
+      ).toBeInTheDocument();
+    });
+
+    it("calls onFlagUnverified when flag button clicked", () => {
+      render(<VerifyConfirmModal {...propsWithFlag} />);
+
+      // Open reject menu
+      fireEvent.click(screen.getByText(/Cannot Verify/));
+
+      // Click flag option
+      fireEvent.click(screen.getByText(/Cannot find in docs or search/));
+
+      expect(propsWithFlag.onFlagUnverified).toHaveBeenCalledWith({
+        clickedDocs: false,
+        clickedSearch: false,
+      });
+    });
+
+    it("flag option appears before rejection reasons", () => {
+      render(<VerifyConfirmModal {...propsWithFlag} />);
+
+      // Open reject menu
+      fireEvent.click(screen.getByText(/Cannot Verify/));
+
+      // Both should be present
+      expect(
+        screen.getByText(/Cannot find in docs or search/)
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Or reject outright/)).toBeInTheDocument();
+    });
+  });
 });
