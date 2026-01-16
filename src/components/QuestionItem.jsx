@@ -578,7 +578,6 @@ const QuestionItem = ({
           <VerifyConfirmModal
             sourceUrl={q.sourceUrl || q.SourceURL || q.SourceUrl}
             sourceExcerpt={q.sourceExcerpt}
-            verifyingMethod={showVerifyModal}
             onConfirm={() => {
               handleConfirmVerify();
               setShowVerifyModal(null);

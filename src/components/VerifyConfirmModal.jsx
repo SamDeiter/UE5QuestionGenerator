@@ -1,17 +1,38 @@
 import React from "react";
 import Icon from "./Icon";
+import { isEpicLink } from "../utils/urlValidator";
 
 /**
  * VerifyConfirmModal - Appears after user opens docs to confirm verification
- * Similar UX pattern to the ImprovementModal but simpler for verification
+ * Shows both Epic Docs and Google Search buttons like the SourceContextCard
  */
 const VerifyConfirmModal = ({
   sourceUrl,
   sourceExcerpt,
   onConfirm,
   onDismiss,
-  verifyingMethod = "docs", // "docs" or "search"
 }) => {
+  const hasValidUrl = isEpicLink(sourceUrl);
+  const cleanUrl = sourceUrl?.trim() || "";
+
+  const handleOpenDocs = () => {
+    if (hasValidUrl) {
+      window.open(cleanUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const handleOpenSearch = () => {
+    if (sourceExcerpt) {
+      navigator.clipboard.writeText(sourceExcerpt).catch(() => {});
+      const query = encodeURIComponent(sourceExcerpt);
+      window.open(
+        `https://www.google.com/search?q=${query}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black/80 z-[10000] flex items-start justify-center pt-8 p-4 overflow-y-auto pointer-events-auto cursor-pointer"
@@ -32,9 +53,7 @@ const VerifyConfirmModal = ({
                 Verify Source Content
               </h2>
               <p className="text-xs text-emerald-400/80">
-                {verifyingMethod === "docs"
-                  ? "Epic Documentation opened in new tab"
-                  : "Google Search opened in new tab"}
+                Check the source and confirm the excerpt is accurate
               </p>
             </div>
           </div>
@@ -63,26 +82,6 @@ const VerifyConfirmModal = ({
             </div>
           </div>
 
-          {/* Source URL */}
-          {sourceUrl && (
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Icon name="link" size={14} className="text-yellow-400" />
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">
-                  Source URL
-                </span>
-              </div>
-              <a
-                href={sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-yellow-400 hover:text-yellow-300 underline break-all"
-              >
-                {sourceUrl}
-              </a>
-            </div>
-          )}
-
           {/* Source Excerpt */}
           {sourceExcerpt && (
             <div className="bg-orange-900/20 border border-orange-700/30 rounded-lg p-4">
@@ -97,6 +96,56 @@ const VerifyConfirmModal = ({
               </p>
             </div>
           )}
+
+          {/* Verification Buttons - Like SourceContextCard */}
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Icon name="external-link" size={14} className="text-slate-400" />
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                Open Source to Verify
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {/* Epic Documentation Button */}
+              <button
+                type="button"
+                onClick={handleOpenDocs}
+                disabled={!hasValidUrl}
+                className={`flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-lg border transition-all ${
+                  hasValidUrl
+                    ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/40 hover:bg-yellow-500/30 hover:border-yellow-400"
+                    : "bg-red-500/20 text-red-400 border-red-500/40 opacity-50 cursor-not-allowed"
+                }`}
+                title={
+                  hasValidUrl
+                    ? `Open: ${cleanUrl}`
+                    : "Documentation link is missing"
+                }
+              >
+                <Icon
+                  name={hasValidUrl ? "external-link" : "alert-circle"}
+                  size={16}
+                />
+                {hasValidUrl ? "Epic Documentation" : "Docs Link Broken"}
+              </button>
+
+              {/* Google Search Button */}
+              <button
+                type="button"
+                onClick={handleOpenSearch}
+                disabled={!sourceExcerpt}
+                className={`flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-lg border transition-all ${
+                  sourceExcerpt
+                    ? "bg-blue-500/20 text-blue-400 border-blue-500/40 hover:bg-blue-500/30 hover:border-blue-400"
+                    : "bg-slate-700/50 text-slate-500 border-slate-600 opacity-50 cursor-not-allowed"
+                }`}
+                title="Search the excerpt on Google"
+              >
+                <Icon name="search" size={16} />
+                Search Excerpt
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Footer Buttons */}
