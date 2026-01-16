@@ -170,8 +170,8 @@ const VerifyConfirmModal = ({
             </div>
             {clickedSearch && (
               <p className="text-xs text-blue-400/80 mt-2 flex items-center gap-1 animate-in fade-in duration-300">
-                <Icon name="clipboard" size={12} />
-                Excerpt copied to clipboard for easy searching
+                <Icon name="copy" size={12} />
+                📋 Excerpt copied to clipboard for easy searching
               </p>
             )}
             {(clickedDocs || clickedSearch) && (
