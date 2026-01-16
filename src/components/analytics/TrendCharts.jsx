@@ -10,7 +10,6 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  Cell,
 } from "recharts";
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
 

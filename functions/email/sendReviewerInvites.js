@@ -119,10 +119,12 @@ exports.sendReviewerInvites = functions
         }
 
         // Format max uses
-        const usesText =
-          maxUses === -1
-            ? "unlimited uses"
-            : `${maxUses} use${maxUses !== 1 ? "s" : ""}`;
+        let usesText;
+        if (maxUses === -1) {
+          usesText = "unlimited uses";
+        } else {
+          usesText = `${maxUses} use${maxUses !== 1 ? "s" : ""}`;
+        }
 
         const msg = {
           to: email,

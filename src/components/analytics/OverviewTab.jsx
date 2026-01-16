@@ -37,12 +37,10 @@ const OverviewTab = ({
   ];
 
   // Translation coverage
-  const englishCount = translationLanguages["English"] || 0;
+  // englishCount and translationPercent removed - not used in current UI
   const translatedCount = Object.entries(translationLanguages)
     .filter(([lang]) => lang !== "English")
     .reduce((sum, [, count]) => sum + count, 0);
-  const translationPercent =
-    englishCount > 0 ? Math.round((translatedCount / englishCount) * 100) : 0;
 
   return (
     <div className="space-y-6">
