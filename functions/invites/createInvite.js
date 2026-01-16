@@ -350,10 +350,10 @@ exports.generateCritique = functions
         // Try multiple patterns to extract score (Robust Fallback)
         let score = null;
         const patterns = [
-          /SCORE:\s*(\d+)/i, // SCORE: 75
-          /"score"\s*:\s*(\d+)/i, // "score": 75
-          /\bscore\s*[:\-=]\s*(\d+)/i, // score: 75, score = 75
-          /(\d+)\s*\/\s*100/i, // 75/100
+          /SCORE:\s{0,5}(\d+)/i, // SCORE: 75
+          /"score"\s{0,3}:\s{0,3}(\d+)/i, // "score": 75
+          /\bscore\s{0,3}[:=]\s{0,3}(\d+)/i, // score: 75, score = 75
+          /(\d{1,3})\/100/i, // 75/100
            
           /^(\d{1,3})(?!\d)/m, // Just a number at start of line (0-999)
         ];
