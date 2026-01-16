@@ -1,15 +1,14 @@
-# 📋 Critique & Verify Workflow - Current State & Questions
+# 📋 Critique & Verify Workflow - RESOLVED
 
 **Created:** 2026-01-15  
-**Status:** 🔍 Under Review - Needs Clarification
+**Resolved:** 2026-01-16  
+**Status:** ✅ IMPLEMENTED - Hybrid Workflow
 
 ---
 
-## 🎯 Current Workflow (As Implemented)
+## 🎯 Implemented Workflow
 
 ### Review Pipeline Steps
-
-The `ReviewProgressBar.jsx` shows these steps:
 
 ```
 [Critique] → [Verify] → [Accept]
@@ -17,113 +16,54 @@ The `ReviewProgressBar.jsx` shows these steps:
 
 | Step | Trigger | What Happens |
 |------|---------|--------------|
-| **1. Critique** | Click "Critique" button | AI evaluates question, returns score 0-100, may suggest rewrite |
-| **2. Verify** | Click "Verify Source" or open Epic Docs | Sets `humanVerified: true`, records who verified and when |
-| **3. Accept** | Click "Accept" button | Sets `status: 'accepted'` - question goes into the approved pool |
+| **1. Critique** | Click "Critique" button | AI evaluates question, returns score 0-100 |
+| **2. Verify** | Click "Epic Docs" → then "Confirm Verified" | Opens docs, then requires explicit confirmation |
+| **3. Accept** | Click "Accept" button | Low-score warning if < 70, then accepts |
 
 ---
 
-## 🤔 Current Confusion Points
+## ✅ Decisions Made
 
 ### Issue 1: What Does "Verify" Actually Check?
 
-**Current behavior:**
+**Resolution:** Two-step verification:
 
-- Clicking "Verify Source" opens the Epic Docs link (`sourceUrl`)
-- Just opening the link marks `humanVerified: true`
-- No actual confirmation that the human **read and checked** the content
-
-**Questions:**
-
-- Should there be a confirmation step after viewing docs?
-- Should the user manually confirm "Yes, I verified this is correct"?
+1. User clicks "Epic Documentation" or "Search Excerpt" to open source
+2. After opening, a green "Confirm Verified" button appears
+3. User must click "Confirm Verified" to mark as verified
 
 ### Issue 2: Auto-Verification Trigger
 
-**Current behavior (from `SourceContextCard.jsx` and `QuestionItem.jsx`):**
-
-- `handleOpenDocs()` - Opens Epic Docs URL AND sets verified = true
-- `handleOpenSearch()` - Opens Google Search AND sets verified = true
-
-**Question:** Is this intentional? Just opening a link = verified?
+**Resolution:** Auto-verification REMOVED. Opening docs/search does NOT mark as verified. Explicit confirmation required.
 
 ### Issue 3: Relationship Between Critique and Verify
 
-**Current flow:**
+**Resolution:** Flexible ordering. Critique is informational, not blocking. Both required before Accept.
 
-1. Critique runs → returns score and optional rewrite
-2. If score < 70, "Apply Improvement" modal appears
-3. User can apply improvement or dismiss
-4. Verify step is independent (can be done before/after critique)
+### Issue 4: Low-Score Handling
 
-**Question:** Should Verify be locked until Critique is done? Or vice versa?
-
-### Issue 4: Progress Bar Decoupling
-
-**From recent sessions:** The "Verify Source" button was updated to NOT auto-advance to the next question.
-
-**Current behavior:**
-
-- Verify updates the progress bar locally
-- But critique and verify are independent steps
-- Accept requires BOTH critique and verify to be complete
+**Resolution:** If critique score < 70 and user clicks Accept, a browser confirm dialog appears asking "Are you sure?"
 
 ---
 
-## 🔧 Proposed Clarifications (For Discussion)
+## 📂 Files Changed
 
-### Option A: Strict Pipeline
-
-```
-Must Critique (score ≥70) → Must Verify → Can Accept
-```
-
-- Pros: Consistent quality control
-- Cons: Slow for trusted reviewers
-
-### Option B: Flexible Pipeline
-
-```
-Critique (any score) → Verify (any time) → Accept (if both done)
-```
-
-- Pros: Faster workflow
-- Cons: Might accept low-quality questions
-
-### Option C: Verification Confirmation
-
-```
-Critique → Click "Verify" → Opens Docs → User clicks "Confirm Verified" → Accept enabled
-```
-
-- Pros: Actually confirms human review happened
-- Cons: Extra click
-
----
-
-## 📂 Relevant Files
-
-| File | Purpose |
+| File | Changes |
 |------|---------|
-| `src/components/ReviewProgressBar.jsx` | Shows the Critique → Verify → Accept pipeline |
-| `src/components/QuestionItem.jsx` | Contains `handleOpenDocs()` and `handleOpenSearch()` |
-| `src/components/QuestionItem/SourceContextCard.jsx` | Shows "Verify Source" buttons |
-| `src/hooks/generation/useQuestionCritique.js` | Handles the AI critique logic |
+| `src/components/QuestionItem/SourceContextCard.jsx` | Added `hasOpenedDocs` state, `onConfirmVerify` prop, "Confirm Verified" button |
+| `src/components/QuestionItem.jsx` | Added `handleConfirmVerify` callback, low-score warning in `handleAccept` |
 
 ---
 
-## ✅ Next Session Action Items
+## 🧪 How to Test
 
-- [ ] Decide: Should "opening docs" automatically mark as verified?
-- [ ] Decide: Should there be a manual "Confirm Verified" button?
-- [ ] Decide: Should critique score threshold block verification or acceptance?
-- [ ] Update `ReviewProgressBar` based on decisions
-- [ ] Update `SourceContextCard` based on decisions
-
----
-
-## 🗂️ Related Context
-
-- Critique Cloud Function was just fixed (defensive validation added)
-- Version 2.2.99 deployed to GitHub Pages
-- The "Verify Source" button no longer auto-advances to next question (per recent fix)
+1. Open Review mode
+2. Select a pending question
+3. Run Critique (score appears)
+4. Click "Epic Documentation" → docs open in new tab
+5. **Observe:** "Confirm Verified" button appears (emerald green)
+6. Click "Confirm Verified" → toast shows "✅ Source verified!"
+7. Progress bar shows Verify step complete
+8. Click Accept:
+   - If score ≥ 70: Accepts immediately
+   - If score < 70: Shows confirmation dialog first

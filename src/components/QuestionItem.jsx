@@ -31,7 +31,6 @@ import { useAuth } from "../hooks/useAuth";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 
 import { saveTrainingPair } from "../services/trainingDataService";
-import { logAuditEvent, AUDIT_ACTIONS } from "../services/auditService";
 
 // Helper functions (updated to use constants where appropriate, though display text might differ)
 // ...
@@ -199,47 +198,30 @@ const QuestionItem = ({
     q.critiqueAttempts,
   ]);
 
-  const handleOpenDocs = useCallback(async () => {
+  const handleOpenDocs = useCallback(() => {
+    // Only opens the docs - NO auto-verification
+    // Humans must explicitly click "Verify" button separately
     const urlToOpen = q.sourceUrl || q.SourceURL || q.SourceUrl;
     const hasValidUrl = isEpicLink(urlToOpen);
 
     if (hasValidUrl) {
       window.open(urlToOpen.trim(), "_blank", "noopener,noreferrer");
-    }
-
-    if (!q.humanVerified && onUpdateStatus) {
-      // For legacy compatibility, we use onUpdateStatus if humanVerified isn't handled via onUpdateQuestion in some contexts
-      // But typically we should use onUpdateQuestion
-      if (onUpdateQuestion) {
-        await onUpdateQuestion(q.id, {
-          humanVerified: true,
-          humanVerifiedBy: userEmail || "Unknown",
-          humanVerifiedAt: new Date().toISOString(),
-        });
+      if (showMessage) {
+        showMessage(
+          "📄 Docs opened - click Verify when confirmed",
+          TOAST_DURATION.MEDIUM
+        );
       }
-      logAuditEvent(q.uniqueId || q.id, AUDIT_ACTIONS.QUESTION_VERIFIED, {
-        oldValue: q.humanVerified,
-        newValue: true,
-        verifiedBy: userEmail,
-        method: "epic_docs",
-      });
-      if (showMessage)
-        showMessage("✅ Verified via Epic Docs", TOAST_DURATION.SHORT);
+    } else {
+      if (showMessage) {
+        showMessage("⚠️ No valid Epic Docs link found", TOAST_DURATION.MEDIUM);
+      }
     }
-  }, [
-    q.sourceUrl,
-    q.SourceURL,
-    q.SourceUrl,
-    q.humanVerified,
-    onUpdateQuestion,
-    onUpdateStatus,
-    userEmail,
-    q.id,
-    q.uniqueId,
-    showMessage,
-  ]);
+  }, [q.sourceUrl, q.SourceURL, q.SourceUrl, showMessage]);
 
-  const handleOpenSearch = useCallback(async () => {
+  const handleOpenSearch = useCallback(() => {
+    // Only opens search - NO auto-verification
+    // Humans must explicitly click "Verify" button separately
     if (q.sourceExcerpt) {
       // Copy to clipboard
       navigator.clipboard
@@ -253,32 +235,33 @@ const QuestionItem = ({
         "_blank",
         "noopener,noreferrer"
       );
+      if (showMessage) {
+        showMessage(
+          "🔍 Search opened - click Verify when confirmed",
+          TOAST_DURATION.MEDIUM
+        );
+      }
+    } else {
+      if (showMessage) {
+        showMessage("⚠️ No source excerpt to search", TOAST_DURATION.MEDIUM);
+      }
     }
+  }, [q.sourceExcerpt, showMessage]);
 
-    if (!q.humanVerified && onUpdateQuestion) {
-      await onUpdateQuestion(q.id, {
-        humanVerified: true,
-        humanVerifiedBy: userEmail || "Unknown",
-        humanVerifiedAt: new Date().toISOString(),
-      });
-      logAuditEvent(q.uniqueId || q.id, AUDIT_ACTIONS.QUESTION_VERIFIED, {
-        oldValue: q.humanVerified,
-        newValue: true,
-        verifiedBy: userEmail,
-        method: "google_search",
-      });
-      if (showMessage)
-        showMessage("✅ Verified via Google Search", TOAST_DURATION.SHORT);
+  // NEW: Explicit verification confirmation handler
+  const handleConfirmVerify = useCallback(() => {
+    if (!onUpdateQuestion) return;
+
+    onUpdateQuestion(q.id, {
+      humanVerified: true,
+      humanVerifiedBy: userEmail || "Unknown",
+      humanVerifiedAt: new Date().toISOString(),
+    });
+
+    if (showMessage) {
+      showMessage("✅ Source verified!", TOAST_DURATION.MEDIUM);
     }
-  }, [
-    q.sourceExcerpt,
-    q.humanVerified,
-    onUpdateQuestion,
-    userEmail,
-    q.id,
-    q.uniqueId,
-    showMessage,
-  ]);
+  }, [q.id, onUpdateQuestion, userEmail, showMessage]);
 
   const handleFix = useCallback(() => {
     if (onApplyRewrite) {
@@ -298,6 +281,16 @@ const QuestionItem = ({
         showMessage("⚠️ Please verify first", TOAST_DURATION.LONG);
       return;
     }
+
+    // LOW-SCORE WARNING: Confirm before accepting low-quality questions
+    const passThreshold = QUALITY_THRESHOLDS?.PASS || 70;
+    if (q.critiqueScore < passThreshold) {
+      const confirmed = window.confirm(
+        `⚠️ This question scored ${q.critiqueScore}/100 (below ${passThreshold}).\n\nAre you sure you want to accept it anyway?`
+      );
+      if (!confirmed) return;
+    }
+
     onUpdateStatus(q.id, QUESTION_STATUS.ACCEPTED);
   }, [q.critiqueScore, q.humanVerified, q.id, onUpdateStatus, showMessage]);
 
@@ -471,6 +464,7 @@ const QuestionItem = ({
           verifiedAt={q.humanVerifiedAt}
           onVerifyDocs={handleOpenDocs}
           onVerifySearch={handleOpenSearch}
+          onConfirmVerify={handleConfirmVerify}
           showMessage={showMessage}
           canVerify={q.critiqueScore >= (QUALITY_THRESHOLDS?.PASS || 70)}
         />
