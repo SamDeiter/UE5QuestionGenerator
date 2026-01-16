@@ -85,7 +85,7 @@ export const TUTORIAL_SCENARIOS = {
     ],
   },
 
-  // 3. Review Mode - 3 steps
+  // 3. Review Mode - 4 steps (Updated for Traffic Light verification)
   review: {
     id: "review",
     label: "Review Mode",
@@ -96,7 +96,7 @@ export const TUTORIAL_SCENARIOS = {
         id: "review-card",
         title: "Question Card",
         content:
-          "Each card shows the question, answers, difficulty, and source. Use **arrow keys** or buttons to navigate.",
+          "Each card shows the question, answers, difficulty, and source excerpt. Use **arrow keys** or buttons to navigate.",
         target: '[data-tour="review-card"]',
         position: "right",
         scenarioId: "review",
@@ -104,23 +104,33 @@ export const TUTORIAL_SCENARIOS = {
       },
       {
         id: "critique",
-        title: "AI Quality Check",
+        title: "Step 1: AI Critique",
         content:
-          "Click **Critique** for AI scoring (75+ = Excellent). Then **Verify** the source is accurate.",
+          "Click **Critique** for AI quality scoring (70+ = Pass). Low scores show a warning before accepting.",
         target: '[data-tour="critique-button"]',
         position: "bottom",
         scenarioId: "review",
         order: 1,
       },
       {
-        id: "accept-reject",
-        title: "Accept or Reject",
+        id: "verify",
+        title: "Step 2: Verify Source",
         content:
-          "**Accept** quality questions or **Reject** with a reason (Inaccurate, Too Easy, etc.) to improve future AI output.",
+          "Click **Verify Source** to open the verification modal. Check **Epic Docs** or **Google Search**, then select where you found the excerpt.",
+        target: '[data-tour="verify-button"]',
+        position: "bottom",
+        scenarioId: "review",
+        order: 2,
+      },
+      {
+        id: "accept-reject",
+        title: "Step 3: Accept or Reject",
+        content:
+          "**Accept** verified questions or **Cannot Verify** to reject with a reason (Source Not Found, AI Hallucination, etc.).",
         target: '[data-tour="review-actions"]',
         position: "left",
         scenarioId: "review",
-        order: 2,
+        order: 3,
       },
     ],
   },
