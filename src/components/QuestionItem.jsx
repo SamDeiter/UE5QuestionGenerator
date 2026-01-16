@@ -240,20 +240,46 @@ const QuestionItem = ({
     }
   }, [q.sourceExcerpt, showMessage]);
 
-  // NEW: Explicit verification confirmation handler
-  const handleConfirmVerify = useCallback(() => {
+  // NEW: Verification handlers for Traffic Light outcomes
+  const handleVerifyViaDocs = useCallback(() => {
     if (!onUpdateQuestion) return;
-
     onUpdateQuestion(q.id, {
       humanVerified: true,
       humanVerifiedBy: userEmail || "Unknown",
       humanVerifiedAt: new Date().toISOString(),
+      verificationSource: "epic_docs",
     });
-
     if (showMessage) {
-      showMessage("✅ Source verified!", TOAST_DURATION.MEDIUM);
+      showMessage("✅ Verified via Epic Docs!", TOAST_DURATION.MEDIUM);
     }
   }, [q.id, onUpdateQuestion, userEmail, showMessage]);
+
+  const handleVerifyViaSearch = useCallback(() => {
+    if (!onUpdateQuestion) return;
+    onUpdateQuestion(q.id, {
+      humanVerified: true,
+      humanVerifiedBy: userEmail || "Unknown",
+      humanVerifiedAt: new Date().toISOString(),
+      verificationSource: "google_search",
+    });
+    if (showMessage) {
+      showMessage("✅ Verified via Google Search!", TOAST_DURATION.MEDIUM);
+    }
+  }, [q.id, onUpdateQuestion, userEmail, showMessage]);
+
+  const handleRejectVerification = useCallback(
+    (reasonId) => {
+      if (!onUpdateStatus) return;
+      onUpdateStatus(q.id, QUESTION_STATUS.REJECTED, reasonId);
+      if (showMessage) {
+        showMessage(
+          "❌ Question rejected - source not verified",
+          TOAST_DURATION.LONG
+        );
+      }
+    },
+    [q.id, onUpdateStatus, showMessage]
+  );
 
   const handleFix = useCallback(() => {
     if (onApplyRewrite) {
@@ -456,7 +482,6 @@ const QuestionItem = ({
           verifiedAt={q.humanVerifiedAt}
           onVerifyDocs={handleOpenDocs}
           onVerifySearch={handleOpenSearch}
-          onConfirmVerify={handleConfirmVerify}
           showMessage={showMessage}
           canVerify={q.critiqueScore >= (QUALITY_THRESHOLDS?.PASS || 70)}
         />
@@ -578,8 +603,16 @@ const QuestionItem = ({
           <VerifyConfirmModal
             sourceUrl={q.sourceUrl || q.SourceURL || q.SourceUrl}
             sourceExcerpt={q.sourceExcerpt}
-            onConfirm={() => {
-              handleConfirmVerify();
+            onVerifyDocs={() => {
+              handleVerifyViaDocs();
+              setShowVerifyModal(null);
+            }}
+            onVerifySearch={() => {
+              handleVerifyViaSearch();
+              setShowVerifyModal(null);
+            }}
+            onReject={(reasonId) => {
+              handleRejectVerification(reasonId);
               setShowVerifyModal(null);
             }}
             onDismiss={() => setShowVerifyModal(null)}
