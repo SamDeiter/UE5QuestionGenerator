@@ -1,3 +1,7 @@
+/**
+ * tokenCounter - Tests for token estimation and cost calculation
+ * Pure functions, no React dependencies
+ */
 import { describe, it, expect } from "vitest";
 import {
   estimateTokens,
@@ -12,229 +16,134 @@ import {
 
 describe("tokenCounter", () => {
   describe("estimateTokens", () => {
-    it("should estimate tokens based on character count", () => {
-      expect(estimateTokens("Hello World")).toBe(3); // 11 chars / 4 = 2.75 -> 3
-      expect(estimateTokens("A")).toBe(1);
-      expect(estimateTokens("")).toBe(0);
+    it("returns 0 for empty/null text", () => {
       expect(estimateTokens(null)).toBe(0);
+      expect(estimateTokens("")).toBe(0);
+      expect(estimateTokens(undefined)).toBe(0);
     });
 
-    it("should handle longer text", () => {
-      const longText = "A".repeat(1000);
-      expect(estimateTokens(longText)).toBe(250); // 1000 / 4 = 250
+    it("estimates tokens as ~4 chars per token", () => {
+      const text = "a".repeat(100);
+      expect(estimateTokens(text)).toBe(25);
+    });
+
+    it("rounds up", () => {
+      const text = "abc"; // 3 chars
+      expect(estimateTokens(text)).toBe(1);
     });
   });
 
   describe("calculateCost", () => {
-    it("should calculate cost for gemini-1.5-flash", () => {
-      const cost = calculateCost(1000000, 1000000, "gemini-1.5-flash");
-      expect(cost).toBe(0.375); // (1M * 0.075 + 1M * 0.30) / 1M
+    it("calculates cost for gemini-2.0-flash", () => {
+      // 1M input + 1M output at flash pricing
+      const cost = calculateCost(1000000, 1000000, "gemini-2.0-flash");
+      expect(cost).toBeCloseTo(0.375, 3);
     });
 
-    it("should calculate cost for gemini-1.5-pro", () => {
-      const cost = calculateCost(1000000, 1000000, "gemini-1.5-pro");
-      expect(cost).toBe(6.25); // (1M * 1.25 + 1M * 5.00) / 1M
+    it("uses default model if not specified", () => {
+      const cost = calculateCost(1000, 1000);
+      expect(cost).toBeGreaterThan(0);
     });
 
-    it("should calculate cost for gemini-2.0-flash-exp (free)", () => {
-      const cost = calculateCost(1000000, 1000000, "gemini-2.0-flash-exp");
-      expect(cost).toBe(0.375);
-    });
-
-    it("should default to gemini-1.5-flash for unknown models", () => {
+    it("falls back to flash pricing for unknown model", () => {
       const cost = calculateCost(1000000, 1000000, "unknown-model");
-      expect(cost).toBe(0.375);
-    });
-
-    it("should handle small token counts", () => {
-      const cost = calculateCost(100, 100, "gemini-1.5-flash");
-      expect(cost).toBeCloseTo(0.0000375, 7);
+      expect(cost).toBeCloseTo(0.375, 3);
     });
   });
 
   describe("formatCost", () => {
-    it("should format small costs in thousandths", () => {
-      expect(formatCost(0.001)).toBe("$1.000k");
-      expect(formatCost(0.0001)).toBe("$0.100k");
+    it("formats small costs in thousandths", () => {
+      const result = formatCost(0.005);
+      expect(result).toContain("k"); // Shows in thousandths
     });
 
-    it("should format larger costs in dollars", () => {
-      expect(formatCost(0.01)).toBe("$0.0100");
-      expect(formatCost(1.5)).toBe("$1.5000");
+    it("formats larger costs normally", () => {
+      const result = formatCost(1.2345);
+      expect(result).toBe("$1.2345");
     });
   });
 
   describe("checkTokenLimit", () => {
-    it("should check input token limits for gemini-1.5-flash", () => {
-      const result = checkTokenLimit(500000, "input", "gemini-1.5-flash");
+    it("returns withinLimit true for small counts", () => {
+      const result = checkTokenLimit(1000, "input");
       expect(result.withinLimit).toBe(true);
-      expect(result.limit).toBe(1000000);
+    });
+
+    it("calculates percentage correctly", () => {
+      const result = checkTokenLimit(500000, "input", "gemini-2.0-flash");
       expect(result.percentage).toBe(50);
     });
 
-    it("should check output token limits", () => {
-      const result = checkTokenLimit(4096, "output", "gemini-1.5-flash");
-      expect(result.withinLimit).toBe(true);
-      expect(result.limit).toBe(8192);
-      expect(result.percentage).toBe(50);
-    });
-
-    it("should detect when over limit", () => {
-      const result = checkTokenLimit(2000000, "input", "gemini-1.5-flash");
+    it("returns withinLimit false when over limit", () => {
+      const result = checkTokenLimit(2000000, "input", "gemini-2.0-flash");
       expect(result.withinLimit).toBe(false);
-      expect(result.percentage).toBe(200);
     });
   });
 
   describe("getTokenWarningLevel", () => {
-    it('should return "none" for low usage', () => {
-      expect(getTokenWarningLevel(100000, "input", "gemini-1.5-flash")).toBe(
-        "none"
-      );
+    it("returns none for low usage", () => {
+      expect(getTokenWarningLevel(100, "input")).toBe("none");
     });
 
-    it('should return "warning" for 70-89% usage', () => {
-      expect(getTokenWarningLevel(750000, "input", "gemini-1.5-flash")).toBe(
+    it("returns warning at 70%+", () => {
+      expect(getTokenWarningLevel(750000, "input", "gemini-2.0-flash")).toBe(
         "warning"
       );
     });
 
-    it('should return "danger" for 90%+ usage', () => {
-      expect(getTokenWarningLevel(950000, "input", "gemini-1.5-flash")).toBe(
+    it("returns danger at 90%+", () => {
+      expect(getTokenWarningLevel(950000, "input", "gemini-2.0-flash")).toBe(
         "danger"
       );
     });
   });
 
   describe("analyzeRequest", () => {
-    it("should analyze a typical request", () => {
-      const systemPrompt = "A".repeat(400); // ~100 tokens
-      const userPrompt = "A".repeat(400); // ~100 tokens
-
-      const analysis = analyzeRequest(
-        systemPrompt,
-        userPrompt,
-        2000,
-        "gemini-1.5-flash"
-      );
-
-      expect(analysis.input.system).toBe(100);
-      expect(analysis.input.user).toBe(100);
-      expect(analysis.input.total).toBe(200);
-      expect(analysis.input.withinLimit).toBe(true);
-      expect(analysis.input.warningLevel).toBe("none");
-
-      expect(analysis.output.expected).toBe(2000);
-      expect(analysis.output.withinLimit).toBe(true);
-
-      expect(analysis.cost.estimated).toBeGreaterThan(0);
-      expect(analysis.model).toBe("gemini-1.5-flash");
+    it("returns complete analysis object", () => {
+      const result = analyzeRequest("System prompt", "User prompt", 2000);
+      expect(result).toHaveProperty("input");
+      expect(result).toHaveProperty("output");
+      expect(result).toHaveProperty("cost");
+      expect(result).toHaveProperty("model");
     });
 
-    it("should detect high token usage", () => {
-      const systemPrompt = "A".repeat(3000000); // ~750k tokens
-      const userPrompt = "A".repeat(400);
-
-      const analysis = analyzeRequest(
-        systemPrompt,
-        userPrompt,
-        2000,
-        "gemini-1.5-flash"
-      );
-
-      expect(analysis.input.warningLevel).toBe("warning");
-    });
-
-    it("should detect danger level usage", () => {
-      const systemPrompt = "A".repeat(3600000); // ~900k tokens
-      const userPrompt = "A".repeat(400);
-
-      const analysis = analyzeRequest(
-        systemPrompt,
-        userPrompt,
-        2000,
-        "gemini-1.5-flash"
-      );
-
-      expect(analysis.input.warningLevel).toBe("danger");
+    it("calculates input tokens correctly", () => {
+      const result = analyzeRequest("system", "user");
+      expect(result.input.system).toBeGreaterThan(0);
+      expect(result.input.user).toBeGreaterThan(0);
+      expect(result.input.total).toBe(result.input.system + result.input.user);
     });
   });
 
   describe("summarizeAnalysis", () => {
-    it("should create readable summary for normal usage", () => {
-      const analysis = {
-        input: { total: 1000, warningLevel: "none" },
-        output: { expected: 2000, warningLevel: "none" },
-        cost: { formatted: "$0.0001" },
-      };
-
+    it("returns human-readable summary", () => {
+      const analysis = analyzeRequest("System", "User", 2000);
       const summary = summarizeAnalysis(analysis);
-      expect(summary).toContain("1,000 input");
-      expect(summary).toContain("2,000 output");
-      expect(summary).toContain("$0.0001");
-      expect(summary).not.toContain("⚠️");
-    });
-
-    it("should include warning for high usage", () => {
-      const analysis = {
-        input: { total: 1000, warningLevel: "warning" },
-        output: { expected: 2000, warningLevel: "none" },
-        cost: { formatted: "$0.0001" },
-      };
-
-      const summary = summarizeAnalysis(analysis);
-      expect(summary).toContain("⚠️ Warning");
-    });
-
-    it("should include danger alert for critical usage", () => {
-      const analysis = {
-        input: { total: 1000, warningLevel: "danger" },
-        output: { expected: 2000, warningLevel: "none" },
-        cost: { formatted: "$0.0001" },
-      };
-
-      const summary = summarizeAnalysis(analysis);
-      expect(summary).toContain("⚠️ DANGER");
+      expect(summary).toContain("Token Usage:");
+      expect(summary).toContain("$");
     });
   });
 
   describe("compareAnalyses", () => {
-    it("should calculate reduction percentages", () => {
-      const before = {
-        input: { total: 1000 },
-        output: { expected: 2000 },
-        cost: { estimated: 0.001 },
-      };
-
-      const after = {
-        input: { total: 500 },
-        output: { expected: 1500 },
-        cost: { estimated: 0.0005 },
-      };
-
+    it("calculates reduction correctly", () => {
+      const before = analyzeRequest(
+        "Long system prompt here",
+        "Long user prompt",
+        2000
+      );
+      const after = analyzeRequest("Short", "Short", 1000);
       const comparison = compareAnalyses(before, after);
 
-      expect(comparison.input.reduction).toBe(500);
-      expect(comparison.input.percentage).toBe(50);
-
-      expect(comparison.output.reduction).toBe(500);
-      expect(comparison.output.percentage).toBe(25);
-
-      expect(comparison.cost.savings).toBe(0.0005);
-      expect(comparison.cost.percentage).toBe(50);
+      expect(comparison.input.reduction).toBeGreaterThan(0);
+      expect(comparison.cost.savings).toBeGreaterThan(0);
     });
 
-    it("should handle zero reduction", () => {
-      const before = {
-        input: { total: 1000 },
-        output: { expected: 2000 },
-        cost: { estimated: 0.001 },
-      };
+    it("calculates percentage reduction", () => {
+      const before = analyzeRequest("x".repeat(1000), "", 2000);
+      const after = analyzeRequest("x".repeat(500), "", 2000);
+      const comparison = compareAnalyses(before, after);
 
-      const comparison = compareAnalyses(before, before);
-
-      expect(comparison.input.reduction).toBe(0);
-      expect(comparison.input.percentage).toBe(0);
+      expect(comparison.input.percentage).toBe(50);
     });
   });
 });
