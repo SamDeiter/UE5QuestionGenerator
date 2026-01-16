@@ -120,9 +120,16 @@ const removeUndefined = (obj) => {
  * @returns {Object} Question with enforced fields
  */
 const enforceRequiredFields = (question) => {
+  const currentUid = auth.currentUser?.uid;
   const currentEmail = auth.currentUser?.email;
   const currentName = auth.currentUser?.displayName || currentEmail;
   const now = new Date().toISOString();
+
+  // CRITICAL: Ensure creatorId is set - required by Firestore rules for creates
+  if (!question.creatorId && currentUid) {
+    question.creatorId = currentUid;
+    logger.log(`[FieldEnforce] Auto-set creatorId: ${currentUid}`);
+  }
 
   // Ensure creator info is set
   if (!question.creatorEmail && currentEmail) {
