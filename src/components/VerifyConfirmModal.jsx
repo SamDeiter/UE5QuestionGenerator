@@ -7,6 +7,8 @@ import { isEpicLink } from "../utils/urlValidator";
  * 1. Found in Epic Docs (green) - verifies with source="epic_docs"
  * 2. Found in Google Search (blue) - verifies with source="google_search"
  * 3. Cannot Verify (red) - opens rejection reason menu
+ *
+ * Tracks which buttons user clicked before confirming (for accountability)
  */
 
 const REJECTION_REASONS = [
@@ -27,12 +29,16 @@ const VerifyConfirmModal = ({
   onDismiss,
 }) => {
   const [showRejectMenu, setShowRejectMenu] = useState(false);
+  const [clickedDocs, setClickedDocs] = useState(false);
+  const [clickedSearch, setClickedSearch] = useState(false);
+
   const hasValidUrl = isEpicLink(sourceUrl);
   const cleanUrl = sourceUrl?.trim() || "";
 
   const handleOpenDocs = () => {
     if (hasValidUrl) {
       window.open(cleanUrl, "_blank", "noopener,noreferrer");
+      setClickedDocs(true);
     }
   };
 
@@ -45,11 +51,46 @@ const VerifyConfirmModal = ({
         "_blank",
         "noopener,noreferrer"
       );
+      setClickedSearch(true);
     }
   };
 
+  // Helper functions to avoid nested ternaries (lint compliance)
+  const getDocsButtonStyle = () => {
+    if (clickedDocs) {
+      return "bg-green-600/30 text-green-300 border-green-500/60 ring-2 ring-green-500/40";
+    }
+    if (hasValidUrl) {
+      return "bg-yellow-500/20 text-yellow-400 border-yellow-500/40 hover:bg-yellow-500/30";
+    }
+    return "bg-red-500/20 text-red-400 border-red-500/40 opacity-50 cursor-not-allowed";
+  };
+
+  const getDocsIconName = () => {
+    if (clickedDocs) return "check";
+    if (hasValidUrl) return "external-link";
+    return "alert-circle";
+  };
+
+  const getDocsButtonText = () => {
+    if (clickedDocs) return "✓ Docs Opened";
+    if (hasValidUrl) return "Epic Documentation";
+    return "Docs Link Broken";
+  };
+
+  const handleVerifyDocs = () => {
+    // Pass click tracking info to parent
+    onVerifyDocs({ clickedDocs, clickedSearch });
+  };
+
+  const handleVerifySearch = () => {
+    // Pass click tracking info to parent
+    onVerifySearch({ clickedDocs, clickedSearch });
+  };
+
   const handleReject = (reasonId) => {
-    onReject(reasonId);
+    // Pass click tracking info to parent
+    onReject(reasonId, { clickedDocs, clickedSearch });
   };
 
   return (
@@ -95,12 +136,12 @@ const VerifyConfirmModal = ({
             </div>
           )}
 
-          {/* Open Source Buttons */}
+          {/* Open Source Buttons - with click indicators */}
           <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <Icon name="external-link" size={14} className="text-slate-400" />
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">
-                Open Source to Check
+                Step 1: Open Source to Check
               </span>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -108,28 +149,37 @@ const VerifyConfirmModal = ({
                 type="button"
                 onClick={handleOpenDocs}
                 disabled={!hasValidUrl}
-                className={`flex-1 min-w-[140px] inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg border transition-all ${
-                  hasValidUrl
-                    ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/40 hover:bg-yellow-500/30"
-                    : "bg-red-500/20 text-red-400 border-red-500/40 opacity-50 cursor-not-allowed"
-                }`}
+                className={`flex-1 min-w-[140px] inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg border transition-all ${getDocsButtonStyle()}`}
               >
-                <Icon
-                  name={hasValidUrl ? "external-link" : "alert-circle"}
-                  size={16}
-                />
-                {hasValidUrl ? "Epic Documentation" : "Docs Link Broken"}
+                <Icon name={getDocsIconName()} size={16} />
+                {getDocsButtonText()}
               </button>
               <button
                 type="button"
                 onClick={handleOpenSearch}
                 disabled={!sourceExcerpt}
-                className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg border transition-all bg-blue-500/20 text-blue-400 border-blue-500/40 hover:bg-blue-500/30"
+                className={`flex-1 min-w-[140px] inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg border transition-all ${
+                  clickedSearch
+                    ? "bg-green-600/30 text-green-300 border-green-500/60 ring-2 ring-green-500/40"
+                    : "bg-blue-500/20 text-blue-400 border-blue-500/40 hover:bg-blue-500/30"
+                }`}
               >
-                <Icon name="search" size={16} />
-                Search Excerpt
+                <Icon name={clickedSearch ? "check" : "search"} size={16} />
+                {clickedSearch ? "✓ Search Opened" : "Search Excerpt"}
               </button>
             </div>
+            {clickedSearch && (
+              <p className="text-xs text-blue-400/80 mt-2 flex items-center gap-1 animate-in fade-in duration-300">
+                <Icon name="clipboard" size={12} />
+                Excerpt copied to clipboard for easy searching
+              </p>
+            )}
+            {(clickedDocs || clickedSearch) && (
+              <p className="text-xs text-green-400/70 mt-2 flex items-center gap-1">
+                <Icon name="check-circle" size={12} />
+                Link opened - now select where you found the excerpt below
+              </p>
+            )}
           </div>
 
           {/* Verification Outcome Section */}
@@ -142,14 +192,14 @@ const VerifyConfirmModal = ({
                   className="text-slate-400"
                 />
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">
-                  Where did you find the excerpt?
+                  Step 2: Where did you find the excerpt?
                 </span>
               </div>
               <div className="space-y-2">
                 {/* Found in Docs - Green */}
                 <button
                   type="button"
-                  onClick={() => onVerifyDocs()}
+                  onClick={handleVerifyDocs}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold rounded-lg border transition-all bg-green-600/20 text-green-400 border-green-500/40 hover:bg-green-600/40 hover:border-green-400"
                 >
                   <Icon name="check-circle" size={18} />✓ Found in Epic Docs
@@ -158,7 +208,7 @@ const VerifyConfirmModal = ({
                 {/* Found in Search - Blue */}
                 <button
                   type="button"
-                  onClick={() => onVerifySearch()}
+                  onClick={handleVerifySearch}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold rounded-lg border transition-all bg-blue-600/20 text-blue-400 border-blue-500/40 hover:bg-blue-600/40 hover:border-blue-400"
                 >
                   <Icon name="search" size={18} />

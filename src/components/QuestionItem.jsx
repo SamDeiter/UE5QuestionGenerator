@@ -210,36 +210,60 @@ const QuestionItem = ({
   }, []);
 
   // NEW: Verification handlers for Traffic Light outcomes
-  const handleVerifyViaDocs = useCallback(() => {
-    if (!onUpdateQuestion) return;
-    onUpdateQuestion(q.id, {
-      humanVerified: true,
-      humanVerifiedBy: userEmail || "Unknown",
-      humanVerifiedAt: new Date().toISOString(),
-      verificationSource: "epic_docs",
-    });
-    if (showMessage) {
-      showMessage("✅ Verified via Epic Docs!", TOAST_DURATION.MEDIUM);
-    }
-  }, [q.id, onUpdateQuestion, userEmail, showMessage]);
+  // Include click tracking for accountability
+  const handleVerifyViaDocs = useCallback(
+    (clickInfo = {}) => {
+      if (!onUpdateQuestion) return;
+      onUpdateQuestion(q.id, {
+        humanVerified: true,
+        humanVerifiedBy: userEmail || "Unknown",
+        humanVerifiedAt: new Date().toISOString(),
+        verificationSource: "epic_docs",
+        verificationClickedDocs: clickInfo.clickedDocs || false,
+        verificationClickedSearch: clickInfo.clickedSearch || false,
+      });
+      if (showMessage) {
+        showMessage("✅ Verified via Epic Docs!", TOAST_DURATION.MEDIUM);
+      }
+    },
+    [q.id, onUpdateQuestion, userEmail, showMessage]
+  );
 
-  const handleVerifyViaSearch = useCallback(() => {
-    if (!onUpdateQuestion) return;
-    onUpdateQuestion(q.id, {
-      humanVerified: true,
-      humanVerifiedBy: userEmail || "Unknown",
-      humanVerifiedAt: new Date().toISOString(),
-      verificationSource: "google_search",
-    });
-    if (showMessage) {
-      showMessage("✅ Verified via Google Search!", TOAST_DURATION.MEDIUM);
-    }
-  }, [q.id, onUpdateQuestion, userEmail, showMessage]);
+  const handleVerifyViaSearch = useCallback(
+    (clickInfo = {}) => {
+      if (!onUpdateQuestion) return;
+      onUpdateQuestion(q.id, {
+        humanVerified: true,
+        humanVerifiedBy: userEmail || "Unknown",
+        humanVerifiedAt: new Date().toISOString(),
+        verificationSource: "google_search",
+        verificationClickedDocs: clickInfo.clickedDocs || false,
+        verificationClickedSearch: clickInfo.clickedSearch || false,
+      });
+      if (showMessage) {
+        showMessage("✅ Verified via Google Search!", TOAST_DURATION.MEDIUM);
+      }
+    },
+    [q.id, onUpdateQuestion, userEmail, showMessage]
+  );
 
   const handleRejectVerification = useCallback(
-    (reasonId) => {
-      if (!onUpdateStatus) return;
-      onUpdateStatus(q.id, QUESTION_STATUS.REJECTED, reasonId);
+    (reasonId, clickInfo = {}) => {
+      if (!onUpdateQuestion) return;
+      // Save rejection info to question document
+      onUpdateQuestion(q.id, {
+        humanVerified: false,
+        verificationRejected: true,
+        verificationRejectedBy: userEmail || "Unknown",
+        verificationRejectedAt: new Date().toISOString(),
+        verificationRejectReason: reasonId,
+        verificationClickedDocs: clickInfo.clickedDocs || false,
+        verificationClickedSearch: clickInfo.clickedSearch || false,
+      });
+      // Also update status to rejected
+      if (onUpdateStatus) {
+        onUpdateStatus(q.id, QUESTION_STATUS.REJECTED, reasonId);
+      }
       if (showMessage) {
         showMessage(
           "❌ Question rejected - source not verified",
@@ -247,7 +271,7 @@ const QuestionItem = ({
         );
       }
     },
-    [q.id, onUpdateStatus, showMessage]
+    [q.id, onUpdateQuestion, onUpdateStatus, userEmail, showMessage]
   );
 
   const handleFix = useCallback(() => {
