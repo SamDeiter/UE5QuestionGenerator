@@ -226,19 +226,25 @@ const processOfflineQueue = async () => {
           err.message?.includes("Missing or insufficient permissions");
 
         logger.warn(
-          `Failed to sync ${item.question.uniqueId}, ${
-            isPermissionError ? "dropping due to permissions" : "re-queuing"
-          }:`,
+          `Failed to sync ${item.question.uniqueId}, re-queuing:`,
           err
         );
 
-        if (!isPermissionError) {
-          const alreadyHasNewer = offlineQueue.some(
-            (q) => q.question?.uniqueId === item.question?.uniqueId
+        // ALWAYS re-queue on failure - never drop user data
+        // Permission errors may be temporary (stale token, rules change, etc.)
+        const alreadyHasNewer = offlineQueue.some(
+          (q) => q.question?.uniqueId === item.question?.uniqueId
+        );
+        if (!alreadyHasNewer) {
+          offlineQueue.push(item);
+        }
+
+        // Notify user of permission issues so they can take action
+        if (isPermissionError) {
+          toastError(
+            "⚠️ Permission issue saving questions - please refresh or re-sign in",
+            8000
           );
-          if (!alreadyHasNewer) {
-            offlineQueue.push(item);
-          }
         }
       }
     }

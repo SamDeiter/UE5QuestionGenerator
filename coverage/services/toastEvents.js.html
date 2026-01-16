@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">56.25% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>9/16</span>
+                <span class='fraction'>16/16</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">25% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/8</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">64.28% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>9/14</span>
+                <span class='fraction'>14/14</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -126,16 +126,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -144,21 +144,21 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * Global Toast Events - Allows services to trigger toast notifications
  *
@@ -181,9 +181,9 @@ const listeners = new Set();
  * @param {Function} callback - (message, type) =&gt; void
  * @returns {Function} Unsubscribe function
  */
-export const subscribeToToasts = <span class="fstat-no" title="function not covered" >(c</span>allback) =&gt; {
-<span class="cstat-no" title="statement not covered" >  listeners.add(callback);</span>
-<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >listeners.delete(callback);</span></span>
+export const subscribeToToasts = (callback) =&gt; {
+  listeners.add(callback);
+  return () =&gt; listeners.delete(callback);
 };
 &nbsp;
 /**
@@ -193,7 +193,7 @@ export const subscribeToToasts = <span class="fstat-no" title="function not cove
  * @param {number} duration - Optional duration in ms
  */
 export const emitToast = (message, type = "error", duration) =&gt; {
-  listeners.forEach(<span class="fstat-no" title="function not covered" >(c</span>allback) =&gt; <span class="cstat-no" title="statement not covered" >callback(message, type, duration))</span>;
+  listeners.forEach((callback) =&gt; callback(message, type, duration));
 };
 &nbsp;
 /**
@@ -201,12 +201,12 @@ export const emitToast = (message, type = "error", duration) =&gt; {
  */
 export const toastError = (message, duration) =&gt;
   emitToast(message, "error", duration);
-export const toastWarning = <span class="fstat-no" title="function not covered" >(m</span>essage, duration) =&gt;
-<span class="cstat-no" title="statement not covered" >  emitToast(message, "warning", duration);</span>
-export const toastSuccess = <span class="fstat-no" title="function not covered" >(m</span>essage, duration) =&gt;
-<span class="cstat-no" title="statement not covered" >  emitToast(message, "success", duration);</span>
-export const toastInfo = <span class="fstat-no" title="function not covered" >(m</span>essage, duration) =&gt;
-<span class="cstat-no" title="statement not covered" >  emitToast(message, "info", duration);</span>
+export const toastWarning = (message, duration) =&gt;
+  emitToast(message, "warning", duration);
+export const toastSuccess = (message, duration) =&gt;
+  emitToast(message, "success", duration);
+export const toastInfo = (message, duration) =&gt;
+  emitToast(message, "info", duration);
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -214,7 +214,7 @@ export const toastInfo = <span class="fstat-no" title="function not covered" >(m
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-16T16:33:33.809Z
+                at 2026-01-16T16:40:26.030Z
             </div>
         <script src="../prettify.js"></script>
         <script>
