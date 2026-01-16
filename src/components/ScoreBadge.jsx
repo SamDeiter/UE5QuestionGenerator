@@ -30,14 +30,14 @@ const ScoreBadge = ({ score, improved = false }) => {
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-bold ${colorClasses}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs font-bold ${colorClasses}`}
       title={
         improved
           ? `Improved Score: ${score}/100`
           : `AI Score: ${score}/100 - ${meta.label}`
       }
     >
-      <span className="text-sm">{improved ? "→" : meta.icon}</span>
+      <span>{improved ? "→" : meta.icon}</span>
       <span>{score}</span>
     </div>
   );
