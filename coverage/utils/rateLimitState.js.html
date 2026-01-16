@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">30% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>6/20</span>
+                <span class='fraction'>20/20</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">33.33% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>6/18</span>
+                <span class='fraction'>18/18</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -129,7 +129,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -139,10 +139,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">22x</span>
+<span class="cline-any cline-yes">22x</span>
+<span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -154,19 +154,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -174,14 +174,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * Rate Limit State Manager
@@ -199,10 +199,10 @@ const rateLimitState = {
  * Gets the current rate limit status.
  * @returns {{ isLimited: boolean, retryAfter: number, remainingSeconds: number }}
  */
-export const getRateLimitStatus = <span class="fstat-no" title="function not covered" >()</span> =&gt; {
-  const now = <span class="cstat-no" title="statement not covered" >Date.now();</span>
-  const remainingMs = <span class="cstat-no" title="statement not covered" >Math.max(0, rateLimitState.retryAfter - now);</span>
-<span class="cstat-no" title="statement not covered" >  return {</span>
+export const getRateLimitStatus = () =&gt; {
+  const now = Date.now();
+  const remainingMs = Math.max(0, rateLimitState.retryAfter - now);
+  return {
     isLimited: rateLimitState.isLimited &amp;&amp; remainingMs &gt; 0,
     retryAfter: rateLimitState.retryAfter,
     remainingSeconds: Math.ceil(remainingMs / 1000),
@@ -214,19 +214,19 @@ export const getRateLimitStatus = <span class="fstat-no" title="function not cov
  * @param {boolean} isLimited
  * @param {number} retryAfter - Timestamp when limit expires
  */
-export const setRateLimitState = <span class="fstat-no" title="function not covered" >(i</span>sLimited, retryAfter) =&gt; {
-<span class="cstat-no" title="statement not covered" >  rateLimitState.isLimited = isLimited;</span>
-<span class="cstat-no" title="statement not covered" >  rateLimitState.retryAfter = retryAfter;</span>
-<span class="cstat-no" title="statement not covered" >  notifyListeners();</span>
+export const setRateLimitState = (isLimited, retryAfter) =&gt; {
+  rateLimitState.isLimited = isLimited;
+  rateLimitState.retryAfter = retryAfter;
+  notifyListeners();
 };
 &nbsp;
 /**
  * Clears rate limit state after successful request.
  */
-export const clearRateLimitState = <span class="fstat-no" title="function not covered" >()</span> =&gt; {
-<span class="cstat-no" title="statement not covered" >  rateLimitState.isLimited = false;</span>
-<span class="cstat-no" title="statement not covered" >  rateLimitState.retryAfter = 0;</span>
-<span class="cstat-no" title="statement not covered" >  notifyListeners();</span>
+export const clearRateLimitState = () =&gt; {
+  rateLimitState.isLimited = false;
+  rateLimitState.retryAfter = 0;
+  notifyListeners();
 };
 &nbsp;
 /**
@@ -234,14 +234,14 @@ export const clearRateLimitState = <span class="fstat-no" title="function not co
  * @param {Function} callback - Called when state changes
  * @returns {Function} Unsubscribe function
  */
-export const subscribeToRateLimitState = <span class="fstat-no" title="function not covered" >(c</span>allback) =&gt; {
-<span class="cstat-no" title="statement not covered" >  rateLimitState.listeners.add(callback);</span>
-<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >rateLimitState.listeners.delete(callback);</span></span>
+export const subscribeToRateLimitState = (callback) =&gt; {
+  rateLimitState.listeners.add(callback);
+  return () =&gt; rateLimitState.listeners.delete(callback);
 };
 &nbsp;
 /** Notify all listeners of state change */
-const notifyListeners = <span class="fstat-no" title="function not covered" >()</span> =&gt; {
-<span class="cstat-no" title="statement not covered" >  rateLimitState.listeners.forEach(<span class="fstat-no" title="function not covered" >(c</span>b) =&gt; <span class="cstat-no" title="statement not covered" >cb(getRateLimitStatus()))</span>;</span>
+const notifyListeners = () =&gt; {
+  rateLimitState.listeners.forEach((cb) =&gt; cb(getRateLimitStatus()));
 };
 &nbsp;</pre></td></tr></table></pre>
 
@@ -250,7 +250,7 @@ const notifyListeners = <span class="fstat-no" title="function not covered" >()<
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-16T16:40:26.030Z
+                at 2026-01-16T17:32:42.771Z
             </div>
         <script src="../prettify.js"></script>
         <script>

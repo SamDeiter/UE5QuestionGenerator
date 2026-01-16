@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">15.38% </span>
+                <span class="strong">15.06% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>36/234</span>
+                <span class='fraction'>36/239</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.22% </span>
+                <span class="strong">3.17% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>4/124</span>
+                <span class='fraction'>4/126</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">16.36% </span>
+                <span class="strong">16% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>36/220</span>
+                <span class='fraction'>36/225</span>
             </div>
         
             
@@ -576,7 +576,20 @@
 <a name='L511'></a><a href='#L511'>511</a>
 <a name='L512'></a><a href='#L512'>512</a>
 <a name='L513'></a><a href='#L513'>513</a>
-<a name='L514'></a><a href='#L514'>514</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L514'></a><a href='#L514'>514</a>
+<a name='L515'></a><a href='#L515'>515</a>
+<a name='L516'></a><a href='#L516'>516</a>
+<a name='L517'></a><a href='#L517'>517</a>
+<a name='L518'></a><a href='#L518'>518</a>
+<a name='L519'></a><a href='#L519'>519</a>
+<a name='L520'></a><a href='#L520'>520</a>
+<a name='L521'></a><a href='#L521'>521</a>
+<a name='L522'></a><a href='#L522'>522</a>
+<a name='L523'></a><a href='#L523'>523</a>
+<a name='L524'></a><a href='#L524'>524</a>
+<a name='L525'></a><a href='#L525'>525</a>
+<a name='L526'></a><a href='#L526'>526</a>
+<a name='L527'></a><a href='#L527'>527</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -701,6 +714,13 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -812,10 +832,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1211,9 +1237,16 @@ const removeUndefined = <span class="fstat-no" title="function not covered" >(o<
  * @returns {Object} Question with enforced fields
  */
 const enforceRequiredFields = <span class="fstat-no" title="function not covered" >(q</span>uestion) =&gt; {
+  const currentUid = <span class="cstat-no" title="statement not covered" >auth.currentUser?.uid;</span>
   const currentEmail = <span class="cstat-no" title="statement not covered" >auth.currentUser?.email;</span>
   const currentName = <span class="cstat-no" title="statement not covered" >auth.currentUser?.displayName || currentEmail;</span>
   const now = <span class="cstat-no" title="statement not covered" >new Date().toISOString();</span>
+&nbsp;
+  // CRITICAL: Ensure creatorId is set - required by Firestore rules for creates
+<span class="cstat-no" title="statement not covered" >  if (!question.creatorId &amp;&amp; currentUid) {</span>
+<span class="cstat-no" title="statement not covered" >    question.creatorId = currentUid;</span>
+<span class="cstat-no" title="statement not covered" >    logger.log(`[FieldEnforce] Auto-set creatorId: ${currentUid}`);</span>
+  }
 &nbsp;
   // Ensure creator info is set
 <span class="cstat-no" title="statement not covered" >  if (!question.creatorEmail &amp;&amp; currentEmail) {</span>
@@ -1317,19 +1350,25 @@ const processOfflineQueue = <span class="fstat-no" title="function not covered" 
           err.message?.includes("Missing or insufficient permissions");
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        logger.warn(</span>
-          `Failed to sync ${item.question.uniqueId}, ${
-            isPermissionError ? "dropping due to permissions" : "re-queuing"
-          }:`,
+          `Failed to sync ${item.question.uniqueId}, re-queuing:`,
           err
         );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        if (!isPermissionError) {</span>
-          const alreadyHasNewer = <span class="cstat-no" title="statement not covered" >offlineQueue.some(</span>
-<span class="fstat-no" title="function not covered" >            (q</span>) =&gt; <span class="cstat-no" title="statement not covered" >q.question?.uniqueId === item.question?.uniqueId</span>
+        // ALWAYS re-queue on failure - never drop user data
+        // Permission errors may be temporary (stale token, rules change, etc.)
+        const alreadyHasNewer = <span class="cstat-no" title="statement not covered" >offlineQueue.some(</span>
+<span class="fstat-no" title="function not covered" >          (q</span>) =&gt; <span class="cstat-no" title="statement not covered" >q.question?.uniqueId === item.question?.uniqueId</span>
+        );
+<span class="cstat-no" title="statement not covered" >        if (!alreadyHasNewer) {</span>
+<span class="cstat-no" title="statement not covered" >          offlineQueue.push(item);</span>
+        }
+&nbsp;
+        // Notify user of permission issues so they can take action
+<span class="cstat-no" title="statement not covered" >        if (isPermissionError) {</span>
+<span class="cstat-no" title="statement not covered" >          toastError(</span>
+            "⚠️ Permission issue saving questions - please refresh or re-sign in",
+            8000
           );
-<span class="cstat-no" title="statement not covered" >          if (!alreadyHasNewer) {</span>
-<span class="cstat-no" title="statement not covered" >            offlineQueue.push(item);</span>
-          }
         }
       }
     }
@@ -1609,7 +1648,7 @@ export const batchSaveQuestions = <span class="fstat-no" title="function not cov
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-16T16:40:26.030Z
+                at 2026-01-16T17:32:42.771Z
             </div>
         <script src="../prettify.js"></script>
         <script>

@@ -1,0 +1,348 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.17 [39m[90mC:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+Not implemented: Window's open() method
+Not implemented: Window's open() method
+ [32mΓ£ô[39m src/services/__tests__/googleSheets.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+[90mstdout[2m | functions/test/invite.test.js
+[22m[39mΓ£à All invite system tests defined. Run with: npm test
+
+ [32mΓ£ô[39m src/utils/__tests__/analyticsFiltering.test.js [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/firebaseSave.regression.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32mΓ£ô[39m functions/test/invite.test.js [2m([22m[2m25 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/toastEvents.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/tokenCounter.test.js [2m([22m[2m23 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/ContentSanitization.test.jsx [2m([22m[2m9 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/questionFilters.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+stderr | src/utils/__tests__/normalizeQuestion.test.js > normalizeQuestion > normalizeQuestion > returns null for invalid input
+ΓÜá∩╕Å [17:32:37] normalizeQuestion received invalid input: null
+ΓÜá∩╕Å [17:32:37] normalizeQuestion received invalid input: undefined
+ΓÜá∩╕Å [17:32:37] normalizeQuestion received invalid input: string
+
+ [32mΓ£ô[39m src/utils/__tests__/validation.test.js [2m([22m[2m24 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+stderr | src/utils/__tests__/normalizeQuestion.test.js > normalizeQuestion > normalizeQuestions > filters out null entries from invalid inputs
+ΓÜá∩╕Å [17:32:37] normalizeQuestion received invalid input: null
+
+stderr | src/utils/__tests__/normalizeQuestion.test.js > normalizeQuestion > normalizeQuestions > returns empty array for non-array input
+ΓÜá∩╕Å [17:32:37] normalizeQuestions received non-array: null
+ΓÜá∩╕Å [17:32:37] normalizeQuestions received non-array: string
+
+stderr | src/utils/__tests__/secureStorage.test.js > secureStorage > getSecureItem > returns null for invalid JSON
+ΓÜá∩╕Å [17:32:37] Could not parse invalid, returning null
+
+stderr | src/hooks/helpers/__tests__/questionManagerHelpers.test.js > questionManagerHelpers > validateDocumentId > should convert numeric IDs to strings
+ΓÜá∩╕Å [17:32:37] Converting numeric ID to string: 12345
+
+ [32mΓ£ô[39m src/utils/__tests__/dateHelpers.test.js [2m([22m[2m8 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/diffUtils.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/logger.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/answerValidator.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/metricsUtils.test.js [2m([22m[2m14 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/constants.test.js [2m([22m[2m20 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/quizUtils.test.js [2m([22m[2m15 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/scormExporter.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/sanitize.test.js [2m([22m[2m16 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/analyticsStore.test.js [2m([22m[2m19 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/themeColors.test.js [2m([22m[2m27 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/rateLimitState.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/questionManager/__tests__/useQuestionDerivedData.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/normalizeQuestion.test.js [2m([22m[2m23 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/generationUtils.test.js [2m([22m[2m14 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/secureStorage.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/helpers/__tests__/questionManagerHelpers.test.js [2m([22m[2m18 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/stringHelpers.test.js [2m([22m[2m34 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+[90mstdout[2m | src/utils/__tests__/exportUtils.test.js[2m > [22m[2mexportUtils[2m > [22m[2mgetCSVContent[2m > [22m[2mhandles missing optional fields
+[22m[39m≡ƒô¥ [17:32:37] DEBUG CSV ROW: "1","u1","Tech Art","Multiple Choice","Easy","Q1","A","B","","","A","2026-01-16","","Excerpt","Unknown","No","","","Sam","Rev","English","","","","pending","",""
+
+ [32mΓ£ô[39m src/utils/__tests__/urlValidator.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useToast.test.js [2m([22m[2m22 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/AppBanners.test.jsx [2m([22m[2m12 tests[22m[2m)[22m[32m 216[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/exportUtils.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 72[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/questionHelpers.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/helpers.test.js [2m([22m[2m14 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/questionManager/__tests__/useQuestionSync.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/usePendingCount.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/debug.test.js [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/fileProcessor.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/importValidation.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useNavigationAfterLanguageSwitch.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/firestoreSave.integration.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useAppConfig.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32mΓ£ô[39m src/components/analytics/__tests__/StatCard.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[32m 73[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/importExport.integration.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[32m 159[2mms[22m[39m
+[90mstdout[2m | src/__tests__/feedbackLoop.integration.test.jsx[2m > [22m[2mFeedback Loop Integration Tests[2m > [22m[2mshould include rejected questions in the system prompt
+[22m[39m≡ƒô¥ [17:32:38] ≡ƒöì [geminiSecure] Checking authentication: {
+  isAuthenticated: [33mfalse[39m,
+  hasEffectiveKey: [33mtrue[39m,
+  effectiveKeyLength: [33m12[39m
+}
+≡ƒô¥ [17:32:38] Γ¥ô User not authenticated - using direct API
+≡ƒô¥ [17:32:38] ≡ƒôí Calling direct API with key: test-api-k...
+
+ [32mΓ£ô[39m src/hooks/questionManager/__tests__/useQuestionState.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 255[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/Footer.test.jsx [2m([22m[2m9 tests[22m[2m)[22m[33m 416[2mms[22m[39m
+stderr | src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should translate a question to target language
+ΓÜá∩╕Å [17:32:38] JSON parse failed, trying parseQuestions fallback SyntaxError: Unexpected token '|', "| ID | Dis"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Object.handleTranslateSingle (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionTranslation.js:62:33)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/translation.integration.test.jsx:147:9
+
+[90mstdout[2m | src/__tests__/feedbackLoop.integration.test.jsx[2m > [22m[2mFeedback Loop Integration Tests[2m > [22m[2mshould NOT include rejected questions from other disciplines
+[22m[39m≡ƒô¥ [17:32:38] ≡ƒöì [geminiSecure] Checking authentication: {
+  isAuthenticated: [33mfalse[39m,
+  hasEffectiveKey: [33mtrue[39m,
+  effectiveKeyLength: [33m12[39m
+}
+≡ƒô¥ [17:32:38] Γ¥ô User not authenticated - using direct API
+≡ƒô¥ [17:32:38] ≡ƒôí Calling direct API with key: test-api-k...
+
+ [32mΓ£ô[39m src/hooks/__tests__/useQuestionManager.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/questionManager/__tests__/useQuestionActions.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/generation/__tests__/useQuestionGenerator.test.js [2m([22m[2m13 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/CriticalUI.regression.test.jsx [2m([22m[2m4 tests[22m[2m)[22m[32m 232[2mms[22m[39m
+stderr | src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should preserve question metadata during translation
+ΓÜá∩╕Å [17:32:38] JSON parse failed, trying parseQuestions fallback SyntaxError: Unexpected token '|', "| ID | Dis"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Object.handleTranslateSingle (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionTranslation.js:62:33)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/translation.integration.test.jsx:211:9
+
+ [32mΓ£ô[39m src/__tests__/feedbackLoop.integration.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[32m 254[2mms[22m[39m
+stderr | src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should handle translation errors gracefully
+Γ¥î [17:32:38] Translation error: Error: Translation failed
+    at Module.simulateError (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/mocks/gemini.mock.js:239:41)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/translation.integration.test.jsx:232:18
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+
+ [32mΓ£ô[39m src/components/__tests__/VerifyConfirmModal.test.jsx [2m([22m[2m19 tests[22m[2m)[22m[33m 349[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useAuth.test.js [2m([22m[2m7 tests[22m[2m)[22m[33m 512[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/QuestionItem.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/LanguageControls.test.jsx [2m([22m[2m5 tests[22m[2m)[22m[33m 430[2mms[22m[39m
+[90mstdout[2m | src/__tests__/questionGeneration.integration.test.jsx[2m > [22m[2mQuestion Generation Integration Tests[2m > [22m[2mQuestion Variations[2m > [22m[2mshould generate critique for question
+[22m[39m≡ƒô¥ [17:32:38] [Critique] Saving to Firestore via saveQuestionToFirestore: mc-003
+
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate critique for question
+Γ¥î [17:32:38] Γ¥î [Save] Cannot save - user not authenticated!
+
+[90mstdout[2m | src/__tests__/questionGeneration.integration.test.jsx[2m > [22m[2mQuestion Generation Integration Tests[2m > [22m[2mQuestion Variations[2m > [22m[2mshould generate critique for question
+[22m[39m≡ƒô¥ [17:32:38] [Critique] Saved critique fields for mc-003 including 3 tags
+
+ [32mΓ£ô[39m src/components/__tests__/Header.test.jsx [2m([22m[2m18 tests[22m[2m)[22m[33m 574[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/questionGeneration.integration.test.jsx [2m([22m[2m9 tests[22m[2m)[22m[33m 624[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/googleSheets.integration.test.jsx [2m([22m[2m10 tests[22m[2m)[22m[33m 1466[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m should import from Sheets and re-export successfully [33m 355[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/translation.integration.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1247[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m should translate multiple questions to target languages [33m 341[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m should show progress during bulk translation [33m 356[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/SmokeTests.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[33m 3328[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m AdminPanel can be imported [33m 970[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m GlobalModals can be imported [33m 1874[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/InviteSignUp.test.jsx [2m([22m[2m18 tests[22m[2m)[22m[33m 3869[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m disables input after successful validation [33m 360[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows loading state during validation [33m 343[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows success message for valid invite [33m 324[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows error message for invalid invite [33m 324[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows rate limit error when exceeded [33m 344[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows Google sign-in button after valid invite [33m 372[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m calls onSuccess after successful sign-in and invite consumption [33m 448[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows error when authentication fails [33m 440[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m input shows aria-invalid when validation fails [33m 322[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m60 passed[39m[22m[90m (60)[39m
+[2m      Tests [22m [1m[32m656 passed[39m[22m[90m (656)[39m
+[2m   Start at [22m 12:32:33
+[2m   Duration [22m 9.69s[2m (transform 20.00s, setup 18.42s, import 30.91s, tests 14.80s, environment 164.61s)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |    37.1 |    29.87 |   29.83 |   37.74 |                   
+ __tests__         |   37.73 |    15.38 |   13.33 |   40.81 |                   
+  testHelpers.js   |   37.73 |    15.38 |   13.33 |   40.81 | ...67,274,285,296 
+ __tests__/mocks   |   71.05 |    47.54 |   65.51 |   72.27 |                   
+  gemini.mock.js   |   60.25 |    43.39 |   47.36 |   61.42 | ...37,183,204,247 
+  ...heets.mock.js |   94.44 |       75 |     100 |   96.77 | 58                
+ agents            |    0.62 |        0 |       0 |    0.63 |                   
+  auditAgent.js    |       0 |        0 |       0 |       0 | 30-196            
+  ...olverAgent.js |       0 |        0 |       0 |       0 | 20-256            
+  index.js         |    3.57 |        0 |       0 |     3.7 | 24-94             
+  loadAgent.js     |       0 |        0 |       0 |       0 | 20-119            
+  lockAgent.js     |       0 |        0 |       0 |       0 | 29-271            
+  ...GuardAgent.js |       0 |        0 |       0 |       0 | 29-285            
+  sessionAgent.js  |       5 |        0 |       0 |       5 | 19-65,77-80       
+ components        |   19.37 |    10.32 |    9.38 |   20.44 |                   
+  AdminPanel.jsx   |   23.07 |        0 |       0 |   30.76 | 20,28,46-242      
+  AgeGateModal.jsx |    6.25 |        0 |       0 |    6.66 | 8-56              
+  ...Dashboard.jsx |    5.33 |        0 |       0 |    5.79 | ...8,42-49,65-595 
+  ...yticsView.jsx |       3 |        0 |       0 |    3.19 | 46-350            
+  ApiKeyModal.jsx  |    5.88 |        0 |       0 |    7.14 | 5-65              
+  AppBanners.jsx   |     100 |      100 |     100 |     100 |                   
+  ...avigation.jsx |    12.5 |        0 |       0 |    12.5 | 4-81              
+  ...cessModal.jsx |      25 |        0 |       0 |   33.33 | 4-6               
+  ...portModal.jsx |    5.71 |        0 |       0 |       8 | 8-11,15-323       
+  ...tionModal.jsx |      50 |      100 |       0 |      50 | 4                 
+  ...leSection.jsx |   16.66 |        0 |       0 |   16.66 | 30-58             
+  ...irmDialog.jsx |   11.11 |        0 |       0 |    12.5 | 14-39             
+  ...xtToolbar.jsx |    1.72 |        0 |       0 |    1.92 | 39-540            
+  ...entBanner.jsx |    2.17 |        0 |       0 |    2.27 | 10-86             
+  ...downTimer.jsx |       5 |        0 |       0 |    5.55 | 11-40             
+  ...ZoneModal.jsx |    0.65 |        0 |       0 |    0.66 | 29-534            
+  DatabaseView.jsx |    2.41 |        0 |       0 |    2.72 | 25-361            
+  ...tionModal.jsx |   16.66 |        0 |       0 |      20 | 4-22              
+  EmailLogin.jsx   |    1.56 |        0 |       0 |    1.56 | 20-275            
+  EmptyState.jsx   |      50 |        0 |       0 |      50 | 18                
+  FilterButton.jsx |   18.18 |        0 |       0 |   18.18 | 8-14,22-32        
+  FlagIcon.jsx     |   93.33 |     92.3 |     100 |   93.33 | 119               
+  Footer.jsx       |     100 |      100 |     100 |     100 |                   
+  GlobalModals.jsx |    7.14 |        0 |       0 |    7.14 | 34-126            
+  Header.jsx       |   81.33 |    60.29 |   64.28 |   80.88 | ...,73-74,248-275 
+  Icon.jsx         |      75 |       75 |     100 |      75 | 220-223           
+  ...mentModal.jsx |    2.32 |        0 |       0 |    2.43 | 24-360            
+  InfoTooltip.jsx  |      50 |        0 |       0 |      50 | 4                 
+  InviteSignUp.jsx |   57.77 |    57.14 |   35.29 |   58.42 | ...45,239-334,349 
+  ...ngSpinner.jsx |      50 |        0 |       0 |      50 | 9,24,34,45        
+  MainLayout.jsx   |      10 |        0 |       0 |    12.5 | 139-194           
+  ...Dashboard.jsx |    7.14 |        0 |       0 |    8.33 | 8-51              
+  ...ntryModal.jsx |    8.33 |        0 |       0 |    9.09 | 6-51              
+  PromptDialog.jsx |    5.26 |        0 |       0 |    6.25 | 16-53             
+  QuestionItem.jsx |   26.98 |    10.85 |   13.33 |   29.65 | ...19-643,654-684 
+  QuestionList.jsx |   33.33 |        0 |       0 |   33.33 | 23-28             
+  ReviewMode.jsx   |    3.84 |        0 |       0 |    4.34 | 27-86             
+  ...odeBanner.jsx |      50 |      100 |       0 |      50 | 9                 
+  ...ogressBar.jsx |    9.09 |        0 |       0 |   11.11 | ...6,61-63,80-211 
+  ScoreBadge.jsx   |   22.22 |        0 |       0 |   22.22 | 18-31             
+  Sidebar.jsx      |   33.33 |        0 |       0 |   33.33 | 33-43             
+  ...fUseModal.jsx |    12.5 |        0 |       0 |   14.28 | 9-20              
+  ...geDisplay.jsx |      20 |        0 |       0 |      25 | 2-6               
+  ...alOverlay.jsx |    0.85 |        0 |       0 |    0.94 | 16-376            
+  ...firmModal.jsx |   94.33 |    93.93 |   78.94 |   93.87 | 44,58,258         
+  ViewRouter.jsx   |    18.6 |        0 |       0 |   21.62 | 14,29-39,120-308  
+ components/Admin  |      50 |        0 |       0 |      50 |                   
+  ...ureAccess.jsx |      50 |      100 |       0 |      50 | 11                
+  AdminHeader.jsx  |      50 |      100 |       0 |      50 | 10                
+  AdminSection.jsx |      50 |        0 |       0 |      50 | 11                
+  AdminStats.jsx   |      50 |        0 |       0 |      50 | 16                
+ components/Header |   57.14 |    32.32 |      50 |   59.37 |                   
+  ...obileMenu.jsx |   16.66 |        0 |       0 |   16.66 | 32-96             
+  ...StatusBar.jsx |    87.5 |       40 |      50 |    87.5 | 77                
+  ...rUserInfo.jsx |   73.33 |       50 |     100 |   83.33 | 28,34             
+ ...s/QuestionItem |   26.76 |     12.8 |   14.92 |   26.51 |                   
+  ...ueSection.jsx |      50 |      100 |       0 |      50 | 4                 
+  ...onDisplay.jsx |      25 |        0 |       0 |      25 | 6-10              
+  ...eControls.jsx |    62.5 |    59.32 |   42.85 |   60.46 | ...,73-96,113,116 
+  ...onActions.jsx |   53.96 |    31.08 |   43.75 |   54.23 | ...25-226,240-320 
+  ...onContent.jsx |    2.56 |        0 |       0 |    3.03 | 17-196            
+  ...ionHeader.jsx |    7.89 |        0 |       0 |    8.82 | 11-30,54-268      
+  ...nMetadata.jsx |   10.52 |        0 |       0 |   11.11 | 6-41,52-147       
+  ...otesField.jsx |    3.84 |        0 |       0 |    3.84 | 5-61              
+  ...ntextCard.jsx |    6.25 |        0 |       0 |    6.25 | 17-56,126-132     
+  ...nWarnings.jsx |    7.69 |        0 |       0 |    7.69 | 5-50              
+ ...ents/analytics |    3.94 |        0 |    0.76 |    4.34 |                   
+  ...tailPanel.jsx |    8.82 |        0 |       0 |   10.34 | 17-20,32-107      
+  ...plinesTab.jsx |   15.38 |        0 |       0 |   15.38 | 50-188            
+  ...ionCharts.jsx |    1.66 |        0 |       0 |    1.86 | 27-458            
+  OverviewTab.jsx  |    8.33 |        0 |       0 |    8.33 | 28-234            
+  QualityTab.jsx   |      25 |        0 |       0 |      25 | 23-56             
+  ...Container.jsx |    3.33 |        0 |       0 |    3.33 | 10-64             
+  StatCard.jsx     |     100 |      100 |     100 |     100 |                   
+  ...Analytics.jsx |    1.56 |        0 |       0 |    1.81 | 16-161            
+  ...tionGraph.jsx |    0.82 |        0 |       0 |     0.9 | 16-314            
+  TrendCharts.jsx  |    6.66 |        0 |       0 |    7.14 | 27-145            
+ ...onents/sidebar |    2.87 |        0 |       0 |    3.33 |                   
+  ActionFooter.jsx |      12 |        0 |       0 |   13.63 | 13-22,29-32,51-70 
+  ...Suggester.jsx |    2.08 |        0 |       0 |    2.38 | 12-120            
+  ...nSettings.jsx |    0.99 |        0 |       0 |    1.16 | 25-484            
+ components/ui     |     100 |      100 |     100 |     100 |                   
+  Button.jsx       |     100 |      100 |     100 |     100 |                   
+ contexts          |   61.76 |       50 |   38.46 |      70 |                   
+  ...tyContext.jsx |   61.76 |       50 |   38.46 |      70 | ...42,59,64,68,72 
+ hooks             |   48.78 |    49.58 |    53.4 |   48.95 |                   
+  useAppConfig.js  |   73.33 |    62.96 |   83.33 |   75.71 | ...31,134,140-156 
+  useAuth.js       |   82.71 |     61.9 |   72.72 |   83.11 | ...75-181,189-192 
+  useEditLock.js   |    0.53 |        0 |       0 |    0.56 | 30-399            
+  useGeneration.js |     100 |      100 |     100 |     100 |                   
+  ...uageSwitch.js |     100 |      100 |     100 |     100 |                   
+  ...ndingCount.js |     100 |      100 |     100 |     100 |                   
+  ...ionManager.js |   88.88 |      100 |      75 |   88.88 | 47                
+  ...hemeColors.js |    9.09 |        0 |       0 |    9.09 | 25-88             
+  useToast.js      |   98.48 |    87.87 |     100 |   98.38 | 134               
+ hooks/admin       |    6.74 |        0 |       0 |    7.22 |                   
+  ...nAnalytics.js |    8.33 |      100 |       0 |    8.33 | 12-31             
+  ...minInvites.js |    9.52 |        0 |       0 |      10 | 15-43             
+  ...PanelLogic.js |      20 |      100 |       0 |      20 | 21-34             
+  useAdminUsers.js |    3.92 |        0 |       0 |    4.34 | 15-96             
+ hooks/generation  |   78.52 |    53.71 |      75 |   79.74 |                   
+  ...onCritique.js |   49.36 |    24.44 |    37.5 |   51.31 | ...41-243,264-287 
+  ...nGenerator.js |   88.88 |    75.96 |      85 |   89.74 | ...96-497,550-552 
+  ...ranslation.js |   85.88 |    62.85 |    87.5 |    86.9 | ...11,139-143,242 
+ hooks/helpers     |     100 |      100 |     100 |     100 |                   
+  ...gerHelpers.js |     100 |      100 |     100 |     100 |                   
+ ...uestionManager |   60.39 |    42.46 |   67.67 |   61.36 |                   
+  ...Resolution.js |   22.44 |        0 |   11.11 |   22.91 | ...43-144,152-155 
+  ...ionActions.js |   37.25 |    13.63 |   37.03 |   40.47 | ...87-188,195-223 
+  ...erivedData.js |   97.43 |       68 |     100 |   98.46 | 76                
+  ...stionState.js |   96.55 |    83.33 |     100 |   96.15 | 64                
+  ...estionSync.js |      92 |    88.88 |      90 |    91.3 | 32,53             
+  ...tusActions.js |   52.94 |    38.96 |   33.33 |   54.83 | ...04-233,255,265 
+ services          |      26 |    21.91 |   27.46 |   26.25 |                   
+  auditService.js  |   52.63 |       30 |      50 |   52.63 | 43,59-78          
+  ...dFunctions.js |    12.5 |        0 |   16.66 |    12.5 | ...53-168,180-197 
+  firebase.js      |      75 |       50 |     100 |      75 | 20                
+  firebaseAuth.js  |   26.41 |       20 |       0 |   26.41 | ...47,157,165-166 
+  ...aseQueries.js |    8.33 |        0 |       0 |    8.33 | ...65-385,394-411 
+  firebaseSave.js  |   15.06 |     3.17 |    3.33 |      16 | ...76-431,443-525 
+  firestoreSave.js |   91.48 |    90.47 |     100 |   91.11 | 40-41,62-63       
+  gemini.js        |    4.63 |        0 |       0 |    4.89 | ...71-502,512-521 
+  geminiSecure.js  |   15.09 |    21.73 |      25 |   15.09 | ...86-150,159-196 
+  googleSheets.js  |   91.22 |    79.06 |      80 |   91.07 | ...17-120,126,142 
+  inviteService.js |   16.66 |        0 |       0 |    17.3 | ...26-129,139-145 
+  promptBuilder.js |   81.48 |    57.89 |     100 |   81.48 | 44-46,61,63       
+  scormExporter.js |   56.14 |    71.05 |   83.33 |   55.35 | ...68-169,179,194 
+  toastEvents.js   |     100 |      100 |     100 |     100 |                   
+  ...ataService.js |    8.33 |        0 |       0 |    8.64 | ...91-241,250-282 
+ services/prompts  |     100 |       50 |     100 |     100 |                   
+  ...ionPrompts.js |     100 |       50 |     100 |     100 | 8-29              
+ utils             |   64.54 |    62.44 |   61.51 |   65.61 |                   
+  ...yticsStore.js |   68.87 |    62.13 |   56.09 |   69.44 | ...99,421,425,484 
+  ...rValidator.js |   94.44 |    91.17 |     100 |   97.05 | 195               
+  constants.js     |     100 |       50 |     100 |     100 | 3                 
+  dateHelpers.js   |     100 |      100 |     100 |     100 |                   
+  diffUtils.js     |   79.31 |    72.41 |     100 |   78.57 | 33-39             
+  exportUtils.js   |   82.75 |    79.16 |     100 |     100 | 22,27-35,53,58,80 
+  ...alCritique.js |    7.01 |        0 |       0 |    7.27 | ...95-145,153-171 
+  fileProcessor.js |   87.09 |    67.64 |      90 |   91.37 | ...67,177,198-203 
+  ...ationUtils.js |      86 |    69.04 |   93.75 |   84.78 | ...3,85,89,93,140 
+  logger.js        |   65.51 |    45.83 |      60 |   62.96 | 69-70,96-117      
+  metricsUtils.js  |   95.55 |    95.45 |     100 |    97.5 | 11                
+  ...zeQuestion.js |    87.3 |    96.85 |   78.57 |   88.52 | 22-26,36-37,401   
+  parserUtils.js   |    60.4 |    50.71 |      64 |   63.21 | ...08-311,361-431 
+  ...ionFilters.js |   49.21 |    41.93 |   68.75 |   52.57 | ...15-220,245-249 
+  ...ionHelpers.js |    8.33 |      100 |       0 |    8.33 | 14-24             
+  ...nValidator.js |   76.66 |    81.81 |   33.33 |   76.66 | 36-37,50-51,84-86 
+  quizUtils.js     |   58.33 |       25 |   85.71 |   55.88 | 75-110            
+  ...nforcement.js |    36.9 |    20.37 |   22.72 |   39.72 | ...96,206,220-238 
+  ...LimitState.js |     100 |      100 |     100 |     100 |                   
+  ...rAnalytics.js |    5.51 |        0 |       0 |    5.69 | ...09-315,324-368 
+  sanitize.js      |     100 |      100 |     100 |     100 |                   
+  secureStorage.js |   91.66 |      100 |     100 |    90.9 | 16                
+  security.js      |   58.06 |       50 |   66.66 |      60 | ...4,75,81,90,101 
+  stringHelpers.js |    93.7 |    94.11 |   85.71 |   95.14 | 42-46             
+  tagTaxonomy.js   |   22.22 |        0 |       0 |   22.22 | ...77,287-292,300 
+  themeColors.js   |   96.07 |    83.92 |     100 |     100 | ...89,402-403,417 
+  tokenCounter.js  |     100 |      100 |     100 |     100 |                   
+  ...lAnalytics.js |    12.5 |        0 |       0 |    12.5 | ...9,77-80,89-126 
+  ...moQuestion.js |   66.66 |      100 |       0 |     100 |                   
+  urlValidator.js  |      80 |    78.12 |      50 |   81.48 | 48,93-102,126     
+  ...idatorData.js |     100 |      100 |     100 |     100 |                   
+  validation.js    |   89.06 |       85 |     100 |   88.88 | ...42,49,57,83,92 
+ utils/tutorial    |       8 |        0 |       0 |    8.88 |                   
+  domHelpers.js    |       8 |        0 |       0 |    8.88 | ...7,68-79,88-117 
+-------------------|---------|----------|---------|---------|-------------------
