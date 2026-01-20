@@ -25,8 +25,11 @@ exports.checkUserRegistration = functions
       const email = context.auth.token.email;
       console.log(`[checkUserRegistration] Checking email: ${email}`);
 
+      // Check for Epic Games employees (main domain and subdomains like xa.epicgames.com)
+      const emailLower = email ? email.toLowerCase() : "";
       const isEpicEmployee =
-        email && email.toLowerCase().endsWith("@epicgames.com");
+        emailLower.endsWith("@epicgames.com") ||
+        emailLower.endsWith("@xa.epicgames.com");
 
       if (isEpicEmployee) {
         console.log(

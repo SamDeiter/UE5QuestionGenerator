@@ -32,8 +32,12 @@ exports.checkToolAccess = functions
     const db = admin.firestore();
 
     try {
-      // 2. Epic Games Employee auto-approval
-      if (email && email.toLowerCase().endsWith("@epicgames.com")) {
+      // 2. Epic Games Employee auto-approval (main domain and subdomains)
+      const emailLower = email ? email.toLowerCase() : "";
+      if (
+        emailLower.endsWith("@epicgames.com") ||
+        emailLower.endsWith("@xa.epicgames.com")
+      ) {
         console.log(`Auto-approving Epic employee ${email} for tool ${toolId}`);
         return {
           hasAccess: true,
