@@ -210,6 +210,17 @@ service cloud.firestore {
       // Immutable - no updates or deletes
       allow update, delete: if false;
     }
+
+    // ============================================================
+    // TOOL REGISTRY
+    // ============================================================
+    
+    match /toolRegistry/{toolId} {
+      // Read: Any authenticated user
+      allow read: if isSignedIn();
+      // Write: Admins only
+      allow write: if isAdmin();
+    }
     
     // ============================================================
     // DENY ALL OTHER ACCESS

@@ -6,7 +6,17 @@ import { DEFAULT_CONFIG, STORAGE_KEYS, APP_MODES } from "../utils/constants";
 export const useAppConfig = () => {
   // Application mode: 'landing' (home screen), 'create' (generation mode), 'review' (review mode), 'database' (view all)
   const [appMode, setAppMode] = useState(() => {
-    // SECURITY: Get mode from localStorage if available to prevent flash-resets on hydrate
+    // 1. Check URL parameters (Highest priority)
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const modeParam = params.get("mode");
+      if (modeParam && Object.values(APP_MODES).includes(modeParam)) {
+        logger.log("🔗 Found app mode in URL:", modeParam);
+        return modeParam;
+      }
+    }
+
+    // 2. Fallback to localStorage
     if (typeof window === "undefined") return APP_MODES.LANDING;
     return localStorage.getItem(STORAGE_KEYS.APP_MODE) || APP_MODES.LANDING;
   });
@@ -108,7 +118,7 @@ export const useAppConfig = () => {
       "🌍 [handleLanguageSwitch] Switching global language filter to:",
       lang,
       "| Navigate to uniqueId:",
-      uniqueId
+      uniqueId,
     );
     // Store the uniqueId for navigation after re-filter
     if (uniqueId) {

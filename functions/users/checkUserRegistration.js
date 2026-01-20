@@ -19,6 +19,17 @@ exports.checkUserRegistration = functions
     const userId = context.auth.uid;
 
     try {
+      // 1. Epic Games Employee auto-registration check
+      const email = context.auth.token.email;
+      if (email && email.toLowerCase().endsWith("@epicgames.com")) {
+        return {
+          registered: true,
+          role: "admin",
+          isEmployee: true,
+          tools: ["questions", "blueprint", "scenario", "materials"],
+        };
+      }
+
       const userDoc = await db.collection("registeredUsers").doc(userId).get();
 
       if (userDoc.exists) {
@@ -27,13 +38,18 @@ exports.checkUserRegistration = functions
           registered: true,
           role: userData.role || "reviewer",
           registeredAt: userData.registeredAt?.toDate()?.toISOString(),
+          tools: userData.tools || ["questions"], // Default to questions for backward compatibility
         };
       }
 
-      // Also check if user is an admin (admins don't need invites)
+      // 2. Also check if user is an admin (admins don't need invites)
       const isAdmin = await isAdminUser(userId);
       if (isAdmin) {
-        return { registered: true, role: "admin" };
+        return {
+          registered: true,
+          role: "admin",
+          tools: ["questions", "blueprint", "scenario", "materials"],
+        };
       }
 
       return { registered: false };

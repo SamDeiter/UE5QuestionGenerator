@@ -23,8 +23,8 @@ import { subscribeToToasts } from "./services/toastEvents";
 const LandingPage = lazy(() => import("./components/LandingPage"));
 const MainLayout = lazy(() => import("./components/MainLayout"));
 const GlobalModals = lazy(() => import("./components/GlobalModals"));
-const CrashRecoveryPrompt = lazy(() =>
-  import("./components/CrashRecoveryPrompt")
+const CrashRecoveryPrompt = lazy(
+  () => import("./components/CrashRecoveryPrompt"),
 );
 
 // Custom Hooks
@@ -52,7 +52,7 @@ import { useNavigationAfterLanguageSwitch } from "./hooks/useNavigationAfterLang
 // Concurrent Editing Agents
 import { initializeAgents } from "./agents";
 // Utilities
-import { TOAST_DURATION, APP_MODES } from "./utils/constants";
+import { TOAST_DURATION, APP_MODES, QUESTION_STATUS } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import { logger } from "./utils/logger";
 import { getTokenUsageFromQuestions } from "./utils/analyticsStore";
@@ -244,7 +244,7 @@ const App = () => {
   // Calculate token usage from Firestore questions (aggregates estimatedCost from all questions)
   const firestoreTokenUsage = useMemo(
     () => getTokenUsageFromQuestions(databaseQuestions),
-    [databaseQuestions]
+    [databaseQuestions],
   );
 
   // 2.5. Crash Recovery - detect and restore from cloud backup
@@ -268,7 +268,7 @@ const App = () => {
       showMessage,
       setStatus,
       isApiReady,
-      effectiveApiKey
+      effectiveApiKey,
     );
 
   // 5. Filtering & Search (extracted to useFiltering hook)
@@ -345,7 +345,7 @@ const App = () => {
     setShowApiError,
     setShowHistory,
     translationMap,
-    allQuestionsMap
+    allQuestionsMap,
   );
 
   // 7. Modal State (extracted to useModalState hook)
@@ -383,7 +383,7 @@ const App = () => {
     setAppMode,
     setShowExportMenu,
     setShowBulkExportModal,
-    replaceQuestions
+    replaceQuestions,
   );
 
   // Auto-load database questions on startup for difficulty distribution chart
@@ -394,7 +394,7 @@ const App = () => {
       const migrated = runLocalStorageMigration();
       if (migrated.updated > 0) {
         logger.log(
-          `🔄 Migrated ${migrated.updated} questions with estimated improved scores`
+          `🔄 Migrated ${migrated.updated} questions with estimated improved scores`,
         );
       }
 
@@ -443,6 +443,31 @@ const App = () => {
     setCurrentReviewIndex,
     handleLoadFromFirestore,
   });
+
+  // ========================================================================
+  // INITIAL MODE SETUP - Handle URL parameters (e.g., mode=review)
+  // ========================================================================
+  useEffect(() => {
+    // If the appMode was set via URL (detected in useAppConfig)
+    // we need to ensure the filters and history visibility are initialized correctly
+    if (appMode === APP_MODES.REVIEW && !showHistory) {
+      logger.log("🎯 Initializing Review Mode from URL parameters");
+      setShowHistory(true);
+      setFilterMode(QUESTION_STATUS.PENDING);
+      setCurrentReviewIndex(0);
+    } else if (appMode === APP_MODES.TRANSLATE && !showHistory) {
+      logger.log("🎯 Initializing Translate Mode from URL parameters");
+      setShowHistory(true);
+      setFilterMode(QUESTION_STATUS.ACCEPTED);
+      setCurrentReviewIndex(0);
+    }
+  }, [
+    appMode,
+    setShowHistory,
+    setFilterMode,
+    setCurrentReviewIndex,
+    showHistory,
+  ]);
 
   // Bulk selection feature removed
 
@@ -509,7 +534,7 @@ const App = () => {
       handleTrimExcess,
       handleUpdateQuestion,
       userRole,
-    ]
+    ],
   );
 
   // Render - Loading state
@@ -795,24 +820,24 @@ const App = () => {
               if (action === "DISCARD") {
                 // Reload the latest version from server
                 const { loadAgent } = await import("./agents").then((m) =>
-                  m.getAgents()
+                  m.getAgents(),
                 );
                 if (loadAgent) {
                   const result = await loadAgent.loadQuestion(
-                    conflictData.serverQuestion.id
+                    conflictData.serverQuestion.id,
                   );
                   if (result.success) {
                     handleUpdateQuestion(result.question.id, result.question);
                     showMessage(
                       "✓ Reloaded latest version",
-                      TOAST_DURATION.MEDIUM
+                      TOAST_DURATION.MEDIUM,
                     );
                   }
                 }
               } else if (action === "OVERWRITE") {
                 // Force save local changes
                 const { saveGuardAgent } = await import("./agents").then((m) =>
-                  m.getAgents()
+                  m.getAgents(),
                 );
                 if (saveGuardAgent) {
                   await saveGuardAgent.saveQuestion(
@@ -820,7 +845,7 @@ const App = () => {
                     conflictData.localChanges,
                     conflictData.serverVersion, // Use server version to force overwrite
                     user?.uid || "unknown",
-                    user?.email || "unknown@example.com"
+                    user?.email || "unknown@example.com",
                   );
                   showMessage("✓ Overwrote server changes", 2000);
                 }

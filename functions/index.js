@@ -27,12 +27,14 @@ Object.assign(exports, require("./users/changeUserRole"));
 Object.assign(exports, require("./users/revokeUserAccess"));
 Object.assign(exports, require("./users/checkUserRegistration"));
 Object.assign(exports, require("./users/setupInitialAdmin"));
+Object.assign(exports, require("./users/checkToolAccess"));
 
 // ============================================================================
 // Migration Functions
 // ============================================================================
 Object.assign(exports, require("./migrations/migrateTranslations"));
 Object.assign(exports, require("./migrations/importAIScores"));
+Object.assign(exports, require("./migrations/unifiedAccessMigration"));
 
 // ============================================================================
 // Email Functions
