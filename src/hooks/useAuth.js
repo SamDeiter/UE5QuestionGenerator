@@ -71,12 +71,15 @@ export function useAuth(showMessage) {
         setRegistrationLoading(true);
         try {
           let regStatus = await checkUserRegistration();
+          logger.log("🔍 [Auth] checkUserRegistration result:", regStatus);
+          logger.log("🔍 [Auth] User email:", currentUser.email);
 
           // If not registered, attempt server-side admin setup
           // Server validates email whitelist - client never sees the whitelist
           if (!regStatus.registered) {
             try {
               const adminResult = await setupInitialAdmin();
+              logger.log("🔍 [Auth] setupInitialAdmin result:", adminResult);
               if (adminResult.success) {
                 logger.log("✅ Server-side admin setup successful");
                 regStatus = {
@@ -90,6 +93,12 @@ export function useAuth(showMessage) {
             }
           }
 
+          logger.log(
+            "🔍 [Auth] Final role:",
+            regStatus.role,
+            "isAdmin:",
+            regStatus.role === "admin",
+          );
           setIsRegistered(regStatus.registered);
           setUserRole(regStatus.role || "user");
           setIsAdmin(regStatus.role === "admin");
@@ -102,10 +111,10 @@ export function useAuth(showMessage) {
               await setDoc(
                 doc(db, "userSettings", currentUser.uid),
                 { lastVerified: serverTimestamp() },
-                { merge: true }
+                { merge: true },
               );
               logger.log(
-                "✅ Write probe successful - Firestore access verified"
+                "✅ Write probe successful - Firestore access verified",
               );
               setPermissionError(false);
             } catch (probeError) {

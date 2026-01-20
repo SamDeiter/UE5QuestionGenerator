@@ -19,9 +19,20 @@ exports.checkUserRegistration = functions
     const userId = context.auth.uid;
 
     try {
-      // 1. Epic Games Employee auto-registration check
+      // 1. PRIORITY: Epic Games Employee auto-registration check
+      // This check ALWAYS comes first and returns immediately for Epic employees
+      // Prevents any registeredUsers document from overriding Epic employee admin status
       const email = context.auth.token.email;
-      if (email && email.toLowerCase().endsWith("@epicgames.com")) {
+      console.log(`[checkUserRegistration] Checking email: ${email}`);
+
+      const isEpicEmployee =
+        email && email.toLowerCase().endsWith("@epicgames.com");
+
+      if (isEpicEmployee) {
+        console.log(
+          `[checkUserRegistration] Epic employee detected, granting admin: ${email}`,
+        );
+        // Epic employees are ALWAYS admins - no exceptions
         return {
           registered: true,
           role: "admin",
@@ -30,6 +41,7 @@ exports.checkUserRegistration = functions
         };
       }
 
+      // 2. For non-Epic users, check registeredUsers collection
       const userDoc = await db.collection("registeredUsers").doc(userId).get();
 
       if (userDoc.exists) {
