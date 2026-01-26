@@ -29,7 +29,7 @@ export const useQuestionCritique = ({
         logger.error("[Critique] Question object is undefined or null");
         showMessage(
           "Critique failed: Invalid question data",
-          TOAST_DURATION.LONG
+          TOAST_DURATION.LONG,
         );
         return;
       }
@@ -37,11 +37,11 @@ export const useQuestionCritique = ({
       if (!q.question) {
         logger.error(
           "[Critique] Question object missing 'question' property:",
-          q
+          q,
         );
         showMessage(
           "Critique failed: Question text is missing",
-          TOAST_DURATION.LONG
+          TOAST_DURATION.LONG,
         );
         return;
       }
@@ -49,11 +49,11 @@ export const useQuestionCritique = ({
       if (!q.options || typeof q.options !== "object") {
         logger.error(
           "[Critique] Question object missing 'options' property:",
-          q
+          q,
         );
         showMessage(
           "Critique failed: Question options are missing",
-          TOAST_DURATION.LONG
+          TOAST_DURATION.LONG,
         );
         return;
       }
@@ -61,11 +61,11 @@ export const useQuestionCritique = ({
       if (!q.correct) {
         logger.error(
           "[Critique] Question object missing 'correct' property:",
-          q
+          q,
         );
         showMessage(
           "Critique failed: Correct answer is missing",
-          TOAST_DURATION.LONG
+          TOAST_DURATION.LONG,
         );
         return;
       }
@@ -73,7 +73,7 @@ export const useQuestionCritique = ({
       if (!isApiReady) {
         showMessage(
           "API key is required for critique. Please enter it in the settings panel.",
-          TOAST_DURATION.LONG
+          TOAST_DURATION.LONG,
         );
         return;
       }
@@ -107,7 +107,7 @@ export const useQuestionCritique = ({
 
             const newTags = await generateTagsSecure(
               effectiveApiKey,
-              questionForTags
+              questionForTags,
             );
             if (newTags && newTags.length > 0) {
               suggestedTags = [
@@ -140,8 +140,18 @@ export const useQuestionCritique = ({
                 C: opts.C || rewrite.optionC || q.options?.C || "",
                 D: opts.D || rewrite.optionD || q.options?.D || "",
               };
-              const newCorrect =
-                rewrite.correct || rewrite.correctLetter || q.correct || "A";
+
+              // CRITICAL FIX: Always preserve original correct answer
+              // The AI should NEVER change which answer is correct - only improve wording
+              // This prevents T/F questions from incorrectly flipping True<->False
+              const newCorrect = q.correct || "A";
+
+              // Log if AI tried to change the answer (for debugging)
+              if (rewrite.correct && rewrite.correct !== q.correct) {
+                logger.warn(
+                  `[Critique] AI attempted to change correct answer from "${q.correct}" to "${rewrite.correct}" - PRESERVED ORIGINAL`,
+                );
+              }
 
               // Check if rewrite is identical to original
               const isIdentical =
@@ -196,9 +206,8 @@ export const useQuestionCritique = ({
         // CRITICAL: Persist critique results (including tags) to Firestore
         // Use saveQuestionToFirestore which handles offline queue and permissions
         try {
-          const { saveQuestionToFirestore } = await import(
-            "../../services/firebase"
-          );
+          const { saveQuestionToFirestore } =
+            await import("../../services/firebase");
 
           // Merge critique fields into the full question object
           const updatedQuestion = {
@@ -215,27 +224,27 @@ export const useQuestionCritique = ({
           };
 
           logger.log(
-            `[Critique] Saving to Firestore via saveQuestionToFirestore: ${q.id}`
+            `[Critique] Saving to Firestore via saveQuestionToFirestore: ${q.id}`,
           );
           await saveQuestionToFirestore(updatedQuestion);
           logger.log(
-            `[Critique] Saved critique fields for ${q.id} including ${suggestedTags.length} tags`
+            `[Critique] Saved critique fields for ${q.id} including ${suggestedTags.length} tags`,
           );
         } catch (saveError) {
           logger.error(
             "[Critique] Failed to save critique results to Firestore:",
-            saveError
+            saveError,
           );
           // Don't fail silently - notify user
           showMessage(
             "⚠️ Critique saved locally but failed to sync to database",
-            TOAST_DURATION.LONG
+            TOAST_DURATION.LONG,
           );
         }
 
         showMessage(
           `Critique Ready! Score: ${score}/100`,
-          TOAST_DURATION.MEDIUM
+          TOAST_DURATION.MEDIUM,
         );
       } catch (e) {
         logger.error("Critique failed:", e);
@@ -253,7 +262,7 @@ export const useQuestionCritique = ({
       updateAllVariantsInState,
       setStatus,
       setIsProcessing,
-    ]
+    ],
   );
 
   /**
@@ -287,7 +296,7 @@ export const useQuestionCritique = ({
         handleCritique({ ...updatedQ, id: q.id });
       }, 300);
     },
-    [updateQuestionInState, showMessage, handleCritique]
+    [updateQuestionInState, showMessage, handleCritique],
   );
 
   return {
