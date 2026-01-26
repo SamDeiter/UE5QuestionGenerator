@@ -40,6 +40,11 @@ const DIFFICULTY_OPTIONS = [
   { value: QUESTION_DIFFICULTY.EXPERT, label: "Expert", color: "red" },
 ];
 
+const TRUE_FALSE_OPTIONS = [
+  { value: "A", label: "True", color: "emerald" },
+  { value: "B", label: "False", color: "red" },
+];
+
 const QuestionHeader = ({
   q,
   originalQ, // NEW: The base question record
@@ -54,6 +59,28 @@ const QuestionHeader = ({
   const displayDifficulty = normalizeDifficulty(q.difficulty);
   // Language available via q.language if needed
   const [isEditingDifficulty, setIsEditingDifficulty] = useState(false);
+  const [isEditingTrueFalse, setIsEditingTrueFalse] = useState(false);
+
+  // Determine if this is a True/False question
+  const isTrueFalseQuestion = q.type === "True/False" || q.type === "T/F";
+
+  // Get current correct answer for T/F questions (normalize to A or B)
+  const getCurrentTFAnswer = () => {
+    const correct = (q.correct || q.correctLetter || "A")
+      .toString()
+      .toUpperCase();
+    return correct === "B" ? "B" : "A"; // Default to A (True) if unclear
+  };
+
+  const handleTrueFalseChange = async (newAnswer) => {
+    if (onUpdateQuestion && newAnswer !== getCurrentTFAnswer()) {
+      await onUpdateQuestion(q.id, {
+        correct: newAnswer,
+        correctLetter: newAnswer,
+      });
+    }
+    setIsEditingTrueFalse(false);
+  };
 
   const handleDifficultyChange = async (newDifficulty) => {
     if (onUpdateQuestion && newDifficulty !== q.difficulty) {
@@ -85,7 +112,7 @@ const QuestionHeader = ({
             <button
               onClick={() => onUpdateQuestion && setIsEditingDifficulty(true)}
               className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(
-                displayDifficulty
+                displayDifficulty,
               )} flex items-center gap-1 ${
                 onUpdateQuestion
                   ? "cursor-pointer hover:opacity-80 transition-opacity"
@@ -110,8 +137,60 @@ const QuestionHeader = ({
             </button>
           )}
           <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">
-            {q.type === "True/False" ? "T/F" : "MC"}
+            {q.type === "True/False" || q.type === "T/F" ? "T/F" : "MC"}
           </span>
+
+          {/* True/False Answer Toggle - Only for T/F questions */}
+          {isTrueFalseQuestion && (
+            <>
+              {isEditingTrueFalse ? (
+                <select
+                  value={getCurrentTFAnswer()}
+                  onChange={(e) => handleTrueFalseChange(e.target.value)}
+                  onBlur={() => setIsEditingTrueFalse(false)}
+                  autoFocus
+                  className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-slate-800 text-white border border-slate-600 cursor-pointer focus:ring-2 focus:ring-blue-500"
+                >
+                  {TRUE_FALSE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      Answer: {opt.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <button
+                  onClick={() =>
+                    onUpdateQuestion && setIsEditingTrueFalse(true)
+                  }
+                  className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border flex items-center gap-1 ${
+                    getCurrentTFAnswer() === "A"
+                      ? "bg-emerald-950 text-emerald-400 border-emerald-800"
+                      : "bg-red-950 text-red-400 border-red-800"
+                  } ${
+                    onUpdateQuestion
+                      ? "cursor-pointer hover:opacity-80 transition-opacity"
+                      : ""
+                  }`}
+                  title={
+                    onUpdateQuestion
+                      ? "Click to change correct answer"
+                      : `Correct: ${getCurrentTFAnswer() === "A" ? "True" : "False"}`
+                  }
+                  disabled={!onUpdateQuestion}
+                >
+                  <Icon name="check-circle" size={12} />
+                  {getCurrentTFAnswer() === "A" ? "True" : "False"}
+                  {onUpdateQuestion && (
+                    <Icon
+                      name="chevron-down"
+                      size={10}
+                      className="ml-0.5 opacity-50"
+                    />
+                  )}
+                </button>
+              )}
+            </>
+          )}
 
           {/* Variation Badge */}
           {q.isVariation && (
