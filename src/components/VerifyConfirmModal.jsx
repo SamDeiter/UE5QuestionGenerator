@@ -16,6 +16,10 @@ const REJECTION_REASONS = [
   { id: "excerpt_not_in_search", label: "Excerpt not found in search results" },
   { id: "source_url_broken", label: "Source URL is broken/invalid" },
   { id: "info_outdated", label: "Information appears outdated" },
+  {
+    id: "engine_version_specific",
+    label: "References specific engine version (e.g. UE5.3)",
+  },
   { id: "ai_hallucination", label: "AI Hallucination suspected" },
   { id: "other", label: "Other reason" },
 ];
