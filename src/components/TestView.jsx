@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/pseudo-random */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Icon from "./Icon";
 import QuizPreview from "./QuizPreview";
 import ScormExportModal from "./ScormExportModal";
@@ -27,9 +27,9 @@ const TestView = ({
     adaptiveDifficulty: true, // Adjust difficulty based on performance
   });
 
-  // Filter state
+  // Filter state - will be set to first discipline on mount
   const [filters, setFilters] = useState({
-    discipline: "",
+    discipline: "", // Will be set to first available discipline
   });
 
   // UI state
@@ -77,14 +77,14 @@ const TestView = ({
     if (selectedQuestionIds.size === 0) {
       // If none selected, use filtered questions up to questionCount
       // Shuffle questions for quiz variety (non-security random)
-       
+
       const shuffled = quizConfig.shuffleQuestions
         ? [...filteredQuestions].sort(() => Math.random() - 0.5)
         : filteredQuestions;
       return shuffled.slice(0, quizConfig.questionCount);
     }
     return filteredQuestions.filter((q) =>
-      selectedQuestionIds.has(q.id || q.uniqueId)
+      selectedQuestionIds.has(q.id || q.uniqueId),
     );
   }, [filteredQuestions, selectedQuestionIds, quizConfig]);
 
@@ -108,10 +108,17 @@ const TestView = ({
       setSelectedQuestionIds(new Set());
     } else {
       setSelectedQuestionIds(
-        new Set(filteredQuestions.map((q) => q.id || q.uniqueId))
+        new Set(filteredQuestions.map((q) => q.id || q.uniqueId)),
       );
     }
   };
+
+  // Auto-select first discipline when disciplines are available
+  useEffect(() => {
+    if (disciplines.length > 0 && !filters.discipline) {
+      setFilters((prev) => ({ ...prev, discipline: disciplines[0] }));
+    }
+  }, [disciplines, filters.discipline]);
 
   // Snapshot questions when starting preview to prevent re-shuffling during quiz
   const handleStartPreview = () => {
@@ -132,16 +139,13 @@ const TestView = ({
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Icon name="clipboard-list" size={28} />
-          Test Configuration
-        </h1>
-        <div className="flex justify-between items-center mt-2">
-          <p className="text-slate-400">
-            Configure and preview quizzes from approved questions
-          </p>
+      {/* Header with Discipline Filter */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+            <Icon name="clipboard-list" size={28} />
+            Test Configuration
+          </h1>
           <div className="flex gap-2">
             {mockQuestions.length === 0 && (
               <button
@@ -161,6 +165,30 @@ const TestView = ({
               </button>
             )}
           </div>
+        </div>
+
+        {/* Discipline Tabs - Single Selection Required */}
+        <div className="flex flex-wrap gap-2 bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+          <span className="text-sm text-slate-400 mr-2 self-center">
+            <Icon name="filter" size={14} className="inline mr-1" />
+            Discipline:
+          </span>
+          {disciplines.map((d) => (
+            <button
+              key={d}
+              onClick={() => setFilters({ ...filters, discipline: d })}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                filters.discipline === d
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+              }`}
+            >
+              {d}
+              <span className="ml-2 text-xs opacity-70">
+                ({approvedQuestions.filter((q) => q.discipline === d).length})
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -242,10 +270,10 @@ const TestView = ({
               <input
                 type="range"
                 min="5"
-                max={Math.min(50, filteredQuestions.length || 50)}
+                max={Math.min(200, filteredQuestions.length || 200)}
                 value={Math.min(
                   quizConfig.questionCount,
-                  filteredQuestions.length
+                  filteredQuestions.length,
                 )}
                 onChange={(e) =>
                   setQuizConfig({
@@ -314,32 +342,17 @@ const TestView = ({
             </div>
           </div>
 
-          {/* Filter Card */}
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-5">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Icon name="filter" size={18} />
-              Question Filters
-            </h2>
-
-            {/* Discipline */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-300 mb-1">
-                Discipline
-              </label>
-              <select
-                value={filters.discipline}
-                onChange={(e) =>
-                  setFilters({ ...filters, discipline: e.target.value })
-                }
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white"
-              >
-                <option value="">All Disciplines</option>
-                {disciplines.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+          {/* Filter moved to header - show current filter info */}
+          <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-4">
+            <div className="text-sm text-slate-400">
+              <Icon name="filter" size={14} className="inline mr-1" />
+              Showing:{" "}
+              <span className="text-white font-medium">
+                {filters.discipline || "Select a discipline above"}
+              </span>
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              {filteredQuestions.length} questions available
             </div>
           </div>
 
