@@ -15,14 +15,36 @@ import { SCORM_DEFAULTS } from "../utils/constants";
 export function convertQuestionToScormFormat(question) {
   // Support both field names: 'question' (Firestore) and 'questionText' (legacy)
   const questionText = question.question || question.questionText;
-  const { type, choices, correctAnswer, guid, difficulty } = question;
+  const { type, guid, difficulty } = question;
 
-  // For Multiple Choice: choices is array of strings, correctAnswer is the correct string
-  // For True/False: choices is ["True", "False"], correctAnswer is "True" or "False"
+  // Support TWO Firestore formats:
+  // 1. New format: choices (array), correctAnswer (text)
+  // 2. Old format: options (object {A, B, C, D}), correct (letter "A", "B", etc.)
 
-  const scormChoices = (choices || []).map((choiceText) => ({
+  let choicesArray = [];
+  let correctAnswerText = "";
+
+  if (question.choices && Array.isArray(question.choices)) {
+    // New format: choices is already an array
+    choicesArray = question.choices;
+    correctAnswerText = question.correctAnswer || "";
+  } else if (question.options && typeof question.options === "object") {
+    // Old format: options is {A: "...", B: "...", C: "...", D: "..."}
+    // correct is a letter like "A"
+    const optionKeys = ["A", "B", "C", "D"];
+    choicesArray = optionKeys
+      .map((key) => question.options[key])
+      .filter((opt) => opt && opt.trim()); // Remove empty options
+
+    // Convert letter to actual text
+    if (question.correct && question.options[question.correct]) {
+      correctAnswerText = question.options[question.correct];
+    }
+  }
+
+  const scormChoices = choicesArray.map((choiceText) => ({
     text: choiceText,
-    correct: choiceText === correctAnswer,
+    correct: choiceText === correctAnswerText,
   }));
 
   return {
@@ -189,15 +211,38 @@ export function validateQuestionsForExport(questions) {
       errors.push(`Question ${index + 1}: Missing question text`);
     }
 
-    if (!q.choices || q.choices.length < 2) {
+    // Support TWO formats for choices:
+    // 1. New: choices (array), correctAnswer (text)
+    // 2. Old: options (object {A, B, C, D}), correct (letter)
+    let choicesArray = [];
+    let correctAnswerText = "";
+
+    if (q.choices && Array.isArray(q.choices)) {
+      choicesArray = q.choices;
+      correctAnswerText = q.correctAnswer || "";
+    } else if (q.options && typeof q.options === "object") {
+      const optionKeys = ["A", "B", "C", "D"];
+      choicesArray = optionKeys
+        .map((key) => q.options[key])
+        .filter((opt) => opt && opt.trim());
+      if (q.correct && q.options[q.correct]) {
+        correctAnswerText = q.options[q.correct];
+      }
+    }
+
+    if (choicesArray.length < 2) {
       errors.push(`Question ${index + 1}: Must have at least 2 choices`);
     }
 
-    if (!q.correctAnswer) {
+    if (!correctAnswerText) {
       errors.push(`Question ${index + 1}: Missing correct answer`);
     }
 
-    if (q.choices && !q.choices.includes(q.correctAnswer)) {
+    if (
+      choicesArray.length > 0 &&
+      correctAnswerText &&
+      !choicesArray.includes(correctAnswerText)
+    ) {
       errors.push(`Question ${index + 1}: Correct answer not found in choices`);
     }
   });
