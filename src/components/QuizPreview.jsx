@@ -56,10 +56,13 @@ const QuizPreview = ({ questions, config, onClose }) => {
 
   /**
    * Build a balanced question list at quiz start
+   * Selects 20 Easy + 20 Medium + 20 Hard = 60 questions
+   * Starts with an easy question for confidence, then interleaves E-M-H
    */
   const buildBalancedQuestionList = useCallback(
     (guid) => {
       const randomFn = createSeededRandom(guid);
+      const QUESTIONS_PER_DIFFICULTY = 20;
 
       // Filter to English-only questions first
       const englishQuestions = questions.filter((q) => {
@@ -82,23 +85,42 @@ const QuizPreview = ({ questions, config, onClose }) => {
       const shuffledMedium = seededShuffle(medium, randomFn);
       const shuffledHard = seededShuffle(hard, randomFn);
 
-      // Interleave: E-M-H-E-M-H...
+      // Select exactly 20 from each difficulty (or as many as available)
+      const selectedEasy = shuffledEasy.slice(0, QUESTIONS_PER_DIFFICULTY);
+      const selectedMedium = shuffledMedium.slice(0, QUESTIONS_PER_DIFFICULTY);
+      const selectedHard = shuffledHard.slice(0, QUESTIONS_PER_DIFFICULTY);
+
+      // Build the question order:
+      // 1. Start with ONE easy question for confidence
+      // 2. Interleave remaining: E-M-H-E-M-H...
       const distributed = [];
+
+      // Add first easy question
+      if (selectedEasy.length > 0) {
+        distributed.push(selectedEasy[0]);
+      }
+
+      // Interleave the rest (starting from index 1 for easy, 0 for others)
+      const remainingEasy = selectedEasy.slice(1);
       const maxLen = Math.max(
-        shuffledEasy.length,
-        shuffledMedium.length,
-        shuffledHard.length,
+        remainingEasy.length,
+        selectedMedium.length,
+        selectedHard.length,
       );
 
       for (let i = 0; i < maxLen; i++) {
-        if (shuffledEasy[i]) distributed.push(shuffledEasy[i]);
-        if (shuffledMedium[i]) distributed.push(shuffledMedium[i]);
-        if (shuffledHard[i]) distributed.push(shuffledHard[i]);
+        if (remainingEasy[i]) distributed.push(remainingEasy[i]);
+        if (selectedMedium[i]) distributed.push(selectedMedium[i]);
+        if (selectedHard[i]) distributed.push(selectedHard[i]);
       }
 
-      return distributed.slice(0, config.questionCount || distributed.length);
+      logger.log(
+        `Quiz built: ${selectedEasy.length} easy, ${selectedMedium.length} medium, ${selectedHard.length} hard = ${distributed.length} total`,
+      );
+
+      return distributed;
     },
-    [questions, config.questionCount],
+    [questions],
   );
 
   // Generate GUID and build question list when quiz starts
@@ -204,24 +226,44 @@ const QuizPreview = ({ questions, config, onClose }) => {
       return;
     }
 
-    // Confidence boost: if 2+ wrong in a row, try to give an easy question next
+    // Confidence boost: if 2+ wrong in a row, inject 2 easy questions next
     if (wrongStreak >= 2) {
       const answeredIds = new Set(Object.keys(answers));
       const upcomingQuestions = quizQuestions.slice(currentIndex + 1);
 
-      const easyIndex = upcomingQuestions.findIndex(
-        (q) =>
+      // Find all easy questions in upcoming that haven't been answered
+      const easyIndices = [];
+      upcomingQuestions.forEach((q, idx) => {
+        if (
           (q.difficulty || "").toLowerCase().includes("easy") &&
-          !answeredIds.has(q.id || q.uniqueId),
-      );
+          !answeredIds.has(q.id || q.uniqueId)
+        ) {
+          easyIndices.push(idx);
+        }
+      });
 
-      if (easyIndex > 0) {
+      // Move up to 2 easy questions to the front
+      const numToMove = Math.min(2, easyIndices.length);
+      if (numToMove > 0) {
         const newQuestions = [...quizQuestions];
-        const easyQ = newQuestions[currentIndex + 1 + easyIndex];
-        const nextQ = newQuestions[currentIndex + 1];
-        newQuestions[currentIndex + 1] = easyQ;
-        newQuestions[currentIndex + 1 + easyIndex] = nextQ;
+        let insertPosition = currentIndex + 1;
+
+        for (let i = 0; i < numToMove; i++) {
+          const easyIdx = easyIndices[i];
+          // Only swap if the easy question isn't already at the insert position
+          if (currentIndex + 1 + easyIdx > insertPosition) {
+            const easyQ = newQuestions[currentIndex + 1 + easyIdx];
+            const displaced = newQuestions[insertPosition];
+            newQuestions[insertPosition] = easyQ;
+            newQuestions[currentIndex + 1 + easyIdx] = displaced;
+            insertPosition++;
+          }
+        }
+
         setQuizQuestions(newQuestions);
+        logger.log(
+          `Confidence boost: Moved ${numToMove} easy questions forward after ${wrongStreak} wrong`,
+        );
       }
     }
 
