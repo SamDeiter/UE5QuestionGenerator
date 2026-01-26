@@ -267,6 +267,7 @@ export const useQuestionCritique = ({
 
   /**
    * Applies the suggested rewrite to the question.
+   * NOTE: Does NOT auto re-critique - reviewer can proceed if satisfied.
    */
   const handleApplyRewrite = useCallback(
     (q) => {
@@ -281,22 +282,20 @@ export const useQuestionCritique = ({
         tags: q.suggestedRewrite.tags || q.tags || [],
         suggestedRewrite: null,
         rewriteChanges: null,
-        critique: null,
-        critiqueScore: null,
+        // Keep the existing critique score - don't reset
+        critique: q.critique,
+        critiqueScore: q.improvedScore || q.critiqueScore, // Use improved score if available
         humanVerified: false,
         status: "pending",
         rejectionReason: null,
+        improvementsApplied: true, // Mark that improvements were applied
       };
 
       updateQuestionInState(q.id, () => updatedQ);
-      showMessage("✓ Applied! Re-critiquing...", TOAST_DURATION.SHORT);
-
-      // Re-trigger critique after a short delay
-      setTimeout(() => {
-        handleCritique({ ...updatedQ, id: q.id });
-      }, 300);
+      showMessage("✓ Improvements applied!", TOAST_DURATION.SHORT);
+      // NOTE: No auto re-critique - reviewer can proceed with verification
     },
-    [updateQuestionInState, showMessage, handleCritique],
+    [updateQuestionInState, showMessage],
   );
 
   return {
