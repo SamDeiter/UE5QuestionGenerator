@@ -1,58 +1,41 @@
 import JSZip from "jszip";
 import { logger } from "../utils/logger";
 import { SCORM_DEFAULTS } from "../utils/constants";
+import { normalizeQuestion } from "../utils/questionNormalizer";
 
 /**
  * SCORM 1.2 Exporter Service
  * Converts Firestore questions to SCORM packages
+ *
+ * Uses centralized questionNormalizer for consistent field handling.
  */
 
 /**
  * Convert a Firestore question to SCORM quiz format
- * @param {Object} question - Firestore question object
+ * @param {Object} question - Firestore question object (any format)
  * @returns {Object} SCORM-formatted question
  */
 export function convertQuestionToScormFormat(question) {
-  // Support both field names: 'question' (Firestore) and 'questionText' (legacy)
-  const questionText = question.question || question.questionText;
-  const { type, guid, difficulty } = question;
+  // Use centralized normalizer for consistent field handling
+  const normalized = normalizeQuestion(question);
 
-  // Support TWO Firestore formats:
-  // 1. New format: choices (array), correctAnswer (text)
-  // 2. Old format: options (object {A, B, C, D}), correct (letter "A", "B", etc.)
-
-  let choicesArray = [];
-  let correctAnswerText = "";
-
-  if (question.choices && Array.isArray(question.choices)) {
-    // New format: choices is already an array
-    choicesArray = question.choices;
-    correctAnswerText = question.correctAnswer || "";
-  } else if (question.options && typeof question.options === "object") {
-    // Old format: options is {A: "...", B: "...", C: "...", D: "..."}
-    // correct is a letter like "A"
-    const optionKeys = ["A", "B", "C", "D"];
-    choicesArray = optionKeys
-      .map((key) => question.options[key])
-      .filter((opt) => opt && opt.trim()); // Remove empty options
-
-    // Convert letter to actual text
-    if (question.correct && question.options[question.correct]) {
-      correctAnswerText = question.options[question.correct];
-    }
+  if (!normalized) {
+    return null;
   }
 
-  const scormChoices = choicesArray.map((choiceText) => ({
+  const scormChoices = normalized.choices.map((choiceText) => ({
     text: choiceText,
-    correct: choiceText === correctAnswerText,
+    correct: choiceText === normalized.correctAnswer,
   }));
 
   return {
     // eslint-disable-next-line sonarjs/pseudo-random
-    id: guid || `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    text: questionText,
-    type: type,
-    difficulty: difficulty || "Medium",
+    id:
+      normalized.guid ||
+      `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    text: normalized.question,
+    type: normalized.type,
+    difficulty: normalized.difficulty,
     choices: scormChoices,
   };
 }
@@ -192,56 +175,46 @@ export function validateQuestionsForExport(questions) {
     return { valid: false, errors, warnings };
   }
 
+  // eslint-disable-next-line no-magic-numbers
   if (questions.length < 5) {
     warnings.push(
       "Less than 5 questions selected. Consider adding more for a comprehensive assessment.",
     );
   }
 
+  // eslint-disable-next-line no-magic-numbers
   if (questions.length > 100) {
     warnings.push(
       "More than 100 questions selected. Large packages may take longer to load in the LMS.",
     );
   }
 
+  // Use centralized normalizer for validation
   questions.forEach((q, index) => {
-    // Support both field names: 'question' (Firestore) and 'questionText' (legacy)
-    const text = q.question || q.questionText;
-    if (!text || text.trim() === "") {
+    const normalized = normalizeQuestion(q);
+
+    if (!normalized) {
+      errors.push(`Question ${index + 1}: Invalid question format`);
+      return;
+    }
+
+    if (!normalized.question || normalized.question.trim() === "") {
       errors.push(`Question ${index + 1}: Missing question text`);
     }
 
-    // Support TWO formats for choices:
-    // 1. New: choices (array), correctAnswer (text)
-    // 2. Old: options (object {A, B, C, D}), correct (letter)
-    let choicesArray = [];
-    let correctAnswerText = "";
-
-    if (q.choices && Array.isArray(q.choices)) {
-      choicesArray = q.choices;
-      correctAnswerText = q.correctAnswer || "";
-    } else if (q.options && typeof q.options === "object") {
-      const optionKeys = ["A", "B", "C", "D"];
-      choicesArray = optionKeys
-        .map((key) => q.options[key])
-        .filter((opt) => opt && opt.trim());
-      if (q.correct && q.options[q.correct]) {
-        correctAnswerText = q.options[q.correct];
-      }
-    }
-
-    if (choicesArray.length < 2) {
+    // eslint-disable-next-line no-magic-numbers
+    if (!normalized.choices || normalized.choices.length < 2) {
       errors.push(`Question ${index + 1}: Must have at least 2 choices`);
     }
 
-    if (!correctAnswerText) {
+    if (!normalized.correctAnswer) {
       errors.push(`Question ${index + 1}: Missing correct answer`);
     }
 
     if (
-      choicesArray.length > 0 &&
-      correctAnswerText &&
-      !choicesArray.includes(correctAnswerText)
+      normalized.choices &&
+      normalized.correctAnswer &&
+      !normalized.choices.includes(normalized.correctAnswer)
     ) {
       errors.push(`Question ${index + 1}: Correct answer not found in choices`);
     }

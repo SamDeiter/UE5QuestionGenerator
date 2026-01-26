@@ -138,6 +138,7 @@ describe("SCORM Exporter Service", () => {
     it("should generate ID when guid is missing", () => {
       const noGuidQuestion = {
         ...firestoreQuestion,
+        id: undefined,
         guid: undefined,
       };
       const result = convertQuestionToScormFormat(noGuidQuestion);
