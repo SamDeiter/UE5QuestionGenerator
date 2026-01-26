@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import { logger } from "../utils/logger";
-import { SCORM_DEFAULTS } from "../utils/constants";
+import { SCORM_DEFAULTS, QUESTION_LIMITS } from "../utils/constants";
 import normalizeQuestion from "../utils/normalizeQuestion";
 
 /**
@@ -183,17 +183,15 @@ export function validateQuestionsForExport(questions) {
     return { valid: false, errors, warnings };
   }
 
-  // eslint-disable-next-line no-magic-numbers
-  if (questions.length < 5) {
+  if (questions.length < QUESTION_LIMITS.MIN_EXPORT_QUESTIONS) {
     warnings.push(
-      "Less than 5 questions selected. Consider adding more for a comprehensive assessment.",
+      `Less than ${QUESTION_LIMITS.MIN_EXPORT_QUESTIONS} questions selected. Consider adding more for a comprehensive assessment.`,
     );
   }
 
-  // eslint-disable-next-line no-magic-numbers
-  if (questions.length > 100) {
+  if (questions.length > QUESTION_LIMITS.MAX_EXPORT_QUESTIONS) {
     warnings.push(
-      "More than 100 questions selected. Large packages may take longer to load in the LMS.",
+      `More than ${QUESTION_LIMITS.MAX_EXPORT_QUESTIONS} questions selected. Large packages may take longer to load in the LMS.`,
     );
   }
 
@@ -216,9 +214,10 @@ export function validateQuestionsForExport(questions) {
       .map((key) => normalized.options[key])
       .filter((opt) => opt && opt.trim());
 
-    // eslint-disable-next-line no-magic-numbers
-    if (validChoices.length < 2) {
-      errors.push(`Question ${index + 1}: Must have at least 2 choices`);
+    if (validChoices.length < QUESTION_LIMITS.MIN_CHOICES) {
+      errors.push(
+        `Question ${index + 1}: Must have at least ${QUESTION_LIMITS.MIN_CHOICES} choices`,
+      );
     }
 
     // Check correct answer exists

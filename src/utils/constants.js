@@ -199,6 +199,16 @@ export const GENERATION_LIMITS = {
   ERROR_TRUNCATE_LENGTH: 50, // Max chars to show in error messages
 };
 
+// Question Validation Limits
+export const QUESTION_LIMITS = {
+  MIN_CHOICES: 2,
+  MAX_CHOICES: 6,
+  MIN_QUESTION_LENGTH: 10,
+  MAX_QUESTION_LENGTH: 500,
+  MIN_EXPORT_QUESTIONS: 5, // Warn if exporting less than this
+  MAX_EXPORT_QUESTIONS: 100, // Warn if exporting more than this
+};
+
 // Processing Constants
 export const PROCESSING = {
   BATCH_SIZE: 500,
