@@ -472,10 +472,11 @@ const TestView = ({
         />
       )}
 
-      {/* SCORM Export Modal */}
+      {/* SCORM Export Modal - receives ALL questions for the discipline */}
+      {/* The quiz runtime will select 20 Easy + 20 Medium + 20 Hard = 60 randomly */}
       {showExport && (
         <ScormExportModal
-          questions={selectedQuestions}
+          questions={filteredQuestions}
           onClose={() => setShowExport(false)}
         />
       )}
