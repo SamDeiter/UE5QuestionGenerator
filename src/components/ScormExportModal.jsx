@@ -15,7 +15,7 @@ const ScormExportModal = ({ questions, onClose }) => {
     title: "UE5 Knowledge Assessment",
     description: "Test your Unreal Engine 5 knowledge",
     passingScore: 80,
-    timeLimit: 30, // minutes
+    timeLimit: 60, // minutes (default: 1 hour)
   });
 
   const [isExporting, setIsExporting] = useState(false);

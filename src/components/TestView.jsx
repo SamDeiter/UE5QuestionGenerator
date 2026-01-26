@@ -20,8 +20,8 @@ const TestView = ({
     title: "UE5 Knowledge Assessment",
     description: "Test your Unreal Engine 5 knowledge",
     passingScore: 80,
-    timeLimit: 30, // minutes
-    questionCount: 10,
+    timeLimit: 60, // minutes (default: 1 hour)
+    questionCount: 60, // 20 easy + 20 medium + 20 hard
     shuffleQuestions: true,
     showFeedback: "end", // "immediate" or "end"
     adaptiveDifficulty: true, // Adjust difficulty based on performance
