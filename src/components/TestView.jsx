@@ -202,6 +202,27 @@ const TestView = ({
               Quiz Settings
             </h2>
 
+            {/* Action Buttons - At Top */}
+            <div className="space-y-2 mb-6 pb-4 border-b border-slate-700">
+              <button
+                onClick={handleStartPreview}
+                disabled={selectedQuestions.length === 0}
+                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+              >
+                <Icon name="play" size={18} />
+                Preview Quiz ({selectedQuestions.length} questions)
+              </button>
+
+              <button
+                onClick={() => setShowExport(true)}
+                disabled={filteredQuestions.length === 0}
+                className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+              >
+                <Icon name="download" size={18} />
+                Export SCORM Package
+              </button>
+            </div>
+
             {/* Title */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-slate-300 mb-1">
@@ -353,27 +374,6 @@ const TestView = ({
             <div className="text-xs text-slate-500 mt-1">
               {filteredQuestions.length} questions available
             </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            <button
-              onClick={handleStartPreview}
-              disabled={selectedQuestions.length === 0}
-              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
-            >
-              <Icon name="play" size={18} />
-              Preview Quiz ({selectedQuestions.length} questions)
-            </button>
-
-            <button
-              onClick={() => setShowExport(true)}
-              disabled={selectedQuestions.length === 0}
-              className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
-            >
-              <Icon name="download" size={18} />
-              Export SCORM Package
-            </button>
           </div>
         </div>
 
