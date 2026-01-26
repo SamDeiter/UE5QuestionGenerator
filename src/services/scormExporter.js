@@ -1,13 +1,13 @@
 import JSZip from "jszip";
 import { logger } from "../utils/logger";
 import { SCORM_DEFAULTS } from "../utils/constants";
-import { normalizeQuestion } from "../utils/questionNormalizer";
+import normalizeQuestion from "../utils/normalizeQuestion";
 
 /**
  * SCORM 1.2 Exporter Service
  * Converts Firestore questions to SCORM packages
  *
- * Uses centralized questionNormalizer for consistent field handling.
+ * Uses centralized normalizeQuestion for consistent field handling.
  */
 
 /**
@@ -23,15 +23,23 @@ export function convertQuestionToScormFormat(question) {
     return null;
   }
 
-  const scormChoices = normalized.choices.map((choiceText) => ({
+  // Convert options object {A, B, C, D} to choices array for SCORM
+  const optionKeys = ["A", "B", "C", "D"];
+  const choicesArray = optionKeys
+    .map((key) => normalized.options[key])
+    .filter((opt) => opt && opt.trim());
+
+  const correctAnswerText = normalized.options[normalized.correct] || "";
+
+  const scormChoices = choicesArray.map((choiceText) => ({
     text: choiceText,
-    correct: choiceText === normalized.correctAnswer,
+    correct: choiceText === correctAnswerText,
   }));
 
   return {
     // eslint-disable-next-line sonarjs/pseudo-random
     id:
-      normalized.guid ||
+      normalized.id ||
       `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     text: normalized.question,
     type: normalized.type,
@@ -202,20 +210,25 @@ export function validateQuestionsForExport(questions) {
       errors.push(`Question ${index + 1}: Missing question text`);
     }
 
+    // Count valid options (options is {A, B, C, D})
+    const optionKeys = ["A", "B", "C", "D"];
+    const validChoices = optionKeys
+      .map((key) => normalized.options[key])
+      .filter((opt) => opt && opt.trim());
+
     // eslint-disable-next-line no-magic-numbers
-    if (!normalized.choices || normalized.choices.length < 2) {
+    if (validChoices.length < 2) {
       errors.push(`Question ${index + 1}: Must have at least 2 choices`);
     }
 
-    if (!normalized.correctAnswer) {
+    // Check correct answer exists
+    const correctAnswer = normalized.options[normalized.correct];
+    if (!correctAnswer) {
       errors.push(`Question ${index + 1}: Missing correct answer`);
     }
 
-    if (
-      normalized.choices &&
-      normalized.correctAnswer &&
-      !normalized.choices.includes(normalized.correctAnswer)
-    ) {
+    // Check correct answer is in valid choices
+    if (correctAnswer && !validChoices.includes(correctAnswer)) {
       errors.push(`Question ${index + 1}: Correct answer not found in choices`);
     }
   });
