@@ -257,8 +257,7 @@ const TestView = ({
                 <option value={15}>15 minutes</option>
                 <option value={30}>30 minutes</option>
                 <option value={45}>45 minutes</option>
-                <option value={60}>60 minutes</option>
-                <option value={90}>90 minutes</option>
+                <option value={60}>60 minutes (1 hour)</option>
               </select>
             </div>
 
@@ -270,7 +269,7 @@ const TestView = ({
               <input
                 type="range"
                 min="5"
-                max={Math.min(200, filteredQuestions.length || 200)}
+                max={Math.min(60, filteredQuestions.length || 60)}
                 value={Math.min(
                   quizConfig.questionCount,
                   filteredQuestions.length,
