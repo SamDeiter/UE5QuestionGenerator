@@ -38,6 +38,10 @@ const VerifyConfirmModal = ({
 
   const handleOpenDocs = () => {
     if (hasValidUrl) {
+      // Copy excerpt to clipboard so user can search in docs page
+      if (sourceExcerpt) {
+        navigator.clipboard.writeText(sourceExcerpt).catch(() => {});
+      }
       setClickedDocs(true);
       // Delay so user sees the checkmark before page opens
       setTimeout(() => {
@@ -58,7 +62,7 @@ const VerifyConfirmModal = ({
         window.open(
           `https://www.google.com/search?q=${query}`,
           "_blank",
-          "noopener,noreferrer"
+          "noopener,noreferrer",
         );
       }, 1500);
     }
@@ -182,7 +186,8 @@ const VerifyConfirmModal = ({
                 {clickedSearch ? "✓ Search Opened" : "Search Excerpt"}
               </button>
             </div>
-            {clickedSearch && (
+            {/* Show clipboard message when either button is clicked */}
+            {(clickedDocs || clickedSearch) && (
               <p className="text-xs text-blue-400/80 mt-2 flex items-center gap-1 animate-in fade-in duration-300">
                 <Icon name="copy" size={12} />
                 📋 Excerpt copied to clipboard for easy searching
