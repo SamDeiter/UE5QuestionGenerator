@@ -43,8 +43,8 @@ const QuizPreview = ({ questions, config, onClose }) => {
   const [showAnswerWarning, setShowAnswerWarning] = useState(false);
   const [quizStartTime, setQuizStartTime] = useState(null);
 
-  // Accessibility state
-  const [focusedOptionIndex, setFocusedOptionIndex] = useState(0);
+  // Accessibility state - start with -1 (no focus) until user uses keyboard
+  const [focusedOptionIndex, setFocusedOptionIndex] = useState(-1);
   const [announceMessage, setAnnounceMessage] = useState("");
 
   // Derived state
@@ -68,13 +68,13 @@ const QuizPreview = ({ questions, config, onClose }) => {
       });
 
       const easy = englishQuestions.filter((q) =>
-        (q.difficulty || "").toLowerCase().includes("easy")
+        (q.difficulty || "").toLowerCase().includes("easy"),
       );
       const medium = englishQuestions.filter((q) =>
-        (q.difficulty || "").toLowerCase().includes("medium")
+        (q.difficulty || "").toLowerCase().includes("medium"),
       );
       const hard = englishQuestions.filter((q) =>
-        (q.difficulty || "").toLowerCase().includes("hard")
+        (q.difficulty || "").toLowerCase().includes("hard"),
       );
 
       // Shuffle each pool using seeded random
@@ -87,7 +87,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
       const maxLen = Math.max(
         shuffledEasy.length,
         shuffledMedium.length,
-        shuffledHard.length
+        shuffledHard.length,
       );
 
       for (let i = 0; i < maxLen; i++) {
@@ -98,7 +98,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
 
       return distributed.slice(0, config.questionCount || distributed.length);
     },
-    [questions, config.questionCount]
+    [questions, config.questionCount],
   );
 
   // Generate GUID and build question list when quiz starts
@@ -187,7 +187,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
         setWrongStreak((prev) => prev + 1);
       }
     },
-    [currentQuestion]
+    [currentQuestion],
   );
 
   // Handle next question with confidence boost
@@ -212,7 +212,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
       const easyIndex = upcomingQuestions.findIndex(
         (q) =>
           (q.difficulty || "").toLowerCase().includes("easy") &&
-          !answeredIds.has(q.id || q.uniqueId)
+          !answeredIds.has(q.id || q.uniqueId),
       );
 
       if (easyIndex > 0) {
@@ -245,26 +245,38 @@ const QuizPreview = ({ questions, config, onClose }) => {
       if (e.key === "ArrowDown" || e.key === "ArrowRight") {
         e.preventDefault();
         setFocusedOptionIndex((prev) => {
-          const newIndex = (prev + 1) % optionKeys.length;
+          // If no focus yet (-1), start at first option (0)
+          const newIndex = prev < 0 ? 0 : (prev + 1) % optionKeys.length;
           setAnnounceMessage(
             `Option ${optionKeys[newIndex]}, ${
               optionKeys.length - newIndex
-            } of ${optionKeys.length}`
+            } of ${optionKeys.length}`,
           );
           return newIndex;
         });
       } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
         e.preventDefault();
         setFocusedOptionIndex((prev) => {
-          const newIndex = prev === 0 ? optionKeys.length - 1 : prev - 1;
+          // If no focus yet (-1), start at last option; otherwise move up (wrap around)
+          let newIndex;
+          if (prev < 0) {
+            newIndex = optionKeys.length - 1;
+          } else {
+            newIndex = prev === 0 ? optionKeys.length - 1 : prev - 1;
+          }
           setAnnounceMessage(
             `Option ${optionKeys[newIndex]}, ${newIndex + 1} of ${
               optionKeys.length
-            }`
+            }`,
           );
           return newIndex;
         });
-      } else if ((e.key === "Enter" || e.key === " ") && !selectedAnswer) {
+      } else if (
+        (e.key === "Enter" || e.key === " ") &&
+        !selectedAnswer &&
+        focusedOptionIndex >= 0
+      ) {
+        // Only allow Enter/Space selection if an option is focused
         e.preventDefault();
         const selectedKey = optionKeys[focusedOptionIndex];
         handleAnswer(selectedKey);
@@ -288,17 +300,17 @@ const QuizPreview = ({ questions, config, onClose }) => {
     getOptions,
   ]);
 
-  // Reset focused option when question changes
+  // Reset focused option when question changes - start at -1 (no visible focus)
   useEffect(() => {
-    setFocusedOptionIndex(0);
+    setFocusedOptionIndex(-1);
     if (currentQuestion) {
       setAnnounceMessage(
         `Question ${
           currentIndex + 1
         } of ${totalQuestions}: ${currentQuestion.question.replace(
           /<[^>]*>/g,
-          ""
-        )}`
+          "",
+        )}`,
       );
     }
   }, [currentIndex, currentQuestion, totalQuestions]);
