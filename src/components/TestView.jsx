@@ -477,6 +477,7 @@ const TestView = ({
       {showExport && (
         <ScormExportModal
           questions={filteredQuestions}
+          discipline={filters.discipline}
           onClose={() => setShowExport(false)}
         />
       )}

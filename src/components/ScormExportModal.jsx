@@ -10,10 +10,15 @@ import { logger } from "../utils/logger";
  * SCORM Export Modal
  * Allows users to configure and export selected questions as SCORM 1.2 package
  */
-const ScormExportModal = ({ questions, onClose }) => {
+const ScormExportModal = ({ questions, discipline, onClose }) => {
+  // Auto-generate title based on discipline
+  const defaultTitle = discipline
+    ? `UE5 ${discipline} Assessment`
+    : "UE5 Knowledge Assessment";
+
   const [config, setConfig] = useState({
-    title: "UE5 Knowledge Assessment",
-    description: "Test your Unreal Engine 5 knowledge",
+    title: defaultTitle,
+    description: `Test your Unreal Engine 5 ${discipline || "knowledge"}`,
     passingScore: 80,
     timeLimit: 60, // minutes (default: 1 hour)
   });
