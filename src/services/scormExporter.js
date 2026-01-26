@@ -13,13 +13,14 @@ import { SCORM_DEFAULTS } from "../utils/constants";
  * @returns {Object} SCORM-formatted question
  */
 export function convertQuestionToScormFormat(question) {
-  const { questionText, type, choices, correctAnswer, guid, difficulty } =
-    question;
+  // Support both field names: 'question' (Firestore) and 'questionText' (legacy)
+  const questionText = question.question || question.questionText;
+  const { type, choices, correctAnswer, guid, difficulty } = question;
 
   // For Multiple Choice: choices is array of strings, correctAnswer is the correct string
   // For True/False: choices is ["True", "False"], correctAnswer is "True" or "False"
 
-  const scormChoices = choices.map((choiceText) => ({
+  const scormChoices = (choices || []).map((choiceText) => ({
     text: choiceText,
     correct: choiceText === correctAnswer,
   }));
@@ -68,7 +69,7 @@ export async function generateScormPackageFiles(questions, config = {}) {
     .replace(/UE5 Scenario Tracker/g, title)
     .replace(
       /com\.example\.ue5scenario\.scorm12/g,
-      `com.ue5questiongen.${Date.now()}`
+      `com.ue5questiongen.${Date.now()}`,
     );
 
   // Replace template variables in index.html
@@ -171,18 +172,20 @@ export function validateQuestionsForExport(questions) {
 
   if (questions.length < 5) {
     warnings.push(
-      "Less than 5 questions selected. Consider adding more for a comprehensive assessment."
+      "Less than 5 questions selected. Consider adding more for a comprehensive assessment.",
     );
   }
 
   if (questions.length > 100) {
     warnings.push(
-      "More than 100 questions selected. Large packages may take longer to load in the LMS."
+      "More than 100 questions selected. Large packages may take longer to load in the LMS.",
     );
   }
 
   questions.forEach((q, index) => {
-    if (!q.questionText || q.questionText.trim() === "") {
+    // Support both field names: 'question' (Firestore) and 'questionText' (legacy)
+    const text = q.question || q.questionText;
+    if (!text || text.trim() === "") {
       errors.push(`Question ${index + 1}: Missing question text`);
     }
 
