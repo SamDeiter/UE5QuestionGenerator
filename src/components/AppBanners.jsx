@@ -4,6 +4,7 @@
  */
 import { useState } from "react";
 import AdBlockerWarning from "./AdBlockerWarning";
+import BrowserWarning from "./BrowserWarning";
 
 /**
  * Registration Warning Banner
@@ -77,6 +78,7 @@ const AppBanners = ({
 
   return (
     <>
+      <BrowserWarning />
       <RegistrationWarningBanner show={showRegistrationWarning} />
       <PermissionErrorBanner show={permissionError} />
       <AdBlockerBanner

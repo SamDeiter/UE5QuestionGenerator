@@ -99,6 +99,53 @@ Sample questions:
 
 ---
 
+### `validate-firestore-fields.js`
+
+**Purpose**: Parse Firestore rules and generate a list of allowed reviewer fields. Validates that code updates match the rules.
+
+**When to run**: Before deploying new features that update question fields, or as part of CI.
+
+**Usage**:
+
+```bash
+# Run validation and generate allowedFields.generated.js
+node scripts/validate-firestore-fields.js
+
+# Or use npm script (after adding to package.json)
+npm run validate:rules
+```
+
+**What it does**:
+
+1. Parses `config/firestore/firestore.rules` for the `.hasOnly()` field list
+2. Extracts all allowed reviewer update fields
+3. Generates `src/utils/allowedFields.generated.js` with:
+   - `REVIEWER_ALLOWED_FIELDS` - Array of allowed field names
+   - `isFieldAllowed(fieldName)` - Check if a field is allowed
+   - `filterToAllowedFields(object)` - Filter an object to only allowed fields
+
+**Expected Output**:
+
+```
+🔍 Validating Firestore rules...
+✓ Read rules file: config/firestore/firestore.rules
+✓ Found 45 allowed fields
+
+📋 Allowed Reviewer Fields:
+──────────────────────────────────────────────────
+    1. status
+    2. humanVerified
+   ...
+   45. notes
+──────────────────────────────────────────────────
+
+✓ Generated: src/utils/allowedFields.generated.js
+
+✅ Firestore rules validation complete!
+```
+
+---
+
 ## Troubleshooting
 
 ### Error: `firebase-admin package not installed`

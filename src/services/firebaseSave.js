@@ -17,6 +17,7 @@ import {
 import { logEvent } from "firebase/analytics";
 import { logger } from "../utils/logger";
 import { PROCESSING } from "../utils/constants";
+import { getToastMessage } from "../utils/errorMessages";
 import {
   app,
   auth,
@@ -49,7 +50,7 @@ export const getDb = () => {
           } else if (err.code === "unimplemented") {
             // The current browser does not support all of the features required to enable persistence
             logger.warn(
-              "⚠️ Firestore persistence failed: Browser not supported"
+              "⚠️ Firestore persistence failed: Browser not supported",
             );
           } else {
             logger.error("❌ Firestore persistence error:", err);
@@ -176,7 +177,7 @@ const saveQuestionToFirestoreInternal = async (question) => {
 
   logger.log(
     `🔍 [DEBUG] Saving to Firestore. Fields being sent:`,
-    Object.keys(payload)
+    Object.keys(payload),
   );
 
   await setDoc(docRef, payload, { merge: true });
@@ -234,13 +235,13 @@ const processOfflineQueue = async () => {
 
         logger.warn(
           `Failed to sync ${item.question.uniqueId}, re-queuing:`,
-          err
+          err,
         );
 
         // ALWAYS re-queue on failure - never drop user data
         // Permission errors may be temporary (stale token, rules change, etc.)
         const alreadyHasNewer = offlineQueue.some(
-          (q) => q.question?.uniqueId === item.question?.uniqueId
+          (q) => q.question?.uniqueId === item.question?.uniqueId,
         );
         if (!alreadyHasNewer) {
           offlineQueue.push(item);
@@ -248,10 +249,7 @@ const processOfflineQueue = async () => {
 
         // Notify user of permission issues so they can take action
         if (isPermissionError) {
-          toastError(
-            "⚠️ Permission issue saving questions - please refresh or re-sign in",
-            8000
-          );
+          toastError(getToastMessage(err, "syncing questions"), 8000);
         }
       }
     }
@@ -297,7 +295,7 @@ if (typeof window !== "undefined") {
   setInterval(() => {
     if (offlineQueue.length > 0 && isOnline) {
       logger.warn(
-        `⚠️ [Queue Check] ${offlineQueue.length} items stuck in queue - attempting sync...`
+        `⚠️ [Queue Check] ${offlineQueue.length} items stuck in queue - attempting sync...`,
       );
       processOfflineQueue();
     }
@@ -376,7 +374,7 @@ export const saveQuestionToFirestore = async (question) => {
     if (!isOnline) {
       logger.log(`📴 Offline - queuing ${question.uniqueId} for later sync`);
       offlineQueue = offlineQueue.filter(
-        (item) => item.question?.uniqueId !== question.uniqueId
+        (item) => item.question?.uniqueId !== question.uniqueId,
       );
       offlineQueue.push({ question, timestamp: Date.now() });
       persistQueue();
@@ -402,7 +400,7 @@ export const saveQuestionToFirestore = async (question) => {
 
     if (is403 && auth.currentUser) {
       logger.warn(
-        `🔐 Permission denied for ${question.uniqueId} - refreshing token and retrying...`
+        `🔐 Permission denied for ${question.uniqueId} - refreshing token and retrying...`,
       );
       try {
         await refreshAuthToken();
@@ -413,17 +411,17 @@ export const saveQuestionToFirestore = async (question) => {
       } catch (retryError) {
         logger.error(
           `❌ Retry also failed for ${question.uniqueId}:`,
-          retryError.message
+          retryError.message,
         );
       }
     }
 
     logger.warn(
       `⚠️ Save failed for ${question.uniqueId}, queuing for retry:`,
-      errorMessage
+      errorMessage,
     );
     offlineQueue = offlineQueue.filter(
-      (item) => item.question?.uniqueId !== question.uniqueId
+      (item) => item.question?.uniqueId !== question.uniqueId,
     );
     offlineQueue.push({ question, timestamp: Date.now() });
     persistQueue();
@@ -458,11 +456,11 @@ export const batchSaveQuestions = async (questions) => {
 
   if (!isOnline) {
     logger.log(
-      `📴 Offline - queuing ${questions.length} questions for later sync`
+      `📴 Offline - queuing ${questions.length} questions for later sync`,
     );
     questions.forEach((q) => {
       offlineQueue = offlineQueue.filter(
-        (item) => item.question?.uniqueId !== q.uniqueId
+        (item) => item.question?.uniqueId !== q.uniqueId,
       );
       offlineQueue.push({ question: q, timestamp: Date.now() });
     });
@@ -506,7 +504,7 @@ export const batchSaveQuestions = async (questions) => {
     } catch (error) {
       logger.warn(
         `⚠️ Batch save failed, falling back to individual saves:`,
-        error.message
+        error.message,
       );
       for (const q of batch) {
         const result = await saveQuestionToFirestore(q);

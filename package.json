@@ -1,7 +1,7 @@
 {
   "name": "ue5-question-generator",
   "private": true,
-  "version": "2.3.18",
+  "version": "2.3.19",
   "homepage": "https://samdeiter.github.io/UE5QuestionGenerator/",
   "type": "module",
   "scripts": {
@@ -18,6 +18,7 @@
     "env:prod": "python scripts/switch_env.py prod",
     "env:check": "python scripts/switch_env.py",
     "functions:check": "python scripts/test_cloud_functions.py",
+    "validate:rules": "node scripts/validate-firestore-fields.js",
     "dev:dev": "python scripts/switch_env.py dev && vite",
     "dev:prod": "python scripts/switch_env.py prod && vite"
   },
