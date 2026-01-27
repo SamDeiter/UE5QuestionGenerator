@@ -1,8 +1,9 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  * Tests for authHealthCheck utility
  */
 
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   runAuthHealthCheck,
   isAuthLikelyWorking,
@@ -10,7 +11,7 @@ import {
 } from "../authHealthCheck";
 
 // Mock Firebase auth
-jest.mock("../../services/firebase", () => ({
+vi.mock("../../services/firebase", () => ({
   auth: {
     currentUser: null,
   },
@@ -28,16 +29,16 @@ describe("authHealthCheck", () => {
   });
 
   describe("runAuthHealthCheck with user", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       // Mock a logged in user
-      const mockFirebase = require("../../services/firebase");
+      const mockFirebase = await import("../../services/firebase");
       mockFirebase.auth.currentUser = {
-        getIdToken: jest.fn().mockResolvedValue("fake-token"),
+        getIdToken: vi.fn().mockResolvedValue("fake-token"),
       };
     });
 
-    afterEach(() => {
-      const mockFirebase = require("../../services/firebase");
+    afterEach(async () => {
+      const mockFirebase = await import("../../services/firebase");
       mockFirebase.auth.currentUser = null;
     });
 
@@ -50,8 +51,8 @@ describe("authHealthCheck", () => {
     });
 
     it("returns unhealthy when token refresh fails", async () => {
-      const mockFirebase = require("../../services/firebase");
-      mockFirebase.auth.currentUser.getIdToken = jest
+      const mockFirebase = await import("../../services/firebase");
+      mockFirebase.auth.currentUser.getIdToken = vi
         .fn()
         .mockRejectedValue(new Error("403 Forbidden"));
 
@@ -64,8 +65,8 @@ describe("authHealthCheck", () => {
     });
 
     it("detects blocked requests from ad blockers", async () => {
-      const mockFirebase = require("../../services/firebase");
-      mockFirebase.auth.currentUser.getIdToken = jest
+      const mockFirebase = await import("../../services/firebase");
+      mockFirebase.auth.currentUser.getIdToken = vi
         .fn()
         .mockRejectedValue(new Error("Failed to fetch"));
 

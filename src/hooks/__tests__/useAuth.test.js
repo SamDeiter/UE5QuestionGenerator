@@ -12,6 +12,9 @@ import { useAuth } from "../useAuth";
 vi.mock("firebase/auth", () => ({
   onAuthStateChanged: vi.fn(),
   getAuth: vi.fn(() => ({})),
+  GoogleAuthProvider: class MockGoogleAuthProvider {},
+  signInWithPopup: vi.fn(),
+  signOut: vi.fn(),
 }));
 
 // Mock Firestore for write probe
@@ -169,7 +172,7 @@ describe("useAuth", () => {
 
     // Not an Epic email, so setupInitialAdmin will throw
     setupInitialAdmin.mockRejectedValue(
-      new Error("Not authorized for initial admin setup")
+      new Error("Not authorized for initial admin setup"),
     );
 
     const { result } = renderHook(() => useAuth(mockShowMessage));
