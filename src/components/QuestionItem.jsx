@@ -21,6 +21,7 @@ import ExplanationDisplay from "./QuestionItem/ExplanationDisplay";
 import SourceContextCard from "./QuestionItem/SourceContextCard";
 import ImprovementModal from "./ImprovementModal";
 import VerifyConfirmModal from "./VerifyConfirmModal";
+import VersionComparisonModal from "./VersionComparisonModal";
 
 import QuestionNotesField from "./QuestionItem/QuestionNotesField";
 import QuestionHeader from "./QuestionItem/QuestionHeader";
@@ -48,6 +49,8 @@ const QuestionItem = ({
   onDelete,
   onUpdateQuestion,
   onKickBack, // NEW: Handler for kicking question back to review
+  onRevertToOriginal, // NEW: Handler for reverting to original version
+  onUseAIRewrite, // NEW: Handler for re-applying AI rewrite
   availableVariants,
   isProcessing,
   showMessage,
@@ -80,6 +83,7 @@ const QuestionItem = ({
   const [editedText, setEditedText] = useState("");
   const [showImprovementModal, setShowImprovementModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(null); // null or "docs" or "search"
+  const [showVersionModal, setShowVersionModal] = useState(false); // Version comparison modal
   const lastProcessedCritiqueRef = useRef(null);
 
   // Display question (supports language variants)
@@ -411,6 +415,38 @@ const QuestionItem = ({
         </div>
       )}
 
+      {/* Version Source Badge - Shows if question was rewritten */}
+      {q.versionSource && q.versionSource !== "original" && (
+        <div
+          className={`ml-6 mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs cursor-pointer transition-all hover:opacity-80 ${
+            q.versionSource === "ai_rewrite"
+              ? "bg-purple-900/30 border border-purple-500/50 text-purple-300"
+              : "bg-blue-900/30 border border-blue-500/50 text-blue-300"
+          }`}
+          title={
+            q.originalVersion
+              ? "Click to compare versions"
+              : `Version source: ${q.versionSource}`
+          }
+          onClick={() => {
+            if (q.originalVersion) {
+              setShowVersionModal(true);
+            }
+          }}
+        >
+          <Icon
+            name={q.versionSource === "ai_rewrite" ? "zap" : "edit-3"}
+            size={12}
+          />
+          <span>
+            {q.versionSource === "ai_rewrite" ? "AI Rewrite" : "Edited"}
+          </span>
+          {q.originalVersion && (
+            <Icon name="chevron-right" size={10} className="opacity-60" />
+          )}
+        </div>
+      )}
+
       <div className="flex flex-col gap-2 mb-3 pl-6">
         <QuestionHeader
           q={displayQuestion}
@@ -641,6 +677,24 @@ const QuestionItem = ({
               setShowVerifyModal(null);
             }}
             onDismiss={() => setShowVerifyModal(null)}
+          />
+        )}
+
+        {/* Version Comparison Modal - Original vs AI Rewrite */}
+        {showVersionModal && (q.originalVersion || q.suggestedRewrite) && (
+          <VersionComparisonModal
+            isOpen={showVersionModal}
+            onClose={() => setShowVersionModal(false)}
+            originalVersion={q.originalVersion}
+            aiRewrite={q.suggestedRewrite}
+            _currentQuestion={q}
+            versionSource={q.versionSource || "original"}
+            onUseOriginal={() => {
+              if (onRevertToOriginal) onRevertToOriginal(q);
+            }}
+            onUseAIRewrite={() => {
+              if (onUseAIRewrite) onUseAIRewrite(q);
+            }}
           />
         )}
       </div>

@@ -83,6 +83,7 @@ const App = () => {
     setShowAgeGate,
     setTermsAccepted,
     permissionError,
+    blockedByExtension,
   } = useAuth(showMessage);
 
   // ========================================================================
@@ -679,6 +680,7 @@ const App = () => {
           isRegistered={_isRegistered}
           registrationLoading={registrationLoading}
           permissionError={permissionError}
+          blockedByExtension={blockedByExtension}
         />
 
         <Suspense fallback={<LoadingSpinner />}>

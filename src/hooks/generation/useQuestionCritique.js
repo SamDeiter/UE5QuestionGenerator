@@ -267,11 +267,21 @@ export const useQuestionCritique = ({
 
   /**
    * Applies the suggested rewrite to the question.
+   * Stores the original version for later comparison/revert.
    * NOTE: Does NOT auto re-critique - reviewer can proceed if satisfied.
    */
   const handleApplyRewrite = useCallback(
     (q) => {
       if (!q.suggestedRewrite) return;
+
+      // Store original version before applying rewrite (for version comparison)
+      const originalVersion = q.originalVersion || {
+        question: q.question,
+        options: { ...q.options },
+        correct: q.correct,
+        savedAt: new Date().toISOString(),
+        savedBy: q.creatorEmail || "unknown",
+      };
 
       const updatedQ = {
         ...q,
@@ -280,7 +290,8 @@ export const useQuestionCritique = ({
         correct: q.suggestedRewrite.correct,
         // Include suggested tags if available
         tags: q.suggestedRewrite.tags || q.tags || [],
-        suggestedRewrite: null,
+        // Keep the suggested rewrite for comparison (don't clear it)
+        suggestedRewrite: q.suggestedRewrite,
         rewriteChanges: null,
         // Keep the existing critique score - don't reset
         critique: q.critique,
@@ -289,11 +300,84 @@ export const useQuestionCritique = ({
         status: "pending",
         rejectionReason: null,
         improvementsApplied: true, // Mark that improvements were applied
+        // Version tracking
+        originalVersion,
+        versionSource: "ai_rewrite",
+        wasRewritten: true,
+        rewriteAppliedAt: new Date().toISOString(),
+        lastEditedBy: null, // Will be set when user manually edits
+        lastEditedAt: new Date().toISOString(),
       };
 
       updateQuestionInState(q.id, () => updatedQ);
-      showMessage("✓ Improvements applied!", TOAST_DURATION.SHORT);
+      showMessage(
+        "✓ AI rewrite applied! Click Critique to compare versions.",
+        TOAST_DURATION.SHORT,
+      );
       // NOTE: No auto re-critique - reviewer can proceed with verification
+    },
+    [updateQuestionInState, showMessage],
+  );
+
+  /**
+   * Reverts the question to its original version (before AI rewrite).
+   */
+  const handleRevertToOriginal = useCallback(
+    (q) => {
+      if (!q.originalVersion) {
+        showMessage("No original version available", TOAST_DURATION.SHORT);
+        return;
+      }
+
+      const updatedQ = {
+        ...q,
+        question: q.originalVersion.question,
+        options: { ...q.originalVersion.options },
+        correct: q.originalVersion.correct,
+        // Keep the suggested rewrite for potential re-apply
+        suggestedRewrite: q.suggestedRewrite,
+        // Update version tracking
+        versionSource: "original",
+        wasRewritten: false,
+        lastEditedBy: null,
+        lastEditedAt: new Date().toISOString(),
+        // Reset review status since content changed
+        humanVerified: false,
+        status: "pending",
+      };
+
+      updateQuestionInState(q.id, () => updatedQ);
+      showMessage("✓ Reverted to original version", TOAST_DURATION.SHORT);
+    },
+    [updateQuestionInState, showMessage],
+  );
+
+  /**
+   * Applies the AI rewrite from a stored suggestedRewrite (for re-applying after revert).
+   */
+  const handleUseAIRewrite = useCallback(
+    (q) => {
+      if (!q.suggestedRewrite) {
+        showMessage("No AI rewrite available", TOAST_DURATION.SHORT);
+        return;
+      }
+
+      const updatedQ = {
+        ...q,
+        question: q.suggestedRewrite.question,
+        options: q.suggestedRewrite.options,
+        correct: q.suggestedRewrite.correct,
+        tags: q.suggestedRewrite.tags || q.tags || [],
+        versionSource: "ai_rewrite",
+        wasRewritten: true,
+        lastEditedBy: null,
+        lastEditedAt: new Date().toISOString(),
+        humanVerified: false,
+        status: "pending",
+      };
+
+      updateQuestionInState(q.id, () => updatedQ);
+      showMessage("✓ AI rewrite applied", TOAST_DURATION.SHORT);
     },
     [updateQuestionInState, showMessage],
   );
@@ -301,5 +385,7 @@ export const useQuestionCritique = ({
   return {
     handleCritique,
     handleApplyRewrite,
+    handleRevertToOriginal,
+    handleUseAIRewrite,
   };
 };

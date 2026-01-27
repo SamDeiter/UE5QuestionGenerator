@@ -56,6 +56,9 @@ export function useAuth(showMessage) {
   // Permission error state (write probe failed)
   const [permissionError, setPermissionError] = useState(false);
 
+  // Blocked by extension state (ad blocker detected)
+  const [blockedByExtension, setBlockedByExtension] = useState(false);
+
   // ========================================================================
   // EFFECTS
   // ========================================================================
@@ -126,6 +129,23 @@ export function useAuth(showMessage) {
           }
         } catch (error) {
           logger.error("Failed to check registration:", error);
+
+          // Detect if request was blocked by browser extension (ad blocker)
+          const errorMsg = error?.message?.toLowerCase() || "";
+          const isNetworkBlocked =
+            errorMsg.includes("failed to fetch") ||
+            errorMsg.includes("network request failed") ||
+            errorMsg.includes("blocked") ||
+            error?.code === "unavailable" ||
+            error?.code === "resource-exhausted";
+
+          if (isNetworkBlocked) {
+            logger.warn(
+              "🚫 Request appears to be blocked by browser extension",
+            );
+            setBlockedByExtension(true);
+          }
+
           // SECURITY: On error, default to no access (fail closed)
           setIsAdmin(false);
           setIsRegistered(false);
@@ -235,5 +255,8 @@ export function useAuth(showMessage) {
 
     // Permission error (write probe failed)
     permissionError,
+
+    // Blocked by browser extension (ad blocker)
+    blockedByExtension,
   };
 }

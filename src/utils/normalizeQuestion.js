@@ -278,6 +278,10 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
     rewriteAppliedAt: q.rewriteAppliedAt || null,
     originalQuestionText: q.originalQuestionText || null, // Text before rewrite
 
+    // Version comparison fields (for Original vs AI Rewrite selection)
+    originalVersion: q.originalVersion || null, // Full snapshot {question, options, correct}
+    versionSource: q.versionSource || "original", // 'original' | 'ai_rewrite' | 'human_edited'
+
     // Export tracking
     exportedAt: q.exportedAt || null, // Last export timestamp
     exportedTo: q.exportedTo || null, // Where exported (sheets, csv, scorm)
@@ -381,6 +385,9 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
             "wasRewritten",
             "rewriteAppliedAt",
             "originalQuestionText",
+            // Version comparison
+            "originalVersion",
+            "versionSource",
             // Analytics - Export
             "exportedAt",
             "exportedTo",

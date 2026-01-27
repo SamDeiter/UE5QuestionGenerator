@@ -1,7 +1,9 @@
 /**
  * AppBanners - Warning banners extracted from App.jsx
- * Displays registration warnings and permission error alerts
+ * Displays registration warnings, permission errors, and ad blocker alerts
  */
+import { useState } from "react";
+import AdBlockerWarning from "./AdBlockerWarning";
 
 /**
  * Registration Warning Banner
@@ -41,6 +43,26 @@ export const PermissionErrorBanner = ({ show }) => {
 };
 
 /**
+ * Ad Blocker Warning Banner
+ * Shows when browser extensions are blocking Firebase requests
+ */
+export const AdBlockerBanner = ({ show, onShowModal }) => {
+  if (!show) return null;
+
+  return (
+    <div className="bg-amber-600 text-white px-4 py-2 text-center font-medium flex items-center justify-center gap-2">
+      <span>🚫 Ad blocker detected - Firebase requests are being blocked.</span>
+      <button
+        onClick={onShowModal}
+        className="underline hover:text-amber-100 font-bold"
+      >
+        Learn how to fix
+      </button>
+    </div>
+  );
+};
+
+/**
  * AppBanners - Combined component for all app-level warning banners
  */
 const AppBanners = ({
@@ -48,13 +70,22 @@ const AppBanners = ({
   isRegistered,
   registrationLoading,
   permissionError,
+  blockedByExtension,
 }) => {
   const showRegistrationWarning = user && !isRegistered && !registrationLoading;
+  const [showBlockerModal, setShowBlockerModal] = useState(false);
 
   return (
     <>
       <RegistrationWarningBanner show={showRegistrationWarning} />
       <PermissionErrorBanner show={permissionError} />
+      <AdBlockerBanner
+        show={blockedByExtension}
+        onShowModal={() => setShowBlockerModal(true)}
+      />
+      {showBlockerModal && (
+        <AdBlockerWarning onDismiss={() => setShowBlockerModal(false)} />
+      )}
     </>
   );
 };

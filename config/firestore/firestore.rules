@@ -61,6 +61,8 @@ service cloud.firestore {
             .hasOnly([
               // Version and timestamps
               'version', 'updatedAt', 'firestoreUpdatedAt', 'modifiedAt',
+              // Question content fields (for applying rewrites and edits)
+              'question', 'options', 'correct', 'correctLetter',
               // Scoring fields
               'aiScore', 'scoredAt', 'scoreSource', 
               // Status and rejection fields
@@ -80,6 +82,8 @@ service cloud.firestore {
               'tags', 'difficulty',
               // Backfill metadata fields
               '_backfilledHumanVerified', '_backfilledAt', 'tagsBackfilledAt',
+              // Version comparison fields (for Original vs AI Rewrite selection)
+              'originalVersion', 'versionSource',
               // Notes
               'notes'
             ]))
