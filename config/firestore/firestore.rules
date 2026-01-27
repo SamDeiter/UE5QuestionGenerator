@@ -84,6 +84,8 @@ service cloud.firestore {
               '_backfilledHumanVerified', '_backfilledAt', 'tagsBackfilledAt',
               // Version comparison fields (for Original vs AI Rewrite selection)
               'originalVersion', 'versionSource',
+              // Manual editing tracking fields (for click-to-correct answers)
+              'lastEditedBy', 'lastEditedAt',
               // Notes
               'notes'
             ]))
