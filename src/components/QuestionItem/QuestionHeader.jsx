@@ -329,6 +329,23 @@ const QuestionHeader = ({
               Re-Critique
             </button>
           )}
+
+        {/* View AI Suggestions Button - Shows for ANY critiqued question with suggestions */}
+        {(appMode === "database" || appMode === "review") &&
+          onOpenCritiqueModal &&
+          q.critiqueScore !== null &&
+          q.critiqueScore !== undefined &&
+          (q.critique || q.suggestedRewrite) && (
+            <button
+              onClick={onOpenCritiqueModal}
+              className="px-3 py-1.5 rounded-lg transition-all bg-indigo-900/30 text-indigo-300 hover:bg-indigo-800/50 hover:text-indigo-200 border border-indigo-700/50 flex items-center gap-2 text-xs font-medium"
+              title="View AI critique details and suggestions"
+              aria-label="View AI Suggestions"
+            >
+              <Icon name="eye" size={14} />
+              View AI Suggestions
+            </button>
+          )}
         {appMode === "database" && (
           <button
             onClick={() => onKickBack(originalQ || q)}
