@@ -143,18 +143,30 @@ const App = () => {
     if (!user || authLoading) return;
 
     // Refresh token immediately on mount
-    refreshAuthToken().then((success) => {
-      if (success) {
+    refreshAuthToken().then((result) => {
+      if (result?.success) {
         logger.log("🔄 Initial auth token refreshed");
+      } else if (result?.reason === "auth-blocked") {
+        logger.error("🔒 Auth blocked - securetoken 403 detected");
+        showMessage(
+          "🔒 Auth blocked - sign out, clear browser data, and sign in fresh",
+          "error",
+        );
       }
     });
 
     // Set up periodic refresh every 30 minutes
     const REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes in ms
     const intervalId = setInterval(() => {
-      refreshAuthToken().then((success) => {
-        if (success) {
+      refreshAuthToken().then((result) => {
+        if (result?.success) {
           logger.log("🔄 Auth token auto-refreshed");
+        } else if (result?.reason === "auth-blocked") {
+          logger.error("🔒 Auth blocked during auto-refresh");
+          showMessage(
+            "🔒 Auth issue detected - please sign out and sign in again",
+            "error",
+          );
         } else {
           logger.warn("⚠️ Auth token refresh failed");
         }
@@ -162,7 +174,7 @@ const App = () => {
     }, REFRESH_INTERVAL);
 
     return () => clearInterval(intervalId);
-  }, [user, authLoading]);
+  }, [user, authLoading, showMessage]);
 
   // ========================================================================
   // HOOKS - State Management

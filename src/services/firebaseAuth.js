@@ -26,10 +26,10 @@ const firebaseConfig = {
 // Validate required config
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   logger.error(
-    "❌ Firebase configuration missing. Ensure .env.local is set up correctly."
+    "❌ Firebase configuration missing. Ensure .env.local is set up correctly.",
   );
   logger.error(
-    "Run: npm run env:dev or npm run env:prod to configure environment."
+    "Run: npm run env:dev or npm run env:prod to configure environment.",
   );
 }
 
@@ -136,15 +136,31 @@ export const refreshAuthToken = async () => {
   try {
     if (!auth.currentUser) {
       logger.warn("[Auth] No current user - cannot refresh token");
-      return false;
+      return { success: false, reason: "no-user" };
     }
     // Force token refresh
     await auth.currentUser.getIdToken(true);
     logger.log("[Auth] Token refreshed successfully");
-    return true;
+    return { success: true };
   } catch (error) {
+    const errorMsg = error?.message || "";
+
+    // Detect specific securetoken 403 error (auth servers blocking refresh)
+    if (
+      errorMsg.includes("securetoken.googleapis.com") &&
+      errorMsg.includes("403")
+    ) {
+      logger.error("[Auth] Token refresh BLOCKED - securetoken 403:", error);
+      return {
+        success: false,
+        reason: "auth-blocked",
+        message:
+          "Your browser is having trouble authenticating with Google. Try signing out, clearing browser data, and signing in fresh.",
+      };
+    }
+
     logger.error("[Auth] Token refresh failed:", error);
-    return false;
+    return { success: false, reason: "refresh-failed", error };
   }
 };
 

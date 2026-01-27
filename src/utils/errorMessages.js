@@ -14,6 +14,7 @@ export const ERROR_TYPES = {
   NETWORK_ERROR: "network-error",
   SESSION_EXPIRED: "session-expired",
   RATE_LIMITED: "rate-limited",
+  FIREBASE_AUTH_BLOCKED: "firebase-auth-blocked",
   UNKNOWN: "unknown",
 };
 
@@ -46,6 +47,15 @@ export const getBrowserName = () => {
 export const categorizeError = (error) => {
   const code = error?.code || "";
   const message = error?.message || "";
+
+  // Firebase Auth token refresh blocked (securetoken 403)
+  // This is a specific error when token refresh fails
+  if (
+    message.includes("securetoken.googleapis.com") &&
+    message.includes("403")
+  ) {
+    return ERROR_TYPES.FIREBASE_AUTH_BLOCKED;
+  }
 
   // Permission errors
   if (
@@ -100,6 +110,19 @@ export const getErrorMessage = (error, context = "saving") => {
   const usingSafari = isSafari();
 
   const messages = {
+    [ERROR_TYPES.FIREBASE_AUTH_BLOCKED]: {
+      title: "🔒 Authentication Blocked",
+      message:
+        "Your browser is having trouble refreshing your session with Google's authentication servers.",
+      actions: [
+        "1. Sign out completely using the button in the top menu",
+        "2. Clear browser data for this site (cookies + cache)",
+        "3. Close and reopen your browser",
+        "4. Sign in again with a fresh session",
+      ],
+      severity: "error",
+      canRetry: false,
+    },
     [ERROR_TYPES.PERMISSION_DENIED]: {
       title: "🔐 Permission Issue",
       message: `Unable to save your changes. Your session may have expired.`,
@@ -167,6 +190,8 @@ export const getToastMessage = (error, context = "saving") => {
   const errorType = categorizeError(error);
 
   const toasts = {
+    [ERROR_TYPES.FIREBASE_AUTH_BLOCKED]:
+      "🔒 Auth blocked - sign out, clear browser data, and sign in fresh",
     [ERROR_TYPES.PERMISSION_DENIED]:
       "🔐 Permission issue - please refresh or re-sign in",
     [ERROR_TYPES.UNAUTHENTICATED]: "🔑 Session expired - please sign in again",
