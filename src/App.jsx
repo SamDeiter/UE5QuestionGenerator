@@ -56,6 +56,7 @@ import { TOAST_DURATION, APP_MODES, QUESTION_STATUS } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import { logger } from "./utils/logger";
 import { getTokenUsageFromQuestions } from "./utils/analyticsStore";
+import { runAuthHealthCheck } from "./utils/authHealthCheck";
 
 const App = () => {
   // ========================================================================
@@ -85,6 +86,9 @@ const App = () => {
     permissionError,
     blockedByExtension,
   } = useAuth(showMessage);
+
+  // Auth health check state
+  const [authHealthStatus, setAuthHealthStatus] = useState(null);
 
   // ========================================================================
   // GLOBAL TOAST EVENT SUBSCRIPTION - Allow services to trigger UI notifications
@@ -133,6 +137,21 @@ const App = () => {
         }
       };
       initAgents();
+    }
+  }, [user, authLoading]);
+
+  // ========================================================================
+  // AUTH HEALTH CHECK - Run once on authenticated user mount
+  // ========================================================================
+  useEffect(() => {
+    if (user && !authLoading) {
+      // Run health check to detect Token Service API issues
+      runAuthHealthCheck().then((status) => {
+        setAuthHealthStatus(status);
+        if (!status.healthy) {
+          logger.warn("🏥 Auth health check failed:", status);
+        }
+      });
     }
   }, [user, authLoading]);
 
@@ -693,6 +712,7 @@ const App = () => {
           registrationLoading={registrationLoading}
           permissionError={permissionError}
           blockedByExtension={blockedByExtension}
+          authHealthStatus={authHealthStatus}
         />
 
         <Suspense fallback={<LoadingSpinner />}>

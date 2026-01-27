@@ -22,6 +22,7 @@ import { getTokenUsage } from "../utils/analyticsStore";
 import {
   checkUserRegistration,
   setupInitialAdmin,
+  logAuthFailure,
 } from "../services/inviteService";
 import { logger } from "../utils/logger";
 
@@ -144,6 +145,20 @@ export function useAuth(showMessage) {
               "🚫 Request appears to be blocked by browser extension",
             );
             setBlockedByExtension(true);
+          }
+
+          // Log auth failure to Firestore for admin monitoring
+          try {
+            await logAuthFailure({
+              errorCode:
+                error?.code || (isNetworkBlocked ? "blocked" : "unknown"),
+              errorMessage: error?.message || "Registration check failed",
+              userAgent: navigator.userAgent,
+              timestamp: new Date().toISOString(),
+            });
+          } catch (logError) {
+            // Don't fail if logging fails
+            logger.warn("Failed to log auth failure:", logError);
           }
 
           // SECURITY: On error, default to no access (fail closed)

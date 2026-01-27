@@ -28,6 +28,7 @@ Object.assign(exports, require("./users/revokeUserAccess"));
 Object.assign(exports, require("./users/checkUserRegistration"));
 Object.assign(exports, require("./users/setupInitialAdmin"));
 Object.assign(exports, require("./users/checkToolAccess"));
+Object.assign(exports, require("./users/logAuthFailure"));
 
 // ============================================================================
 // Migration Functions

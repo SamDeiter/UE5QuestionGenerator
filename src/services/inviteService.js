@@ -145,3 +145,26 @@ export const setupInitialAdmin = async () => {
     throw new Error(error.message || "Failed to setup admin");
   }
 };
+
+/**
+ * Logs an authentication failure for admin monitoring.
+ * Non-critical - errors are swallowed to avoid breaking the auth flow.
+ *
+ * @param {Object} data - Failure details
+ * @param {string} data.errorCode - Error code
+ * @param {string} data.errorMessage - Error message
+ * @param {string} data.userAgent - Browser user agent
+ * @param {string} data.timestamp - ISO timestamp
+ * @returns {Promise<{success: boolean, logId?: string}>}
+ */
+export const logAuthFailure = async (data) => {
+  try {
+    const logFn = httpsCallable(functions, "logAuthFailure");
+    const result = await logFn(data);
+    return result.data;
+  } catch (error) {
+    // Silently fail - logging should never break auth
+    logger.warn("Failed to log auth failure:", error);
+    return { success: false };
+  }
+};

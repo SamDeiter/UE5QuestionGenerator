@@ -1,6 +1,7 @@
 /**
  * AppBanners - Warning banners extracted from App.jsx
- * Displays registration warnings, permission errors, and ad blocker alerts
+ * Displays registration warnings, permission errors, ad blocker alerts,
+ * and auth service health warnings
  */
 import { useState } from "react";
 import AdBlockerWarning from "./AdBlockerWarning";
@@ -64,6 +65,44 @@ export const AdBlockerBanner = ({ show, onShowModal }) => {
 };
 
 /**
+ * Auth Health Warning Banner
+ * Shows when auth health check fails (e.g., Token Service API disabled)
+ */
+export const AuthHealthBanner = ({ authHealthStatus }) => {
+  const [showDetails, setShowDetails] = useState(false);
+
+  // Don't show if healthy or no status
+  if (!authHealthStatus || authHealthStatus.healthy) return null;
+
+  return (
+    <div className="bg-orange-600 text-white px-4 py-3">
+      <div className="flex items-center justify-center gap-3">
+        <span className="font-bold">
+          🏥 Auth Service Issue: {authHealthStatus.error}
+        </span>
+        <button
+          onClick={() => setShowDetails(!showDetails)}
+          className="text-sm underline hover:text-orange-100"
+        >
+          {showDetails ? "Hide Details" : "Show Details"}
+        </button>
+      </div>
+      {showDetails && authHealthStatus.guidance && (
+        <div className="mt-2 text-center text-sm bg-orange-700 rounded p-2 max-w-2xl mx-auto">
+          <p className="font-medium mb-1">How to fix:</p>
+          <p>{authHealthStatus.guidance}</p>
+          {authHealthStatus.errorCode && (
+            <p className="mt-1 text-orange-200 text-xs">
+              Error code: {authHealthStatus.errorCode}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
  * AppBanners - Combined component for all app-level warning banners
  */
 const AppBanners = ({
@@ -72,6 +111,7 @@ const AppBanners = ({
   registrationLoading,
   permissionError,
   blockedByExtension,
+  authHealthStatus,
 }) => {
   const showRegistrationWarning = user && !isRegistered && !registrationLoading;
   const [showBlockerModal, setShowBlockerModal] = useState(false);
@@ -79,6 +119,7 @@ const AppBanners = ({
   return (
     <>
       <BrowserWarning />
+      <AuthHealthBanner authHealthStatus={authHealthStatus} />
       <RegistrationWarningBanner show={showRegistrationWarning} />
       <PermissionErrorBanner show={permissionError} />
       <AdBlockerBanner
