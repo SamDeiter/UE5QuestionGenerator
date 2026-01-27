@@ -193,14 +193,42 @@ const QuestionContent = ({
                 .replace(/[\u0980-\u09FF]+/g, "") // Remove Bengali Unicode block
                 .replace(/<\/?[a-zA-Z][^>]*>/g, "") // Remove HTML tags
                 .trim() || "(Empty)";
+
+            // Click handler to change correct answer
+            const handleChangeCorrect = () => {
+              if (isCorrect) return; // Already correct, no action needed
+
+              const confirmed = window.confirm(
+                `⚠️ Change correct answer?\n\nFrom: ${displayedQ.correct}) ${displayedQ.options?.[displayedQ.correct]?.substring(0, 50) || ""}...\n\nTo: ${key}) ${optionText.substring(0, 50)}...`,
+              );
+
+              if (confirmed && onUpdateQuestion) {
+                onUpdateQuestion(q.id, {
+                  correct: key,
+                  versionSource: "human_edited",
+                  lastEditedBy: "reviewer",
+                  lastEditedAt: new Date().toISOString(),
+                });
+                if (showMessage) {
+                  showMessage(`✅ Correct answer changed to ${key}`, 3000);
+                }
+              }
+            };
+
             return (
               <div
                 key={key}
-                className={`text-sm p-2 rounded border transition-all ${
+                onClick={handleChangeCorrect}
+                className={`text-sm p-2 rounded border transition-all cursor-pointer hover:scale-[1.02] ${
                   isCorrect
                     ? "bg-green-700/50 border-green-400 text-white shadow-[0_0_10px_-3px_rgba(34,197,94,0.5)]"
-                    : "bg-slate-950 border-slate-800 text-slate-400"
+                    : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-600 hover:bg-slate-900"
                 }`}
+                title={
+                  isCorrect
+                    ? "✓ Correct answer"
+                    : "Click to set as correct answer"
+                }
               >
                 <span
                   className={`font-bold mr-2 ${
@@ -212,6 +240,13 @@ const QuestionContent = ({
                 <span
                   dangerouslySetInnerHTML={{ __html: sanitizeText(optionText) }}
                 />
+                {!isCorrect && (
+                  <Icon
+                    name="edit-2"
+                    size={12}
+                    className="inline ml-2 opacity-30"
+                  />
+                )}
               </div>
             );
           })}
@@ -221,20 +256,64 @@ const QuestionContent = ({
       {displayedQ.type === "True/False" && (
         <div className="flex gap-4 mb-4">
           <div
-            className={`px-3 py-1 rounded text-xs border transition-all ${
+            onClick={() => {
+              if (displayedQ.correct !== "A") {
+                const confirmed = window.confirm(
+                  "⚠️ Change correct answer from FALSE to TRUE?",
+                );
+                if (confirmed && onUpdateQuestion) {
+                  onUpdateQuestion(q.id, {
+                    correct: "A",
+                    versionSource: "human_edited",
+                    lastEditedBy: "reviewer",
+                    lastEditedAt: new Date().toISOString(),
+                  });
+                  if (showMessage)
+                    showMessage("✅ Answer changed to TRUE", 3000);
+                }
+              }
+            }}
+            className={`px-3 py-1 rounded text-xs border transition-all cursor-pointer hover:scale-105 ${
               displayedQ.correct === "A"
                 ? "bg-green-700/50 border-green-400 text-white shadow-[0_0_10px_-3px_rgba(34,197,94,0.5)]"
-                : "bg-slate-950 border-slate-800 text-slate-500"
+                : "bg-slate-950 border-slate-800 text-slate-500 hover:border-green-600 hover:bg-green-950/30"
             }`}
+            title={
+              displayedQ.correct === "A"
+                ? "✓ Correct"
+                : "Click to set TRUE as correct"
+            }
           >
             TRUE
           </div>
           <div
-            className={`px-3 py-1 rounded text-xs border transition-all ${
+            onClick={() => {
+              if (displayedQ.correct !== "B") {
+                const confirmed = window.confirm(
+                  "⚠️ Change correct answer from TRUE to FALSE?",
+                );
+                if (confirmed && onUpdateQuestion) {
+                  onUpdateQuestion(q.id, {
+                    correct: "B",
+                    versionSource: "human_edited",
+                    lastEditedBy: "reviewer",
+                    lastEditedAt: new Date().toISOString(),
+                  });
+                  if (showMessage)
+                    showMessage("✅ Answer changed to FALSE", 3000);
+                }
+              }
+            }}
+            className={`px-3 py-1 rounded text-xs border transition-all cursor-pointer hover:scale-105 ${
               displayedQ.correct === "B"
                 ? "bg-red-700/50 border-red-400 text-white shadow-[0_0_10px_-3px_rgba(239,68,68,0.5)]"
-                : "bg-slate-950 border-slate-800 text-slate-500"
+                : "bg-slate-950 border-slate-800 text-slate-500 hover:border-red-600 hover:bg-red-950/30"
             }`}
+            title={
+              displayedQ.correct === "B"
+                ? "✓ Correct"
+                : "Click to set FALSE as correct"
+            }
           >
             FALSE
           </div>
