@@ -69,12 +69,99 @@ let offlineQueue = [];
 let isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
 let syncInProgress = false;
 
+// Queue configuration
+const QUEUE_CONFIG = {
+  MAX_AGE_MS: 24 * 60 * 60 * 1000, // 24 hours
+  MAX_RETRY_COUNT: 10,
+  STORAGE_KEY: "ue5_offline_queue",
+  USER_KEY: "ue5_queue_user_id",
+};
+
+/**
+ * Check if queue item has expired or exceeded retries
+ */
+const isQueueItemValid = (item) => {
+  const now = Date.now();
+  const age = now - (item.timestamp || 0);
+  const retryCount = item.retryCount || 0;
+
+  if (age > QUEUE_CONFIG.MAX_AGE_MS) {
+    logger.warn(
+      `[Queue] Expiring stale item (${Math.round(age / 3600000)}h old): ${item.question?.uniqueId}`,
+    );
+    return false;
+  }
+
+  if (retryCount >= QUEUE_CONFIG.MAX_RETRY_COUNT) {
+    logger.warn(
+      `[Queue] Expiring item after ${retryCount} failed retries: ${item.question?.uniqueId}`,
+    );
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * Clean up queue for current user - removes expired items and mismatched user items
+ */
+export const cleanupQueueForUser = (currentUserId) => {
+  const storedUserId = localStorage.getItem(QUEUE_CONFIG.USER_KEY);
+
+  // If different user, clear the entire queue
+  if (storedUserId && storedUserId !== currentUserId) {
+    logger.log(
+      `[Queue] New user login detected - clearing queue from previous user`,
+    );
+    offlineQueue = [];
+    persistQueue();
+    localStorage.setItem(QUEUE_CONFIG.USER_KEY, currentUserId);
+    return { cleared: true, reason: "user_changed" };
+  }
+
+  // Store current user ID
+  localStorage.setItem(QUEUE_CONFIG.USER_KEY, currentUserId);
+
+  // Filter out expired/invalid items
+  const beforeCount = offlineQueue.length;
+  offlineQueue = offlineQueue.filter(isQueueItemValid);
+  const removed = beforeCount - offlineQueue.length;
+
+  if (removed > 0) {
+    logger.log(`[Queue] Cleaned up ${removed} expired/invalid items`);
+    persistQueue();
+  }
+
+  return { cleared: removed > 0, removed, remaining: offlineQueue.length };
+};
+
+/**
+ * Manual queue clear for debugging/recovery
+ */
+export const clearOfflineQueue = () => {
+  const count = offlineQueue.length;
+  offlineQueue = [];
+  persistQueue();
+  logger.log(`[Queue] Manually cleared ${count} items`);
+  notifyConnectionListeners();
+  return { cleared: count };
+};
+
 // Load queued items from localStorage on startup
 try {
-  const savedQueue = localStorage.getItem("ue5_offline_queue");
+  const savedQueue = localStorage.getItem(QUEUE_CONFIG.STORAGE_KEY);
   if (savedQueue) {
     offlineQueue = JSON.parse(savedQueue);
-    logger.log(`📦 Loaded ${offlineQueue.length} queued items from storage`);
+    // Immediately filter expired items on load
+    const beforeCount = offlineQueue.length;
+    offlineQueue = offlineQueue.filter(isQueueItemValid);
+    const expiredCount = beforeCount - offlineQueue.length;
+    if (expiredCount > 0) {
+      logger.log(`[Queue] Expired ${expiredCount} stale items on startup`);
+    }
+    if (offlineQueue.length > 0) {
+      logger.log(`📦 Loaded ${offlineQueue.length} queued items from storage`);
+    }
   }
 } catch (e) {
   logger.warn("Failed to load offline queue:", e);
@@ -83,7 +170,10 @@ try {
 // Save queue to localStorage
 const persistQueue = () => {
   try {
-    localStorage.setItem("ue5_offline_queue", JSON.stringify(offlineQueue));
+    localStorage.setItem(
+      QUEUE_CONFIG.STORAGE_KEY,
+      JSON.stringify(offlineQueue),
+    );
   } catch (e) {
     logger.warn("Failed to persist offline queue:", e);
   }
@@ -200,7 +290,7 @@ const saveQuestionToFirestoreInternal = async (question) => {
 const processOfflineQueue = async () => {
   // Re-hydrate from localStorage in case items were added by another session/tab
   try {
-    const savedQueue = localStorage.getItem("ue5_offline_queue");
+    const savedQueue = localStorage.getItem(QUEUE_CONFIG.STORAGE_KEY);
     if (savedQueue) {
       const parsed = JSON.parse(savedQueue);
       if (parsed.length > offlineQueue.length) {
@@ -212,10 +302,23 @@ const processOfflineQueue = async () => {
     logger.warn("Failed to re-hydrate queue:", e);
   }
 
+  // Filter out expired items before processing
+  const beforeCount = offlineQueue.length;
+  offlineQueue = offlineQueue.filter(isQueueItemValid);
+  if (beforeCount !== offlineQueue.length) {
+    logger.log(
+      `[Queue] Filtered ${beforeCount - offlineQueue.length} expired items`,
+    );
+    persistQueue();
+  }
+
   if (syncInProgress || offlineQueue.length === 0) return;
 
   syncInProgress = true;
   logger.log(`🔄 Processing ${offlineQueue.length} queued items...`);
+
+  // Track if we've shown a permission error this cycle (avoid toast spam)
+  let hasShownPermissionToast = false;
 
   try {
     const itemsToProcess = [...offlineQueue];
@@ -233,23 +336,36 @@ const processOfflineQueue = async () => {
           err.message?.includes("permissions") ||
           err.message?.includes("Missing or insufficient permissions");
 
-        logger.warn(
-          `Failed to sync ${item.question.uniqueId}, re-queuing:`,
-          err,
-        );
+        // Increment retry count
+        const updatedItem = {
+          ...item,
+          retryCount: (item.retryCount || 0) + 1,
+          lastRetryAt: Date.now(),
+        };
 
-        // ALWAYS re-queue on failure - never drop user data
-        // Permission errors may be temporary (stale token, rules change, etc.)
-        const alreadyHasNewer = offlineQueue.some(
-          (q) => q.question?.uniqueId === item.question?.uniqueId,
-        );
-        if (!alreadyHasNewer) {
-          offlineQueue.push(item);
+        // Check if item should still be kept
+        if (isQueueItemValid(updatedItem)) {
+          logger.warn(
+            `Failed to sync ${item.question.uniqueId} (attempt ${updatedItem.retryCount}), re-queuing:`,
+            err.message,
+          );
+
+          const alreadyHasNewer = offlineQueue.some(
+            (q) => q.question?.uniqueId === item.question?.uniqueId,
+          );
+          if (!alreadyHasNewer) {
+            offlineQueue.push(updatedItem);
+          }
+        } else {
+          logger.warn(
+            `[Queue] Dropping item after max retries: ${item.question.uniqueId}`,
+          );
         }
 
-        // Notify user of permission issues so they can take action
-        if (isPermissionError) {
+        // Rate-limit permission error toasts (only show once per sync cycle)
+        if (isPermissionError && !hasShownPermissionToast) {
           toastError(getToastMessage(err, "syncing questions"), 8000);
+          hasShownPermissionToast = true;
         }
       }
     }

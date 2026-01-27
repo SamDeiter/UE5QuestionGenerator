@@ -24,6 +24,7 @@ import {
   setupInitialAdmin,
   logAuthFailure,
 } from "../services/inviteService";
+import { cleanupQueueForUser } from "../services/firebaseSave";
 import { logger } from "../utils/logger";
 
 // SECURITY FIX V-002: Removed client-side FALLBACK_ADMIN_EMAILS
@@ -71,6 +72,15 @@ export function useAuth(showMessage) {
       setAuthLoading(false);
 
       if (currentUser) {
+        // QUEUE CLEANUP: Clear stale queue items from previous users/sessions
+        // This prevents repeated permission errors from old queued saves
+        const queueCleanup = cleanupQueueForUser(currentUser.uid);
+        if (queueCleanup.cleared) {
+          const reason =
+            queueCleanup.reason || "removed " + queueCleanup.removed + " items";
+          logger.log("[Auth] Queue cleanup:", reason);
+        }
+
         // Check registration status via Cloud Function (server-side admin detection)
         setRegistrationLoading(true);
         try {
