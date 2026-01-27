@@ -1,7 +1,7 @@
 {
   "name": "ue5-question-generator",
   "private": true,
-  "version": "2.3.17",
+  "version": "2.3.18",
   "homepage": "https://samdeiter.github.io/UE5QuestionGenerator/",
   "type": "module",
   "scripts": {
@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist",
+    "deploy": "firebase use prod && firebase deploy --only firestore:rules && gh-pages -d dist",
     "prepare": "husky",
     "env:dev": "python scripts/switch_env.py dev",
     "env:prod": "python scripts/switch_env.py prod",

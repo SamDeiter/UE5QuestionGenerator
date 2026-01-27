@@ -71,7 +71,7 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
         setValidationError(error.message || "Invalid invite code");
       }
     },
-    [inviteCode]
+    [inviteCode],
   );
 
   useEffect(() => {
@@ -334,7 +334,7 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
                 onClick={() => setShowExistingUserLogin(true)}
                 className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
               >
-                Sign in with email →
+                Already registered? Sign in →
               </button>
             </div>
           )}
