@@ -225,7 +225,7 @@ const App = () => {
     handleLanguageSwitch,
     pendingNavigationUniqueId,
     setPendingNavigationUniqueId,
-  } = useAppConfig();
+  } = useAppConfig({ user });
 
   // Run all migrations (extracted to useMigrations hook)
   useMigrations({

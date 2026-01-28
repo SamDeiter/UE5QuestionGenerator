@@ -2,8 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { getSecureItem, setSecureItem } from "../utils/secureStorage";
 import { logger } from "../utils/logger";
 import { DEFAULT_CONFIG, STORAGE_KEYS, APP_MODES } from "../utils/constants";
+import { validateDisplayName } from "../utils/nameValidation";
 
-export const useAppConfig = () => {
+/**
+ * @param {Object} options
+ * @param {Object} options.user - Firebase user object (optional)
+ */
+export const useAppConfig = ({ user = null } = {}) => {
   // Application mode: 'landing' (home screen), 'create' (generation mode), 'review' (review mode), 'database' (view all)
   const [appMode, setAppMode] = useState(() => {
     // 1. Check URL parameters (Highest priority)
@@ -97,6 +102,32 @@ export const useAppConfig = () => {
     if (!config.creatorName) setShowNameModal(true);
   }, [config.creatorName]);
 
+  // Auto-populate creatorName from Firebase user displayName
+  useEffect(() => {
+    if (user?.displayName && !config.creatorName) {
+      const validation = validateDisplayName(user.displayName);
+      if (validation.valid) {
+        logger.log(
+          "🔄 Auto-setting creatorName from Firebase displayName:",
+          validation.sanitized,
+        );
+        setConfig((prev) => ({
+          ...prev,
+          creatorName: validation.sanitized,
+          reviewerName: validation.sanitized,
+        }));
+        setShowNameModal(false);
+      } else {
+        // DisplayName exists but is invalid, show modal for manual entry
+        logger.log(
+          "⚠️ Firebase displayName invalid, prompting for name:",
+          validation.error,
+        );
+        setShowNameModal(true);
+      }
+    }
+  }, [user?.displayName, config.creatorName]);
+
   useEffect(() => {
     setSecureItem(STORAGE_KEYS.CONFIG, config);
   }, [config]);
@@ -146,11 +177,18 @@ export const useAppConfig = () => {
   };
 
   const handleNameSave = (name) => {
-    // Sanitize: Trim and remove duplication if the user somehow pasted it twice (e.g. "Sam Sam")
-    let cleanName = name.trim();
+    // Validate name using industry-standard rules
+    const validation = validateDisplayName(name);
+    if (!validation.valid) {
+      logger.log("❌ Name validation failed:", validation.error);
+      return { success: false, error: validation.error };
+    }
+
+    let cleanName = validation.sanitized;
+
+    // Additional cleanup: Remove accidental duplications (e.g. "Sam Deiter Sam Deiter")
     if (cleanName.includes(" ") && cleanName.length > 5) {
       const parts = cleanName.split(" ");
-      // If the second half equals the first half exactly (e.g. "Sam Deiter Sam Deiter")
       const mid = Math.floor(parts.length / 2);
       const firstHalf = parts.slice(0, mid).join(" ");
       const secondHalf = parts.slice(mid).join(" ");
@@ -158,12 +196,15 @@ export const useAppConfig = () => {
         cleanName = firstHalf;
       }
     }
+
     setConfig((prev) => ({
       ...prev,
       creatorName: cleanName,
       reviewerName: cleanName,
     }));
     setShowNameModal(false);
+    logger.log("✅ Name saved:", cleanName);
+    return { success: true, error: null };
   };
 
   return {
