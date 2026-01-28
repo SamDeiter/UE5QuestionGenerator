@@ -172,6 +172,56 @@ class AuthManager {
   }
 
   /**
+   * MEDIUM 13: Get current user's claims (async)
+   * Useful for checking role, tools, disabled status
+   * @returns {Promise<Object|null>} Token claims or null if not authenticated
+   */
+  async getClaims() {
+    if (!this.currentUser) return null;
+
+    try {
+      const tokenResult = await this.currentUser.getIdTokenResult();
+      return tokenResult.claims;
+    } catch (error) {
+      logger.error("[AuthManager] Error getting claims:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Get last known role (synchronous, from last token check)
+   * @returns {string|null}
+   */
+  getLastKnownRole() {
+    return this._lastKnownRole;
+  }
+
+  /**
+   * Force refresh token and claims
+   * Call when you expect claims to have changed (e.g., after invite consumption)
+   * @returns {Promise<Object|null>} New claims or null on error
+   */
+  async refreshClaims() {
+    if (!this.currentUser) return null;
+
+    try {
+      // Force refresh the token
+      const tokenResult = await this.currentUser.getIdTokenResult(true);
+      const newRole = tokenResult.claims.role || null;
+
+      if (this._lastKnownRole !== newRole) {
+        logger.log(`[AuthManager] Claims refreshed, role: ${newRole}`);
+        this._lastKnownRole = newRole;
+      }
+
+      return tokenResult.claims;
+    } catch (error) {
+      logger.error("[AuthManager] Error refreshing claims:", error);
+      return null;
+    }
+  }
+
+  /**
    * Notify all listeners of auth change
    * @private
    */

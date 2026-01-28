@@ -365,3 +365,69 @@ describe("AuthManager - Destruction", () => {
     expect(manager.isInitialized).toBe(false);
   });
 });
+
+describe("AuthManager - Claims Methods", () => {
+  let manager;
+  let tokenCallback;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    manager = new AuthManager();
+
+    onIdTokenChanged.mockImplementation((auth, callback) => {
+      tokenCallback = callback;
+      return vi.fn();
+    });
+
+    manager.init();
+  });
+
+  afterEach(() => {
+    manager.destroy();
+  });
+
+  it("getClaims returns null when not authenticated", async () => {
+    const claims = await manager.getClaims();
+    expect(claims).toBeNull();
+  });
+
+  it("getClaims returns claims when authenticated", async () => {
+    const mockClaims = { role: "reviewer", admin: false };
+    const mockUser = {
+      uid: "user-123",
+      getIdTokenResult: vi.fn().mockResolvedValue({ claims: mockClaims }),
+    };
+
+    tokenCallback(mockUser);
+
+    const claims = await manager.getClaims();
+    expect(claims).toEqual(mockClaims);
+  });
+
+  it("getLastKnownRole returns undefined initially", () => {
+    expect(manager.getLastKnownRole()).toBeUndefined();
+  });
+
+  it("refreshClaims returns null when not authenticated", async () => {
+    const claims = await manager.refreshClaims();
+    expect(claims).toBeNull();
+  });
+
+  it("refreshClaims forces token refresh with true parameter", async () => {
+    const mockClaims = { role: "admin" };
+    const mockGetIdTokenResult = vi
+      .fn()
+      .mockResolvedValue({ claims: mockClaims });
+    const mockUser = {
+      uid: "user-123",
+      getIdTokenResult: mockGetIdTokenResult,
+    };
+
+    tokenCallback(mockUser);
+
+    await manager.refreshClaims();
+
+    // Should be called with true to force refresh
+    expect(mockGetIdTokenResult).toHaveBeenCalledWith(true);
+  });
+});
