@@ -13,7 +13,7 @@ async function migrateOrphanedRegistration(db, orphanedDoc, newUserId, email) {
   const orphanedUid = orphanedDoc.id;
 
   console.log(
-    `[checkUserRegistration] Migrating orphaned doc from ${orphanedUid} to ${newUserId}`,
+    `[checkUserRegistration] Migrating orphaned doc from ${orphanedUid} to ${newUserId}`
   );
 
   // Create new doc under current UID
@@ -122,22 +122,45 @@ exports.checkUserRegistration = functions
       // 3. EMAIL FALLBACK: Query by email for orphaned docs
       if (email) {
         console.log(
-          `[checkUserRegistration] UID miss, checking email: ${email}`,
+          `[checkUserRegistration] UID miss, checking email: ${email}`
         );
 
+        // Get ALL documents with this email to clean up duplicates
         const emailQuery = await db
           .collection("registeredUsers")
           .where("email", "==", email)
-          .limit(1)
           .get();
 
         if (!emailQuery.empty) {
-          return await migrateOrphanedRegistration(
-            db,
-            emailQuery.docs[0],
-            userId,
-            email,
+          // Find documents that don't match current UID (orphaned)
+          const orphanedDocs = emailQuery.docs.filter(
+            (doc) => doc.id !== userId
           );
+
+          if (orphanedDocs.length > 0) {
+            // Migrate first orphaned doc to current UID
+            const result = await migrateOrphanedRegistration(
+              db,
+              orphanedDocs[0],
+              userId,
+              email
+            );
+
+            // Delete any ADDITIONAL orphaned docs (prevents duplicate issue)
+            if (orphanedDocs.length > 1) {
+              console.log(
+                `[checkUserRegistration] Cleaning up ${orphanedDocs.length - 1} duplicate records`
+              );
+              for (let i = 1; i < orphanedDocs.length; i++) {
+                await db
+                  .collection("registeredUsers")
+                  .doc(orphanedDocs[i].id)
+                  .delete();
+              }
+            }
+
+            return result;
+          }
         }
       }
 
