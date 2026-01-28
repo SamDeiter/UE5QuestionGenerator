@@ -8,11 +8,27 @@
  */
 
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { app } from "./firebase";
+import { app, auth } from "./firebase";
+import { refreshAuthToken, isAuthPotentiallyStale } from "./firebaseAuth";
 import { logger } from "../utils/logger";
 
 // Initialize Cloud Functions
 const functions = getFunctions(app, "us-central1");
+
+/**
+ * Ensures auth token is fresh before making authenticated Cloud Function calls
+ */
+const ensureFreshToken = async () => {
+  if (!auth.currentUser) {
+    throw new Error("User not authenticated. Please sign in.");
+  }
+  if (isAuthPotentiallyStale()) {
+    const result = await refreshAuthToken();
+    if (!result.success) {
+      await auth.currentUser.getIdToken(true);
+    }
+  }
+};
 
 /**
  * Validates an invite code server-side.
@@ -43,6 +59,7 @@ export const validateInvite = async (code) => {
  */
 export const consumeInvite = async (code) => {
   try {
+    await ensureFreshToken();
     const consumeInviteFn = httpsCallable(functions, "consumeInvite");
     const result = await consumeInviteFn({ code });
     return result.data;
@@ -65,6 +82,7 @@ export const consumeInvite = async (code) => {
  */
 export const createInvite = async (options = {}) => {
   try {
+    await ensureFreshToken();
     const createInviteFn = httpsCallable(functions, "createInvite");
     const result = await createInviteFn(options);
     return result.data;
@@ -83,6 +101,7 @@ export const createInvite = async (options = {}) => {
  */
 export const revokeInvite = async (code) => {
   try {
+    await ensureFreshToken();
     const revokeInviteFn = httpsCallable(functions, "revokeInvite");
     const result = await revokeInviteFn({ code });
     return result.data;
@@ -99,6 +118,7 @@ export const revokeInvite = async (code) => {
  */
 export const checkUserRegistration = async () => {
   try {
+    await ensureFreshToken();
     const checkFn = httpsCallable(functions, "checkUserRegistration");
     const result = await checkFn({});
     return result.data;
@@ -137,6 +157,7 @@ export const clearInviteFromUrl = () => {
  */
 export const setupInitialAdmin = async () => {
   try {
+    await ensureFreshToken();
     const setupFn = httpsCallable(functions, "setupInitialAdmin");
     const result = await setupFn({});
     return result.data;

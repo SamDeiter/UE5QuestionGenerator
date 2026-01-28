@@ -6,7 +6,35 @@
 
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app, auth } from "./firebase";
+import { refreshAuthToken, isAuthPotentiallyStale } from "./firebaseAuth";
 import { logger } from "../utils/logger";
+
+/**
+ * Ensures auth token is fresh before making Cloud Function calls
+ * This prevents 401 errors from expired tokens
+ */
+const ensureFreshToken = async () => {
+  if (!auth.currentUser) {
+    throw new Error("User not authenticated. Please sign in.");
+  }
+
+  // Always refresh if token might be stale (older than 30 minutes)
+  if (isAuthPotentiallyStale()) {
+    logger.log("[CloudFunctions] Token potentially stale, refreshing...");
+    const result = await refreshAuthToken();
+    if (!result.success) {
+      logger.warn("[CloudFunctions] Token refresh failed:", result.reason);
+      // Force a hard refresh if soft refresh failed
+      try {
+        await auth.currentUser.getIdToken(true);
+        logger.log("[CloudFunctions] Hard token refresh succeeded");
+      } catch (e) {
+        logger.error("[CloudFunctions] Hard token refresh failed:", e.message);
+        throw new Error("Session expired. Please sign in again.");
+      }
+    }
+  }
+};
 
 // Initialize Cloud Functions
 const functions = getFunctions(app, "us-central1");
@@ -25,9 +53,12 @@ export const generateContentViaCloudFunction = async (
   userPrompt,
   setStatus = () => {},
   temperature = 0.2,
-  model = "gemini-2.0-flash-exp"
+  model = "gemini-2.0-flash-exp",
 ) => {
   try {
+    // Ensure token is fresh before calling Cloud Function
+    await ensureFreshToken();
+
     setStatus("Calling secure Cloud Function...");
 
     const generateQuestions = httpsCallable(functions, "generateQuestions");
@@ -69,33 +100,36 @@ export const generateContentViaCloudFunction = async (
  */
 export const generateCritiqueViaCloudFunction = async (
   question,
-  model = "gemini-1.5-flash"
+  model = "gemini-1.5-flash",
 ) => {
   try {
     // Defensive validation - catch malformed data before Cloud Function call
     if (!question || typeof question !== "object") {
       throw new Error(
-        "Invalid question object: received undefined or non-object"
+        "Invalid question object: received undefined or non-object",
       );
     }
 
     if (!question.question) {
       throw new Error(
         `Invalid question: missing 'question' text property. Keys present: ${Object.keys(
-          question
-        ).join(", ")}`
+          question,
+        ).join(", ")}`,
       );
     }
 
     if (!question.options || typeof question.options !== "object") {
       throw new Error(
-        "Invalid question: missing or invalid 'options' property"
+        "Invalid question: missing or invalid 'options' property",
       );
     }
 
     if (!question.correct) {
       throw new Error("Invalid question: missing 'correct' answer property");
     }
+
+    // Ensure token is fresh before calling Cloud Function
+    await ensureFreshToken();
 
     const generateCritique = httpsCallable(functions, "generateCritique");
 
@@ -114,12 +148,12 @@ export const generateCritiqueViaCloudFunction = async (
 
     logger.log(
       "[CloudFunction DEBUG] Raw result.data:",
-      JSON.stringify(result.data).substring(0, 200)
+      JSON.stringify(result.data).substring(0, 200),
     );
     logger.log("[CloudFunction DEBUG] Extracted score:", result.data.score);
     logger.log(
       "[CloudFunction DEBUG] Extracted improvedScore:",
-      result.data.improvedScore
+      result.data.improvedScore,
     );
 
     return {
@@ -151,6 +185,9 @@ export const isUserAuthenticated = () => {
  */
 export const migrateTranslationsViaCloudFunction = async () => {
   try {
+    // Ensure token is fresh before calling Cloud Function
+    await ensureFreshToken();
+
     const migrateTranslations = httpsCallable(functions, "migrateTranslations");
 
     const result = await migrateTranslations();
@@ -178,6 +215,9 @@ export const migrateTranslationsViaCloudFunction = async () => {
  */
 export const sendReviewerInvitesViaEmail = async (invites) => {
   try {
+    // Ensure token is fresh before calling Cloud Function
+    await ensureFreshToken();
+
     const sendReviewerInvites = httpsCallable(functions, "sendReviewerInvites");
 
     const result = await sendReviewerInvites({ invites });
