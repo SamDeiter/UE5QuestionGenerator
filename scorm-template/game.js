@@ -16,7 +16,116 @@ document.addEventListener("DOMContentLoaded", () => {
     totalQuestions: 0,
   };
 
-  const questions = window.QUESTIONS || [];
+  // Load all questions from bank
+  const allQuestions = window.QUESTIONS || [];
+
+  // ═══════════════════════════════════════════════════════════════
+  // QUESTION SELECTION - 60 total (20 per difficulty)
+  // ═══════════════════════════════════════════════════════════════
+
+  const QUESTIONS_PER_DIFFICULTY = 20;
+  const TARGET_TOTAL = 60;
+
+  /**
+   * Shuffle array using Fisher-Yates algorithm
+   */
+  function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+
+  /**
+   * Select N random questions from an array
+   */
+  function selectRandom(array, count) {
+    if (array.length <= count) return [...array];
+    return shuffleArray(array).slice(0, count);
+  }
+
+  /**
+   * Categorize questions by difficulty
+   */
+  function categorizeByDifficulty(questionList) {
+    const easy = [];
+    const medium = [];
+    const hard = [];
+    const unknown = [];
+
+    questionList.forEach((q) => {
+      const diff = (q.difficulty || "").toLowerCase();
+      if (diff.includes("easy") || diff.includes("beginner")) {
+        easy.push(q);
+      } else if (diff.includes("medium") || diff.includes("intermediate")) {
+        medium.push(q);
+      } else if (
+        diff.includes("hard") ||
+        diff.includes("expert") ||
+        diff.includes("advanced")
+      ) {
+        hard.push(q);
+      } else {
+        unknown.push(q);
+      }
+    });
+
+    return { easy, medium, hard, unknown };
+  }
+
+  /**
+   * Select 60 questions: 20 easy, 20 medium, 20 hard
+   * Falls back to more from other categories if one is short
+   */
+  function selectQuizQuestions(questionList) {
+    const { easy, medium, hard, unknown } =
+      categorizeByDifficulty(questionList);
+
+    // Select up to 20 from each category
+    let selected = [];
+    let remaining = TARGET_TOTAL;
+
+    // Try to get 20 from each
+    const easyPick = selectRandom(easy, QUESTIONS_PER_DIFFICULTY);
+    const mediumPick = selectRandom(medium, QUESTIONS_PER_DIFFICULTY);
+    const hardPick = selectRandom(hard, QUESTIONS_PER_DIFFICULTY);
+
+    selected = [...easyPick, ...mediumPick, ...hardPick];
+    remaining = TARGET_TOTAL - selected.length;
+
+    // If we don't have 60 yet, fill from unknown category
+    if (remaining > 0 && unknown.length > 0) {
+      const unknownPick = selectRandom(unknown, remaining);
+      selected = [...selected, ...unknownPick];
+      remaining = TARGET_TOTAL - selected.length;
+    }
+
+    // If still short, try to get more from categories that have extras
+    if (remaining > 0) {
+      const allUnused = [
+        ...easy.filter((q) => !easyPick.includes(q)),
+        ...medium.filter((q) => !mediumPick.includes(q)),
+        ...hard.filter((q) => !hardPick.includes(q)),
+      ];
+      const extraPick = selectRandom(allUnused, remaining);
+      selected = [...selected, ...extraPick];
+    }
+
+    // Shuffle final selection so difficulties are mixed
+    return shuffleArray(selected);
+  }
+
+  // Select questions for this quiz session
+  const questions =
+    allQuestions.length > TARGET_TOTAL
+      ? selectQuizQuestions(allQuestions)
+      : shuffleArray(allQuestions);
+
+  console.log(
+    `Quiz initialized: ${questions.length} questions selected from ${allQuestions.length} in bank`
+  );
 
   // ═══════════════════════════════════════════════════════════════
   // STATE
@@ -130,6 +239,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateProgress();
 
+    // SECURITY: Do NOT expose correct answer in DOM (no data-correct attribute)
+    // Correctness is checked server-side via question data at answer time
     const html = `
       <div class="bg-slate-800 rounded-lg p-6 shadow-xl">
         <h2 class="text-2xl font-bold text-blue-300 mb-4">${question.text}</h2>
@@ -138,9 +249,8 @@ document.addEventListener("DOMContentLoaded", () => {
             .map(
               (choice, index) => `
             <button 
-              class="choice-btn w-full text-left p-4 bg-slate-700 hover:bg-slate-600 rounded-lg border border-slate-600 hover:border-blue-500 transition-all"
+              class="choice-btn w-full text-left p-4 bg-slate-700 hover:bg-slate-600 rounded-lg border-2 border-slate-600 hover:border-blue-500 transition-all"
               data-index="${index}"
-              data-correct="${choice.correct}"
             >
               <span class="font-semibold">${choice.text}</span>
             </button>
@@ -162,7 +272,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleAnswer(button) {
     const question = questions[currentQuestionIndex];
     const choiceIndex = parseInt(button.dataset.index);
-    const isCorrect = button.dataset.correct === "true";
+    // SECURITY: Check correctness from question data, not DOM attribute
+    const isCorrect = question.choices[choiceIndex].correct === true;
     const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
 
     // Record answer
@@ -174,26 +285,28 @@ document.addEventListener("DOMContentLoaded", () => {
       timeSpent: timeSpent,
     });
 
-    // Visual feedback
-    if (isCorrect) {
-      button.classList.add("bg-green-600", "border-green-500");
-    } else {
-      button.classList.add("bg-red-600", "border-red-500");
-      // Highlight correct answer
-      document.querySelectorAll(".choice-btn").forEach((btn) => {
-        if (btn.dataset.correct === "true") {
-          btn.classList.add("bg-green-600", "border-green-500");
-        }
-      });
-    }
+    // Testing mode: No correct/incorrect feedback - just show selection
+    // This prevents test-takers from learning answers during the test
 
-    // Disable all buttons
+    // Disable all buttons to prevent double-click
     document.querySelectorAll(".choice-btn").forEach((btn) => {
       btn.disabled = true;
-      btn.classList.add("cursor-not-allowed");
+      btn.classList.add("cursor-not-allowed", "opacity-40");
     });
 
-    // Move to next question after delay
+    // IMPROVED: Show clear "selected" indicator on chosen answer
+    button.classList.remove("opacity-40", "bg-slate-700", "border-slate-600");
+    button.classList.add(
+      "bg-blue-600",
+      "border-blue-400",
+      "ring-2",
+      "ring-blue-400",
+      "ring-offset-2",
+      "ring-offset-slate-800",
+      "opacity-100"
+    );
+
+    // Move to next question after brief delay (long enough to show selection clearly)
     setTimeout(() => {
       currentQuestionIndex++;
       if (currentQuestionIndex < questions.length) {
@@ -201,7 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         endQuiz("completed");
       }
-    }, 1500);
+    }, 600);
   }
 
   function calculateScore() {
