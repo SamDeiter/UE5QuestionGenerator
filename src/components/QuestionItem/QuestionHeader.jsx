@@ -3,6 +3,7 @@ import Icon from "../Icon";
 // FlagIcon available but emoji used instead for simplicity
 import ScoreBadge from "../ScoreBadge";
 import { QUESTION_DIFFICULTY } from "../../utils/constants";
+import { getDiffBadgeColor } from "../../utils/questionItemHelpers";
 
 /**
  * Normalize difficulty value - handles legacy "BALANCED ALL" and other invalid values
@@ -48,7 +49,7 @@ const TRUE_FALSE_OPTIONS = [
 const QuestionHeader = ({
   q,
   originalQ, // NEW: The base question record
-  getDiffBadgeColor,
+  colorblindMode = false, // NEW: Use colorblind-safe colors
   onKickBack,
   onCritique, // NEW: Allow re-critique from database view
   appMode,
@@ -119,6 +120,7 @@ const QuestionHeader = ({
               onClick={() => onUpdateQuestion && setIsEditingDifficulty(true)}
               className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(
                 displayDifficulty,
+                colorblindMode
               )} flex items-center gap-1 ${
                 onUpdateQuestion
                   ? "cursor-pointer hover:opacity-80 transition-opacity"
