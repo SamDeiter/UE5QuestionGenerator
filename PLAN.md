@@ -311,11 +311,17 @@ export function logError(error, additionalContext = {}) {
 
 ---
 
-#### 2.1 Decompose `QuestionItem.jsx` (747 lines)
+#### 2.1 Decompose `QuestionItem.jsx` (747 lines) ⏳ IN PROGRESS
 
 **Problem:** Handles 6 app modes with conditional rendering throughout
 
 **Strategy:** Extract mode-specific renderers
+
+**Progress:**
+
+- ✅ Created `src/hooks/useQuestionHandlers.js` - verification handlers extracted
+- ✅ Created `src/utils/questionItemHelpers.js` - lock/status/difficulty style helpers
+- ⏳ Integration into QuestionItem.jsx pending (utilities ready, not yet wired)
 
 ```
 src/components/
