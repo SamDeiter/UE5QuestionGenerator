@@ -34,7 +34,7 @@ This plan consolidates two audit objectives into a single staged implementation:
 
 | Rank | File | Lines | Complexity Type(s) | Why Hard to Reason About |
 |------|------|-------|-------------------|--------------------------|
-| 1 | `App.jsx` | 986 | **State, Control Flow, Temporal** | God Component: 25+ hooks, ~50 handler functions, route-level orchestration mixed with state |
+| 1 | `App.jsx` | ~~986~~ **831** ✅ | **State, Control Flow, Temporal** | Reduced via hook extraction: useAgentLifecycle, useTokenUsage, useAutoLoad, useAuthRefresh |
 | 2 | `useFiltering.js` | 558 | **State, Data Shape** | 14 state variables, 6 useEffect hooks with complex dependencies, hash-based stability detection |
 | 3 | `QuestionItem.jsx` | ~~747~~ **566** ✅ | **Control Flow, Data Shape** | 20+ props, conditional rendering for 6 modes, inline handlers, lock logic nested |
 | 4 | `firebaseQueries.js` | 718 | **Control Flow, Temporal** | 17 exported functions, mixed caching strategies, pagination + real-time overlap |
