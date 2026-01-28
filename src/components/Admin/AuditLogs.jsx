@@ -39,7 +39,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         const apiUsageQuery = query(
           collection(getDb(), "apiUsage"),
           orderBy("timestamp", "desc"),
-          limit(LOGS_PER_COLLECTION)
+          limit(LOGS_PER_COLLECTION),
         );
         const apiUsageSnapshot = await getDocs(apiUsageQuery);
         apiUsageSnapshot.forEach((doc) => {
@@ -63,7 +63,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         const inviteAttemptsQuery = query(
           collection(getDb(), "inviteAttempts"),
           orderBy("lastAttempt", "desc"),
-          limit(LOGS_PER_COLLECTION)
+          limit(LOGS_PER_COLLECTION),
         );
         const inviteAttemptsSnapshot = await getDocs(inviteAttemptsQuery);
         inviteAttemptsSnapshot.forEach((doc) => {
@@ -84,19 +84,28 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         logger.warn("Could not fetch inviteAttempts:", err.message);
       }
 
-      // Fetch generic audit-log (e.g. user registrations, excessive usage)
+      // Fetch generic audit-log (e.g. user registrations, excessive usage, uid migrations)
       try {
         const auditLogQuery = query(
           collection(getDb(), "audit-log"),
           orderBy("timestamp", "desc"),
-          limit(LOGS_PER_COLLECTION)
+          limit(LOGS_PER_COLLECTION),
         );
         const auditLogSnapshot = await getDocs(auditLogQuery);
         auditLogSnapshot.forEach((doc) => {
           const data = doc.data();
-          // Format details for display
+          // Format details based on event type
           let formattedDetails = "No details";
-          if (data.details) {
+          const eventType = data.eventType || "unknown";
+
+          if (eventType === "uid_migration" && data.details) {
+            // Special formatting for UID migrations
+            const d =
+              typeof data.details === "string"
+                ? JSON.parse(data.details)
+                : data.details;
+            formattedDetails = `${d.email || "Unknown"} migrated: ${d.oldUid?.slice(0, 8) || "?"} → ${d.newUid?.slice(0, 8) || "?"}`;
+          } else if (data.details) {
             formattedDetails =
               typeof data.details === "string"
                 ? data.details
@@ -105,8 +114,8 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
 
           combinedLogs.push({
             id: doc.id,
-            type: "system", // generic system event
-            action: data.eventType || "unknown",
+            type: eventType === "uid_migration" ? "migration" : "system",
+            action: eventType,
             userId: data.userId,
             timestamp: data.timestamp?.toDate?.() || new Date(),
             details: formattedDetails,
@@ -134,6 +143,8 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         return <Icon name="zap" size={14} className="text-yellow-400" />;
       case "invite":
         return <Icon name="mail" size={14} className="text-blue-400" />;
+      case "migration":
+        return <Icon name="user-check" size={14} className="text-orange-400" />;
       case "system":
         return (
           <Icon
@@ -239,7 +250,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
                     {getActionIcon(log.type)}
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${getActionBadge(
-                        log.action
+                        log.action,
                       )}`}
                     >
                       {log.action.replace("_", " ")}
