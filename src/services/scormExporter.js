@@ -7,14 +7,42 @@ const SECONDS_IN_MINUTE = 60;
 const JSON_INDENTATION = 2;
 
 /**
- * Escape XML special characters
+ * Escape XML special characters and handle HTML entities
  * @param {string} unsafe - String with potentially unsafe characters
  * @returns {string} XML-safe string
  */
 const escapeXml = (unsafe) => {
   if (!unsafe) return "";
-  return unsafe
-    .toString()
+
+  // Common HTML entities that need conversion (these cause "undeclared entity" errors)
+  const HTML_ENTITIES = {
+    "&nbsp;": " ",
+    "&copy;": "\u00A9",
+    "&reg;": "\u00AE",
+    "&trade;": "\u2122",
+    "&mdash;": "\u2014",
+    "&ndash;": "\u2013",
+    "&hellip;": "\u2026",
+    "&ldquo;": "\u201C",
+    "&rdquo;": "\u201D",
+    "&lsquo;": "\u2018",
+    "&rsquo;": "\u2019",
+    "&bull;": "\u2022",
+  };
+
+  let result = unsafe.toString();
+
+  // First, replace known HTML entities with their actual characters
+  Object.entries(HTML_ENTITIES).forEach(([entity, char]) => {
+    result = result.replace(new RegExp(entity, "gi"), char);
+  });
+
+  // Remove any remaining unrecognized entity references (e.g., &foo;)
+  // This regex matches &word; patterns that aren't the 5 standard XML entities
+  result = result.replace(/&(?!(?:amp|lt|gt|quot|apos);)[a-zA-Z0-9#]+;/g, "");
+
+  // Now escape XML special characters (order matters: & first!)
+  return result
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -197,13 +225,13 @@ export function validateQuestionsForExport(questions) {
 
   if (questions.length < QUESTION_LIMITS.MIN_EXPORT_QUESTIONS) {
     warnings.push(
-      `Less than ${QUESTION_LIMITS.MIN_EXPORT_QUESTIONS} questions selected. Consider adding more for a comprehensive assessment.`,
+      `Less than ${QUESTION_LIMITS.MIN_EXPORT_QUESTIONS} questions selected. Consider adding more for a comprehensive assessment.`
     );
   }
 
   if (questions.length > QUESTION_LIMITS.MAX_EXPORT_QUESTIONS) {
     warnings.push(
-      `More than ${QUESTION_LIMITS.MAX_EXPORT_QUESTIONS} questions selected. Large packages may take longer to load in the LMS.`,
+      `More than ${QUESTION_LIMITS.MAX_EXPORT_QUESTIONS} questions selected. Large packages may take longer to load in the LMS.`
     );
   }
 
@@ -228,7 +256,7 @@ export function validateQuestionsForExport(questions) {
 
     if (validChoices.length < QUESTION_LIMITS.MIN_CHOICES) {
       errors.push(
-        `Question ${index + 1}: Must have at least ${QUESTION_LIMITS.MIN_CHOICES} choices`,
+        `Question ${index + 1}: Must have at least ${QUESTION_LIMITS.MIN_CHOICES} choices`
       );
     }
 
