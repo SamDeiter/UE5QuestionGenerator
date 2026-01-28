@@ -3,8 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
-import { runLocalStorageMigration } from "./utils/migrateScores";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 
 // Critical components - keep eager loading (needed immediately)
 import Header from "./components/Header";
@@ -27,7 +26,7 @@ const LandingPage = lazy(() => import("./components/LandingPage"));
 const MainLayout = lazy(() => import("./components/MainLayout"));
 const GlobalModals = lazy(() => import("./components/GlobalModals"));
 const CrashRecoveryPrompt = lazy(
-  () => import("./components/CrashRecoveryPrompt"),
+  () => import("./components/CrashRecoveryPrompt")
 );
 
 // Custom Hooks
@@ -51,17 +50,14 @@ import { useAppHandlers } from "./hooks/useAppHandlers";
 import { useMigrations } from "./hooks/useMigrations";
 import { usePendingCount } from "./hooks/usePendingCount";
 import { useNavigationAfterLanguageSwitch } from "./hooks/useNavigationAfterLanguageSwitch";
+import { useAgentLifecycle } from "./hooks/useAgentLifecycle";
+import { useTokenUsage } from "./hooks/useTokenUsage";
+import { useAutoLoad } from "./hooks/useAutoLoad";
 
-// Concurrent Editing Agents
-import { initializeAgents, resetAgents } from "./agents";
-// AuthManager for centralized auth lifecycle
-import { authManager } from "./services/AuthManager";
 // Utilities
 import { TOAST_DURATION, APP_MODES, QUESTION_STATUS } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import { logger } from "./utils/logger";
-import { getTokenUsageFromQuestions } from "./utils/analyticsStore";
-import { getUserTokenUsageAggregated } from "./services/firebaseQueries";
 import { runAuthHealthCheck } from "./utils/authHealthCheck";
 
 const App = () => {
@@ -130,29 +126,7 @@ const App = () => {
   // ========================================================================
   // CONCURRENT EDITING AGENTS - Initialize once when user is authenticated
   // ========================================================================
-  useEffect(() => {
-    if (user && !authLoading) {
-      // Initialize agents with Firestore instance
-      const initAgents = async () => {
-        try {
-          const { getDb } = await import("./services/firebase");
-          initializeAgents(getDb());
-          logger.log("✅ Concurrent editing agents initialized");
-        } catch (error) {
-          logger.error("❌ Failed to initialize agents:", error);
-        }
-      };
-      initAgents();
-
-      // MEDIUM 14: Register agent cleanup on logout
-      const cleanupFn = authManager.registerCleanup(() => {
-        logger.log("🧹 Cleaning up agents on logout");
-        resetAgents();
-      });
-
-      return cleanupFn;
-    }
-  }, [user, authLoading]);
+  useAgentLifecycle({ user, authLoading });
 
   // ========================================================================
   // AUTH HEALTH CHECK - Run once on authenticated user mount
@@ -181,13 +155,13 @@ const App = () => {
         logger.log(
           isAutoRefresh
             ? "🔄 Auth token auto-refreshed"
-            : "🔄 Initial auth token refreshed",
+            : "🔄 Initial auth token refreshed"
         );
       } else if (result?.reason === "auth-blocked") {
         logger.error("🔒 Auth blocked - securetoken 403 detected");
         showMessage(
           "🔒 Session corrupted - signing you out automatically...",
-          "error",
+          "error"
         );
         // A6: Auto sign-out to clear corrupted auth state
         setTimeout(() => signOut(), 2000);
@@ -196,7 +170,7 @@ const App = () => {
         showMessage(
           "⚠️ Your account has been disabled. Please contact support.",
           "error",
-          TOAST_DURATION.LONG,
+          TOAST_DURATION.LONG
         );
         setTimeout(() => signOut(), 2000);
       } else if (result?.reason === "auth/id-token-revoked") {
@@ -204,7 +178,7 @@ const App = () => {
         showMessage(
           "🔐 Session expired - please sign in again.",
           "warning",
-          TOAST_DURATION.LONG,
+          TOAST_DURATION.LONG
         );
         setTimeout(() => signOut(), 2000);
       } else if (isAutoRefresh && !result?.success) {
@@ -213,14 +187,14 @@ const App = () => {
         if (result?.reason === "auth/network-request-failed") {
           showMessage(
             "📶 Network issue - couldn't refresh session. Check your connection.",
-            "warning",
+            "warning"
           );
         } else {
           // For other failures, prompt re-auth
           showMessage(
             "⏳ Session needs refresh - please sign out and back in.",
             "warning",
-            TOAST_DURATION.LONG,
+            TOAST_DURATION.LONG
           );
         }
       }
@@ -233,7 +207,7 @@ const App = () => {
     const REFRESH_INTERVAL_MS = 30 * 60 * 1000;
     const intervalId = setInterval(() => {
       refreshAuthToken().then((result) =>
-        handleAuthRefreshResult(result, true),
+        handleAuthRefreshResult(result, true)
       );
     }, REFRESH_INTERVAL_MS);
 
@@ -320,48 +294,7 @@ const App = () => {
 
   // Calculate token usage from Firestore using server-side aggregation (PHASE 2.1)
   // Uses Firestore getAggregateFromServer for 99.98% read reduction (1 read vs 5000+)
-  const [firestoreTokenUsage, setFirestoreTokenUsage] = useState(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchTokenUsage = async () => {
-      if (!user?.uid) {
-        setFirestoreTokenUsage(null);
-        return;
-      }
-
-      try {
-        const aggregatedUsage = await getUserTokenUsageAggregated(user.uid);
-        if (isMounted) {
-          // Transform to expected format for TokenUsageDisplay
-          setFirestoreTokenUsage({
-            allTime: {
-              inputTokens: aggregatedUsage.estimatedInputTokens,
-              outputTokens: aggregatedUsage.estimatedOutputTokens,
-              totalCost: aggregatedUsage.totalCost,
-              questionCount: aggregatedUsage.questionCount,
-            },
-          });
-        }
-      } catch (error) {
-        logger.error("Failed to fetch aggregated token usage:", error);
-        // Fallback to client-side calculation if aggregation fails
-        if (isMounted && databaseQuestions.length > 0) {
-          const userQuestions = databaseQuestions.filter(
-            (q) => q.creatorId === user?.uid,
-          );
-          setFirestoreTokenUsage(getTokenUsageFromQuestions(userQuestions));
-        }
-      }
-    };
-
-    fetchTokenUsage();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.uid, databaseQuestions]); // Re-fetch when question count or list changes
+  const firestoreTokenUsage = useTokenUsage(user?.uid, databaseQuestions);
 
   // 2.5. Crash Recovery - detect and restore from cloud backup
   const {
@@ -384,7 +317,7 @@ const App = () => {
       showMessage,
       setStatus,
       isApiReady,
-      effectiveApiKey,
+      effectiveApiKey
     );
 
   // 5. Filtering & Search (extracted to useFiltering hook)
@@ -461,7 +394,7 @@ const App = () => {
     setShowApiError,
     setShowHistory,
     translationMap,
-    allQuestionsMap,
+    allQuestionsMap
   );
 
   // 7. Modal State (extracted to useModalState hook)
@@ -499,28 +432,10 @@ const App = () => {
     setAppMode,
     setShowExportMenu,
     setShowBulkExportModal,
-    replaceQuestions,
+    replaceQuestions
   );
-
   // Auto-load database questions on startup for difficulty distribution chart
-  const hasAutoLoadedRef = useRef(false);
-  useEffect(() => {
-    if (user && !authLoading && !hasAutoLoadedRef.current) {
-      // One-time migration: Add improvedScore to existing critiques
-      const migrated = runLocalStorageMigration();
-      if (migrated.updated > 0) {
-        logger.log(
-          `🔄 Migrated ${migrated.updated} questions with estimated improved scores`,
-        );
-      }
-
-      hasAutoLoadedRef.current = true;
-      logger.log("📊 Auto-loading full database...");
-
-      // Load all questions immediately (IndexedDB persistence handles caching)
-      handleLoadFromFirestore(true);
-    }
-  }, [user, authLoading, handleLoadFromFirestore]);
+  useAutoLoad({ user, authLoading, handleLoadFromFirestore });
 
   // Migrations handled by useMigrations hook (called earlier in component)
 
@@ -650,7 +565,7 @@ const App = () => {
       handleTrimExcess,
       handleUpdateQuestion,
       userRole,
-    ],
+    ]
   );
 
   // Render - Loading state
@@ -938,24 +853,24 @@ const App = () => {
               if (action === "DISCARD") {
                 // Reload the latest version from server
                 const { loadAgent } = await import("./agents").then((m) =>
-                  m.getAgents(),
+                  m.getAgents()
                 );
                 if (loadAgent) {
                   const result = await loadAgent.loadQuestion(
-                    conflictData.serverQuestion.id,
+                    conflictData.serverQuestion.id
                   );
                   if (result.success) {
                     handleUpdateQuestion(result.question.id, result.question);
                     showMessage(
                       "✓ Reloaded latest version",
-                      TOAST_DURATION.MEDIUM,
+                      TOAST_DURATION.MEDIUM
                     );
                   }
                 }
               } else if (action === "OVERWRITE") {
                 // Force save local changes
                 const { saveGuardAgent } = await import("./agents").then((m) =>
-                  m.getAgents(),
+                  m.getAgents()
                 );
                 if (saveGuardAgent) {
                   await saveGuardAgent.saveQuestion(
@@ -963,7 +878,7 @@ const App = () => {
                     conflictData.localChanges,
                     conflictData.serverVersion, // Use server version to force overwrite
                     user?.uid || "unknown",
-                    user?.email || "unknown@example.com",
+                    user?.email || "unknown@example.com"
                   );
                   showMessage("✓ Overwrote server changes", 2000);
                 }
