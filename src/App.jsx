@@ -3,7 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 
 // Critical components - keep eager loading (needed immediately)
 import Header from "./components/Header";
@@ -52,9 +52,11 @@ import { useAuthRefresh } from "./hooks/useAuthRefresh";
 import { useAuthHealthCheck } from "./hooks/useAuthHealthCheck";
 import { useUrlModeSync } from "./hooks/useUrlModeSync";
 import { useGlobalToastSubscription } from "./hooks/useGlobalToastSubscription";
+import { useViewRouterHandlers } from "./hooks/useViewRouterHandlers";
+import { useConflictResolution } from "./hooks/useConflictResolution";
 
 // Utilities
-import { TOAST_DURATION, APP_MODES } from "./utils/constants";
+import { APP_MODES } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import { logger } from "./utils/logger";
 
@@ -203,6 +205,15 @@ const App = () => {
     bulkDeleteQuestions,
     moveQuestion,
   } = useQuestionManager(config, showMessage);
+
+  // Conflict resolution handler (extracted to hook)
+  const handleResolveConflict = useConflictResolution({
+    conflictData,
+    handleUpdateQuestion,
+    showMessage,
+    setShowConflictModal,
+    user,
+  });
 
   // Calculate token usage from Firestore using server-side aggregation (PHASE 2.1)
   // Uses Firestore getAggregateFromServer for 99.98% read reduction (1 read vs 5000+)
@@ -426,45 +437,25 @@ const App = () => {
       setShowApiKeyModal,
     });
 
-  // Memoize viewRouterHandlers to prevent unnecessary re-renders
-  const viewRouterHandlers = useMemo(
-    () => ({
-      handleLoadFromSheets,
-      handleLoadFromFirestore,
-      handleUpdateDatabaseQuestion,
-      handleKickBackToReview,
-      handleUpdateStatus,
-      handleExplain,
-      handleVariate,
-      handleCritique,
-      handleApplyRewrite,
-      handleTranslateSingle,
-      handleLanguageSwitch,
-      handleDelete,
-      handleManualUpdate,
-      handleTrimExcess,
-      handleUpdateQuestion,
-      userRole,
-    }),
-    [
-      handleLoadFromSheets,
-      handleLoadFromFirestore,
-      handleUpdateDatabaseQuestion,
-      handleKickBackToReview,
-      handleUpdateStatus,
-      handleExplain,
-      handleVariate,
-      handleCritique,
-      handleApplyRewrite,
-      handleTranslateSingle,
-      handleLanguageSwitch,
-      handleDelete,
-      handleManualUpdate,
-      handleTrimExcess,
-      handleUpdateQuestion,
-      userRole,
-    ]
-  );
+  // Memoize viewRouterHandlers to prevent unnecessary re-renders (extracted to hook)
+  const viewRouterHandlers = useViewRouterHandlers({
+    handleLoadFromSheets,
+    handleLoadFromFirestore,
+    handleUpdateDatabaseQuestion,
+    handleKickBackToReview,
+    handleUpdateStatus,
+    handleExplain,
+    handleVariate,
+    handleCritique,
+    handleApplyRewrite,
+    handleTranslateSingle,
+    handleLanguageSwitch,
+    handleDelete,
+    handleManualUpdate,
+    handleTrimExcess,
+    handleUpdateQuestion,
+    userRole,
+  });
 
   // Render - Loading state
   if (authLoading || registrationLoading) {
@@ -747,42 +738,7 @@ const App = () => {
             isOpen={showConflictModal}
             onClose={() => setShowConflictModal(false)}
             conflictData={conflictData}
-            onResolve={async (action) => {
-              if (action === "DISCARD") {
-                // Reload the latest version from server
-                const { loadAgent } = await import("./agents").then((m) =>
-                  m.getAgents()
-                );
-                if (loadAgent) {
-                  const result = await loadAgent.loadQuestion(
-                    conflictData.serverQuestion.id
-                  );
-                  if (result.success) {
-                    handleUpdateQuestion(result.question.id, result.question);
-                    showMessage(
-                      "✓ Reloaded latest version",
-                      TOAST_DURATION.MEDIUM
-                    );
-                  }
-                }
-              } else if (action === "OVERWRITE") {
-                // Force save local changes
-                const { saveGuardAgent } = await import("./agents").then((m) =>
-                  m.getAgents()
-                );
-                if (saveGuardAgent) {
-                  await saveGuardAgent.saveQuestion(
-                    conflictData.serverQuestion.id,
-                    conflictData.localChanges,
-                    conflictData.serverVersion, // Use server version to force overwrite
-                    user?.uid || "unknown",
-                    user?.email || "unknown@example.com"
-                  );
-                  showMessage("✓ Overwrote server changes", 2000);
-                }
-              }
-              setShowConflictModal(false);
-            }}
+            onResolve={handleResolveConflict}
           />
         )}
 
