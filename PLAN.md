@@ -235,11 +235,20 @@ export function useFiltering(params) {
 
 ---
 
-#### 1.3 Standardize Error Handling Pattern
+#### 1.3 Standardize Error Handling Pattern ⏳ IN PROGRESS
 
 **Problem:** 19+ catch blocks with `(e)` only, inconsistent handling
 
-**Create `AppError` Class:**
+**Migration Status:**
+
+- ✅ `cloudFunctions.js` - 5 catch blocks migrated
+- ✅ `firebase.js` - 1 catch block migrated  
+- ✅ `firebaseSave.js` - 3 catch blocks migrated (already done)
+- ✅ `gemini.js` - 2 catch blocks migrated (already done)
+- ✅ `useExport.js` - 4 catch blocks migrated (already done)
+- ⏳ Remaining utility files (lower priority)
+
+**Create `AppError` Class:** ✅ EXISTS
 
 ```javascript
 // src/utils/AppError.js (NEW)
