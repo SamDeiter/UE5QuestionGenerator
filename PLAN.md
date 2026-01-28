@@ -246,6 +246,9 @@ export function useFiltering(params) {
 - ✅ `firebaseSave.js` - 3 catch blocks migrated (already done)
 - ✅ `gemini.js` - 2 catch blocks migrated (already done)
 - ✅ `useExport.js` - 4 catch blocks migrated (already done)
+- ✅ `useQuestionGenerator.js` - 1 catch block migrated
+- ✅ `useQuestionTranslation.js` - 3 catch blocks migrated
+- ✅ `useQuestionCritique.js` - 2 catch blocks migrated
 - ⏳ Remaining utility files (lower priority)
 
 **Create `AppError` Class:** ✅ EXISTS

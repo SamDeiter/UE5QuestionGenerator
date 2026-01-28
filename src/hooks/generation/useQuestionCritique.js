@@ -5,6 +5,7 @@ import {
 } from "../../services/geminiSecure";
 import { TOAST_DURATION } from "../../utils/constants";
 import { logger } from "../../utils/logger";
+import { logError } from "../../utils/AppError";
 
 /**
  * Hook for handling question critique and feedback loop logic.
@@ -29,7 +30,7 @@ export const useQuestionCritique = ({
         logger.error("[Critique] Question object is undefined or null");
         showMessage(
           "Critique failed: Invalid question data",
-          TOAST_DURATION.LONG,
+          TOAST_DURATION.LONG
         );
         return;
       }
@@ -37,11 +38,11 @@ export const useQuestionCritique = ({
       if (!q.question) {
         logger.error(
           "[Critique] Question object missing 'question' property:",
-          q,
+          q
         );
         showMessage(
           "Critique failed: Question text is missing",
-          TOAST_DURATION.LONG,
+          TOAST_DURATION.LONG
         );
         return;
       }
@@ -49,11 +50,11 @@ export const useQuestionCritique = ({
       if (!q.options || typeof q.options !== "object") {
         logger.error(
           "[Critique] Question object missing 'options' property:",
-          q,
+          q
         );
         showMessage(
           "Critique failed: Question options are missing",
-          TOAST_DURATION.LONG,
+          TOAST_DURATION.LONG
         );
         return;
       }
@@ -61,11 +62,11 @@ export const useQuestionCritique = ({
       if (!q.correct) {
         logger.error(
           "[Critique] Question object missing 'correct' property:",
-          q,
+          q
         );
         showMessage(
           "Critique failed: Correct answer is missing",
-          TOAST_DURATION.LONG,
+          TOAST_DURATION.LONG
         );
         return;
       }
@@ -73,7 +74,7 @@ export const useQuestionCritique = ({
       if (!isApiReady) {
         showMessage(
           "API key is required for critique. Please enter it in the settings panel.",
-          TOAST_DURATION.LONG,
+          TOAST_DURATION.LONG
         );
         return;
       }
@@ -107,7 +108,7 @@ export const useQuestionCritique = ({
 
             const newTags = await generateTagsSecure(
               effectiveApiKey,
-              questionForTags,
+              questionForTags
             );
             if (newTags && newTags.length > 0) {
               suggestedTags = [
@@ -118,7 +119,10 @@ export const useQuestionCritique = ({
               ].slice(0, 5);
             }
           } catch (error) {
-            logger.error("Tag generation failed during critique:", error);
+            logError(error, {
+              operation: "generateTagsDuringCritique",
+              questionId: q?.id,
+            });
           }
         }
         // Normalize changes to array format
@@ -149,7 +153,7 @@ export const useQuestionCritique = ({
               // Log if AI tried to change the answer (for debugging)
               if (rewrite.correct && rewrite.correct !== q.correct) {
                 logger.warn(
-                  `[Critique] AI attempted to change correct answer from "${q.correct}" to "${rewrite.correct}" - PRESERVED ORIGINAL`,
+                  `[Critique] AI attempted to change correct answer from "${q.correct}" to "${rewrite.correct}" - PRESERVED ORIGINAL`
                 );
               }
 
@@ -224,30 +228,30 @@ export const useQuestionCritique = ({
           };
 
           logger.log(
-            `[Critique] Saving to Firestore via saveQuestionToFirestore: ${q.id}`,
+            `[Critique] Saving to Firestore via saveQuestionToFirestore: ${q.id}`
           );
           await saveQuestionToFirestore(updatedQuestion);
           logger.log(
-            `[Critique] Saved critique fields for ${q.id} including ${suggestedTags.length} tags`,
+            `[Critique] Saved critique fields for ${q.id} including ${suggestedTags.length} tags`
           );
         } catch (saveError) {
           logger.error(
             "[Critique] Failed to save critique results to Firestore:",
-            saveError,
+            saveError
           );
           // Don't fail silently - notify user
           showMessage(
             "⚠️ Critique saved locally but failed to sync to database",
-            TOAST_DURATION.LONG,
+            TOAST_DURATION.LONG
           );
         }
 
         showMessage(
           `Critique Ready! Score: ${score}/100`,
-          TOAST_DURATION.MEDIUM,
+          TOAST_DURATION.MEDIUM
         );
       } catch (e) {
-        logger.error("Critique failed:", e);
+        logError(e, { operation: "handleCritique", questionId: q?.id });
         setStatus("Fail");
         showMessage(`Critique Failed: ${e.message}`, TOAST_DURATION.LONG);
       } finally {
@@ -262,7 +266,7 @@ export const useQuestionCritique = ({
       updateAllVariantsInState,
       setStatus,
       setIsProcessing,
-    ],
+    ]
   );
 
   /**
@@ -312,11 +316,11 @@ export const useQuestionCritique = ({
       updateQuestionInState(q.id, () => updatedQ);
       showMessage(
         "✓ AI rewrite applied! Click Critique to compare versions.",
-        TOAST_DURATION.SHORT,
+        TOAST_DURATION.SHORT
       );
       // NOTE: No auto re-critique - reviewer can proceed with verification
     },
-    [updateQuestionInState, showMessage],
+    [updateQuestionInState, showMessage]
   );
 
   /**
@@ -349,7 +353,7 @@ export const useQuestionCritique = ({
       updateQuestionInState(q.id, () => updatedQ);
       showMessage("✓ Reverted to original version", TOAST_DURATION.SHORT);
     },
-    [updateQuestionInState, showMessage],
+    [updateQuestionInState, showMessage]
   );
 
   /**
@@ -379,7 +383,7 @@ export const useQuestionCritique = ({
       updateQuestionInState(q.id, () => updatedQ);
       showMessage("✓ AI rewrite applied", TOAST_DURATION.SHORT);
     },
-    [updateQuestionInState, showMessage],
+    [updateQuestionInState, showMessage]
   );
 
   return {
