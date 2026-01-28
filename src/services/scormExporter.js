@@ -1,7 +1,26 @@
 import JSZip from "jszip";
-import { logger } from "../utils/logger";
+import logger from "../utils/logger";
 import { SCORM_DEFAULTS, QUESTION_LIMITS } from "../utils/constants";
 import normalizeQuestion from "../utils/normalizeQuestion";
+
+const SECONDS_IN_MINUTE = 60;
+const JSON_INDENTATION = 2;
+
+/**
+ * Escape XML special characters
+ * @param {string} unsafe - String with potentially unsafe characters
+ * @returns {string} XML-safe string
+ */
+const escapeXml = (unsafe) => {
+  if (!unsafe) return "";
+  return unsafe
+    .toString()
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+};
 
 /**
  * SCORM 1.2 Exporter Service
@@ -74,30 +93,26 @@ export async function generateScormPackageFiles(questions, config = {}) {
     fetch(`${templatePath}imsmanifest.xml`).then((r) => r.text()),
   ]);
 
-  // Replace template variables in manifest
+  // Replace template variables
   const processedManifest = manifest
-    .replace(/UE5 Scenario Tracker/g, title)
-    .replace(
-      /com\.example\.ue5scenario\.scorm12/g,
-      `com.ue5questiongen.${Date.now()}`,
-    );
+    .replace(/{{TITLE}}/g, escapeXml(title))
+    .replace(/{{ID}}/g, `com.ue5questiongen.${Date.now()}`);
 
-  // Replace template variables in index.html
-  const processedIndexHtml = indexHtml.replace(/UE5 Scenario Tracker/g, title);
+  const processedIndexHtml = indexHtml.replace(/{{TITLE}}/g, escapeXml(title));
 
   // Create questions.js file with our questions
   const questionsJs = `// Generated questions for SCORM package
 // Generated: ${new Date().toISOString()}
 
 window.QUIZ_CONFIG = {
-  title: "${title}",
-  description: "${description}",
+  title: ${JSON.stringify(title)},
+  description: ${JSON.stringify(description)},
   passingScore: ${passingScore},
-  timeLimit: ${timeLimit * 60}, // Convert minutes to seconds
+  timeLimit: ${timeLimit * SECONDS_IN_MINUTE}, // Convert minutes to seconds
   totalQuestions: ${scormQuestions.length}
 };
 
-window.QUESTIONS = ${JSON.stringify(scormQuestions, null, 2)};
+window.QUESTIONS = ${JSON.stringify(scormQuestions, null, JSON_INDENTATION)};
 `;
 
   return {
