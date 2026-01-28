@@ -321,7 +321,8 @@ export function logError(error, additionalContext = {}) {
 
 - ✅ Created `src/hooks/useQuestionHandlers.js` - verification handlers extracted
 - ✅ Created `src/utils/questionItemHelpers.js` - lock/status/difficulty style helpers
-- ⏳ Integration into QuestionItem.jsx pending (utilities ready, not yet wired)
+- ✅ Integrated style helpers into QuestionItem.jsx (747 → 678 lines, ~9% reduction)
+- ⏳ Remaining: Wire up verification handlers from useQuestionHandlers.js
 
 ```
 src/components/
