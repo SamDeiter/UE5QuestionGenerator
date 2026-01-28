@@ -156,7 +156,7 @@ Each stage is **independently shippable** and must pass all existing tests.
 
 ---
 
-#### 1.1 Create Document Parser for Questions
+#### 1.1 Create Document Parser for Questions ✅ COMPLETE
 
 **Problem:** `normalizeQuestion.js` conflates parsing, validation, and normalization.
 
@@ -204,7 +204,7 @@ export function normalizeQuestion(parsed, contextDefaults = {}) {
 
 ---
 
-#### 1.2 Extract `useFiltering` Sub-Hooks
+#### 1.2 Extract `useFiltering` Sub-Hooks ✅ COMPLETE
 
 **Problem:** 558 lines, 14 state variables, 6 useEffect hooks
 
