@@ -105,7 +105,7 @@ describe("SCORM Exporter Service", () => {
       expect(result.choices).toHaveLength(2);
       expect(result.choices.find((c) => c.text === "True").correct).toBe(true);
       expect(result.choices.find((c) => c.text === "False").correct).toBe(
-        false,
+        false
       );
     });
 
@@ -240,6 +240,7 @@ describe("SCORM Exporter Service", () => {
     beforeEach(() => {
       global.fetch = fetchMock;
       fetchMock.mockResolvedValue({
+        ok: true,
         text: () => Promise.resolve("TEMPLATE_CONTENT"),
       });
     });
@@ -257,16 +258,16 @@ describe("SCORM Exporter Service", () => {
 
       const files = await generateScormPackageFiles(
         [firestoreQuestion],
-        config,
+        config
       );
 
       expect(files["questions.js"]).toContain(
-        'title: "UE5 Rendering Assessment"',
+        'title: "UE5 Rendering Assessment"'
       );
       expect(files["questions.js"]).toContain("passingScore: 80");
       expect(files["questions.js"]).toContain("timeLimit: 3600"); // 60 * 60
       expect(files["questions.js"]).toContain(
-        '"text": "What is Nanite in Unreal Engine 5?"',
+        '"text": "What is Nanite in Unreal Engine 5?"'
       );
     });
 
@@ -276,19 +277,19 @@ describe("SCORM Exporter Service", () => {
 
       expect(fetchMock).toHaveBeenCalledTimes(5);
       expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining("scorm.js"),
+        expect.stringContaining("scorm.js")
       );
       expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining("index.html"),
+        expect.stringContaining("index.html")
       );
       expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining("style.css"),
+        expect.stringContaining("style.css")
       );
       expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining("game.js"),
+        expect.stringContaining("game.js")
       );
       expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining("imsmanifest.xml"),
+        expect.stringContaining("imsmanifest.xml")
       );
     });
 
@@ -307,11 +308,12 @@ describe("SCORM Exporter Service", () => {
       fetchMock.mockImplementation((url) => {
         if (url.includes("imsmanifest.xml")) {
           return Promise.resolve({
+            ok: true,
             text: () =>
               Promise.resolve("<title>{{TITLE}}</title><id>{{ID}}</id>"),
           });
         }
-        return Promise.resolve({ text: () => Promise.resolve("") });
+        return Promise.resolve({ ok: true, text: () => Promise.resolve("") });
       });
 
       const files = await generateScormPackageFiles([firestoreQuestion], {
@@ -319,7 +321,7 @@ describe("SCORM Exporter Service", () => {
       });
 
       expect(files["imsmanifest.xml"]).toContain(
-        "<title>My Custom Quiz</title>",
+        "<title>My Custom Quiz</title>"
       );
       expect(files["imsmanifest.xml"]).toContain("com.ue5questiongen");
     });
