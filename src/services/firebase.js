@@ -55,6 +55,7 @@ export {
   getQueueDetails,
   getQueuedQuestionIds,
   triggerManualSync,
+  clearOfflineQueue,
   subscribeToConnectionStatus,
   saveQuestionToFirestore,
   batchSaveQuestions,
