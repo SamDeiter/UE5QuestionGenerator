@@ -204,6 +204,15 @@ service cloud.firestore {
     }
     
     // ============================================================
+    // RATE LIMITS (Counter-based rate limiting - Server Only)
+    // ============================================================
+    
+    match /rateLimits/{docId} {
+      // Cloud Functions only - clients cannot access counter docs
+      allow read, write: if false;
+    }
+    
+    // ============================================================
     // DENY ALL OTHER ACCESS
     // ============================================================
     

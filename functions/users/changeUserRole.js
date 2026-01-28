@@ -25,7 +25,7 @@ exports.generateQuestions = functions
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "User must be authenticated to generate questions."
+        "User must be authenticated to generate questions.",
       );
     }
     // ... (start of function body remains)
@@ -42,7 +42,7 @@ exports.generateQuestions = functions
     if (!systemPrompt || !userPrompt) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "systemPrompt and userPrompt are required."
+        "systemPrompt and userPrompt are required.",
       );
     }
 
@@ -51,7 +51,7 @@ exports.generateQuestions = functions
     if (!rateLimitCheck.allowed) {
       throw new functions.https.HttpsError(
         "resource-exhausted",
-        `Rate limit exceeded. ${rateLimitCheck.message}`
+        `Rate limit exceeded. ${rateLimitCheck.message}`,
       );
     }
 
@@ -69,7 +69,7 @@ exports.generateQuestions = functions
         console.error("[ERROR] GEMINI_API_KEY secret is not set.");
         throw new functions.https.HttpsError(
           "failed-precondition",
-          "Server configuration error: API Key missing."
+          "Server configuration error: API Key missing.",
         );
       }
 
@@ -81,7 +81,7 @@ exports.generateQuestions = functions
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
       console.log(
         "[DEBUG] Calling Gemini API (SKIPPED FOR DEBUGGING) with model:",
-        model
+        model,
       );
 
       const payload = {
@@ -110,10 +110,10 @@ exports.generateQuestions = functions
         const errorText = await response.text();
         console.error(
           `[ERROR] Gemini API failed: ${response.status} ${response.statusText}`,
-          errorText
+          errorText,
         );
         throw new Error(
-          `Gemini API error: ${response.status} ${response.statusText}`
+          `Gemini API error: ${response.status} ${response.statusText}`,
         );
       }
 
@@ -125,7 +125,7 @@ exports.generateQuestions = functions
       if (!generatedText) {
         console.error(
           "[ERROR] No content in Gemini response:",
-          JSON.stringify(responseData)
+          JSON.stringify(responseData),
         );
         throw new Error("No content generated from Gemini");
       }
@@ -145,7 +145,7 @@ exports.generateQuestions = functions
       console.error("[ERROR] Error details:", JSON.stringify(error, null, 2));
       throw new functions.https.HttpsError(
         "internal",
-        `Failed to generate questions: ${error.message}`
+        `Failed to generate questions: ${error.message}`,
       );
     }
   });
@@ -165,7 +165,7 @@ exports.generateCritique = functions
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "User must be authenticated."
+        "User must be authenticated.",
       );
     }
 
@@ -183,7 +183,7 @@ exports.generateCritique = functions
     if (!question || !options || !correct) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "question, options, and correct are required."
+        "question, options, and correct are required.",
       );
     }
 
@@ -192,7 +192,7 @@ exports.generateCritique = functions
     if (!rateLimitCheck.allowed) {
       throw new functions.https.HttpsError(
         "resource-exhausted",
-        `Rate limit exceeded. ${rateLimitCheck.message}`
+        `Rate limit exceeded. ${rateLimitCheck.message}`,
       );
     }
 
@@ -210,7 +210,7 @@ exports.generateCritique = functions
       if (!apiKey) {
         throw new functions.https.HttpsError(
           "failed-precondition",
-          "Gemini API key not configured."
+          "Gemini API key not configured.",
         );
       }
 
@@ -353,7 +353,7 @@ exports.generateCritique = functions
           /"score"\s{0,3}:\s{0,3}(\d+)/i, // "score": 75
           /\bscore\s{0,3}[:=]\s{0,3}(\d+)/i, // score: 75, score = 75
           /(\d{1,3})\/100/i, // 75/100
-           
+
           /^(\d{1,3})(?!\d)/m, // Just a number at start of line (0-999)
         ];
 
@@ -396,7 +396,7 @@ exports.generateCritique = functions
       console.error("Error in generateCritique:", error);
       throw new functions.https.HttpsError(
         "internal",
-        `Failed to generate critique: ${error.message}`
+        `Failed to generate critique: ${error.message}`,
       );
     }
   });
@@ -495,7 +495,7 @@ exports.validateInvite = functions
     if (!code || typeof code !== "string") {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Invite code is required"
+        "Invite code is required",
       );
     }
 
@@ -508,7 +508,7 @@ exports.validateInvite = functions
     if (sanitizedCode.length < 8) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Invalid invite code format"
+        "Invalid invite code format",
       );
     }
 
@@ -538,11 +538,11 @@ exports.validateInvite = functions
             rateData.lockedUntil.toDate() > new Date()
           ) {
             const remainingMins = Math.ceil(
-              (rateData.lockedUntil.toDate() - new Date()) / 60000
+              (rateData.lockedUntil.toDate() - new Date()) / 60000,
             );
             throw new functions.https.HttpsError(
               "resource-exhausted",
-              `Too many failed attempts. Try again in ${remainingMins} minutes.`
+              `Too many failed attempts. Try again in ${remainingMins} minutes.`,
             );
           }
 
@@ -551,12 +551,12 @@ exports.validateInvite = functions
             // Lock for 1 hour
             await rateLimitRef.update({
               lockedUntil: admin.firestore.Timestamp.fromDate(
-                new Date(Date.now() + 60 * 60 * 1000)
+                new Date(Date.now() + 60 * 60 * 1000),
               ),
             });
             throw new functions.https.HttpsError(
               "resource-exhausted",
-              "Too many failed attempts. Locked for 1 hour."
+              "Too many failed attempts. Locked for 1 hour.",
             );
           }
         }
@@ -573,11 +573,11 @@ exports.validateInvite = functions
             attempts: admin.firestore.FieldValue.increment(1),
             lastAttempt: admin.firestore.Timestamp.now(),
           },
-          { merge: true }
+          { merge: true },
         );
         throw new functions.https.HttpsError(
           "not-found",
-          "Invalid invite code"
+          "Invalid invite code",
         );
       }
 
@@ -587,7 +587,7 @@ exports.validateInvite = functions
       if (!invite.isActive) {
         throw new functions.https.HttpsError(
           "failed-precondition",
-          "This invite has been revoked"
+          "This invite has been revoked",
         );
       }
 
@@ -595,7 +595,7 @@ exports.validateInvite = functions
       if (invite.expiresAt && invite.expiresAt.toDate() < new Date()) {
         throw new functions.https.HttpsError(
           "failed-precondition",
-          "This invite has expired"
+          "This invite has expired",
         );
       }
 
@@ -603,7 +603,7 @@ exports.validateInvite = functions
       if (invite.maxUses !== -1 && invite.currentUses >= invite.maxUses) {
         throw new functions.https.HttpsError(
           "failed-precondition",
-          "This invite has reached its usage limit"
+          "This invite has reached its usage limit",
         );
       }
 
@@ -628,7 +628,7 @@ exports.validateInvite = functions
       console.error("Error validating invite:", error);
       throw new functions.https.HttpsError(
         "internal",
-        "Failed to validate invite"
+        "Failed to validate invite",
       );
     }
   });
@@ -645,7 +645,7 @@ exports.consumeInvite = functions
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "Must be signed in to use invite"
+        "Must be signed in to use invite",
       );
     }
 
@@ -663,7 +663,7 @@ exports.consumeInvite = functions
     if (!sanitizedCode) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Invite code is required"
+        "Invite code is required",
       );
     }
 
@@ -674,7 +674,7 @@ exports.consumeInvite = functions
       if (!inviteDoc.exists) {
         throw new functions.https.HttpsError(
           "not-found",
-          "Invalid invite code"
+          "Invalid invite code",
         );
       }
 
@@ -682,7 +682,7 @@ exports.consumeInvite = functions
 
       // Check if already used by this user
       const alreadyUsed = invite.usedBy?.some(
-        (u) => u.email === userEmail || u.uid === userId
+        (u) => u.email === userEmail || u.uid === userId,
       );
       if (alreadyUsed) {
         return { success: true, alreadyUsed: true, role: invite.role };
@@ -696,7 +696,7 @@ exports.consumeInvite = functions
         if (normalizedUserEmail !== normalizedInviteEmail) {
           throw new functions.https.HttpsError(
             "permission-denied",
-            `This invite is for ${invite.forEmail} only. You are signed in as ${userEmail}.`
+            `This invite is for ${invite.forEmail} only. You are signed in as ${userEmail}.`,
           );
         }
       }
@@ -705,19 +705,19 @@ exports.consumeInvite = functions
       if (!invite.isActive) {
         throw new functions.https.HttpsError(
           "failed-precondition",
-          "Invite has been revoked"
+          "Invite has been revoked",
         );
       }
       if (invite.expiresAt && invite.expiresAt.toDate() < new Date()) {
         throw new functions.https.HttpsError(
           "failed-precondition",
-          "Invite has expired"
+          "Invite has expired",
         );
       }
       if (invite.maxUses !== -1 && invite.currentUses >= invite.maxUses) {
         throw new functions.https.HttpsError(
           "failed-precondition",
-          "Invite limit reached"
+          "Invite limit reached",
         );
       }
 
@@ -743,7 +743,7 @@ exports.consumeInvite = functions
             role: invite.role || "reviewer",
             registeredAt: admin.firestore.Timestamp.now(),
           },
-          { merge: true }
+          { merge: true },
         );
 
       console.log(`Invite ${sanitizedCode} consumed by ${userEmail}`);
@@ -756,7 +756,7 @@ exports.consumeInvite = functions
       console.error("Error consuming invite:", error);
       throw new functions.https.HttpsError(
         "internal",
-        "Failed to consume invite"
+        "Failed to consume invite",
       );
     }
   });
@@ -773,7 +773,7 @@ exports.createInvite = functions
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "Must be signed in"
+        "Must be signed in",
       );
     }
 
@@ -781,7 +781,7 @@ exports.createInvite = functions
     if (!isAdmin) {
       throw new functions.https.HttpsError(
         "permission-denied",
-        "Admin access required"
+        "Admin access required",
       );
     }
 
@@ -803,7 +803,7 @@ exports.createInvite = functions
         if (!emailRegex.test(forEmail)) {
           throw new functions.https.HttpsError(
             "invalid-argument",
-            "Invalid email address format"
+            "Invalid email address format",
           );
         }
         sanitizedEmail = forEmail.toLowerCase().trim();
@@ -820,7 +820,7 @@ exports.createInvite = functions
       // Calculate expiration (max 30 days)
       const expiresAt = new Date();
       expiresAt.setDate(
-        expiresAt.getDate() + Math.min(Math.max(expiresInDays, 1), 30)
+        expiresAt.getDate() + Math.min(Math.max(expiresInDays, 1), 30),
       );
 
       const inviteData = {
@@ -843,7 +843,7 @@ exports.createInvite = functions
       console.log(
         `Invite ${code} created by ${context.auth.token.email}${
           sanitizedEmail ? ` for ${sanitizedEmail}` : ""
-        }`
+        }`,
       );
 
       // Build invite URL with optional email parameter
@@ -867,7 +867,7 @@ exports.createInvite = functions
       console.error("Error creating invite:", error);
       throw new functions.https.HttpsError(
         "internal",
-        "Failed to create invite"
+        "Failed to create invite",
       );
     }
   });
@@ -883,7 +883,7 @@ exports.revokeInvite = functions
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "Must be signed in"
+        "Must be signed in",
       );
     }
 
@@ -891,7 +891,7 @@ exports.revokeInvite = functions
     if (!isAdmin) {
       throw new functions.https.HttpsError(
         "permission-denied",
-        "Admin access required"
+        "Admin access required",
       );
     }
 
@@ -906,7 +906,7 @@ exports.revokeInvite = functions
     if (!sanitizedCode) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Invite code is required"
+        "Invite code is required",
       );
     }
 
@@ -925,7 +925,7 @@ exports.revokeInvite = functions
       });
 
       console.log(
-        `Invite ${sanitizedCode} revoked by ${context.auth.token.email}`
+        `Invite ${sanitizedCode} revoked by ${context.auth.token.email}`,
       );
 
       return { success: true };
@@ -936,7 +936,7 @@ exports.revokeInvite = functions
       console.error("Error revoking invite:", error);
       throw new functions.https.HttpsError(
         "internal",
-        "Failed to revoke invite"
+        "Failed to revoke invite",
       );
     }
   });
@@ -992,7 +992,7 @@ exports.setupInitialAdmin = functions
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "Must be signed in"
+        "Must be signed in",
       );
     }
 
@@ -1009,7 +1009,7 @@ exports.setupInitialAdmin = functions
     if (!ALLOWED_INITIAL_ADMINS.includes(userEmail.toLowerCase())) {
       throw new functions.https.HttpsError(
         "permission-denied",
-        "Not authorized for initial admin setup"
+        "Not authorized for initial admin setup",
       );
     }
 
@@ -1031,7 +1031,7 @@ exports.setupInitialAdmin = functions
           registeredAt: admin.firestore.Timestamp.now(),
           inviteCode: "INITIAL_ADMIN_SETUP",
         },
-        { merge: true }
+        { merge: true },
       );
 
       console.log(`Initial admin setup complete for ${userEmail}`);
@@ -1058,7 +1058,7 @@ exports.importAIScores = functions
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "Must be signed in"
+        "Must be signed in",
       );
     }
 
@@ -1066,7 +1066,7 @@ exports.importAIScores = functions
     if (!isAdmin) {
       throw new functions.https.HttpsError(
         "permission-denied",
-        "Admin access required to import scores"
+        "Admin access required to import scores",
       );
     }
 
@@ -1075,7 +1075,7 @@ exports.importAIScores = functions
     if (!scores || !Array.isArray(scores)) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Scores must be an array"
+        "Scores must be an array",
       );
     }
 
@@ -1125,8 +1125,8 @@ exports.importAIScores = functions
         await batchOp.commit();
         console.log(
           `Imported batch ${Math.floor(i / 500) + 1}/${Math.ceil(
-            scores.length / 500
-          )}`
+            scores.length / 500,
+          )}`,
         );
       }
 
@@ -1141,7 +1141,7 @@ exports.importAIScores = functions
       console.error("Error importing scores:", error);
       throw new functions.https.HttpsError(
         "internal",
-        `Failed to import scores: ${error.message}`
+        `Failed to import scores: ${error.message}`,
       );
     }
   });
@@ -1161,7 +1161,7 @@ exports.listRegisteredUsers = functions
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "Must be signed in"
+        "Must be signed in",
       );
     }
 
@@ -1169,7 +1169,7 @@ exports.listRegisteredUsers = functions
     if (!isAdmin) {
       throw new functions.https.HttpsError(
         "permission-denied",
-        "Admin access required"
+        "Admin access required",
       );
     }
 
@@ -1209,7 +1209,7 @@ exports.listInvites = functions
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "Must be signed in"
+        "Must be signed in",
       );
     }
 
@@ -1217,7 +1217,7 @@ exports.listInvites = functions
     if (!isAdmin) {
       throw new functions.https.HttpsError(
         "permission-denied",
-        "Admin access required"
+        "Admin access required",
       );
     }
 
@@ -1254,7 +1254,7 @@ exports.listInvites = functions
       console.error("Error listing invites:", error);
       throw new functions.https.HttpsError(
         "internal",
-        "Failed to list invites"
+        "Failed to list invites",
       );
     }
   });
@@ -1271,7 +1271,7 @@ exports.changeUserRole = functions
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "Must be signed in"
+        "Must be signed in",
       );
     }
 
@@ -1279,7 +1279,7 @@ exports.changeUserRole = functions
     if (!isAdmin) {
       throw new functions.https.HttpsError(
         "permission-denied",
-        "Admin access required"
+        "Admin access required",
       );
     }
 
@@ -1287,7 +1287,7 @@ exports.changeUserRole = functions
     if (!userId || !role) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "User ID and Role are required"
+        "User ID and Role are required",
       );
     }
 
@@ -1299,7 +1299,7 @@ exports.changeUserRole = functions
     if (userId === context.auth.uid) {
       throw new functions.https.HttpsError(
         "failed-precondition",
-        "Cannot change your own role"
+        "Cannot change your own role",
       );
     }
 
@@ -1313,6 +1313,15 @@ exports.changeUserRole = functions
         updatedBy: context.auth.uid,
       });
 
+      // Sync custom claims for fast role checks in security rules
+      try {
+        await admin.auth().setCustomUserClaims(userId, { role });
+        console.log(`✅ Custom claims synced for user ${userId}: role=${role}`);
+      } catch (claimsError) {
+        console.error("Failed to sync custom claims:", claimsError);
+        // Continue - Firestore is the source of truth
+      }
+
       // Update admins collection
       if (role === "admin") {
         await db.collection("admins").doc(userId).set(
@@ -1322,7 +1331,7 @@ exports.changeUserRole = functions
             promotedAt: admin.firestore.FieldValue.serverTimestamp(),
             promotedBy: context.auth.uid,
           },
-          { merge: true }
+          { merge: true },
         );
       } else {
         // Demote
@@ -1330,7 +1339,7 @@ exports.changeUserRole = functions
       }
 
       console.log(
-        `User ${userId} role changed to ${role} by ${context.auth.uid}`
+        `User ${userId} role changed to ${role} by ${context.auth.uid}`,
       );
 
       return { success: true };
@@ -1338,7 +1347,7 @@ exports.changeUserRole = functions
       console.error("Error changing user role:", error);
       throw new functions.https.HttpsError(
         "internal",
-        "Failed to change user role"
+        "Failed to change user role",
       );
     }
   });

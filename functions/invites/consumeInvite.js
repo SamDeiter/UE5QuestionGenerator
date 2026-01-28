@@ -137,6 +137,22 @@ exports.consumeInvite = functions
         };
       });
 
+      // Sync custom claims for fast role checks in security rules
+      if (result.success && !result.alreadyUsed) {
+        try {
+          await admin.auth().setCustomUserClaims(userId, {
+            role: result.role,
+            tools: result.tools,
+          });
+          console.log(
+            `✅ Custom claims set for user ${userId}: role=${result.role}`,
+          );
+        } catch (claimsError) {
+          // Log but don't fail - claims can be synced later
+          console.error("Failed to set custom claims:", claimsError);
+        }
+      }
+
       // 8. AUDIT LOG (outside transaction - non-critical)
       if (result.success && !result.alreadyUsed) {
         try {
