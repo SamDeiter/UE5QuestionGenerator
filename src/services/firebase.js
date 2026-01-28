@@ -8,7 +8,7 @@
  * - firebaseSave.js: Save/write functions + offline queue
  */
 import { app, auth, firebaseConfig } from "./firebaseAuth";
-import { logger } from "../utils/logger";
+import { logError } from "../utils/AppError";
 
 // NOTE: Analytics disabled - requires additional Firebase Console configuration
 const analytics = null;
@@ -17,7 +17,10 @@ try {
     // analytics = getAnalytics(app); // Optimization: Keep disabled unless needed
   }
 } catch (e) {
-  logger.warn("Firebase Analytics not available:", e.message);
+  logError(e, {
+    operation: "initializeAnalytics",
+    measurementId: firebaseConfig.measurementId,
+  });
 }
 
 export { app, analytics, auth };

@@ -8,6 +8,7 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { app, auth } from "./firebase";
 import { refreshAuthToken, isAuthPotentiallyStale } from "./firebaseAuth";
 import { logger } from "../utils/logger";
+import { logError } from "../utils/AppError";
 
 /**
  * Ensures auth token is fresh before making Cloud Function calls
@@ -29,7 +30,7 @@ const ensureFreshToken = async () => {
         await auth.currentUser.getIdToken(true);
         logger.log("[CloudFunctions] Hard token refresh succeeded");
       } catch (e) {
-        logger.error("[CloudFunctions] Hard token refresh failed:", e.message);
+        logError(e, { operation: "hardTokenRefresh" });
         throw new Error("Session expired. Please sign in again.");
       }
     }
@@ -53,7 +54,7 @@ export const generateContentViaCloudFunction = async (
   userPrompt,
   setStatus = () => {},
   temperature = 0.2,
-  model = "gemini-2.0-flash",
+  model = "gemini-2.0-flash"
 ) => {
   try {
     // Ensure token is fresh before calling Cloud Function
@@ -87,7 +88,7 @@ export const generateContentViaCloudFunction = async (
 
     return result.data.textResponse;
   } catch (error) {
-    logger.error("Cloud Function error:", error);
+    logError(error, { operation: "generateContentViaCloudFunction", model });
     setStatus(`Error: ${error.message}`);
     throw error;
   }
@@ -100,27 +101,27 @@ export const generateContentViaCloudFunction = async (
  */
 export const generateCritiqueViaCloudFunction = async (
   question,
-  model = "gemini-1.5-flash",
+  model = "gemini-1.5-flash"
 ) => {
   try {
     // Defensive validation - catch malformed data before Cloud Function call
     if (!question || typeof question !== "object") {
       throw new Error(
-        "Invalid question object: received undefined or non-object",
+        "Invalid question object: received undefined or non-object"
       );
     }
 
     if (!question.question) {
       throw new Error(
         `Invalid question: missing 'question' text property. Keys present: ${Object.keys(
-          question,
-        ).join(", ")}`,
+          question
+        ).join(", ")}`
       );
     }
 
     if (!question.options || typeof question.options !== "object") {
       throw new Error(
-        "Invalid question: missing or invalid 'options' property",
+        "Invalid question: missing or invalid 'options' property"
       );
     }
 
@@ -148,12 +149,12 @@ export const generateCritiqueViaCloudFunction = async (
 
     logger.log(
       "[CloudFunction DEBUG] Raw result.data:",
-      JSON.stringify(result.data).substring(0, 200),
+      JSON.stringify(result.data).substring(0, 200)
     );
     logger.log("[CloudFunction DEBUG] Extracted score:", result.data.score);
     logger.log(
       "[CloudFunction DEBUG] Extracted improvedScore:",
-      result.data.improvedScore,
+      result.data.improvedScore
     );
 
     return {
@@ -164,7 +165,7 @@ export const generateCritiqueViaCloudFunction = async (
       changes: result.data.changes,
     };
   } catch (error) {
-    logger.error("Critique Cloud Function error:", error);
+    logError(error, { operation: "generateCritiqueViaCloudFunction", model });
     throw error;
   }
 };
@@ -201,7 +202,7 @@ export const migrateTranslationsViaCloudFunction = async () => {
       stats: result.data.stats,
     };
   } catch (error) {
-    logger.error("Migration Cloud Function error:", error);
+    logError(error, { operation: "migrateTranslationsViaCloudFunction" });
     throw error;
   }
 };
@@ -233,7 +234,10 @@ export const sendReviewerInvitesViaEmail = async (invites) => {
       total: result.data.total,
     };
   } catch (error) {
-    logger.error("SendReviewerInvites Cloud Function error:", error);
+    logError(error, {
+      operation: "sendReviewerInvitesViaEmail",
+      inviteCount: invites?.length,
+    });
     throw error;
   }
 };

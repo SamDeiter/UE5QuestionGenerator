@@ -174,26 +174,19 @@ document.addEventListener("DOMContentLoaded", () => {
       timeSpent: timeSpent,
     });
 
-    // Visual feedback
-    if (isCorrect) {
-      button.classList.add("bg-green-600", "border-green-500");
-    } else {
-      button.classList.add("bg-red-600", "border-red-500");
-      // Highlight correct answer
-      document.querySelectorAll(".choice-btn").forEach((btn) => {
-        if (btn.dataset.correct === "true") {
-          btn.classList.add("bg-green-600", "border-green-500");
-        }
-      });
-    }
+    // Testing mode: No visual feedback - just record and move on
+    // This prevents test-takers from learning answers during the test
 
-    // Disable all buttons
+    // Disable all buttons to prevent double-click
     document.querySelectorAll(".choice-btn").forEach((btn) => {
       btn.disabled = true;
-      btn.classList.add("cursor-not-allowed");
+      btn.classList.add("cursor-not-allowed", "opacity-50");
     });
 
-    // Move to next question after delay
+    // Show brief "Answer recorded" indicator
+    button.classList.add("bg-blue-600", "border-blue-500");
+
+    // Move to next question after brief delay (just long enough to show selection)
     setTimeout(() => {
       currentQuestionIndex++;
       if (currentQuestionIndex < questions.length) {
@@ -201,7 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         endQuiz("completed");
       }
-    }, 1500);
+    }, 500);
   }
 
   function calculateScore() {
