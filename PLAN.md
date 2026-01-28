@@ -340,30 +340,39 @@ src/utils/questionItemHelpers.js         # +76 lines (verification data builders
 
 ---
 
-#### 2.2 Decompose `ContextToolbar.jsx` (561 lines)
+#### 2.2 Decompose `ContextToolbar.jsx` (561 → 122 lines) ✅ COMPLETE
 
 **Problem:** Mode-specific branching for 6 app modes
 
-**Strategy:** Mode-specific toolbar components
+**Strategy:** Mode-specific toolbar components with component mapping
 
-```javascript
-// ContextToolbar.jsx (AFTER)
-const TOOLBAR_BY_MODE = {
-  [APP_MODES.CREATE]: CreateModeToolbar,
-  [APP_MODES.REVIEW]: ReviewModeToolbar,
-  [APP_MODES.DATABASE]: DatabaseModeToolbar,
-  [APP_MODES.TRANSLATE]: TranslateModeToolbar,
-  // ...
-};
+**Accomplishments:**
 
-export function ContextToolbar({ mode, ...props }) {
-  const ToolbarComponent = TOOLBAR_BY_MODE[mode] || DefaultToolbar;
-  return <ToolbarComponent {...props} />;
-}
+- ✅ Created `src/components/ContextToolbar/` directory structure
+- ✅ Extracted `CreateModeToolbar.jsx` (117 lines)
+- ✅ Extracted `ReviewModeToolbar.jsx` (253 lines) - largest toolbar
+- ✅ Extracted `DatabaseModeToolbar.jsx` (103 lines)
+- ✅ Extracted `TranslateModeToolbar.jsx` (30 lines)
+- ✅ Created `MinimalToolbars.jsx` for Analytics/Test/Admin/Playground
+- ✅ Created `SharedToolbarComponents.jsx` (SearchInput, ToolbarDivider, etc.)
+- ✅ Main `index.jsx` is now 122 lines (78% reduction)
+- ✅ Uses component mapping instead of conditional chains
+
+**Files Structure:**
+
+```
+src/components/ContextToolbar/
+├── index.jsx                    # Main orchestrator (122 lines)
+├── CreateModeToolbar.jsx        # Generate mode (117 lines)
+├── ReviewModeToolbar.jsx        # Review mode (253 lines)
+├── DatabaseModeToolbar.jsx      # Database mode (103 lines)
+├── TranslateModeToolbar.jsx     # Translate mode (30 lines)
+├── MinimalToolbars.jsx          # Empty toolbars (30 lines)
+└── SharedToolbarComponents.jsx  # Reusable components (130 lines)
 ```
 
-**Invariant:** Same rendered output per mode  
-**Test:** Visual regression per mode
+**Invariant:** Same rendered output per mode ✅
+**Test:** All 920 tests passing ✅
 
 ---
 
