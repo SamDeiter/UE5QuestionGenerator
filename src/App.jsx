@@ -53,7 +53,9 @@ import { usePendingCount } from "./hooks/usePendingCount";
 import { useNavigationAfterLanguageSwitch } from "./hooks/useNavigationAfterLanguageSwitch";
 
 // Concurrent Editing Agents
-import { initializeAgents } from "./agents";
+import { initializeAgents, resetAgents } from "./agents";
+// AuthManager for centralized auth lifecycle
+import { authManager } from "./services/AuthManager";
 // Utilities
 import { TOAST_DURATION, APP_MODES, QUESTION_STATUS } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
@@ -141,6 +143,14 @@ const App = () => {
         }
       };
       initAgents();
+
+      // MEDIUM 14: Register agent cleanup on logout
+      const cleanupFn = authManager.registerCleanup(() => {
+        logger.log("🧹 Cleaning up agents on logout");
+        resetAgents();
+      });
+
+      return cleanupFn;
     }
   }, [user, authLoading]);
 
@@ -165,7 +175,7 @@ const App = () => {
   useEffect(() => {
     if (!user || authLoading) return;
 
-    // A6: Handler for auth refresh result - auto sign-out on blocked
+    // HIGH 7: Enhanced handler for auth refresh result
     const handleAuthRefreshResult = (result, isAutoRefresh = false) => {
       if (result?.success) {
         logger.log(
@@ -181,8 +191,38 @@ const App = () => {
         );
         // A6: Auto sign-out to clear corrupted auth state
         setTimeout(() => signOut(), 2000);
-      } else if (isAutoRefresh) {
-        logger.warn("⚠️ Auth token refresh failed");
+      } else if (result?.reason === "auth/user-disabled") {
+        // HIGH 7: Account disabled by admin
+        showMessage(
+          "⚠️ Your account has been disabled. Please contact support.",
+          "error",
+          TOAST_DURATION.LONG,
+        );
+        setTimeout(() => signOut(), 2000);
+      } else if (result?.reason === "auth/id-token-revoked") {
+        // HIGH 7: Token revoked (password changed, security event)
+        showMessage(
+          "🔐 Session expired - please sign in again.",
+          "warning",
+          TOAST_DURATION.LONG,
+        );
+        setTimeout(() => signOut(), 2000);
+      } else if (isAutoRefresh && !result?.success) {
+        // HIGH 7: Generic refresh failure - show clear message
+        logger.warn("⚠️ Auth token refresh failed:", result?.reason);
+        if (result?.reason === "auth/network-request-failed") {
+          showMessage(
+            "📶 Network issue - couldn't refresh session. Check your connection.",
+            "warning",
+          );
+        } else {
+          // For other failures, prompt re-auth
+          showMessage(
+            "⏳ Session needs refresh - please sign out and back in.",
+            "warning",
+            TOAST_DURATION.LONG,
+          );
+        }
       }
     };
 
@@ -190,12 +230,12 @@ const App = () => {
     refreshAuthToken().then((result) => handleAuthRefreshResult(result, false));
 
     // Set up periodic refresh every 30 minutes
-    const REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes in ms
+    const REFRESH_INTERVAL_MS = 30 * 60 * 1000;
     const intervalId = setInterval(() => {
       refreshAuthToken().then((result) =>
         handleAuthRefreshResult(result, true),
       );
-    }, REFRESH_INTERVAL);
+    }, REFRESH_INTERVAL_MS);
 
     return () => clearInterval(intervalId);
   }, [user, authLoading, showMessage]);

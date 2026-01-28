@@ -7,6 +7,11 @@ import { AccessibilityProvider } from "./contexts/AccessibilityContext.jsx";
 import { ErrorReporterProvider } from "./contexts/ErrorReporterContext.jsx";
 import "./index.css";
 
+// Initialize centralized AuthManager on app startup
+// This ensures auth lifecycle events are tracked before any component mounts
+import { authManager } from "./services/AuthManager";
+authManager.init();
+
 // Import cleanup utility to expose window.cleanupProductionDatabase for console access
 // Lazy load debug tools to avoid bundling Firestore in the main chunk
 window.loadDebugTools = () => import("./utils/databaseCleanup.js");
@@ -22,5 +27,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </ErrorReporterProvider>
       </AccessibilityProvider>
     </ErrorBoundary>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
