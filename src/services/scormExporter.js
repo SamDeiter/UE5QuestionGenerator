@@ -37,10 +37,7 @@ export function convertQuestionToScormFormat(question) {
   }));
 
   return {
-    // eslint-disable-next-line sonarjs/pseudo-random
-    id:
-      normalized.id ||
-      `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: normalized.id || `q-${Date.now()}-${crypto.randomUUID().split("-")[0]}`,
     text: normalized.question,
     type: normalized.type,
     difficulty: normalized.difficulty,

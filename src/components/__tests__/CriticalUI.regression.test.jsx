@@ -10,6 +10,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// Mock ScoreBadge
+vi.mock("../ScoreBadge", () => ({
+  default: ({ score }) => <div data-testid="score-badge">{score}</div>,
+}));
+
 // ============================================================
 // MOCKS - Required to isolate component rendering
 // ============================================================
@@ -242,9 +247,8 @@ describe("Critical UI Regression Tests", () => {
 
   // ============================================================
   // VIEW AI SUGGESTIONS BUTTON TESTS (NEW FEATURE)
-  // TODO: These tests need ScoreBadge mock - skipping temporarily
   // ============================================================
-  describe.skip("QuestionHeader View AI Suggestions Button", () => {
+  describe("QuestionHeader View AI Suggestions Button", () => {
     const critiquedQuestion = {
       id: "critiqued-123",
       question: "Test question",

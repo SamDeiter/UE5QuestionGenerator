@@ -3,7 +3,7 @@
  * Uses jsdom environment for localStorage mocking
  * @vitest-environment jsdom
  */
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { setSecureItem, getSecureItem } from "../secureStorage";
 
 describe("secureStorage", () => {

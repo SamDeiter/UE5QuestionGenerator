@@ -72,6 +72,12 @@ const QuestionHeader = ({
     return correct === "B" ? "B" : "A"; // Default to A (True) if unclear
   };
 
+  // Compute title text to avoid nested ternary in JSX
+  const currentTFLabel = getCurrentTFAnswer() === "A" ? "True" : "False";
+  const tfAnswerTitle = onUpdateQuestion
+    ? "Click to change correct answer"
+    : `Correct: ${currentTFLabel}`;
+
   const handleTrueFalseChange = async (newAnswer) => {
     if (onUpdateQuestion && newAnswer !== getCurrentTFAnswer()) {
       await onUpdateQuestion(q.id, {
@@ -171,11 +177,7 @@ const QuestionHeader = ({
                       ? "cursor-pointer hover:opacity-80 transition-opacity"
                       : ""
                   }`}
-                  title={
-                    onUpdateQuestion
-                      ? "Click to change correct answer"
-                      : `Correct: ${getCurrentTFAnswer() === "A" ? "True" : "False"}`
-                  }
+                  title={tfAnswerTitle}
                   disabled={!onUpdateQuestion}
                 >
                   <Icon name="check-circle" size={12} />

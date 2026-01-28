@@ -16,7 +16,10 @@ import InviteSignUp from "./components/InviteSignUp";
 // ApiKeyModal moved to GlobalModals - lazy loaded when needed
 import ConflictModal from "./components/ConflictModal";
 import { getInviteFromUrl } from "./services/inviteService";
-import { refreshAuthToken, signOut } from "./services/firebaseAuth";
+import {
+  refreshAuthToken,
+  signOutUser as signOut,
+} from "./services/firebaseAuth";
 import { subscribeToToasts } from "./services/toastEvents";
 
 // Lazy load heavy components (loaded on-demand)
@@ -165,7 +168,11 @@ const App = () => {
     // A6: Handler for auth refresh result - auto sign-out on blocked
     const handleAuthRefreshResult = (result, isAutoRefresh = false) => {
       if (result?.success) {
-        logger.log(isAutoRefresh ? "🔄 Auth token auto-refreshed" : "🔄 Initial auth token refreshed");
+        logger.log(
+          isAutoRefresh
+            ? "🔄 Auth token auto-refreshed"
+            : "🔄 Initial auth token refreshed",
+        );
       } else if (result?.reason === "auth-blocked") {
         logger.error("🔒 Auth blocked - securetoken 403 detected");
         showMessage(
@@ -185,7 +192,9 @@ const App = () => {
     // Set up periodic refresh every 30 minutes
     const REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes in ms
     const intervalId = setInterval(() => {
-      refreshAuthToken().then((result) => handleAuthRefreshResult(result, true));
+      refreshAuthToken().then((result) =>
+        handleAuthRefreshResult(result, true),
+      );
     }, REFRESH_INTERVAL);
 
     return () => clearInterval(intervalId);
@@ -312,7 +321,7 @@ const App = () => {
     return () => {
       isMounted = false;
     };
-  }, [user?.uid, databaseQuestions.length]); // Re-fetch when question count changes
+  }, [user?.uid, databaseQuestions]); // Re-fetch when question count or list changes
 
   // 2.5. Crash Recovery - detect and restore from cloud backup
   const {

@@ -355,16 +355,6 @@ const processOfflineQueue = async () => {
   syncInProgress = true;
   logger.log(`🔄 Processing ${offlineQueue.length} queued items...`);
 
-  // DEBUG: Log what's in the queue
-  console.log(
-    "[SYNC DEBUG] Queue contents:",
-    offlineQueue.map((item) => ({
-      id: item.question?.uniqueId,
-      timestamp: item.timestamp,
-      retryCount: item.retryCount,
-    })),
-  );
-
   // Track if we've shown a permission error this cycle (avoid toast spam)
   let hasShownPermissionToast = false;
 

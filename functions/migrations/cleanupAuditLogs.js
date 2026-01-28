@@ -15,7 +15,7 @@ exports.cleanupAuditLogs = functions
   .runWith({ timeoutSeconds: 540, memory: "256MB" })
   .pubsub.schedule("0 3 * * *") // 3:00 AM UTC daily
   .timeZone("UTC")
-  .onRun(async (context) => {
+  .onRun(async (_context) => {
     const db = admin.firestore();
 
     // Calculate cutoff date
@@ -39,7 +39,6 @@ exports.cleanupAuditLogs = functions
         .get();
 
       if (snapshot.empty) {
-        hasMore = false;
         break;
       }
 

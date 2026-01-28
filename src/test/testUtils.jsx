@@ -31,8 +31,10 @@ const localStorageMock = (() => {
 })();
 
 // Set up localStorage mock if in test environment
-if (typeof global.localStorage === "undefined") {
-  Object.defineProperty(global, "localStorage", { value: localStorageMock });
+if (typeof globalThis.localStorage === "undefined") {
+  Object.defineProperty(globalThis, "localStorage", {
+    value: localStorageMock,
+  });
 }
 
 /**

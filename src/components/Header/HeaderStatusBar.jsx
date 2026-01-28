@@ -7,7 +7,6 @@ import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 const HeaderStatusBar = ({
   formattedTokens,
-  formattedCost,
   tokenUsage,
   connectionStatus,
   apiKeyStatus,

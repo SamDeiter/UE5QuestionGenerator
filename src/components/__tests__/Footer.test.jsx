@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import Footer from "../Footer";
 
 // Mock constants
@@ -16,7 +16,7 @@ describe("Footer", () => {
   it("renders copyright with current year", () => {
     render(<Footer />);
     expect(
-      screen.getByText(new RegExp(`© ${currentYear}`))
+      screen.getByText(new RegExp(`© ${currentYear}`)),
     ).toBeInTheDocument();
   });
 
@@ -40,7 +40,7 @@ describe("Footer", () => {
     const link = screen.getByRole("link", { name: /Privacy Policy/i });
     expect(link).toHaveAttribute(
       "href",
-      "https://legal.epicgames.com/en-US/epicgames/privacy-policy"
+      "https://legal.epicgames.com/en-US/epicgames/privacy-policy",
     );
   });
 
@@ -49,7 +49,7 @@ describe("Footer", () => {
     const link = screen.getByRole("link", { name: /Terms of Service/i });
     expect(link).toHaveAttribute(
       "href",
-      "https://www.epicgames.com/site/en-US/tos"
+      "https://www.epicgames.com/site/en-US/tos",
     );
   });
 
@@ -58,7 +58,7 @@ describe("Footer", () => {
     const link = screen.getByRole("link", { name: /GitHub/i });
     expect(link).toHaveAttribute(
       "href",
-      "https://github.com/SamDeiter/UE5QuestionGenerator"
+      "https://github.com/SamDeiter/UE5QuestionGenerator",
     );
   });
 

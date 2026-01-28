@@ -43,8 +43,6 @@ const VersionComparisonModal = ({
     }
   };
 
-  const currentBadge = getVersionBadge(versionSource);
-
   const renderQuestionCard = (title, data, isActive, badgeInfo) => (
     <div
       className={`flex-1 p-4 rounded-xl border-2 transition-all ${

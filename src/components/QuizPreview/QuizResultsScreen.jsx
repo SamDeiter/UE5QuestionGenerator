@@ -4,7 +4,7 @@
 import Icon from "../Icon";
 import { useAccessibility } from "../../contexts/AccessibilityContext";
 
-const QuizResultsScreen = ({ results, config, onClose }) => {
+const QuizResultsScreen = ({ results, onClose }) => {
   const { colorblindMode } = useAccessibility();
   const cb = colorblindMode;
 

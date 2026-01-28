@@ -12,7 +12,6 @@ const QuizQuestion = ({
   showAnswerWarning,
   currentIndex,
   totalQuestions,
-  announceMessage,
   onAnswerSelect,
   onNext,
 }) => {

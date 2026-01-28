@@ -2,7 +2,7 @@
  * csrf - Tests for CSRF protection utilities
  * Tests token generation, validation, and header management
  */
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   getCSRFToken,
   validateCSRFToken,

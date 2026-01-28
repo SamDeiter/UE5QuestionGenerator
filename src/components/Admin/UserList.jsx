@@ -85,24 +85,20 @@ const UserList = ({
 
     if (
       !confirm(
-        `Revoke access for ${selectedUsers.size} user(s)?\n${selectedEmails}`
+        `Revoke access for ${selectedUsers.size} user(s)?\n${selectedEmails}`,
       )
     )
       return;
 
     setBulkRevoking(true);
-    let _successCount = 0;
-    let failCount = 0;
 
     for (const uid of selectedUsers) {
       const user = users.find((u) => u.uid === uid);
       if (user) {
         try {
           await handleRevokeUser(uid, user.email, true); // true = suppress individual confirmation
-          _successCount++;
         } catch (error) {
           logger.error(`Failed to revoke ${user.email}:`, error);
-          failCount++;
         }
       }
     }
@@ -201,7 +197,7 @@ const UserList = ({
                 <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
                   <span
                     className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold ${getRoleBadgeClasses(
-                      user.role
+                      user.role,
                     )}`}
                   >
                     {user.role}
