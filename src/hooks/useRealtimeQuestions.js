@@ -15,9 +15,10 @@ import { logger } from "../utils/logger";
  * - Prevents duplicate work and ensures data consistency
  *
  * @param {boolean} enabled - Whether to enable real-time sync
+ * @param {boolean} isRegistered - Whether the user is registered (Q1: prevents listeners after sign-out)
  * @returns {Object} { questions, isLoading, error, refresh, syncStatus }
  */
-export const useRealtimeQuestions = (enabled = true) => {
+export const useRealtimeQuestions = (enabled = true, isRegistered = true) => {
   const [questions, setQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,9 +34,14 @@ export const useRealtimeQuestions = (enabled = true) => {
   }, []);
 
   useEffect(() => {
-    if (!enabled) {
+    // Q1: Don't run listeners if user is not registered (prevents stale auth issues)
+    if (!enabled || !isRegistered) {
       setIsLoading(false);
       setSyncStatus("disconnected");
+      if (!isRegistered) {
+        // Clear questions when user signs out to prevent showing stale data
+        setQuestions([]);
+      }
       return;
     }
 
@@ -58,8 +64,8 @@ export const useRealtimeQuestions = (enabled = true) => {
           } else {
             logger.log(
               `📤 ${Math.abs(
-                diff
-              )} question(s) removed/accepted by another user`
+                diff,
+              )} question(s) removed/accepted by another user`,
             );
           }
         }
@@ -70,7 +76,7 @@ export const useRealtimeQuestions = (enabled = true) => {
         const queuedIds = getQueuedQuestionIds();
         if (queuedIds.size > 0) {
           logger.log(
-            `🛡️ Protecting ${queuedIds.size} queued items from server overwrite`
+            `🛡️ Protecting ${queuedIds.size} queued items from server overwrite`,
           );
         }
 
@@ -99,7 +105,7 @@ export const useRealtimeQuestions = (enabled = true) => {
         setError(null);
         setSyncStatus("synced");
       },
-      5000 // Max 5000 questions
+      5000, // Max 5000 questions
     );
 
     // Cleanup on unmount or when refreshTrigger changes
@@ -108,7 +114,7 @@ export const useRealtimeQuestions = (enabled = true) => {
       setSyncStatus("disconnected");
       unsubscribe();
     };
-  }, [enabled, refreshTrigger]);
+  }, [enabled, isRegistered, refreshTrigger]);
 
   return {
     questions,

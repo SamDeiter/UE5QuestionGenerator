@@ -67,7 +67,13 @@ export function useAuth(showMessage) {
 
   // Listen for auth state changes and check registration
   useEffect(() => {
+    // A2/A3: Cancellation flag to prevent stale async updates after user changes
+    let isCancelled = false;
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      // Check if this callback is stale (user changed during async ops)
+      if (isCancelled) return;
+
       setUser(currentUser);
       setAuthLoading(false);
 
@@ -85,6 +91,7 @@ export function useAuth(showMessage) {
         setRegistrationLoading(true);
         try {
           let regStatus = await checkUserRegistration();
+          if (isCancelled) return; // A2/A3: Check for stale callback
           logger.log("🔍 [Auth] checkUserRegistration result:", regStatus);
           logger.log("🔍 [Auth] User email:", currentUser.email);
 
@@ -93,6 +100,7 @@ export function useAuth(showMessage) {
           if (!regStatus.registered) {
             try {
               const adminResult = await setupInitialAdmin();
+              if (isCancelled) return; // A2/A3: Check for stale callback
               logger.log("🔍 [Auth] setupInitialAdmin result:", adminResult);
               if (adminResult.success) {
                 logger.log("✅ Server-side admin setup successful");
@@ -113,6 +121,7 @@ export function useAuth(showMessage) {
             "isAdmin:",
             regStatus.role === "admin",
           );
+          if (isCancelled) return; // A2/A3: Check before updating state
           setIsRegistered(regStatus.registered);
           setUserRole(regStatus.role || "user");
           setIsAdmin(regStatus.role === "admin");
@@ -130,8 +139,10 @@ export function useAuth(showMessage) {
               logger.log(
                 "✅ Write probe successful - Firestore access verified",
               );
+              if (isCancelled) return; // A2/A3: Check for stale callback
               setPermissionError(false);
             } catch (probeError) {
+              if (isCancelled) return; // A2/A3: Check for stale callback
               logger.error("❌ Write probe failed:", probeError);
               if (probeError.code === "permission-denied") {
                 setPermissionError(true);
@@ -172,16 +183,19 @@ export function useAuth(showMessage) {
           }
 
           // SECURITY: On error, default to no access (fail closed)
-          setIsAdmin(false);
-          setIsRegistered(false);
-          setUserRole("user");
+          if (!isCancelled) {
+            setIsAdmin(false);
+            setIsRegistered(false);
+            setUserRole("user");
+          }
         } finally {
-          setRegistrationLoading(false);
+          if (!isCancelled) setRegistrationLoading(false);
         }
 
         // Load custom tags from Firestore
         try {
           const tags = await getCustomTags();
+          if (isCancelled) return; // A2/A3: Check for stale callback
           setCustomTags(tags);
         } catch (error) {
           logger.error("Failed to load custom tags:", error);
@@ -193,7 +207,10 @@ export function useAuth(showMessage) {
         setRegistrationLoading(false);
       }
     });
-    return () => unsubscribe();
+    return () => {
+      isCancelled = true; // A2/A3: Mark all pending async ops as stale
+      unsubscribe();
+    };
   }, []);
 
   // Refresh token usage periodically
