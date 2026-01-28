@@ -23,6 +23,12 @@ import { logger } from "../utils/logger";
 import { TIMING, FIRESTORE_LIMITS, QUESTION_SOURCES } from "../utils/constants";
 import { auth, firebaseConfig } from "./firebaseAuth";
 import { getDb } from "./firebaseSave";
+import {
+  getCachedQuestions,
+  cacheQuestions,
+  isCacheValid,
+  clearCache as clearIndexedDBCache,
+} from "./questionCache";
 
 // --- Cache Management ---
 let _questionsCache = null;
@@ -33,10 +39,16 @@ const CACHE_TTL_MS = TIMING.CACHE_TTL_MS;
  * Invalidates the questions cache.
  * Call after saves/deletes to ensure fresh data on next load.
  */
-export const invalidateQuestionsCache = () => {
+export const invalidateQuestionsCache = async () => {
   _questionsCache = null;
   _questionsCacheTimestamp = 0;
-  logger.log("🗑️ Questions cache invalidated");
+  // Also clear IndexedDB cache
+  try {
+    await clearIndexedDBCache();
+  } catch (error) {
+    logger.warn("Failed to clear IndexedDB cache:", error);
+  }
+  logger.log("🗑️ Questions cache invalidated (memory + IndexedDB)");
 };
 
 /**
@@ -100,7 +112,7 @@ export const getAllQuestionsFromFirestore = async (
       return [];
     }
 
-    // PERFORMANCE: Return cached data if fresh (within TTL)
+    // PERFORMANCE: Return in-memory cached data if fresh (within TTL)
     const now = Date.now();
     if (
       !forceRefresh &&
@@ -109,11 +121,35 @@ export const getAllQuestionsFromFirestore = async (
       now - _questionsCacheTimestamp < CACHE_TTL_MS
     ) {
       logger.log(
-        `⚡ Returning ${_questionsCache.length} cached questions (${Math.round(
+        `⚡ Returning ${_questionsCache.length} cached questions (memory, ${Math.round(
           (now - _questionsCacheTimestamp) / 1000,
         )}s old)`,
       );
       return _questionsCache;
+    }
+
+    // PERFORMANCE: Try IndexedDB cache if memory cache is stale
+    if (!forceRefresh && !customLimit) {
+      try {
+        const idbCacheValid = await isCacheValid();
+        if (idbCacheValid) {
+          const cachedQuestions = await getCachedQuestions();
+          if (cachedQuestions.length > 0) {
+            logger.log(
+              `📦 Returning ${cachedQuestions.length} cached questions (IndexedDB)`,
+            );
+            // Update memory cache from IndexedDB
+            _questionsCache = cachedQuestions;
+            _questionsCacheTimestamp = now;
+            return cachedQuestions;
+          }
+        }
+      } catch (idbError) {
+        logger.warn(
+          "IndexedDB cache check failed, falling back to Firestore:",
+          idbError,
+        );
+      }
     }
 
     const fetchLimit = customLimit || maxResults;
@@ -150,6 +186,12 @@ export const getAllQuestionsFromFirestore = async (
     if (!customLimit) {
       _questionsCache = questions;
       _questionsCacheTimestamp = now;
+      // Also persist to IndexedDB for offline support
+      try {
+        await cacheQuestions(questions);
+      } catch (idbError) {
+        logger.warn("Failed to cache to IndexedDB:", idbError);
+      }
     }
 
     return questions;

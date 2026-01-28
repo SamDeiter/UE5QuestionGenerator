@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   signInWithGoogle,
   signInWithEmail,
@@ -19,8 +19,23 @@ const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetCooldown, setResetCooldown] = useState(0);
+
+  // A1: Synchronous guard to prevent double-submit race conditions
+  const isSubmittingRef = useRef(false);
+
+  // A11: Password reset rate-limiting cooldown timer
+  useEffect(() => {
+    if (resetCooldown > 0) {
+      const timer = setTimeout(() => setResetCooldown(resetCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resetCooldown]);
 
   const handleGoogleSignIn = async () => {
+    // A1: Synchronous guard prevents multiple rapid clicks
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setError(null);
     try {
@@ -42,11 +57,15 @@ const SignIn = () => {
       }
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
   const handleEmailAuth = async (e) => {
     e.preventDefault();
+    // A1: Synchronous guard prevents double-submit
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setError(null);
     try {
@@ -74,11 +93,16 @@ const SignIn = () => {
       setError(getErrorMessage(err.code));
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
   const handlePasswordReset = async (e) => {
     e.preventDefault();
+    // A11: Rate-limit password reset requests
+    if (resetCooldown > 0) return;
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setError(null);
     setResetSuccess(false);
@@ -86,6 +110,7 @@ const SignIn = () => {
     try {
       await resetPassword(email);
       setResetSuccess(true);
+      setResetCooldown(60); // A11: 60 second cooldown after success
     } catch (err) {
       logger.error(err);
       let message = err.message || "Failed to send reset email";
@@ -99,6 +124,7 @@ const SignIn = () => {
       setError(message);
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
   // Render content based on current view state
@@ -126,10 +152,14 @@ const SignIn = () => {
           </div>
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || resetCooldown > 0}
             className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
           >
-            {isLoading ? "Sending..." : "Send Reset Email"}
+            {(() => {
+              if (isLoading) return "Sending...";
+              if (resetCooldown > 0) return `Wait ${resetCooldown}s`;
+              return "Send Reset Email";
+            })()}
           </button>
           <button
             type="button"
