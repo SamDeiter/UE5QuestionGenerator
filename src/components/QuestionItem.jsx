@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   APP_MODES,
   QUESTION_STATUS,
-  QUESTION_DIFFICULTY,
   TOAST_DURATION,
   QUALITY_THRESHOLDS,
 } from "../utils/constants";
@@ -30,13 +29,18 @@ import { logger } from "../utils/logger";
 import { useAuth } from "../hooks/useAuth";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 import { useEditLock } from "../hooks/useEditLock";
-// Stage 2.1: Extracted helpers available in:
-// - ../hooks/useQuestionHandlers.js (verification handlers)
-// - ../utils/questionItemHelpers.js (style helpers)
+import {
+  getLockColor,
+  getLockTooltip,
+  getLockIcon,
+  getLockLabel,
+  getStatusStyle,
+  getDifficultyGradient,
+} from "../utils/questionItemHelpers";
 
 import { saveTrainingPair } from "../services/trainingDataService";
 
-// Helper functions (duplicates exist in questionItemHelpers.js for future extraction)
+// Stage 2.1: Using extracted helpers from questionItemHelpers.js
 const QuestionItem = ({
   q,
   appMode,
@@ -106,50 +110,8 @@ const QuestionItem = ({
     setShowImprovementModal(false);
   }, [q.id]);
 
-  // Lock status color helper - refactored to avoid nested ternaries
-  const lockColor = (hasLockArg, isLockedArg, type) => {
-    if (hasLockArg) {
-      if (type === "container") {
-        return cb
-          ? "bg-blue-900/30 border border-blue-500/50"
-          : "bg-green-900/30 border border-green-500/50";
-      }
-      return cb ? "text-blue-400" : "text-green-400";
-    }
-    if (isLockedArg) {
-      if (type === "container") {
-        return cb
-          ? "bg-rose-900/30 border border-rose-500/50"
-          : "bg-red-900/30 border border-red-500/50";
-      }
-      return cb ? "text-rose-400" : "text-red-400";
-    }
-    if (type === "container") {
-      return "bg-slate-800/50 border border-slate-600/50";
-    }
-    return "text-slate-400";
-  };
-
-  // Lock tooltip helper
-  const getLockTooltip = (hasLockVal, isLockedVal, lockedByEmail) => {
-    if (hasLockVal) return "You have the edit lock";
-    if (isLockedVal) return `Locked by ${lockedByEmail || "another user"}`;
-    return "Available for editing";
-  };
-
-  // Lock icon name helper (avoids nested ternary)
-  const getLockIcon = (hasLockVal, isLockedVal) => {
-    if (hasLockVal) return "edit-3";
-    if (isLockedVal) return "lock";
-    return "unlock";
-  };
-
-  // Lock label text helper (avoids nested ternary)
-  const getLockLabel = (hasLockVal, isLockedVal) => {
-    if (hasLockVal) return "Editing";
-    if (isLockedVal) return "Locked";
-    return "Available";
-  };
+  // Lock helpers: Using imported functions from questionItemHelpers.js
+  // - getLockColor, getLockTooltip, getLockIcon, getLockLabel
 
   // Auto-open improvement modal when critique arrives or updates
   // Track the last seen critiqueScore/attempts to detect re-critiques DURING THIS SESSION
@@ -338,45 +300,12 @@ const QuestionItem = ({
     onUpdateStatus(q.id, QUESTION_STATUS.ACCEPTED);
   }, [q.critiqueScore, q.humanVerified, q.id, onUpdateStatus, showMessage]);
 
-  // Status style helper
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case QUESTION_STATUS.ACCEPTED:
-        return "ring-1 ring-green-500/50";
-      case QUESTION_STATUS.REJECTED:
-        return "border-red-900/50 bg-slate-950/80 opacity-50 grayscale";
-      default:
-        return "";
-    }
-  };
-
-  const getGradient = (d) => {
-    // Normalize to handle "Easy" vs "Beginner" legacy data
-    const difficulty = d?.toLowerCase();
-    if (
-      difficulty === "easy" ||
-      difficulty === QUESTION_DIFFICULTY.BEGINNER.toLowerCase()
-    ) {
-      return "bg-gradient-to-br from-slate-900/50 to-green-950 border-green-700 shadow-[0_0_15px_-5px_rgba(34,197,94,0.3)]";
-    }
-    if (
-      difficulty === "medium" ||
-      difficulty === QUESTION_DIFFICULTY.INTERMEDIATE.toLowerCase()
-    ) {
-      return "bg-gradient-to-br from-slate-900/50 to-yellow-950 border-yellow-700 shadow-[0_0_15px_-5px_rgba(234,179,8,0.3)]";
-    }
-    if (
-      difficulty === "hard" ||
-      difficulty === QUESTION_DIFFICULTY.EXPERT.toLowerCase()
-    ) {
-      return "bg-gradient-to-br from-slate-900/50 to-red-950 border-red-700 shadow-[0_0_15px_-5px_rgba(239,68,68,0.3)]";
-    }
-    return "bg-slate-900 border-slate-800";
-  };
+  // Style helpers: Using imported functions from questionItemHelpers.js
+  // - getStatusStyle, getDifficultyGradient
 
   return (
     <div
-      className={`group rounded-lg border shadow-sm transition-all p-4 relative ${getGradient(
+      className={`group rounded-lg border shadow-sm transition-all p-4 relative ${getDifficultyGradient(
         q.difficulty
       )} ${getStatusStyle(q.status)}`}
     >
@@ -398,19 +327,20 @@ const QuestionItem = ({
       {/* Active Lock Indicator */}
       {appMode === APP_MODES.REVIEW && (
         <div
-          className={`ml-6 mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all duration-500 ${lockColor(
+          className={`ml-6 mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all duration-500 ${getLockColor(
             hasLock,
             isLocked,
-            "container"
+            "container",
+            cb
           )}`}
           title={getLockTooltip(hasLock, isLocked, lockedBy?.email)}
         >
           <Icon
             name={getLockIcon(hasLock, isLocked)}
             size={12}
-            className={lockColor(hasLock, isLocked, "icon")}
+            className={getLockColor(hasLock, isLocked, "icon", cb)}
           />
-          <span className={lockColor(hasLock, isLocked, "icon")}>
+          <span className={getLockColor(hasLock, isLocked, "icon", cb)}>
             {getLockLabel(hasLock, isLocked)}
           </span>
         </div>
