@@ -8,6 +8,7 @@
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { getDb } from "../services/firebase";
 import { logger } from "../utils/logger";
+import { logError } from "../utils/AppError";
 
 /**
  * Fetches all questions that have been reviewed (have reviewCompletedAt timestamp)
@@ -73,12 +74,14 @@ export const fetchReviewedQuestions = async () => {
         );
         return fallbackQuestions;
       } catch (fallbackError) {
-        logger.error("Fallback query also failed:", fallbackError);
+        logError(fallbackError, {
+          operation: "fetchReviewedQuestionsFallback",
+        });
         return [];
       }
     }
 
-    logger.error("Error fetching reviewed questions:", error);
+    logError(error, { operation: "fetchReviewedQuestions" });
     throw error;
   }
 };
@@ -311,7 +314,7 @@ export const formatDate = (dateVal) => {
     const date = dateVal instanceof Date ? dateVal : new Date(dateVal);
     return isNaN(date.getTime()) ? "Invalid Date" : date.toLocaleDateString();
   } catch (e) {
-    logger.error("Date formatting error:", e);
+    logError(e, { operation: "formatDate", dateVal: String(dateVal) });
     return "Invalid Date";
   }
 };
@@ -364,7 +367,7 @@ export const getReviewerAnalytics = async () => {
         },
       };
     }
-    logger.error("Error getting reviewer analytics:", error);
+    logError(error, { operation: "getReviewerAnalytics" });
     throw error;
   }
 };
