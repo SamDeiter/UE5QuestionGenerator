@@ -17,11 +17,13 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth.token.role == 'admin' 
         || request.auth.token.email == 'sam.deiter@epicgames.com'
-        || get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'admin';
+        || (exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
+            && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'admin');
     }
 
     function isReviewer() {
-      return get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'reviewer';
+      return exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'reviewer';
     }
     
     // Version control: Prevent version regression
