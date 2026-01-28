@@ -60,10 +60,14 @@ debug_error.txt
 eslint-errors.*
 eslint-output.*
 eslint-report.*
+eslint_errors*.txt
 
 # Lint fixing scripts (temporary utilities)
 fix_*.py
 lint_report.txt
+
+# Archive temp files
+scripts/archive/*.txt
 
 # Backups (kept locally for safety)
 tools/security_backups/
