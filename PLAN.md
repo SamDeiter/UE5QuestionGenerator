@@ -36,7 +36,7 @@ This plan consolidates two audit objectives into a single staged implementation:
 |------|------|-------|-------------------|--------------------------|
 | 1 | `App.jsx` | 986 | **State, Control Flow, Temporal** | God Component: 25+ hooks, ~50 handler functions, route-level orchestration mixed with state |
 | 2 | `useFiltering.js` | 558 | **State, Data Shape** | 14 state variables, 6 useEffect hooks with complex dependencies, hash-based stability detection |
-| 3 | `QuestionItem.jsx` | 747 | **Control Flow, Data Shape** | 20+ props, conditional rendering for 6 modes, inline handlers, lock logic nested |
+| 3 | `QuestionItem.jsx` | ~~747~~ **566** ✅ | **Control Flow, Data Shape** | 20+ props, conditional rendering for 6 modes, inline handlers, lock logic nested |
 | 4 | `firebaseQueries.js` | 718 | **Control Flow, Temporal** | 17 exported functions, mixed caching strategies, pagination + real-time overlap |
 | 5 | `firebaseSave.js` | 687 | **Temporal, State** | Offline queue with localStorage persistence, retry logic, connection listeners |
 
@@ -311,33 +311,32 @@ export function logError(error, additionalContext = {}) {
 
 ---
 
-#### 2.1 Decompose `QuestionItem.jsx` (747 lines) ⏳ IN PROGRESS
+#### 2.1 Decompose `QuestionItem.jsx` (747 → 566 lines) ✅ COMPLETE
 
 **Problem:** Handles 6 app modes with conditional rendering throughout
 
-**Strategy:** Extract mode-specific renderers
+**Strategy:** Extract mode-specific renderers and utility functions
 
-**Progress:**
+**Accomplishments:**
 
 - ✅ Created `src/hooks/useQuestionHandlers.js` - verification handlers extracted
 - ✅ Created `src/utils/questionItemHelpers.js` - lock/status/difficulty style helpers
-- ✅ Integrated style helpers into QuestionItem.jsx (747 → 678 lines, ~9% reduction)
-- ⏳ Remaining: Wire up verification handlers from useQuestionHandlers.js
+- ✅ Added verification data builders: `buildVerifyDocsData`, `buildVerifySearchData`, `buildRejectVerificationData`, `buildFlagUnverifiedData`
+- ✅ Replaced inline verification handlers with streamlined versions using data builders
+- ✅ Removed inline `getDiffBadgeColor` prop - now imported in QuestionHeader
+- ✅ Added `colorblindMode` prop to QuestionHeader for accessibility
+- ✅ **Result: 747 → 566 lines (24% reduction)**
+
+**Files Modified:**
 
 ```
-src/components/
-├── QuestionItem/
-│   ├── index.jsx              # Orchestrator (props routing)
-│   ├── QuestionItemHeader.jsx # Status, badges, actions
-│   ├── QuestionItemBody.jsx   # Question text, options
-│   ├── QuestionItemFooter.jsx # Critique, rewrite controls
-│   ├── QuestionItemActions.jsx # Button groups by mode
-│   └── hooks/
-│       └── useQuestionItemState.js # Local state extraction
+src/components/QuestionItem.jsx          # 747 → 566 lines (-24%)
+src/components/QuestionItem/QuestionHeader.jsx  # Now imports getDiffBadgeColor
+src/utils/questionItemHelpers.js         # +76 lines (verification data builders)
 ```
 
 **Invariant:** Props interface unchanged  
-**Test:** Snapshot tests for each mode (create, review, database, translate)
+**Test:** All 911 tests passing
 
 ---
 
