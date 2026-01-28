@@ -317,6 +317,16 @@ const processOfflineQueue = async () => {
   syncInProgress = true;
   logger.log(`🔄 Processing ${offlineQueue.length} queued items...`);
 
+  // DEBUG: Log what's in the queue
+  console.log(
+    "[SYNC DEBUG] Queue contents:",
+    offlineQueue.map((item) => ({
+      id: item.question?.uniqueId,
+      timestamp: item.timestamp,
+      retryCount: item.retryCount,
+    })),
+  );
+
   // Track if we've shown a permission error this cycle (avoid toast spam)
   let hasShownPermissionToast = false;
 
@@ -331,6 +341,14 @@ const processOfflineQueue = async () => {
         await saveQuestionToFirestoreInternal(item.question);
         logger.log(`✓ Synced queued item: ${item.question.uniqueId}`);
       } catch (err) {
+        // DEBUG: Log full error details for permission debugging
+        console.error("[SYNC DEBUG] Failed to sync question:", {
+          questionId: item.question?.uniqueId,
+          errorCode: err.code,
+          errorMessage: err.message,
+          fullError: err,
+        });
+
         const isPermissionError =
           err.code === "permission-denied" ||
           err.message?.includes("permissions") ||

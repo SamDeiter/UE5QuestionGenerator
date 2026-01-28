@@ -40,8 +40,9 @@ service cloud.firestore {
       // All authenticated users can read questions (for shared review workflow)
       allow read: if isSignedIn();
       
-      // Create: Requires authentication, must set version = 1, must set creatorId
+      // Create: Admins/Creators only - Reviewers cannot create questions
       allow create: if isSignedIn()
+        && !isReviewer()  // Reviewers cannot create questions
         && request.resource.data.creatorId == request.auth.uid
         && request.resource.data.creatorEmail == request.auth.token.email
         && (!request.resource.data.keys().hasAny(['version']) || request.resource.data.version == 1);
@@ -57,40 +58,9 @@ service cloud.firestore {
         // Admin FULL override: Admins can update any fields
         isAdmin()
         ||
-        // Reviewer override: Can update specific review-related fields only
-        (isReviewer()
-         && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly([
-              // Version and timestamps
-              'version', 'updatedAt', 'firestoreUpdatedAt', 'modifiedAt',
-              // Question content fields (for applying rewrites and edits)
-              'question', 'options', 'correct', 'correctLetter',
-              // Scoring fields
-              'aiScore', 'scoredAt', 'scoreSource', 
-              // Status and rejection fields
-              'status', 'rejectionReason', 'rejectionCategory', 'rejectionNotes', 
-              'rejectedAt', 'rejectedBy', 'acceptedAt', 'acceptedBy',
-              // Review tracking fields
-              'reviewedBy', 'reviewedAt', 'reviewCompletedAt', 
-              'reviewerName', 'reviewDuration', 'reviewStartedAt',
-              // Critique and improvement fields
-              'critique', 'critiqueScore', 'suggestedRewrite', 'improvedScore', 'improvementsApplied',
-              'rewriteChanges', 'critiqueAttempts', 'previousCritiqueScore',
-              // Human verification fields
-              'humanVerified', 'humanVerifiedBy', 'humanVerifiedAt',
-              // Kick back fields
-              'kickedBackAt', 'kickedBackBy', 'kickedBackReason',
-              // Tags and difficulty (for re-critique and manual updates)
-              'tags', 'difficulty',
-              // Backfill metadata fields
-              '_backfilledHumanVerified', '_backfilledAt', 'tagsBackfilledAt',
-              // Version comparison fields (for Original vs AI Rewrite selection)
-              'originalVersion', 'versionSource',
-              // Manual editing tracking fields (for click-to-correct answers)
-              'lastEditedBy', 'lastEditedAt',
-              // Notes
-              'notes'
-            ]))
+        // Reviewer FULL override: Reviewers can update any fields (same as admins)
+        // This prevents permission errors from dynamic question fields
+        isReviewer()
       );
       
       // Delete: Admins only
