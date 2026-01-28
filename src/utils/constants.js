@@ -157,6 +157,8 @@ export const TIMING = {
   MAX_POLLING_ATTEMPTS: 20,
   CACHE_TTL_MS: 30 * 1000,
   STALE_AUTH_MS: 45 * 60 * 1000,
+  TOKEN_REFRESH_INTERVAL_MS: 50 * 60 * 1000, // 50 minutes (tokens expire at ~60 min)
+  WRITE_PROBE_INTERVAL_MS: 15 * 60 * 1000, // 15 minutes - verify Firestore access periodically
 };
 
 // Standard Time Multipliers (in ms)

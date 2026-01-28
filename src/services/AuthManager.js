@@ -16,6 +16,7 @@
 import { onIdTokenChanged, signOut as firebaseSignOut } from "firebase/auth";
 import { auth } from "./firebaseAuth";
 import { logger } from "../utils/logger";
+import { TIMING, TIME } from "../utils/constants";
 
 class AuthManager {
   constructor() {
@@ -24,6 +25,48 @@ class AuthManager {
     this.currentUser = null;
     this.unsubscribe = null;
     this.isInitialized = false;
+
+    // Proactive token refresh (prevents "permission denied" errors)
+    this.tokenRefreshTimer = null;
+    this.lastTokenRefresh = null;
+  }
+
+  /**
+   * Start proactive token refresh timer
+   * Refreshes token every 50 minutes to prevent expiration issues
+   * @private
+   */
+  startTokenRefreshTimer() {
+    this.stopTokenRefreshTimer(); // Clear any existing timer
+
+    this.tokenRefreshTimer = setInterval(async () => {
+      if (this.currentUser) {
+        try {
+          await this.currentUser.getIdToken(true);
+          this.lastTokenRefresh = Date.now();
+          logger.log("[AuthManager] Proactive token refresh successful");
+        } catch (error) {
+          logger.warn("[AuthManager] Proactive token refresh failed:", error);
+          // Don't sign out on refresh failure - let user continue working
+          // The next operation will trigger a fresh auth check
+        }
+      }
+    }, TIMING.TOKEN_REFRESH_INTERVAL_MS);
+
+    logger.log(
+      `[AuthManager] Token refresh timer started (${TIMING.TOKEN_REFRESH_INTERVAL_MS / TIME.MINUTE} min interval)`
+    );
+  }
+
+  /**
+   * Stop the proactive token refresh timer
+   * @private
+   */
+  stopTokenRefreshTimer() {
+    if (this.tokenRefreshTimer) {
+      clearInterval(this.tokenRefreshTimer);
+      this.tokenRefreshTimer = null;
+    }
   }
 
   /**
@@ -54,7 +97,7 @@ class AuthManager {
           // Check if user explicitly disabled via custom claim
           if (token.claims.disabled) {
             logger.warn(
-              "[AuthManager] User disabled via custom claim, forcing sign-out",
+              "[AuthManager] User disabled via custom claim, forcing sign-out"
             );
             await this.signOut();
             return;
@@ -63,10 +106,13 @@ class AuthManager {
           // React to role changes
           if (token.claims.role && this._lastKnownRole !== token.claims.role) {
             logger.log(
-              `[AuthManager] Role changed: ${this._lastKnownRole} → ${token.claims.role}`,
+              `[AuthManager] Role changed: ${this._lastKnownRole} → ${token.claims.role}`
             );
             this._lastKnownRole = token.claims.role;
           }
+
+          // Start proactive token refresh timer for logged-in user
+          this.startTokenRefreshTimer();
         } catch (error) {
           // auth/user-disabled is thrown when trying to get token for disabled user
           if (error.code === "auth/user-disabled") {
@@ -81,7 +127,7 @@ class AuthManager {
             error.code === "auth/id-token-revoked"
           ) {
             logger.warn(
-              "[AuthManager] Token revoked/expired, forcing sign-out",
+              "[AuthManager] Token revoked/expired, forcing sign-out"
             );
             await this.signOut();
             return;
@@ -97,6 +143,7 @@ class AuthManager {
       // Centralized: Cleanup on logout
       if (!user && previousUser) {
         logger.log("[AuthManager] User logged out, running cleanup callbacks");
+        this.stopTokenRefreshTimer(); // Stop the timer on logout
         this.runCleanupCallbacks();
       }
     });
@@ -241,7 +288,7 @@ class AuthManager {
    */
   runCleanupCallbacks() {
     logger.log(
-      `[AuthManager] Running ${this.cleanupCallbacks.size} cleanup callbacks`,
+      `[AuthManager] Running ${this.cleanupCallbacks.size} cleanup callbacks`
     );
 
     this.cleanupCallbacks.forEach((callback) => {

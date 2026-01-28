@@ -19,6 +19,7 @@ import {
 } from "../services/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { getTokenUsage } from "../utils/analyticsStore";
+import { TIMING } from "../utils/constants";
 import {
   checkUserRegistration,
   setupInitialAdmin,
@@ -119,7 +120,7 @@ export function useAuth(showMessage) {
             "🔍 [Auth] Final role:",
             regStatus.role,
             "isAdmin:",
-            regStatus.role === "admin",
+            regStatus.role === "admin"
           );
           // CRITICAL FIX: Check cancellation BEFORE any setState to prevent ghost admin
           if (isCancelled) return;
@@ -135,10 +136,10 @@ export function useAuth(showMessage) {
               await setDoc(
                 doc(db, "userSettings", currentUser.uid),
                 { lastVerified: serverTimestamp() },
-                { merge: true },
+                { merge: true }
               );
               logger.log(
-                "✅ Write probe successful - Firestore access verified",
+                "✅ Write probe successful - Firestore access verified"
               );
               if (isCancelled) return; // A2/A3: Check for stale callback
               setPermissionError(false);
@@ -153,7 +154,7 @@ export function useAuth(showMessage) {
                 setUserRole("user");
                 setIsAdmin(false);
                 logger.warn(
-                  "⚠️ Write probe failed - revoking registration status",
+                  "⚠️ Write probe failed - revoking registration status"
                 );
               }
             }
@@ -185,7 +186,7 @@ export function useAuth(showMessage) {
 
             if (isNetworkBlocked) {
               logger.warn(
-                "🚫 Request appears to be blocked by browser extension",
+                "🚫 Request appears to be blocked by browser extension"
               );
               setBlockedByExtension(true);
             }
@@ -241,6 +242,39 @@ export function useAuth(showMessage) {
     const interval = setInterval(() => setTokenUsage(getTokenUsage()), 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // PERIODIC WRITE PROBE: Verify Firestore access every 15 minutes
+  // This catches stale permissions during long review sessions (Stephan fix 2026-01-28)
+  useEffect(() => {
+    if (!user || !isRegistered) return;
+
+    const runWriteProbe = async () => {
+      try {
+        const db = getDb();
+        await setDoc(
+          doc(db, "userSettings", user.uid),
+          { lastVerified: serverTimestamp() },
+          { merge: true }
+        );
+        logger.log("✅ Periodic write probe successful");
+        setPermissionError(false);
+      } catch (probeError) {
+        logger.error("❌ Periodic write probe failed:", probeError);
+        if (probeError.code === "permission-denied") {
+          setPermissionError(true);
+          // Don't revoke registration - just flag the error for UI to handle
+          logger.warn(
+            "⚠️ Periodic write probe failed - permissions may be stale"
+          );
+        }
+      }
+    };
+
+    // Run write probe every 15 minutes
+    const interval = setInterval(runWriteProbe, TIMING.WRITE_PROBE_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [user, isRegistered]);
 
   // Check compliance status on app load
   useEffect(() => {

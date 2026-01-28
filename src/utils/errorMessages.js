@@ -125,12 +125,13 @@ export const getErrorMessage = (error, context = "saving") => {
     },
     [ERROR_TYPES.PERMISSION_DENIED]: {
       title: "🔐 Permission Issue",
-      message: `Unable to save your changes. Your session may have expired.`,
+      message: `Your session may have become stale after extended use. This is a temporary issue.`,
       actions: [
-        "1. Click the refresh button below",
-        "2. If that doesn't work, sign out and sign back in",
+        "1. Click the 'Refresh Session' button below",
+        "2. If the issue persists, sign out completely and sign back in",
+        "3. Your unsaved work is preserved locally - it will sync once reconnected",
         usingSafari
-          ? "3. Consider using Chrome or Firefox for better compatibility"
+          ? "4. Consider using Chrome or Firefox for better compatibility"
           : null,
       ].filter(Boolean),
       severity: "warning",
@@ -193,7 +194,7 @@ export const getToastMessage = (error, context = "saving") => {
     [ERROR_TYPES.FIREBASE_AUTH_BLOCKED]:
       "🔒 Auth blocked - sign out, clear browser data, and sign in fresh",
     [ERROR_TYPES.PERMISSION_DENIED]:
-      "🔐 Permission issue - please refresh or re-sign in",
+      "🔐 Session stale - click 'Refresh Session' or re-sign in",
     [ERROR_TYPES.UNAUTHENTICATED]: "🔑 Session expired - please sign in again",
     [ERROR_TYPES.NETWORK_ERROR]:
       "📡 Connection issue - changes queued for sync",
