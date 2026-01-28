@@ -26,10 +26,10 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'reviewer';
     }
     
-    // Version control: Prevent version regression
-    function versionNotRegressing() {
+    // Version control: Require version increments by exactly 1 (no skipping)
+    function versionIsIncremented() {
       return !resource.data.keys().hasAny(['version']) || 
-             request.resource.data.version > resource.data.version;
+             request.resource.data.version == resource.data.version + 1;
     }
     
     // ============================================================
@@ -53,7 +53,7 @@ service cloud.firestore {
         // Standard update: Owner updates their own question with version increment
         (resource.data.creatorId == request.auth.uid 
          && request.resource.data.creatorId == request.auth.uid
-         && versionNotRegressing())
+         && versionIsIncremented())
         ||
         // Admin FULL override: Admins can update any fields
         isAdmin()
@@ -125,8 +125,11 @@ service cloud.firestore {
     match /apiUsage/{docId} {
       // Read: Admins only (for audit trail)
       allow read: if isAdmin();
-      // Create: Any authenticated user (Cloud Functions log usage)
-      allow create: if isSignedIn();
+      // Create: Any authenticated user with required fields to prevent spam
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasAll(['userId', 'timestamp', 'type'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.type in ['generation', 'critique', 'export', 'import'];
       // Immutable - no updates or deletes
       allow update, delete: if false;
     }
