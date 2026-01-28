@@ -3,7 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 
 // Critical components - keep eager loading (needed immediately)
 import Header from "./components/Header";
@@ -15,7 +15,6 @@ import InviteSignUp from "./components/InviteSignUp";
 // ApiKeyModal moved to GlobalModals - lazy loaded when needed
 import ConflictModal from "./components/ConflictModal";
 import { getInviteFromUrl } from "./services/inviteService";
-import { subscribeToToasts } from "./services/toastEvents";
 
 // Lazy load heavy components (loaded on-demand)
 const LandingPage = lazy(() => import("./components/LandingPage"));
@@ -50,12 +49,14 @@ import { useAgentLifecycle } from "./hooks/useAgentLifecycle";
 import { useTokenUsage } from "./hooks/useTokenUsage";
 import { useAutoLoad } from "./hooks/useAutoLoad";
 import { useAuthRefresh } from "./hooks/useAuthRefresh";
+import { useAuthHealthCheck } from "./hooks/useAuthHealthCheck";
+import { useUrlModeSync } from "./hooks/useUrlModeSync";
+import { useGlobalToastSubscription } from "./hooks/useGlobalToastSubscription";
 
 // Utilities
-import { TOAST_DURATION, APP_MODES, QUESTION_STATUS } from "./utils/constants";
+import { TOAST_DURATION, APP_MODES } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import { logger } from "./utils/logger";
-import { runAuthHealthCheck } from "./utils/authHealthCheck";
 
 const App = () => {
   // ========================================================================
@@ -86,18 +87,8 @@ const App = () => {
     blockedByExtension,
   } = useAuth(showMessage);
 
-  // Auth health check state
-  const [authHealthStatus, setAuthHealthStatus] = useState(null);
-
-  // ========================================================================
-  // GLOBAL TOAST EVENT SUBSCRIPTION - Allow services to trigger UI notifications
-  // ========================================================================
-  useEffect(() => {
-    const unsubscribe = subscribeToToasts((message, type, duration) => {
-      showMessage(message, type, duration);
-    });
-    return unsubscribe;
-  }, [showMessage]);
+  // Global toast subscription (extracted to hook)
+  useGlobalToastSubscription(showMessage);
 
   // ... (rest of the file)
 
@@ -126,19 +117,9 @@ const App = () => {
   useAgentLifecycle({ user, authLoading });
 
   // ========================================================================
-  // AUTH HEALTH CHECK - Run once on authenticated user mount
+  // AUTH HEALTH CHECK - Run once on authenticated user mount (extracted to hook)
   // ========================================================================
-  useEffect(() => {
-    if (user && !authLoading) {
-      // Run health check to detect Token Service API issues
-      runAuthHealthCheck().then((status) => {
-        setAuthHealthStatus(status);
-        if (!status.healthy) {
-          logger.warn("🏥 Auth health check failed:", status);
-        }
-      });
-    }
-  }, [user, authLoading]);
+  const authHealthStatus = useAuthHealthCheck({ user, authLoading });
 
   // ========================================================================
   // AUTOMATIC TOKEN REFRESH - Refresh auth token every 30 minutes
@@ -407,29 +388,15 @@ const App = () => {
   });
 
   // ========================================================================
-  // INITIAL MODE SETUP - Handle URL parameters (e.g., mode=review)
+  // INITIAL MODE SETUP - Handle URL parameters (extracted to hook)
   // ========================================================================
-  useEffect(() => {
-    // If the appMode was set via URL (detected in useAppConfig)
-    // we need to ensure the filters and history visibility are initialized correctly
-    if (appMode === APP_MODES.REVIEW && !showHistory) {
-      logger.log("🎯 Initializing Review Mode from URL parameters");
-      setShowHistory(true);
-      setFilterMode(QUESTION_STATUS.PENDING);
-      setCurrentReviewIndex(0);
-    } else if (appMode === APP_MODES.TRANSLATE && !showHistory) {
-      logger.log("🎯 Initializing Translate Mode from URL parameters");
-      setShowHistory(true);
-      setFilterMode(QUESTION_STATUS.ACCEPTED);
-      setCurrentReviewIndex(0);
-    }
-  }, [
+  useUrlModeSync({
     appMode,
+    showHistory,
     setShowHistory,
     setFilterMode,
     setCurrentReviewIndex,
-    showHistory,
-  ]);
+  });
 
   // Bulk selection feature removed
 
