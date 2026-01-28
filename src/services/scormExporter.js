@@ -51,6 +51,53 @@ const escapeXml = (unsafe) => {
 };
 
 /**
+ * Sanitize text for safe inclusion in SCORM packages
+ * Removes HTML entities and other problematic characters that could cause LMS parsing issues
+ * @param {string} text - Text to sanitize
+ * @returns {string} Sanitized text safe for SCORM
+ */
+const sanitizeForScorm = (text) => {
+  if (!text) return "";
+
+  let result = text.toString();
+
+  // Decode common HTML entities to their actual characters
+  const HTML_ENTITIES = {
+    "&nbsp;": " ",
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
+    "&quot;": '"',
+    "&apos;": "'",
+    "&#39;": "'",
+    "&copy;": "(c)",
+    "&reg;": "(R)",
+    "&trade;": "(TM)",
+    "&mdash;": "-",
+    "&ndash;": "-",
+    "&hellip;": "...",
+    "&ldquo;": '"',
+    "&rdquo;": '"',
+    "&lsquo;": "'",
+    "&rsquo;": "'",
+    "&bull;": "*",
+  };
+
+  // Replace known HTML entities
+  Object.entries(HTML_ENTITIES).forEach(([entity, char]) => {
+    result = result.replace(new RegExp(entity, "gi"), char);
+  });
+
+  // Remove any remaining HTML entity references
+  result = result.replace(/&[a-zA-Z0-9#]+;/g, "");
+
+  // Remove HTML tags
+  result = result.replace(/<\/?[a-zA-Z][^>]*>/g, "");
+
+  return result.trim();
+};
+
+/**
  * SCORM 1.2 Exporter Service
  * Converts Firestore questions to SCORM packages
  *
@@ -78,14 +125,16 @@ export function convertQuestionToScormFormat(question) {
 
   const correctAnswerText = normalized.options[normalized.correct] || "";
 
+  // Sanitize all text content to remove HTML entities and special characters
+  // that could cause LMS parsing errors
   const scormChoices = choicesArray.map((choiceText) => ({
-    text: choiceText,
+    text: sanitizeForScorm(choiceText),
     correct: choiceText === correctAnswerText,
   }));
 
   return {
     id: normalized.id || `q-${Date.now()}-${crypto.randomUUID().split("-")[0]}`,
-    text: normalized.question,
+    text: sanitizeForScorm(normalized.question),
     type: normalized.type,
     difficulty: normalized.difficulty,
     choices: scormChoices,
