@@ -57,6 +57,11 @@ import { useConflictResolution } from "./hooks/useConflictResolution";
 import { useSidebarProps } from "./hooks/useSidebarProps";
 import { useToolbarProps } from "./hooks/useToolbarProps";
 import { useViewRouterState } from "./hooks/useViewRouterState";
+import {
+  useGlobalModalsVisibility,
+  useGlobalModalsState,
+  useGlobalModalsHandlers,
+} from "./hooks/useGlobalModalsProps";
 
 // Utilities
 import { APP_MODES } from "./utils/constants";
@@ -538,6 +543,73 @@ const App = () => {
     userRole,
   });
 
+  // Memoize GlobalModals visibility (extracted to hook)
+  const globalModalsVisibility = useGlobalModalsVisibility({
+    showNameModal,
+    showClearModal,
+    showBulkExportModal,
+    showSettings,
+    showAnalytics,
+    showDangerZone,
+    showApiKeyModal,
+    showTerms,
+    showAgeGate,
+    tutorialActive,
+    deleteConfirmId,
+    showAdvancedConfig,
+    showApiKey,
+  });
+
+  // Memoize GlobalModals state (extracted to hook)
+  const globalModalsState = useGlobalModalsState({
+    config,
+    isProcessing,
+    status,
+    translationProgress,
+    allQuestionsMap,
+    appMode,
+    currentStep,
+    tutorialSteps,
+    activeScenario,
+    approvedCount,
+    questionsLength: questions.length,
+    isApiReady,
+    customTags,
+    isAdmin,
+  });
+
+  // Memoize GlobalModals handlers (extracted to hook)
+  const globalModalsHandlers = useGlobalModalsHandlers({
+    handleNameSave,
+    handleDeleteAllQuestions,
+    handleBulkExport,
+    confirmDelete,
+    setDeleteConfirmId,
+    setShowBulkExportModal,
+    setShowSettings,
+    setShowAnalytics,
+    setShowDangerZone,
+    setShowApiKeyModal,
+    handleChange,
+    handleSaveApiKey,
+    setShowTerms,
+    setTermsAccepted,
+    setShowAgeGate,
+    setShowClearModal,
+    handleTutorialNext,
+    handleTutorialPrev,
+    handleTutorialSkip,
+    handleTutorialComplete,
+    setConfig,
+    config,
+    fileInputRef,
+    handleFileChange,
+    setShowAdvancedConfig,
+    setShowApiKey,
+    handleDetectTopics,
+    handleSaveCustomTags,
+  });
+
   // Render - Loading state
   if (authLoading || registrationLoading) {
     return <LoadingSpinner />;
@@ -590,74 +662,9 @@ const App = () => {
             onDismiss={dismissRecovery}
           />
           <GlobalModals
-            visibility={{
-              showNameModal,
-              showClearModal,
-              showBulkExportModal,
-              showSettings,
-              showAnalytics,
-              showDangerZone,
-              showApiKeyModal,
-              showTerms,
-              showAgeGate,
-              tutorialActive,
-              deleteConfirmId,
-              showAdvancedConfig,
-              showApiKey,
-            }}
-            state={{
-              config,
-              isProcessing,
-              status,
-              translationProgress,
-              allQuestionsMap,
-              appMode,
-              currentStep,
-              tutorialSteps,
-              activeScenario,
-              metrics: {
-                totalApproved: approvedCount,
-                totalQuestions: questions.length,
-              },
-              isApiReady,
-              customTags,
-              isAdmin,
-            }}
-            handlers={{
-              handleNameSave,
-              handleDeleteAllQuestions,
-              handleBulkExport,
-              confirmDelete,
-              setDeleteConfirmId,
-              onCloseBulkExport: () => setShowBulkExportModal(false),
-              onCloseSettings: () => setShowSettings(false),
-              onCloseAnalytics: () => setShowAnalytics(false),
-              onCloseDangerZone: () => setShowDangerZone(false),
-              onCloseApiKey: () => setShowApiKeyModal(false),
-              handleChange,
-              handleSaveApiKey,
-              setShowTerms,
-              setTermsAccepted,
-              setShowAgeGate,
-              setShowClearModal,
-              handleTutorialNext,
-              handleTutorialPrev,
-              handleTutorialSkip,
-              handleTutorialComplete,
-              onResetSettings: () =>
-                setConfig({ ...config, ...useAppConfig.defaultConfig }),
-              onHardReset: () => {
-                localStorage.clear();
-                window.location.reload();
-              },
-              fileInputRef,
-              handleFileChange,
-              setShowAdvancedConfig,
-              setShowApiKey,
-              handleDetectTopics,
-              onSaveCustomTags: handleSaveCustomTags,
-              window: window,
-            }}
+            visibility={globalModalsVisibility}
+            state={globalModalsState}
+            handlers={globalModalsHandlers}
           />
         </Suspense>
 
