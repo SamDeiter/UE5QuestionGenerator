@@ -273,11 +273,14 @@ const App = () => {
     moveQuestion,
   } = useQuestionManager(config, showMessage);
 
-  // Calculate token usage from Firestore questions (aggregates estimatedCost from all questions)
-  const firestoreTokenUsage = useMemo(
-    () => getTokenUsageFromQuestions(databaseQuestions),
-    [databaseQuestions],
-  );
+  // Calculate token usage from Firestore questions (only count user's own questions)
+  const firestoreTokenUsage = useMemo(() => {
+    // Filter to only questions created by the current user
+    const userQuestions = databaseQuestions.filter(
+      (q) => q.createdBy === user?.uid,
+    );
+    return getTokenUsageFromQuestions(userQuestions);
+  }, [databaseQuestions, user?.uid]);
 
   // 2.5. Crash Recovery - detect and restore from cloud backup
   const {
