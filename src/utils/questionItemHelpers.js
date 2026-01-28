@@ -143,3 +143,79 @@ export const getDiffBadgeColor = (difficulty, colorblindMode = false) => {
 
   return "bg-slate-800 text-slate-400 border-slate-700";
 };
+
+// ============================================
+// VERIFICATION DATA BUILDERS
+// ============================================
+
+/**
+ * Build update data for "Verified via Docs" action
+ * @param {string} userEmail - Email of the verifier
+ * @param {Object} clickInfo - Click tracking info
+ * @returns {Object} Update data for Firestore
+ */
+export const buildVerifyDocsData = (userEmail, clickInfo = {}) => ({
+  humanVerified: true,
+  humanVerifiedBy: userEmail || "Unknown",
+  humanVerifiedAt: new Date().toISOString(),
+  verificationSource: "epic_docs",
+  verificationClickedDocs: clickInfo.clickedDocs || false,
+  verificationClickedSearch: clickInfo.clickedSearch || false,
+});
+
+/**
+ * Build update data for "Verified via Search" action
+ * @param {string} userEmail - Email of the verifier
+ * @param {Object} clickInfo - Click tracking info
+ * @returns {Object} Update data for Firestore
+ */
+export const buildVerifySearchData = (userEmail, clickInfo = {}) => ({
+  humanVerified: true,
+  humanVerifiedBy: userEmail || "Unknown",
+  humanVerifiedAt: new Date().toISOString(),
+  verificationSource: "google_search",
+  verificationClickedDocs: clickInfo.clickedDocs || false,
+  verificationClickedSearch: clickInfo.clickedSearch || false,
+});
+
+/**
+ * Build update data for "Reject Verification" action
+ * @param {string} userEmail - Email of the rejector
+ * @param {string} reasonId - Rejection reason ID
+ * @param {Object} clickInfo - Click tracking info
+ * @returns {Object} Update data for Firestore
+ */
+export const buildRejectVerificationData = (
+  userEmail,
+  reasonId,
+  clickInfo = {}
+) => ({
+  humanVerified: false,
+  verificationRejected: true,
+  verificationRejectedBy: userEmail || "Unknown",
+  verificationRejectedAt: new Date().toISOString(),
+  verificationRejectReason: reasonId,
+  verificationClickedDocs: clickInfo.clickedDocs || false,
+  verificationClickedSearch: clickInfo.clickedSearch || false,
+});
+
+/**
+ * Build update data for "Flag as Unverified" action
+ * @param {string} userEmail - Email of the flagger
+ * @param {Object} clickInfo - Click tracking info
+ * @returns {Object} Update data for Firestore
+ */
+export const buildFlagUnverifiedData = (userEmail, clickInfo = {}) => ({
+  // Mark as verified so it advances to Accept step
+  humanVerified: true,
+  humanVerifiedBy: userEmail || "Unknown",
+  humanVerifiedAt: new Date().toISOString(),
+  verificationSource: "flagged_unverified",
+  // But also flag as source unverified
+  sourceUnverified: true,
+  sourceUnverifiedBy: userEmail || "Unknown",
+  sourceUnverifiedAt: new Date().toISOString(),
+  sourceUnverifiedReason: "not_found_anywhere",
+  verificationClickedDocs: clickInfo.clickedDocs || false,
+  verificationClickedSearch: clickInfo.clickedSearch || false,
+});

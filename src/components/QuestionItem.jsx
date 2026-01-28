@@ -36,6 +36,10 @@ import {
   getLockLabel,
   getStatusStyle,
   getDifficultyGradient,
+  buildVerifyDocsData,
+  buildVerifySearchData,
+  buildRejectVerificationData,
+  buildFlagUnverifiedData,
 } from "../utils/questionItemHelpers";
 
 import { saveTrainingPair } from "../services/trainingDataService";
@@ -176,22 +180,12 @@ const QuestionItem = ({
     setShowVerifyModal(true);
   }, []);
 
-  // NEW: Verification handlers for Traffic Light outcomes
-  // Include click tracking for accountability
+  // Verification handlers using extracted data builders
   const handleVerifyViaDocs = useCallback(
     (clickInfo = {}) => {
       if (!onUpdateQuestion) return;
-      onUpdateQuestion(q.id, {
-        humanVerified: true,
-        humanVerifiedBy: userEmail || "Unknown",
-        humanVerifiedAt: new Date().toISOString(),
-        verificationSource: "epic_docs",
-        verificationClickedDocs: clickInfo.clickedDocs || false,
-        verificationClickedSearch: clickInfo.clickedSearch || false,
-      });
-      if (showMessage) {
-        showMessage("✅ Verified via Epic Docs!", TOAST_DURATION.MEDIUM);
-      }
+      onUpdateQuestion(q.id, buildVerifyDocsData(userEmail, clickInfo));
+      showMessage?.("✅ Verified via Epic Docs!", TOAST_DURATION.MEDIUM);
     },
     [q.id, onUpdateQuestion, userEmail, showMessage]
   );
@@ -199,17 +193,8 @@ const QuestionItem = ({
   const handleVerifyViaSearch = useCallback(
     (clickInfo = {}) => {
       if (!onUpdateQuestion) return;
-      onUpdateQuestion(q.id, {
-        humanVerified: true,
-        humanVerifiedBy: userEmail || "Unknown",
-        humanVerifiedAt: new Date().toISOString(),
-        verificationSource: "google_search",
-        verificationClickedDocs: clickInfo.clickedDocs || false,
-        verificationClickedSearch: clickInfo.clickedSearch || false,
-      });
-      if (showMessage) {
-        showMessage("✅ Verified via Google Search!", TOAST_DURATION.MEDIUM);
-      }
+      onUpdateQuestion(q.id, buildVerifySearchData(userEmail, clickInfo));
+      showMessage?.("✅ Verified via Google Search!", TOAST_DURATION.MEDIUM);
     },
     [q.id, onUpdateQuestion, userEmail, showMessage]
   );
@@ -217,54 +202,28 @@ const QuestionItem = ({
   const handleRejectVerification = useCallback(
     (reasonId, clickInfo = {}) => {
       if (!onUpdateQuestion) return;
-      // Save rejection info to question document
-      onUpdateQuestion(q.id, {
-        humanVerified: false,
-        verificationRejected: true,
-        verificationRejectedBy: userEmail || "Unknown",
-        verificationRejectedAt: new Date().toISOString(),
-        verificationRejectReason: reasonId,
-        verificationClickedDocs: clickInfo.clickedDocs || false,
-        verificationClickedSearch: clickInfo.clickedSearch || false,
-      });
-      // Also update status to rejected
-      if (onUpdateStatus) {
-        onUpdateStatus(q.id, QUESTION_STATUS.REJECTED, reasonId);
-      }
-      if (showMessage) {
-        showMessage(
-          "❌ Question rejected - source not verified",
-          TOAST_DURATION.LONG
-        );
-      }
+      onUpdateQuestion(
+        q.id,
+        buildRejectVerificationData(userEmail, reasonId, clickInfo)
+      );
+      onUpdateStatus?.(q.id, QUESTION_STATUS.REJECTED, reasonId);
+      showMessage?.(
+        "❌ Question rejected - source not verified",
+        TOAST_DURATION.LONG
+      );
     },
     [q.id, onUpdateQuestion, onUpdateStatus, userEmail, showMessage]
   );
 
-  // NEW: Flag as unverified but don't reject - question advances to Accept with warning
+  // Flag as unverified but don't reject - question advances to Accept with warning
   const handleFlagUnverified = useCallback(
     (clickInfo = {}) => {
       if (!onUpdateQuestion) return;
-      onUpdateQuestion(q.id, {
-        // Mark as verified so it advances to Accept step
-        humanVerified: true,
-        humanVerifiedBy: userEmail || "Unknown",
-        humanVerifiedAt: new Date().toISOString(),
-        verificationSource: "flagged_unverified",
-        // But also flag as source unverified
-        sourceUnverified: true,
-        sourceUnverifiedBy: userEmail || "Unknown",
-        sourceUnverifiedAt: new Date().toISOString(),
-        sourceUnverifiedReason: "not_found_anywhere",
-        verificationClickedDocs: clickInfo.clickedDocs || false,
-        verificationClickedSearch: clickInfo.clickedSearch || false,
-      });
-      if (showMessage) {
-        showMessage(
-          "🚩 Flagged - source unverified, ready for Accept/Reject",
-          TOAST_DURATION.LONG
-        );
-      }
+      onUpdateQuestion(q.id, buildFlagUnverifiedData(userEmail, clickInfo));
+      showMessage?.(
+        "🚩 Flagged - source unverified, ready for Accept/Reject",
+        TOAST_DURATION.LONG
+      );
     },
     [q.id, onUpdateQuestion, userEmail, showMessage]
   );
