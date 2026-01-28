@@ -7,6 +7,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  sendEmailVerification,
 } from "firebase/auth";
 import { logger } from "../utils/logger";
 import { TIMING } from "../utils/constants";
@@ -69,14 +70,27 @@ export const signOutUser = async () => {
 
 /**
  * Sign up with email and password
+ * HIGH 8: Sends email verification after account creation
  * @param {string} email - User email
  * @param {string} password - User password
- * @returns {Promise<User>} Firebase user object
+ * @returns {Promise<{user: User, verificationSent: boolean}>} Firebase user and verification status
  */
 export const signUpWithEmail = async (email, password) => {
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password);
-    return result.user;
+
+    // HIGH 8: Send email verification
+    let verificationSent = false;
+    try {
+      await sendEmailVerification(result.user);
+      verificationSent = true;
+      logger.log("✉️ Email verification sent to:", email);
+    } catch (verificationError) {
+      // Don't fail signup if verification email fails
+      logger.warn("⚠️ Failed to send verification email:", verificationError);
+    }
+
+    return { user: result.user, verificationSent };
   } catch (error) {
     // Only log unexpected errors (not user mistakes like "email already in use")
     if (

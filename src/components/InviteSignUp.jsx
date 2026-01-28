@@ -107,7 +107,12 @@ const InviteSignUp = ({ onSuccess, onCancel }) => {
     setAuthError("");
     try {
       if (isNewUser) {
-        await signUpWithEmail(email, password);
+        // signUpWithEmail now returns {user, verificationSent}
+        const { verificationSent } = await signUpWithEmail(email, password);
+        if (verificationSent) {
+          // Note: User can continue even without verification for now
+          // Future: Could require verification before full access
+        }
       } else {
         await signInWithEmail(email, password);
       }
