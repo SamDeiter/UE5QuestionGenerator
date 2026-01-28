@@ -17,17 +17,23 @@ const escapeXml = (unsafe) => {
   // Common HTML entities that need conversion (these cause "undeclared entity" errors)
   const HTML_ENTITIES = {
     "&nbsp;": " ",
-    "&copy;": "\u00A9",
-    "&reg;": "\u00AE",
-    "&trade;": "\u2122",
-    "&mdash;": "\u2014",
-    "&ndash;": "\u2013",
-    "&hellip;": "\u2026",
-    "&ldquo;": "\u201C",
-    "&rdquo;": "\u201D",
-    "&lsquo;": "\u2018",
-    "&rsquo;": "\u2019",
-    "&bull;": "\u2022",
+    "&copy;": "(c)",
+    "&reg;": "(R)",
+    "&trade;": "(TM)",
+    "&mdash;": "-",
+    "&ndash;": "-",
+    "&hellip;": "...",
+    "&ldquo;": '"',
+    "&rdquo;": '"',
+    "&lsquo;": "'",
+    "&rsquo;": "'",
+    "&bull;": "*",
+    "&amp;": "&", // Decode first, then re-escape
+    "&lt;": "<",
+    "&gt;": ">",
+    "&quot;": '"',
+    "&#39;": "'",
+    "&apos;": "'",
   };
 
   let result = unsafe.toString();
@@ -37,9 +43,12 @@ const escapeXml = (unsafe) => {
     result = result.replace(new RegExp(entity, "gi"), char);
   });
 
-  // Remove any remaining unrecognized entity references (e.g., &foo;)
-  // This regex matches &word; patterns that aren't the 5 standard XML entities
-  result = result.replace(/&(?!(?:amp|lt|gt|quot|apos);)[a-zA-Z0-9#]+;/g, "");
+  // CRITICAL: Remove ALL remaining entity references (e.g., &foo; &xxx;)
+  // This catches ANY entity the LMS XML parser won't recognize
+  // XML only supports: &amp; &lt; &gt; &quot; &apos;
+  result = result.replace(/&[a-zA-Z][a-zA-Z\d]*;/g, "");
+  result = result.replace(/&#\d+;/g, ""); // Numeric entities like &#160;
+  result = result.replace(/&#x[\da-fA-F]+;/g, ""); // Hex entities like &#xA0;
 
   // Now escape XML special characters (order matters: & first!)
   return result
