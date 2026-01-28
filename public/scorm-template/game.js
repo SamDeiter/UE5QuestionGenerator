@@ -130,6 +130,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateProgress();
 
+    // SECURITY: Do NOT expose correct answer in DOM (no data-correct attribute)
+    // Correctness is checked server-side via question data at answer time
     const html = `
       <div class="bg-slate-800 rounded-lg p-6 shadow-xl">
         <h2 class="text-2xl font-bold text-blue-300 mb-4">${question.text}</h2>
@@ -138,9 +140,8 @@ document.addEventListener("DOMContentLoaded", () => {
             .map(
               (choice, index) => `
             <button 
-              class="choice-btn w-full text-left p-4 bg-slate-700 hover:bg-slate-600 rounded-lg border border-slate-600 hover:border-blue-500 transition-all"
+              class="choice-btn w-full text-left p-4 bg-slate-700 hover:bg-slate-600 rounded-lg border-2 border-slate-600 hover:border-blue-500 transition-all"
               data-index="${index}"
-              data-correct="${choice.correct}"
             >
               <span class="font-semibold">${choice.text}</span>
             </button>
@@ -162,7 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleAnswer(button) {
     const question = questions[currentQuestionIndex];
     const choiceIndex = parseInt(button.dataset.index);
-    const isCorrect = button.dataset.correct === "true";
+    // SECURITY: Check correctness from question data, not DOM attribute
+    const isCorrect = question.choices[choiceIndex].correct === true;
     const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
 
     // Record answer
@@ -174,19 +176,28 @@ document.addEventListener("DOMContentLoaded", () => {
       timeSpent: timeSpent,
     });
 
-    // Testing mode: No visual feedback - just record and move on
+    // Testing mode: No correct/incorrect feedback - just show selection
     // This prevents test-takers from learning answers during the test
 
     // Disable all buttons to prevent double-click
     document.querySelectorAll(".choice-btn").forEach((btn) => {
       btn.disabled = true;
-      btn.classList.add("cursor-not-allowed", "opacity-50");
+      btn.classList.add("cursor-not-allowed", "opacity-40");
     });
 
-    // Show brief "Answer recorded" indicator
-    button.classList.add("bg-blue-600", "border-blue-500");
+    // IMPROVED: Show clear "selected" indicator on chosen answer
+    button.classList.remove("opacity-40", "bg-slate-700", "border-slate-600");
+    button.classList.add(
+      "bg-blue-600",
+      "border-blue-400",
+      "ring-2",
+      "ring-blue-400",
+      "ring-offset-2",
+      "ring-offset-slate-800",
+      "opacity-100"
+    );
 
-    // Move to next question after brief delay (just long enough to show selection)
+    // Move to next question after brief delay (long enough to show selection clearly)
     setTimeout(() => {
       currentQuestionIndex++;
       if (currentQuestionIndex < questions.length) {
@@ -194,7 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         endQuiz("completed");
       }
-    }, 500);
+    }, 600);
   }
 
   function calculateScore() {
