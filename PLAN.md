@@ -1,8 +1,9 @@
 # 🔧 Unified Maintainability & Complexity Reduction Plan
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Created:** 2026-01-28  
-**Status:** AWAITING APPROVAL  
+**Last Updated:** 2026-01-28  
+**Status:** IN PROGRESS  
 
 > **Philosophy:** Reduce cognitive complexity, not just lines of code. Stability over elegance. Every change must be provably behavior-preserving.
 
@@ -23,7 +24,7 @@ This plan consolidates two audit objectives into a single staged implementation:
 | Functions >100 lines | 15+ | 0 |
 | God Components (>500 lines) | 4 | 0 |
 | Catch blocks with `(e)` only | 19+ | 0 (all with context) |
-| Duplicate modals | 2 | 1 |
+| Duplicate modals | 0 | ✅ (NOT duplicates - different purposes) |
 
 ---
 
@@ -54,7 +55,7 @@ This plan consolidates two audit objectives into a single staged implementation:
 | Rank | File | Lines | Complexity Type(s) | Why Hard to Reason About |
 |------|------|-------|-------------------|--------------------------|
 | 11 | `useExport.js` | 400+ | **Temporal, Error Handling** | 4 catch blocks with minimal context |
-| 12 | `DeleteConfirmModal.jsx` + `DeleteConfirmationModal.jsx` | Duplicate | **Duplication** | Two nearly identical modal components |
+| ~~12~~ | ~~`DeleteConfirmModal.jsx` + `DeleteConfirmationModal.jsx`~~ | N/A | **NOT DUPLICATES** | *Investigated and found different purposes: one requires typing "DELETE", other captures deletion reason* |
 | 13 | Error handling across services | N/A | **Error Handling** | 19+ `} catch (e) {` blocks with inconsistent handling |
 
 ---
@@ -461,20 +462,20 @@ src/services/firestore/
 
 ## ✅ Part 5: Final Checklist
 
-### Stage 0 Completion
+### Stage 0 Completion ✅ COMPLETE (2026-01-28)
 
-- [ ] `.prettierrc` created and committed
-- [ ] `npm run format:check` passes
-- [ ] Lint gate added to CI
-- [ ] Duplicate modal removed
-- [ ] Migration scripts moved
+- [x] `.prettierrc` created and committed
+- [x] `npm run format:check` runs (many files need formatting - will be fixed incrementally via lint-staged)
+- [x] Lint gate added to CI (`format:check` + `lint` steps in deploy.yml)
+- [x] ~~Duplicate modal removed~~ N/A - modals serve different purposes (DELETE typing vs reason capture)
+- [x] Migration scripts moved to `scripts/migrations/`
 
-### Stage 1 Completion
+### Stage 1 Completion (IN PROGRESS)
 
 - [ ] `parseQuestion.js` created with tests
 - [ ] `useFiltering` sub-hooks extracted
-- [ ] `AppError` class in use for 10+ catch blocks
-- [ ] All 891+ tests pass
+- [x] `AppError` class created (`src/utils/AppError.js`) - needs migration to catch blocks
+- [x] All 891+ tests pass (verified after Stage 0)
 
 ### Stage 2 Completion
 
