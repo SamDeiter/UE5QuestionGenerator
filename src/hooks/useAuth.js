@@ -121,7 +121,8 @@ export function useAuth(showMessage) {
             "isAdmin:",
             regStatus.role === "admin",
           );
-          if (isCancelled) return; // A2/A3: Check before updating state
+          // CRITICAL FIX: Check cancellation BEFORE any setState to prevent ghost admin
+          if (isCancelled) return;
           setIsRegistered(regStatus.registered);
           setUserRole(regStatus.role || "user");
           setIsAdmin(regStatus.role === "admin");
@@ -146,26 +147,48 @@ export function useAuth(showMessage) {
               logger.error("❌ Write probe failed:", probeError);
               if (probeError.code === "permission-denied") {
                 setPermissionError(true);
+                // CRITICAL FIX: Revoke registration if write access denied
+                // Prevents "Ghost Reviewer" - appears registered but can't save
+                setIsRegistered(false);
+                setUserRole("user");
+                setIsAdmin(false);
+                logger.warn(
+                  "⚠️ Write probe failed - revoking registration status",
+                );
               }
             }
           }
         } catch (error) {
           logger.error("Failed to check registration:", error);
 
-          // Detect if request was blocked by browser extension (ad blocker)
-          const errorMsg = error?.message?.toLowerCase() || "";
-          const isNetworkBlocked =
-            errorMsg.includes("failed to fetch") ||
-            errorMsg.includes("network request failed") ||
-            errorMsg.includes("blocked") ||
-            error?.code === "unavailable" ||
-            error?.code === "resource-exhausted";
+          // Track if blocked by extension for logging purposes
+          let isNetworkBlocked = false;
 
-          if (isNetworkBlocked) {
-            logger.warn(
-              "🚫 Request appears to be blocked by browser extension",
-            );
-            setBlockedByExtension(true);
+          // IMPROVED: Check if truly offline first before blaming ad blocker
+          if (!navigator.onLine) {
+            logger.warn("📵 User is offline - cannot check registration");
+            // Don't set blockedByExtension for genuine network issues
+            if (!isCancelled) {
+              setIsRegistered(false);
+              setUserRole("user");
+              setIsAdmin(false);
+            }
+          } else {
+            // Detect if request was blocked by browser extension (ad blocker)
+            const errorMsg = error?.message?.toLowerCase() || "";
+            isNetworkBlocked =
+              errorMsg.includes("failed to fetch") ||
+              errorMsg.includes("network request failed") ||
+              errorMsg.includes("blocked") ||
+              error?.code === "unavailable" ||
+              error?.code === "resource-exhausted";
+
+            if (isNetworkBlocked) {
+              logger.warn(
+                "🚫 Request appears to be blocked by browser extension",
+              );
+              setBlockedByExtension(true);
+            }
           }
 
           // Log auth failure to Firestore for admin monitoring

@@ -11,6 +11,7 @@
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
     "test": "vitest",
+    "test:rules": "firebase emulators:exec --only firestore \"vitest run --testPathPattern=firestore.rules\"",
     "predeploy": "npm run build",
     "deploy": "firebase use prod && firebase deploy --only firestore:rules && gh-pages -d dist",
     "prepare": "husky",
@@ -38,6 +39,7 @@
     "recharts": "^3.5.1"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
