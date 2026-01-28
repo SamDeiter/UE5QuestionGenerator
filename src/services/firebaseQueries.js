@@ -8,6 +8,8 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
+  doc,
   collection,
   orderBy,
   limit,
@@ -605,5 +607,41 @@ export const getCustomTags = async () => {
   } catch (error) {
     logger.error("Error getting custom tags:", error);
     return {};
+  }
+};
+
+/**
+ * Retrieves pre-computed question statistics from the aggregate document.
+ * This is FAR cheaper than counting all questions client-side.
+ *
+ * The aggregate doc is maintained by a Cloud Function trigger.
+ *
+ * @returns {Promise<Object|null>} Stats object or null if not found
+ * @example
+ * const stats = await getQuestionStats();
+ * // stats = {
+ * //   totalQuestions: 4500,
+ * //   byStatus: { pending: 150, accepted: 3800, rejected: 500 },
+ * //   byDiscipline: { blueprints: 1200, materials: 800, ... },
+ * //   byType: { multiple_choice: 3000, true_false: 1500 },
+ * //   byDifficulty: { easy: 1500, medium: 2000, hard: 1000 },
+ * //   lastUpdated: Timestamp
+ * // }
+ */
+export const getQuestionStats = async () => {
+  try {
+    const statsRef = doc(getDb(), "_aggregates", "questionStats");
+    const statsSnap = await getDoc(statsRef);
+
+    if (statsSnap.exists()) {
+      logger.log("📊 Loaded question stats from aggregate doc");
+      return statsSnap.data();
+    }
+
+    logger.warn("⚠️ No aggregate stats found - run backfill script");
+    return null;
+  } catch (error) {
+    logger.error("Error getting question stats:", error);
+    return null;
   }
 };

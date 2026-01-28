@@ -1,7 +1,7 @@
 {
   "name": "ue5-question-generator",
   "private": true,
-  "version": "2.3.27",
+  "version": "2.3.28",
   "homepage": "https://samdeiter.github.io/UE5QuestionGenerator/",
   "type": "module",
   "scripts": {
@@ -28,6 +28,7 @@
     "dompurify": "^3.3.1",
     "firebase": "^12.6.0",
     "firebase-admin": "^13.6.0",
+    "idb": "^8.0.3",
     "jszip": "^3.10.1",
     "lucide-react": "^0.460.0",
     "portkey-ai": "^3.0.1",

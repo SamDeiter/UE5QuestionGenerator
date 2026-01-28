@@ -43,3 +43,8 @@ Object.assign(exports, require("./migrations/cleanupAuditLogs"));
 // Email Functions
 // ============================================================================
 Object.assign(exports, require("./email/sendReviewerInvites"));
+
+// ============================================================================
+// Firestore Triggers (Aggregations)
+// ============================================================================
+Object.assign(exports, require("./triggers/questionStatsUpdater"));
