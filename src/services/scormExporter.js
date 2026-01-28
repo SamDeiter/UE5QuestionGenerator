@@ -110,15 +110,28 @@ export async function generateScormPackageFiles(questions, config = {}) {
   const scormQuestions = questions.map(convertQuestionToScormFormat);
 
   // Load template files from public directory
-  const templatePath = "/scorm-template/";
+  // Use Vite's BASE_URL to handle deployment at non-root paths (e.g., /UE5QuestionGenerator/)
+  const baseUrl = import.meta.env.BASE_URL || "/";
+  const templatePath = `${baseUrl}scorm-template/`;
+
+  // Fetch template files with error handling
+  const fetchTemplate = async (filename) => {
+    const response = await fetch(`${templatePath}${filename}`);
+    if (!response.ok) {
+      throw new Error(
+        `Failed to load SCORM template: ${filename} (${response.status})`
+      );
+    }
+    return response.text();
+  };
 
   // Fetch template files
   const [scormJs, indexHtml, styleCSS, gameJs, manifest] = await Promise.all([
-    fetch(`${templatePath}scorm.js`).then((r) => r.text()),
-    fetch(`${templatePath}index.html`).then((r) => r.text()),
-    fetch(`${templatePath}style.css`).then((r) => r.text()),
-    fetch(`${templatePath}game.js`).then((r) => r.text()),
-    fetch(`${templatePath}imsmanifest.xml`).then((r) => r.text()),
+    fetchTemplate("scorm.js"),
+    fetchTemplate("index.html"),
+    fetchTemplate("style.css"),
+    fetchTemplate("game.js"),
+    fetchTemplate("imsmanifest.xml"),
   ]);
 
   // Replace template variables
