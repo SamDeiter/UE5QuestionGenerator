@@ -11,6 +11,7 @@ import {
   getRateLimitStatus,
 } from "../utils/rateLimitState";
 import { logger } from "../utils/logger";
+import { logError } from "../utils/AppError";
 
 /**
  * Helper to handle API calls with retry logic and error handling.
@@ -349,7 +350,10 @@ export const generateCritique = async (apiKey, q) => {
       changes: result.changes,
     };
   } catch (e) {
-    logger.error("Failed to parse critique JSON:", e, rawText);
+    logError(e, {
+      operation: "parseCritiqueJSON",
+      rawTextLength: rawText.length,
+    });
     // Fallback to multiple patterns for score extraction if JSON fails
     let score = null;
 
@@ -498,7 +502,7 @@ export const generateTagsForQuestion = async (apiKey, questionText) => {
   try {
     return JSON.parse(text);
   } catch (e) {
-    logger.error("Failed to parse tags:", text, e);
+    logError(e, { operation: "parseTagsResponse", responseText: text });
     return [];
   }
 };

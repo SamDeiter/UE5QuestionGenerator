@@ -10,7 +10,7 @@ import {
 } from "../services/firebase";
 import { downloadFile, normalizeStatus } from "../utils/questionHelpers";
 import { formatDate } from "../utils/dateHelpers";
-import { logger } from "../utils/logger";
+import { logError } from "../utils/AppError";
 import {
   QUESTION_SOURCES,
   QUESTION_STATUS,
@@ -170,7 +170,11 @@ export const useExport = (
         7000
       );
     } catch (e) {
-      logger.error("Error pushing to Sheets endpoint:", e);
+      logError(e, {
+        operation: "exportToSheets",
+        sheetUrl: config.sheetUrl,
+        questionCount: validQuestions.length,
+      });
       showMessage(
         `Error connecting to endpoint. Check URL/Console: ${e.message}`,
         10000
@@ -270,7 +274,7 @@ export const useExport = (
         );
       }
     } catch (e) {
-      logger.error("Load Error:", e);
+      logError(e, { operation: "loadFromSheets", sheetUrl: config.sheetUrl });
       showMessage(
         `Load Failed: ${e.message}. (Ensure Script Access is set to 'Anyone')`,
         7000
@@ -319,7 +323,7 @@ export const useExport = (
           );
         }
       } catch (e) {
-        logger.error("Firestore Load Error:", e);
+        logError(e, { operation: "loadFromFirestore", silent, limit });
         if (!silent) {
           showMessage(`Firestore Load Failed: ${e.message}`, 7000);
         }
@@ -384,7 +388,10 @@ export const useExport = (
           await saveQuestionsToSheets(config.sheetUrl, questionsToExport);
           showMessage(`Export launched! Check new tab for status.`, 5000);
         } catch (e) {
-          logger.error(e);
+          logError(e, {
+            operation: "bulkExportToSheets",
+            questionCount: questionsToExport.length,
+          });
           showMessage(`Error: ${e.message}`, 5000);
         } finally {
           setIsProcessing(false);
