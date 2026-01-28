@@ -1,0 +1,26 @@
+[36mvite v7.2.4 [32mbuilding client environment for production...[36m[39m
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+transforming...
+[32mΓ£ô[39m 2767 modules transformed.
+Γ£ù Build failed in 5.95s
+error during build:
+src/hooks/useAuthRefresh.js (4:27): "signOut" is not exported by "src/hooks/useAuth.js", imported by "src/hooks/useAuthRefresh.js".
+file: C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/useAuthRefresh.js:4:27
+
+2: import { logger } from "../utils/logger";
+3: import { TOAST_DURATION } from "../utils/constants";
+4: import { refreshAuthToken, signOut } from "./useAuth";
+                              ^
+5: 
+6: // Constants
+
+    at getRollupError (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at error (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/rollup/dist/es/shared/parseAst.js:397:42)
+    at Module.error (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/rollup/dist/es/shared/node-entry.js:16956:16)
+    at Module.traceVariable (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/rollup/dist/es/shared/node-entry.js:17412:29)
+    at ModuleScope.findVariable (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/rollup/dist/es/shared/node-entry.js:15076:39)
+    at FunctionScope.findVariable (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/rollup/dist/es/shared/node-entry.js:5649:38)
+    at FunctionBodyScope.findVariable (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/rollup/dist/es/shared/node-entry.js:5649:38)
+    at ReturnValueScope.findVariable (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/rollup/dist/es/shared/node-entry.js:5649:38)
+    at FunctionBodyScope.findVariable (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/rollup/dist/es/shared/node-entry.js:5649:38)
+    at ReturnValueScope.findVariable (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/rollup/dist/es/shared/node-entry.js:5649:38)

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { logger } from "../utils/logger";
 import { TOAST_DURATION } from "../utils/constants";
-import { refreshAuthToken, signOut } from "./useAuth";
+import { refreshAuthToken, signOutUser } from "../services/firebaseAuth";
 
 // Constants
 const REFRESH_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
@@ -35,7 +35,7 @@ export function useAuthRefresh({ user, authLoading, showMessage }) {
           "error"
         );
         // A6: Auto sign-out to clear corrupted auth state
-        setTimeout(() => signOut(), SIGN_OUT_DELAY_MS);
+        setTimeout(() => signOutUser(), SIGN_OUT_DELAY_MS);
       } else if (result?.reason === "auth/user-disabled") {
         // HIGH 7: Account disabled by admin
         showMessage(
@@ -43,7 +43,7 @@ export function useAuthRefresh({ user, authLoading, showMessage }) {
           "error",
           TOAST_DURATION.LONG
         );
-        setTimeout(() => signOut(), SIGN_OUT_DELAY_MS);
+        setTimeout(() => signOutUser(), SIGN_OUT_DELAY_MS);
       } else if (result?.reason === "auth/id-token-revoked") {
         // HIGH 7: Token revoked (password changed, security event)
         showMessage(
@@ -51,7 +51,7 @@ export function useAuthRefresh({ user, authLoading, showMessage }) {
           "warning",
           TOAST_DURATION.LONG
         );
-        setTimeout(() => signOut(), SIGN_OUT_DELAY_MS);
+        setTimeout(() => signOutUser(), SIGN_OUT_DELAY_MS);
       } else if (isAutoRefresh && !result?.success) {
         // HIGH 7: Generic refresh failure - show clear message
         logger.warn("⚠️ Auth token refresh failed:", result?.reason);
