@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { logger } from "../utils/logger";
-import { runLocalStorageMigration } from "../utils/scoreMigration";
+import { runLocalStorageMigration } from "../utils/migrateScores";
 
 /**
  * Hook to auto-load database questions on startup.

@@ -46,9 +46,12 @@ const escapeXml = (unsafe) => {
   // CRITICAL: Remove ALL remaining entity references (e.g., &foo; &xxx;)
   // This catches ANY entity the LMS XML parser won't recognize
   // XML only supports: &amp; &lt; &gt; &quot; &apos;
-  result = result.replace(/&[a-zA-Z][a-zA-Z\d]*;/g, "");
+  // Enhanced regex to catch ALL patterns including edge cases
+  result = result.replace(/&[a-zA-Z_][\w-]*;/g, ""); // Named entities (including single-letter)
   result = result.replace(/&#\d+;/g, ""); // Numeric entities like &#160;
-  result = result.replace(/&#x[\da-fA-F]+;/g, ""); // Hex entities like &#xA0;
+  result = result.replace(/&#x[\dA-Fa-f]+;/g, ""); // Hex entities like &#xA0;
+  // Final pass: catch ANY remaining ampersand followed by word chars and semicolon
+  result = result.replace(/&\w+;/g, "");
 
   // Now escape XML special characters (order matters: & first!)
   return result
@@ -97,8 +100,11 @@ const sanitizeForScorm = (text) => {
     result = result.replace(new RegExp(entity, "gi"), char);
   });
 
-  // Remove any remaining HTML entity references
-  result = result.replace(/&[a-zA-Z0-9#]+;/g, "");
+  // Remove any remaining HTML entity references - same enhanced patterns as escapeXml
+  result = result.replace(/&[a-zA-Z_][\w-]*;/g, ""); // Named entities
+  result = result.replace(/&#\d+;/g, ""); // Numeric entities
+  result = result.replace(/&#x[\dA-Fa-f]+;/g, ""); // Hex entities
+  result = result.replace(/&\w+;/g, ""); // Final catch-all
 
   // Remove HTML tags
   result = result.replace(/<\/?[a-zA-Z][^>]*>/g, "");
@@ -200,12 +206,15 @@ export async function generateScormPackageFiles(questions, config = {}) {
   const processedIndexHtml = indexHtml.replace(/{{TITLE}}/g, escapeXml(title));
 
   // Create questions.js file with our questions
+  // Sanitize title/description to prevent any entity issues in JavaScript contexts
+  const safeTitle = sanitizeForScorm(title);
+  const safeDescription = sanitizeForScorm(description);
   const questionsJs = `// Generated questions for SCORM package
 // Generated: ${new Date().toISOString()}
 
 window.QUIZ_CONFIG = {
-  title: ${JSON.stringify(title)},
-  description: ${JSON.stringify(description)},
+  title: ${JSON.stringify(safeTitle)},
+  description: ${JSON.stringify(safeDescription)},
   passingScore: ${passingScore},
   timeLimit: ${timeLimit * SECONDS_IN_MINUTE}, // Convert minutes to seconds
   totalQuestions: ${scormQuestions.length}
