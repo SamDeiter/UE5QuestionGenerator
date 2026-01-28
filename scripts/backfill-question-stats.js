@@ -7,23 +7,41 @@
  * Usage:
  *   node scripts/backfill-question-stats.js
  *
- * Note: Requires GOOGLE_APPLICATION_CREDENTIALS or running from Firebase Functions shell.
+ * Note: Requires GOOGLE_APPLICATION_CREDENTIALS or running from Firebase CLI context.
  */
 
-const admin = require("firebase-admin");
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { readFileSync } from "fs";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
 
-// Initialize if not already done
-if (!admin.apps.length) {
-  admin.initializeApp();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Try to find service account key
+let serviceAccount;
+const keyPath = resolve(__dirname, "../functions/.env");
+
+// Use default credentials if available (Firebase CLI context)
+if (getApps().length === 0) {
+  try {
+    // Try service account file first
+    const serviceAccountPath = resolve(__dirname, "../serviceAccountKey.json");
+    serviceAccount = JSON.parse(readFileSync(serviceAccountPath, "utf8"));
+    initializeApp({ credential: cert(serviceAccount) });
+    console.log("🔐 Initialized with service account key");
+  } catch {
+    // Fall back to application default credentials
+    initializeApp();
+    console.log("🔐 Initialized with application default credentials");
+  }
 }
 
-const db = admin.firestore();
+const db = getFirestore();
 const STATS_DOC_PATH = "_aggregates/questionStats";
 
 /**
- * Sanitizes a field name for use in Firestore document paths.
- * @param {string} name - The field name to sanitize
- * @returns {string} - Sanitized field name
+ * Sanitizes a field name for use in Firestore.
  */
 function sanitizeFieldName(name) {
   if (!name) return "unknown";
@@ -42,7 +60,7 @@ async function backfillStats() {
     byType: {},
     byDifficulty: {},
     totalQuestions: 0,
-    lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+    lastUpdated: FieldValue.serverTimestamp(),
   };
 
   snapshot.forEach((doc) => {
