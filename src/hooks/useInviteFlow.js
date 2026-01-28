@@ -10,6 +10,8 @@ import {
   signUpWithEmail,
   signInWithEmail,
 } from "../services/firebase";
+import { logger } from "../utils/logger";
+import { getErrorMessage } from "../utils/errorMessages";
 
 /**
  * useInviteFlow Hook
@@ -69,12 +71,11 @@ export function useInviteFlow({ onSuccess }) {
       clearInviteFromUrl();
       onSuccess?.(result.role);
     } catch (error) {
-      let message = error.message || "Authentication failed";
-      if (error.code === "auth/user-disabled") {
-        message = "Your account has been disabled. Please contact support.";
-      }
-      setAuthError(message);
+      // Use centralized error handling
+      const errorConfig = getErrorMessage(error);
+      setAuthError(errorConfig.message);
       setIsAuthenticating(false);
+      logger.error("Failed to sign in with Google:", error);
     }
   };
 
@@ -91,18 +92,10 @@ export function useInviteFlow({ onSuccess }) {
       clearInviteFromUrl();
       onSuccess?.(result.role);
     } catch (error) {
-      let message = error.message || "Authentication failed";
       if (error.code === "auth/email-already-in-use") {
-        message = "Email already registered. Try signing in instead.";
         setIsNewUser(false);
-      } else if (error.code === "auth/weak-password") {
-        message = "Password should be at least 6 characters.";
-      } else if (error.code === "auth/wrong-password") {
-        message = "Incorrect password. Try again.";
-      } else if (error.code === "auth/user-disabled") {
-        message = "Your account has been disabled. Please contact support.";
       }
-      setAuthError(message);
+      setAuthError(getErrorMessage(error).message);
       setIsAuthenticating(false);
     }
   };

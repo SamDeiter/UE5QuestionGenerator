@@ -10,6 +10,11 @@ export const ERROR_TYPES = {
   SESSION_EXPIRED: "session-expired",
   RATE_LIMITED: "rate-limited",
   FIREBASE_AUTH_BLOCKED: "firebase-auth-blocked",
+  ACCOUNT_EXISTS: "account-exists",
+  EMAIL_IN_USE: "email-in-use",
+  INVALID_CREDENTIAL: "invalid-credential",
+  // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- This is an error type constant, not a password
+  WEAK_PASSWORD: "weak-password",
   UNKNOWN: "unknown",
 };
 
@@ -33,6 +38,13 @@ export const getBrowserName = () => {
 /**
  * Categorizes errors based on code or message patterns.
  */
+// Helper to match code or message
+const matchError = (error, patterns) => {
+  const code = error?.code || "";
+  const message = error?.message || "";
+  return patterns.some((p) => code === p || message.includes(p));
+};
+
 export const categorizeError = (error) => {
   const code = error?.code || "";
   const message = error?.message || "";
@@ -44,24 +56,42 @@ export const categorizeError = (error) => {
     return ERROR_TYPES.FIREBASE_AUTH_BLOCKED;
   }
 
-  const match = (p) => code === p || message.includes(p);
-
+  // Auth Specific Errors
+  if (code === "auth/account-exists-with-different-credential")
+    return ERROR_TYPES.ACCOUNT_EXISTS;
+  if (code === "auth/email-already-in-use") return ERROR_TYPES.EMAIL_IN_USE;
+  if (code === "auth/weak-password") return ERROR_TYPES.WEAK_PASSWORD;
   if (
     [
+      "auth/wrong-password",
+      "auth/invalid-credential",
+      "auth/user-not-found",
+    ].includes(code)
+  ) {
+    return ERROR_TYPES.INVALID_CREDENTIAL;
+  }
+
+  // Broad Categories
+  if (
+    matchError(error, [
       "permission-denied",
       "403",
       "PERMISSION_DENIED",
       "insufficient permissions",
-    ].some(match)
+    ])
   ) {
     return ERROR_TYPES.PERMISSION_DENIED;
   }
-
-  if (["unauthenticated", "auth/user-token-expired", "token"].some(match)) {
+  if (
+    matchError(error, ["unauthenticated", "auth/user-token-expired", "token"])
+  ) {
     return ERROR_TYPES.UNAUTHENTICATED;
   }
+  if (matchError(error, ["resource-exhausted", "429", "quota"])) {
+    return ERROR_TYPES.RATE_LIMITED;
+  }
 
-  const net = [
+  const networkPatterns = [
     "unavailable",
     "network-request-failed",
     "network",
@@ -69,10 +99,7 @@ export const categorizeError = (error) => {
     "ERR_INTERNET_DISCONNECTED",
     "ERR_BLOCKED_BY_CLIENT",
   ];
-  if (net.some(match)) return ERROR_TYPES.NETWORK_ERROR;
-
-  if (["resource-exhausted", "429", "quota"].some(match))
-    return ERROR_TYPES.RATE_LIMITED;
+  if (matchError(error, networkPatterns)) return ERROR_TYPES.NETWORK_ERROR;
 
   return ERROR_TYPES.UNKNOWN;
 };
@@ -90,6 +117,38 @@ const getMessageConfig = (context, browser, usingSafari) => ({
     ],
     severity: "error",
     canRetry: false,
+  },
+  [ERROR_TYPES.ACCOUNT_EXISTS]: {
+    title: "⚠️ Account Exists",
+    message:
+      "An account with this email already exists. Please sign in using your existing method (Email/Password).",
+    actions: [
+      "1. Sign in with Email/Password",
+      "2. Use Forgot Password if needed",
+    ],
+    severity: "warning",
+    canRetry: true,
+  },
+  [ERROR_TYPES.EMAIL_IN_USE]: {
+    title: "📧 Email Registered",
+    message: "This email is already registered. Try signing in instead.",
+    actions: ["1. Switch to 'Sign In' tab", "2. Reset password if needed"],
+    severity: "warning",
+    canRetry: true,
+  },
+  [ERROR_TYPES.INVALID_CREDENTIAL]: {
+    title: "❌ Invalid Credentials",
+    message: "Incorrect email or password. Please try again.",
+    actions: ["1. Check email spelling", "2. Reset password"],
+    severity: "warning",
+    canRetry: true,
+  },
+  [ERROR_TYPES.WEAK_PASSWORD]: {
+    title: "⚠️ Weak Password",
+    message: "Password should be at least 6 characters.",
+    actions: ["1. Use a longer password"],
+    severity: "warning",
+    canRetry: true,
   },
   [ERROR_TYPES.PERMISSION_DENIED]: {
     title: "🔐 Permission Issue",
