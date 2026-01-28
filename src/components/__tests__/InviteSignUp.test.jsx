@@ -91,23 +91,23 @@ describe("InviteSignUp Component", () => {
     test("renders validate button initially", () => {
       render(<InviteSignUp onSuccess={mockOnSuccess} />);
       expect(
-        screen.getByRole("button", { name: /validate invite code/i }),
+        screen.getByRole("button", { name: /validate invite code/i })
       ).toBeInTheDocument();
     });
 
     test("renders cancel button when onCancel is provided", () => {
       render(
-        <InviteSignUp onSuccess={mockOnSuccess} onCancel={mockOnCancel} />,
+        <InviteSignUp onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
       );
       expect(
-        screen.getByRole("button", { name: /cancel/i }),
+        screen.getByRole("button", { name: /cancel/i })
       ).toBeInTheDocument();
     });
 
     test("does not render cancel button when onCancel is not provided", () => {
       render(<InviteSignUp onSuccess={mockOnSuccess} />);
       expect(
-        screen.queryByRole("button", { name: /cancel/i }),
+        screen.queryByRole("button", { name: /cancel/i })
       ).not.toBeInTheDocument();
     });
   });
@@ -124,7 +124,7 @@ describe("InviteSignUp Component", () => {
 
       await waitFor(() => {
         expect(screen.getByLabelText(/invite code/i)).toHaveValue(
-          "ABC123XYZ789",
+          "ABC123XYZ789"
         );
       });
     });
@@ -140,7 +140,7 @@ describe("InviteSignUp Component", () => {
 
       await waitFor(() => {
         expect(inviteService.validateInvite).toHaveBeenCalledWith(
-          "ABC123XYZ789",
+          "ABC123XYZ789"
         );
       });
     });
@@ -184,7 +184,7 @@ describe("InviteSignUp Component", () => {
       render(<InviteSignUp onSuccess={mockOnSuccess} />);
       await userEvent.type(
         screen.getByLabelText(/invite code/i),
-        "CODE12345678",
+        "CODE12345678"
       );
       await userEvent.click(screen.getByRole("button", { name: /validate/i }));
 
@@ -200,7 +200,7 @@ describe("InviteSignUp Component", () => {
       render(<InviteSignUp onSuccess={mockOnSuccess} />);
       await userEvent.type(
         screen.getByLabelText(/invite code/i),
-        "VALIDCODE123",
+        "VALIDCODE123"
       );
       await userEvent.click(screen.getByRole("button", { name: /validate/i }));
 
@@ -212,13 +212,13 @@ describe("InviteSignUp Component", () => {
 
     test("shows error message for invalid invite", async () => {
       inviteService.validateInvite.mockRejectedValue(
-        new Error("Invalid invite code"),
+        new Error("Invalid invite code")
       );
 
       render(<InviteSignUp onSuccess={mockOnSuccess} />);
       await userEvent.type(
         screen.getByLabelText(/invite code/i),
-        "BADCODE12345",
+        "BADCODE12345"
       );
       await userEvent.click(screen.getByRole("button", { name: /validate/i }));
 
@@ -229,19 +229,19 @@ describe("InviteSignUp Component", () => {
 
     test("shows rate limit error when exceeded", async () => {
       inviteService.validateInvite.mockRejectedValue(
-        new Error("Too many failed attempts"),
+        new Error("Too many failed attempts")
       );
 
       render(<InviteSignUp onSuccess={mockOnSuccess} />);
       await userEvent.type(
         screen.getByLabelText(/invite code/i),
-        "ANYCODE12345",
+        "ANYCODE12345"
       );
       await userEvent.click(screen.getByRole("button", { name: /validate/i }));
 
       await waitFor(() => {
         expect(
-          screen.getByText(/too many failed attempts/i),
+          screen.getByText(/too many failed attempts/i)
         ).toBeInTheDocument();
       });
     });
@@ -257,13 +257,13 @@ describe("InviteSignUp Component", () => {
       render(<InviteSignUp onSuccess={mockOnSuccess} />);
       await userEvent.type(
         screen.getByLabelText(/invite code/i),
-        "VALIDCODE123",
+        "VALIDCODE123"
       );
       await userEvent.click(screen.getByRole("button", { name: /validate/i }));
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /continue with google/i }),
+          screen.getByRole("button", { name: /continue with google/i })
         ).toBeInTheDocument();
       });
     });
@@ -285,18 +285,18 @@ describe("InviteSignUp Component", () => {
       render(<InviteSignUp onSuccess={mockOnSuccess} />);
       await userEvent.type(
         screen.getByLabelText(/invite code/i),
-        "VALIDCODE123",
+        "VALIDCODE123"
       );
       await userEvent.click(screen.getByRole("button", { name: /validate/i }));
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /continue with google/i }),
+          screen.getByRole("button", { name: /continue with google/i })
         ).toBeInTheDocument();
       });
 
       await userEvent.click(
-        screen.getByRole("button", { name: /continue with google/i }),
+        screen.getByRole("button", { name: /continue with google/i })
       );
 
       await waitFor(() => {
@@ -314,22 +314,23 @@ describe("InviteSignUp Component", () => {
       render(<InviteSignUp onSuccess={mockOnSuccess} />);
       await userEvent.type(
         screen.getByLabelText(/invite code/i),
-        "VALIDCODE123",
+        "VALIDCODE123"
       );
       await userEvent.click(screen.getByRole("button", { name: /validate/i }));
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /continue with google/i }),
+          screen.getByRole("button", { name: /continue with google/i })
         ).toBeInTheDocument();
       });
 
       await userEvent.click(
-        screen.getByRole("button", { name: /continue with google/i }),
+        screen.getByRole("button", { name: /continue with google/i })
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/auth cancelled/i)).toBeInTheDocument();
+        // After centralization, generic errors show standardized message
+        expect(screen.getByText(/an error occurred/i)).toBeInTheDocument();
       });
     });
   });
@@ -337,7 +338,7 @@ describe("InviteSignUp Component", () => {
   describe("Cancel Flow", () => {
     test("calls onCancel when cancel button is clicked", async () => {
       render(
-        <InviteSignUp onSuccess={mockOnSuccess} onCancel={mockOnCancel} />,
+        <InviteSignUp onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
       );
 
       await userEvent.click(screen.getByRole("button", { name: /cancel/i }));
@@ -360,14 +361,14 @@ describe("InviteSignUp Component", () => {
       render(<InviteSignUp onSuccess={mockOnSuccess} />);
       await userEvent.type(
         screen.getByLabelText(/invite code/i),
-        "BADCODE12345",
+        "BADCODE12345"
       );
       await userEvent.click(screen.getByRole("button", { name: /validate/i }));
 
       await waitFor(() => {
         expect(screen.getByLabelText(/invite code/i)).toHaveAttribute(
           "aria-invalid",
-          "true",
+          "true"
         );
       });
     });
