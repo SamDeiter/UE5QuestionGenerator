@@ -178,7 +178,7 @@ export async function generateScormPackageFiles(questions, config = {}) {
   const baseUrl = import.meta.env.BASE_URL || "/";
   const templatePath = `${baseUrl}scorm-template/`;
 
-  // Fetch template files with error handling
+  // Fetch template files with error handling and cleanup
   const fetchTemplate = async (filename) => {
     const response = await fetch(`${templatePath}${filename}`);
     if (!response.ok) {
@@ -186,7 +186,15 @@ export async function generateScormPackageFiles(questions, config = {}) {
         `Failed to load SCORM template: ${filename} (${response.status})`
       );
     }
-    return response.text();
+    let content = await response.text();
+    // CRITICAL: Strip BOM (Byte Order Mark) that can cause "Line 6" XML errors
+    // BOM characters: UTF-8 (EF BB BF), UTF-16 LE (FF FE), UTF-16 BE (FE FF)
+    content = content.replace(/^\uFEFF/, "");
+    content = content.replace(/^\uFFFE/, "");
+    // Normalize line endings to LF only (CRLF causes parsing issues in some LMS)
+    content = content.replace(/\r\n/g, "\n");
+    content = content.replace(/\r/g, "\n");
+    return content;
   };
 
   // Fetch template files
@@ -198,12 +206,24 @@ export async function generateScormPackageFiles(questions, config = {}) {
     fetchTemplate("imsmanifest.xml"),
   ]);
 
-  // Replace template variables
-  const processedManifest = manifest
-    .replace(/{{TITLE}}/g, escapeXml(title))
+  // CRITICAL: Double-sanitize the title to prevent ANY entity issues
+  // First pass: convert known HTML entities to plain text
+  // Second pass: escape for XML
+  const sanitizedTitle = escapeXml(sanitizeForScorm(title));
+
+  // Replace template variables with heavily sanitized content
+  let processedManifest = manifest
+    .replace(/{{TITLE}}/g, sanitizedTitle)
     .replace(/{{ID}}/g, `com.ue5questiongen.${Date.now()}`);
 
-  const processedIndexHtml = indexHtml.replace(/{{TITLE}}/g, escapeXml(title));
+  // CRITICAL: Final pass - remove ANY remaining entity-like patterns from manifest
+  // This catches anything that might have slipped through
+  processedManifest = processedManifest
+    .replace(/&(?!amp;|lt;|gt;|quot;|apos;)[a-zA-Z_][\w-]*;/g, "")
+    .replace(/&#\d+;/g, "")
+    .replace(/&#x[\dA-F]+;/gi, "");
+
+  const processedIndexHtml = indexHtml.replace(/{{TITLE}}/g, sanitizedTitle);
 
   // Create questions.js file with our questions
   // Sanitize title/description to prevent any entity issues in JavaScript contexts
