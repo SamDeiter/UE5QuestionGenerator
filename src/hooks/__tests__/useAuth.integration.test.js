@@ -30,17 +30,17 @@ vi.mock("firebase/firestore", () => ({
 vi.mock("../../services/firebase", () => ({
   auth: {},
   getDb: vi.fn(() => ({})),
+  getCustomTags: vi.fn(() => Promise.resolve({})),
 }));
 
 vi.mock("../../services/inviteService", () => ({
   checkUserRegistration: vi.fn(),
   setupInitialAdmin: vi.fn(),
   getCustomTags: vi.fn(() => Promise.resolve([])),
+  logAuthFailure: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock("../../services/firebaseQueries", () => ({
-  logAuthFailure: vi.fn(),
-}));
+// firebaseQueries removed as it no longer contains logAuthFailure
 
 vi.mock("../../utils/logger", () => ({
   logger: {
@@ -117,7 +117,7 @@ describe("useAuth - Race Condition Protection", () => {
         expect(result.current.isAdmin).toBe(false);
         expect(result.current.isRegistered).toBe(false);
       },
-      { timeout: 2000 },
+      { timeout: 2000 }
     );
 
     unmount();
@@ -168,7 +168,7 @@ describe("useAuth - Race Condition Protection", () => {
         expect(result.current.isRegistered).toBe(false);
         expect(result.current.isAdmin).toBe(false);
       },
-      { timeout: 2000 },
+      { timeout: 2000 }
     );
   });
 
@@ -203,7 +203,7 @@ describe("useAuth - Race Condition Protection", () => {
         expect(result.current.isAdmin).toBe(true);
         expect(result.current.userRole).toBe("admin");
       },
-      { timeout: 2000 },
+      { timeout: 2000 }
     );
   });
 
@@ -234,7 +234,7 @@ describe("useAuth - Race Condition Protection", () => {
         expect(result.current.isRegistered).toBe(false);
         expect(result.current.isAdmin).toBe(false);
       },
-      { timeout: 2000 },
+      { timeout: 2000 }
     );
   });
 
@@ -247,7 +247,7 @@ describe("useAuth - Race Condition Protection", () => {
 
     // Simulate network error
     checkUserRegistration.mockRejectedValue(
-      new Error("Network request failed"),
+      new Error("Network request failed")
     );
 
     const { result } = renderHook(() => useAuth(showMessage));
@@ -264,7 +264,7 @@ describe("useAuth - Race Condition Protection", () => {
         expect(result.current.isRegistered).toBe(false);
         expect(result.current.isAdmin).toBe(false);
       },
-      { timeout: 2000 },
+      { timeout: 2000 }
     );
   });
 });

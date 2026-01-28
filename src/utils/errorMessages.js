@@ -1,13 +1,8 @@
 /**
  * Error Messages Utility
- *
- * Provides user-friendly, actionable error messages for common error scenarios.
- * Centralizes error message logic for consistent UX across the application.
+ * Centralizes error categorization and user messaging logic.
  */
 
-/**
- * Error types for categorization
- */
 export const ERROR_TYPES = {
   PERMISSION_DENIED: "permission-denied",
   UNAUTHENTICATED: "unauthenticated",
@@ -18,9 +13,6 @@ export const ERROR_TYPES = {
   UNKNOWN: "unknown",
 };
 
-/**
- * Detect Safari browser
- */
 export const isSafari = () => {
   const ua = navigator.userAgent.toLowerCase();
   return (
@@ -28,9 +20,6 @@ export const isSafari = () => {
   );
 };
 
-/**
- * Detect browser type for error messages
- */
 export const getBrowserName = () => {
   const ua = navigator.userAgent;
   if (ua.includes("Brave")) return "Brave";
@@ -42,14 +31,12 @@ export const getBrowserName = () => {
 };
 
 /**
- * Parse Firebase error and return categorized error type
+ * Categorizes errors based on code or message patterns.
  */
 export const categorizeError = (error) => {
   const code = error?.code || "";
   const message = error?.message || "";
 
-  // Firebase Auth token refresh blocked (securetoken 403)
-  // This is a specific error when token refresh fails
   if (
     message.includes("securetoken.googleapis.com") &&
     message.includes("403")
@@ -57,169 +44,125 @@ export const categorizeError = (error) => {
     return ERROR_TYPES.FIREBASE_AUTH_BLOCKED;
   }
 
-  // Permission errors
+  const match = (p) => code === p || message.includes(p);
+
   if (
-    code === "permission-denied" ||
-    message.includes("403") ||
-    message.includes("PERMISSION_DENIED") ||
-    message.includes("Missing or insufficient permissions")
+    [
+      "permission-denied",
+      "403",
+      "PERMISSION_DENIED",
+      "insufficient permissions",
+    ].some(match)
   ) {
     return ERROR_TYPES.PERMISSION_DENIED;
   }
 
-  // Authentication errors
-  if (
-    code === "unauthenticated" ||
-    code === "auth/user-token-expired" ||
-    message.includes("unauthenticated") ||
-    message.includes("token")
-  ) {
+  if (["unauthenticated", "auth/user-token-expired", "token"].some(match)) {
     return ERROR_TYPES.UNAUTHENTICATED;
   }
 
-  // Network errors
-  if (
-    code === "unavailable" ||
-    code === "network-request-failed" ||
-    message.includes("network") ||
-    message.includes("Failed to fetch") ||
-    message.includes("ERR_INTERNET_DISCONNECTED") ||
-    message.includes("ERR_BLOCKED_BY_CLIENT")
-  ) {
-    return ERROR_TYPES.NETWORK_ERROR;
-  }
+  const net = [
+    "unavailable",
+    "network-request-failed",
+    "network",
+    "Failed to fetch",
+    "ERR_INTERNET_DISCONNECTED",
+    "ERR_BLOCKED_BY_CLIENT",
+  ];
+  if (net.some(match)) return ERROR_TYPES.NETWORK_ERROR;
 
-  // Rate limiting
-  if (
-    code === "resource-exhausted" ||
-    message.includes("429") ||
-    message.includes("quota")
-  ) {
+  if (["resource-exhausted", "429", "quota"].some(match))
     return ERROR_TYPES.RATE_LIMITED;
-  }
 
   return ERROR_TYPES.UNKNOWN;
 };
 
-/**
- * Get user-friendly error message with recovery steps
- */
+const getMessageConfig = (context, browser, usingSafari) => ({
+  [ERROR_TYPES.FIREBASE_AUTH_BLOCKED]: {
+    title: "🔒 Authentication Blocked",
+    message:
+      "Your browser is having trouble refreshing your session with Google's authentication servers.",
+    actions: [
+      "1. Sign out completely",
+      "2. Clear browser data",
+      "3. Restart browser",
+      "4. Sign in again",
+    ],
+    severity: "error",
+    canRetry: false,
+  },
+  [ERROR_TYPES.PERMISSION_DENIED]: {
+    title: "🔐 Permission Issue",
+    message: "Your session may have become stale after extended use.",
+    actions: [
+      "1. Refresh Session",
+      "2. Sign out and back in",
+      "3. Work is saved locally",
+      usingSafari ? "4. Try Chrome or Firefox" : null,
+    ].filter(Boolean),
+    severity: "warning",
+    canRetry: true,
+  },
+  [ERROR_TYPES.UNAUTHENTICATED]: {
+    title: "🔑 Session Expired",
+    message: "Your session has expired. Please sign in again.",
+    actions: ['1. Click "Sign Out"', "2. Sign back in"],
+    severity: "warning",
+    canRetry: false,
+  },
+  [ERROR_TYPES.NETWORK_ERROR]: {
+    title: "📡 Connection Issue",
+    message: "Unable to connect. Changes will sync automatically.",
+    actions: [
+      "1. Check internet connection",
+      browser === "Brave" ? "2. Disable Brave Shields" : null,
+      "2. Changes are queued",
+    ].filter(Boolean),
+    severity: "info",
+    canRetry: true,
+  },
+  [ERROR_TYPES.RATE_LIMITED]: {
+    title: "⏳ Too Many Requests",
+    message: "The server is temporarily limiting requests.",
+    actions: ["1. Wait 30 seconds", "2. Try again"],
+    severity: "warning",
+    canRetry: true,
+  },
+  [ERROR_TYPES.UNKNOWN]: {
+    title: "❌ Unexpected Error",
+    message: `An error occurred while ${context}.`,
+    actions: ["1. Refresh page", "2. Try again", "3. Contact support"],
+    severity: "error",
+    canRetry: true,
+  },
+});
+
 export const getErrorMessage = (error, context = "saving") => {
-  const errorType = categorizeError(error);
-  const browser = getBrowserName();
-  const usingSafari = isSafari();
-
-  const messages = {
-    [ERROR_TYPES.FIREBASE_AUTH_BLOCKED]: {
-      title: "🔒 Authentication Blocked",
-      message:
-        "Your browser is having trouble refreshing your session with Google's authentication servers.",
-      actions: [
-        "1. Sign out completely using the button in the top menu",
-        "2. Clear browser data for this site (cookies + cache)",
-        "3. Close and reopen your browser",
-        "4. Sign in again with a fresh session",
-      ],
-      severity: "error",
-      canRetry: false,
-    },
-    [ERROR_TYPES.PERMISSION_DENIED]: {
-      title: "🔐 Permission Issue",
-      message: `Your session may have become stale after extended use. This is a temporary issue.`,
-      actions: [
-        "1. Click the 'Refresh Session' button below",
-        "2. If the issue persists, sign out completely and sign back in",
-        "3. Your unsaved work is preserved locally - it will sync once reconnected",
-        usingSafari
-          ? "4. Consider using Chrome or Firefox for better compatibility"
-          : null,
-      ].filter(Boolean),
-      severity: "warning",
-      canRetry: true,
-    },
-    [ERROR_TYPES.UNAUTHENTICATED]: {
-      title: "🔑 Session Expired",
-      message: "Your session has expired. Please sign in again to continue.",
-      actions: [
-        '1. Click "Sign Out" in the top menu',
-        "2. Sign back in with your account",
-      ],
-      severity: "warning",
-      canRetry: false,
-    },
-    [ERROR_TYPES.NETWORK_ERROR]: {
-      title: "📡 Connection Issue",
-      message: `Unable to connect to the server. Your changes will be saved automatically when the connection is restored.`,
-      actions: [
-        "1. Check your internet connection",
-        browser === "Brave"
-          ? "2. Try disabling Brave Shields for this site"
-          : null,
-        "2. Changes are queued and will sync automatically",
-      ].filter(Boolean),
-      severity: "info",
-      canRetry: true,
-    },
-    [ERROR_TYPES.RATE_LIMITED]: {
-      title: "⏳ Too Many Requests",
-      message:
-        "The server is temporarily limiting requests. Please wait a moment and try again.",
-      actions: ["1. Wait 30 seconds", "2. Try your action again"],
-      severity: "warning",
-      canRetry: true,
-    },
-    [ERROR_TYPES.UNKNOWN]: {
-      title: "❌ Unexpected Error",
-      message: `An error occurred while ${context}. Please try again.`,
-      actions: [
-        "1. Refresh the page",
-        "2. Try your action again",
-        "3. If the problem persists, contact support",
-      ],
-      severity: "error",
-      canRetry: true,
-    },
-  };
-
-  return messages[errorType] || messages[ERROR_TYPES.UNKNOWN];
+  const type = categorizeError(error);
+  const cfg = getMessageConfig(context, getBrowserName(), isSafari());
+  return cfg[type] || cfg[ERROR_TYPES.UNKNOWN];
 };
 
-/**
- * Format error for toast notification (short version)
- */
 export const getToastMessage = (error, context = "saving") => {
-  const errorType = categorizeError(error);
-
+  const type = categorizeError(error);
   const toasts = {
-    [ERROR_TYPES.FIREBASE_AUTH_BLOCKED]:
-      "🔒 Auth blocked - sign out, clear browser data, and sign in fresh",
-    [ERROR_TYPES.PERMISSION_DENIED]:
-      "🔐 Session stale - click 'Refresh Session' or re-sign in",
-    [ERROR_TYPES.UNAUTHENTICATED]: "🔑 Session expired - please sign in again",
-    [ERROR_TYPES.NETWORK_ERROR]:
-      "📡 Connection issue - changes queued for sync",
-    [ERROR_TYPES.RATE_LIMITED]: "⏳ Too many requests - please wait and retry",
-    [ERROR_TYPES.UNKNOWN]: `❌ Error ${context} - please try again`,
+    [ERROR_TYPES.FIREBASE_AUTH_BLOCKED]: "🔒 Auth blocked - refresh session",
+    [ERROR_TYPES.PERMISSION_DENIED]: "🔐 Session stale - refresh session",
+    [ERROR_TYPES.UNAUTHENTICATED]: "🔑 Session expired",
+    [ERROR_TYPES.NETWORK_ERROR]: "📡 Connection issue - queued",
+    [ERROR_TYPES.RATE_LIMITED]: "⏳ Too many requests",
+    [ERROR_TYPES.UNKNOWN]: `❌ Error ${context}`,
   };
-
-  return toasts[errorType] || toasts[ERROR_TYPES.UNKNOWN];
+  return toasts[type] || toasts[ERROR_TYPES.UNKNOWN];
 };
 
-/**
- * Check if error is recoverable (user can retry)
- */
-export const isRecoverableError = (error) => {
-  const errorType = categorizeError(error);
-  return errorType !== ERROR_TYPES.UNAUTHENTICATED;
-};
+export const isRecoverableError = (error) =>
+  categorizeError(error) !== ERROR_TYPES.UNAUTHENTICATED;
 
-/**
- * Check if error should prompt for re-authentication
- */
 export const shouldPromptReauth = (error) => {
-  const errorType = categorizeError(error);
+  const type = categorizeError(error);
   return (
-    errorType === ERROR_TYPES.UNAUTHENTICATED ||
-    errorType === ERROR_TYPES.PERMISSION_DENIED
+    type === ERROR_TYPES.UNAUTHENTICATED ||
+    type === ERROR_TYPES.PERMISSION_DENIED
   );
 };

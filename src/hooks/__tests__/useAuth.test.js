@@ -37,6 +37,7 @@ vi.mock("../../services/firebase", () => ({
 vi.mock("../../services/inviteService", () => ({
   checkUserRegistration: vi.fn(),
   setupInitialAdmin: vi.fn(),
+  logAuthFailure: vi.fn(() => Promise.resolve()),
 }));
 
 // Mock logger
@@ -172,7 +173,7 @@ describe("useAuth", () => {
 
     // Not an Epic email, so setupInitialAdmin will throw
     setupInitialAdmin.mockRejectedValue(
-      new Error("Not authorized for initial admin setup"),
+      new Error("Not authorized for initial admin setup")
     );
 
     const { result } = renderHook(() => useAuth(mockShowMessage));
