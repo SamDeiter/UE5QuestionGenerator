@@ -29,6 +29,8 @@ import {
   isCacheValid,
   clearCache as clearIndexedDBCache,
 } from "./questionCache";
+import { parseQuestionDoc } from "../utils/questionDocParser";
+import { registerListener, unregisterListener } from "../utils/listenerTracker";
 
 // --- Cache Management ---
 let _questionsCache = null;
@@ -234,14 +236,35 @@ export const subscribeToAllQuestions = (
     limit(maxResults),
   );
 
+  // Q11b: Register listener for observability
+  const listenerId = registerListener("subscribeToAllQuestions");
+
   // Set up real-time listener
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
       const questions = [];
+      let skippedCount = 0;
       snapshot.forEach((docSnapshot) => {
-        questions.push({ id: docSnapshot.id, ...docSnapshot.data() });
+        // Q4b: Validate document structure before passing to UI
+        const result = parseQuestionDoc({
+          id: docSnapshot.id,
+          ...docSnapshot.data(),
+        });
+        if (result.valid) {
+          questions.push(result.question);
+        } else {
+          skippedCount++;
+          logger.warn(
+            `Skipped malformed doc ${docSnapshot.id}:`,
+            result.errors,
+          );
+        }
       });
+
+      if (skippedCount > 0) {
+        logger.warn(`⚠️ Skipped ${skippedCount} malformed documents`);
+      }
 
       logger.log(
         `✅ Real-time update: ${questions.length} questions (${
@@ -260,7 +283,12 @@ export const subscribeToAllQuestions = (
   );
 
   logger.log("✓ Real-time listener active");
-  return unsubscribe;
+
+  // Return wrapped unsubscribe that also cleans up listener tracking
+  return () => {
+    unregisterListener(listenerId);
+    unsubscribe();
+  };
 };
 
 /**

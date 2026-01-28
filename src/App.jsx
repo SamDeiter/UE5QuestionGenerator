@@ -16,7 +16,7 @@ import InviteSignUp from "./components/InviteSignUp";
 // ApiKeyModal moved to GlobalModals - lazy loaded when needed
 import ConflictModal from "./components/ConflictModal";
 import { getInviteFromUrl } from "./services/inviteService";
-import { refreshAuthToken } from "./services/firebaseAuth";
+import { refreshAuthToken, signOut } from "./services/firebaseAuth";
 import { subscribeToToasts } from "./services/toastEvents";
 
 // Lazy load heavy components (loaded on-demand)
@@ -162,35 +162,30 @@ const App = () => {
   useEffect(() => {
     if (!user || authLoading) return;
 
-    // Refresh token immediately on mount
-    refreshAuthToken().then((result) => {
+    // A6: Handler for auth refresh result - auto sign-out on blocked
+    const handleAuthRefreshResult = (result, isAutoRefresh = false) => {
       if (result?.success) {
-        logger.log("🔄 Initial auth token refreshed");
+        logger.log(isAutoRefresh ? "🔄 Auth token auto-refreshed" : "🔄 Initial auth token refreshed");
       } else if (result?.reason === "auth-blocked") {
         logger.error("🔒 Auth blocked - securetoken 403 detected");
         showMessage(
-          "🔒 Auth blocked - sign out, clear browser data, and sign in fresh",
+          "🔒 Session corrupted - signing you out automatically...",
           "error",
         );
+        // A6: Auto sign-out to clear corrupted auth state
+        setTimeout(() => signOut(), 2000);
+      } else if (isAutoRefresh) {
+        logger.warn("⚠️ Auth token refresh failed");
       }
-    });
+    };
+
+    // Refresh token immediately on mount
+    refreshAuthToken().then((result) => handleAuthRefreshResult(result, false));
 
     // Set up periodic refresh every 30 minutes
     const REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes in ms
     const intervalId = setInterval(() => {
-      refreshAuthToken().then((result) => {
-        if (result?.success) {
-          logger.log("🔄 Auth token auto-refreshed");
-        } else if (result?.reason === "auth-blocked") {
-          logger.error("🔒 Auth blocked during auto-refresh");
-          showMessage(
-            "🔒 Auth issue detected - please sign out and sign in again",
-            "error",
-          );
-        } else {
-          logger.warn("⚠️ Auth token refresh failed");
-        }
-      });
+      refreshAuthToken().then((result) => handleAuthRefreshResult(result, true));
     }, REFRESH_INTERVAL);
 
     return () => clearInterval(intervalId);

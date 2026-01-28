@@ -31,6 +31,8 @@ import { toastError } from "./toastEvents";
 // --- Lazy-load Firestore with Persistence ---
 let _db = null;
 let _persistenceInitialized = false;
+let _persistencePromise = null;
+let _persistenceStatus = "pending"; // "pending" | "enabled" | "failed"
 
 export const getDb = () => {
   if (!_db) {
@@ -39,27 +41,63 @@ export const getDb = () => {
     // Enable persistence in a non-blocking way
     if (!_persistenceInitialized && typeof window !== "undefined") {
       _persistenceInitialized = true;
-      enableMultiTabIndexedDbPersistence(_db)
+      _persistencePromise = enableMultiTabIndexedDbPersistence(_db)
         .then(() => {
           logger.log("✅ Firestore multi-tab persistence enabled");
+          _persistenceStatus = "enabled";
+          return { success: true, status: "enabled" };
         })
         .catch((err) => {
           if (err.code === "failed-precondition") {
             // Multiple tabs open, persistence can only be enabled in one tab at a time.
             logger.warn("⚠️ Firestore persistence failed: Multiple tabs open");
+            _persistenceStatus = "failed";
+            return { success: false, status: "failed", reason: "multi-tab" };
           } else if (err.code === "unimplemented") {
             // The current browser does not support all of the features required to enable persistence
             logger.warn(
               "⚠️ Firestore persistence failed: Browser not supported",
             );
+            _persistenceStatus = "failed";
+            return { success: false, status: "failed", reason: "unsupported" };
           } else {
             logger.error("❌ Firestore persistence error:", err);
+            _persistenceStatus = "failed";
+            return { success: false, status: "failed", reason: err.code };
           }
         });
     }
   }
   return _db;
 };
+
+/**
+ * Q10: Ensure Firestore persistence is enabled before critical operations.
+ * 
+ * Call this before operations that depend on offline support:
+ * - Initial app load
+ * - Before queuing offline writes
+ * - Before enabling real-time listeners
+ * 
+ * @returns {Promise<{success: boolean, status: string, reason?: string}>}
+ */
+export const ensurePersistence = async () => {
+  // Initialize db if not already done
+  getDb();
+  
+  if (_persistencePromise) {
+    return await _persistencePromise;
+  }
+  
+  // Browser doesn't support persistence or SSR
+  return { success: false, status: "unavailable", reason: "no-window" };
+};
+
+/**
+ * Get current persistence status synchronously.
+ * @returns {"pending" | "enabled" | "failed"}
+ */
+export const getPersistenceStatus = () => _persistenceStatus;
 
 // NOTE: Analytics disabled - requires Firebase Console configuration
 const analytics = null;
