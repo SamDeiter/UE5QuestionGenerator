@@ -25,10 +25,13 @@ export function useAutoLoad({ user, authLoading, handleLoadFromFirestore }) {
       }
 
       hasAutoLoadedRef.current = true;
-      logger.log("📊 Auto-loading full database...");
+      logger.log(
+        "📊 Database questions will load when user navigates to Database view"
+      );
 
-      // Load all questions immediately (IndexedDB persistence handles caching)
-      handleLoadFromFirestore(true);
+      // PERFORMANCE FIX: Removed eager loading of 5000 questions on startup
+      // Questions are now loaded on-demand when user navigates to Database view
+      // handleLoadFromFirestore(true);
     }
   }, [user, authLoading, handleLoadFromFirestore]);
 
