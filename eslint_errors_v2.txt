@@ -1,8 +1,0 @@
-npm error Missing script: "eslint"
-npm error
-npm error Did you mean this?
-npm error   npm run lint # run the "lint" package script
-npm error
-npm error To see a list of scripts, run:
-npm error   npm run
-npm error A complete log of this run can be found in: C:\Users\Sam Deiter\AppData\Local\npm-cache\_logs\2026-01-28T18_17_36_072Z-debug-0.log
