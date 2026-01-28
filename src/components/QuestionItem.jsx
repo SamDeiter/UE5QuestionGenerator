@@ -26,16 +26,17 @@ import VersionComparisonModal from "./VersionComparisonModal";
 import QuestionNotesField from "./QuestionItem/QuestionNotesField";
 import QuestionHeader from "./QuestionItem/QuestionHeader";
 
-import { useEditLock } from "../hooks/useEditLock";
 import { logger } from "../utils/logger";
 import { useAuth } from "../hooks/useAuth";
 import { useAccessibility } from "../contexts/AccessibilityContext";
+import { useEditLock } from "../hooks/useEditLock";
+// Stage 2.1: Extracted helpers available in:
+// - ../hooks/useQuestionHandlers.js (verification handlers)
+// - ../utils/questionItemHelpers.js (style helpers)
 
 import { saveTrainingPair } from "../services/trainingDataService";
 
-// Helper functions (updated to use constants where appropriate, though display text might differ)
-// ...
-
+// Helper functions (duplicates exist in questionItemHelpers.js for future extraction)
 const QuestionItem = ({
   q,
   appMode,
@@ -75,7 +76,7 @@ const QuestionItem = ({
     userEmail,
     appMode === APP_MODES.REVIEW,
     handleLockExpired,
-    isProcessing,
+    isProcessing
   );
 
   // Local state for editing and UI
@@ -96,7 +97,7 @@ const QuestionItem = ({
         onSwitchLanguage(q.id, langCode);
       }
     },
-    [onSwitchLanguage, q.id],
+    [onSwitchLanguage, q.id]
   );
 
   // Helper function for modal dismissal
@@ -230,7 +231,7 @@ const QuestionItem = ({
         showMessage("✅ Verified via Epic Docs!", TOAST_DURATION.MEDIUM);
       }
     },
-    [q.id, onUpdateQuestion, userEmail, showMessage],
+    [q.id, onUpdateQuestion, userEmail, showMessage]
   );
 
   const handleVerifyViaSearch = useCallback(
@@ -248,7 +249,7 @@ const QuestionItem = ({
         showMessage("✅ Verified via Google Search!", TOAST_DURATION.MEDIUM);
       }
     },
-    [q.id, onUpdateQuestion, userEmail, showMessage],
+    [q.id, onUpdateQuestion, userEmail, showMessage]
   );
 
   const handleRejectVerification = useCallback(
@@ -271,11 +272,11 @@ const QuestionItem = ({
       if (showMessage) {
         showMessage(
           "❌ Question rejected - source not verified",
-          TOAST_DURATION.LONG,
+          TOAST_DURATION.LONG
         );
       }
     },
-    [q.id, onUpdateQuestion, onUpdateStatus, userEmail, showMessage],
+    [q.id, onUpdateQuestion, onUpdateStatus, userEmail, showMessage]
   );
 
   // NEW: Flag as unverified but don't reject - question advances to Accept with warning
@@ -299,11 +300,11 @@ const QuestionItem = ({
       if (showMessage) {
         showMessage(
           "🚩 Flagged - source unverified, ready for Accept/Reject",
-          TOAST_DURATION.LONG,
+          TOAST_DURATION.LONG
         );
       }
     },
-    [q.id, onUpdateQuestion, userEmail, showMessage],
+    [q.id, onUpdateQuestion, userEmail, showMessage]
   );
 
   const handleFix = useCallback(() => {
@@ -329,7 +330,7 @@ const QuestionItem = ({
     const passThreshold = QUALITY_THRESHOLDS?.PASS || 70;
     if (q.critiqueScore < passThreshold) {
       const confirmed = window.confirm(
-        `⚠️ This question scored ${q.critiqueScore}/100 (below ${passThreshold}).\n\nAre you sure you want to accept it anyway?`,
+        `⚠️ This question scored ${q.critiqueScore}/100 (below ${passThreshold}).\n\nAre you sure you want to accept it anyway?`
       );
       if (!confirmed) return;
     }
@@ -376,7 +377,7 @@ const QuestionItem = ({
   return (
     <div
       className={`group rounded-lg border shadow-sm transition-all p-4 relative ${getGradient(
-        q.difficulty,
+        q.difficulty
       )} ${getStatusStyle(q.status)}`}
     >
       {/* Lock Status Banner */}
@@ -400,7 +401,7 @@ const QuestionItem = ({
           className={`ml-6 mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all duration-500 ${lockColor(
             hasLock,
             isLocked,
-            "container",
+            "container"
           )}`}
           title={getLockTooltip(hasLock, isLocked, lockedBy?.email)}
         >
@@ -647,7 +648,7 @@ const QuestionItem = ({
               if (showMessage) {
                 showMessage(
                   "✅ Improvement applied! Now verify and accept.",
-                  TOAST_DURATION.LONG,
+                  TOAST_DURATION.LONG
                 );
               }
             }}
