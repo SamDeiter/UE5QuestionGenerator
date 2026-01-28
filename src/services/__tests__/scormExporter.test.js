@@ -359,4 +359,126 @@ describe("SCORM Exporter Service", () => {
       expect(result.warnings.join(" ")).toContain("More than 100 questions");
     });
   });
+
+  // =====================================================
+  // XML Entity Sanitization - REGRESSION TESTS
+  // Critical: These tests prevent "Undeclared entity" LMS errors
+  // =====================================================
+  describe("XML Entity Sanitization (Regression Tests)", () => {
+    it("CRITICAL: should sanitize HTML entities in question text", () => {
+      const questionWithEntities = {
+        ...firestoreQuestion,
+        question: "What&nbsp;is&nbsp;Nanite&copy; in UE5&trade;?",
+      };
+      const result = convertQuestionToScormFormat(questionWithEntities);
+
+      // Should NOT contain any HTML entities
+      expect(result.text).not.toContain("&nbsp;");
+      expect(result.text).not.toContain("&copy;");
+      expect(result.text).not.toContain("&trade;");
+
+      // Should have converted to safe text
+      expect(result.text).toContain("What");
+      expect(result.text).toContain("Nanite");
+    });
+
+    it("CRITICAL: should sanitize HTML entities in answer choices", () => {
+      const questionWithEntities = {
+        ...firestoreQuestion,
+        choices: [
+          "Virtualized&nbsp;geometry&mdash;system",
+          "Lighting&hellip;system",
+          "&ldquo;Sound&rdquo; system",
+          "Physics&bull;engine",
+        ],
+        correctAnswer: "Virtualized&nbsp;geometry&mdash;system",
+      };
+      const result = convertQuestionToScormFormat(questionWithEntities);
+
+      // Check all choices are sanitized
+      result.choices.forEach((choice) => {
+        expect(choice.text).not.toMatch(/&[a-zA-Z]+;/);
+      });
+    });
+
+    it("CRITICAL: should handle numeric entities (&#160;)", () => {
+      const questionWithNumericEntities = {
+        ...firestoreQuestion,
+        question: "What&#160;is&#160;Nanite?",
+        choices: ["Option&#160;A", "Option B", "Option C", "Option D"],
+        correctAnswer: "Option&#160;A",
+      };
+      const result = convertQuestionToScormFormat(questionWithNumericEntities);
+
+      expect(result.text).not.toMatch(/&#\d+;/);
+      result.choices.forEach((choice) => {
+        expect(choice.text).not.toMatch(/&#\d+;/);
+      });
+    });
+
+    it("CRITICAL: should handle hex entities (&#xA0;)", () => {
+      const questionWithHexEntities = {
+        ...firestoreQuestion,
+        question: "What&#xA0;is&#x2019;Nanite?",
+      };
+      const result = convertQuestionToScormFormat(questionWithHexEntities);
+
+      expect(result.text).not.toMatch(/&#x[\da-fA-F]+;/);
+    });
+
+    it("CRITICAL: should handle ampersands in text", () => {
+      const questionWithAmpersand = {
+        ...firestoreQuestion,
+        question: "What is Nanite & Lumen?",
+      };
+      const result = convertQuestionToScormFormat(questionWithAmpersand);
+
+      // Ampersand should remain as plain text (not &amp; since this goes into JSON)
+      expect(result.text).toBe("What is Nanite & Lumen?");
+    });
+
+    it("CRITICAL: should strip unknown entities completely", () => {
+      const questionWithUnknownEntities = {
+        ...firestoreQuestion,
+        question: "What is &unknown; and &foobar; system?",
+      };
+      const result = convertQuestionToScormFormat(questionWithUnknownEntities);
+
+      // Unknown entities should be removed
+      expect(result.text).not.toMatch(/&[a-zA-Z]+;/);
+      expect(result.text).toBe("What is  and  system?");
+    });
+
+    it("should handle mix of valid and invalid entities", () => {
+      const mixedQuestion = {
+        ...firestoreQuestion,
+        question: "UE5&trade; has &nbsp;Nanite&copy; &foobar; features",
+      };
+      const result = convertQuestionToScormFormat(mixedQuestion);
+
+      // All entities should be handled
+      expect(result.text).not.toMatch(/&[a-zA-Z]+;/);
+      expect(result.text).toContain("UE5");
+      expect(result.text).toContain("Nanite");
+    });
+
+    it("should handle empty string gracefully", () => {
+      const emptyQuestion = {
+        ...firestoreQuestion,
+        question: "",
+      };
+      // Should not throw
+      expect(() => convertQuestionToScormFormat(emptyQuestion)).not.toThrow();
+    });
+
+    it("should handle null/undefined question text", () => {
+      const nullQuestion = {
+        ...firestoreQuestion,
+        question: null,
+        questionText: undefined,
+      };
+      // Should not throw
+      expect(() => convertQuestionToScormFormat(nullQuestion)).not.toThrow();
+    });
+  });
 });
