@@ -54,6 +54,9 @@ import { useUrlModeSync } from "./hooks/useUrlModeSync";
 import { useGlobalToastSubscription } from "./hooks/useGlobalToastSubscription";
 import { useViewRouterHandlers } from "./hooks/useViewRouterHandlers";
 import { useConflictResolution } from "./hooks/useConflictResolution";
+import { useSidebarProps } from "./hooks/useSidebarProps";
+import { useToolbarProps } from "./hooks/useToolbarProps";
+import { useViewRouterState } from "./hooks/useViewRouterState";
 
 // Utilities
 import { APP_MODES } from "./utils/constants";
@@ -457,6 +460,84 @@ const App = () => {
     userRole,
   });
 
+  // Memoize sidebarProps for MainLayout (extracted to hook)
+  const sidebarProps = useSidebarProps({
+    showGenSettings,
+    setShowGenSettings,
+    config,
+    handleChange,
+    allQuestionsMap,
+    approvedCounts,
+    overallPercentage,
+    totalApproved,
+    isTargetMet,
+    maxBatchSize,
+    batchSizeWarning,
+    handleGenerate,
+    isGenerating,
+    isApiReady,
+    handleBulkTranslateMissing,
+    isProcessing,
+    setShowSettings,
+    handleSelectCategory,
+    customTags,
+    status,
+    showMessage,
+    isAdmin,
+  });
+
+  // Memoize toolbarProps for MainLayout (extracted to hook)
+  const toolbarProps = useToolbarProps({
+    appMode,
+    contextCounts,
+    filterMode,
+    setFilterMode,
+    filterByCreator,
+    setFilterByCreator,
+    filterTags,
+    setFilterTags,
+    filterScoreTier,
+    setFilterScoreTier,
+    filterByReviewer,
+    setFilterByReviewer,
+    uniqueReviewers,
+    customTags,
+    searchTerm,
+    setSearchTerm,
+    sortBy,
+    setSortBy,
+    isProcessing,
+    status,
+    isAuthReady,
+    config,
+    handleLoadFromSheets,
+    handleLoadFromFirestore,
+    setShowBulkExportModal,
+    handleClearPending,
+    handleBulkAcceptHighScores,
+    handleBulkCritiqueAll,
+    handleTrimExcess,
+    handleAutoTagAll,
+    effectiveApiKey,
+    handleChange,
+  });
+
+  // Memoize viewRouterState for MainLayout (extracted to hook)
+  const viewRouterState = useViewRouterState({
+    currentReviewIndex,
+    translationMap,
+    filterByCreator,
+    filteredQuestions,
+    questions,
+    status,
+    filterMode,
+    sortBy,
+    searchTerm,
+    showHistory,
+    user,
+    userRole,
+  });
+
   // Render - Loading state
   if (authLoading || registrationLoading) {
     return <LoadingSpinner />;
@@ -622,73 +703,11 @@ const App = () => {
               setAppMode={setAppMode}
               effectiveApiKey={effectiveApiKey}
               isAdmin={isAdmin}
-              sidebarProps={{
-                showGenSettings,
-                setShowGenSettings,
-                config,
-                handleChange,
-                allQuestionsMap,
-                approvedCounts,
-                overallPercentage,
-                totalApproved,
-                isTargetMet,
-                maxBatchSize,
-                batchSizeWarning,
-                handleGenerate,
-                isGenerating,
-                isApiReady,
-                handleBulkTranslateMissing,
-                isProcessing,
-                setShowSettings,
-                handleSelectCategory,
-                customTags,
-                status,
-                showMessage,
-                isAdmin,
-              }}
+              sidebarProps={sidebarProps}
               handleModeSelect={handleModeSelect}
               handleViewDatabase={handleViewDatabase}
               pendingCount={totalPendingQuestions}
-              toolbarProps={{
-                mode: appMode,
-                counts: contextCounts,
-                filterMode,
-                setFilterMode,
-                filterByCreator,
-                setFilterByCreator,
-                filterTags,
-                setFilterTags,
-                filterScoreTier,
-                setFilterScoreTier,
-                filterByReviewer,
-                setFilterByReviewer,
-                uniqueReviewers,
-                customTags,
-                searchTerm,
-                setSearchTerm,
-                sortBy,
-                setSortBy,
-                isProcessing,
-                status,
-                isAuthReady,
-                config,
-                onLoadSheets: handleLoadFromSheets,
-                onLoadFirestore: handleLoadFromFirestore,
-                onBulkExport: () => setShowBulkExportModal(true),
-                onClearPending: handleClearPending,
-                onBulkAcceptHighScores:
-                  appMode === APP_MODES.REVIEW
-                    ? handleBulkAcceptHighScores
-                    : undefined,
-                onBulkCritiqueAll:
-                  appMode === APP_MODES.REVIEW
-                    ? handleBulkCritiqueAll
-                    : undefined,
-                onTrimExcess: handleTrimExcess,
-                onAutoTagAll: handleAutoTagAll,
-                effectiveApiKey: effectiveApiKey,
-                handleChange,
-              }}
+              toolbarProps={toolbarProps}
               showHistory={showHistory}
               uniqueFilteredQuestions={uniqueFilteredQuestions}
               questions={questions}
@@ -698,20 +717,7 @@ const App = () => {
               isProcessing={isProcessing}
               allQuestionsMap={allQuestionsMap}
               viewRouterHandlers={viewRouterHandlers}
-              viewRouterState={{
-                currentReviewIndex,
-                translationMap,
-                filterByCreator,
-                filteredQuestions,
-                questions,
-                status,
-                filterMode,
-                sortBy,
-                searchTerm,
-                showHistory,
-                currentUser: user,
-                userRole,
-              }}
+              viewRouterState={viewRouterState}
               viewRouterSetters={{
                 setCurrentReviewIndex,
                 setFilterByCreator,
