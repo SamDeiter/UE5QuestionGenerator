@@ -1,7 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-echo "🧪 Running critical regression tests before push..."
 npm test -- --run src/components/__tests__/CriticalUI.regression.test.jsx
 
 # If tests fail, prevent push
