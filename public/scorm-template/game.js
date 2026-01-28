@@ -16,7 +16,116 @@ document.addEventListener("DOMContentLoaded", () => {
     totalQuestions: 0,
   };
 
-  const questions = window.QUESTIONS || [];
+  // Load all questions from bank
+  const allQuestions = window.QUESTIONS || [];
+
+  // ═══════════════════════════════════════════════════════════════
+  // QUESTION SELECTION - 60 total (20 per difficulty)
+  // ═══════════════════════════════════════════════════════════════
+
+  const QUESTIONS_PER_DIFFICULTY = 20;
+  const TARGET_TOTAL = 60;
+
+  /**
+   * Shuffle array using Fisher-Yates algorithm
+   */
+  function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+
+  /**
+   * Select N random questions from an array
+   */
+  function selectRandom(array, count) {
+    if (array.length <= count) return [...array];
+    return shuffleArray(array).slice(0, count);
+  }
+
+  /**
+   * Categorize questions by difficulty
+   */
+  function categorizeByDifficulty(questionList) {
+    const easy = [];
+    const medium = [];
+    const hard = [];
+    const unknown = [];
+
+    questionList.forEach((q) => {
+      const diff = (q.difficulty || "").toLowerCase();
+      if (diff.includes("easy") || diff.includes("beginner")) {
+        easy.push(q);
+      } else if (diff.includes("medium") || diff.includes("intermediate")) {
+        medium.push(q);
+      } else if (
+        diff.includes("hard") ||
+        diff.includes("expert") ||
+        diff.includes("advanced")
+      ) {
+        hard.push(q);
+      } else {
+        unknown.push(q);
+      }
+    });
+
+    return { easy, medium, hard, unknown };
+  }
+
+  /**
+   * Select 60 questions: 20 easy, 20 medium, 20 hard
+   * Falls back to more from other categories if one is short
+   */
+  function selectQuizQuestions(questionList) {
+    const { easy, medium, hard, unknown } =
+      categorizeByDifficulty(questionList);
+
+    // Select up to 20 from each category
+    let selected = [];
+    let remaining = TARGET_TOTAL;
+
+    // Try to get 20 from each
+    const easyPick = selectRandom(easy, QUESTIONS_PER_DIFFICULTY);
+    const mediumPick = selectRandom(medium, QUESTIONS_PER_DIFFICULTY);
+    const hardPick = selectRandom(hard, QUESTIONS_PER_DIFFICULTY);
+
+    selected = [...easyPick, ...mediumPick, ...hardPick];
+    remaining = TARGET_TOTAL - selected.length;
+
+    // If we don't have 60 yet, fill from unknown category
+    if (remaining > 0 && unknown.length > 0) {
+      const unknownPick = selectRandom(unknown, remaining);
+      selected = [...selected, ...unknownPick];
+      remaining = TARGET_TOTAL - selected.length;
+    }
+
+    // If still short, try to get more from categories that have extras
+    if (remaining > 0) {
+      const allUnused = [
+        ...easy.filter((q) => !easyPick.includes(q)),
+        ...medium.filter((q) => !mediumPick.includes(q)),
+        ...hard.filter((q) => !hardPick.includes(q)),
+      ];
+      const extraPick = selectRandom(allUnused, remaining);
+      selected = [...selected, ...extraPick];
+    }
+
+    // Shuffle final selection so difficulties are mixed
+    return shuffleArray(selected);
+  }
+
+  // Select questions for this quiz session
+  const questions =
+    allQuestions.length > TARGET_TOTAL
+      ? selectQuizQuestions(allQuestions)
+      : shuffleArray(allQuestions);
+
+  console.log(
+    `Quiz initialized: ${questions.length} questions selected from ${allQuestions.length} in bank`
+  );
 
   // ═══════════════════════════════════════════════════════════════
   // STATE
