@@ -308,9 +308,7 @@ describe("SCORM Exporter Service", () => {
         if (url.includes("imsmanifest.xml")) {
           return Promise.resolve({
             text: () =>
-              Promise.resolve(
-                "<title>UE5 Scenario Tracker</title><id>com.example.ue5scenario.scorm12</id>",
-              ),
+              Promise.resolve("<title>{{TITLE}}</title><id>{{ID}}</id>"),
           });
         }
         return Promise.resolve({ text: () => Promise.resolve("") });
