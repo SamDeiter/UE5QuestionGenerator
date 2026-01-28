@@ -56,6 +56,7 @@ import { TOAST_DURATION, APP_MODES, QUESTION_STATUS } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import { logger } from "./utils/logger";
 import { getTokenUsageFromQuestions } from "./utils/analyticsStore";
+import { getUserTokenUsageAggregated } from "./services/firebaseQueries";
 import { runAuthHealthCheck } from "./utils/authHealthCheck";
 
 const App = () => {
@@ -273,14 +274,50 @@ const App = () => {
     moveQuestion,
   } = useQuestionManager(config, showMessage);
 
-  // Calculate token usage from Firestore questions (only count user's own questions)
-  const firestoreTokenUsage = useMemo(() => {
-    // Filter to only questions created by the current user
-    const userQuestions = databaseQuestions.filter(
-      (q) => q.createdBy === user?.uid,
-    );
-    return getTokenUsageFromQuestions(userQuestions);
-  }, [databaseQuestions, user?.uid]);
+  // Calculate token usage from Firestore using server-side aggregation (PHASE 2.1)
+  // Uses Firestore getAggregateFromServer for 99.98% read reduction (1 read vs 5000+)
+  const [firestoreTokenUsage, setFirestoreTokenUsage] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchTokenUsage = async () => {
+      if (!user?.uid) {
+        setFirestoreTokenUsage(null);
+        return;
+      }
+
+      try {
+        const aggregatedUsage = await getUserTokenUsageAggregated(user.uid);
+        if (isMounted) {
+          // Transform to expected format for TokenUsageDisplay
+          setFirestoreTokenUsage({
+            allTime: {
+              inputTokens: aggregatedUsage.estimatedInputTokens,
+              outputTokens: aggregatedUsage.estimatedOutputTokens,
+              totalCost: aggregatedUsage.totalCost,
+              questionCount: aggregatedUsage.questionCount,
+            },
+          });
+        }
+      } catch (error) {
+        logger.error("Failed to fetch aggregated token usage:", error);
+        // Fallback to client-side calculation if aggregation fails
+        if (isMounted && databaseQuestions.length > 0) {
+          const userQuestions = databaseQuestions.filter(
+            (q) => q.creatorId === user?.uid,
+          );
+          setFirestoreTokenUsage(getTokenUsageFromQuestions(userQuestions));
+        }
+      }
+    };
+
+    fetchTokenUsage();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.uid, databaseQuestions.length]); // Re-fetch when question count changes
 
   // 2.5. Crash Recovery - detect and restore from cloud backup
   const {

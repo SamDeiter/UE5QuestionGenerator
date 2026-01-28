@@ -176,10 +176,16 @@ export const SCORM_DEFAULTS = {
   TIME_LIMIT_MINUTES: 30,
 };
 
-// Firestore Query Limits
+// Firestore Query Limits - Performance Optimization
 export const FIRESTORE_LIMITS = {
   MAX_RESULTS: 500,
   DEFAULT_PAGE_SIZE: 20,
+  MAX_QUERY_LIMIT: 100, // Maximum docs per query (non-admin) - prevents unbounded reads
+  ADMIN_MAX_QUERY_LIMIT: 5000, // Admin maintenance tasks only
+  MAX_BATCH_SIZE: 500, // Firestore batch write limit
+  MAX_LISTENERS: 5, // Max concurrent real-time listeners
+  CACHE_TTL_MS: 5 * 60 * 1000, // 5 minute cache TTL
+  MIN_QUERY_INTERVAL_MS: 1000, // Rate limit between queries (1/sec)
 };
 
 // History Limits

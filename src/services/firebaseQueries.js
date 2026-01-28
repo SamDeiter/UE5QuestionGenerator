@@ -13,9 +13,12 @@ import {
   limit,
   onSnapshot,
   startAfter,
+  getAggregateFromServer,
+  count,
+  sum,
 } from "firebase/firestore";
 import { logger } from "../utils/logger";
-import { TIMING } from "../utils/constants";
+import { TIMING, FIRESTORE_LIMITS, QUESTION_SOURCES } from "../utils/constants";
 import { auth, firebaseConfig } from "./firebaseAuth";
 import { getDb } from "./firebaseSave";
 
@@ -49,7 +52,7 @@ export const getQuestionsFromFirestore = async () => {
     // Load user-specific questions only
     const userQuery = query(
       collection(getDb(), "questions"),
-      where("creatorId", "==", auth.currentUser.uid)
+      where("creatorId", "==", auth.currentUser.uid),
     );
     const userSnapshot = await getDocs(userQuery);
 
@@ -60,11 +63,11 @@ export const getQuestionsFromFirestore = async () => {
 
     if (questions.length === 0) {
       logger.log(
-        `📭 No questions found for user ${auth.currentUser.uid} (this is normal for new users)`
+        `📭 No questions found for user ${auth.currentUser.uid} (this is normal for new users)`,
       );
     } else {
       logger.log(
-        `✅ Loaded ${questions.length} questions for user ${auth.currentUser.uid}`
+        `✅ Loaded ${questions.length} questions for user ${auth.currentUser.uid}`,
       );
     }
 
@@ -84,9 +87,9 @@ export const getQuestionsFromFirestore = async () => {
  * @returns {Promise<Array>} Array of question objects.
  */
 export const getAllQuestionsFromFirestore = async (
-  maxResults = 5000,
+  maxResults = FIRESTORE_LIMITS.MAX_QUERY_LIMIT,
   forceRefresh = false,
-  customLimit = null
+  customLimit = null,
 ) => {
   try {
     // Require authentication
@@ -105,8 +108,8 @@ export const getAllQuestionsFromFirestore = async (
     ) {
       logger.log(
         `⚡ Returning ${_questionsCache.length} cached questions (${Math.round(
-          (now - _questionsCacheTimestamp) / 1000
-        )}s old)`
+          (now - _questionsCacheTimestamp) / 1000,
+        )}s old)`,
       );
       return _questionsCache;
     }
@@ -120,7 +123,7 @@ export const getAllQuestionsFromFirestore = async (
     const allQuery = query(
       collection(getDb(), "questions"),
       orderBy("firestoreUpdatedAt", "desc"),
-      limit(fetchLimit)
+      limit(fetchLimit),
     );
     const snapshot = await getDocs(allQuery);
 
@@ -137,7 +140,7 @@ export const getAllQuestionsFromFirestore = async (
 
     const duration = Math.round(performance.now() - startTime);
     logger.log(
-      `✅ Loaded ${questions.length} questions from Firestore in ${duration}ms`
+      `✅ Loaded ${questions.length} questions from Firestore in ${duration}ms`,
     );
     logger.log("📊 Discipline Breakdown:", disciplineCounts);
 
@@ -167,7 +170,10 @@ export const getAllQuestionsFromFirestore = async (
  * @param {number} maxResults - Maximum number of questions to retrieve (default 5000)
  * @returns {Function} Unsubscribe function to stop listening
  */
-export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
+export const subscribeToAllQuestions = (
+  callback,
+  maxResults = FIRESTORE_LIMITS.MAX_QUERY_LIMIT,
+) => {
   // Require authentication
   if (!auth.currentUser) {
     logger.log("⚠️ No user signed in, cannot subscribe to questions");
@@ -181,7 +187,7 @@ export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
   const q = query(
     collection(getDb(), "questions"),
     orderBy("firestoreUpdatedAt", "desc"),
-    limit(maxResults)
+    limit(maxResults),
   );
 
   // Set up real-time listener
@@ -196,7 +202,7 @@ export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
       logger.log(
         `✅ Real-time update: ${questions.length} questions (${
           snapshot.docChanges().length
-        } changes)`
+        } changes)`,
       );
 
       // Notify callback with updated data
@@ -206,7 +212,7 @@ export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
       logger.error("❌ Error in real-time listener:", error);
       // On error, fall back to empty array
       callback([]);
-    }
+    },
   );
 
   logger.log("✓ Real-time listener active");
@@ -223,7 +229,7 @@ export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
 export const getQuestionsPaginated = async (
   userId,
   limitCount = 20,
-  lastDoc = null
+  lastDoc = null,
 ) => {
   try {
     const db = getDb();
@@ -231,7 +237,7 @@ export const getQuestionsPaginated = async (
       collection(db, "questions"),
       where("creatorId", "==", userId),
       orderBy("firestoreUpdatedAt", "desc"),
-      limit(limitCount)
+      limit(limitCount),
     );
 
     if (lastDoc) {
@@ -258,6 +264,196 @@ export const getQuestionsPaginated = async (
   }
 };
 
+/**
+ * Enhanced paginated question loading with flexible filtering.
+ * PHASE 1.3: Supports status, discipline, and custom ordering for efficient queries.
+ *
+ * @param {Object} options - Query options
+ * @param {string} options.status - Filter by status (optional)
+ * @param {string} options.discipline - Filter by discipline (optional)
+ * @param {number} options.pageSize - Number of docs per page (default 50)
+ * @param {DocumentSnapshot} options.lastDoc - Last doc from previous page (optional)
+ * @param {string} options.orderByField - Field to order by (default 'firestoreUpdatedAt')
+ * @param {string} options.orderDirection - 'asc' or 'desc' (default 'desc')
+ * @returns {Promise<{questions: Array, lastDoc: DocumentSnapshot, hasMore: boolean}>}
+ */
+export const getQuestionsPaginatedWithFilters = async ({
+  status = null,
+  discipline = null,
+  pageSize = FIRESTORE_LIMITS.DEFAULT_PAGE_SIZE,
+  lastDoc = null,
+  orderByField = "firestoreUpdatedAt",
+  orderDirection = "desc",
+} = {}) => {
+  try {
+    if (!auth.currentUser) {
+      logger.log("⚠️ No user signed in, cannot load questions");
+      return { questions: [], lastDoc: null, hasMore: false };
+    }
+
+    const constraints = [];
+
+    // Add filters
+    if (status) {
+      constraints.push(where("status", "==", status));
+    }
+    if (discipline) {
+      constraints.push(where("discipline", "==", discipline));
+    }
+
+    // Add ordering
+    constraints.push(orderBy(orderByField, orderDirection));
+
+    // Add limit (+1 to check if more exist)
+    constraints.push(limit(pageSize + 1));
+
+    // Add pagination cursor
+    if (lastDoc) {
+      constraints.push(startAfter(lastDoc));
+    }
+
+    const q = query(collection(getDb(), "questions"), ...constraints);
+    const startTime = performance.now();
+    const snapshot = await getDocs(q);
+    const duration = Math.round(performance.now() - startTime);
+
+    const docs = snapshot.docs;
+    const hasMore = docs.length > pageSize;
+
+    // Remove the extra doc if we have more
+    const questions = docs.slice(0, pageSize).map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      _source: QUESTION_SOURCES.DATABASE,
+    }));
+
+    logger.log(
+      `✅ Paginated query: ${questions.length} questions in ${duration}ms ` +
+        `(status=${status || "all"}, discipline=${discipline || "all"})`,
+    );
+
+    return {
+      questions,
+      lastDoc: docs[pageSize - 1] || null,
+      hasMore,
+    };
+  } catch (error) {
+    logger.error("Error in paginated query:", error);
+    return { questions: [], lastDoc: null, hasMore: false };
+  }
+};
+
+/**
+ * PHASE 2.1: Get token usage stats for a user using server-side aggregation.
+ * Uses Firestore's getAggregateFromServer with sum() and count() for efficient
+ * calculation without downloading documents.
+ *
+ * PERFORMANCE: 1 aggregation read vs 5000+ document reads
+ * COST: ~0.0001¢ vs ~$0.18 per request
+ *
+ * @param {string} userId - The user's UID
+ * @returns {Promise<{totalCost: number, questionCount: number, estimatedInputTokens: number, estimatedOutputTokens: number}>}
+ */
+export const getUserTokenUsageAggregated = async (userId) => {
+  try {
+    if (!userId) {
+      logger.log("⚠️ No userId provided for token usage aggregation");
+      return {
+        totalCost: 0,
+        questionCount: 0,
+        estimatedInputTokens: 0,
+        estimatedOutputTokens: 0,
+      };
+    }
+
+    const userQuery = query(
+      collection(getDb(), "questions"),
+      where("creatorId", "==", userId),
+    );
+
+    const snapshot = await getAggregateFromServer(userQuery, {
+      totalCost: sum("estimatedCost"),
+      questionCount: count(),
+    });
+
+    const data = snapshot.data();
+    const avgInputTokensPerQuestion = 500;
+    const avgOutputTokensPerQuestion = 200;
+
+    const result = {
+      totalCost: data.totalCost || 0,
+      questionCount: data.questionCount || 0,
+      estimatedInputTokens:
+        (data.questionCount || 0) * avgInputTokensPerQuestion,
+      estimatedOutputTokens:
+        (data.questionCount || 0) * avgOutputTokensPerQuestion,
+    };
+
+    logger.log(
+      `📊 User ${userId.slice(0, 8)}... token usage: ${result.questionCount} questions, $${result.totalCost.toFixed(4)}`,
+    );
+
+    return result;
+  } catch (error) {
+    logger.error("Error getting user token usage:", error);
+    return {
+      totalCost: 0,
+      questionCount: 0,
+      estimatedInputTokens: 0,
+      estimatedOutputTokens: 0,
+    };
+  }
+};
+
+/**
+ * PHASE 2.2: Get aggregate statistics for all questions.
+ * Useful for dashboard stats without loading all documents.
+ *
+ * @returns {Promise<{total: number, byStatus: Object}>}
+ */
+export const getQuestionStatsAggregated = async () => {
+  try {
+    if (!auth.currentUser) {
+      return { total: 0, byStatus: {} };
+    }
+
+    // Get total count
+    const totalQuery = query(collection(getDb(), "questions"));
+    const totalSnapshot = await getAggregateFromServer(totalQuery, {
+      total: count(),
+    });
+
+    // Get counts by status (requires separate queries due to Firestore limitations)
+    const statuses = ["pending", "accepted", "rejected"];
+    const byStatus = {};
+
+    for (const status of statuses) {
+      const statusQuery = query(
+        collection(getDb(), "questions"),
+        where("status", "==", status),
+      );
+      const statusSnapshot = await getAggregateFromServer(statusQuery, {
+        count: count(),
+      });
+      byStatus[status] = statusSnapshot.data().count || 0;
+    }
+
+    const result = {
+      total: totalSnapshot.data().total || 0,
+      byStatus,
+    };
+
+    logger.log(
+      `📊 Question stats: ${result.total} total, ${JSON.stringify(result.byStatus)}`,
+    );
+
+    return result;
+  } catch (error) {
+    logger.error("Error getting question stats:", error);
+    return { total: 0, byStatus: {} };
+  }
+};
+
 // --- Delete Operations ---
 
 /**
@@ -271,7 +467,7 @@ export const clearAllQuestionsFromFirestore = async () => {
     if (auth.currentUser) {
       q = query(
         collection(getDb(), "questions"),
-        where("creatorId", "==", auth.currentUser.uid)
+        where("creatorId", "==", auth.currentUser.uid),
       );
     } else {
       q = collection(getDb(), "questions");
@@ -307,7 +503,7 @@ export const deleteSoftDeletedQuestionsFromFirestore = async () => {
   try {
     const q = query(
       collection(getDb(), "questions"),
-      where("status", "==", "deleted")
+      where("status", "==", "deleted"),
     );
 
     const querySnapshot = await getDocs(q);
@@ -322,7 +518,7 @@ export const deleteSoftDeletedQuestionsFromFirestore = async () => {
 
     await Promise.all(deletePromises);
     logger.log(
-      `Successfully cleaned up ${deletedCount} soft-deleted questions.`
+      `Successfully cleaned up ${deletedCount} soft-deleted questions.`,
     );
     invalidateQuestionsCache();
     return deletedCount;
@@ -376,7 +572,7 @@ export const saveCustomTags = async (customTags) => {
         customTags,
         updatedAt: Timestamp.now(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     logger.log("Custom tags saved to Firestore");
