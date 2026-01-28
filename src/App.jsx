@@ -15,10 +15,6 @@ import InviteSignUp from "./components/InviteSignUp";
 // ApiKeyModal moved to GlobalModals - lazy loaded when needed
 import ConflictModal from "./components/ConflictModal";
 import { getInviteFromUrl } from "./services/inviteService";
-import {
-  refreshAuthToken,
-  signOutUser as signOut,
-} from "./services/firebaseAuth";
 import { subscribeToToasts } from "./services/toastEvents";
 
 // Lazy load heavy components (loaded on-demand)
@@ -53,6 +49,7 @@ import { useNavigationAfterLanguageSwitch } from "./hooks/useNavigationAfterLang
 import { useAgentLifecycle } from "./hooks/useAgentLifecycle";
 import { useTokenUsage } from "./hooks/useTokenUsage";
 import { useAutoLoad } from "./hooks/useAutoLoad";
+import { useAuthRefresh } from "./hooks/useAuthRefresh";
 
 // Utilities
 import { TOAST_DURATION, APP_MODES, QUESTION_STATUS } from "./utils/constants";
@@ -146,73 +143,7 @@ const App = () => {
   // ========================================================================
   // AUTOMATIC TOKEN REFRESH - Refresh auth token every 30 minutes
   // ========================================================================
-  useEffect(() => {
-    if (!user || authLoading) return;
-
-    // HIGH 7: Enhanced handler for auth refresh result
-    const handleAuthRefreshResult = (result, isAutoRefresh = false) => {
-      if (result?.success) {
-        logger.log(
-          isAutoRefresh
-            ? "🔄 Auth token auto-refreshed"
-            : "🔄 Initial auth token refreshed"
-        );
-      } else if (result?.reason === "auth-blocked") {
-        logger.error("🔒 Auth blocked - securetoken 403 detected");
-        showMessage(
-          "🔒 Session corrupted - signing you out automatically...",
-          "error"
-        );
-        // A6: Auto sign-out to clear corrupted auth state
-        setTimeout(() => signOut(), 2000);
-      } else if (result?.reason === "auth/user-disabled") {
-        // HIGH 7: Account disabled by admin
-        showMessage(
-          "⚠️ Your account has been disabled. Please contact support.",
-          "error",
-          TOAST_DURATION.LONG
-        );
-        setTimeout(() => signOut(), 2000);
-      } else if (result?.reason === "auth/id-token-revoked") {
-        // HIGH 7: Token revoked (password changed, security event)
-        showMessage(
-          "🔐 Session expired - please sign in again.",
-          "warning",
-          TOAST_DURATION.LONG
-        );
-        setTimeout(() => signOut(), 2000);
-      } else if (isAutoRefresh && !result?.success) {
-        // HIGH 7: Generic refresh failure - show clear message
-        logger.warn("⚠️ Auth token refresh failed:", result?.reason);
-        if (result?.reason === "auth/network-request-failed") {
-          showMessage(
-            "📶 Network issue - couldn't refresh session. Check your connection.",
-            "warning"
-          );
-        } else {
-          // For other failures, prompt re-auth
-          showMessage(
-            "⏳ Session needs refresh - please sign out and back in.",
-            "warning",
-            TOAST_DURATION.LONG
-          );
-        }
-      }
-    };
-
-    // Refresh token immediately on mount
-    refreshAuthToken().then((result) => handleAuthRefreshResult(result, false));
-
-    // Set up periodic refresh every 30 minutes
-    const REFRESH_INTERVAL_MS = 30 * 60 * 1000;
-    const intervalId = setInterval(() => {
-      refreshAuthToken().then((result) =>
-        handleAuthRefreshResult(result, true)
-      );
-    }, REFRESH_INTERVAL_MS);
-
-    return () => clearInterval(intervalId);
-  }, [user, authLoading, showMessage]);
+  useAuthRefresh({ user, authLoading, showMessage });
 
   // ========================================================================
   // HOOKS - State Management
