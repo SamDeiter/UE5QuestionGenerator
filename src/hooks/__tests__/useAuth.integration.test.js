@@ -10,12 +10,12 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { onAuthStateChanged } from "firebase/auth";
+import { onIdTokenChanged } from "firebase/auth";
 import { setDoc } from "firebase/firestore";
 
 // Setup mocks before imports
 vi.mock("firebase/auth", () => ({
-  onAuthStateChanged: vi.fn(),
+  onIdTokenChanged: vi.fn(),
   getAuth: vi.fn(() => ({})),
   GoogleAuthProvider: vi.fn(),
 }));
@@ -63,7 +63,7 @@ describe("useAuth - Race Condition Protection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUnsubscribe = vi.fn();
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       authStateCallback = callback;
       return mockUnsubscribe;
     });
@@ -127,7 +127,7 @@ describe("useAuth - Race Condition Protection", () => {
   // Test: Listener Cleanup
   // ========================================
 
-  it("unsubscribes from onAuthStateChanged on unmount", () => {
+  it("unsubscribes from onIdTokenChanged on unmount", () => {
     const showMessage = vi.fn();
     const { unmount } = renderHook(() => useAuth(showMessage));
 
@@ -274,7 +274,7 @@ describe("useAuth - State Management", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       authStateCallback = callback;
       return vi.fn();
     });

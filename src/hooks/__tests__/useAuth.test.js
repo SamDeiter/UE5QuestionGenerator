@@ -10,7 +10,7 @@ import { useAuth } from "../useAuth";
 
 // Mock Firebase Auth
 vi.mock("firebase/auth", () => ({
-  onAuthStateChanged: vi.fn(),
+  onIdTokenChanged: vi.fn(),
   getAuth: vi.fn(() => ({})),
   GoogleAuthProvider: class MockGoogleAuthProvider {},
   signInWithPopup: vi.fn(),
@@ -54,7 +54,7 @@ vi.mock("../../utils/analyticsStore", () => ({
   getTokenUsage: vi.fn(() => ({ input: 0, output: 0 })),
 }));
 
-import { onAuthStateChanged } from "firebase/auth";
+import { onIdTokenChanged } from "firebase/auth";
 import {
   checkUserRegistration,
   setupInitialAdmin,
@@ -73,7 +73,7 @@ describe("useAuth", () => {
 
   it("should return registered=false when user is not authenticated", async () => {
     // Mock no user
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(null);
       return () => {};
     });
@@ -91,7 +91,7 @@ describe("useAuth", () => {
   it("should detect registered reviewer from checkUserRegistration", async () => {
     const mockUser = { uid: "test-uid", email: "reviewer@gmail.com" };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
@@ -115,7 +115,7 @@ describe("useAuth", () => {
   it("should auto-register @epicgames.com users as admin via setupInitialAdmin", async () => {
     const mockUser = { uid: "epic-uid", email: "dev@epicgames.com" };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
@@ -141,7 +141,7 @@ describe("useAuth", () => {
   it("should fail closed when Cloud Function errors (no access)", async () => {
     const mockUser = { uid: "error-uid", email: "user@example.com" };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
@@ -163,7 +163,7 @@ describe("useAuth", () => {
   it("should detect Ghost Reviewer state (authenticated but not registered)", async () => {
     const mockUser = { uid: "ghost-uid", email: "ghost@company.com" };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
@@ -195,7 +195,7 @@ describe("useAuth", () => {
       email: "success@epicgames.com",
     };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
@@ -223,7 +223,7 @@ describe("useAuth", () => {
   it("should set permissionError=true when write probe fails with permission-denied", async () => {
     const mockUser = { uid: "probe-fail-uid", email: "fail@epicgames.com" };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
