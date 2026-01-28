@@ -53,7 +53,7 @@ export const generateContentViaCloudFunction = async (
   userPrompt,
   setStatus = () => {},
   temperature = 0.2,
-  model = "gemini-2.0-flash-exp",
+  model = "gemini-2.0-flash",
 ) => {
   try {
     // Ensure token is fresh before calling Cloud Function
