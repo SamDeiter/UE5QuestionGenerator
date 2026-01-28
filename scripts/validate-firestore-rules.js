@@ -75,14 +75,31 @@ function parseRulesFile() {
 
   const content = fs.readFileSync(rulesPath, "utf-8");
 
-  // Extract the hasOnly array for reviewer fields
+  // Check if reviewers have full write access (no hasOnly restriction)
+  // Pattern: isReviewer() without field restrictions in the update rule
+  const hasFullAccess = content.includes("// Reviewer FULL override");
+
+  if (hasFullAccess) {
+    console.log(
+      "ℹ️  Reviewers have FULL write access (no field restrictions in rules)",
+    );
+    console.log(
+      "   Validation will use constants.js REVIEWER_ALLOWED_FIELDS as source of truth\n",
+    );
+    return ALLOWED_REVIEWER_FIELDS;
+  }
+
+  // Extract the hasOnly array for reviewer fields (legacy pattern)
   // Pattern: isReviewer() followed by && ... .hasOnly([...])
   const match = content.match(
-    /isReviewer\(\)[\s\S]*?\.hasOnly\(\[([\s\S]*?)\]\)/
+    /isReviewer\(\)[\s\S]*?\.hasOnly\(\[([\s\S]*?)\]\)/,
   );
 
   if (!match) {
     console.error("❌ Could not parse reviewer fields from firestore.rules");
+    console.error(
+      "   Expected either FULL access comment or hasOnly([...]) pattern",
+    );
     process.exit(1);
   }
 
@@ -99,13 +116,13 @@ function parseRulesFile() {
 function main() {
   console.log("🔍 Firestore Rules Validator\n");
   console.log(
-    "Checking that all fields updated by reviewer actions are allowed...\n"
+    "Checking that all fields updated by reviewer actions are allowed...\n",
   );
 
   // Parse actual rules from file
   const actualAllowedFields = parseRulesFile();
   console.log(
-    `📋 Found ${actualAllowedFields.length} allowed fields in firestore.rules\n`
+    `📋 Found ${actualAllowedFields.length} allowed fields in firestore.rules\n`,
   );
 
   let allPassed = true;
@@ -128,7 +145,7 @@ function main() {
     process.exit(0);
   } else {
     console.log(
-      "❌ Some validations failed! Update firestore.rules to include missing fields."
+      "❌ Some validations failed! Update firestore.rules to include missing fields.",
     );
     process.exit(1);
   }
