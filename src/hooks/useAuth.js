@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { onIdTokenChanged } from "firebase/auth";
 import { auth, getCustomTags, saveCustomTags } from "../services/firebase";
 import { logger } from "../utils/logger";
+import { TIMING } from "../utils/constants";
 
 // Extracted focus hooks
 import { useCompliance } from "./useCompliance";
@@ -98,10 +99,10 @@ export function useAuth(showMessage) {
     try {
       await saveCustomTags(newCustomTags);
       setCustomTags(newCustomTags);
-      showMessage("Custom tags saved!", 2000);
+      showMessage("Custom tags saved!", TIMING.TOAST_SHORT);
     } catch (error) {
       logger.error("Failed to save custom tags:", error);
-      showMessage("Failed to save tags", 3000);
+      showMessage("Failed to save tags", TIMING.TOAST_MEDIUM);
     }
   };
 

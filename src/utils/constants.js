@@ -160,6 +160,8 @@ export const TIMING = {
   TOKEN_REFRESH_INTERVAL_MS: 50 * 60 * 1000, // 50 minutes (tokens expire at ~60 min)
   WRITE_PROBE_INTERVAL_MS: 15 * 60 * 1000, // 15 minutes - verify Firestore access periodically
   ANALYTICS_REFRESH_MS: 5000, // 5 seconds - refresh local token usage
+  TOAST_SHORT: 2000,
+  TOAST_MEDIUM: 3000,
 };
 
 // Standard Time Multipliers (in ms)
