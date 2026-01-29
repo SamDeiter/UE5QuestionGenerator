@@ -110,19 +110,64 @@ export const generateCritiqueSecure = async (
     );
   }
 
-  if (!question.correct) {
-    logger.error("[CritiqueSecure] Missing 'correct' property. Received:", {
-      id: question.id,
-      correct: question.correct,
-    });
-    throw new Error("Critique failed: Correct answer is missing.");
+  // Try to infer correct answer if missing
+  let effectiveCorrect = question.correct;
+  if (
+    !effectiveCorrect ||
+    (typeof effectiveCorrect === "string" && !effectiveCorrect.trim())
+  ) {
+    // For T/F questions, infer from standard A=True, B=False layout
+    const isTF = question.type === "True/False" || question.type === "T/F";
+    if (isTF && question.options) {
+      const optA = (question.options.A || "").toLowerCase().trim();
+      const optB = (question.options.B || "").toLowerCase().trim();
+      if (
+        (optA === "true" || optA === "true.") &&
+        (optB === "false" || optB === "false.")
+      ) {
+        logger.warn(
+          `[CritiqueSecure] T/F question missing 'correct' - inferring 'A'. ID: ${question.id}`
+        );
+        effectiveCorrect = "A";
+      }
+    }
+
+    // Final fallback for any question with options
+    if (
+      !effectiveCorrect &&
+      question.options &&
+      (question.options.A || question.options.B)
+    ) {
+      logger.warn(
+        `[CritiqueSecure] Question missing 'correct' - defaulting to 'A'. ID: ${question.id}`
+      );
+      effectiveCorrect = "A";
+    }
+
+    if (!effectiveCorrect) {
+      logger.error(
+        "[CritiqueSecure] Cannot infer 'correct' property. Received:",
+        {
+          id: question.id,
+          correct: question.correct,
+          type: question.type,
+        }
+      );
+      throw new Error("Critique failed: Could not determine correct answer.");
+    }
   }
+
+  // Create normalized question with inferred correct
+  const normalizedQuestion = { ...question, correct: effectiveCorrect };
 
   // Try Cloud Functions first (most secure)
   if (isUserAuthenticated()) {
     try {
       logger.log("🔒 [CritiqueSecure DEBUG] Using Cloud Function for critique");
-      const result = await generateCritiqueViaCloudFunction(question, model);
+      const result = await generateCritiqueViaCloudFunction(
+        normalizedQuestion,
+        model
+      );
       logger.log(
         "🔒 [CritiqueSecure DEBUG] Cloud Function returned score:",
         result.score,
@@ -142,7 +187,7 @@ export const generateCritiqueSecure = async (
 
   // Fallback to direct API only if NOT authenticated
   logger.log("📡 [CritiqueSecure DEBUG] Calling direct API for critique");
-  const result = await generateCritiqueDirect(apiKey, question);
+  const result = await generateCritiqueDirect(apiKey, normalizedQuestion);
   logger.log(
     "📡 [CritiqueSecure DEBUG] Direct API returned score:",
     result.score
