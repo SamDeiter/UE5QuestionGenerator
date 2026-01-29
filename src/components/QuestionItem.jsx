@@ -18,7 +18,6 @@ import QuestionActions from "./QuestionItem/QuestionActions";
 import ValidationWarnings from "./QuestionItem/ValidationWarnings";
 import ExplanationDisplay from "./QuestionItem/ExplanationDisplay";
 import SourceContextCard from "./QuestionItem/SourceContextCard";
-import ReviewStateSelector from "./QuestionItem/ReviewStateSelector";
 import NeedsResearchBadge, {
   NeedsResearchButton,
 } from "./QuestionItem/NeedsResearchBadge";
@@ -245,29 +244,7 @@ const QuestionItem = ({
     [q.id, onUpdateQuestion, userEmail]
   );
 
-  // Handle answer state change (Phase 2)
-  const handleAnswerStateChange = useCallback(
-    (newState) => {
-      if (!onUpdateQuestion) return;
-      onUpdateQuestion(q.id, {
-        answerState: newState,
-      });
-    },
-    [q.id, onUpdateQuestion]
-  );
-
-  // Handle doc link state change (Phase 2)
-  const handleDocLinkStateChange = useCallback(
-    (newState) => {
-      if (!onUpdateQuestion) return;
-      onUpdateQuestion(q.id, {
-        docLinkState: newState,
-      });
-    },
-    [q.id, onUpdateQuestion]
-  );
-
-  // Handle marking a question for research (Phase 4)
+  // Note: Answer/DocLink state now handled in ImprovementModal  // Handle marking a question for research (Phase 4)
   const handleMarkForResearch = useCallback(() => {
     if (!onUpdateQuestion) return;
     const reason = window.prompt(
@@ -521,25 +498,14 @@ const QuestionItem = ({
           canClear={appMode === APP_MODES.REVIEW}
         />
 
-        {/* Review State Selector - Explicit answer/doc assessment (Phase 2) */}
+        {/* Mark for Research button (Phase 4) - standalone quick action */}
         {appMode === APP_MODES.REVIEW && (
           <div className="mb-3">
-            <ReviewStateSelector
-              answerState={q.answerState}
-              docLinkState={q.docLinkState}
-              onAnswerStateChange={handleAnswerStateChange}
-              onDocLinkStateChange={handleDocLinkStateChange}
+            <NeedsResearchButton
+              needsResearch={q.needsResearch}
+              onMarkForResearch={handleMarkForResearch}
               disabled={isLocked}
-              showGuidance={true}
             />
-            {/* Mark for Research button (Phase 4) */}
-            <div className="mt-2">
-              <NeedsResearchButton
-                needsResearch={q.needsResearch}
-                onMarkForResearch={handleMarkForResearch}
-                disabled={isLocked}
-              />
-            </div>
           </div>
         )}
 
@@ -660,12 +626,14 @@ const QuestionItem = ({
           <VerifyConfirmModal
             sourceUrl={q.sourceUrl || q.SourceURL || q.SourceUrl}
             sourceExcerpt={q.sourceExcerpt}
-            onVerifyDocs={() => {
-              handleVerifyViaDocs();
+            onVerifyDocs={(verifyData) => {
+              // verifyData now includes { clickedDocs, clickedSearch, answerState, docLinkState }
+              handleVerifyViaDocs(verifyData);
               setShowVerifyModal(null);
             }}
-            onVerifySearch={() => {
-              handleVerifyViaSearch();
+            onVerifySearch={(verifyData) => {
+              // verifyData now includes { clickedDocs, clickedSearch, answerState, docLinkState }
+              handleVerifyViaSearch(verifyData);
               setShowVerifyModal(null);
             }}
             onReject={(reasonId) => {

@@ -161,6 +161,9 @@ export const buildVerifyDocsData = (userEmail, clickInfo = {}) => ({
   verificationSource: "epic_docs",
   verificationClickedDocs: clickInfo.clickedDocs || false,
   verificationClickedSearch: clickInfo.clickedSearch || false,
+  // Review assessment from modal
+  answerState: clickInfo.answerState || null,
+  docLinkState: clickInfo.docLinkState || null,
 });
 
 /**
@@ -176,6 +179,9 @@ export const buildVerifySearchData = (userEmail, clickInfo = {}) => ({
   verificationSource: "google_search",
   verificationClickedDocs: clickInfo.clickedDocs || false,
   verificationClickedSearch: clickInfo.clickedSearch || false,
+  // Review assessment from modal
+  answerState: clickInfo.answerState || null,
+  docLinkState: clickInfo.docLinkState || null,
 });
 
 /**

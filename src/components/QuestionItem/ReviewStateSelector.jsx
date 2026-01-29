@@ -18,6 +18,7 @@ const ReviewStateSelector = ({
   onDocLinkStateChange,
   disabled = false,
   showGuidance = true,
+  showDocLinkState = true, // NEW: Hide doc link section when false
 }) => {
   // Answer state options with styling
   const answerOptions = [
@@ -156,7 +157,9 @@ const ReviewStateSelector = ({
       </div>
 
       {/* Two-column layout for Answer and Doc Link states */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div
+        className={`grid grid-cols-1 ${showDocLinkState ? "md:grid-cols-2" : ""} gap-3`}
+      >
         {/* Answer State */}
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-1.5">
@@ -169,17 +172,19 @@ const ReviewStateSelector = ({
           </div>
         </div>
 
-        {/* Doc Link State */}
-        <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
-            Documentation Link Quality
-          </label>
-          <div className="flex gap-1">
-            {docLinkOptions.map((option) =>
-              renderOptionButton(option, docLinkState, onDocLinkStateChange)
-            )}
+        {/* Doc Link State - conditionally shown */}
+        {showDocLinkState && (
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">
+              Documentation Link Quality
+            </label>
+            <div className="flex gap-1">
+              {docLinkOptions.map((option) =>
+                renderOptionButton(option, docLinkState, onDocLinkStateChange)
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Contextual guidance */}

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Icon from "./Icon";
 import { isEpicLink } from "../utils/urlValidator";
+import ReviewStateSelector from "./QuestionItem/ReviewStateSelector";
 
 /**
  * VerifyConfirmModal - "Traffic Light" verification with three outcomes:
@@ -56,6 +57,9 @@ const VerifyConfirmModal = ({
   const [fixedUrl, setFixedUrl] = useState(""); // NEW: User's corrected URL
   const [clickedDocs, setClickedDocs] = useState(false);
   const [clickedSearch, setClickedSearch] = useState(false);
+  // Assessment state for reviewer feedback
+  const [answerState, setAnswerState] = useState(null);
+  const [docLinkState, setDocLinkState] = useState(null);
 
   const hasValidUrl = isEpicLink(sourceUrl);
   const cleanUrl = sourceUrl?.trim() || "";
@@ -116,13 +120,13 @@ const VerifyConfirmModal = ({
   };
 
   const handleVerifyDocs = () => {
-    // Pass click tracking info to parent
-    onVerifyDocs({ clickedDocs, clickedSearch });
+    // Pass click tracking info and assessment to parent
+    onVerifyDocs({ clickedDocs, clickedSearch, answerState, docLinkState });
   };
 
   const handleVerifySearch = () => {
-    // Pass click tracking info to parent
-    onVerifySearch({ clickedDocs, clickedSearch });
+    // Pass click tracking info and assessment to parent
+    onVerifySearch({ clickedDocs, clickedSearch, answerState, docLinkState });
   };
 
   const handleReject = (reasonId) => {
@@ -225,6 +229,17 @@ const VerifyConfirmModal = ({
             )}
           </div>
 
+          {/* Reviewer Assessment - Answer Correctness only */}
+          <ReviewStateSelector
+            answerState={answerState}
+            docLinkState={docLinkState}
+            onAnswerStateChange={setAnswerState}
+            onDocLinkStateChange={setDocLinkState}
+            disabled={false}
+            showGuidance={false}
+            showDocLinkState={false}
+          />
+
           {/* Verification Outcome Section */}
           {!showRejectMenu ? (
             <div className="bg-slate-800/30 border border-slate-600/50 rounded-lg p-4">
@@ -235,7 +250,7 @@ const VerifyConfirmModal = ({
                   className="text-slate-400"
                 />
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">
-                  Step 2: Where did you find the excerpt?
+                  Step 3: Where did you find the excerpt?
                 </span>
               </div>
               <div className="space-y-2">
