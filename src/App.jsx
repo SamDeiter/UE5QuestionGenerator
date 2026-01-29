@@ -366,7 +366,11 @@ const App = () => {
     replaceQuestions
   );
   // Auto-load database questions on startup for difficulty distribution chart
-  useAutoLoad({ user, authLoading, handleLoadFromFirestore });
+  const { isInitialLoading } = useAutoLoad({
+    user,
+    authLoading,
+    handleLoadFromFirestore,
+  });
 
   // Migrations handled by useMigrations hook (called earlier in component)
 
@@ -541,6 +545,7 @@ const App = () => {
     showHistory,
     user,
     userRole,
+    isInitialLoading,
   });
 
   // Memoize GlobalModals visibility (extracted to hook)

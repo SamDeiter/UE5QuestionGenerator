@@ -3,9 +3,10 @@ import {
   generateCritiqueSecure as generateCritique,
   generateTagsSecure,
 } from "../../services/geminiSecure";
-import { TOAST_DURATION } from "../../utils/constants";
+import { TOAST_DURATION, AI_CONFIG } from "../../utils/constants";
 import { logger } from "../../utils/logger";
 import { logError } from "../../utils/AppError";
+import { inferCorrectAnswer } from "../../utils/answerHelpers";
 
 /**
  * Hook for handling question critique and feedback loop logic.
@@ -59,17 +60,26 @@ export const useQuestionCritique = ({
         return;
       }
 
-      if (!q.correct) {
-        logger.error(
-          "[Critique] Question object missing 'correct' property:",
-          q
-        );
+      // Try to infer correct answer if missing
+      const effectiveCorrect = inferCorrectAnswer(q);
+      if (!effectiveCorrect) {
+        logger.error("[Critique] Could not determine correct answer:", {
+          id: q.id,
+          correct: q.correct,
+          type: q.type,
+        });
         showMessage(
-          "Critique failed: Correct answer is missing",
+          "Critique failed: Could not determine correct answer",
           TOAST_DURATION.LONG
         );
         return;
       }
+
+      // Use the inferred/validated correct answer
+      const normalizedQuestion = {
+        ...q,
+        correct: effectiveCorrect,
+      };
 
       if (!isApiReady) {
         showMessage(
@@ -84,11 +94,11 @@ export const useQuestionCritique = ({
 
       try {
         const { score, text, rewrite, improvedScore, changes } =
-          await generateCritique(effectiveApiKey, q);
+          await generateCritique(effectiveApiKey, normalizedQuestion);
 
-        // Generate tags if question has fewer than 3
+        // Generate tags if question has fewer than MAX_CRITIQUE_RETRIES
         let suggestedTags = Array.isArray(q.tags) ? q.tags : [];
-        if (suggestedTags.length < 3) {
+        if (suggestedTags.length < AI_CONFIG.MAX_CRITIQUE_RETRIES) {
           try {
             const questionForTags = rewrite
               ? {
@@ -116,7 +126,7 @@ export const useQuestionCritique = ({
                   ...suggestedTags,
                   ...newTags.map((t) => t.replace(/^#/, "")),
                 ]),
-              ].slice(0, 5);
+              ].slice(0, AI_CONFIG.MAX_FEEDBACK_SCORE);
             }
           } catch (error) {
             logError(error, {

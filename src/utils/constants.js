@@ -92,6 +92,20 @@ export const TOAST_DURATION = {
   EXTENDED: 4000, // Errors & warnings requiring attention
 };
 
+// AI/Gemini Configuration Constants
+export const AI_CONFIG = {
+  // Temperature settings (0.0 = deterministic, 1.0 = creative)
+  DEFAULT_TEMPERATURE: 0.2, // Standard generation temperature
+  TAGGING_TEMPERATURE: 0.3, // Slightly higher for tag classification
+  // Model defaults
+  DEFAULT_MODEL: "gemini-2.0-flash",
+  // Log preview length
+  API_KEY_PREVIEW_LENGTH: 10,
+  // Retry/Loop limits
+  MAX_CRITIQUE_RETRIES: 3,
+  MAX_FEEDBACK_SCORE: 5,
+};
+
 // UI Constants
 export const UI_LABELS = {
   APP_TITLE: "UE5 Question Generator",
@@ -255,6 +269,21 @@ export const QUESTION_STATUS = {
   DELETED: "deleted",
 };
 
+// Answer Review States - Explicit reviewer assessment of answer correctness
+export const ANSWER_STATE = {
+  CORRECT: "correct",
+  INCORRECT: "incorrect",
+  UNSURE: "unsure",
+};
+
+// Doc Link Review States - Quality assessment of documentation link
+export const DOC_LINK_STATE = {
+  RELEVANT: "relevant",
+  TOO_BROAD: "too_broad",
+  INCORRECT: "incorrect",
+  MISSING: "missing",
+};
+
 export const QUESTION_DIFFICULTY = {
   BEGINNER: "Beginner",
   INTERMEDIATE: "Intermediate",
@@ -314,4 +343,21 @@ export const REVIEWER_ALLOWED_FIELDS = [
   "humanVerifiedAt",
   // Notes
   "notes",
+  // Doc link management (Phase 1)
+  "sourceUrl",
+  "sourceExcerpt",
+  "docLinkSource",
+  "docLinkModifiedBy",
+  "docLinkModifiedAt",
+  "docLinkModificationNote",
+  "originalSourceUrl",
+  "originalSourceExcerpt",
+  // Explicit review states (Phase 2)
+  "answerState",
+  "docLinkState",
+  // Needs research (Phase 4)
+  "needsResearch",
+  "needsResearchReason",
+  "needsResearchAt",
+  "needsResearchBy",
 ];

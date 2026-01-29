@@ -3,6 +3,7 @@ import DOMPurify from "dompurify";
 import Icon from "../Icon";
 import { formatDate } from "../../utils/reviewerAnalytics";
 import { isEpicLink } from "../../utils/urlValidator";
+import DocLinkEditor from "./DocLinkEditor";
 
 const SourceContextActions = ({
   sourceUrl,
@@ -122,12 +123,23 @@ const SourceContextCard = ({
   onVerifySearch,
   onConfirmVerify,
   canVerify = true,
+  // Doc link management props (Phase 1)
+  docLinkSource = "system",
+  docLinkModifiedBy = null,
+  docLinkModificationNote = null,
+  originalSourceUrl = null,
+  originalSourceExcerpt = null,
+  onDocLinkUpdate = null,
+  showMessage = null,
+  canEdit = true,
 }) => {
   const hasValidUrl = isEpicLink(sourceUrl);
 
   if (!sourceExcerpt && !hasValidUrl) {
     return null;
   }
+
+  const isModified = docLinkSource === "user_modified";
 
   return (
     <div className="bg-slate-950/50 border border-blue-700/30 rounded-lg p-4 mb-3">
@@ -137,6 +149,16 @@ const SourceContextCard = ({
           <span className="text-blue-300 font-bold text-sm">
             Source Context
           </span>
+          {/* Show modified badge next to title */}
+          {isModified && (
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-purple-900/40 text-purple-300 border border-purple-700/40"
+              title={`Modified: ${docLinkModificationNote || "No note"}`}
+            >
+              <Icon name="edit-2" size={10} />
+              Edited
+            </span>
+          )}
         </div>
         {!isVerified && sourceExcerpt && (
           <span
@@ -185,6 +207,24 @@ const SourceContextCard = ({
           canVerify={canVerify}
         />
       </div>
+
+      {/* Doc Link Editor - Phase 1 feature */}
+      {onDocLinkUpdate && (
+        <div className="mt-3 pt-3 border-t border-slate-700/50">
+          <DocLinkEditor
+            sourceUrl={sourceUrl}
+            sourceExcerpt={sourceExcerpt}
+            docLinkSource={docLinkSource}
+            docLinkModifiedBy={docLinkModifiedBy}
+            docLinkModificationNote={docLinkModificationNote}
+            originalSourceUrl={originalSourceUrl}
+            originalSourceExcerpt={originalSourceExcerpt}
+            onUpdate={onDocLinkUpdate}
+            showMessage={showMessage}
+            disabled={!canEdit}
+          />
+        </div>
+      )}
     </div>
   );
 };

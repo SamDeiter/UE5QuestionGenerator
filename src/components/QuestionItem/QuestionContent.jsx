@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { sanitizeText } from "../../utils/stringHelpers";
 import Icon from "../Icon";
+import AnswerChangeConfirmModal from "../AnswerChangeConfirmModal";
 
 const QuestionContent = ({
   q,
@@ -15,6 +16,8 @@ const QuestionContent = ({
 }) => {
   // Track which version to display (0 = original, 1+ = alternatives)
   const [alternativeIndex, setAlternativeIndex] = useState(0);
+  // Answer change modal state
+  const [answerChangeModal, setAnswerChangeModal] = useState(null);
 
   // Get all versions (original + alternatives)
   const allVersions = [q, ...(q.alternatives || [])];
@@ -198,21 +201,47 @@ const QuestionContent = ({
             const handleChangeCorrect = () => {
               if (isCorrect) return; // Already correct, no action needed
 
-              const confirmed = window.confirm(
-                `⚠️ Change correct answer?\n\nFrom: ${displayedQ.correct}) ${displayedQ.options?.[displayedQ.correct]?.substring(0, 50) || ""}...\n\nTo: ${key}) ${optionText.substring(0, 50)}...`
-              );
+              // Open the answer change modal instead of window.confirm
+              setAnswerChangeModal({
+                fromAnswer: displayedQ.correct,
+                fromText: displayedQ.options?.[displayedQ.correct] || "",
+                toAnswer: key,
+                toText: optionText,
+                questionText: displayedQ.question,
+                sourceUrl: q.sourceUrl || q.docLink,
+                onConfirm: (result) => {
+                  if (onUpdateQuestion) {
+                    const updates = {
+                      correct: key,
+                      versionSource: "human_edited",
+                      lastEditedBy: "reviewer",
+                      lastEditedAt: new Date().toISOString(),
+                    };
 
-              if (confirmed && onUpdateQuestion) {
-                onUpdateQuestion(q.id, {
-                  correct: key,
-                  versionSource: "human_edited",
-                  lastEditedBy: "reviewer",
-                  lastEditedAt: new Date().toISOString(),
-                });
-                if (showMessage) {
-                  showMessage(`✅ Correct answer changed to ${key}`, 3000);
-                }
-              }
+                    // Handle different verification paths
+                    if (result.path === "research") {
+                      updates.needsResearch = true;
+                      updates.researchNote =
+                        "Answer changed - needs verification";
+                    } else if (result.path === "update_doc" && result.note) {
+                      updates.docLinkModificationNote = result.note;
+                      updates.docLinkState = "needs_update";
+                    } else {
+                      updates.answerVerified = true;
+                    }
+
+                    onUpdateQuestion(q.id, updates);
+                    if (showMessage) {
+                      const msg =
+                        result.path === "research"
+                          ? `⚠️ Answer changed to ${key} - marked for research`
+                          : `✅ Correct answer changed to ${key}`;
+                      showMessage(msg, 3000);
+                    }
+                  }
+                  setAnswerChangeModal(null);
+                },
+              });
             };
 
             return (
@@ -318,6 +347,21 @@ const QuestionContent = ({
             FALSE
           </div>
         </div>
+      )}
+
+      {/* Answer Change Confirmation Modal */}
+      {answerChangeModal && (
+        <AnswerChangeConfirmModal
+          isOpen={!!answerChangeModal}
+          onClose={() => setAnswerChangeModal(null)}
+          onConfirm={answerChangeModal.onConfirm}
+          fromAnswer={answerChangeModal.fromAnswer}
+          fromText={answerChangeModal.fromText}
+          toAnswer={answerChangeModal.toAnswer}
+          toText={answerChangeModal.toText}
+          questionText={answerChangeModal.questionText}
+          sourceUrl={answerChangeModal.sourceUrl}
+        />
       )}
     </>
   );
