@@ -25,11 +25,10 @@ export function useAutoLoad({ user, authLoading, handleLoadFromFirestore }) {
       }
 
       hasAutoLoadedRef.current = true;
-      logger.log("📊 Pre-loading first 50 questions for instant display...");
+      logger.log("📊 Loading all questions from Firestore...");
 
-      // PERFORMANCE FIX v2: Pre-load 50 questions for fast initial display
-      // Full dataset loads via real-time subscription in background
-      handleLoadFromFirestore(true, 50); // Limited eager load
+      // Load all questions on startup - required since real-time subscription isn't connected
+      handleLoadFromFirestore(true);
     }
   }, [user, authLoading, handleLoadFromFirestore]);
 
