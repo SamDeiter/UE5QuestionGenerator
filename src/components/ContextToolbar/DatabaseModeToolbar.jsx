@@ -49,40 +49,41 @@ const DatabaseModeToolbar = ({
       </div>
 
       <div className="flex items-center gap-2 md:gap-3">
-        {/* Load Data Buttons */}
-        <button
-          onClick={onLoadFirestore}
-          disabled={isProcessing}
-          className="px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 md:gap-2 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50"
-          title="Load from Firestore"
-        >
-          <Icon name="cloud-lightning" size={14} />
-          <span className="hidden sm:inline">Firestore</span>
-        </button>
-        <button
-          onClick={onLoadSheets}
-          disabled={isProcessing || !config.sheetUrl}
-          className="px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 md:gap-2 bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
-          title={
-            !config.sheetUrl
-              ? "Configure Sheet URL in Settings first"
-              : "Load from Google Sheets"
-          }
-        >
-          <Icon name="table" size={14} />
-          <span className="hidden sm:inline">Sheets</span>
-        </button>
-
+        {/* Load Data Buttons - Admin Only */}
         {isAdmin && (
-          <button
-            onClick={onBulkExport}
-            className="px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 md:gap-2 bg-green-600 hover:bg-green-500 text-white"
-            data-tour="export-menu"
-            title="Export Questions"
-          >
-            <Icon name="download" size={14} />
-            <span className="hidden sm:inline">Export</span>
-          </button>
+          <>
+            <button
+              onClick={onLoadFirestore}
+              disabled={isProcessing}
+              className="px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 md:gap-2 bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50"
+              title="Load from Firestore"
+            >
+              <Icon name="cloud-lightning" size={14} />
+              <span className="hidden sm:inline">Firestore</span>
+            </button>
+            <button
+              onClick={onLoadSheets}
+              disabled={isProcessing || !config.sheetUrl}
+              className="px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 md:gap-2 bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+              title={
+                !config.sheetUrl
+                  ? "Configure Sheet URL in Settings first"
+                  : "Load from Google Sheets"
+              }
+            >
+              <Icon name="table" size={14} />
+              <span className="hidden sm:inline">Sheets</span>
+            </button>
+            <button
+              onClick={onBulkExport}
+              className="px-2 md:px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 md:gap-2 bg-green-600 hover:bg-green-500 text-white"
+              data-tour="export-menu"
+              title="Export Questions"
+            >
+              <Icon name="download" size={14} />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+          </>
         )}
 
         <ToolbarDivider />
