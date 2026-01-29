@@ -26,14 +26,12 @@ export function useTokenUsage(userId, databaseQuestions = []) {
       try {
         const aggregatedUsage = await getUserTokenUsageAggregated(userId);
         if (isMounted) {
-          // Transform to expected format for TokenUsageDisplay
+          // Return flat structure expected by Header/TokenUsageDisplay
           setTokenUsage({
-            allTime: {
-              inputTokens: aggregatedUsage.estimatedInputTokens,
-              outputTokens: aggregatedUsage.estimatedOutputTokens,
-              totalCost: aggregatedUsage.totalCost,
-              questionCount: aggregatedUsage.questionCount,
-            },
+            inputTokens: aggregatedUsage.estimatedInputTokens || 0,
+            outputTokens: aggregatedUsage.estimatedOutputTokens || 0,
+            totalCost: aggregatedUsage.totalCost || 0,
+            questionCount: aggregatedUsage.questionCount || 0,
           });
         }
       } catch (error) {
