@@ -25,13 +25,11 @@ export function useAutoLoad({ user, authLoading, handleLoadFromFirestore }) {
       }
 
       hasAutoLoadedRef.current = true;
-      logger.log(
-        "📊 Database questions will load when user navigates to Database view"
-      );
+      logger.log("📊 Pre-loading first 50 questions for instant display...");
 
-      // PERFORMANCE FIX: Removed eager loading of 5000 questions on startup
-      // Questions are now loaded on-demand when user navigates to Database view
-      // handleLoadFromFirestore(true);
+      // PERFORMANCE FIX v2: Pre-load 50 questions for fast initial display
+      // Full dataset loads via real-time subscription in background
+      handleLoadFromFirestore(true, 50); // Limited eager load
     }
   }, [user, authLoading, handleLoadFromFirestore]);
 
