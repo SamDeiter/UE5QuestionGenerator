@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { logger } from "../utils/logger";
 import { getCSVContent, segmentQuestions } from "../utils/exportUtils";
 import {
   saveQuestionsToSheets,
@@ -296,31 +297,59 @@ export const useExport = (
   const handleLoadFromFirestore = useCallback(
     async (silent = false, limit = 5000) => {
       setIsProcessing(true);
-      setStatus(silent ? "" : "Loading from Firestore...");
       if (setShowExportMenu) setShowExportMenu(false);
 
-      try {
-        // Use getAllQuestionsFromFirestore for shared database view (all authenticated users can see all questions)
-        const data = await getAllQuestionsFromFirestore(5000, false, limit);
-
-        // PERFORMANCE: Load once to prevent re-render loops
-        const loadedQuestions = data.map((q, index) => ({
+      const processQuestions = (data) => {
+        return data.map((q, index) => ({
           ...q,
           // eslint-disable-next-line sonarjs/pseudo-random
-          id: q.id || Date.now() + index + Math.random(), // Ensure React key
-          status: q.status || QUESTION_STATUS.PENDING, // CRITICAL: Preserve actual status
+          id: q.id || Date.now() + index + Math.random(),
+          status: q.status || QUESTION_STATUS.PENDING,
         }));
+      };
+
+      try {
+        // PERFORMANCE: Stale-while-revalidate pattern
+        // Step 1: Immediately try to serve from IndexedDB cache
+        const { getCachedQuestions } =
+          await import("../services/questionCache");
+        const cachedData = await getCachedQuestions();
+
+        if (cachedData.length > 0) {
+          // Instantly display cached questions
+          const cachedQuestions = processQuestions(cachedData);
+          if (replaceQuestions) {
+            replaceQuestions(cachedQuestions, QUESTION_SOURCES.DATABASE);
+            replaceQuestions(cachedQuestions, QUESTION_SOURCES.IMPORT);
+          }
+          logger.log(
+            `⚡ Instantly loaded ${cachedQuestions.length} cached questions`
+          );
+
+          if (!silent) {
+            setStatus("Syncing latest data...");
+          }
+        } else {
+          if (!silent) {
+            setStatus("Loading from Firestore...");
+          }
+        }
+
+        // Step 2: Fetch fresh data from Firestore (always, to ensure sync)
+        const freshData = await getAllQuestionsFromFirestore(5000, true, limit);
+        const freshQuestions = processQuestions(freshData);
 
         if (replaceQuestions) {
-          replaceQuestions(loadedQuestions, QUESTION_SOURCES.DATABASE);
-          replaceQuestions(loadedQuestions, QUESTION_SOURCES.IMPORT); // Sync history
+          replaceQuestions(freshQuestions, QUESTION_SOURCES.DATABASE);
+          replaceQuestions(freshQuestions, QUESTION_SOURCES.IMPORT);
         }
 
         if (!silent) {
-          showMessage(
-            `Loaded ${loadedQuestions.length} questions from Firestore!`,
-            3000
-          );
+          const msg =
+            cachedData.length > 0
+              ? `Synced ${freshQuestions.length} questions from Firestore`
+              : `Loaded ${freshQuestions.length} questions from Firestore!`;
+          showMessage(msg, 3000);
         }
       } catch (e) {
         logError(e, { operation: "loadFromFirestore", silent, limit });
