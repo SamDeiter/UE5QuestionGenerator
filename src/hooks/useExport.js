@@ -16,6 +16,7 @@ import {
   QUESTION_SOURCES,
   QUESTION_STATUS,
   APP_MODES,
+  FIRESTORE_LIMITS,
 } from "../utils/constants";
 import { validateQuestion } from "../utils/questionValidator";
 
@@ -294,9 +295,9 @@ export const useExport = (
     replaceQuestions,
   ]);
 
-  // PERFORMANCE: Constants for 2-tier loading strategy
-  const INITIAL_LOAD_COUNT = 100;
-  const FULL_SYNC_COUNT = 5000;
+  // PERFORMANCE: Using constants from FIRESTORE_LIMITS for 3-tier loading strategy
+  const { INITIAL_LOAD_COUNT, FULL_SYNC_COUNT, BACKGROUND_SYNC_DELAY_MS } =
+    FIRESTORE_LIMITS;
 
   const handleLoadFromFirestore = useCallback(
     async (silent = false, fullSync = false) => {
@@ -383,7 +384,7 @@ export const useExport = (
             } catch (bgError) {
               logger.warn("Background sync failed:", bgError);
             }
-          }, 500);
+          }, BACKGROUND_SYNC_DELAY_MS);
         }
       } catch (e) {
         logError(e, { operation: "loadFromFirestore", silent, fullSync });
@@ -395,6 +396,7 @@ export const useExport = (
         setStatus("");
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- FIRESTORE_LIMITS constants are module-level, won't change
     [
       setIsProcessing,
       setStatus,
