@@ -8,13 +8,30 @@ import { isEpicLink } from "../utils/urlValidator";
  * 2. Found in Google Search (blue) - verifies with source="google_search"
  * 3. Cannot Verify (red) - opens rejection reason menu
  *
+ * NEW: URL issues are now FIXABLE instead of auto-rejecting!
+ * If the URL is broken, the user can paste the correct one and still accept.
+ *
  * Tracks which buttons user clicked before confirming (for accountability)
  */
 
+// Fixable issues - these prompt URL editing instead of rejection
+const FIXABLE_ISSUES = [
+  {
+    id: "source_url_broken",
+    label: "Source URL is broken/invalid",
+    action: "fix_url",
+  },
+  {
+    id: "source_url_wrong_page",
+    label: "URL goes to wrong page (I have the correct one)",
+    action: "fix_url",
+  },
+];
+
+// Non-fixable issues - these trigger rejection
 const REJECTION_REASONS = [
   { id: "excerpt_not_in_docs", label: "Excerpt not on Epic Docs page" },
   { id: "excerpt_not_in_search", label: "Excerpt not found in search results" },
-  { id: "source_url_broken", label: "Source URL is broken/invalid" },
   { id: "info_outdated", label: "Information appears outdated" },
   {
     id: "engine_version_specific",
@@ -30,10 +47,13 @@ const VerifyConfirmModal = ({
   onVerifyDocs,
   onVerifySearch,
   onReject,
-  onFlagUnverified, // NEW: Flag as unverified without rejecting
+  onFlagUnverified, // Flag as unverified without rejecting
+  onDocLinkUpdate, // NEW: Callback to save fixed URL
   onDismiss,
 }) => {
   const [showRejectMenu, setShowRejectMenu] = useState(false);
+  const [showUrlFixMode, setShowUrlFixMode] = useState(false); // NEW: URL editor mode
+  const [fixedUrl, setFixedUrl] = useState(""); // NEW: User's corrected URL
   const [clickedDocs, setClickedDocs] = useState(false);
   const [clickedSearch, setClickedSearch] = useState(false);
 
@@ -280,6 +300,89 @@ const VerifyConfirmModal = ({
                   <Icon name="flag" size={14} className="flex-shrink-0" />
                   🚩 Cannot find in docs or search (flag for review)
                 </button>
+
+                {/* NEW: Fixable issues - URL can be corrected */}
+                {!showUrlFixMode ? (
+                  <>
+                    <div className="border-t border-blue-700/30 my-2 pt-2">
+                      <span className="text-xs text-blue-400/60 uppercase tracking-wide">
+                        ✏️ URL issue? Fix it and keep the question:
+                      </span>
+                    </div>
+                    {FIXABLE_ISSUES.map((issue) => (
+                      <button
+                        key={issue.id}
+                        type="button"
+                        onClick={() => setShowUrlFixMode(true)}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-blue-900/30 text-blue-300 border-blue-700/50 hover:bg-blue-800/50 hover:border-blue-500 text-left"
+                      >
+                        <Icon name="edit" size={14} className="flex-shrink-0" />
+                        {issue.label}
+                      </button>
+                    ))}
+                  </>
+                ) : (
+                  /* URL Fix Mode - Inline editor */
+                  <div className="bg-blue-900/20 border border-blue-600/40 rounded-lg p-3 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon name="edit-2" size={14} className="text-blue-400" />
+                      <span className="text-xs font-bold text-blue-300 uppercase">
+                        Paste Correct URL
+                      </span>
+                    </div>
+                    <input
+                      type="url"
+                      value={fixedUrl}
+                      onChange={(e) => setFixedUrl(e.target.value)}
+                      placeholder="https://dev.epicgames.com/documentation/..."
+                      className="w-full px-3 py-2 text-sm rounded-md bg-slate-800 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
+                      autoFocus
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (fixedUrl.trim() && onDocLinkUpdate) {
+                            // Save the fixed URL and verify
+                            onDocLinkUpdate({
+                              sourceUrl: fixedUrl.trim(),
+                              originalSourceUrl: sourceUrl, // Preserve original
+                              docLinkSource: "user_modified",
+                              docLinkModificationNote:
+                                "Fixed broken/wrong URL during verification",
+                              docLinkModifiedAt: new Date().toISOString(),
+                            });
+                            // Also mark as verified since user provided correct link
+                            onVerifyDocs({
+                              clickedDocs,
+                              clickedSearch,
+                              urlFixed: true,
+                            });
+                          }
+                        }}
+                        disabled={!fixedUrl.trim()}
+                        className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-bold rounded-lg border transition-all ${
+                          fixedUrl.trim()
+                            ? "bg-green-600/30 text-green-400 border-green-500/50 hover:bg-green-600/50"
+                            : "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed"
+                        }`}
+                      >
+                        <Icon name="check" size={14} />
+                        Save & Verify
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowUrlFixMode(false);
+                          setFixedUrl("");
+                        }}
+                        className="px-3 py-2 text-sm font-medium rounded-lg border bg-slate-800 text-slate-400 border-slate-600 hover:bg-slate-700"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="border-t border-red-700/30 my-2 pt-2">
                   <span className="text-xs text-red-400/60 uppercase tracking-wide">

@@ -676,6 +676,10 @@ const QuestionItem = ({
               handleFlagUnverified(clickInfo);
               setShowVerifyModal(null);
             }}
+            onDocLinkUpdate={(updates) => {
+              // Save the fixed URL - this allows fixing broken URLs without rejecting
+              handleDocLinkUpdate(updates);
+            }}
             onDismiss={() => setShowVerifyModal(null)}
           />
         )}
