@@ -92,6 +92,20 @@ export const TOAST_DURATION = {
   EXTENDED: 4000, // Errors & warnings requiring attention
 };
 
+// AI/Gemini Configuration Constants
+export const AI_CONFIG = {
+  // Temperature settings (0.0 = deterministic, 1.0 = creative)
+  DEFAULT_TEMPERATURE: 0.2, // Standard generation temperature
+  TAGGING_TEMPERATURE: 0.3, // Slightly higher for tag classification
+  // Model defaults
+  DEFAULT_MODEL: "gemini-2.0-flash",
+  // Log preview length
+  API_KEY_PREVIEW_LENGTH: 10,
+  // Retry/Loop limits
+  MAX_CRITIQUE_RETRIES: 3,
+  MAX_FEEDBACK_SCORE: 5,
+};
+
 // UI Constants
 export const UI_LABELS = {
   APP_TITLE: "UE5 Question Generator",

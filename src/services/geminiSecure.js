@@ -17,6 +17,7 @@ import {
 } from "./gemini.js";
 import { logger } from "../utils/logger";
 import { inferCorrectAnswer } from "../utils/answerHelpers";
+import { AI_CONFIG } from "../utils/constants";
 
 /**
  * Secure generate content wrapper
@@ -27,8 +28,8 @@ export const generateContentSecure = async (
   systemPrompt,
   userPrompt,
   setStatus,
-  temperature = 0.2,
-  model = "gemini-2.0-flash"
+  temperature = AI_CONFIG.DEFAULT_TEMPERATURE,
+  model = AI_CONFIG.DEFAULT_MODEL
 ) => {
   // DEBUG: Log authentication status
   logger.log("🔍 [geminiSecure] Checking authentication:", {
@@ -62,7 +63,9 @@ export const generateContentSecure = async (
   // Fallback to direct API only if NOT authenticated
   logger.log(
     "📡 Calling direct API with key:",
-    effectiveKey ? `${effectiveKey.substring(0, 10)}...` : "NONE"
+    effectiveKey
+      ? `${effectiveKey.substring(0, AI_CONFIG.API_KEY_PREVIEW_LENGTH)}...`
+      : "NONE"
   );
   return await generateContentDirect(
     effectiveKey,
@@ -184,8 +187,8 @@ export const generateTagsSecure = async (apiKey, questionText) => {
       systemPrompt,
       userPrompt,
       () => {}, // No status updates needed for fast tagging
-      0.3, // Temp
-      "gemini-2.0-flash" // Model
+      AI_CONFIG.TAGGING_TEMPERATURE,
+      AI_CONFIG.DEFAULT_MODEL
     );
 
     // Parse result - try multiple extraction methods

@@ -45,6 +45,52 @@ export const normalizeAnswerKey = (value) => {
 };
 
 /**
+ * Check if options represent a standard T/F layout (A=True, B=False).
+ * @param {Object} options - Question options object
+ * @returns {boolean} True if standard T/F layout
+ */
+const isStandardTFLayout = (options) => {
+  if (!options) return false;
+  const optA = (options.A || "").toLowerCase().trim();
+  const optB = (options.B || "").toLowerCase().trim();
+  return (
+    (optA === "true" || optA === "true.") &&
+    (optB === "false" || optB === "false.")
+  );
+};
+
+/**
+ * Try to infer T/F answer from correctAnswerText field.
+ * @param {Object} q - Question object
+ * @returns {string|null} "A" or "B" if inferable, null otherwise
+ */
+const inferFromCorrectAnswerText = (q) => {
+  if (!q.correctAnswerText || !q.options) return null;
+
+  const txt = q.correctAnswerText.toLowerCase().trim();
+  const optA = (q.options.A || "").toLowerCase().trim();
+  const optB = (q.options.B || "").toLowerCase().trim();
+
+  if (txt === "true" && optA === "true") return "A";
+  if (txt === "false" && optB === "false") return "B";
+
+  return null;
+};
+
+/**
+ * Log warning and return default answer for missing correct field.
+ * @param {Object} q - Question object
+ * @param {string} context - Context description for log
+ * @returns {string} Default answer "A"
+ */
+const returnDefaultWithWarning = (q, context) => {
+  logger.warn(
+    `[inferCorrectAnswer] ${context} - defaulting to 'A'. Question ID: ${q.id || q.uniqueId}`
+  );
+  return "A";
+};
+
+/**
  * Safely infer the correct answer from a question object.
  * Handles cases where 'correct' is missing, empty, or malformed.
  *
@@ -58,34 +104,19 @@ export const inferCorrectAnswer = (q) => {
 
   // 2. For T/F questions, try to infer from options
   if (isTrueFalseQuestion(q) && q.options) {
-    const optA = (q.options.A || "").toLowerCase().trim();
-    const optB = (q.options.B || "").toLowerCase().trim();
-
     // Check explicit marking via correctAnswerText
-    if (q.correctAnswerText) {
-      const txt = q.correctAnswerText.toLowerCase().trim();
-      if (txt === "true" && optA === "true") return "A";
-      if (txt === "false" && optB === "false") return "B";
-    }
+    const fromText = inferFromCorrectAnswerText(q);
+    if (fromText) return fromText;
 
     // Standard T/F layout - default to A (True) as conservative fallback
-    if (
-      (optA === "true" || optA === "true.") &&
-      (optB === "false" || optB === "false.")
-    ) {
-      logger.warn(
-        `[inferCorrectAnswer] T/F question missing 'correct' - defaulting to 'A' (True). Question ID: ${q.id || q.uniqueId}`
-      );
-      return "A";
+    if (isStandardTFLayout(q.options)) {
+      return returnDefaultWithWarning(q, "T/F question missing 'correct'");
     }
   }
 
   // 3. For MC questions with options but missing correct, default to 'A'
   if (q.options && (q.options.A || q.options.B)) {
-    logger.warn(
-      `[inferCorrectAnswer] Question missing 'correct' - defaulting to 'A'. Question ID: ${q.id || q.uniqueId}`
-    );
-    return "A";
+    return returnDefaultWithWarning(q, "Question missing 'correct'");
   }
 
   // 4. Truly unrecoverable
