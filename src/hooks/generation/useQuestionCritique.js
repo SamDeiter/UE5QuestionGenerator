@@ -6,64 +6,7 @@ import {
 import { TOAST_DURATION } from "../../utils/constants";
 import { logger } from "../../utils/logger";
 import { logError } from "../../utils/AppError";
-
-/**
- * Safely infer the correct answer from a question object.
- * Handles cases where 'correct' is missing, empty, or malformed.
- * For T/F questions, attempts to infer from options.
- * @param {Object} q - Question object
- * @returns {string|null} The correct answer key (A, B, C, D) or null if unrecoverable
- */
-const inferCorrectAnswer = (q) => {
-  // If correct exists and is valid, return it
-  if (q.correct && typeof q.correct === "string" && q.correct.trim()) {
-    const val = q.correct.trim().toUpperCase();
-    // Normalize "TRUE"/"FALSE" to A/B for T/F questions
-    if (val === "TRUE") return "A";
-    if (val === "FALSE") return "B";
-    if (["A", "B", "C", "D"].includes(val)) return val;
-  }
-
-  // For True/False questions, we can infer from options
-  const isT = q.type === "True/False" || q.type === "T/F";
-  if (isT && q.options) {
-    // Standard T/F: A=True, B=False
-    const optA = (q.options.A || "").toLowerCase().trim();
-    const optB = (q.options.B || "").toLowerCase().trim();
-
-    // Check if we can determine from explicit marking
-    // Some legacy data might have "True" or "False" as the correct value text
-    if (q.correctAnswerText) {
-      const txt = q.correctAnswerText.toLowerCase().trim();
-      if (txt === "true" && optA === "true") return "A";
-      if (txt === "false" && optB === "false") return "B";
-    }
-
-    // If options look like T/F, default to A (True) as conservative fallback
-    // Reviewer can correct if wrong
-    if (
-      (optA === "true" || optA === "true.") &&
-      (optB === "false" || optB === "false.")
-    ) {
-      logger.warn(
-        `[inferCorrectAnswer] T/F question missing 'correct' - defaulting to 'A' (True). Question ID: ${q.id}`
-      );
-      return "A";
-    }
-  }
-
-  // For MC questions with valid options but missing correct, default to 'A'
-  // with warning - reviewer should verify
-  if (q.options && (q.options.A || q.options.B)) {
-    logger.warn(
-      `[inferCorrectAnswer] Question missing 'correct' - defaulting to 'A'. Question ID: ${q.id}`
-    );
-    return "A";
-  }
-
-  // Truly unrecoverable
-  return null;
-};
+import { inferCorrectAnswer } from "../../utils/answerHelpers";
 
 /**
  * Hook for handling question critique and feedback loop logic.

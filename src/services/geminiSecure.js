@@ -16,6 +16,7 @@ import {
   generateCritique as generateCritiqueDirect,
 } from "./gemini.js";
 import { logger } from "../utils/logger";
+import { inferCorrectAnswer } from "../utils/answerHelpers";
 
 /**
  * Secure generate content wrapper
@@ -110,51 +111,18 @@ export const generateCritiqueSecure = async (
     );
   }
 
-  // Try to infer correct answer if missing
-  let effectiveCorrect = question.correct;
-  if (
-    !effectiveCorrect ||
-    (typeof effectiveCorrect === "string" && !effectiveCorrect.trim())
-  ) {
-    // For T/F questions, infer from standard A=True, B=False layout
-    const isTF = question.type === "True/False" || question.type === "T/F";
-    if (isTF && question.options) {
-      const optA = (question.options.A || "").toLowerCase().trim();
-      const optB = (question.options.B || "").toLowerCase().trim();
-      if (
-        (optA === "true" || optA === "true.") &&
-        (optB === "false" || optB === "false.")
-      ) {
-        logger.warn(
-          `[CritiqueSecure] T/F question missing 'correct' - inferring 'A'. ID: ${question.id}`
-        );
-        effectiveCorrect = "A";
+  // Use shared utility to infer correct answer if missing
+  const effectiveCorrect = inferCorrectAnswer(question);
+  if (!effectiveCorrect) {
+    logger.error(
+      "[CritiqueSecure] Cannot infer 'correct' property. Received:",
+      {
+        id: question.id,
+        correct: question.correct,
+        type: question.type,
       }
-    }
-
-    // Final fallback for any question with options
-    if (
-      !effectiveCorrect &&
-      question.options &&
-      (question.options.A || question.options.B)
-    ) {
-      logger.warn(
-        `[CritiqueSecure] Question missing 'correct' - defaulting to 'A'. ID: ${question.id}`
-      );
-      effectiveCorrect = "A";
-    }
-
-    if (!effectiveCorrect) {
-      logger.error(
-        "[CritiqueSecure] Cannot infer 'correct' property. Received:",
-        {
-          id: question.id,
-          correct: question.correct,
-          type: question.type,
-        }
-      );
-      throw new Error("Critique failed: Could not determine correct answer.");
-    }
+    );
+    throw new Error("Critique failed: Could not determine correct answer.");
   }
 
   // Create normalized question with inferred correct
