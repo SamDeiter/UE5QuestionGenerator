@@ -255,6 +255,21 @@ export const QUESTION_STATUS = {
   DELETED: "deleted",
 };
 
+// Answer Review States - Explicit reviewer assessment of answer correctness
+export const ANSWER_STATE = {
+  CORRECT: "correct",
+  INCORRECT: "incorrect",
+  UNSURE: "unsure",
+};
+
+// Doc Link Review States - Quality assessment of documentation link
+export const DOC_LINK_STATE = {
+  RELEVANT: "relevant",
+  TOO_BROAD: "too_broad",
+  INCORRECT: "incorrect",
+  MISSING: "missing",
+};
+
 export const QUESTION_DIFFICULTY = {
   BEGINNER: "Beginner",
   INTERMEDIATE: "Intermediate",
@@ -314,4 +329,21 @@ export const REVIEWER_ALLOWED_FIELDS = [
   "humanVerifiedAt",
   // Notes
   "notes",
+  // Doc link management (Phase 1)
+  "sourceUrl",
+  "sourceExcerpt",
+  "docLinkSource",
+  "docLinkModifiedBy",
+  "docLinkModifiedAt",
+  "docLinkModificationNote",
+  "originalSourceUrl",
+  "originalSourceExcerpt",
+  // Explicit review states (Phase 2)
+  "answerState",
+  "docLinkState",
+  // Needs research (Phase 4)
+  "needsResearch",
+  "needsResearchReason",
+  "needsResearchAt",
+  "needsResearchBy",
 ];

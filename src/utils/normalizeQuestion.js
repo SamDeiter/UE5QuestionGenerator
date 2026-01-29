@@ -287,6 +287,30 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
     exportedTo: q.exportedTo || null, // Where exported (sheets, csv, scorm)
     exportCount: q.exportCount || 0, // How many times exported
 
+    // ═══════════════════════════════════════════════════════════════
+    // DOC LINK MANAGEMENT - Track source URL modifications
+    // ═══════════════════════════════════════════════════════════════
+    docLinkSource: q.docLinkSource || "system", // "system" (AI-generated) | "user_modified"
+    docLinkModifiedBy: q.docLinkModifiedBy || null, // Email of who edited the link
+    docLinkModifiedAt: q.docLinkModifiedAt || null, // When the link was modified
+    docLinkModificationNote: q.docLinkModificationNote || null, // Justification for change
+    originalSourceUrl: q.originalSourceUrl || null, // Preserved original for audit trail
+    originalSourceExcerpt: q.originalSourceExcerpt || null, // Preserved original excerpt
+
+    // ═══════════════════════════════════════════════════════════════
+    // EXPLICIT REVIEW STATES - Decouple answer from doc link assessment
+    // ═══════════════════════════════════════════════════════════════
+    answerState: q.answerState || null, // "correct" | "incorrect" | "unsure"
+    docLinkState: q.docLinkState || null, // "relevant" | "too_broad" | "incorrect" | "missing"
+
+    // ═══════════════════════════════════════════════════════════════
+    // NEEDS RESEARCH - Pause approval without rejecting
+    // ═══════════════════════════════════════════════════════════════
+    needsResearch: q.needsResearch || false,
+    needsResearchReason: q.needsResearchReason || null,
+    needsResearchAt: q.needsResearchAt || null,
+    needsResearchBy: q.needsResearchBy || null,
+
     // Preserve any additional fields from source not explicitly handled
     ...Object.fromEntries(
       Object.entries(q).filter(
@@ -392,6 +416,21 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
             "exportedAt",
             "exportedTo",
             "exportCount",
+            // Doc Link Management
+            "docLinkSource",
+            "docLinkModifiedBy",
+            "docLinkModifiedAt",
+            "docLinkModificationNote",
+            "originalSourceUrl",
+            "originalSourceExcerpt",
+            // Explicit Review States
+            "answerState",
+            "docLinkState",
+            // Needs Research
+            "needsResearch",
+            "needsResearchReason",
+            "needsResearchAt",
+            "needsResearchBy",
           ].includes(key)
       )
     ),

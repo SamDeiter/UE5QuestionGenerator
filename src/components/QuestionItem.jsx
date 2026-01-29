@@ -228,6 +228,19 @@ const QuestionItem = ({
     [q.id, onUpdateQuestion, userEmail, showMessage]
   );
 
+  // Handle doc link updates from the DocLinkEditor component (Phase 1)
+  const handleDocLinkUpdate = useCallback(
+    (updates) => {
+      if (!onUpdateQuestion) return;
+      // Include the modifiedBy field automatically
+      onUpdateQuestion(q.id, {
+        ...updates,
+        docLinkModifiedBy: userEmail,
+      });
+    },
+    [q.id, onUpdateQuestion, userEmail]
+  );
+
   const handleFix = useCallback(() => {
     if (onApplyRewrite) {
       onApplyRewrite(q);
@@ -418,6 +431,14 @@ const QuestionItem = ({
           onVerifySearch={handleOpenSearch}
           showMessage={showMessage}
           canVerify={q.critiqueScore >= (QUALITY_THRESHOLDS?.PASS || 70)}
+          // Doc link management props (Phase 1)
+          docLinkSource={q.docLinkSource}
+          docLinkModifiedBy={q.docLinkModifiedBy}
+          docLinkModificationNote={q.docLinkModificationNote}
+          originalSourceUrl={q.originalSourceUrl}
+          originalSourceExcerpt={q.originalSourceExcerpt}
+          onDocLinkUpdate={handleDocLinkUpdate}
+          canEdit={appMode === APP_MODES.REVIEW}
         />
 
         <CritiqueSection
