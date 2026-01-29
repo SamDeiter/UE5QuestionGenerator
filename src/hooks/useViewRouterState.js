@@ -22,6 +22,7 @@ export function useViewRouterState({
   showHistory,
   user,
   userRole,
+  isInitialLoading,
 }) {
   return useMemo(
     () => ({
@@ -37,6 +38,7 @@ export function useViewRouterState({
       showHistory,
       currentUser: user,
       userRole,
+      isInitialLoading,
     }),
     [
       currentReviewIndex,
@@ -51,6 +53,7 @@ export function useViewRouterState({
       showHistory,
       user,
       userRole,
+      isInitialLoading,
     ]
   );
 }
