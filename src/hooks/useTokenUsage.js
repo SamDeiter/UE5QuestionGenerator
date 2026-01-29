@@ -1,56 +1,45 @@
 import { useState, useEffect } from "react";
 import { logger } from "../utils/logger";
 import { getTokenUsageFromQuestions } from "../utils/analyticsStore";
-import { getUserTokenUsageAggregated } from "../services/firebaseQueries";
 
 /**
- * Hook to fetch and manage token usage data from Firestore.
- * Uses server-side aggregation for efficiency (1 read vs 5000+).
+ * Hook to calculate token usage from loaded questions.
+ * Uses client-side calculation for reliability.
  *
  * @param {string|undefined} userId - The user's UID
- * @param {Array} databaseQuestions - Fallback question list for client-side calculation
- * @returns {Object|null} Token usage data in format expected by TokenUsageDisplay
+ * @param {Array} databaseQuestions - Questions loaded from Firestore
+ * @returns {Object} Token usage data in format expected by TokenUsageDisplay
  */
 export function useTokenUsage(userId, databaseQuestions = []) {
-  const [tokenUsage, setTokenUsage] = useState(null);
+  const [tokenUsage, setTokenUsage] = useState({
+    inputTokens: 0,
+    outputTokens: 0,
+    totalCost: 0,
+    questionCount: 0,
+  });
 
   useEffect(() => {
-    let isMounted = true;
+    if (!userId || databaseQuestions.length === 0) {
+      return;
+    }
 
-    const fetchTokenUsage = async () => {
-      if (!userId) {
-        setTokenUsage(null);
-        return;
-      }
+    // Client-side calculation from loaded questions
+    const userQuestions = databaseQuestions.filter(
+      (q) => q.creatorId === userId
+    );
 
-      try {
-        const aggregatedUsage = await getUserTokenUsageAggregated(userId);
-        if (isMounted) {
-          // Return flat structure expected by Header/TokenUsageDisplay
-          setTokenUsage({
-            inputTokens: aggregatedUsage.estimatedInputTokens || 0,
-            outputTokens: aggregatedUsage.estimatedOutputTokens || 0,
-            totalCost: aggregatedUsage.totalCost || 0,
-            questionCount: aggregatedUsage.questionCount || 0,
-          });
-        }
-      } catch (error) {
-        logger.error("Failed to fetch aggregated token usage:", error);
-        // Fallback to client-side calculation if aggregation fails
-        if (isMounted && databaseQuestions.length > 0) {
-          const userQuestions = databaseQuestions.filter(
-            (q) => q.creatorId === userId
-          );
-          setTokenUsage(getTokenUsageFromQuestions(userQuestions));
-        }
-      }
-    };
+    const usage = getTokenUsageFromQuestions(userQuestions);
 
-    fetchTokenUsage();
+    setTokenUsage({
+      inputTokens: usage.inputTokens || 0,
+      outputTokens: usage.outputTokens || 0,
+      totalCost: usage.totalCost || 0,
+      questionCount: userQuestions.length,
+    });
 
-    return () => {
-      isMounted = false;
-    };
+    logger.log(
+      `📊 Token usage calculated: ${userQuestions.length} questions, $${(usage.totalCost || 0).toFixed(4)}`
+    );
   }, [userId, databaseQuestions]);
 
   return tokenUsage;
