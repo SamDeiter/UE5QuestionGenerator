@@ -294,8 +294,12 @@ export const useExport = (
     replaceQuestions,
   ]);
 
+  // PERFORMANCE: Constants for 2-tier loading strategy
+  const INITIAL_LOAD_COUNT = 100;
+  const FULL_SYNC_COUNT = 5000;
+
   const handleLoadFromFirestore = useCallback(
-    async (silent = false, limit = 5000) => {
+    async (silent = false, fullSync = false) => {
       setIsProcessing(true);
       if (setShowExportMenu) setShowExportMenu(false);
 
@@ -309,34 +313,33 @@ export const useExport = (
       };
 
       try {
-        // PERFORMANCE: Stale-while-revalidate pattern
-        // Step 1: Immediately try to serve from IndexedDB cache
+        // TIER 1: Instantly display from IndexedDB cache (0ms perceived load)
         const { getCachedQuestions } =
           await import("../services/questionCache");
         const cachedData = await getCachedQuestions();
 
         if (cachedData.length > 0) {
-          // Instantly display cached questions
           const cachedQuestions = processQuestions(cachedData);
           if (replaceQuestions) {
             replaceQuestions(cachedQuestions, QUESTION_SOURCES.DATABASE);
             replaceQuestions(cachedQuestions, QUESTION_SOURCES.IMPORT);
           }
           logger.log(
-            `⚡ Instantly loaded ${cachedQuestions.length} cached questions`
+            `⚡ TIER 1: Instantly loaded ${cachedQuestions.length} cached questions`
           );
-
-          if (!silent) {
-            setStatus("Syncing latest data...");
-          }
-        } else {
-          if (!silent) {
-            setStatus("Loading from Firestore...");
-          }
         }
 
-        // Step 2: Fetch fresh data from Firestore (always, to ensure sync)
-        const freshData = await getAllQuestionsFromFirestore(5000, true, limit);
+        // TIER 2: Fast initial fetch (100 docs = ~200ms)
+        if (!silent) {
+          setStatus(cachedData.length > 0 ? "Syncing latest..." : "Loading...");
+        }
+
+        const initialLimit = fullSync ? FULL_SYNC_COUNT : INITIAL_LOAD_COUNT;
+        const freshData = await getAllQuestionsFromFirestore(
+          FULL_SYNC_COUNT,
+          true,
+          initialLimit
+        );
         const freshQuestions = processQuestions(freshData);
 
         if (replaceQuestions) {
@@ -344,17 +347,48 @@ export const useExport = (
           replaceQuestions(freshQuestions, QUESTION_SOURCES.IMPORT);
         }
 
+        logger.log(
+          `⚡ TIER 2: Fetched ${freshQuestions.length} questions from Firestore`
+        );
+
         if (!silent) {
           const msg =
             cachedData.length > 0
-              ? `Synced ${freshQuestions.length} questions from Firestore`
-              : `Loaded ${freshQuestions.length} questions from Firestore!`;
+              ? `Synced ${freshQuestions.length} questions`
+              : `Loaded ${freshQuestions.length} questions!`;
           showMessage(msg, 3000);
         }
+
+        // TIER 3: Background full sync (if not already done)
+        if (!fullSync && freshData.length >= INITIAL_LOAD_COUNT) {
+          // More data likely exists, trigger background sync
+          setTimeout(async () => {
+            try {
+              logger.log("🔄 TIER 3: Starting background full sync...");
+              const fullData = await getAllQuestionsFromFirestore(
+                FULL_SYNC_COUNT,
+                true,
+                FULL_SYNC_COUNT
+              );
+              if (fullData.length > freshData.length) {
+                const fullQuestions = processQuestions(fullData);
+                if (replaceQuestions) {
+                  replaceQuestions(fullQuestions, QUESTION_SOURCES.DATABASE);
+                  replaceQuestions(fullQuestions, QUESTION_SOURCES.IMPORT);
+                }
+                logger.log(
+                  `✅ TIER 3: Background synced ${fullQuestions.length} total questions`
+                );
+              }
+            } catch (bgError) {
+              logger.warn("Background sync failed:", bgError);
+            }
+          }, 500);
+        }
       } catch (e) {
-        logError(e, { operation: "loadFromFirestore", silent, limit });
+        logError(e, { operation: "loadFromFirestore", silent, fullSync });
         if (!silent) {
-          showMessage(`Firestore Load Failed: ${e.message}`, 7000);
+          showMessage(`Load Failed: ${e.message}`, 7000);
         }
       } finally {
         setIsProcessing(false);
