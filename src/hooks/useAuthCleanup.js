@@ -36,7 +36,7 @@ export function useAuthCleanup() {
   // Run all cleanup callbacks - declare first so it can be used in useEffects
   const runAllCleanups = useCallback(() => {
     console.log(
-      `[useAuthCleanup] Running ${cleanupCallbacks.current.size} cleanup callbacks`,
+      `[useAuthCleanup] Running ${cleanupCallbacks.current.size} cleanup callbacks`
     );
 
     cleanupCallbacks.current.forEach((callback) => {
@@ -117,7 +117,7 @@ export function useCleanupSubscription(subscriptionFactory) {
       const unsubscribe = subscriptionFactory(onData);
       return registerCleanup(unsubscribe);
     },
-    [registerCleanup, subscriptionFactory],
+    [registerCleanup, subscriptionFactory]
   );
 }
 

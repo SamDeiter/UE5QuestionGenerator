@@ -87,7 +87,7 @@ export const withPerfLogging = async (operationName, asyncFn) => {
   } catch (error) {
     logger.error(
       `[PERF] ${operationName} failed after ${timer.elapsed().toFixed(0)}ms:`,
-      error,
+      error
     );
     throw error;
   }

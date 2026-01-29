@@ -83,9 +83,8 @@ export const useConflictResolution = ({
       try {
         if (action === "DISCARD") {
           // Reload the server version
-          const result = await agents.conflictResolverAgent.discardLocalChanges(
-            questionId
-          );
+          const result =
+            await agents.conflictResolverAgent.discardLocalChanges(questionId);
 
           if (result.success) {
             updateQuestionInState(questionId, result.question);

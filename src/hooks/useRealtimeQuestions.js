@@ -64,8 +64,8 @@ export const useRealtimeQuestions = (enabled = true, isRegistered = true) => {
           } else {
             logger.log(
               `📤 ${Math.abs(
-                diff,
-              )} question(s) removed/accepted by another user`,
+                diff
+              )} question(s) removed/accepted by another user`
             );
           }
         }
@@ -76,7 +76,7 @@ export const useRealtimeQuestions = (enabled = true, isRegistered = true) => {
         const queuedIds = getQueuedQuestionIds();
         if (queuedIds.size > 0) {
           logger.log(
-            `🛡️ Protecting ${queuedIds.size} queued items from server overwrite`,
+            `🛡️ Protecting ${queuedIds.size} queued items from server overwrite`
           );
         }
 
@@ -105,7 +105,7 @@ export const useRealtimeQuestions = (enabled = true, isRegistered = true) => {
         setError(null);
         setSyncStatus("synced");
       },
-      5000, // Max 5000 questions
+      5000 // Max 5000 questions
     );
 
     // Cleanup on unmount or when refreshTrigger changes

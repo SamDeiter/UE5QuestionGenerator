@@ -10,8 +10,8 @@ import ReviewMode from "./ReviewMode";
 const TestView = React.lazy(() => import("./TestView"));
 const PromptPlayground = React.lazy(() => import("./PromptPlayground"));
 const AdminPanel = React.lazy(() => import("./AdminPanel"));
-const TranslationManagementView = React.lazy(() =>
-  import("./TranslationManagementView")
+const TranslationManagementView = React.lazy(
+  () => import("./TranslationManagementView")
 );
 import QuestionList from "./QuestionList";
 import { APP_MODES } from "../utils/constants";

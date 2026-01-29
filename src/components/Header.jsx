@@ -25,7 +25,7 @@ const getVersionDisplay = () => {
     "🔍 [Header] Project ID:",
     projectId,
     "| isProd:",
-    projectId.includes("prod"),
+    projectId.includes("prod")
   );
   const isProd = projectId.includes("prod");
   // Get git commit hash from build-time define (set in vite.config.js)

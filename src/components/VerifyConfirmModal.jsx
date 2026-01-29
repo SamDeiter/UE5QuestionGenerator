@@ -66,7 +66,7 @@ const VerifyConfirmModal = ({
         window.open(
           `https://www.google.com/search?q=${query}`,
           "_blank",
-          "noopener,noreferrer",
+          "noopener,noreferrer"
         );
       }, 1500);
     }

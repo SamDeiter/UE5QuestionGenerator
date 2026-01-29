@@ -84,7 +84,7 @@ const TestView = ({
       return shuffled.slice(0, quizConfig.questionCount);
     }
     return filteredQuestions.filter((q) =>
-      selectedQuestionIds.has(q.id || q.uniqueId),
+      selectedQuestionIds.has(q.id || q.uniqueId)
     );
   }, [filteredQuestions, selectedQuestionIds, quizConfig]);
 
@@ -108,7 +108,7 @@ const TestView = ({
       setSelectedQuestionIds(new Set());
     } else {
       setSelectedQuestionIds(
-        new Set(filteredQuestions.map((q) => q.id || q.uniqueId)),
+        new Set(filteredQuestions.map((q) => q.id || q.uniqueId))
       );
     }
   };
@@ -293,7 +293,7 @@ const TestView = ({
                 max={Math.min(60, filteredQuestions.length || 60)}
                 value={Math.min(
                   quizConfig.questionCount,
-                  filteredQuestions.length,
+                  filteredQuestions.length
                 )}
                 onChange={(e) =>
                   setQuizConfig({

@@ -27,7 +27,7 @@ export const generateContentSecure = async (
   userPrompt,
   setStatus,
   temperature = 0.2,
-  model = "gemini-2.0-flash",
+  model = "gemini-2.0-flash"
 ) => {
   // DEBUG: Log authentication status
   logger.log("🔍 [geminiSecure] Checking authentication:", {
@@ -45,7 +45,7 @@ export const generateContentSecure = async (
         userPrompt,
         setStatus,
         temperature,
-        model,
+        model
       );
       logger.log("✅ Cloud Function succeeded");
       return result;
@@ -61,7 +61,7 @@ export const generateContentSecure = async (
   // Fallback to direct API only if NOT authenticated
   logger.log(
     "📡 Calling direct API with key:",
-    effectiveKey ? `${effectiveKey.substring(0, 10)}...` : "NONE",
+    effectiveKey ? `${effectiveKey.substring(0, 10)}...` : "NONE"
   );
   return await generateContentDirect(
     effectiveKey,
@@ -69,7 +69,7 @@ export const generateContentSecure = async (
     userPrompt,
     setStatus,
     temperature,
-    model,
+    model
   );
 };
 
@@ -80,7 +80,7 @@ export const generateContentSecure = async (
 export const generateCritiqueSecure = async (
   apiKey,
   question,
-  model = "gemini-1.5-flash",
+  model = "gemini-1.5-flash"
 ) => {
   // Validate question object before proceeding
   if (!question) {
@@ -93,7 +93,7 @@ export const generateCritiqueSecure = async (
       keys: Object.keys(question),
     });
     throw new Error(
-      "Critique failed: Question text is missing. Check the 'question' property on the object.",
+      "Critique failed: Question text is missing. Check the 'question' property on the object."
     );
   }
 
@@ -103,10 +103,10 @@ export const generateCritiqueSecure = async (
       {
         id: question.id,
         options: question.options,
-      },
+      }
     );
     throw new Error(
-      "Critique failed: Question options are missing or invalid.",
+      "Critique failed: Question options are missing or invalid."
     );
   }
 
@@ -127,7 +127,7 @@ export const generateCritiqueSecure = async (
         "🔒 [CritiqueSecure DEBUG] Cloud Function returned score:",
         result.score,
         "improvedScore:",
-        result.improvedScore,
+        result.improvedScore
       );
       return result;
     } catch (error) {
@@ -136,7 +136,7 @@ export const generateCritiqueSecure = async (
     }
   } else {
     logger.log(
-      "❓ [CritiqueSecure DEBUG] User not authenticated - using direct API for critique",
+      "❓ [CritiqueSecure DEBUG] User not authenticated - using direct API for critique"
     );
   }
 
@@ -145,7 +145,7 @@ export const generateCritiqueSecure = async (
   const result = await generateCritiqueDirect(apiKey, question);
   logger.log(
     "📡 [CritiqueSecure DEBUG] Direct API returned score:",
-    result.score,
+    result.score
   );
   return result;
 };
@@ -172,7 +172,7 @@ export const generateTagsSecure = async (apiKey, questionText) => {
       userPrompt,
       () => {}, // No status updates needed for fast tagging
       0.3, // Temp
-      "gemini-2.0-flash", // Model
+      "gemini-2.0-flash" // Model
     );
 
     // Parse result - try multiple extraction methods

@@ -24,7 +24,7 @@ const NameEntryModal = ({ onSave }) => {
     ];
     // Pick a random placeholder for fun UI variety (non-security)
     setSillyPlaceholder(
-      `e.g. ${sillyNames[Math.floor(Math.random() * sillyNames.length)]}`,
+      `e.g. ${sillyNames[Math.floor(Math.random() * sillyNames.length)]}`
     );
   }, []);
 

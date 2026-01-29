@@ -1,9 +1,9 @@
 /**
  * AUTO-GENERATED FILE - DO NOT EDIT DIRECTLY
- * 
+ *
  * Run: npm run validate:rules
  * Generated from: config/firestore/firestore.rules
- * 
+ *
  * These are the fields that reviewers are allowed to update.
  * If you need to add a new field, update firestore.rules first.
  */
@@ -57,7 +57,7 @@ export const REVIEWER_ALLOWED_FIELDS = [
   "versionSource",
   "lastEditedBy",
   "lastEditedAt",
-  "notes"
+  "notes",
 ];
 
 /**

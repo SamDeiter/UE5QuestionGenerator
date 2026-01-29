@@ -109,7 +109,7 @@ describe("QuestionItem", () => {
     render(
       <AccessibilityProvider>
         <QuestionItem {...defaultProps} isAdmin={true} />
-      </AccessibilityProvider>,
+      </AccessibilityProvider>
     );
     expect(screen.getByTestId("lang-controls")).toBeInTheDocument();
   });
@@ -119,7 +119,7 @@ describe("QuestionItem", () => {
     render(
       <AccessibilityProvider>
         <QuestionItem {...defaultProps} isAdmin={false} />
-      </AccessibilityProvider>,
+      </AccessibilityProvider>
     );
     expect(screen.getByTestId("lang-controls")).toBeInTheDocument();
   });

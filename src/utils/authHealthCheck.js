@@ -119,7 +119,7 @@ export async function runAuthHealthCheck() {
 
     if (!currentUser) {
       logger.log(
-        "🏥 [AuthHealthCheck] No user logged in - skipping token test",
+        "🏥 [AuthHealthCheck] No user logged in - skipping token test"
       );
       status.durationMs = Date.now() - startTime;
       return status;
@@ -154,7 +154,7 @@ export async function runAuthHealthCheck() {
 
   status.durationMs = Date.now() - startTime;
   logger.log(
-    `🏥 [AuthHealthCheck] Complete in ${status.durationMs}ms. Healthy: ${status.healthy}`,
+    `🏥 [AuthHealthCheck] Complete in ${status.durationMs}ms. Healthy: ${status.healthy}`
   );
 
   return status;

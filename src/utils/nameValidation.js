@@ -240,7 +240,7 @@ export const getFirstName = (fullName) => {
  */
 export const getInitials = (
   name,
-  maxInitials = NAME_LIMITS.DEFAULT_MAX_INITIALS,
+  maxInitials = NAME_LIMITS.DEFAULT_MAX_INITIALS
 ) => {
   if (!name) return "";
 

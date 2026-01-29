@@ -68,7 +68,7 @@ export const getQuestionsFromFirestore = async () => {
     // Load user-specific questions only
     const userQuery = query(
       collection(getDb(), "questions"),
-      where("creatorId", "==", auth.currentUser.uid),
+      where("creatorId", "==", auth.currentUser.uid)
     );
     const userSnapshot = await getDocs(userQuery);
 
@@ -79,11 +79,11 @@ export const getQuestionsFromFirestore = async () => {
 
     if (questions.length === 0) {
       logger.log(
-        `📭 No questions found for user ${auth.currentUser.uid} (this is normal for new users)`,
+        `📭 No questions found for user ${auth.currentUser.uid} (this is normal for new users)`
       );
     } else {
       logger.log(
-        `✅ Loaded ${questions.length} questions for user ${auth.currentUser.uid}`,
+        `✅ Loaded ${questions.length} questions for user ${auth.currentUser.uid}`
       );
     }
 
@@ -105,7 +105,7 @@ export const getQuestionsFromFirestore = async () => {
 export const getAllQuestionsFromFirestore = async (
   maxResults = FIRESTORE_LIMITS.MAX_QUERY_LIMIT,
   forceRefresh = false,
-  customLimit = null,
+  customLimit = null
 ) => {
   try {
     // Require authentication
@@ -124,8 +124,8 @@ export const getAllQuestionsFromFirestore = async (
     ) {
       logger.log(
         `⚡ Returning ${_questionsCache.length} cached questions (memory, ${Math.round(
-          (now - _questionsCacheTimestamp) / 1000,
-        )}s old)`,
+          (now - _questionsCacheTimestamp) / 1000
+        )}s old)`
       );
       return _questionsCache;
     }
@@ -138,7 +138,7 @@ export const getAllQuestionsFromFirestore = async (
           const cachedQuestions = await getCachedQuestions();
           if (cachedQuestions.length > 0) {
             logger.log(
-              `📦 Returning ${cachedQuestions.length} cached questions (IndexedDB)`,
+              `📦 Returning ${cachedQuestions.length} cached questions (IndexedDB)`
             );
             // Update memory cache from IndexedDB
             _questionsCache = cachedQuestions;
@@ -149,7 +149,7 @@ export const getAllQuestionsFromFirestore = async (
       } catch (idbError) {
         logger.warn(
           "IndexedDB cache check failed, falling back to Firestore:",
-          idbError,
+          idbError
         );
       }
     }
@@ -163,7 +163,7 @@ export const getAllQuestionsFromFirestore = async (
     const allQuery = query(
       collection(getDb(), "questions"),
       orderBy("firestoreUpdatedAt", "desc"),
-      limit(fetchLimit),
+      limit(fetchLimit)
     );
     const snapshot = await getDocs(allQuery);
 
@@ -180,7 +180,7 @@ export const getAllQuestionsFromFirestore = async (
 
     const duration = Math.round(performance.now() - startTime);
     logger.log(
-      `✅ Loaded ${questions.length} questions from Firestore in ${duration}ms`,
+      `✅ Loaded ${questions.length} questions from Firestore in ${duration}ms`
     );
     logger.log("📊 Discipline Breakdown:", disciplineCounts);
 
@@ -218,7 +218,7 @@ export const getAllQuestionsFromFirestore = async (
  */
 export const subscribeToAllQuestions = (
   callback,
-  maxResults = FIRESTORE_LIMITS.MAX_QUERY_LIMIT,
+  maxResults = FIRESTORE_LIMITS.MAX_QUERY_LIMIT
 ) => {
   // Require authentication
   if (!auth.currentUser) {
@@ -233,7 +233,7 @@ export const subscribeToAllQuestions = (
   const q = query(
     collection(getDb(), "questions"),
     orderBy("firestoreUpdatedAt", "desc"),
-    limit(maxResults),
+    limit(maxResults)
   );
 
   // Q11b: Register listener for observability
@@ -257,7 +257,7 @@ export const subscribeToAllQuestions = (
           skippedCount++;
           logger.warn(
             `Skipped malformed doc ${docSnapshot.id}:`,
-            result.errors,
+            result.errors
           );
         }
       });
@@ -269,7 +269,7 @@ export const subscribeToAllQuestions = (
       logger.log(
         `✅ Real-time update: ${questions.length} questions (${
           snapshot.docChanges().length
-        } changes)`,
+        } changes)`
       );
 
       // Notify callback with updated data
@@ -279,7 +279,7 @@ export const subscribeToAllQuestions = (
       logger.error("❌ Error in real-time listener:", error);
       // On error, fall back to empty array
       callback([]);
-    },
+    }
   );
 
   logger.log("✓ Real-time listener active");
@@ -301,7 +301,7 @@ export const subscribeToAllQuestions = (
 export const getQuestionsPaginated = async (
   userId,
   limitCount = 20,
-  lastDoc = null,
+  lastDoc = null
 ) => {
   try {
     const db = getDb();
@@ -309,7 +309,7 @@ export const getQuestionsPaginated = async (
       collection(db, "questions"),
       where("creatorId", "==", userId),
       orderBy("firestoreUpdatedAt", "desc"),
-      limit(limitCount),
+      limit(limitCount)
     );
 
     if (lastDoc) {
@@ -401,7 +401,7 @@ export const getQuestionsPaginatedWithFilters = async ({
 
     logger.log(
       `✅ Paginated query: ${questions.length} questions in ${duration}ms ` +
-        `(status=${status || "all"}, discipline=${discipline || "all"})`,
+        `(status=${status || "all"}, discipline=${discipline || "all"})`
     );
 
     return {
@@ -440,7 +440,7 @@ export const getUserTokenUsageAggregated = async (userId) => {
 
     const userQuery = query(
       collection(getDb(), "questions"),
-      where("creatorId", "==", userId),
+      where("creatorId", "==", userId)
     );
 
     const snapshot = await getAggregateFromServer(userQuery, {
@@ -462,7 +462,7 @@ export const getUserTokenUsageAggregated = async (userId) => {
     };
 
     logger.log(
-      `📊 User ${userId.slice(0, 8)}... token usage: ${result.questionCount} questions, $${result.totalCost.toFixed(4)}`,
+      `📊 User ${userId.slice(0, 8)}... token usage: ${result.questionCount} questions, $${result.totalCost.toFixed(4)}`
     );
 
     return result;
@@ -502,7 +502,7 @@ export const getQuestionStatsAggregated = async () => {
     for (const status of statuses) {
       const statusQuery = query(
         collection(getDb(), "questions"),
-        where("status", "==", status),
+        where("status", "==", status)
       );
       const statusSnapshot = await getAggregateFromServer(statusQuery, {
         count: count(),
@@ -516,7 +516,7 @@ export const getQuestionStatsAggregated = async () => {
     };
 
     logger.log(
-      `📊 Question stats: ${result.total} total, ${JSON.stringify(result.byStatus)}`,
+      `📊 Question stats: ${result.total} total, ${JSON.stringify(result.byStatus)}`
     );
 
     return result;
@@ -539,7 +539,7 @@ export const clearAllQuestionsFromFirestore = async () => {
     if (auth.currentUser) {
       q = query(
         collection(getDb(), "questions"),
-        where("creatorId", "==", auth.currentUser.uid),
+        where("creatorId", "==", auth.currentUser.uid)
       );
     } else {
       q = collection(getDb(), "questions");
@@ -575,7 +575,7 @@ export const deleteSoftDeletedQuestionsFromFirestore = async () => {
   try {
     const q = query(
       collection(getDb(), "questions"),
-      where("status", "==", "deleted"),
+      where("status", "==", "deleted")
     );
 
     const querySnapshot = await getDocs(q);
@@ -590,7 +590,7 @@ export const deleteSoftDeletedQuestionsFromFirestore = async () => {
 
     await Promise.all(deletePromises);
     logger.log(
-      `Successfully cleaned up ${deletedCount} soft-deleted questions.`,
+      `Successfully cleaned up ${deletedCount} soft-deleted questions.`
     );
     invalidateQuestionsCache();
     return deletedCount;
@@ -644,7 +644,7 @@ export const saveCustomTags = async (customTags) => {
         customTags,
         updatedAt: Timestamp.now(),
       },
-      { merge: true },
+      { merge: true }
     );
 
     logger.log("Custom tags saved to Firestore");

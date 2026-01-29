@@ -346,7 +346,7 @@ export const getScoreTier = (score) => {
 export const getScoreColor = (
   tier,
   colorblindMode = false,
-  property = "full",
+  property = "full"
 ) => {
   const mode = colorblindMode ? "colorblind" : "default";
   return SCORE_COLORS[tier]?.[mode]?.[property] || "";
@@ -376,7 +376,7 @@ export const getLockColor = (
   hasLock,
   isLocked,
   colorblindMode = false,
-  property = "container",
+  property = "container"
 ) => {
   const mode = colorblindMode ? "colorblind" : "default";
   let status = "connecting";

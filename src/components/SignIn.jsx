@@ -44,13 +44,13 @@ const SignIn = () => {
       logger.error(err);
       if (err.code === "auth/configuration-not-found") {
         setError(
-          "Google Sign-In is not enabled. Please enable it in the Firebase Console > Authentication > Sign-in method.",
+          "Google Sign-In is not enabled. Please enable it in the Firebase Console > Authentication > Sign-in method."
         );
       } else if (err.code === "auth/popup-closed-by-user") {
         setError("Sign-in cancelled.");
       } else if (err.code === "auth/user-disabled") {
         setError(
-          "Your account has been disabled by an administrator. Please contact support if you believe this is an error.",
+          "Your account has been disabled by an administrator. Please contact support if you believe this is an error."
         );
       } else {
         setError("Failed to sign in. Please try again.");

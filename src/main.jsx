@@ -27,5 +27,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </ErrorReporterProvider>
       </AccessibilityProvider>
     </ErrorBoundary>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

@@ -29,13 +29,13 @@ const ScormExportModal = ({ questions, discipline, onClose }) => {
   // Count questions by difficulty
   const difficultyBreakdown = useMemo(() => {
     const easy = questions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("easy"),
+      (q.difficulty || "").toLowerCase().includes("easy")
     ).length;
     const medium = questions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("medium"),
+      (q.difficulty || "").toLowerCase().includes("medium")
     ).length;
     const hard = questions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("hard"),
+      (q.difficulty || "").toLowerCase().includes("hard")
     ).length;
     return { easy, medium, hard, total: questions.length };
   }, [questions]);

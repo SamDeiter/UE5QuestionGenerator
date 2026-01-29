@@ -84,7 +84,7 @@ describe("validateDisplayName", () => {
       const result = validateDisplayName("A");
       expect(result.valid).toBe(false);
       expect(result.error).toBe(
-        `Name must be at least ${NAME_LIMITS.MIN_LENGTH} characters`,
+        `Name must be at least ${NAME_LIMITS.MIN_LENGTH} characters`
       );
     });
 
@@ -93,7 +93,7 @@ describe("validateDisplayName", () => {
       const result = validateDisplayName(longName);
       expect(result.valid).toBe(false);
       expect(result.error).toBe(
-        `Name cannot exceed ${NAME_LIMITS.MAX_LENGTH} characters`,
+        `Name cannot exceed ${NAME_LIMITS.MAX_LENGTH} characters`
       );
     });
   });

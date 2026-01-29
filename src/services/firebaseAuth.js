@@ -27,10 +27,10 @@ const firebaseConfig = {
 // Validate required config
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   logger.error(
-    "❌ Firebase configuration missing. Ensure .env.local is set up correctly.",
+    "❌ Firebase configuration missing. Ensure .env.local is set up correctly."
   );
   logger.error(
-    "Run: npm run env:dev or npm run env:prod to configure environment.",
+    "Run: npm run env:dev or npm run env:prod to configure environment."
   );
 }
 

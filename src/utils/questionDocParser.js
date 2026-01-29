@@ -98,7 +98,7 @@ export const parseQuestionDoc = (raw) => {
     firestoreUpdatedAt: raw.firestoreUpdatedAt || null,
     // Pass through other fields not in KNOWN_FIELDS
     ...Object.fromEntries(
-      Object.entries(raw).filter(([key]) => !KNOWN_FIELDS.includes(key)),
+      Object.entries(raw).filter(([key]) => !KNOWN_FIELDS.includes(key))
     ),
   };
 
@@ -130,6 +130,6 @@ export const isDisplayable = (question) => {
     question &&
     (question.id || question.uniqueId) &&
     question.question &&
-    question.creatorId,
+    question.creatorId
   );
 };

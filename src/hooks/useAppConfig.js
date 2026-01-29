@@ -109,7 +109,7 @@ export const useAppConfig = ({ user = null } = {}) => {
       if (validation.valid) {
         logger.log(
           "🔄 Auto-setting creatorName from Firebase displayName:",
-          validation.sanitized,
+          validation.sanitized
         );
         setConfig((prev) => ({
           ...prev,
@@ -121,7 +121,7 @@ export const useAppConfig = ({ user = null } = {}) => {
         // DisplayName exists but is invalid, show modal for manual entry
         logger.log(
           "⚠️ Firebase displayName invalid, prompting for name:",
-          validation.error,
+          validation.error
         );
         setShowNameModal(true);
       }
@@ -149,7 +149,7 @@ export const useAppConfig = ({ user = null } = {}) => {
       "🌍 [handleLanguageSwitch] Switching global language filter to:",
       lang,
       "| Navigate to uniqueId:",
-      uniqueId,
+      uniqueId
     );
     // Store the uniqueId for navigation after re-filter
     if (uniqueId) {

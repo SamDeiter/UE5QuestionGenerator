@@ -1,4 +1,3 @@
- 
 import { useState } from "react";
 import { useQuestionTranslation } from "./generation/useQuestionTranslation";
 import { useQuestionCritique } from "./generation/useQuestionCritique";

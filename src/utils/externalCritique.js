@@ -116,12 +116,12 @@ export const importCritiqueScores = async (jsonText, db, showMessage) => {
           lastCritiquedAt: new Date().toISOString(),
           critiqueSource: "external_ai",
         };
-        
+
         // Only add improvedScore if provided
         if (item.improvedScore) {
           updateData.improvedScore = item.improvedScore;
         }
-        
+
         await updateDoc(doc(db, "questions", item.id), updateData);
         updated++;
       } catch (error) {

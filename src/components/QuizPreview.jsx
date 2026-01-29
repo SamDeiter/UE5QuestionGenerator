@@ -71,13 +71,13 @@ const QuizPreview = ({ questions, config, onClose }) => {
       });
 
       const easy = englishQuestions.filter((q) =>
-        (q.difficulty || "").toLowerCase().includes("easy"),
+        (q.difficulty || "").toLowerCase().includes("easy")
       );
       const medium = englishQuestions.filter((q) =>
-        (q.difficulty || "").toLowerCase().includes("medium"),
+        (q.difficulty || "").toLowerCase().includes("medium")
       );
       const hard = englishQuestions.filter((q) =>
-        (q.difficulty || "").toLowerCase().includes("hard"),
+        (q.difficulty || "").toLowerCase().includes("hard")
       );
 
       // Shuffle each pool using seeded random
@@ -105,7 +105,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
       const maxLen = Math.max(
         remainingEasy.length,
         selectedMedium.length,
-        selectedHard.length,
+        selectedHard.length
       );
 
       for (let i = 0; i < maxLen; i++) {
@@ -115,12 +115,12 @@ const QuizPreview = ({ questions, config, onClose }) => {
       }
 
       logger.log(
-        `Quiz built: ${selectedEasy.length} easy, ${selectedMedium.length} medium, ${selectedHard.length} hard = ${distributed.length} total`,
+        `Quiz built: ${selectedEasy.length} easy, ${selectedMedium.length} medium, ${selectedHard.length} hard = ${distributed.length} total`
       );
 
       return distributed;
     },
-    [questions],
+    [questions]
   );
 
   // Generate GUID and build question list when quiz starts
@@ -209,7 +209,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
         setWrongStreak((prev) => prev + 1);
       }
     },
-    [currentQuestion],
+    [currentQuestion]
   );
 
   // Handle next question with confidence boost
@@ -262,7 +262,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
 
         setQuizQuestions(newQuestions);
         logger.log(
-          `Confidence boost: Moved ${numToMove} easy questions forward after ${wrongStreak} wrong`,
+          `Confidence boost: Moved ${numToMove} easy questions forward after ${wrongStreak} wrong`
         );
       }
     }
@@ -292,7 +292,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
           setAnnounceMessage(
             `Option ${optionKeys[newIndex]}, ${
               optionKeys.length - newIndex
-            } of ${optionKeys.length}`,
+            } of ${optionKeys.length}`
           );
           return newIndex;
         });
@@ -309,7 +309,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
           setAnnounceMessage(
             `Option ${optionKeys[newIndex]}, ${newIndex + 1} of ${
               optionKeys.length
-            }`,
+            }`
           );
           return newIndex;
         });
@@ -351,8 +351,8 @@ const QuizPreview = ({ questions, config, onClose }) => {
           currentIndex + 1
         } of ${totalQuestions}: ${currentQuestion.question.replace(
           /<[^>]*>/g,
-          "",
-        )}`,
+          ""
+        )}`
       );
     }
   }, [currentIndex, currentQuestion, totalQuestions]);

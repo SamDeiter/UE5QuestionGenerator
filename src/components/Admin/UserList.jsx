@@ -85,7 +85,7 @@ const UserList = ({
 
     if (
       !confirm(
-        `Revoke access for ${selectedUsers.size} user(s)?\n${selectedEmails}`,
+        `Revoke access for ${selectedUsers.size} user(s)?\n${selectedEmails}`
       )
     )
       return;
@@ -197,7 +197,7 @@ const UserList = ({
                 <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
                   <span
                     className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold ${getRoleBadgeClasses(
-                      user.role,
+                      user.role
                     )}`}
                   >
                     {user.role}

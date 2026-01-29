@@ -1,4 +1,4 @@
-import { APP_VERSION } from '../utils/constants';
+import { APP_VERSION } from "../utils/constants";
 
 /**
  * Footer - Legal links and copyright

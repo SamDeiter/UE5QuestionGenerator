@@ -105,7 +105,7 @@ describe("Critical UI Regression Tests", () => {
           onDelete={vi.fn()}
           appMode={APP_MODES.REVIEW}
           showMessage={vi.fn()}
-        />,
+        />
       );
 
       // The REJECT button must exist
@@ -124,7 +124,7 @@ describe("Critical UI Regression Tests", () => {
           onDelete={vi.fn()}
           appMode={APP_MODES.REVIEW}
           showMessage={vi.fn()}
-        />,
+        />
       );
 
       const rejectButton = screen.getByRole("button", { name: /reject/i });
@@ -140,7 +140,7 @@ describe("Critical UI Regression Tests", () => {
           onDelete={vi.fn()}
           appMode={APP_MODES.DATABASE}
           showMessage={vi.fn()}
-        />,
+        />
       );
 
       expect(container.firstChild).toBeNull();
@@ -178,7 +178,7 @@ describe("Critical UI Regression Tests", () => {
           onUpdateQuestion={vi.fn()}
           showMessage={vi.fn()}
           appMode={APP_MODES.REVIEW}
-        />,
+        />
       );
 
       // All 4 options should be rendered
@@ -199,7 +199,7 @@ describe("Critical UI Regression Tests", () => {
           onUpdateQuestion={vi.fn()}
           showMessage={vi.fn()}
           appMode={APP_MODES.REVIEW}
-        />,
+        />
       );
 
       // Check that option divs have cursor-pointer class
@@ -218,7 +218,7 @@ describe("Critical UI Regression Tests", () => {
           onUpdateQuestion={vi.fn()}
           showMessage={vi.fn()}
           appMode={APP_MODES.REVIEW}
-        />,
+        />
       );
 
       expect(screen.getByText("TRUE")).toBeInTheDocument();
@@ -236,7 +236,7 @@ describe("Critical UI Regression Tests", () => {
           onUpdateQuestion={vi.fn()}
           showMessage={vi.fn()}
           appMode={APP_MODES.REVIEW}
-        />,
+        />
       );
 
       // The correct answer (A) should have green styling
@@ -273,7 +273,7 @@ describe("Critical UI Regression Tests", () => {
           onUpdateQuestion={vi.fn()}
           onKickBack={vi.fn()}
           onCritique={vi.fn()}
-        />,
+        />
       );
 
       const viewSuggestionsButton = screen.getByRole("button", {
@@ -294,7 +294,7 @@ describe("Critical UI Regression Tests", () => {
           onUpdateQuestion={vi.fn()}
           onKickBack={vi.fn()}
           onCritique={vi.fn()}
-        />,
+        />
       );
 
       const viewSuggestionsButton = screen.getByRole("button", {
@@ -321,7 +321,7 @@ describe("Critical UI Regression Tests", () => {
           onOpenCritiqueModal={vi.fn()}
           onUpdateQuestion={vi.fn()}
           onKickBack={vi.fn()}
-        />,
+        />
       );
 
       const viewSuggestionsButton = screen.queryByRole("button", {

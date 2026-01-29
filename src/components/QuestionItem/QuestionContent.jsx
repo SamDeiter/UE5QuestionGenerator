@@ -199,7 +199,7 @@ const QuestionContent = ({
               if (isCorrect) return; // Already correct, no action needed
 
               const confirmed = window.confirm(
-                `⚠️ Change correct answer?\n\nFrom: ${displayedQ.correct}) ${displayedQ.options?.[displayedQ.correct]?.substring(0, 50) || ""}...\n\nTo: ${key}) ${optionText.substring(0, 50)}...`,
+                `⚠️ Change correct answer?\n\nFrom: ${displayedQ.correct}) ${displayedQ.options?.[displayedQ.correct]?.substring(0, 50) || ""}...\n\nTo: ${key}) ${optionText.substring(0, 50)}...`
               );
 
               if (confirmed && onUpdateQuestion) {
@@ -259,7 +259,7 @@ const QuestionContent = ({
             onClick={() => {
               if (displayedQ.correct !== "A") {
                 const confirmed = window.confirm(
-                  "⚠️ Change correct answer from FALSE to TRUE?",
+                  "⚠️ Change correct answer from FALSE to TRUE?"
                 );
                 if (confirmed && onUpdateQuestion) {
                   onUpdateQuestion(q.id, {
@@ -290,7 +290,7 @@ const QuestionContent = ({
             onClick={() => {
               if (displayedQ.correct !== "B") {
                 const confirmed = window.confirm(
-                  "⚠️ Change correct answer from TRUE to FALSE?",
+                  "⚠️ Change correct answer from TRUE to FALSE?"
                 );
                 if (confirmed && onUpdateQuestion) {
                   onUpdateQuestion(q.id, {

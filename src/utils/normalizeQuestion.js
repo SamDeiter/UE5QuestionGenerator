@@ -392,8 +392,8 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
             "exportedAt",
             "exportedTo",
             "exportCount",
-          ].includes(key),
-      ),
+          ].includes(key)
+      )
     ),
   };
 };

@@ -39,7 +39,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         const apiUsageQuery = query(
           collection(getDb(), "apiUsage"),
           orderBy("timestamp", "desc"),
-          limit(LOGS_PER_COLLECTION),
+          limit(LOGS_PER_COLLECTION)
         );
         const apiUsageSnapshot = await getDocs(apiUsageQuery);
         apiUsageSnapshot.forEach((doc) => {
@@ -63,7 +63,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         const inviteAttemptsQuery = query(
           collection(getDb(), "inviteAttempts"),
           orderBy("lastAttempt", "desc"),
-          limit(LOGS_PER_COLLECTION),
+          limit(LOGS_PER_COLLECTION)
         );
         const inviteAttemptsSnapshot = await getDocs(inviteAttemptsQuery);
         inviteAttemptsSnapshot.forEach((doc) => {
@@ -89,7 +89,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
         const auditLogQuery = query(
           collection(getDb(), "audit-log"),
           orderBy("timestamp", "desc"),
-          limit(LOGS_PER_COLLECTION),
+          limit(LOGS_PER_COLLECTION)
         );
         const auditLogSnapshot = await getDocs(auditLogQuery);
         auditLogSnapshot.forEach((doc) => {
@@ -250,7 +250,7 @@ const AuditLogs = ({ isCollapsed, onToggle }) => {
                     {getActionIcon(log.type)}
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${getActionBadge(
-                        log.action,
+                        log.action
                       )}`}
                     >
                       {log.action.replace("_", " ")}

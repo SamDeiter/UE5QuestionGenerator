@@ -45,7 +45,7 @@ export class AuthTestHarness {
     const rejected = results.filter((r) => r.status === "rejected").length;
 
     console.log(
-      `[Harness] Results: ${fulfilled} fulfilled, ${rejected} rejected`,
+      `[Harness] Results: ${fulfilled} fulfilled, ${rejected} rejected`
     );
 
     return results;
@@ -80,7 +80,7 @@ export class AuthTestHarness {
   async simulateLogoutMidFetch(
     authStateChangeFn,
     inflightRequest,
-    logoutDelayMs = 500,
+    logoutDelayMs = 500
   ) {
     console.log("[Harness] Starting in-flight request...");
 
@@ -231,7 +231,7 @@ export class AuthTestHarness {
    */
   createUserDisabledError() {
     const error = new Error(
-      "The user account has been disabled by an administrator.",
+      "The user account has been disabled by an administrator."
     );
     error.code = "auth/user-disabled";
     error.name = "FirebaseError";

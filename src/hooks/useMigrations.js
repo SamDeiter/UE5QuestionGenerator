@@ -57,9 +57,8 @@ export function useMigrations({
 
           // Dynamic imports to avoid bundling firebase if not needed
           const { getDb } = await import("../services/firebase");
-          const { collection, getDocs, doc, updateDoc } = await import(
-            "firebase/firestore"
-          );
+          const { collection, getDocs, doc, updateDoc } =
+            await import("firebase/firestore");
           const db = getDb();
 
           const questionsRef = collection(db, "questions");

@@ -50,7 +50,7 @@ describe("Firestore Rules - User Profile Access", () => {
 
     if (!emulatorAvailable) {
       console.warn(
-        "⚠️ Firestore Emulator not running on port 8080. Run: firebase emulators:start --only firestore",
+        "⚠️ Firestore Emulator not running on port 8080. Run: firebase emulators:start --only firestore"
       );
       return;
     }
@@ -58,7 +58,7 @@ describe("Firestore Rules - User Profile Access", () => {
     // Load rules from project config
     const rulesPath = path.join(
       process.cwd(),
-      "config/firestore/firestore.rules",
+      "config/firestore/firestore.rules"
     );
     let rulesContent;
 
@@ -116,10 +116,10 @@ describe("Firestore Rules - User Profile Access", () => {
   describe("User Profile (/users/{uid})", () => {
     it("allows authenticated user to read own profile", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const alice = testEnv.authenticatedContext("alice-uid");
       const aliceDoc = doc(alice.firestore(), "users/alice-uid");
@@ -137,10 +137,10 @@ describe("Firestore Rules - User Profile Access", () => {
 
     it("denies user from reading another user's profile", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const alice = testEnv.authenticatedContext("alice-uid");
       const bobDoc = doc(alice.firestore(), "users/bob-uid");
@@ -158,10 +158,10 @@ describe("Firestore Rules - User Profile Access", () => {
 
     it("allows user to write to own profile", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const alice = testEnv.authenticatedContext("alice-uid");
       const aliceDoc = doc(alice.firestore(), "users/alice-uid");
@@ -170,16 +170,16 @@ describe("Firestore Rules - User Profile Access", () => {
         setDoc(aliceDoc, {
           email: "alice@example.com",
           updatedAt: new Date().toISOString(),
-        }),
+        })
       );
     });
 
     it("denies user from writing to another user's profile", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const alice = testEnv.authenticatedContext("alice-uid");
       const bobDoc = doc(alice.firestore(), "users/bob-uid");
@@ -187,7 +187,7 @@ describe("Firestore Rules - User Profile Access", () => {
       await assertFails(
         setDoc(bobDoc, {
           email: "hacked@evil.com",
-        }),
+        })
       );
     });
   });
@@ -199,10 +199,10 @@ describe("Firestore Rules - User Profile Access", () => {
   describe("User Settings (/userSettings/{uid})", () => {
     it("allows user to write to own userSettings (write probe)", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const alice = testEnv.authenticatedContext("alice-uid");
       const settingsDoc = doc(alice.firestore(), "userSettings/alice-uid");
@@ -210,16 +210,16 @@ describe("Firestore Rules - User Profile Access", () => {
       await assertSucceeds(
         setDoc(settingsDoc, {
           lastVerified: new Date().toISOString(),
-        }),
+        })
       );
     });
 
     it("denies user from writing to another user's settings", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const alice = testEnv.authenticatedContext("alice-uid");
       const bobSettings = doc(alice.firestore(), "userSettings/bob-uid");
@@ -227,7 +227,7 @@ describe("Firestore Rules - User Profile Access", () => {
       await assertFails(
         setDoc(bobSettings, {
           lastVerified: new Date().toISOString(),
-        }),
+        })
       );
     });
   });
@@ -239,10 +239,10 @@ describe("Firestore Rules - User Profile Access", () => {
   describe("Unauthenticated Access", () => {
     it("denies unauthenticated user from reading /users", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const unauth = testEnv.unauthenticatedContext();
       const userDoc = doc(unauth.firestore(), "users/alice-uid");
@@ -252,10 +252,10 @@ describe("Firestore Rules - User Profile Access", () => {
 
     it("denies unauthenticated user from writing to /users", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const unauth = testEnv.unauthenticatedContext();
       const userDoc = doc(unauth.firestore(), "users/fake-uid");
@@ -263,16 +263,16 @@ describe("Firestore Rules - User Profile Access", () => {
       await assertFails(
         setDoc(userDoc, {
           email: "fake@example.com",
-        }),
+        })
       );
     });
 
     it("denies unauthenticated user from reading /questions", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const unauth = testEnv.unauthenticatedContext();
       const questionDoc = doc(unauth.firestore(), "questions/test-question");
@@ -288,10 +288,10 @@ describe("Firestore Rules - User Profile Access", () => {
   describe("Questions Collection (/questions/{id})", () => {
     it("allows authenticated user to read questions", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const alice = testEnv.authenticatedContext("alice-uid");
 
@@ -309,10 +309,10 @@ describe("Firestore Rules - User Profile Access", () => {
 
     it("allows authenticated user to write questions", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const alice = testEnv.authenticatedContext("alice-uid");
       const questionDoc = doc(alice.firestore(), "questions/new-question");
@@ -321,7 +321,7 @@ describe("Firestore Rules - User Profile Access", () => {
         setDoc(questionDoc, {
           question: "New question from Alice",
           createdBy: "alice-uid",
-        }),
+        })
       );
     });
   });
@@ -333,10 +333,10 @@ describe("Firestore Rules - User Profile Access", () => {
   describe("Ghost Reviewer Prevention", () => {
     it("verified write probe grants actual write access", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const alice = testEnv.authenticatedContext("alice-uid");
 
@@ -345,8 +345,8 @@ describe("Firestore Rules - User Profile Access", () => {
         setDoc(
           probeDoc,
           { lastVerified: new Date().toISOString() },
-          { merge: true },
-        ),
+          { merge: true }
+        )
       );
 
       const questionDoc = doc(alice.firestore(), "questions/alice-question");
@@ -354,21 +354,21 @@ describe("Firestore Rules - User Profile Access", () => {
         setDoc(questionDoc, {
           question: "Alice's verified question",
           createdBy: "alice-uid",
-        }),
+        })
       );
     });
 
     it("detects when registered user lacks actual write access", async (ctx) => {
       if (!emulatorAvailable) {
-      expect(emulatorAvailable).toBe(false);
-      ctx.skip();
-      return;
-    }
+        expect(emulatorAvailable).toBe(false);
+        ctx.skip();
+        return;
+      }
 
       const ghostUser = testEnv.authenticatedContext("ghost-uid");
       const protectedDoc = doc(
         ghostUser.firestore(),
-        "adminSettings/protected",
+        "adminSettings/protected"
       );
 
       await assertFails(setDoc(protectedDoc, { hacked: true }));

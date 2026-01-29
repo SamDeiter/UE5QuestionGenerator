@@ -11,9 +11,11 @@ let csrfToken = null;
  * @returns {string} CSRF token
  */
 const generateCSRFToken = () => {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
+    ""
+  );
 };
 
 /**
@@ -22,11 +24,11 @@ const generateCSRFToken = () => {
  * @returns {string} Current CSRF token
  */
 export const getCSRFToken = () => {
-    if (!csrfToken) {
-        csrfToken = generateCSRFToken();
-        logger.log('[CSRF] Token generated');
-    }
-    return csrfToken;
+  if (!csrfToken) {
+    csrfToken = generateCSRFToken();
+    logger.log("[CSRF] Token generated");
+  }
+  return csrfToken;
 };
 
 /**
@@ -35,16 +37,16 @@ export const getCSRFToken = () => {
  * @returns {boolean} Whether token is valid
  */
 export const validateCSRFToken = (token) => {
-    return token === csrfToken;
+  return token === csrfToken;
 };
 
 /**
  * Refreshes the CSRF token (call after logout or security events)
  */
 export const refreshCSRFToken = () => {
-    csrfToken = generateCSRFToken();
-    logger.log('[CSRF] Token refreshed');
-    return csrfToken;
+  csrfToken = generateCSRFToken();
+  logger.log("[CSRF] Token refreshed");
+  return csrfToken;
 };
 
 /**
@@ -53,15 +55,15 @@ export const refreshCSRFToken = () => {
  * @returns {object} Headers with CSRF token added
  */
 export const addCSRFHeader = (headers = {}) => {
-    return {
-        ...headers,
-        'X-CSRF-Token': getCSRFToken()
-    };
+  return {
+    ...headers,
+    "X-CSRF-Token": getCSRFToken(),
+  };
 };
 
 export default {
-    getCSRFToken,
-    validateCSRFToken,
-    refreshCSRFToken,
-    addCSRFHeader
+  getCSRFToken,
+  validateCSRFToken,
+  refreshCSRFToken,
+  addCSRFHeader,
 };

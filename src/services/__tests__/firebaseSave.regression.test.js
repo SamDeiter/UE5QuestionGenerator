@@ -84,7 +84,7 @@ describe("firebaseSave - Critical Regression Tests", () => {
 
       // Simulate permission error handling - should ALWAYS re-queue
       const hasId = offlineQueue.some(
-        (q) => q.question?.uniqueId === item.question?.uniqueId,
+        (q) => q.question?.uniqueId === item.question?.uniqueId
       );
       if (!hasId) {
         offlineQueue.push(item);
@@ -102,7 +102,7 @@ describe("firebaseSave - Critical Regression Tests", () => {
       const item = { question: { uniqueId: "q1" }, timestamp: Date.now() };
 
       const alreadyHasNewer = offlineQueue.some(
-        (q) => q.question?.uniqueId === item.question?.uniqueId,
+        (q) => q.question?.uniqueId === item.question?.uniqueId
       );
       if (!alreadyHasNewer) {
         offlineQueue.push(item);

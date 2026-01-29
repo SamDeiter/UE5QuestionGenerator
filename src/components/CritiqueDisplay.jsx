@@ -1,5 +1,3 @@
-
-
 /**
  * CritiqueDisplay Component - Shows AI critique with markdown rendering
  *

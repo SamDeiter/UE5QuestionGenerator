@@ -1,4 +1,3 @@
- 
 /**
  * Field Schema Compatibility Tests
  *
@@ -159,10 +158,10 @@ describe("Field Schema Compatibility", () => {
       // After normalization, invalid correctAnswer defaults to "A" so only 2 errors
       expect(result.errors.length).toBeGreaterThanOrEqual(2);
       expect(
-        result.errors.some((e) => e.includes("Missing question text")),
+        result.errors.some((e) => e.includes("Missing question text"))
       ).toBe(true);
       expect(result.errors.some((e) => e.includes("at least 2 choices"))).toBe(
-        true,
+        true
       );
     });
   });

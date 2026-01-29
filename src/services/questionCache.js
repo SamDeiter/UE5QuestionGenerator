@@ -126,7 +126,7 @@ export const getCachedQuestion = async (uniqueId) => {
  * @returns {Promise<boolean>}
  */
 export const isCacheValid = async (
-  maxAgeMs = FIRESTORE_LIMITS.CACHE_TTL_MS,
+  maxAgeMs = FIRESTORE_LIMITS.CACHE_TTL_MS
 ) => {
   try {
     const db = await getDB();

@@ -198,14 +198,14 @@ const TutorialOverlay = ({
                         0% 0%, 
                         ${targetRect.left}px ${targetRect.top}px, 
                         ${targetRect.left + targetRect.width}px ${
-              targetRect.top
-            }px, 
+                          targetRect.top
+                        }px, 
                         ${targetRect.left + targetRect.width}px ${
-              targetRect.top + targetRect.height
-            }px, 
+                          targetRect.top + targetRect.height
+                        }px, 
                         ${targetRect.left}px ${
-              targetRect.top + targetRect.height
-            }px, 
+                          targetRect.top + targetRect.height
+                        }px, 
                         ${targetRect.left}px ${targetRect.top}px
                     )`,
           }}

@@ -172,14 +172,14 @@ const VersionComparisonModal = ({
                   "Original Version",
                   originalVersion,
                   versionSource === "original",
-                  getVersionBadge("original"),
+                  getVersionBadge("original")
                 )}
               {hasAI &&
                 renderQuestionCard(
                   "AI Rewrite",
                   aiRewrite,
                   versionSource === "ai_rewrite",
-                  getVersionBadge("ai_rewrite"),
+                  getVersionBadge("ai_rewrite")
                 )}
               {!hasOriginal && !hasAI && (
                 <div className="text-center text-slate-500 py-8">
@@ -195,7 +195,7 @@ const VersionComparisonModal = ({
                 "Original Version",
                 originalVersion,
                 versionSource === "original",
-                getVersionBadge("original"),
+                getVersionBadge("original")
               )}
             </div>
           )}
@@ -206,7 +206,7 @@ const VersionComparisonModal = ({
                 "AI Rewrite",
                 aiRewrite,
                 versionSource === "ai_rewrite",
-                getVersionBadge("ai_rewrite"),
+                getVersionBadge("ai_rewrite")
               )}
             </div>
           )}

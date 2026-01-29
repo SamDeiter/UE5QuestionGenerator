@@ -28,7 +28,7 @@ const lastQueryTimes = new Map();
 export const rateLimitedQuery = async (
   queryKey,
   queryFn,
-  minIntervalMs = FIRESTORE_LIMITS.MIN_QUERY_INTERVAL_MS,
+  minIntervalMs = FIRESTORE_LIMITS.MIN_QUERY_INTERVAL_MS
 ) => {
   const now = Date.now();
   const lastTime = lastQueryTimes.get(queryKey) || 0;
@@ -53,7 +53,7 @@ export const rateLimitedQuery = async (
  */
 export const canQueryNow = (
   queryKey,
-  minIntervalMs = FIRESTORE_LIMITS.MIN_QUERY_INTERVAL_MS,
+  minIntervalMs = FIRESTORE_LIMITS.MIN_QUERY_INTERVAL_MS
 ) => {
   const lastTime = lastQueryTimes.get(queryKey) || 0;
   return Date.now() - lastTime >= minIntervalMs;
