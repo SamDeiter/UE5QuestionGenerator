@@ -104,8 +104,10 @@ describe("VerifyConfirmModal", () => {
       fireEvent.click(screen.getByText(/Found in Epic Docs/));
 
       expect(mockProps.onVerifyDocs).toHaveBeenCalledWith({
+        answerState: null,
         clickedDocs: true,
         clickedSearch: false,
+        docLinkState: null,
       });
     });
 
@@ -119,8 +121,10 @@ describe("VerifyConfirmModal", () => {
       fireEvent.click(screen.getByText(/Found in Google Search/));
 
       expect(mockProps.onVerifySearch).toHaveBeenCalledWith({
+        answerState: null,
         clickedDocs: false,
         clickedSearch: true,
+        docLinkState: null,
       });
     });
 
