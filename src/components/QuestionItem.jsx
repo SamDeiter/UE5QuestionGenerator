@@ -18,6 +18,10 @@ import QuestionActions from "./QuestionItem/QuestionActions";
 import ValidationWarnings from "./QuestionItem/ValidationWarnings";
 import ExplanationDisplay from "./QuestionItem/ExplanationDisplay";
 import SourceContextCard from "./QuestionItem/SourceContextCard";
+import ReviewStateSelector from "./QuestionItem/ReviewStateSelector";
+import NeedsResearchBadge, {
+  NeedsResearchButton,
+} from "./QuestionItem/NeedsResearchBadge";
 import ImprovementModal from "./ImprovementModal";
 import VerifyConfirmModal from "./VerifyConfirmModal";
 import VersionComparisonModal from "./VersionComparisonModal";
@@ -241,6 +245,55 @@ const QuestionItem = ({
     [q.id, onUpdateQuestion, userEmail]
   );
 
+  // Handle answer state change (Phase 2)
+  const handleAnswerStateChange = useCallback(
+    (newState) => {
+      if (!onUpdateQuestion) return;
+      onUpdateQuestion(q.id, {
+        answerState: newState,
+      });
+    },
+    [q.id, onUpdateQuestion]
+  );
+
+  // Handle doc link state change (Phase 2)
+  const handleDocLinkStateChange = useCallback(
+    (newState) => {
+      if (!onUpdateQuestion) return;
+      onUpdateQuestion(q.id, {
+        docLinkState: newState,
+      });
+    },
+    [q.id, onUpdateQuestion]
+  );
+
+  // Handle marking a question for research (Phase 4)
+  const handleMarkForResearch = useCallback(() => {
+    if (!onUpdateQuestion) return;
+    const reason = window.prompt(
+      "Why does this question need research?\n(e.g., 'Unsure if this API still exists in UE5.4')"
+    );
+    if (reason === null) return; // User cancelled
+
+    onUpdateQuestion(q.id, {
+      needsResearch: true,
+      needsResearchReason: reason || "Needs manual verification",
+      needsResearchAt: new Date().toISOString(),
+      needsResearchBy: userEmail,
+    });
+    showMessage?.("🔬 Marked for research", TOAST_DURATION.MEDIUM);
+  }, [q.id, onUpdateQuestion, userEmail, showMessage]);
+
+  // Handle clearing research flag (Phase 4)
+  const handleClearResearch = useCallback(() => {
+    if (!onUpdateQuestion) return;
+    onUpdateQuestion(q.id, {
+      needsResearch: false,
+      // Keep the reason/metadata for audit trail
+    });
+    showMessage?.("✅ Research flag cleared", TOAST_DURATION.MEDIUM);
+  }, [q.id, onUpdateQuestion, showMessage]);
+
   const handleFix = useCallback(() => {
     if (onApplyRewrite) {
       onApplyRewrite(q);
@@ -260,6 +313,16 @@ const QuestionItem = ({
       return;
     }
 
+    // NEEDS RESEARCH BLOCK (Phase 4): Cannot accept if flagged for research
+    if (q.needsResearch) {
+      if (showMessage)
+        showMessage(
+          "🔬 This question is marked for research. Clear the flag or reject it.",
+          TOAST_DURATION.LONG
+        );
+      return;
+    }
+
     // LOW-SCORE WARNING: Confirm before accepting low-quality questions
     const passThreshold = QUALITY_THRESHOLDS?.PASS || 70;
     if (q.critiqueScore < passThreshold) {
@@ -270,7 +333,14 @@ const QuestionItem = ({
     }
 
     onUpdateStatus(q.id, QUESTION_STATUS.ACCEPTED);
-  }, [q.critiqueScore, q.humanVerified, q.id, onUpdateStatus, showMessage]);
+  }, [
+    q.critiqueScore,
+    q.humanVerified,
+    q.needsResearch,
+    q.id,
+    onUpdateStatus,
+    showMessage,
+  ]);
 
   // Style helpers: Using imported functions from questionItemHelpers.js
   // - getStatusStyle, getDifficultyGradient
@@ -440,6 +510,38 @@ const QuestionItem = ({
           onDocLinkUpdate={handleDocLinkUpdate}
           canEdit={appMode === APP_MODES.REVIEW}
         />
+
+        {/* Needs Research Badge - Show if question is flagged (Phase 4) */}
+        <NeedsResearchBadge
+          needsResearch={q.needsResearch}
+          needsResearchReason={q.needsResearchReason}
+          needsResearchBy={q.needsResearchBy}
+          needsResearchAt={q.needsResearchAt}
+          onClearResearch={handleClearResearch}
+          canClear={appMode === APP_MODES.REVIEW}
+        />
+
+        {/* Review State Selector - Explicit answer/doc assessment (Phase 2) */}
+        {appMode === APP_MODES.REVIEW && (
+          <div className="mb-3">
+            <ReviewStateSelector
+              answerState={q.answerState}
+              docLinkState={q.docLinkState}
+              onAnswerStateChange={handleAnswerStateChange}
+              onDocLinkStateChange={handleDocLinkStateChange}
+              disabled={isLocked}
+              showGuidance={true}
+            />
+            {/* Mark for Research button (Phase 4) */}
+            <div className="mt-2">
+              <NeedsResearchButton
+                needsResearch={q.needsResearch}
+                onMarkForResearch={handleMarkForResearch}
+                disabled={isLocked}
+              />
+            </div>
+          </div>
+        )}
 
         <CritiqueSection
           q={q}
