@@ -9,13 +9,11 @@ import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { getDb } from "../services/firebase";
 import { logger } from "../utils/logger";
 import { logError } from "../utils/AppError";
+import { normalizeReviewerName } from "./normalizeReviewerName";
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-
-/** Minimum name length to check for duplicates (avoids false positives on short names) */
-const MIN_NAME_LENGTH_FOR_DUPLICATE_CHECK = 2;
 
 /** Duration threshold in seconds - values above this are likely stored in milliseconds */
 const LIKELY_MILLISECONDS_THRESHOLD = 100000;
@@ -127,29 +125,6 @@ export const aggregateReviewerStats = (questions) => {
   const reviewerMap = new Map();
 
   /**
-   * Normalize reviewer name - fix duplicated names like "Sam DeiterSam Deiter"
-   */
-  const normalizeReviewerName = (name) => {
-    if (!name || typeof name !== "string") return "Unknown";
-    const trimmed = name.trim();
-
-    // Detect and fix duplicated names: "NameName" or "Name Name" (exact duplicate)
-    const halfLen = Math.floor(trimmed.length / VELOCITY_DECIMAL_PLACES);
-    const firstHalf = trimmed.substring(0, halfLen);
-    const secondHalf = trimmed.substring(halfLen);
-
-    if (
-      firstHalf === secondHalf &&
-      firstHalf.length > MIN_NAME_LENGTH_FOR_DUPLICATE_CHECK
-    ) {
-      logger.log(`🔧 Fixed duplicated name: "${trimmed}" -> "${firstHalf}"`);
-      return firstHalf;
-    }
-
-    return trimmed;
-  };
-
-  /**
    * Process and validate review duration, handling unit conversion and capping
    * @param {Object} q - Question object
    * @param {string} reviewerName - Normalized reviewer name
@@ -191,7 +166,7 @@ export const aggregateReviewerStats = (questions) => {
       stats.lastReviewDate = date;
   };
   questions.forEach((q) => {
-    // Use reviewerName or acceptedBy for reviewer identification
+    // Use shared normalizer that maps emails to display names
     // NOTE: Deliberately NOT using creatorEmail/creatorName - we only want to count
     // actual review actions, not question creation (fixes analytics discrepancy)
     const rawName = q.reviewerName || q.acceptedBy;
@@ -199,7 +174,8 @@ export const aggregateReviewerStats = (questions) => {
     // Skip questions that don't have a reviewer assigned
     if (!rawName) return;
 
-    const reviewerName = normalizeReviewerName(rawName);
+    // Use imported normalizer (handles email->name mapping and duplicate name fixing)
+    const reviewerName = normalizeReviewerName(rawName) || "Unknown";
 
     if (!reviewerMap.has(reviewerName)) {
       reviewerMap.set(reviewerName, {

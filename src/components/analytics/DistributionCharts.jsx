@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "recharts";
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
+import { getReviewerFromQuestion } from "../../utils/normalizeReviewerName";
 
 const COLORS = [
   "#F472B6", // Pink 400
@@ -389,31 +390,9 @@ const DistributionCharts = ({ questions }) => {
           Questions reviewed/verified by each team member
         </p>
         {(() => {
-          // Normalize reviewer name - fix duplicates like "Sam DeiterSam Deiter"
-          const normalizeReviewerName = (name) => {
-            if (!name || typeof name !== "string") return null;
-            const trimmed = name.trim();
-
-            // Filter out invalid names
-            const invalidNames = ["unknown", "user", "undefined", "null", ""];
-            if (invalidNames.includes(trimmed.toLowerCase())) return null;
-
-            // Detect and fix duplicated names: "NameName" pattern
-            const halfLen = Math.floor(trimmed.length / 2);
-            const firstHalf = trimmed.substring(0, halfLen);
-            const secondHalf = trimmed.substring(halfLen);
-
-            if (firstHalf === secondHalf && firstHalf.length > 2) {
-              return firstHalf;
-            }
-
-            return trimmed;
-          };
-
+          // Use shared normalizer that maps emails to display names
           const reviewerCounts = questions.reduce((acc, q) => {
-            const rawReviewer =
-              q.humanVerifiedBy || q.acceptedBy || q.reviewerName;
-            const reviewer = normalizeReviewerName(rawReviewer);
+            const reviewer = getReviewerFromQuestion(q);
             if (reviewer) {
               acc[reviewer] = (acc[reviewer] || 0) + 1;
             }
