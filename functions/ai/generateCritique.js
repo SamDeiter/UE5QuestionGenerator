@@ -5,6 +5,7 @@ const admin = require("firebase-admin");
 // Import utility functions
 const { logApiUsage } = require("../utils/apiUsage");
 const { extractGroundingSources } = require("../utils/grounding");
+const { sanitizeInput } = require("../utils/inputSanitizer");
 
 /**
  * Cloud Function: generateQuestions
@@ -190,6 +191,11 @@ exports.generateCritique = functions
       );
     }
 
+    // SECURITY: Sanitize inputs to prevent XSS
+    const sanitizedQuestion = sanitizeInput(question);
+    const sanitizedOptions = options.map((opt) => sanitizeInput(opt));
+    const sanitizedCorrect = sanitizeInput(correct);
+
     // Rate limiting (SECURITY: Prevents AI cost abuse)
     const hourlyLimit = await checkRateLimit(userId, "AI_HOURLY");
     if (!hourlyLimit.allowed) {
@@ -287,9 +293,9 @@ exports.generateCritique = functions
         IMPORTANT: Both "score" AND "improvedScore" are REQUIRED. The improvedScore should reflect the quality of your rewritten version.
 
         Question Type: ${type}
-        Question: ${question}
-        Options: ${JSON.stringify(options)}
-        Correct: ${correct}`;
+        Question: ${sanitizedQuestion}
+        Options: ${JSON.stringify(sanitizedOptions)}
+        Correct: ${sanitizedCorrect}`;
 
       // Model fallback list: ALL available text-out models prioritized by quota
       const modelFallbacks = [

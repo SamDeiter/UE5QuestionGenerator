@@ -4,6 +4,10 @@ const functions = require("firebase-functions");
 const { checkRateLimit } = require("../middleware/rateLimiter");
 const { logApiUsage } = require("../utils/apiUsage");
 const { extractGroundingSources } = require("../utils/grounding");
+const {
+  sanitizeInput,
+  validateNoPromptInjection,
+} = require("../utils/inputSanitizer");
 
 /**
  * Cloud Function: generateQuestions
@@ -40,13 +44,21 @@ exports.generateQuestions = functions
       model = "gemini-1.5-flash", // Updated to stable model (2.0-flash-exp was returning 404)
     } = data;
 
-    // 2. Input validation
+    // 2. Input validation and sanitization (SECURITY: Prevent XSS and injection)
     if (!systemPrompt || !userPrompt) {
       throw new functions.https.HttpsError(
         "invalid-argument",
         "systemPrompt and userPrompt are required."
       );
     }
+
+    // Sanitize inputs to prevent XSS
+    const sanitizedSystemPrompt = sanitizeInput(systemPrompt);
+    const sanitizedUserPrompt = sanitizeInput(userPrompt);
+
+    // Check for prompt injection attempts
+    validateNoPromptInjection(sanitizedSystemPrompt);
+    validateNoPromptInjection(sanitizedUserPrompt);
 
     // 3. Rate limiting check (SECURITY: Prevents AI cost abuse)
     const hourlyLimit = await checkRateLimit(userId, "AI_HOURLY");
@@ -102,8 +114,8 @@ exports.generateQuestions = functions
       );
 
       const payload = {
-        contents: [{ parts: [{ text: userPrompt }] }],
-        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ parts: [{ text: sanitizedUserPrompt }] }],
+        systemInstruction: { parts: [{ text: sanitizedSystemPrompt }] },
         tools: [
           {
             googleSearch: {}, // Enable grounding
