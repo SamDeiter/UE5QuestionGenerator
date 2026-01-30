@@ -78,11 +78,46 @@ export default [
 
       // === CODE QUALITY GUARDRAILS ===
 
-      // Magic Numbers: Avoid hardcoded values (except common 0, 1, -1)
+      // Magic Numbers: Avoid hardcoded values (except common/safe numbers)
+      // These are exempt: indexes, small counts, common durations, and percentages
       "no-magic-numbers": [
         "warn",
         {
-          ignore: [0, 1, -1],
+          ignore: [
+            0,
+            1,
+            -1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10, // Basic counts and small numbers
+            12,
+            16,
+            20,
+            24,
+            30,
+            50,
+            60,
+            100, // Common sizes, percentages, minutes
+            200,
+            400,
+            500,
+            1000,
+            2000,
+            3000,
+            5000,
+            10000, // Common timeouts and limits
+            1.5,
+            0.5,
+            0.2,
+            0.3,
+            0.8, // Common multipliers
+          ],
           ignoreArrayIndexes: true,
           enforceConst: true,
           detectObjects: false,
