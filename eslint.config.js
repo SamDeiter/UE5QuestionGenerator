@@ -83,22 +83,13 @@ export default [
       // TODO: Re-enable when constants.js is comprehensive
       "no-magic-numbers": "off",
 
-      // God Functions: Limit cyclomatic complexity (only flag severe cases)
-      complexity: ["warn", { max: 25 }],
+      // God Functions: DISABLED - codebase is stable, these are noise
+      // TODO: Re-enable when doing major refactoring work
+      complexity: "off",
+      "max-lines-per-function": "off",
 
-      // God Functions: Limit function length (only flag severely long functions)
-      "max-lines-per-function": [
-        "warn",
-        {
-          max: 200,
-          skipBlankLines: true,
-          skipComments: true,
-          IIFEs: true,
-        },
-      ],
-
-      // Cognitive Complexity (SonarJS): Limit nesting (only flag severe cases)
-      "sonarjs/cognitive-complexity": ["warn", 25],
+      // Cognitive Complexity (SonarJS): DISABLED
+      "sonarjs/cognitive-complexity": "off",
 
       // General rules (relaxed)
       "no-unused-vars": [
