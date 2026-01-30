@@ -19,10 +19,17 @@ const EMAIL_TO_NAME_MAP = {
   "stephan.rueb.dcc@gmail.com": "Stephan Rüb",
   "edward.bennett@epicgames.com": "Edward Bennett",
   "luis.cataldi@ea.epicgames.com": "Luis Cataldi",
+  "luis.cataldi@epicgames.com": "Luis Cataldi",
   "james.hill@epicgames.com": "James Hill",
+  "emanuele.salvucci@epicgames.com": "Emanuele Salvucci",
+  "stephane.blanc@epicgames.com": "Stephane Blanc",
+  "mahmoud.alkawadri@epicgames.com": "Mahmoud Alkawadri",
   // Gmail users (extracted from chart data)
   "samdeiter@gmail.com": "Sam Deiter",
   "gregbert77@gmail.com": "Greg Berridge",
+  // Name variations that should be normalized
+  Gregbert77: "Greg Berridge",
+  gregbert77: "Greg Berridge",
 };
 
 // Names that should be filtered out entirely

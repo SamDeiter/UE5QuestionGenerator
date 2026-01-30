@@ -391,7 +391,11 @@ const DistributionCharts = ({ questions }) => {
         </p>
         {(() => {
           // Use shared normalizer that maps emails to display names
-          const reviewerCounts = questions.reduce((acc, q) => {
+          // IMPORTANT: Filter to only reviewed questions (accepted/rejected) to match ReviewerAnalyticsTable
+          const reviewedQuestions = questions.filter(
+            (q) => q.status === "accepted" || q.status === "rejected"
+          );
+          const reviewerCounts = reviewedQuestions.reduce((acc, q) => {
             const reviewer = getReviewerFromQuestion(q);
             if (reviewer) {
               acc[reviewer] = (acc[reviewer] || 0) + 1;
