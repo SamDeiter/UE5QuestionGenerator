@@ -10,7 +10,6 @@ import {
   Tooltip,
 } from "recharts";
 import SafeResponsiveContainer from "./SafeResponsiveContainer";
-import { getReviewerFromQuestion } from "../../utils/normalizeReviewerName";
 
 const COLORS = [
   "#F472B6", // Pink 400
@@ -379,108 +378,6 @@ const DistributionCharts = ({ questions }) => {
             );
           })()}
         </div>
-      </div>
-
-      {/* Reviewer Activity */}
-      <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 md:col-span-2">
-        <h3 className="text-sm font-bold text-slate-300 mb-1 text-center">
-          Reviewer Activity
-        </h3>
-        <p className="text-xs text-slate-500 mb-3 text-center">
-          Questions reviewed/verified by each team member
-        </p>
-        {(() => {
-          // Use shared normalizer that maps emails to display names
-          // IMPORTANT: Filter to only reviewed questions (accepted/rejected) to match ReviewerAnalyticsTable
-          const reviewedQuestions = questions.filter(
-            (q) => q.status === "accepted" || q.status === "rejected"
-          );
-          const reviewerCounts = reviewedQuestions.reduce((acc, q) => {
-            const reviewer = getReviewerFromQuestion(q);
-            if (reviewer) {
-              acc[reviewer] = (acc[reviewer] || 0) + 1;
-            }
-            return acc;
-          }, {});
-          const reviewerData = Object.entries(reviewerCounts)
-            .map(([name, value]) => ({
-              name,
-              value,
-            }))
-            .sort((a, b) => b.value - a.value);
-
-          if (reviewerData.length === 0) {
-            return (
-              <div className="h-64 flex items-center justify-center text-slate-500">
-                No reviewer data yet
-              </div>
-            );
-          }
-
-          // Dynamic height based on number of reviewers (min 200px, 35px per reviewer)
-          const chartHeight = Math.max(200, reviewerData.length * 35);
-
-          // Custom tooltip component for better readability
-          const CustomTooltip = ({ active, payload }) => {
-            if (active && payload && payload.length) {
-              const data = payload[0].payload;
-              return (
-                <div className="bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 shadow-xl">
-                  <p className="text-white font-bold text-sm mb-1">
-                    {data.name}
-                  </p>
-                  <p className="text-violet-300 text-lg font-mono">
-                    {data.value} questions
-                  </p>
-                </div>
-              );
-            }
-            return null;
-          };
-
-          return (
-            <div style={{ height: chartHeight }}>
-              <SafeResponsiveContainer
-                width="100%"
-                height="100%"
-                minWidth={0}
-                minHeight={0}
-              >
-                <BarChart
-                  data={reviewerData}
-                  layout="vertical"
-                  margin={{ top: 5, right: 50, left: 150, bottom: 5 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#334155"
-                    horizontal={false}
-                  />
-                  <XAxis type="number" stroke="#e2e8f0" />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    stroke="#e2e8f0"
-                    width={145}
-                    tick={{ fontSize: 11, fill: "#cbd5e1" }}
-                    tickLine={false}
-                    interval={0}
-                  />
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    cursor={{ fill: "#475569", opacity: 0.3 }}
-                  />
-                  <Bar
-                    dataKey="value"
-                    fill="#8B5CF6"
-                    radius={[0, 4, 4, 0]}
-                    label={{ position: "right", fill: "#e2e8f0", fontSize: 10 }}
-                  />
-                </BarChart>
-              </SafeResponsiveContainer>
-            </div>
-          );
-        })()}
       </div>
     </div>
   );
