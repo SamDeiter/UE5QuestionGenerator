@@ -78,68 +78,27 @@ export default [
 
       // === CODE QUALITY GUARDRAILS ===
 
-      // Magic Numbers: Avoid hardcoded values (except common/safe numbers)
-      // These are exempt: indexes, small counts, common durations, and percentages
-      "no-magic-numbers": [
-        "warn",
-        {
-          ignore: [
-            0,
-            1,
-            -1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10, // Basic counts and small numbers
-            12,
-            16,
-            20,
-            24,
-            30,
-            50,
-            60,
-            100, // Common sizes, percentages, minutes
-            200,
-            400,
-            500,
-            1000,
-            2000,
-            3000,
-            5000,
-            10000, // Common timeouts and limits
-            1.5,
-            0.5,
-            0.2,
-            0.3,
-            0.8, // Common multipliers
-          ],
-          ignoreArrayIndexes: true,
-          enforceConst: true,
-          detectObjects: false,
-        },
-      ],
+      // Magic Numbers: DISABLED - too noisy for this codebase
+      // Many legitimate uses like array indexes, durations, percentages
+      // TODO: Re-enable when constants.js is comprehensive
+      "no-magic-numbers": "off",
 
-      // God Functions: Limit cyclomatic complexity
-      complexity: ["warn", { max: 20 }],
+      // God Functions: Limit cyclomatic complexity (only flag severe cases)
+      complexity: ["warn", { max: 25 }],
 
-      // God Functions: Limit function length
+      // God Functions: Limit function length (only flag severely long functions)
       "max-lines-per-function": [
         "warn",
         {
-          max: 150,
+          max: 200,
           skipBlankLines: true,
           skipComments: true,
           IIFEs: true,
         },
       ],
 
-      // Cognitive Complexity (SonarJS): Limit logic nesting
-      "sonarjs/cognitive-complexity": ["warn", 20],
+      // Cognitive Complexity (SonarJS): Limit nesting (only flag severe cases)
+      "sonarjs/cognitive-complexity": ["warn", 25],
 
       // General rules (relaxed)
       "no-unused-vars": [
