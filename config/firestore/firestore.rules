@@ -16,7 +16,7 @@ service cloud.firestore {
     
     function isAdmin() {
       return request.auth.token.role == 'admin' 
-        || request.auth.token.email == 'sam.deiter@epicgames.com'
+        // SECURITY: Hardcoded email removed - use custom claims or registeredUsers only
         || (exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
             && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'admin');
     }
@@ -48,7 +48,7 @@ service cloud.firestore {
         && (!request.resource.data.keys().hasAny(['version']) || request.resource.data.version == 1);
       
       // Update: Must be authenticated, version must increment, updatedBy must match auth
-      // Special case: Admins can update any fields
+      // Special case: Admins can update any fields, Reviewers limited to specific fields
       allow update: if isSignedIn() && (
         // Standard update: Owner updates their own question with version increment
         (resource.data.creatorId == request.auth.uid 
@@ -58,9 +58,16 @@ service cloud.firestore {
         // Admin FULL override: Admins can update any fields
         isAdmin()
         ||
-        // Reviewer FULL override: Reviewers can update any fields (same as admins)
-        // This prevents permission errors from dynamic question fields
-        isReviewer()
+        // Reviewer LIMITED update: Can only modify review-specific fields
+        // SECURITY: Prevents reviewers from stealing ownership or bypassing version control
+        (isReviewer()
+         && request.resource.data.creatorId == resource.data.creatorId  // Cannot change owner
+         && request.resource.data.creatorEmail == resource.data.creatorEmail  // Cannot change creator email
+         && versionIsIncremented()  // Must increment version (concurrent editing protection)
+         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'rejectionReason', 'reviewedBy', 'reviewedAt', 
+              'updatedAt', 'updatedBy', 'version', 'aiScore', 'critique'
+            ]))  // Can ONLY modify these fields
       );
       
       // Delete: Admins only
@@ -160,8 +167,8 @@ service cloud.firestore {
     // ============================================================
     
     match /admins/{userId} {
-      // Read: Any authenticated user (to check admin status)
-      allow read: if isSignedIn();
+      // Read: Admins only (SECURITY: prevents admin enumeration)
+      allow read: if isAdmin();
       // Write: Admins only
       allow write: if isAdmin();
     }

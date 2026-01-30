@@ -1,7 +1,7 @@
 const functions = require("firebase-functions");
 
 // Import utility functions
-const { checkRateLimit } = require("../utils/rateLimit");
+const { checkRateLimit } = require("../middleware/rateLimiter");
 const { logApiUsage } = require("../utils/apiUsage");
 const { extractGroundingSources } = require("../utils/grounding");
 
@@ -48,12 +48,27 @@ exports.generateQuestions = functions
       );
     }
 
-    // 4. Rate limiting check
-    const rateLimitCheck = await checkRateLimit(userId);
-    if (!rateLimitCheck.allowed) {
+    // 3. Rate limiting check (SECURITY: Prevents AI cost abuse)
+    const hourlyLimit = await checkRateLimit(userId, "AI_HOURLY");
+    if (!hourlyLimit.allowed) {
       throw new functions.https.HttpsError(
         "resource-exhausted",
-        `Rate limit exceeded. ${rateLimitCheck.message}`
+        hourlyLimit.reason || "Rate limit exceeded",
+        {
+          resetAt: hourlyLimit.resetAt?.toISOString(),
+          resetInSeconds: Math.ceil((hourlyLimit.resetAt - new Date()) / 1000),
+        }
+      );
+    }
+
+    const dailyLimit = await checkRateLimit(userId, "AI_DAILY");
+    if (!dailyLimit.allowed) {
+      throw new functions.https.HttpsError(
+        "resource-exhausted",
+        dailyLimit.reason || "Daily rate limit exceeded",
+        {
+          resetAt: dailyLimit.resetAt?.toISOString(),
+        }
       );
     }
 

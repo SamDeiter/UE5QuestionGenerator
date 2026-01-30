@@ -250,4 +250,89 @@ describe("useAuth", () => {
     // permissionError should be true - blocking banner will show
     expect(result.current.permissionError).toBe(true);
   });
+
+  // ============================================================
+  // AUTH RACE CONDITION TESTS (QA BLIND SPOT FIX)
+  // ============================================================
+  describe("Auth Race Conditions (QA Blind Spot)", () => {
+    it("CRITICAL: authLoading starts as true to prevent premature UI render", () => {
+      // This test ensures UI won't show private data before auth resolves
+      onIdTokenChanged.mockImplementation((auth, callback) => {
+        // Don't call callback immediately - simulate async auth check
+        setTimeout(() => callback(null), 100);
+        return () => {};
+      });
+
+      const { result } = renderHook(() => useAuth(mockShowMessage));
+
+      // Auth should be loading initially
+      expect(result.current.authLoading).toBe(true);
+      expect(result.current.user).toBeNull();
+    });
+
+    it("CRITICAL: authLoading becomes false only after auth settles", async () => {
+      let authCallback;
+      onIdTokenChanged.mockImplementation((auth, callback) => {
+        authCallback = callback;
+        return () => {};
+      });
+
+      const { result } = renderHook(() => useAuth(mockShowMessage));
+
+      // Initially loading
+      expect(result.current.authLoading).toBe(true);
+
+      // Simulate auth resolving
+      authCallback(null);
+
+      await waitFor(() => {
+        expect(result.current.authLoading).toBe(false);
+      });
+
+      // Now safe to render UI
+      expect(result.current.authLoading).toBe(false);
+    });
+
+    it("CRITICAL: components should wait for both authLoading and registrationLoading", async () => {
+      const mockUser = { uid: "test-uid", email: "test@example.com" };
+
+      onIdTokenChanged.mockImplementation((auth, callback) => {
+        callback(mockUser);
+        return () => {};
+      });
+
+      // Simulate slow registration check - extracted to reduce nesting
+      const slowRegistrationCheck = () =>
+        new Promise((resolve) => {
+          setTimeout(() => resolve({ registered: true, role: "user" }), 100);
+        });
+
+      checkUserRegistration.mockImplementation(slowRegistrationCheck);
+
+      const { result } = renderHook(() => useAuth(mockShowMessage));
+
+      // Even though auth is resolved, registration is still loading
+      await waitFor(() => {
+        expect(result.current.authLoading).toBe(false);
+      });
+
+      // Registration should still be loading
+      expect(result.current.registrationLoading).toBe(true);
+
+      // UI should check BOTH flags before showing private data
+      const shouldShowPrivateUI =
+        !result.current.authLoading && !result.current.registrationLoading;
+      expect(shouldShowPrivateUI).toBe(false);
+
+      // Wait for registration to finish
+      await waitFor(() => {
+        expect(result.current.registrationLoading).toBe(false);
+      });
+
+      // Now both are ready
+      const canShowUI =
+        !result.current.authLoading && !result.current.registrationLoading;
+      expect(canShowUI).toBe(true);
+    });
+  });
 });
