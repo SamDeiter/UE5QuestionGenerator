@@ -4,7 +4,8 @@
  * Tests the authentication and registration flow to prevent
  * "Ghost Reviewer" issues where users are authenticated but not registered.
  */
-import { describe, it, expect, vi } from "vitest";
+/* eslint-disable sonarjs/no-nested-functions */
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useAuth } from "../useAuth";
 
