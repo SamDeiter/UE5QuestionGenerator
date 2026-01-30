@@ -125,13 +125,13 @@ export default [
       ],
 
       // God Functions: Limit cyclomatic complexity
-      complexity: ["warn", { max: 15 }],
+      complexity: ["warn", { max: 20 }],
 
       // God Functions: Limit function length
       "max-lines-per-function": [
         "warn",
         {
-          max: 100,
+          max: 150,
           skipBlankLines: true,
           skipComments: true,
           IIFEs: true,

@@ -32,6 +32,25 @@ service cloud.firestore {
              request.resource.data.version == resource.data.version + 1;
     }
     
+    // SECURITY: Validate question data structure to prevent malformed data
+    function isValidQuestion() {
+      let data = request.resource.data;
+      // Required fields must exist
+      return data.keys().hasAll(['question', 'options', 'correct', 'creatorId', 'creatorEmail'])
+        // Question text must be a non-empty string with reasonable length
+        && data.question is string
+        && data.question.size() > 0
+        && data.question.size() < 5000
+        // Options must be a map (A, B, C, D, E for MC) or string (T/F)
+        && (data.options is map || data.options is string)
+        // Correct answer must be a string
+        && data.correct is string
+        && data.correct.size() > 0
+        // creatorId and creatorEmail must be strings
+        && data.creatorId is string
+        && data.creatorEmail is string;
+    }
+    
     // ============================================================
     // QUESTIONS COLLECTION (with version control)
     // ============================================================
@@ -41,8 +60,10 @@ service cloud.firestore {
       allow read: if isSignedIn();
       
       // Create: Admins/Creators only - Reviewers cannot create questions
+      // SECURITY: isValidQuestion() enforces schema validation
       allow create: if isSignedIn()
         && !isReviewer()  // Reviewers cannot create questions
+        && isValidQuestion()  // SECURITY: Enforce valid question structure
         && request.resource.data.creatorId == request.auth.uid
         && request.resource.data.creatorEmail == request.auth.token.email
         && (!request.resource.data.keys().hasAny(['version']) || request.resource.data.version == 1);
