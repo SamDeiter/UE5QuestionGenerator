@@ -171,7 +171,10 @@ window.QUIZ_CONFIG = {
   adaptiveDifficulty: true
 };
 
-window.QUESTIONS = ${JSON.stringify(scormQuestions, null, 2)};
+// Base64 encode questions to prevent casual view-source cheating
+// Decoded at runtime by game.js - no performance impact (one-time decode)
+window.QUESTIONS_ENCODED = "${btoa(JSON.stringify(scormQuestions))}";
+window.QUESTIONS = null; // Decoded at runtime by game.js
 `;
 
   return {

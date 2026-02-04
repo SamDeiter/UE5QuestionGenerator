@@ -20,7 +20,19 @@ document.addEventListener("DOMContentLoaded", () => {
     adaptiveDifficulty: true,
   };
 
-  const rawQuestions = window.QUESTIONS || [];
+  // Decode base64 encoded questions (prevents casual view-source cheating)
+  // Performance: one-time decode at page load (~2-5ms for 100+ questions)
+  const rawQuestions = (() => {
+    if (window.QUESTIONS_ENCODED) {
+      try {
+        return JSON.parse(atob(window.QUESTIONS_ENCODED));
+      } catch (e) {
+        console.error('Failed to decode questions:', e);
+        return [];
+      }
+    }
+    return window.QUESTIONS || [];
+  })();
 
   // STATE
   // ═══════════════════════════════════════════════════════════════
