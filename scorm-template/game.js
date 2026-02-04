@@ -674,6 +674,28 @@ document.addEventListener("DOMContentLoaded", () => {
       timeSpent: timeSpent,
     });
 
+    // Report to SCORM as cmi.interactions (optional, non-breaking)
+    // This allows LMS to show which questions were asked and how learner responded
+    try {
+      if (typeof window.SCORM12 !== "undefined" && window.SCORM12.isConnected() && window.SCORM12.setInteraction) {
+        // Find correct answer text
+        const correctChoice = choices.find(c => c.correct);
+        const correctText = correctChoice ? correctChoice.text : "";
+        
+        window.SCORM12.setInteraction(currentQuestionIndex, {
+          id: question.id || "q" + currentQuestionIndex,
+          type: "choice",
+          studentResponse: choices[choiceIndex].text.substring(0, 255), // SCORM 1.2 length limit
+          correctResponse: correctText.substring(0, 255),
+          result: isCorrect ? "correct" : "wrong",
+          latency: timeSpent
+        });
+      }
+    } catch (interactionError) {
+      // Never break quiz for interaction tracking failure
+      console.warn("[SCORM] Interaction tracking failed (non-critical):", interactionError);
+    }
+
     // Track wrong streak for adaptive difficulty
     if (isCorrect) {
       wrongStreak = 0;
