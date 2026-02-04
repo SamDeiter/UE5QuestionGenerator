@@ -9,27 +9,52 @@ import { SCORM_DEFAULTS } from "../utils/constants";
 
 /**
  * Convert a Firestore question to SCORM quiz format
+ * Handles both field naming conventions:
+ * - Legacy: questionText, choices (array), correctAnswer (text)
+ * - Current: question, options (object), correct (key)
  * @param {Object} question - Firestore question object
  * @returns {Object} SCORM-formatted question
  */
 export function convertQuestionToScormFormat(question) {
-  const { questionText, type, choices, correctAnswer, guid, difficulty } =
-    question;
+  // Handle both field name conventions
+  const questionText = question.questionText || question.question || "";
+  const type = question.type || "Multiple Choice";
+  const difficulty = question.difficulty || "Medium";
+  const guid = question.guid || question.id || question.uniqueId;
 
-  // For Multiple Choice: choices is array of strings, correctAnswer is the correct string
-  // For True/False: choices is ["True", "False"], correctAnswer is "True" or "False"
+  let scormChoices = [];
 
-  const scormChoices = choices.map((choiceText) => ({
-    text: choiceText,
-    correct: choiceText === correctAnswer,
-  }));
+  // Check if we have options object (current format) or choices array (legacy)
+  if (question.options && typeof question.options === "object") {
+    // Current format: options is an object like {a: "...", b: "...", c: "...", d: "..."}
+    // correct is the key like "a" or "b"
+    const correctKey = question.correct || question.correctAnswer;
+    scormChoices = Object.entries(question.options).map(([key, text]) => ({
+      text: text,
+      correct: key === correctKey,
+    }));
+  } else if (Array.isArray(question.choices)) {
+    // Legacy format: choices is an array, correctAnswer is the text value
+    const correctAnswer = question.correctAnswer;
+    scormChoices = question.choices.map((choiceText) => ({
+      text: choiceText,
+      correct: choiceText === correctAnswer,
+    }));
+  } else {
+    // Fallback for True/False without proper structure
+    logger.warn("Question has no valid choices/options:", guid);
+    scormChoices = [
+      { text: "True", correct: false },
+      { text: "False", correct: false },
+    ];
+  }
 
   return {
     // eslint-disable-next-line sonarjs/pseudo-random
     id: guid || `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     text: questionText,
     type: type,
-    difficulty: difficulty || "Medium",
+    difficulty: difficulty,
     choices: scormChoices,
   };
 }
@@ -46,13 +71,16 @@ export async function generateScormPackageFiles(questions, config = {}) {
     description = "Test your Unreal Engine 5 knowledge",
     passingScore = SCORM_DEFAULTS.PASSING_SCORE,
     timeLimit = SCORM_DEFAULTS.TIME_LIMIT_MINUTES, // minutes
+    questionsPerAttempt = 60, // Random selection per attempt
   } = config;
 
   // Convert questions to SCORM format
   const scormQuestions = questions.map(convertQuestionToScormFormat);
 
   // Load template files from public directory
-  const templatePath = "/scorm-template/";
+  // Use Vite's BASE_URL to handle GitHub Pages deployment path
+  const basePath = import.meta.env.BASE_URL || "/";
+  const templatePath = `${basePath}scorm-template/`;
 
   // Fetch template files
   const [scormJs, indexHtml, styleCSS, gameJs, manifest] = await Promise.all([
@@ -83,7 +111,10 @@ window.QUIZ_CONFIG = {
   description: "${description}",
   passingScore: ${passingScore},
   timeLimit: ${timeLimit * 60}, // Convert minutes to seconds
-  totalQuestions: ${scormQuestions.length}
+  totalQuestions: ${scormQuestions.length},
+  questionsPerAttempt: ${questionsPerAttempt}, // Random selection per attempt
+  shuffleQuestions: true,
+  adaptiveDifficulty: true
 };
 
 window.QUESTIONS = ${JSON.stringify(scormQuestions, null, 2)};
@@ -169,6 +200,22 @@ export function validateQuestionsForExport(questions) {
     return { valid: false, errors, warnings };
   }
 
+  // Debug: Log first question structure to help diagnose field naming issues
+  if (questions.length > 0) {
+    const sample = questions[0];
+    logger.info("Sample question structure for validation:", {
+      hasQuestion: !!sample.question,
+      hasQuestionText: !!sample.questionText,
+      hasOptions: !!sample.options,
+      optionsType: typeof sample.options,
+      optionsKeys: sample.options ? Object.keys(sample.options) : null,
+      hasCorrect: !!sample.correct,
+      hasCorrectAnswer: !!sample.correctAnswer,
+      correct: sample.correct,
+      questionPreview: (sample.question || sample.questionText || "").substring(0, 50),
+    });
+  }
+
   if (questions.length < 5) {
     warnings.push(
       "Less than 5 questions selected. Consider adding more for a comprehensive assessment."
@@ -182,19 +229,26 @@ export function validateQuestionsForExport(questions) {
   }
 
   questions.forEach((q, index) => {
-    if (!q.questionText || q.questionText.trim() === "") {
+    // Handle both field name conventions
+    const questionText = q.questionText || q.question || "";
+    const hasOptions = q.options && typeof q.options === "object";
+    const hasChoices = Array.isArray(q.choices) && q.choices.length >= 2;
+    const hasCorrect = q.correct || q.correctAnswer;
+
+    if (!questionText || questionText.trim() === "") {
       errors.push(`Question ${index + 1}: Missing question text`);
     }
 
-    if (!q.choices || q.choices.length < 2) {
+    if (!hasOptions && !hasChoices) {
       errors.push(`Question ${index + 1}: Must have at least 2 choices`);
     }
 
-    if (!q.correctAnswer) {
+    if (!hasCorrect) {
       errors.push(`Question ${index + 1}: Missing correct answer`);
     }
 
-    if (q.choices && !q.choices.includes(q.correctAnswer)) {
+    // For legacy format, verify correctAnswer is in choices
+    if (q.choices && q.correctAnswer && !q.choices.includes(q.correctAnswer)) {
       errors.push(`Question ${index + 1}: Correct answer not found in choices`);
     }
   });
@@ -205,4 +259,200 @@ export function validateQuestionsForExport(questions) {
     warnings,
     questionCount: questions.length,
   };
+}
+
+/**
+ * Group questions by discipline
+ * @param {Array} questions - Questions to group
+ * @returns {Object} Questions grouped by discipline
+ */
+export function groupQuestionsByDiscipline(questions) {
+  const groups = {};
+  
+  questions.forEach((q) => {
+    const discipline = q.discipline || q.category || "General";
+    if (!groups[discipline]) {
+      groups[discipline] = [];
+    }
+    groups[discipline].push(q);
+  });
+  
+  return groups;
+}
+
+/**
+ * Batch export multiple SCORM packages grouped by discipline
+ * Downloads individual zips or a single master zip containing all packages
+ * @param {Array} questions - All questions to export
+ * @param {Object} baseConfig - Base configuration for all packages
+ * @param {Object} options - Batch options
+ * @returns {Object} Export results
+ */
+export async function batchExportByDiscipline(questions, baseConfig = {}, options = {}) {
+  const {
+    downloadAsSingleZip = true, // If true, creates one master zip containing all packages
+    onProgress = null, // Callback for progress updates
+  } = options;
+
+  if (!questions || questions.length === 0) {
+    throw new Error("No questions provided for batch export");
+  }
+
+  // Group by discipline
+  const groups = groupQuestionsByDiscipline(questions);
+  const disciplines = Object.keys(groups);
+  
+  if (disciplines.length === 0) {
+    throw new Error("No disciplines found in questions");
+  }
+
+  const results = [];
+  const timestamp = new Date().toISOString().split("T")[0];
+
+  try {
+    if (downloadAsSingleZip) {
+      // Create master zip containing all discipline packages
+      const masterZip = new JSZip();
+      
+      for (let i = 0; i < disciplines.length; i++) {
+        const discipline = disciplines[i];
+        const disciplineQuestions = groups[discipline];
+        
+        if (onProgress) {
+          onProgress({
+            current: i + 1,
+            total: disciplines.length,
+            discipline,
+            questionCount: disciplineQuestions.length,
+          });
+        }
+
+        // Filter to only valid questions (instead of skipping entire discipline)
+        const validQuestions = disciplineQuestions.filter((q, index) => {
+          const questionText = q.questionText || q.question || "";
+          const hasOptions = q.options && typeof q.options === "object";
+          const hasChoices = Array.isArray(q.choices) && q.choices.length >= 2;
+          const hasCorrect = q.correct || q.correctAnswer;
+          
+          const isValid = questionText.trim() && (hasOptions || hasChoices) && hasCorrect;
+          if (!isValid) {
+            logger.warn(`Skipping ${discipline}: Question ${index + 1}: Invalid question data`);
+          }
+          return isValid;
+        });
+
+        if (validQuestions.length === 0) {
+          logger.warn(`Skipping ${discipline}: No valid questions found`);
+          results.push({
+            discipline,
+            success: false,
+            error: "No valid questions found",
+          });
+          continue;
+        }
+
+        logger.info(`${discipline}: Exporting ${validQuestions.length} of ${disciplineQuestions.length} questions`);
+
+        // Generate package files using valid questions only
+        const config = {
+          ...baseConfig,
+          title: `${baseConfig.title || "UE5 Assessment"} - ${discipline}`,
+          description: `${baseConfig.description || "Assessment"} for ${discipline}`,
+        };
+        
+        const files = await generateScormPackageFiles(validQuestions, config);
+        
+        // Create discipline zip
+        const disciplineZip = new JSZip();
+        Object.entries(files).forEach(([filename, content]) => {
+          disciplineZip.file(filename, content);
+        });
+        
+        const disciplineBlob = await disciplineZip.generateAsync({ type: "blob" });
+        const sanitizedDiscipline = discipline.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+        const filename = `${sanitizedDiscipline}_${timestamp}_scorm12.zip`;
+        
+        // Add to master zip
+        masterZip.file(filename, disciplineBlob);
+        
+        results.push({
+          discipline,
+          success: true,
+          filename,
+          questionCount: disciplineQuestions.length,
+        });
+      }
+
+      // Generate and download master zip
+      const masterBlob = await masterZip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(masterBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `all_disciplines_${timestamp}_scorm_packages.zip`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      return {
+        success: true,
+        method: "single_zip",
+        masterFilename: link.download,
+        packages: results,
+        totalDisciplines: disciplines.length,
+        successfulExports: results.filter((r) => r.success).length,
+      };
+    } else {
+      // Download each discipline as separate file with small delay
+      for (let i = 0; i < disciplines.length; i++) {
+        const discipline = disciplines[i];
+        const disciplineQuestions = groups[discipline];
+        
+        if (onProgress) {
+          onProgress({
+            current: i + 1,
+            total: disciplines.length,
+            discipline,
+            questionCount: disciplineQuestions.length,
+          });
+        }
+
+        try {
+          const config = {
+            ...baseConfig,
+            title: `${baseConfig.title || "UE5 Assessment"} - ${discipline}`,
+          };
+          
+          const result = await exportToScorm(disciplineQuestions, config);
+          results.push({
+            discipline,
+            ...result,
+          });
+          
+          // Small delay between downloads to prevent browser issues
+          if (i < disciplines.length - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
+        } catch (err) {
+          results.push({
+            discipline,
+            success: false,
+            error: err.message,
+          });
+        }
+      }
+
+      return {
+        success: true,
+        method: "separate_files",
+        packages: results,
+        totalDisciplines: disciplines.length,
+        successfulExports: results.filter((r) => r.success).length,
+      };
+    }
+  } catch (error) {
+    logger.error("Batch SCORM export failed:", error);
+    throw new Error(`Batch export failed: ${error.message}`);
+  }
 }
