@@ -14,6 +14,20 @@ import {
   reportToSCORM,
 } from "../utils/quizUtils";
 import { logger } from "../utils/logger";
+import {
+  generateAttemptToken,
+  lockAttempt,
+  getActiveAttempt,
+  clearAttempt,
+  forceAbandonAttempt,
+  preventBackNavigation,
+  restoreBackNavigation,
+  enableUnloadWarning,
+  disableUnloadWarning,
+  initMultiTabDetection,
+  cleanupMultiTabDetection,
+  queryOtherTabs,
+} from "../utils/quizSessionManager";
 
 // Sub-components
 import QuizStartScreen from "./QuizPreview/QuizStartScreen";
@@ -42,6 +56,8 @@ const QuizPreview = ({ questions, config, onClose }) => {
   const [quizStarted, setQuizStarted] = useState(false);
   const [showAnswerWarning, setShowAnswerWarning] = useState(false);
   const [quizStartTime, setQuizStartTime] = useState(null);
+  const [attemptToken, setAttemptToken] = useState(null);
+  const [duplicateAttemptWarning, setDuplicateAttemptWarning] = useState(null);
 
   // Accessibility state
   const [focusedOptionIndex, setFocusedOptionIndex] = useState(0);
@@ -101,16 +117,55 @@ const QuizPreview = ({ questions, config, onClose }) => {
     [questions, config.questionCount]
   );
 
-  // Generate GUID and build question list when quiz starts
+  // Generate GUID, lock attempt, and build question list when quiz starts
   useEffect(() => {
     if (quizStarted && !quizGuid) {
       const guid = generateGUID();
+      const token = generateAttemptToken();
+      
+      // Lock the attempt to prevent restarts
+      const locked = lockAttempt(token, guid);
+      if (!locked) {
+        const active = getActiveAttempt();
+        logger.warn("Cannot start: attempt already active", active);
+        // Allow continuing if it's the same session
+      }
+      
+      setAttemptToken(token);
       setQuizGuid(guid);
       setQuizStartTime(Date.now());
       setQuizQuestions(buildBalancedQuestionList(guid));
-      logger.log("Quiz started with GUID:", guid);
+      
+      // Enable security features
+      preventBackNavigation();
+      enableUnloadWarning();
+      
+      logger.log("Quiz started with GUID:", guid, "Token:", token);
     }
   }, [quizStarted, quizGuid, buildBalancedQuestionList]);
+
+  // Multi-tab detection: Initialize on mount
+  useEffect(() => {
+    initMultiTabDetection((duplicateData) => {
+      setDuplicateAttemptWarning(duplicateData);
+      logger.warn("[QuizPreview] Duplicate attempt detected in another tab");
+    });
+    
+    // Query other tabs for active attempts
+    queryOtherTabs();
+    
+    return () => {
+      cleanupMultiTabDetection();
+    };
+  }, []);
+
+  // Cleanup security features on unmount or completion
+  useEffect(() => {
+    return () => {
+      restoreBackNavigation();
+      disableUnloadWarning();
+    };
+  }, []);
 
   // Anti-cheating: Block keyboard shortcuts and track tab visibility
   useEffect(() => {
@@ -345,15 +400,64 @@ const QuizPreview = ({ questions, config, onClose }) => {
     return { correct, total, percentage, passed };
   }, [answers, quizQuestions, config.passingScore]);
 
-  // Report results to SCORM when quiz completes
+  // Report results to SCORM and clear attempt when quiz completes
   useEffect(() => {
     if (showResults && quizGuid && quizStartTime) {
       const timeSpent = Math.floor((Date.now() - quizStartTime) / 1000);
       reportToSCORM(results, quizGuid, timeSpent);
+      
+      // Clear the attempt lock on completion
+      if (attemptToken) {
+        clearAttempt(attemptToken);
+        restoreBackNavigation();
+        disableUnloadWarning();
+      }
     }
-  }, [showResults, results, quizGuid, quizStartTime]);
+  }, [showResults, results, quizGuid, quizStartTime, attemptToken]);
 
   // ========== UI RENDERING ==========
+
+  // Handle close with cleanup
+  const handleClose = useCallback(() => {
+    if (quizStarted && !showResults && attemptToken) {
+      // Abandon attempt on close during quiz
+      forceAbandonAttempt();
+      restoreBackNavigation();
+      disableUnloadWarning();
+    }
+    onClose();
+  }, [quizStarted, showResults, attemptToken, onClose]);
+
+  // Duplicate attempt warning modal
+  if (duplicateAttemptWarning && !quizStarted) {
+    return (
+      <div
+        className="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center select-none"
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        <div className="bg-slate-800 p-8 rounded-lg text-center max-w-md">
+          <Icon
+            name="alert-triangle"
+            size={48}
+            className="mx-auto text-yellow-500 mb-4"
+          />
+          <h3 className="text-xl font-bold text-white mb-2">
+            Quiz Already Active
+          </h3>
+          <p className="text-slate-400 mb-6">
+            A quiz attempt is already in progress in another browser tab.
+            Please complete or close that attempt first.
+          </p>
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded font-medium transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Start screen
   if (!quizStarted) {
@@ -361,7 +465,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
       <QuizStartScreen
         questions={questions}
         config={config}
-        onClose={onClose}
+        onClose={handleClose}
         onStart={() => setQuizStarted(true)}
       />
     );
@@ -370,7 +474,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
   // Results screen
   if (showResults) {
     return (
-      <QuizResultsScreen results={results} config={config} onClose={onClose} />
+      <QuizResultsScreen results={results} config={config} onClose={handleClose} />
     );
   }
 

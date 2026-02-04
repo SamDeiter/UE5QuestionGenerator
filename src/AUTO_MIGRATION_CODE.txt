@@ -1,0 +1,49 @@
+  // Auto-load database questions on startup for difficulty distribution chart
+  const hasAutoLoadedRef = useRef(false);
+  useEffect(() => {
+    if (user && !authLoading && !hasAutoLoadedRef.current) {
+      hasAutoLoadedRef.current = true;
+      console.log("📊 Auto-loading database for difficulty chart...");
+      handleLoadFromFirestore();
+    }
+  }, [user, authLoading, handleLoadFromFirestore]);
+
+  // ONE-TIME MIGRATION: Fix auto-accepted questions in Firestore
+  const hasMigratedRef = useRef(false);
+  useEffect(() => {
+    const runMigration = async () => {
+      // Check if migration has already run
+      const migrationKey = 'ue5_migration_auto_accept_fix';
+      if (localStorage.getItem(migrationKey) === 'completed') {
+        return;
+      }
+
+      if (user && !authLoading && !hasMigratedRef.current) {
+        hasMigratedRef.current = true;
+        
+        try {
+          console.log('🔄 Running one-time migration: fixing auto-accepted questions...');
+          const { migrateAutoAcceptedQuestions } = await import('./utils/migrateAutoAccepted.js');
+          const result = await migrateAutoAcceptedQuestions();
+          
+          if (result.success) {
+            console.log(`✅ Migration complete: Fixed ${result.fixed} of ${result.totalChecked} questions`);
+            if (result.fixed > 0) {
+              showMessage(`✅ Fixed ${result.fixed} auto-accepted questions - they are now pending review`, 5000);
+              // Reload database to reflect changes
+              setTimeout(() => handleLoadFromFirestore(), 1000);
+            }
+            // Mark migration as complete
+            localStorage.setItem(migrationKey, 'completed');
+          } else {
+            console.error('❌ Migration failed:', result.error);
+          }
+        } catch (error) {
+          console.error('❌ Migration error:', error);
+        }
+      }
+    };
+
+    runMigration();
+  }, [user, authLoading, showMessage, handleLoadFromFirestore]);
+

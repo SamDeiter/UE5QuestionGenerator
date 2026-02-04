@@ -3,7 +3,7 @@
 A powerful, AI-driven tool for generating, translating, and managing quiz questions for Unreal Engine 5 training. Built with React, Vite, Tailwind CSS, and Google Gemini AI.
 
 [![Deploy Status](https://img.shields.io/badge/deploy-GitHub%20Pages-blue)](https://samdeiter.github.io/UE5QuestionGenerator/)
-[![Tests](https://img.shields.io/badge/tests-354%20passing-brightgreen)](https://github.com/SamDeiter/UE5QuestionGenerator)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/SamDeiter/UE5QuestionGenerator)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Live Demo
@@ -143,8 +143,10 @@ firebase deploy --only functions
 │   │   └── firebaseSave.js
 │   └── utils/           # Helper functions, constants
 ├── functions/           # Firebase Cloud Functions
+├── scripts/             # Utility scripts (Python & JS)
 ├── config/              # Firebase rules and configuration
 ├── docs/                # Documentation
+├── tools/               # Development tools
 ├── MAINTENANCE.md       # Project maintenance guide
 └── public/              # Static assets
 ```

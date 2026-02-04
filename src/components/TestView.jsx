@@ -3,6 +3,7 @@ import { useState, useMemo } from "react";
 import Icon from "./Icon";
 import QuizPreview from "./QuizPreview";
 import ScormExportModal from "./ScormExportModal";
+import BatchScormExportModal from "./BatchScormExportModal";
 import { generateMockQuestions } from "../utils/mockQuestionGenerator";
 
 /**
@@ -35,6 +36,7 @@ const TestView = ({
   // UI state
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showBatchExport, setShowBatchExport] = useState(false);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState(new Set());
   const [mockQuestions, setMockQuestions] = useState([]);
   const [activeQuizQuestions, setActiveQuizQuestions] = useState([]); // Stabilized questions for preview
@@ -362,6 +364,15 @@ const TestView = ({
               <Icon name="download" size={18} />
               Export SCORM Package
             </button>
+
+            <button
+              onClick={() => setShowBatchExport(true)}
+              disabled={approvedQuestions.length === 0}
+              className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <Icon name="archive" size={18} />
+              Export All by Discipline
+            </button>
           </div>
         </div>
 
@@ -465,6 +476,14 @@ const TestView = ({
         <ScormExportModal
           questions={selectedQuestions}
           onClose={() => setShowExport(false)}
+        />
+      )}
+
+      {/* Batch SCORM Export Modal - exports all disciplines at once */}
+      {showBatchExport && (
+        <BatchScormExportModal
+          questions={approvedQuestions}
+          onClose={() => setShowBatchExport(false)}
         />
       )}
     </div>
