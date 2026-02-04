@@ -28,6 +28,11 @@ export function isEnglishText(text) {
  * @returns {Object} { filtered: Array, skipped: number }
  */
 export function filterEnglishQuestions(questions) {
+  // Handle null/undefined input gracefully
+  if (!questions || !Array.isArray(questions)) {
+    return { filtered: [], skipped: 0 };
+  }
+  
   const filtered = [];
   let skipped = 0;
   
@@ -221,8 +226,10 @@ export async function exportToScorm(questions, config = {}) {
     link.href = url;
 
     // Generate filename with version and timestamp (helps distinguish between exports)
-    const version = 'v2.4.19'; // SCORM export version
-    const timestamp = new Date().toISOString().split("T")[0];
+    const version = 'v2.4.20'; // SCORM export version
+    // Generate timestamp with time for unique exports (YYYY-MM-DD_HH-MM)
+    const now = new Date();
+    const timestamp = `${now.toISOString().split("T")[0]}_${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
     const sanitizedTitle = (config.title || "UE5_Quiz")
       .replace(/[^a-z0-9]/gi, "_")
       .toLowerCase();
@@ -368,8 +375,10 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
   }
 
   const results = [];
-  const version = 'v2.4.19'; // SCORM export version
-  const timestamp = new Date().toISOString().split("T")[0];
+  const version = 'v2.4.20'; // SCORM export version
+  // Generate timestamp with time for unique exports (YYYY-MM-DD_HH-MM)
+  const now = new Date();
+  const timestamp = `${now.toISOString().split("T")[0]}_${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
 
   try {
     if (downloadAsSingleZip) {

@@ -18,6 +18,8 @@ import {
   convertQuestionToScormFormat,
   validateQuestionsForExport,
   generateScormPackageFiles,
+  isEnglishText,
+  filterEnglishQuestions,
 } from "../scormExporter";
 
 describe("SCORM Exporter Service", () => {
@@ -479,6 +481,156 @@ describe("SCORM Exporter Service", () => {
       };
       // Should not throw
       expect(() => convertQuestionToScormFormat(nullQuestion)).not.toThrow();
+    });
+  });
+
+  // =====================================================
+  // ENGLISH LANGUAGE FILTERING - REGRESSION TESTS
+  // Critical: Prevents Korean/non-Latin questions from being exported
+  // =====================================================
+  describe("English Language Filtering (Regression Tests)", () => {
+    const koreanQuestion = {
+      ...firestoreQuestion,
+      question: "언리얼 엔진 5의 나나이트란 무엇인가요?",
+      choices: ["가상화된 지오메트리 시스템", "조명 시스템", "사운드 시스템", "물리 엔진"],
+      correctAnswer: "가상화된 지오메트리 시스템",
+      language: "Korean",
+    };
+
+    const japaneseQuestion = {
+      ...firestoreQuestion,
+      question: "Naniteとは何ですか?",
+      choices: ["ジオメトリシステム", "照明システム", "サウンドシステム", "物理エンジン"],
+      correctAnswer: "ジオメトリシステム",
+      language: "Japanese",
+    };
+
+    const chineseQuestion = {
+      ...firestoreQuestion,
+      question: "什么是虚幻引擎5的Nanite?",
+      choices: ["虚拟化几何系统", "照明系统", "声音系统", "物理引擎"],
+      correctAnswer: "虚拟化几何系统",
+      language: "Chinese",
+    };
+
+    const mixedQuestion = {
+      ...firestoreQuestion,
+      question: "What is Nanite? 나나이트란 무엇인가요?",
+      choices: ["Virtualized geometry system", "가상화된 지오메트리", "Sound", "Physics"],
+      correctAnswer: "Virtualized geometry system",
+      language: "English",
+    };
+
+    describe("isEnglishText", () => {
+      it("CRITICAL: should detect pure English text as valid", () => {
+        expect(isEnglishText("What is Nanite in Unreal Engine 5?")).toBe(true);
+        expect(isEnglishText("This is a test question!")).toBe(true);
+        expect(isEnglishText("UE5's Lumen system")).toBe(true);
+      });
+
+      it("CRITICAL: should reject Korean text", () => {
+        expect(isEnglishText("언리얼 엔진 5의 나나이트란 무엇인가요?")).toBe(false);
+        expect(isEnglishText("가상화된 지오메트리 시스템")).toBe(false);
+      });
+
+      it("CRITICAL: should reject Japanese text", () => {
+        expect(isEnglishText("Naniteとは何ですか?")).toBe(false);
+        expect(isEnglishText("ジオメトリシステム")).toBe(false);
+      });
+
+      it("CRITICAL: should reject Chinese text", () => {
+        expect(isEnglishText("什么是虚幻引擎5的Nanite?")).toBe(false);
+        expect(isEnglishText("虚拟化几何系统")).toBe(false);
+      });
+
+      it("CRITICAL: should reject mixed English/Korean text", () => {
+        expect(isEnglishText("What is 나나이트?")).toBe(false);
+        expect(isEnglishText("UE5 가상화")).toBe(false);
+      });
+
+      it("should allow numbers and common punctuation", () => {
+        expect(isEnglishText("What is the value of 3.14159?")).toBe(true);
+        expect(isEnglishText("Cost: $100, discount: 20%")).toBe(true);
+        expect(isEnglishText("Question #1: True or False?")).toBe(true);
+      });
+
+      it("should allow special characters in technical content", () => {
+        expect(isEnglishText("Use &amp; entity")).toBe(true);
+        expect(isEnglishText("C++ and C# programming")).toBe(true);
+        expect(isEnglishText("path/to/file.txt")).toBe(true);
+      });
+
+      it("should handle empty strings", () => {
+        expect(isEnglishText("")).toBe(true); // Empty is valid
+        expect(isEnglishText("   ")).toBe(true); // Whitespace only is valid
+      });
+    });
+
+    describe("filterEnglishQuestions", () => {
+      it("CRITICAL: should filter out Korean questions", () => {
+        const questions = [firestoreQuestion, koreanQuestion];
+        const result = filterEnglishQuestions(questions);
+        expect(result.filtered).toHaveLength(1);
+        expect(result.filtered[0].question).toBe("What is Nanite in Unreal Engine 5?");
+        expect(result.skipped).toBe(1);
+      });
+
+      it("CRITICAL: should filter out Japanese questions", () => {
+        const questions = [firestoreQuestion, japaneseQuestion];
+        const result = filterEnglishQuestions(questions);
+        expect(result.filtered).toHaveLength(1);
+        expect(result.skipped).toBe(1);
+      });
+
+      it("CRITICAL: should filter out Chinese questions", () => {
+        const questions = [firestoreQuestion, chineseQuestion];
+        const result = filterEnglishQuestions(questions);
+        expect(result.filtered).toHaveLength(1);
+        expect(result.skipped).toBe(1);
+      });
+
+      it("CRITICAL: should filter questions with non-Latin choices", () => {
+        const questionWithKoreanChoices = {
+          ...firestoreQuestion,
+          choices: ["Virtualized geometry", "가상화된 지오메트리", "Sound", "Physics"],
+          correctAnswer: "Virtualized geometry",
+        };
+        const questions = [firestoreQuestion, questionWithKoreanChoices];
+        const result = filterEnglishQuestions(questions);
+        expect(result.filtered).toHaveLength(1);
+        expect(result.skipped).toBe(1);
+      });
+
+      it("CRITICAL: should filter mixed language content", () => {
+        const questions = [firestoreQuestion, mixedQuestion];
+        const result = filterEnglishQuestions(questions);
+        expect(result.filtered).toHaveLength(1);
+        expect(result.skipped).toBe(1);
+      });
+
+      it("should return all questions when all are English", () => {
+        const englishQuestions = [
+          firestoreQuestion,
+          firestoreTrueFalseQuestion,
+          legacyQuestion,
+        ];
+        const result = filterEnglishQuestions(englishQuestions);
+        expect(result.filtered).toHaveLength(3);
+        expect(result.skipped).toBe(0);
+      });
+
+      it("should return empty array when all questions are non-English", () => {
+        const questions = [koreanQuestion, japaneseQuestion, chineseQuestion];
+        const result = filterEnglishQuestions(questions);
+        expect(result.filtered).toHaveLength(0);
+        expect(result.skipped).toBe(3);
+      });
+
+      it("should handle empty input", () => {
+        expect(filterEnglishQuestions([]).filtered).toHaveLength(0);
+        expect(filterEnglishQuestions(null).filtered).toHaveLength(0);
+        expect(filterEnglishQuestions(undefined).filtered).toHaveLength(0);
+      });
     });
   });
 });

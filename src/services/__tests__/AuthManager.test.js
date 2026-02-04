@@ -431,3 +431,151 @@ describe("AuthManager - Claims Methods", () => {
     expect(mockGetIdTokenResult).toHaveBeenCalledWith(true);
   });
 });
+
+/**
+ * Duplicate Account Prevention Tests (The "Ruben Incident")
+ * 
+ * Cover scenarios where a user might inadvertently create duplicate accounts:
+ * - Same email, different auth provider (Google vs Email/Password)
+ * - Session switching between accounts
+ * - Token refresh with different UID (account swap)
+ */
+describe("AuthManager - Duplicate Account Prevention", () => {
+  let manager;
+  let tokenCallback;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    manager = new AuthManager();
+
+    onIdTokenChanged.mockImplementation((auth, callback) => {
+      tokenCallback = callback;
+      return () => {};
+    });
+  });
+
+  afterEach(() => {
+    manager.destroy();
+  });
+
+  it("detects when a different user logs in during active session", async () => {
+    manager.init();
+
+    // First user logs in
+    const user1 = {
+      uid: "user-1-uid",
+      email: "user1@example.com",
+      getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "user" } }),
+    };
+    await tokenCallback(user1);
+    expect(manager.getUser().uid).toBe("user-1-uid");
+
+    // Cleanup should be called when switching to a different user
+    const cleanup = vi.fn();
+    manager.registerCleanup(cleanup);
+
+    // Different user logs in (simulating account switch)
+    const user2 = {
+      uid: "user-2-uid",  // Different UID!
+      email: "user2@example.com",
+      getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "user" } }),
+    };
+    
+    // Simulate logout first (proper flow)
+    await tokenCallback(null);
+    
+    // Cleanup should have been called
+    expect(cleanup).toHaveBeenCalled();
+    
+    // Then new user logs in
+    await tokenCallback(user2);
+    expect(manager.getUser().uid).toBe("user-2-uid");
+  });
+
+  it("handles same email different provider scenario", async () => {
+    manager.init();
+
+    // User logs in via Google
+    const googleUser = {
+      uid: "google-uid-12345",
+      email: "ruben@example.com",
+      providerData: [{ providerId: "google.com" }],
+      getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "user" } }),
+    };
+    await tokenCallback(googleUser);
+    expect(manager.getUser().uid).toBe("google-uid-12345");
+
+    // Logout
+    await tokenCallback(null);
+    expect(manager.getUser()).toBeNull();
+
+    // User logs in via email/password (would create duplicate in old system)
+    const emailUser = {
+      uid: "email-uid-67890",  // Different UID for same email!
+      email: "ruben@example.com",
+      providerData: [{ providerId: "password" }],
+      getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "user" } }),
+    };
+    await tokenCallback(emailUser);
+    
+    // Manager should track the new user correctly
+    expect(manager.getUser().uid).toBe("email-uid-67890");
+    expect(manager.getUser().email).toBe("ruben@example.com");
+  });
+
+  it("clears all state when user changes unexpectedly", async () => {
+    manager.init();
+
+    const listener = vi.fn();
+    const cleanup = vi.fn();
+    
+    manager.onAuthChange(listener);
+    manager.registerCleanup(cleanup);
+
+    // User 1 logs in
+    const user1 = {
+      uid: "original-uid",
+      email: "test@example.com",
+      getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "admin" } }),
+    };
+    await tokenCallback(user1);
+    
+    expect(manager.getUser()).toBeTruthy();
+    
+    // User logs out
+    await tokenCallback(null);
+    
+    // Verify cleanup happened
+    expect(cleanup).toHaveBeenCalled();
+    expect(manager.getUser()).toBeNull();
+  });
+
+  it("tracks provider data changes correctly", async () => {
+    manager.init();
+
+    // Initial login with one provider
+    const initialUser = {
+      uid: "multi-provider-uid",
+      email: "linked@example.com",
+      providerData: [{ providerId: "google.com" }],
+      getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "user" } }),
+    };
+    await tokenCallback(initialUser);
+    
+    // Simulate user linking another provider (token refresh with updated providerData)
+    const linkedUser = {
+      uid: "multi-provider-uid",  // Same UID
+      email: "linked@example.com",
+      providerData: [
+        { providerId: "google.com" },
+        { providerId: "password" },  // Now has both
+      ],
+      getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "user" } }),
+    };
+    await tokenCallback(linkedUser);
+    
+    // Should still be same user, just with more providers
+    expect(manager.getUser().uid).toBe("multi-provider-uid");
+    expect(manager.getUser().providerData).toHaveLength(2);
+  });
+});

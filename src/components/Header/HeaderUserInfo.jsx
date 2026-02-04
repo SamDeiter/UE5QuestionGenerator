@@ -13,7 +13,7 @@ const HeaderUserInfo = ({
   formattedCost = null,
   compact = false,
   onMenuClose = null,
-  showMessage = null,
+  _showMessage = null,
 }) => {
   if (!creatorName) return null;
 

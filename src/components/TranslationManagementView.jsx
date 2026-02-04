@@ -8,7 +8,7 @@ import { useBulkTranslation } from "../hooks/useBulkTranslation";
 const TranslationManagementView = ({
   questions,
   allQuestionsMap,
-  translationMap,
+  _translationMap,
   onTranslateSingle,
   onSwitchLanguage,
   onUpdateStatus,

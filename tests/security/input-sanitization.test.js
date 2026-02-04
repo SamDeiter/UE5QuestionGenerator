@@ -6,7 +6,8 @@ import { describe, it, expect } from "vitest";
 
 // Import the sanitization functions
 // Note: These are Cloud Function utilities, so we test them via unit tests
-const functions = await import("firebase-functions");
+/* eslint-disable sonarjs/code-eval, sonarjs/slow-regex */
+// The patterns below are INTENTIONALLY testing dangerous inputs, not executing them
 
 describe("Security: Input Sanitization", () => {
   describe("sanitizeInput function", () => {

@@ -29,7 +29,7 @@ const TOOLBAR_BY_MODE = {
   playground: PlaygroundModeToolbar,
 };
 
-const KNOWN_MODES = Object.keys(TOOLBAR_BY_MODE);
+const _KNOWN_MODES = Object.keys(TOOLBAR_BY_MODE);
 
 /**
  * Main ContextToolbar component

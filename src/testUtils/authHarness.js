@@ -186,7 +186,7 @@ export class AuthTestHarness {
           email: "test@example.com",
         },
       ],
-      getIdToken: async (forceRefresh = false) => "mock-id-token",
+      getIdToken: async (_forceRefresh = false) => "mock-id-token",
       getIdTokenResult: async () => ({
         token: "mock-id-token",
         claims: {

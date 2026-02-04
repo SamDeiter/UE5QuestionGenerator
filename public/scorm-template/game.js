@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     totalQuestions: 0,
     questionsPerAttempt: null, // If set, randomly select this many questions per attempt
     shuffleQuestions: true,
+    shuffleChoices: true, // Randomize answer order per question (labels stay A/B/C/D)
     adaptiveDifficulty: true,
   };
 
@@ -298,6 +299,19 @@ document.addEventListener("DOMContentLoaded", () => {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+  }
+
+  /**
+   * Shuffle answer choices for a question
+   * Labels (A/B/C/D) stay fixed, content is randomized
+   * @param {Array} choices - Array of choice objects with text and correct properties
+   * @returns {Array} Shuffled choices array
+   */
+  function shuffleChoices(choices) {
+    if (!config.shuffleChoices || !choices || choices.length <= 1) {
+      return choices;
+    }
+    return shuffleArray(choices);
   }
 
   /**
@@ -593,11 +607,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateProgress();
 
+    // Shuffle choices for this question (labels A/B/C/D stay fixed, content shuffles)
+    const shuffledChoices = shuffleChoices(question.choices);
+    // Store shuffled choices on the question for handleAnswer to access
+    question._shuffledChoices = shuffledChoices;
+    
+    const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']; // Support up to 8 choices
+
     const html = `
       <div class="bg-slate-800 rounded-lg p-6 shadow-xl">
         <h2 class="text-2xl font-bold text-blue-300 mb-4">${question.text}</h2>
         <div class="space-y-3">
-          ${question.choices
+          ${shuffledChoices
             .map(
               (choice, index) => `
             <button 
@@ -605,6 +626,7 @@ document.addEventListener("DOMContentLoaded", () => {
               data-index="${index}"
               data-correct="${choice.correct}"
             >
+              <span class="inline-block w-8 h-8 mr-3 bg-slate-600 rounded text-center leading-8 font-bold text-blue-300">${labels[index] || index + 1}</span>
               <span class="font-semibold">${choice.text}</span>
             </button>
           `
@@ -628,11 +650,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const isCorrect = button.dataset.correct === "true";
     const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
 
+    // Use shuffled choices if available (for recording the correct text)
+    const choices = question._shuffledChoices || question.choices;
+
     // Record answer
     answers.push({
       questionId: question.id,
       questionText: question.text,
-      selectedChoice: question.choices[choiceIndex].text,
+      selectedChoice: choices[choiceIndex].text,
       correct: isCorrect,
       timeSpent: timeSpent,
     });

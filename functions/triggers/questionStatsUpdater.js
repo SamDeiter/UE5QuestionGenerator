@@ -62,7 +62,7 @@ exports.updateQuestionStats = functions.firestore
     const before = change.before.exists ? change.before.data() : null;
     const after = change.after.exists ? change.after.data() : null;
 
-    let updates = {};
+    const updates = {};
 
     // Handle status changes
     Object.assign(
