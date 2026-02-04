@@ -703,15 +703,15 @@ document.addEventListener("DOMContentLoaded", () => {
       wrongStreak++;
     }
 
-    // Visual feedback
+    // Visual feedback using inline styles (always override CSS classes)
     if (isCorrect) {
-      button.classList.add("bg-green-600", "border-green-500");
+      button.style.cssText = "background: #16a34a !important; border-color: #22c55e !important;";
     } else {
-      button.classList.add("bg-red-600", "border-red-500");
+      button.style.cssText = "background: #dc2626 !important; border-color: #ef4444 !important;";
       // Highlight correct answer
       document.querySelectorAll(".choice-btn").forEach((btn) => {
         if (btn.dataset.correct === "true") {
-          btn.classList.add("bg-green-600", "border-green-500");
+          btn.style.cssText = "background: #16a34a !important; border-color: #22c55e !important;";
         }
       });
     }
