@@ -91,16 +91,20 @@ export async function generateScormPackageFiles(questions, config = {}) {
     fetch(`${templatePath}imsmanifest.xml`).then((r) => r.text()),
   ]);
 
-  // Replace template variables in manifest
-  const processedManifest = manifest
-    .replace(/UE5 Scenario Tracker/g, title)
-    .replace(
-      /com\.example\.ue5scenario\.scorm12/g,
-      `com.ue5questiongen.${Date.now()}`
-    );
+  // Generate unique ID for the SCORM package
+  const packageId = `com.ue5questiongen.${Date.now()}`;
 
-  // Replace template variables in index.html
-  const processedIndexHtml = indexHtml.replace(/UE5 Scenario Tracker/g, title);
+  // Replace template variables in manifest (both {{TITLE}}/{{ID}} placeholders and legacy strings)
+  const processedManifest = manifest
+    .replace(/\{\{TITLE\}\}/g, title)
+    .replace(/\{\{ID\}\}/g, packageId)
+    .replace(/UE5 Scenario Tracker/g, title)
+    .replace(/com\.example\.ue5scenario\.scorm12/g, packageId);
+
+  // Replace template variables in index.html (both {{TITLE}} placeholders and legacy strings)
+  const processedIndexHtml = indexHtml
+    .replace(/\{\{TITLE\}\}/g, title)
+    .replace(/UE5 Scenario Tracker/g, title);
 
   // Create questions.js file with our questions
   const questionsJs = `// Generated questions for SCORM package
@@ -160,12 +164,13 @@ export async function exportToScorm(questions, config = {}) {
     const link = document.createElement("a");
     link.href = url;
 
-    // Generate filename with timestamp
+    // Generate filename with version and timestamp (helps distinguish between exports)
+    const version = 'v2.4.19'; // SCORM export version
     const timestamp = new Date().toISOString().split("T")[0];
     const sanitizedTitle = (config.title || "UE5_Quiz")
       .replace(/[^a-z0-9]/gi, "_")
       .toLowerCase();
-    link.download = `${sanitizedTitle}_${timestamp}_scorm12.zip`;
+    link.download = `${sanitizedTitle}_${version}_${timestamp}_scorm12.zip`;
 
     // Trigger download
     document.body.appendChild(link);
@@ -307,6 +312,7 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
   }
 
   const results = [];
+  const version = 'v2.4.19'; // SCORM export version
   const timestamp = new Date().toISOString().split("T")[0];
 
   try {
@@ -370,7 +376,7 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
         
         const disciplineBlob = await disciplineZip.generateAsync({ type: "blob" });
         const sanitizedDiscipline = discipline.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-        const filename = `${sanitizedDiscipline}_${timestamp}_scorm12.zip`;
+        const filename = `${sanitizedDiscipline}_${version}_${timestamp}_scorm12.zip`;
         
         // Add to master zip
         masterZip.file(filename, disciplineBlob);
@@ -388,7 +394,7 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
       const url = URL.createObjectURL(masterBlob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `all_disciplines_${timestamp}_scorm_packages.zip`;
+      link.download = `all_disciplines_${version}_${timestamp}_scorm_packages.zip`;
       
       document.body.appendChild(link);
       link.click();

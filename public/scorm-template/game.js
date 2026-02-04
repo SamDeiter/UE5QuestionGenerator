@@ -681,15 +681,37 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         <button 
-          onclick="window.close()" 
+          id="close-assessment-btn"
           class="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
         >
           Close Assessment
         </button>
+        <p id="close-message" class="mt-2 text-sm text-slate-400 hidden">
+          Assessment complete. You may now close this window or navigate away.
+        </p>
       </div>
     `;
 
     resultsContainer.innerHTML = resultHtml;
+
+    // Attach close button handler (window.close() may fail in LMS iframe context)
+    const closeBtn = document.getElementById('close-assessment-btn');
+    const closeMsg = document.getElementById('close-message');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        // Try to close the window
+        window.close();
+        
+        // If we're still here, window.close() failed (common in LMS iframes)
+        // Show a message to the user
+        if (closeMsg) {
+          closeMsg.classList.remove('hidden');
+        }
+        closeBtn.textContent = 'Window Close Unavailable';
+        closeBtn.disabled = true;
+        closeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      });
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════
