@@ -1,10 +1,11 @@
 const functions = require("firebase-functions");
+const { checkRateLimit } = require("../middleware/rateLimiter");
 const admin = require("firebase-admin");
 
 // Import utility functions
-const { checkRateLimit } = require("../utils/rateLimit");
 const { logApiUsage } = require("../utils/apiUsage");
 const { extractGroundingSources } = require("../utils/grounding");
+const { sanitizeInput } = require("../utils/inputSanitizer");
 
 /**
  * Cloud Function: generateQuestions
@@ -190,12 +191,31 @@ exports.generateCritique = functions
       );
     }
 
-    // Rate limiting
-    const rateLimitCheck = await checkRateLimit(userId, "critique");
-    if (!rateLimitCheck.allowed) {
+    // SECURITY: Sanitize inputs to prevent XSS
+    const sanitizedQuestion = sanitizeInput(question);
+    const sanitizedOptions = options.map((opt) => sanitizeInput(opt));
+    const sanitizedCorrect = sanitizeInput(correct);
+
+    // Rate limiting (SECURITY: Prevents AI cost abuse)
+    const hourlyLimit = await checkRateLimit(userId, "AI_HOURLY");
+    if (!hourlyLimit.allowed) {
       throw new functions.https.HttpsError(
         "resource-exhausted",
-        `Rate limit exceeded. ${rateLimitCheck.message}`
+        hourlyLimit.reason || "Rate limit exceeded",
+        {
+          resetAt: hourlyLimit.resetAt?.toISOString(),
+        }
+      );
+    }
+
+    const dailyLimit = await checkRateLimit(userId, "AI_DAILY");
+    if (!dailyLimit.allowed) {
+      throw new functions.https.HttpsError(
+        "resource-exhausted",
+        dailyLimit.reason || "Daily rate limit exceeded",
+        {
+          resetAt: dailyLimit.resetAt?.toISOString(),
+        }
       );
     }
 
@@ -273,9 +293,9 @@ exports.generateCritique = functions
         IMPORTANT: Both "score" AND "improvedScore" are REQUIRED. The improvedScore should reflect the quality of your rewritten version.
 
         Question Type: ${type}
-        Question: ${question}
-        Options: ${JSON.stringify(options)}
-        Correct: ${correct}`;
+        Question: ${sanitizedQuestion}
+        Options: ${JSON.stringify(sanitizedOptions)}
+        Correct: ${sanitizedCorrect}`;
 
       // Model fallback list: ALL available text-out models prioritized by quota
       const modelFallbacks = [

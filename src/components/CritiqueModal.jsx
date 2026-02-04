@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { sanitizeText } from "../utils/sanitize";
 import Icon from "./Icon";
 import { renderMarkdown } from "../utils/stringHelpers";
 import DiffText from "./DiffText";
 import { QUALITY_THRESHOLDS } from "../utils/constants";
 import { useThemeColors } from "../hooks/useThemeColors";
+import ReviewStateSelector from "./QuestionItem/ReviewStateSelector";
 
 // DiffText imported from shared component
 
@@ -24,11 +26,19 @@ const CritiqueModal = ({
   // Get centralized theme colors with colorblind support (must be before any returns)
   const { severityStyles } = useThemeColors();
 
+  // Assessment state for review
+  const [answerState, setAnswerState] = useState(null);
+  const [docLinkState, setDocLinkState] = useState(null);
+
   if (!isOpen || !q) return null;
 
   // Use centralized severity styles
   const styles = severityStyles(score);
   const isFailing = score !== null && score < QUALITY_THRESHOLDS.MEDIOCRE;
+
+  // Check if assessment is complete (required for Accept)
+  const isAssessmentComplete = answerState !== null && docLinkState !== null;
+  const canAccept = !isFailing && !loading && isAssessmentComplete;
 
   // Check if question was changed
   const questionChanged = rewrite?.question && rewrite.question !== q.question;
@@ -195,6 +205,24 @@ const CritiqueModal = ({
           )}
         </div>
 
+        {/* Reviewer Assessment Section - NEW */}
+        <div className="px-6 py-4 border-t border-slate-700/50 bg-slate-950/30">
+          <ReviewStateSelector
+            answerState={answerState}
+            docLinkState={docLinkState}
+            onAnswerStateChange={setAnswerState}
+            onDocLinkStateChange={setDocLinkState}
+            disabled={loading}
+            showGuidance={true}
+          />
+          {!isAssessmentComplete && (
+            <div className="mt-2 text-xs text-amber-400 flex items-center gap-1.5">
+              <Icon name="alert-circle" size={12} />
+              <span>Complete assessment above to enable Accept</span>
+            </div>
+          )}
+        </div>
+
         <div className="p-4 border-t border-slate-800 bg-slate-950/50 rounded-b-xl flex justify-center gap-3 flex-wrap">
           <button
             onClick={onClose}
@@ -228,16 +256,30 @@ const CritiqueModal = ({
           </button>
 
           <button
-            onClick={onAccept}
-            disabled={isFailing || loading}
-            title={isFailing ? "Score too low to accept" : "Accept Question"}
+            onClick={() => {
+              // Pass assessment state with acceptance
+              if (onAccept) {
+                onAccept({ answerState, docLinkState });
+              }
+            }}
+            disabled={!canAccept}
+            title={
+              // Determine tooltip based on current state
+              (() => {
+                if (!isAssessmentComplete)
+                  return "Complete assessment above first";
+                if (isFailing) return "Score too low to accept";
+                return "Accept Question";
+              })()
+            }
             className={`px-4 py-2 font-bold rounded flex items-center gap-2 text-xs uppercase transition-all shadow-lg ${
-              isFailing || loading
+              !canAccept
                 ? "bg-slate-800 text-slate-500 cursor-not-allowed opacity-50"
                 : "bg-green-600 hover:bg-green-500 text-white hover:shadow-green-900/20"
             }`}
           >
-            <Icon name="check" size={14} /> Accept
+            <Icon name="check" size={14} />
+            Accept
           </button>
         </div>
       </div>

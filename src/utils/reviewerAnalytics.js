@@ -8,6 +8,37 @@
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { getDb } from "../services/firebase";
 import { logger } from "../utils/logger";
+import { logError } from "../utils/AppError";
+import { normalizeReviewerName } from "./normalizeReviewerName";
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Duration threshold in seconds - values above this are likely stored in milliseconds */
+const LIKELY_MILLISECONDS_THRESHOLD = 100000;
+
+/** Milliseconds to seconds conversion factor */
+const MS_TO_SECONDS = 1000;
+
+/** Maximum reasonable review duration (1 hour) - longer durations are capped */
+const MAX_REVIEW_SECONDS = 3600;
+
+/** Seconds per minute */
+const SECONDS_PER_MINUTE = 60;
+
+/** Seconds per hour */
+const SECONDS_PER_HOUR = 3600;
+
+/** Hours per day */
+const HOURS_PER_DAY = 24;
+
+/** Milliseconds per day (used for velocity calculation) */
+const MS_PER_DAY =
+  MS_TO_SECONDS * SECONDS_PER_MINUTE * SECONDS_PER_MINUTE * HOURS_PER_DAY;
+
+/** Number of decimal places for velocity calculation */
+const VELOCITY_DECIMAL_PLACES = 2;
 
 /**
  * Fetches all questions that have been reviewed (have reviewCompletedAt timestamp)
@@ -73,12 +104,14 @@ export const fetchReviewedQuestions = async () => {
         );
         return fallbackQuestions;
       } catch (fallbackError) {
-        logger.error("Fallback query also failed:", fallbackError);
+        logError(fallbackError, {
+          operation: "fetchReviewedQuestionsFallback",
+        });
         return [];
       }
     }
 
-    logger.error("Error fetching reviewed questions:", error);
+    logError(error, { operation: "fetchReviewedQuestions" });
     throw error;
   }
 };
@@ -92,35 +125,57 @@ export const aggregateReviewerStats = (questions) => {
   const reviewerMap = new Map();
 
   /**
-   * Normalize reviewer name - fix duplicated names like "Sam DeiterSam Deiter"
+   * Process and validate review duration, handling unit conversion and capping
+   * @param {Object} q - Question object
+   * @param {string} reviewerName - Normalized reviewer name
+   * @returns {number|null} Valid duration in seconds, or null if invalid
    */
-  const normalizeReviewerName = (name) => {
-    if (!name || typeof name !== "string") return "Unknown";
-    const trimmed = name.trim();
+  const processReviewDuration = (q, reviewerName) => {
+    if (!q.reviewDuration || q.reviewDuration <= 0) return null;
 
-    // Detect and fix duplicated names: "NameName" or "Name Name" (exact duplicate)
-    const halfLen = Math.floor(trimmed.length / 2);
-    const firstHalf = trimmed.substring(0, halfLen);
-    const secondHalf = trimmed.substring(halfLen);
+    let durationSeconds = q.reviewDuration;
 
-    if (firstHalf === secondHalf && firstHalf.length > 0) {
-      logger.log(`🔧 Fixed duplicated name: "${trimmed}" -> "${firstHalf}"`);
-      return firstHalf;
+    // HARDENING: Detect if value is likely in milliseconds instead of seconds
+    if (durationSeconds > LIKELY_MILLISECONDS_THRESHOLD) {
+      durationSeconds = Math.round(durationSeconds / MS_TO_SECONDS);
+      logger.log(
+        `⚠️ Converted likely millisecond duration for ${reviewerName}: ${q.reviewDuration} -> ${durationSeconds}s`
+      );
     }
 
-    return trimmed;
+    // HARDENING: Cap at reasonable maximum (1 hour per question)
+    if (durationSeconds > MAX_REVIEW_SECONDS) {
+      logger.log(
+        `⚠️ Capping excessive duration for ${reviewerName}: ${durationSeconds}s -> ${MAX_REVIEW_SECONDS}s`
+      );
+      durationSeconds = MAX_REVIEW_SECONDS;
+    }
+
+    // Skip durations less than 1 second (likely bogus data)
+    return durationSeconds >= 1 ? durationSeconds : null;
   };
 
+  /** Update date range tracking for a reviewer */
+  const updateDateRange = (stats, q) => {
+    const reviewDate = q.reviewCompletedAt || q.acceptedAt;
+    if (!reviewDate) return;
+    const date = new Date(reviewDate);
+    if (!stats.firstReviewDate || date < stats.firstReviewDate)
+      stats.firstReviewDate = date;
+    if (!stats.lastReviewDate || date > stats.lastReviewDate)
+      stats.lastReviewDate = date;
+  };
   questions.forEach((q) => {
-    // Use reviewerName, acceptedBy name, or email as fallback for reviewer identification
-    const rawName =
-      q.reviewerName ||
-      q.acceptedBy ||
-      q.creatorEmail ||
-      q.creatorName ||
-      "Unknown";
+    // Use shared normalizer that maps emails to display names
+    // NOTE: Deliberately NOT using creatorEmail/creatorName - we only want to count
+    // actual review actions, not question creation (fixes analytics discrepancy)
+    const rawName = q.reviewerName || q.acceptedBy;
 
-    const reviewerName = normalizeReviewerName(rawName);
+    // Skip questions that don't have a reviewer assigned
+    if (!rawName) return;
+
+    // Use imported normalizer (handles email->name mapping and duplicate name fixing)
+    const reviewerName = normalizeReviewerName(rawName) || "Unknown";
 
     if (!reviewerMap.has(reviewerName)) {
       reviewerMap.set(reviewerName, {
@@ -152,48 +207,15 @@ export const aggregateReviewerStats = (questions) => {
         (stats.rejectionReasons[reason] || 0) + 1;
     }
 
-    // Add review duration if available (with HARDENED validation)
-    if (q.reviewDuration && q.reviewDuration > 0) {
-      let durationSeconds = q.reviewDuration;
-
-      // HARDENING: Detect if value is likely in milliseconds instead of seconds
-      // A review taking > 1 hour (3600s) is suspicious; if > 100000 it's likely ms
-      if (durationSeconds > 100000) {
-        // Likely stored in milliseconds - convert to seconds
-        durationSeconds = Math.round(durationSeconds / 1000);
-        logger.log(
-          `⚠️ Converted likely millisecond duration for ${reviewerName}: ${q.reviewDuration} -> ${durationSeconds}s`
-        );
-      }
-
-      // HARDENING: Cap at reasonable maximum (1 hour = 3600 seconds per question)
-      // Reviews taking longer than 1 hour are likely stale/abandoned sessions
-      const MAX_REVIEW_SECONDS = 3600; // 1 hour
-      if (durationSeconds > MAX_REVIEW_SECONDS) {
-        logger.log(
-          `⚠️ Capping excessive duration for ${reviewerName}: ${durationSeconds}s -> ${MAX_REVIEW_SECONDS}s`
-        );
-        durationSeconds = MAX_REVIEW_SECONDS;
-      }
-
-      // HARDENING: Skip durations less than 1 second (likely bogus data)
-      if (durationSeconds >= 1) {
-        stats.totalReviewTimeSeconds += durationSeconds;
-        stats.reviewDurations.push(durationSeconds);
-      }
+    // Add review duration if available (using extracted helper for validation)
+    const validDuration = processReviewDuration(q, reviewerName);
+    if (validDuration !== null) {
+      stats.totalReviewTimeSeconds += validDuration;
+      stats.reviewDurations.push(validDuration);
     }
 
-    // Track date range
-    const reviewDate = q.reviewCompletedAt || q.acceptedAt;
-    if (reviewDate) {
-      const date = new Date(reviewDate);
-      if (!stats.firstReviewDate || date < stats.firstReviewDate) {
-        stats.firstReviewDate = date;
-      }
-      if (!stats.lastReviewDate || date > stats.lastReviewDate) {
-        stats.lastReviewDate = date;
-      }
-    }
+    // Track date range using extracted helper
+    updateDateRange(stats, q);
   });
 
   // Convert Map to array and calculate averages
@@ -272,11 +294,8 @@ export const calculateReviewerAverageScore = (reviewerName, questions) => {
  * @returns {number} Questions per day
  */
 const calculateVelocity = (totalQuestions, startDate, endDate) => {
-  const daysDiff = Math.max(
-    1,
-    Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
-  );
-  return (totalQuestions / daysDiff).toFixed(2);
+  const daysDiff = Math.max(1, Math.ceil((endDate - startDate) / MS_PER_DAY));
+  return (totalQuestions / daysDiff).toFixed(VELOCITY_DECIMAL_PLACES);
 };
 
 /**
@@ -287,15 +306,15 @@ const calculateVelocity = (totalQuestions, startDate, endDate) => {
 export const formatDuration = (seconds) => {
   if (!seconds || seconds < 0) return "--";
 
-  if (seconds < 60) {
+  if (seconds < SECONDS_PER_MINUTE) {
     return `${seconds}s`;
-  } else if (seconds < 3600) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+  } else if (seconds < SECONDS_PER_HOUR) {
+    const mins = Math.floor(seconds / SECONDS_PER_MINUTE);
+    const secs = seconds % SECONDS_PER_MINUTE;
     return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
   } else {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
+    const hours = Math.floor(seconds / SECONDS_PER_HOUR);
+    const mins = Math.floor((seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
     return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   }
 };
@@ -311,7 +330,7 @@ export const formatDate = (dateVal) => {
     const date = dateVal instanceof Date ? dateVal : new Date(dateVal);
     return isNaN(date.getTime()) ? "Invalid Date" : date.toLocaleDateString();
   } catch (e) {
-    logger.error("Date formatting error:", e);
+    logError(e, { operation: "formatDate", dateVal: String(dateVal) });
     return "Invalid Date";
   }
 };
@@ -364,7 +383,7 @@ export const getReviewerAnalytics = async () => {
         },
       };
     }
-    logger.error("Error getting reviewer analytics:", error);
+    logError(error, { operation: "getReviewerAnalytics" });
     throw error;
   }
 };

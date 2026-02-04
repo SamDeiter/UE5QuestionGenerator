@@ -5,7 +5,7 @@ import { logger } from "../utils/logger";
  * NOTE: Regex patterns are for validating uploaded CSV files.
  * Input is file content - controlled environment, no DoS risk.
  */
- 
+
 // Maximum file size in bytes (5MB)
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 

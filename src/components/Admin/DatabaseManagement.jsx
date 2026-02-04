@@ -36,9 +36,8 @@ const DatabaseManagement = ({ showMessage, isCollapsed, onToggle }) => {
               showMessage("🔄 Starting translation migration...", 10000);
 
               // Call the Cloud Function
-              const { migrateTranslationsViaCloudFunction } = await import(
-                "../../services/cloudFunctions.js"
-              );
+              const { migrateTranslationsViaCloudFunction } =
+                await import("../../services/cloudFunctions.js");
 
               const result = await migrateTranslationsViaCloudFunction();
 

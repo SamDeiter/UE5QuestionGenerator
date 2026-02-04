@@ -20,7 +20,6 @@ const generateUUID = () => {
   }
   // Fallback UUID v4 implementation
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-     
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
@@ -87,6 +86,39 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
     return null;
   }
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // FORMAT CONVERSION: Handle both Firestore formats
+  // - Old format: options {A,B,C,D}, correct (letter)
+  // - New format: choices (array), correctAnswer (text)
+  // Convert NEW format to OLD format for internal consistency
+  // ═══════════════════════════════════════════════════════════════════════
+  const normalizedInput = { ...q };
+
+  if (q.choices && Array.isArray(q.choices) && !q.options) {
+    // Convert choices array to options object
+    const optionKeys = ["A", "B", "C", "D"];
+    const optionsObj = {};
+    q.choices.forEach((choice, index) => {
+      if (optionKeys[index]) {
+        optionsObj[optionKeys[index]] = choice || "";
+      }
+    });
+    normalizedInput.options = optionsObj;
+
+    // Convert correctAnswer text to correct letter
+    if (q.correctAnswer) {
+      const correctIndex = q.choices.findIndex((c) => c === q.correctAnswer);
+      if (correctIndex >= 0 && optionKeys[correctIndex]) {
+        normalizedInput.correct = optionKeys[correctIndex];
+      }
+    }
+  }
+
+  // Also handle questionText -> question field name
+  if (q.questionText && !q.question) {
+    normalizedInput.question = q.questionText;
+  }
+
   const mergedDefaults = { ...QUESTION_DEFAULTS, ...contextDefaults };
 
   const getValue = (key, existingValue) => {
@@ -110,16 +142,21 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
     return defaultValue;
   };
 
+  // Use normalizedInput for all field access below
+  const input = normalizedInput;
+
   // Handle timestamp/dateAdded normalization
-  const timestamp = q.timestamp || q.dateAdded || getValue("timestamp");
+  const timestamp = input.timestamp || input.dateAdded || getValue("timestamp");
 
   // CRITICAL: id and uniqueId MUST be the same value
   // - When loaded from Firestore: id = docSnapshot.id = uniqueId
   // - When created locally: both should use the same generated UUID
   // - If question has uniqueId but no id (or vice versa), unify them
   const existingUniqueId =
-    q.uniqueId && typeof q.uniqueId === "string" ? q.uniqueId : null;
-  const existingId = q.id && typeof q.id === "string" ? q.id : null;
+    input.uniqueId && typeof input.uniqueId === "string"
+      ? input.uniqueId
+      : null;
+  const existingId = input.id && typeof input.id === "string" ? input.id : null;
   const resolvedId = existingUniqueId || existingId || generateUUID();
 
   return {
@@ -128,17 +165,17 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
     uniqueId: resolvedId,
 
     // Content
-    discipline: getValue("discipline", q.discipline),
-    difficulty: getValue("difficulty", q.difficulty),
-    type: getValue("type", q.type),
-    question: q.question || "",
-    options: q.options || { A: "", B: "", C: "", D: "" },
-    correct: q.correct || "A",
+    discipline: getValue("discipline", input.discipline),
+    difficulty: getValue("difficulty", input.difficulty),
+    type: getValue("type", input.type),
+    question: input.question || "",
+    options: input.options || { A: "", B: "", C: "", D: "" },
+    correct: input.correct || "A",
 
     // Metadata - Core
-    status: getValue("status", q.status),
-    language: getValue("language", q.language),
-    creatorName: getValue("creatorName", q.creatorName),
+    status: getValue("status", input.status),
+    language: getValue("language", input.language),
+    creatorName: getValue("creatorName", input.creatorName),
     timestamp,
     dateAdded: timestamp, // Alias for backward compatibility
     created: timestamp, // Alias for analytics filtering
@@ -241,10 +278,38 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
     rewriteAppliedAt: q.rewriteAppliedAt || null,
     originalQuestionText: q.originalQuestionText || null, // Text before rewrite
 
+    // Version comparison fields (for Original vs AI Rewrite selection)
+    originalVersion: q.originalVersion || null, // Full snapshot {question, options, correct}
+    versionSource: q.versionSource || "original", // 'original' | 'ai_rewrite' | 'human_edited'
+
     // Export tracking
     exportedAt: q.exportedAt || null, // Last export timestamp
     exportedTo: q.exportedTo || null, // Where exported (sheets, csv, scorm)
     exportCount: q.exportCount || 0, // How many times exported
+
+    // ═══════════════════════════════════════════════════════════════
+    // DOC LINK MANAGEMENT - Track source URL modifications
+    // ═══════════════════════════════════════════════════════════════
+    docLinkSource: q.docLinkSource || "system", // "system" (AI-generated) | "user_modified"
+    docLinkModifiedBy: q.docLinkModifiedBy || null, // Email of who edited the link
+    docLinkModifiedAt: q.docLinkModifiedAt || null, // When the link was modified
+    docLinkModificationNote: q.docLinkModificationNote || null, // Justification for change
+    originalSourceUrl: q.originalSourceUrl || null, // Preserved original for audit trail
+    originalSourceExcerpt: q.originalSourceExcerpt || null, // Preserved original excerpt
+
+    // ═══════════════════════════════════════════════════════════════
+    // EXPLICIT REVIEW STATES - Decouple answer from doc link assessment
+    // ═══════════════════════════════════════════════════════════════
+    answerState: q.answerState || null, // "correct" | "incorrect" | "unsure"
+    docLinkState: q.docLinkState || null, // "relevant" | "too_broad" | "incorrect" | "missing"
+
+    // ═══════════════════════════════════════════════════════════════
+    // NEEDS RESEARCH - Pause approval without rejecting
+    // ═══════════════════════════════════════════════════════════════
+    needsResearch: q.needsResearch || false,
+    needsResearchReason: q.needsResearchReason || null,
+    needsResearchAt: q.needsResearchAt || null,
+    needsResearchBy: q.needsResearchBy || null,
 
     // Preserve any additional fields from source not explicitly handled
     ...Object.fromEntries(
@@ -344,10 +409,28 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
             "wasRewritten",
             "rewriteAppliedAt",
             "originalQuestionText",
+            // Version comparison
+            "originalVersion",
+            "versionSource",
             // Analytics - Export
             "exportedAt",
             "exportedTo",
             "exportCount",
+            // Doc Link Management
+            "docLinkSource",
+            "docLinkModifiedBy",
+            "docLinkModifiedAt",
+            "docLinkModificationNote",
+            "originalSourceUrl",
+            "originalSourceExcerpt",
+            // Explicit Review States
+            "answerState",
+            "docLinkState",
+            // Needs Research
+            "needsResearch",
+            "needsResearchReason",
+            "needsResearchAt",
+            "needsResearchBy",
           ].includes(key)
       )
     ),

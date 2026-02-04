@@ -6,7 +6,36 @@
 
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { app, auth } from "./firebase";
+import { refreshAuthToken, isAuthPotentiallyStale } from "./firebaseAuth";
 import { logger } from "../utils/logger";
+import { logError } from "../utils/AppError";
+
+/**
+ * Ensures auth token is fresh before making Cloud Function calls
+ * This prevents 401 errors from expired tokens
+ */
+const ensureFreshToken = async () => {
+  if (!auth.currentUser) {
+    throw new Error("User not authenticated. Please sign in.");
+  }
+
+  // Always refresh if token might be stale (older than 30 minutes)
+  if (isAuthPotentiallyStale()) {
+    logger.log("[CloudFunctions] Token potentially stale, refreshing...");
+    const result = await refreshAuthToken();
+    if (!result.success) {
+      logger.warn("[CloudFunctions] Token refresh failed:", result.reason);
+      // Force a hard refresh if soft refresh failed
+      try {
+        await auth.currentUser.getIdToken(true);
+        logger.log("[CloudFunctions] Hard token refresh succeeded");
+      } catch (e) {
+        logError(e, { operation: "hardTokenRefresh" });
+        throw new Error("Session expired. Please sign in again.");
+      }
+    }
+  }
+};
 
 // Initialize Cloud Functions
 const functions = getFunctions(app, "us-central1");
@@ -25,9 +54,12 @@ export const generateContentViaCloudFunction = async (
   userPrompt,
   setStatus = () => {},
   temperature = 0.2,
-  model = "gemini-2.0-flash-exp"
+  model = "gemini-2.0-flash"
 ) => {
   try {
+    // Ensure token is fresh before calling Cloud Function
+    await ensureFreshToken();
+
     setStatus("Calling secure Cloud Function...");
 
     const generateQuestions = httpsCallable(functions, "generateQuestions");
@@ -56,7 +88,7 @@ export const generateContentViaCloudFunction = async (
 
     return result.data.textResponse;
   } catch (error) {
-    logger.error("Cloud Function error:", error);
+    logError(error, { operation: "generateContentViaCloudFunction", model });
     setStatus(`Error: ${error.message}`);
     throw error;
   }
@@ -97,6 +129,9 @@ export const generateCritiqueViaCloudFunction = async (
       throw new Error("Invalid question: missing 'correct' answer property");
     }
 
+    // Ensure token is fresh before calling Cloud Function
+    await ensureFreshToken();
+
     const generateCritique = httpsCallable(functions, "generateCritique");
 
     const result = await generateCritique({
@@ -130,7 +165,7 @@ export const generateCritiqueViaCloudFunction = async (
       changes: result.data.changes,
     };
   } catch (error) {
-    logger.error("Critique Cloud Function error:", error);
+    logError(error, { operation: "generateCritiqueViaCloudFunction", model });
     throw error;
   }
 };
@@ -151,6 +186,9 @@ export const isUserAuthenticated = () => {
  */
 export const migrateTranslationsViaCloudFunction = async () => {
   try {
+    // Ensure token is fresh before calling Cloud Function
+    await ensureFreshToken();
+
     const migrateTranslations = httpsCallable(functions, "migrateTranslations");
 
     const result = await migrateTranslations();
@@ -164,7 +202,7 @@ export const migrateTranslationsViaCloudFunction = async () => {
       stats: result.data.stats,
     };
   } catch (error) {
-    logger.error("Migration Cloud Function error:", error);
+    logError(error, { operation: "migrateTranslationsViaCloudFunction" });
     throw error;
   }
 };
@@ -178,6 +216,9 @@ export const migrateTranslationsViaCloudFunction = async () => {
  */
 export const sendReviewerInvitesViaEmail = async (invites) => {
   try {
+    // Ensure token is fresh before calling Cloud Function
+    await ensureFreshToken();
+
     const sendReviewerInvites = httpsCallable(functions, "sendReviewerInvites");
 
     const result = await sendReviewerInvites({ invites });
@@ -193,7 +234,10 @@ export const sendReviewerInvitesViaEmail = async (invites) => {
       total: result.data.total,
     };
   } catch (error) {
-    logger.error("SendReviewerInvites Cloud Function error:", error);
+    logError(error, {
+      operation: "sendReviewerInvitesViaEmail",
+      inviteCount: invites?.length,
+    });
     throw error;
   }
 };

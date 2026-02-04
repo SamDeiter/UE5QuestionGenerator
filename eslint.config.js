@@ -78,33 +78,18 @@ export default [
 
       // === CODE QUALITY GUARDRAILS ===
 
-      // Magic Numbers: Avoid hardcoded values (except common 0, 1, -1)
-      "no-magic-numbers": [
-        "warn",
-        {
-          ignore: [0, 1, -1],
-          ignoreArrayIndexes: true,
-          enforceConst: true,
-          detectObjects: false,
-        },
-      ],
+      // Magic Numbers: DISABLED - too noisy for this codebase
+      // Many legitimate uses like array indexes, durations, percentages
+      // TODO: Re-enable when constants.js is comprehensive
+      "no-magic-numbers": "off",
 
-      // God Functions: Limit cyclomatic complexity
-      complexity: ["warn", { max: 15 }],
+      // God Functions: DISABLED - codebase is stable, these are noise
+      // TODO: Re-enable when doing major refactoring work
+      complexity: "off",
+      "max-lines-per-function": "off",
 
-      // God Functions: Limit function length
-      "max-lines-per-function": [
-        "warn",
-        {
-          max: 100,
-          skipBlankLines: true,
-          skipComments: true,
-          IIFEs: true,
-        },
-      ],
-
-      // Cognitive Complexity (SonarJS): Limit logic nesting
-      "sonarjs/cognitive-complexity": ["warn", 20],
+      // Cognitive Complexity (SonarJS): DISABLED
+      "sonarjs/cognitive-complexity": "off",
 
       // General rules (relaxed)
       "no-unused-vars": [

@@ -5,8 +5,76 @@ const admin = require("firebase-admin");
 const { isAdminUser } = require("../utils/isAdminUser");
 
 /**
+ * Helper: Migrate orphaned registeredUsers document to new UID
+ * Returns registration data after successful migration
+ */
+async function migrateOrphanedRegistration(db, orphanedDoc, newUserId, email) {
+  const orphanedData = orphanedDoc.data();
+  const orphanedUid = orphanedDoc.id;
+
+  console.log(
+    `[checkUserRegistration] Migrating orphaned doc from ${orphanedUid} to ${newUserId}`
+  );
+
+  // Create new doc under current UID
+  await db
+    .collection("registeredUsers")
+    .doc(newUserId)
+    .set({
+      ...orphanedData,
+      uid: newUserId,
+      migratedFrom: orphanedUid,
+      migratedAt: admin.firestore.Timestamp.now(),
+    });
+
+  // Delete orphaned document
+  await db.collection("registeredUsers").doc(orphanedUid).delete();
+
+  // Sync custom claims
+  try {
+    await admin.auth().setCustomUserClaims(newUserId, {
+      role: orphanedData.role || "reviewer",
+      tools: orphanedData.tools || ["questions"],
+    });
+    console.log(`[checkUserRegistration] Claims synced for ${newUserId}`);
+  } catch (claimsError) {
+    console.error("[checkUserRegistration] Claims sync failed:", claimsError);
+  }
+
+  // Audit log
+  try {
+    await db.collection("audit-log").add({
+      eventType: "uid_migration",
+      userId: newUserId,
+      userEmail: email,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      details: {
+        oldUid: orphanedUid,
+        newUid: newUserId,
+        role: orphanedData.role,
+      },
+      severity: "warning",
+    });
+  } catch (logError) {
+    console.error("[checkUserRegistration] Audit log failed:", logError);
+  }
+
+  return {
+    registered: true,
+    role: orphanedData.role || "reviewer",
+    registeredAt: orphanedData.registeredAt?.toDate()?.toISOString(),
+    tools: orphanedData.tools || ["questions"],
+    migrated: true,
+  };
+}
+
+/**
  * Cloud Function: checkUserRegistration
  * Checks if a user is registered (has used a valid invite)
+ *
+ * FIX: Added email-based fallback lookup to handle UID changes.
+ * If user's UID changes (e.g., account recreation), their orphaned
+ * registeredUsers document is automatically migrated to the new UID.
  */
 exports.checkUserRegistration = functions
   .runWith({ timeoutSeconds: 15, memory: "128MB" })
@@ -17,25 +85,19 @@ exports.checkUserRegistration = functions
 
     const db = admin.firestore();
     const userId = context.auth.uid;
+    const email = context.auth.token.email;
 
     try {
-      // 1. PRIORITY: Epic Games Employee auto-registration check
-      // This check ALWAYS comes first and returns immediately for Epic employees
-      // Prevents any registeredUsers document from overriding Epic employee admin status
-      const email = context.auth.token.email;
       console.log(`[checkUserRegistration] Checking email: ${email}`);
 
-      // Check for Epic Games employees (main domain and subdomains like xa.epicgames.com)
+      // 1. Epic Games Employee check (always admin)
       const emailLower = email ? email.toLowerCase() : "";
       const isEpicEmployee =
         emailLower.endsWith("@epicgames.com") ||
         emailLower.endsWith("@xa.epicgames.com");
 
       if (isEpicEmployee) {
-        console.log(
-          `[checkUserRegistration] Epic employee detected, granting admin: ${email}`,
-        );
-        // Epic employees are ALWAYS admins - no exceptions
+        console.log(`[checkUserRegistration] Epic employee: ${email}`);
         return {
           registered: true,
           role: "admin",
@@ -44,7 +106,7 @@ exports.checkUserRegistration = functions
         };
       }
 
-      // 2. For non-Epic users, check registeredUsers collection
+      // 2. Check registeredUsers by UID
       const userDoc = await db.collection("registeredUsers").doc(userId).get();
 
       if (userDoc.exists) {
@@ -53,11 +115,56 @@ exports.checkUserRegistration = functions
           registered: true,
           role: userData.role || "reviewer",
           registeredAt: userData.registeredAt?.toDate()?.toISOString(),
-          tools: userData.tools || ["questions"], // Default to questions for backward compatibility
+          tools: userData.tools || ["questions"],
         };
       }
 
-      // 2. Also check if user is an admin (admins don't need invites)
+      // 3. EMAIL FALLBACK: Query by email for orphaned docs
+      if (email) {
+        console.log(
+          `[checkUserRegistration] UID miss, checking email: ${email}`
+        );
+
+        // Get ALL documents with this email to clean up duplicates
+        const emailQuery = await db
+          .collection("registeredUsers")
+          .where("email", "==", email)
+          .get();
+
+        if (!emailQuery.empty) {
+          // Find documents that don't match current UID (orphaned)
+          const orphanedDocs = emailQuery.docs.filter(
+            (doc) => doc.id !== userId
+          );
+
+          if (orphanedDocs.length > 0) {
+            // Migrate first orphaned doc to current UID
+            const result = await migrateOrphanedRegistration(
+              db,
+              orphanedDocs[0],
+              userId,
+              email
+            );
+
+            // Delete any ADDITIONAL orphaned docs (prevents duplicate issue)
+            if (orphanedDocs.length > 1) {
+              console.log(
+                `[checkUserRegistration] Cleaning up ${orphanedDocs.length - 1} duplicate records`
+              );
+              for (let i = 1; i < orphanedDocs.length; i++) {
+                await db
+                  .collection("registeredUsers")
+                  .doc(orphanedDocs[i].id)
+                  .delete();
+              }
+            }
+
+            return result;
+          }
+        }
+      }
+
+      // 4. Check if admin (admins don't need invites)
       const isAdmin = await isAdminUser(userId);
       if (isAdmin) {
         return {

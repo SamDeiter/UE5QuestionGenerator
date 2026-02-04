@@ -1,7 +1,7 @@
 {
   "name": "ue5-question-generator",
   "private": true,
-  "version": "2.3.8",
+  "version": "2.4.19",
   "homepage": "https://samdeiter.github.io/UE5QuestionGenerator/",
   "type": "module",
   "scripts": {
@@ -9,15 +9,19 @@
     "build": "vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{js,jsx,json,css}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,json,css}\"",
     "preview": "vite preview",
     "test": "vitest",
+    "test:rules": "firebase emulators:exec --only firestore \"vitest run --testPathPattern=firestore.rules\"",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist",
+    "deploy": "firebase use prod && firebase deploy --only firestore:rules && gh-pages -d dist",
     "prepare": "husky",
     "env:dev": "python scripts/switch_env.py dev",
     "env:prod": "python scripts/switch_env.py prod",
     "env:check": "python scripts/switch_env.py",
     "functions:check": "python scripts/test_cloud_functions.py",
+    "validate:rules": "node scripts/validate-firestore-fields.js",
     "dev:dev": "python scripts/switch_env.py dev && vite",
     "dev:prod": "python scripts/switch_env.py prod && vite"
   },
@@ -27,6 +31,7 @@
     "dompurify": "^3.3.1",
     "firebase": "^12.6.0",
     "firebase-admin": "^13.6.0",
+    "idb": "^8.0.3",
     "jszip": "^3.10.1",
     "lucide-react": "^0.460.0",
     "portkey-ai": "^3.0.1",
@@ -36,6 +41,7 @@
     "recharts": "^3.5.1"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -55,12 +61,14 @@
     "jsdom": "^27.2.0",
     "lint-staged": "^16.2.7",
     "postcss": "^8.4.49",
+    "prettier": "^3.8.1",
     "tailwindcss": "^3.4.15",
     "vite": "^7.2.4",
     "vitest": "^4.0.14"
   },
   "lint-staged": {
     "src/**/*.{js,jsx}": [
+      "prettier --write",
       "eslint --fix"
     ]
   }

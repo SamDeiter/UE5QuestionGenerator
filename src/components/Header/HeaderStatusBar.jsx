@@ -2,12 +2,11 @@
  * HeaderStatusBar - Displays token usage, cost, connection status, and API indicators
  */
 import Icon from "../Icon";
-import { triggerManualSync } from "../../services/firebase";
+import { triggerManualSync, clearOfflineQueue } from "../../services/firebase";
 import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 const HeaderStatusBar = ({
   formattedTokens,
-  formattedCost,
   tokenUsage,
   connectionStatus,
   apiKeyStatus,
@@ -99,8 +98,22 @@ const HeaderStatusBar = ({
                     </div>
                   )}
                 </div>
-                <div className="mt-2 text-[8px] text-slate-500 pt-1.5 border-t border-slate-800 text-center uppercase tracking-widest font-bold">
-                  Click sync button to flush
+                <div className="mt-2 pt-1.5 border-t border-slate-800 flex gap-1 pointer-events-auto">
+                  <button
+                    onClick={triggerManualSync}
+                    className="flex-1 text-[9px] font-bold uppercase tracking-wide bg-blue-600 hover:bg-blue-500 text-white rounded px-2 py-1 transition-colors"
+                  >
+                    Retry Sync
+                  </button>
+                  <button
+                    onClick={() => {
+                      clearOfflineQueue();
+                      window.location.reload();
+                    }}
+                    className="flex-1 text-[9px] font-bold uppercase tracking-wide bg-red-600 hover:bg-red-500 text-white rounded px-2 py-1 transition-colors"
+                  >
+                    Clear Queue
+                  </button>
                 </div>
               </div>
             </div>

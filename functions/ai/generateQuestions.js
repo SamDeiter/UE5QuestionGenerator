@@ -1,9 +1,13 @@
 const functions = require("firebase-functions");
 
 // Import utility functions
-const { checkRateLimit } = require("../utils/rateLimit");
+const { checkRateLimit } = require("../middleware/rateLimiter");
 const { logApiUsage } = require("../utils/apiUsage");
 const { extractGroundingSources } = require("../utils/grounding");
+const {
+  sanitizeInput,
+  validateNoPromptInjection,
+} = require("../utils/inputSanitizer");
 
 /**
  * Cloud Function: generateQuestions
@@ -40,7 +44,7 @@ exports.generateQuestions = functions
       model = "gemini-1.5-flash", // Updated to stable model (2.0-flash-exp was returning 404)
     } = data;
 
-    // 2. Input validation
+    // 2. Input validation and sanitization (SECURITY: Prevent XSS and injection)
     if (!systemPrompt || !userPrompt) {
       throw new functions.https.HttpsError(
         "invalid-argument",
@@ -48,12 +52,35 @@ exports.generateQuestions = functions
       );
     }
 
-    // 4. Rate limiting check
-    const rateLimitCheck = await checkRateLimit(userId);
-    if (!rateLimitCheck.allowed) {
+    // Sanitize inputs to prevent XSS
+    const sanitizedSystemPrompt = sanitizeInput(systemPrompt);
+    const sanitizedUserPrompt = sanitizeInput(userPrompt);
+
+    // Check for prompt injection attempts
+    validateNoPromptInjection(sanitizedSystemPrompt);
+    validateNoPromptInjection(sanitizedUserPrompt);
+
+    // 3. Rate limiting check (SECURITY: Prevents AI cost abuse)
+    const hourlyLimit = await checkRateLimit(userId, "AI_HOURLY");
+    if (!hourlyLimit.allowed) {
       throw new functions.https.HttpsError(
         "resource-exhausted",
-        `Rate limit exceeded. ${rateLimitCheck.message}`
+        hourlyLimit.reason || "Rate limit exceeded",
+        {
+          resetAt: hourlyLimit.resetAt?.toISOString(),
+          resetInSeconds: Math.ceil((hourlyLimit.resetAt - new Date()) / 1000),
+        }
+      );
+    }
+
+    const dailyLimit = await checkRateLimit(userId, "AI_DAILY");
+    if (!dailyLimit.allowed) {
+      throw new functions.https.HttpsError(
+        "resource-exhausted",
+        dailyLimit.reason || "Daily rate limit exceeded",
+        {
+          resetAt: dailyLimit.resetAt?.toISOString(),
+        }
       );
     }
 
@@ -87,8 +114,8 @@ exports.generateQuestions = functions
       );
 
       const payload = {
-        contents: [{ parts: [{ text: userPrompt }] }],
-        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ parts: [{ text: sanitizedUserPrompt }] }],
+        systemInstruction: { parts: [{ text: sanitizedSystemPrompt }] },
         tools: [
           {
             googleSearch: {}, // Enable grounding

@@ -3,8 +3,7 @@
 // ============================================================================
 
 // React core hooks
-import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
-import { runLocalStorageMigration } from "./utils/migrateScores";
+import { useState, lazy, Suspense } from "react";
 
 // Critical components - keep eager loading (needed immediately)
 import Header from "./components/Header";
@@ -16,15 +15,13 @@ import InviteSignUp from "./components/InviteSignUp";
 // ApiKeyModal moved to GlobalModals - lazy loaded when needed
 import ConflictModal from "./components/ConflictModal";
 import { getInviteFromUrl } from "./services/inviteService";
-import { refreshAuthToken } from "./services/firebaseAuth";
-import { subscribeToToasts } from "./services/toastEvents";
 
 // Lazy load heavy components (loaded on-demand)
 const LandingPage = lazy(() => import("./components/LandingPage"));
 const MainLayout = lazy(() => import("./components/MainLayout"));
 const GlobalModals = lazy(() => import("./components/GlobalModals"));
 const CrashRecoveryPrompt = lazy(
-  () => import("./components/CrashRecoveryPrompt"),
+  () => import("./components/CrashRecoveryPrompt")
 );
 
 // Custom Hooks
@@ -48,14 +45,28 @@ import { useAppHandlers } from "./hooks/useAppHandlers";
 import { useMigrations } from "./hooks/useMigrations";
 import { usePendingCount } from "./hooks/usePendingCount";
 import { useNavigationAfterLanguageSwitch } from "./hooks/useNavigationAfterLanguageSwitch";
+import { useAgentLifecycle } from "./hooks/useAgentLifecycle";
+import { useTokenUsage } from "./hooks/useTokenUsage";
+import { useAutoLoad } from "./hooks/useAutoLoad";
+import { useAuthRefresh } from "./hooks/useAuthRefresh";
+import { useAuthHealthCheck } from "./hooks/useAuthHealthCheck";
+import { useUrlModeSync } from "./hooks/useUrlModeSync";
+import { useGlobalToastSubscription } from "./hooks/useGlobalToastSubscription";
+import { useViewRouterHandlers } from "./hooks/useViewRouterHandlers";
+import { useConflictResolution } from "./hooks/useConflictResolution";
+import { useSidebarProps } from "./hooks/useSidebarProps";
+import { useToolbarProps } from "./hooks/useToolbarProps";
+import { useViewRouterState } from "./hooks/useViewRouterState";
+import {
+  useGlobalModalsVisibility,
+  useGlobalModalsState,
+  useGlobalModalsHandlers,
+} from "./hooks/useGlobalModalsProps";
 
-// Concurrent Editing Agents
-import { initializeAgents } from "./agents";
 // Utilities
-import { TOAST_DURATION, APP_MODES, QUESTION_STATUS } from "./utils/constants";
+import { APP_MODES } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import { logger } from "./utils/logger";
-import { getTokenUsageFromQuestions } from "./utils/analyticsStore";
 
 const App = () => {
   // ========================================================================
@@ -83,17 +94,11 @@ const App = () => {
     setShowAgeGate,
     setTermsAccepted,
     permissionError,
+    blockedByExtension,
   } = useAuth(showMessage);
 
-  // ========================================================================
-  // GLOBAL TOAST EVENT SUBSCRIPTION - Allow services to trigger UI notifications
-  // ========================================================================
-  useEffect(() => {
-    const unsubscribe = subscribeToToasts((message, type, duration) => {
-      showMessage(message, type, duration);
-    });
-    return unsubscribe;
-  }, [showMessage]);
+  // Global toast subscription (extracted to hook)
+  useGlobalToastSubscription(showMessage);
 
   // ... (rest of the file)
 
@@ -119,49 +124,17 @@ const App = () => {
   // ========================================================================
   // CONCURRENT EDITING AGENTS - Initialize once when user is authenticated
   // ========================================================================
-  useEffect(() => {
-    if (user && !authLoading) {
-      // Initialize agents with Firestore instance
-      const initAgents = async () => {
-        try {
-          const { getDb } = await import("./services/firebase");
-          initializeAgents(getDb());
-          logger.log("✅ Concurrent editing agents initialized");
-        } catch (error) {
-          logger.error("❌ Failed to initialize agents:", error);
-        }
-      };
-      initAgents();
-    }
-  }, [user, authLoading]);
+  useAgentLifecycle({ user, authLoading });
+
+  // ========================================================================
+  // AUTH HEALTH CHECK - Run once on authenticated user mount (extracted to hook)
+  // ========================================================================
+  const authHealthStatus = useAuthHealthCheck({ user, authLoading });
 
   // ========================================================================
   // AUTOMATIC TOKEN REFRESH - Refresh auth token every 30 minutes
   // ========================================================================
-  useEffect(() => {
-    if (!user || authLoading) return;
-
-    // Refresh token immediately on mount
-    refreshAuthToken().then((success) => {
-      if (success) {
-        logger.log("🔄 Initial auth token refreshed");
-      }
-    });
-
-    // Set up periodic refresh every 30 minutes
-    const REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes in ms
-    const intervalId = setInterval(() => {
-      refreshAuthToken().then((success) => {
-        if (success) {
-          logger.log("🔄 Auth token auto-refreshed");
-        } else {
-          logger.warn("⚠️ Auth token refresh failed");
-        }
-      });
-    }, REFRESH_INTERVAL);
-
-    return () => clearInterval(intervalId);
-  }, [user, authLoading]);
+  useAuthRefresh({ user, authLoading, showMessage });
 
   // ========================================================================
   // HOOKS - State Management
@@ -192,7 +165,7 @@ const App = () => {
     handleLanguageSwitch,
     pendingNavigationUniqueId,
     setPendingNavigationUniqueId,
-  } = useAppConfig();
+  } = useAppConfig({ user });
 
   // Run all migrations (extracted to useMigrations hook)
   useMigrations({
@@ -241,11 +214,18 @@ const App = () => {
     moveQuestion,
   } = useQuestionManager(config, showMessage);
 
-  // Calculate token usage from Firestore questions (aggregates estimatedCost from all questions)
-  const firestoreTokenUsage = useMemo(
-    () => getTokenUsageFromQuestions(databaseQuestions),
-    [databaseQuestions],
-  );
+  // Conflict resolution handler (extracted to hook)
+  const handleResolveConflict = useConflictResolution({
+    conflictData,
+    handleUpdateQuestion,
+    showMessage,
+    setShowConflictModal,
+    user,
+  });
+
+  // Calculate token usage from Firestore using server-side aggregation (PHASE 2.1)
+  // Uses Firestore getAggregateFromServer for 99.98% read reduction (1 read vs 5000+)
+  const firestoreTokenUsage = useTokenUsage(user?.uid, databaseQuestions);
 
   // 2.5. Crash Recovery - detect and restore from cloud backup
   const {
@@ -268,7 +248,7 @@ const App = () => {
       showMessage,
       setStatus,
       isApiReady,
-      effectiveApiKey,
+      effectiveApiKey
     );
 
   // 5. Filtering & Search (extracted to useFiltering hook)
@@ -345,7 +325,7 @@ const App = () => {
     setShowApiError,
     setShowHistory,
     translationMap,
-    allQuestionsMap,
+    allQuestionsMap
   );
 
   // 7. Modal State (extracted to useModalState hook)
@@ -383,28 +363,14 @@ const App = () => {
     setAppMode,
     setShowExportMenu,
     setShowBulkExportModal,
-    replaceQuestions,
+    replaceQuestions
   );
-
   // Auto-load database questions on startup for difficulty distribution chart
-  const hasAutoLoadedRef = useRef(false);
-  useEffect(() => {
-    if (user && !authLoading && !hasAutoLoadedRef.current) {
-      // One-time migration: Add improvedScore to existing critiques
-      const migrated = runLocalStorageMigration();
-      if (migrated.updated > 0) {
-        logger.log(
-          `🔄 Migrated ${migrated.updated} questions with estimated improved scores`,
-        );
-      }
-
-      hasAutoLoadedRef.current = true;
-      logger.log("📊 Auto-loading full database...");
-
-      // Load all questions immediately (IndexedDB persistence handles caching)
-      handleLoadFromFirestore(true);
-    }
-  }, [user, authLoading, handleLoadFromFirestore]);
+  const { isInitialLoading } = useAutoLoad({
+    user,
+    authLoading,
+    handleLoadFromFirestore,
+  });
 
   // Migrations handled by useMigrations hook (called earlier in component)
 
@@ -445,29 +411,15 @@ const App = () => {
   });
 
   // ========================================================================
-  // INITIAL MODE SETUP - Handle URL parameters (e.g., mode=review)
+  // INITIAL MODE SETUP - Handle URL parameters (extracted to hook)
   // ========================================================================
-  useEffect(() => {
-    // If the appMode was set via URL (detected in useAppConfig)
-    // we need to ensure the filters and history visibility are initialized correctly
-    if (appMode === APP_MODES.REVIEW && !showHistory) {
-      logger.log("🎯 Initializing Review Mode from URL parameters");
-      setShowHistory(true);
-      setFilterMode(QUESTION_STATUS.PENDING);
-      setCurrentReviewIndex(0);
-    } else if (appMode === APP_MODES.TRANSLATE && !showHistory) {
-      logger.log("🎯 Initializing Translate Mode from URL parameters");
-      setShowHistory(true);
-      setFilterMode(QUESTION_STATUS.ACCEPTED);
-      setCurrentReviewIndex(0);
-    }
-  }, [
+  useUrlModeSync({
     appMode,
+    showHistory,
     setShowHistory,
     setFilterMode,
     setCurrentReviewIndex,
-    showHistory,
-  ]);
+  });
 
   // Bulk selection feature removed
 
@@ -497,45 +449,171 @@ const App = () => {
       setShowApiKeyModal,
     });
 
-  // Memoize viewRouterHandlers to prevent unnecessary re-renders
-  const viewRouterHandlers = useMemo(
-    () => ({
-      handleLoadFromSheets,
-      handleLoadFromFirestore,
-      handleUpdateDatabaseQuestion,
-      handleKickBackToReview,
-      handleUpdateStatus,
-      handleExplain,
-      handleVariate,
-      handleCritique,
-      handleApplyRewrite,
-      handleTranslateSingle,
-      handleLanguageSwitch,
-      handleDelete,
-      handleManualUpdate,
-      handleTrimExcess,
-      handleUpdateQuestion,
-      userRole,
-    }),
-    [
-      handleLoadFromSheets,
-      handleLoadFromFirestore,
-      handleUpdateDatabaseQuestion,
-      handleKickBackToReview,
-      handleUpdateStatus,
-      handleExplain,
-      handleVariate,
-      handleCritique,
-      handleApplyRewrite,
-      handleTranslateSingle,
-      handleLanguageSwitch,
-      handleDelete,
-      handleManualUpdate,
-      handleTrimExcess,
-      handleUpdateQuestion,
-      userRole,
-    ],
-  );
+  // Memoize viewRouterHandlers to prevent unnecessary re-renders (extracted to hook)
+  const viewRouterHandlers = useViewRouterHandlers({
+    handleLoadFromSheets,
+    handleLoadFromFirestore,
+    handleUpdateDatabaseQuestion,
+    handleKickBackToReview,
+    handleUpdateStatus,
+    handleExplain,
+    handleVariate,
+    handleCritique,
+    handleApplyRewrite,
+    handleTranslateSingle,
+    handleLanguageSwitch,
+    handleDelete,
+    handleManualUpdate,
+    handleTrimExcess,
+    handleUpdateQuestion,
+    userRole,
+  });
+
+  // Memoize sidebarProps for MainLayout (extracted to hook)
+  const sidebarProps = useSidebarProps({
+    showGenSettings,
+    setShowGenSettings,
+    config,
+    handleChange,
+    allQuestionsMap,
+    approvedCounts,
+    overallPercentage,
+    totalApproved,
+    isTargetMet,
+    maxBatchSize,
+    batchSizeWarning,
+    handleGenerate,
+    isGenerating,
+    isApiReady,
+    handleBulkTranslateMissing,
+    isProcessing,
+    setShowSettings,
+    handleSelectCategory,
+    customTags,
+    status,
+    showMessage,
+    isAdmin,
+  });
+
+  // Memoize toolbarProps for MainLayout (extracted to hook)
+  const toolbarProps = useToolbarProps({
+    appMode,
+    contextCounts,
+    filterMode,
+    setFilterMode,
+    filterByCreator,
+    setFilterByCreator,
+    filterTags,
+    setFilterTags,
+    filterScoreTier,
+    setFilterScoreTier,
+    filterByReviewer,
+    setFilterByReviewer,
+    uniqueReviewers,
+    customTags,
+    searchTerm,
+    setSearchTerm,
+    sortBy,
+    setSortBy,
+    isProcessing,
+    status,
+    isAuthReady,
+    config,
+    handleLoadFromSheets,
+    handleLoadFromFirestore,
+    setShowBulkExportModal,
+    handleClearPending,
+    handleBulkAcceptHighScores,
+    handleBulkCritiqueAll,
+    handleTrimExcess,
+    handleAutoTagAll,
+    effectiveApiKey,
+    handleChange,
+  });
+
+  // Memoize viewRouterState for MainLayout (extracted to hook)
+  const viewRouterState = useViewRouterState({
+    currentReviewIndex,
+    translationMap,
+    filterByCreator,
+    filteredQuestions,
+    questions,
+    status,
+    filterMode,
+    sortBy,
+    searchTerm,
+    showHistory,
+    user,
+    userRole,
+    isInitialLoading,
+  });
+
+  // Memoize GlobalModals visibility (extracted to hook)
+  const globalModalsVisibility = useGlobalModalsVisibility({
+    showNameModal,
+    showClearModal,
+    showBulkExportModal,
+    showSettings,
+    showAnalytics,
+    showDangerZone,
+    showApiKeyModal,
+    showTerms,
+    showAgeGate,
+    tutorialActive,
+    deleteConfirmId,
+    showAdvancedConfig,
+    showApiKey,
+  });
+
+  // Memoize GlobalModals state (extracted to hook)
+  const globalModalsState = useGlobalModalsState({
+    config,
+    isProcessing,
+    status,
+    translationProgress,
+    allQuestionsMap,
+    appMode,
+    currentStep,
+    tutorialSteps,
+    activeScenario,
+    approvedCount,
+    questionsLength: questions.length,
+    isApiReady,
+    customTags,
+    isAdmin,
+  });
+
+  // Memoize GlobalModals handlers (extracted to hook)
+  const globalModalsHandlers = useGlobalModalsHandlers({
+    handleNameSave,
+    handleDeleteAllQuestions,
+    handleBulkExport,
+    confirmDelete,
+    setDeleteConfirmId,
+    setShowBulkExportModal,
+    setShowSettings,
+    setShowAnalytics,
+    setShowDangerZone,
+    setShowApiKeyModal,
+    handleChange,
+    handleSaveApiKey,
+    setShowTerms,
+    setTermsAccepted,
+    setShowAgeGate,
+    setShowClearModal,
+    handleTutorialNext,
+    handleTutorialPrev,
+    handleTutorialSkip,
+    handleTutorialComplete,
+    setConfig,
+    config,
+    fileInputRef,
+    handleFileChange,
+    setShowAdvancedConfig,
+    setShowApiKey,
+    handleDetectTopics,
+    handleSaveCustomTags,
+  });
 
   // Render - Loading state
   if (authLoading || registrationLoading) {
@@ -589,74 +667,9 @@ const App = () => {
             onDismiss={dismissRecovery}
           />
           <GlobalModals
-            visibility={{
-              showNameModal,
-              showClearModal,
-              showBulkExportModal,
-              showSettings,
-              showAnalytics,
-              showDangerZone,
-              showApiKeyModal,
-              showTerms,
-              showAgeGate,
-              tutorialActive,
-              deleteConfirmId,
-              showAdvancedConfig,
-              showApiKey,
-            }}
-            state={{
-              config,
-              isProcessing,
-              status,
-              translationProgress,
-              allQuestionsMap,
-              appMode,
-              currentStep,
-              tutorialSteps,
-              activeScenario,
-              metrics: {
-                totalApproved: approvedCount,
-                totalQuestions: questions.length,
-              },
-              isApiReady,
-              customTags,
-              isAdmin,
-            }}
-            handlers={{
-              handleNameSave,
-              handleDeleteAllQuestions,
-              handleBulkExport,
-              confirmDelete,
-              setDeleteConfirmId,
-              onCloseBulkExport: () => setShowBulkExportModal(false),
-              onCloseSettings: () => setShowSettings(false),
-              onCloseAnalytics: () => setShowAnalytics(false),
-              onCloseDangerZone: () => setShowDangerZone(false),
-              onCloseApiKey: () => setShowApiKeyModal(false),
-              handleChange,
-              handleSaveApiKey,
-              setShowTerms,
-              setTermsAccepted,
-              setShowAgeGate,
-              setShowClearModal,
-              handleTutorialNext,
-              handleTutorialPrev,
-              handleTutorialSkip,
-              handleTutorialComplete,
-              onResetSettings: () =>
-                setConfig({ ...config, ...useAppConfig.defaultConfig }),
-              onHardReset: () => {
-                localStorage.clear();
-                window.location.reload();
-              },
-              fileInputRef,
-              handleFileChange,
-              setShowAdvancedConfig,
-              setShowApiKey,
-              handleDetectTopics,
-              onSaveCustomTags: handleSaveCustomTags,
-              window: window,
-            }}
+            visibility={globalModalsVisibility}
+            state={globalModalsState}
+            handlers={globalModalsHandlers}
           />
         </Suspense>
 
@@ -679,6 +692,8 @@ const App = () => {
           isRegistered={_isRegistered}
           registrationLoading={registrationLoading}
           permissionError={permissionError}
+          blockedByExtension={blockedByExtension}
+          authHealthStatus={authHealthStatus}
         />
 
         <Suspense fallback={<LoadingSpinner />}>
@@ -700,73 +715,11 @@ const App = () => {
               setAppMode={setAppMode}
               effectiveApiKey={effectiveApiKey}
               isAdmin={isAdmin}
-              sidebarProps={{
-                showGenSettings,
-                setShowGenSettings,
-                config,
-                handleChange,
-                allQuestionsMap,
-                approvedCounts,
-                overallPercentage,
-                totalApproved,
-                isTargetMet,
-                maxBatchSize,
-                batchSizeWarning,
-                handleGenerate,
-                isGenerating,
-                isApiReady,
-                handleBulkTranslateMissing,
-                isProcessing,
-                setShowSettings,
-                handleSelectCategory,
-                customTags,
-                status,
-                showMessage,
-                isAdmin,
-              }}
+              sidebarProps={sidebarProps}
               handleModeSelect={handleModeSelect}
               handleViewDatabase={handleViewDatabase}
               pendingCount={totalPendingQuestions}
-              toolbarProps={{
-                mode: appMode,
-                counts: contextCounts,
-                filterMode,
-                setFilterMode,
-                filterByCreator,
-                setFilterByCreator,
-                filterTags,
-                setFilterTags,
-                filterScoreTier,
-                setFilterScoreTier,
-                filterByReviewer,
-                setFilterByReviewer,
-                uniqueReviewers,
-                customTags,
-                searchTerm,
-                setSearchTerm,
-                sortBy,
-                setSortBy,
-                isProcessing,
-                status,
-                isAuthReady,
-                config,
-                onLoadSheets: handleLoadFromSheets,
-                onLoadFirestore: handleLoadFromFirestore,
-                onBulkExport: () => setShowBulkExportModal(true),
-                onClearPending: handleClearPending,
-                onBulkAcceptHighScores:
-                  appMode === APP_MODES.REVIEW
-                    ? handleBulkAcceptHighScores
-                    : undefined,
-                onBulkCritiqueAll:
-                  appMode === APP_MODES.REVIEW
-                    ? handleBulkCritiqueAll
-                    : undefined,
-                onTrimExcess: handleTrimExcess,
-                onAutoTagAll: handleAutoTagAll,
-                effectiveApiKey: effectiveApiKey,
-                handleChange,
-              }}
+              toolbarProps={toolbarProps}
               showHistory={showHistory}
               uniqueFilteredQuestions={uniqueFilteredQuestions}
               questions={questions}
@@ -776,20 +729,7 @@ const App = () => {
               isProcessing={isProcessing}
               allQuestionsMap={allQuestionsMap}
               viewRouterHandlers={viewRouterHandlers}
-              viewRouterState={{
-                currentReviewIndex,
-                translationMap,
-                filterByCreator,
-                filteredQuestions,
-                questions,
-                status,
-                filterMode,
-                sortBy,
-                searchTerm,
-                showHistory,
-                currentUser: user,
-                userRole,
-              }}
+              viewRouterState={viewRouterState}
               viewRouterSetters={{
                 setCurrentReviewIndex,
                 setFilterByCreator,
@@ -816,42 +756,7 @@ const App = () => {
             isOpen={showConflictModal}
             onClose={() => setShowConflictModal(false)}
             conflictData={conflictData}
-            onResolve={async (action) => {
-              if (action === "DISCARD") {
-                // Reload the latest version from server
-                const { loadAgent } = await import("./agents").then((m) =>
-                  m.getAgents(),
-                );
-                if (loadAgent) {
-                  const result = await loadAgent.loadQuestion(
-                    conflictData.serverQuestion.id,
-                  );
-                  if (result.success) {
-                    handleUpdateQuestion(result.question.id, result.question);
-                    showMessage(
-                      "✓ Reloaded latest version",
-                      TOAST_DURATION.MEDIUM,
-                    );
-                  }
-                }
-              } else if (action === "OVERWRITE") {
-                // Force save local changes
-                const { saveGuardAgent } = await import("./agents").then((m) =>
-                  m.getAgents(),
-                );
-                if (saveGuardAgent) {
-                  await saveGuardAgent.saveQuestion(
-                    conflictData.serverQuestion.id,
-                    conflictData.localChanges,
-                    conflictData.serverVersion, // Use server version to force overwrite
-                    user?.uid || "unknown",
-                    user?.email || "unknown@example.com",
-                  );
-                  showMessage("✓ Overwrote server changes", 2000);
-                }
-              }
-              setShowConflictModal(false);
-            }}
+            onResolve={handleResolveConflict}
           />
         )}
 

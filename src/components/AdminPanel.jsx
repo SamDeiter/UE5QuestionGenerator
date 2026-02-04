@@ -16,16 +16,16 @@ import { useAdminPanelLogic } from "../hooks/admin/useAdminPanelLogic";
 
 // Lazy Loaded Admin Components
 const ReviewerAnalytics = React.lazy(() => import("./Admin/ReviewerAnalytics"));
-const DatabaseManagement = React.lazy(() =>
-  import("./Admin/DatabaseManagement")
+const DatabaseManagement = React.lazy(
+  () => import("./Admin/DatabaseManagement")
 );
 const ApiConfig = React.lazy(() => import("./Admin/ApiConfig"));
 const UserList = React.lazy(() => import("./Admin/UserList"));
 const InviteManagement = React.lazy(() => import("./Admin/InviteManagement"));
 const CustomTagsEditor = React.lazy(() => import("./Admin/CustomTagsEditor"));
 const EnvironmentInfo = React.lazy(() => import("./Admin/EnvironmentInfo"));
-const TrainingDataExport = React.lazy(() =>
-  import("./Admin/TrainingDataExport")
+const TrainingDataExport = React.lazy(
+  () => import("./Admin/TrainingDataExport")
 );
 const SystemHealth = React.lazy(() => import("./Admin/SystemHealth"));
 const AuditLogs = React.lazy(() => import("./Admin/AuditLogs"));

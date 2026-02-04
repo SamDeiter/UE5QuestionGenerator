@@ -18,12 +18,15 @@ export const throttle = (func, wait) => {
       lastRan = Date.now();
     } else {
       clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        if (Date.now() - lastRan >= wait) {
-          func.apply(this, args);
-          lastRan = Date.now();
-        }
-      }, wait - (Date.now() - lastRan));
+      timeout = setTimeout(
+        () => {
+          if (Date.now() - lastRan >= wait) {
+            func.apply(this, args);
+            lastRan = Date.now();
+          }
+        },
+        wait - (Date.now() - lastRan)
+      );
     }
   };
 };

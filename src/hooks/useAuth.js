@@ -7,23 +7,18 @@
  * - Admin status from Firestore (server-side only - security fix V-002)
  * - Custom tags from Firestore
  * - Token usage tracking
- * - Age verification and terms acceptance modals
+ * - Age verification and terms acceptance modals (extracted to useCompliance)
  */
 import { useState, useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import {
-  auth,
-  getCustomTags,
-  saveCustomTags,
-  getDb,
-} from "../services/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { getTokenUsage } from "../utils/analyticsStore";
-import {
-  checkUserRegistration,
-  setupInitialAdmin,
-} from "../services/inviteService";
+import { onIdTokenChanged } from "firebase/auth";
+import { auth, getCustomTags, saveCustomTags } from "../services/firebase";
 import { logger } from "../utils/logger";
+import { TIMING } from "../utils/constants";
+
+// Extracted focus hooks
+import { useCompliance } from "./useCompliance";
+import { useLocalTokenUsage } from "./useLocalTokenUsage";
+import { useUserRegistration } from "./useUserRegistration";
 
 // SECURITY FIX V-002: Removed client-side FALLBACK_ADMIN_EMAILS
 // Admin detection now happens entirely server-side via checkUserRegistration()
@@ -41,134 +36,54 @@ export function useAuth(showMessage) {
   // ========================================================================
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [userRole, setUserRole] = useState("user");
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [registrationLoading, setRegistrationLoading] = useState(true);
+
+  // Registration & Roles (extracted)
+  const {
+    isAdmin,
+    userRole,
+    isRegistered,
+    registrationLoading,
+    permissionError,
+    blockedByExtension,
+    setIsRegistered,
+    setUserRole,
+    setIsAdmin,
+  } = useUserRegistration(user);
+
   const [customTags, setCustomTags] = useState({});
-  const [tokenUsage, setTokenUsage] = useState(() => getTokenUsage());
+  const tokenUsage = useLocalTokenUsage();
 
-  // Compliance modals
-  const [showTerms, setShowTerms] = useState(false);
-  const [showAgeGate, setShowAgeGate] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-
-  // Permission error state (write probe failed)
-  const [permissionError, setPermissionError] = useState(false);
+  // Compliance state (extracted)
+  const {
+    showTerms,
+    setShowTerms,
+    showAgeGate,
+    setShowAgeGate,
+    termsAccepted,
+    setTermsAccepted,
+  } = useCompliance();
 
   // ========================================================================
   // EFFECTS
   // ========================================================================
 
-  // Listen for auth state changes and check registration
+  // Listen for auth state changes AND token refreshes (for custom claims)
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onIdTokenChanged(auth, (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
 
       if (currentUser) {
-        // Check registration status via Cloud Function (server-side admin detection)
-        setRegistrationLoading(true);
-        try {
-          let regStatus = await checkUserRegistration();
-          logger.log("🔍 [Auth] checkUserRegistration result:", regStatus);
-          logger.log("🔍 [Auth] User email:", currentUser.email);
-
-          // If not registered, attempt server-side admin setup
-          // Server validates email whitelist - client never sees the whitelist
-          if (!regStatus.registered) {
-            try {
-              const adminResult = await setupInitialAdmin();
-              logger.log("🔍 [Auth] setupInitialAdmin result:", adminResult);
-              if (adminResult.success) {
-                logger.log("✅ Server-side admin setup successful");
-                regStatus = {
-                  registered: true,
-                  role: adminResult.role || "admin",
-                };
-              }
-            } catch {
-              // setupInitialAdmin throws if email not whitelisted - this is expected
-              logger.log("ℹ️ Not a whitelisted admin email");
-            }
-          }
-
-          logger.log(
-            "🔍 [Auth] Final role:",
-            regStatus.role,
-            "isAdmin:",
-            regStatus.role === "admin",
-          );
-          setIsRegistered(regStatus.registered);
-          setUserRole(regStatus.role || "user");
-          setIsAdmin(regStatus.role === "admin");
-
-          // WRITE PROBE: Verify actual Firestore write access
-          // This catches Ghost Reviewers who appear registered but can't save
-          if (regStatus.registered) {
-            try {
-              const db = getDb();
-              await setDoc(
-                doc(db, "userSettings", currentUser.uid),
-                { lastVerified: serverTimestamp() },
-                { merge: true },
-              );
-              logger.log(
-                "✅ Write probe successful - Firestore access verified",
-              );
-              setPermissionError(false);
-            } catch (probeError) {
-              logger.error("❌ Write probe failed:", probeError);
-              if (probeError.code === "permission-denied") {
-                setPermissionError(true);
-              }
-            }
-          }
-        } catch (error) {
-          logger.error("Failed to check registration:", error);
-          // SECURITY: On error, default to no access (fail closed)
-          setIsAdmin(false);
-          setIsRegistered(false);
-          setUserRole("user");
-        } finally {
-          setRegistrationLoading(false);
-        }
-
-        // Load custom tags from Firestore
-        try {
-          const tags = await getCustomTags();
-          setCustomTags(tags);
-        } catch (error) {
-          logger.error("Failed to load custom tags:", error);
-        }
-      } else {
-        setIsAdmin(false);
-        setIsRegistered(false);
-        setUserRole("user");
-        setRegistrationLoading(false);
+        // Load custom tags
+        getCustomTags()
+          .then(setCustomTags)
+          .catch((err) => {
+            logger.error("Failed to load custom tags:", err);
+          });
       }
     });
-    return () => unsubscribe();
-  }, []);
 
-  // Refresh token usage periodically
-  useEffect(() => {
-    const interval = setInterval(() => setTokenUsage(getTokenUsage()), 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Check compliance status on app load
-  useEffect(() => {
-    const ageVerified = localStorage.getItem("ue5_age_verified");
-    const termsAcceptedStorage = localStorage.getItem("ue5_terms_accepted");
-
-    if (!ageVerified) {
-      setShowAgeGate(true);
-    } else if (!termsAcceptedStorage) {
-      setShowTerms(true);
-    } else {
-      setTermsAccepted(true);
-    }
+    return unsubscribe;
   }, []);
 
   // ========================================================================
@@ -184,10 +99,10 @@ export function useAuth(showMessage) {
     try {
       await saveCustomTags(newCustomTags);
       setCustomTags(newCustomTags);
-      showMessage("Custom tags saved!", 2000);
+      showMessage("Custom tags saved!", TIMING.TOAST_SHORT);
     } catch (error) {
       logger.error("Failed to save custom tags:", error);
-      showMessage("Failed to save tags", 3000);
+      showMessage("Failed to save tags", TIMING.TOAST_MEDIUM);
     }
   };
 
@@ -235,5 +150,8 @@ export function useAuth(showMessage) {
 
     // Permission error (write probe failed)
     permissionError,
+
+    // Blocked by browser extension (ad blocker)
+    blockedByExtension,
   };
 }

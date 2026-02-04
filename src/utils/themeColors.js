@@ -175,6 +175,23 @@ const EVENT_COLORS = {
     default: "bg-red-900/50 text-red-300",
     colorblind: "bg-rose-900/50 text-rose-300",
   },
+  // Security events
+  uid_migration: {
+    default: "bg-orange-900/50 text-orange-300",
+    colorblind: "bg-amber-900/50 text-amber-300",
+  },
+  excessive_rate_limit: {
+    default: "bg-red-900/50 text-red-300",
+    colorblind: "bg-rose-900/50 text-rose-300",
+  },
+  auth_failure: {
+    default: "bg-red-900/50 text-red-300",
+    colorblind: "bg-rose-900/50 text-rose-300",
+  },
+  user_registered: {
+    default: "bg-green-900/50 text-green-300",
+    colorblind: "bg-blue-900/50 text-blue-300",
+  },
 };
 
 // =============================================================================

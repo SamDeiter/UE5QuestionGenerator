@@ -28,7 +28,7 @@ export const convertMCtoTF = (mcQuestion, difficulty) => {
   // Determine truthiness and target answer based on question type
   // NOTE: Using Math.random here is acceptable - this is for educational quiz variety,
   // not cryptographic security. No security implications.
-   
+
   const randomBool = Math.random() > 0.5;
 
   // Declare variables with proper initial values based on condition
@@ -37,11 +37,11 @@ export const convertMCtoTF = (mcQuestion, difficulty) => {
     : randomBool;
 
   // Determine target answer based on question type and mode
-   
+
   const getTargetAnswer = () => {
     if (isBooleanAnswer) return correctAnswerText;
     if (makeItTrue) return correctAnswerText;
-     
+
     return (
       wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)] ||
       "incorrect"

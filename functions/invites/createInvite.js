@@ -46,8 +46,12 @@ exports.createInvite = functions
       // 2. Validate and sanitize email if provided
       let sanitizedEmail = null;
       if (forEmail) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(forEmail)) {
+        // Simple non-backtracking regex for basic email format validation
+        if (
+          !forEmail.includes("@") ||
+          !forEmail.includes(".") ||
+          forEmail.length < 5
+        ) {
           throw new functions.https.HttpsError(
             "invalid-argument",
             "Invalid email address format",
@@ -101,7 +105,10 @@ exports.createInvite = functions
       );
 
       // 6. Build invite URL
-      const inviteUrl = `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${code}${sanitizedEmail ? `&email=${encodeURIComponent(sanitizedEmail)}` : ""}`;
+      const emailQuery = sanitizedEmail
+        ? `&email=${encodeURIComponent(sanitizedEmail)}`
+        : "";
+      const inviteUrl = `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${code}${emailQuery}`;
 
       return {
         success: true,

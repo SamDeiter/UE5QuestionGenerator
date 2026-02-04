@@ -232,7 +232,6 @@ const Header = ({
           {/* Status Bar */}
           <HeaderStatusBar
             formattedTokens={formattedTokens}
-            formattedCost={formattedCost}
             tokenUsage={tokenUsage}
             connectionStatus={connectionStatus}
             apiKeyStatus={apiKeyStatus}

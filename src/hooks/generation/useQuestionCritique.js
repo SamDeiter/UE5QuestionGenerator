@@ -3,8 +3,10 @@ import {
   generateCritiqueSecure as generateCritique,
   generateTagsSecure,
 } from "../../services/geminiSecure";
-import { TOAST_DURATION } from "../../utils/constants";
+import { TOAST_DURATION, AI_CONFIG } from "../../utils/constants";
 import { logger } from "../../utils/logger";
+import { logError } from "../../utils/AppError";
+import { inferCorrectAnswer } from "../../utils/answerHelpers";
 
 /**
  * Hook for handling question critique and feedback loop logic.
@@ -58,17 +60,26 @@ export const useQuestionCritique = ({
         return;
       }
 
-      if (!q.correct) {
-        logger.error(
-          "[Critique] Question object missing 'correct' property:",
-          q
-        );
+      // Try to infer correct answer if missing
+      const effectiveCorrect = inferCorrectAnswer(q);
+      if (!effectiveCorrect) {
+        logger.error("[Critique] Could not determine correct answer:", {
+          id: q.id,
+          correct: q.correct,
+          type: q.type,
+        });
         showMessage(
-          "Critique failed: Correct answer is missing",
+          "Critique failed: Could not determine correct answer",
           TOAST_DURATION.LONG
         );
         return;
       }
+
+      // Use the inferred/validated correct answer
+      const normalizedQuestion = {
+        ...q,
+        correct: effectiveCorrect,
+      };
 
       if (!isApiReady) {
         showMessage(
@@ -83,11 +94,11 @@ export const useQuestionCritique = ({
 
       try {
         const { score, text, rewrite, improvedScore, changes } =
-          await generateCritique(effectiveApiKey, q);
+          await generateCritique(effectiveApiKey, normalizedQuestion);
 
-        // Generate tags if question has fewer than 3
+        // Generate tags if question has fewer than MAX_CRITIQUE_RETRIES
         let suggestedTags = Array.isArray(q.tags) ? q.tags : [];
-        if (suggestedTags.length < 3) {
+        if (suggestedTags.length < AI_CONFIG.MAX_CRITIQUE_RETRIES) {
           try {
             const questionForTags = rewrite
               ? {
@@ -115,10 +126,13 @@ export const useQuestionCritique = ({
                   ...suggestedTags,
                   ...newTags.map((t) => t.replace(/^#/, "")),
                 ]),
-              ].slice(0, 5);
+              ].slice(0, AI_CONFIG.MAX_FEEDBACK_SCORE);
             }
           } catch (error) {
-            logger.error("Tag generation failed during critique:", error);
+            logError(error, {
+              operation: "generateTagsDuringCritique",
+              questionId: q?.id,
+            });
           }
         }
         // Normalize changes to array format
@@ -140,8 +154,18 @@ export const useQuestionCritique = ({
                 C: opts.C || rewrite.optionC || q.options?.C || "",
                 D: opts.D || rewrite.optionD || q.options?.D || "",
               };
-              const newCorrect =
-                rewrite.correct || rewrite.correctLetter || q.correct || "A";
+
+              // CRITICAL FIX: Always preserve original correct answer
+              // The AI should NEVER change which answer is correct - only improve wording
+              // This prevents T/F questions from incorrectly flipping True<->False
+              const newCorrect = q.correct || "A";
+
+              // Log if AI tried to change the answer (for debugging)
+              if (rewrite.correct && rewrite.correct !== q.correct) {
+                logger.warn(
+                  `[Critique] AI attempted to change correct answer from "${q.correct}" to "${rewrite.correct}" - PRESERVED ORIGINAL`
+                );
+              }
 
               // Check if rewrite is identical to original
               const isIdentical =
@@ -196,9 +220,8 @@ export const useQuestionCritique = ({
         // CRITICAL: Persist critique results (including tags) to Firestore
         // Use saveQuestionToFirestore which handles offline queue and permissions
         try {
-          const { saveQuestionToFirestore } = await import(
-            "../../services/firebase"
-          );
+          const { saveQuestionToFirestore } =
+            await import("../../services/firebase");
 
           // Merge critique fields into the full question object
           const updatedQuestion = {
@@ -238,7 +261,7 @@ export const useQuestionCritique = ({
           TOAST_DURATION.MEDIUM
         );
       } catch (e) {
-        logger.error("Critique failed:", e);
+        logError(e, { operation: "handleCritique", questionId: q?.id });
         setStatus("Fail");
         showMessage(`Critique Failed: ${e.message}`, TOAST_DURATION.LONG);
       } finally {
@@ -258,10 +281,21 @@ export const useQuestionCritique = ({
 
   /**
    * Applies the suggested rewrite to the question.
+   * Stores the original version for later comparison/revert.
+   * NOTE: Does NOT auto re-critique - reviewer can proceed if satisfied.
    */
   const handleApplyRewrite = useCallback(
     (q) => {
       if (!q.suggestedRewrite) return;
+
+      // Store original version before applying rewrite (for version comparison)
+      const originalVersion = q.originalVersion || {
+        question: q.question,
+        options: { ...q.options },
+        correct: q.correct,
+        savedAt: new Date().toISOString(),
+        savedBy: q.creatorEmail || "unknown",
+      };
 
       const updatedQ = {
         ...q,
@@ -270,28 +304,102 @@ export const useQuestionCritique = ({
         correct: q.suggestedRewrite.correct,
         // Include suggested tags if available
         tags: q.suggestedRewrite.tags || q.tags || [],
-        suggestedRewrite: null,
+        // Keep the suggested rewrite for comparison (don't clear it)
+        suggestedRewrite: q.suggestedRewrite,
         rewriteChanges: null,
-        critique: null,
-        critiqueScore: null,
+        // Keep the existing critique score - don't reset
+        critique: q.critique,
+        critiqueScore: q.improvedScore || q.critiqueScore, // Use improved score if available
         humanVerified: false,
         status: "pending",
         rejectionReason: null,
+        improvementsApplied: true, // Mark that improvements were applied
+        // Version tracking
+        originalVersion,
+        versionSource: "ai_rewrite",
+        wasRewritten: true,
+        rewriteAppliedAt: new Date().toISOString(),
+        lastEditedBy: null, // Will be set when user manually edits
+        lastEditedAt: new Date().toISOString(),
       };
 
       updateQuestionInState(q.id, () => updatedQ);
-      showMessage("✓ Applied! Re-critiquing...", TOAST_DURATION.SHORT);
-
-      // Re-trigger critique after a short delay
-      setTimeout(() => {
-        handleCritique({ ...updatedQ, id: q.id });
-      }, 300);
+      showMessage(
+        "✓ AI rewrite applied! Click Critique to compare versions.",
+        TOAST_DURATION.SHORT
+      );
+      // NOTE: No auto re-critique - reviewer can proceed with verification
     },
-    [updateQuestionInState, showMessage, handleCritique]
+    [updateQuestionInState, showMessage]
+  );
+
+  /**
+   * Reverts the question to its original version (before AI rewrite).
+   */
+  const handleRevertToOriginal = useCallback(
+    (q) => {
+      if (!q.originalVersion) {
+        showMessage("No original version available", TOAST_DURATION.SHORT);
+        return;
+      }
+
+      const updatedQ = {
+        ...q,
+        question: q.originalVersion.question,
+        options: { ...q.originalVersion.options },
+        correct: q.originalVersion.correct,
+        // Keep the suggested rewrite for potential re-apply
+        suggestedRewrite: q.suggestedRewrite,
+        // Update version tracking
+        versionSource: "original",
+        wasRewritten: false,
+        lastEditedBy: null,
+        lastEditedAt: new Date().toISOString(),
+        // Reset review status since content changed
+        humanVerified: false,
+        status: "pending",
+      };
+
+      updateQuestionInState(q.id, () => updatedQ);
+      showMessage("✓ Reverted to original version", TOAST_DURATION.SHORT);
+    },
+    [updateQuestionInState, showMessage]
+  );
+
+  /**
+   * Applies the AI rewrite from a stored suggestedRewrite (for re-applying after revert).
+   */
+  const handleUseAIRewrite = useCallback(
+    (q) => {
+      if (!q.suggestedRewrite) {
+        showMessage("No AI rewrite available", TOAST_DURATION.SHORT);
+        return;
+      }
+
+      const updatedQ = {
+        ...q,
+        question: q.suggestedRewrite.question,
+        options: q.suggestedRewrite.options,
+        correct: q.suggestedRewrite.correct,
+        tags: q.suggestedRewrite.tags || q.tags || [],
+        versionSource: "ai_rewrite",
+        wasRewritten: true,
+        lastEditedBy: null,
+        lastEditedAt: new Date().toISOString(),
+        humanVerified: false,
+        status: "pending",
+      };
+
+      updateQuestionInState(q.id, () => updatedQ);
+      showMessage("✓ AI rewrite applied", TOAST_DURATION.SHORT);
+    },
+    [updateQuestionInState, showMessage]
   );
 
   return {
     handleCritique,
     handleApplyRewrite,
+    handleRevertToOriginal,
+    handleUseAIRewrite,
   };
 };

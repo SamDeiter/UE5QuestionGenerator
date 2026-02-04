@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -38,7 +38,80 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Pre-React loading state - replaced when app mounts -->
+      <style>
+        .initial-loader {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+          color: #fff;
+          font-family:
+            "Inter",
+            -apple-system,
+            BlinkMacSystemFont,
+            sans-serif;
+        }
+        .initial-loader img {
+          width: 80px;
+          height: 80px;
+          margin-bottom: 24px;
+          animation: pulse 2s ease-in-out infinite;
+        }
+        .initial-loader h2 {
+          font-size: 1.25rem;
+          font-weight: 500;
+          margin: 0 0 8px 0;
+          color: #e0e0e0;
+        }
+        .initial-loader p {
+          font-size: 0.875rem;
+          color: #888;
+          margin: 0;
+        }
+        .dots::after {
+          content: "";
+          animation: dots 1.5s steps(4, end) infinite;
+        }
+        @keyframes dots {
+          0% {
+            content: "";
+          }
+          25% {
+            content: ".";
+          }
+          50% {
+            content: "..";
+          }
+          75% {
+            content: "...";
+          }
+        }
+        @keyframes pulse {
+          0%,
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.7;
+            transform: scale(0.95);
+          }
+        }
+      </style>
+      <div class="initial-loader">
+        <img
+          src="/UE5QuestionGenerator/logos/UE-Icon-2023-White.svg"
+          alt="UE5"
+          onerror="this.style.display = 'none'"
+        />
+        <h2>UE5 Question Generator</h2>
+        <p class="dots">Initializing</p>
+      </div>
+    </div>
     <script type="module" src="src/main.jsx"></script>
   </body>
 </html>

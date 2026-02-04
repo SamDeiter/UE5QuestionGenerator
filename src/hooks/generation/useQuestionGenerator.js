@@ -23,6 +23,7 @@ import {
   verifyAndProcessQuestions,
 } from "../../utils/generationUtils";
 import { logger } from "../../utils/logger";
+import { logError } from "../../utils/AppError";
 
 /**
  * Hook to handle question generation, explanation, and variation.
@@ -547,7 +548,7 @@ Output in Markdown Table format.`;
           );
         }
       } catch (e) {
-        logger.error("Variation generation failed:", e);
+        logError(e, { operation: "generateVariations", questionId: q?.id });
         setStatus("Fail");
         showMessage(
           `Failed to generate variations: ${e.message}`,

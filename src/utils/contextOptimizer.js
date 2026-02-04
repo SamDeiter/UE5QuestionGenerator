@@ -4,8 +4,8 @@
  * while maintaining relevance for question generation
  */
 
-import { estimateTokens } from './tokenCounter';
-import { CONTEXT_LIMITS } from './constants';
+import { estimateTokens } from "./tokenCounter";
+import { CONTEXT_LIMITS } from "./constants";
 
 // Use centralized constants
 const MAX_CONTEXT_TOKENS = CONTEXT_LIMITS.MAX_TOKENS;
@@ -17,22 +17,102 @@ const MAX_EXCERPT_LENGTH = CONTEXT_LIMITS.MAX_EXCERPT_LENGTH;
  * @returns {string[]} Array of relevant keywords
  */
 const getDisciplineKeywords = (discipline) => {
-    const keywordMap = {
-        'Animation': ['animation', 'skeletal', 'mesh', 'bone', 'rig', 'blend', 'montage', 'sequence'],
-        'Audio': ['audio', 'sound', 'attenuation', 'reverb', 'spatialization', 'metasound', 'cue'],
-        'Blueprints': ['blueprint', 'node', 'event', 'function', 'variable', 'cast', 'interface'],
-        'Gameplay': ['gameplay', 'actor', 'component', 'pawn', 'controller', 'input', 'collision'],
-        'Lighting': ['light', 'lumen', 'shadow', 'reflection', 'gi', 'global illumination', 'exposure'],
-        'Materials': ['material', 'shader', 'texture', 'parameter', 'blend', 'opacity', 'roughness'],
-        'Niagara': ['niagara', 'particle', 'emitter', 'module', 'system', 'vfx', 'effect'],
-        'Performance': ['performance', 'optimization', 'profiler', 'fps', 'memory', 'cpu', 'gpu'],
-        'Rendering': ['render', 'nanite', 'lumen', 'vsm', 'virtual shadow', 'post process', 'anti-aliasing'],
-        'Scripting': ['c++', 'code', 'class', 'function', 'header', 'module', 'api'],
-        'UI': ['umg', 'widget', 'ui', 'hud', 'canvas', 'slate', 'menu'],
-        'World Building': ['landscape', 'foliage', 'terrain', 'world partition', 'level', 'streaming']
-    };
+  const keywordMap = {
+    Animation: [
+      "animation",
+      "skeletal",
+      "mesh",
+      "bone",
+      "rig",
+      "blend",
+      "montage",
+      "sequence",
+    ],
+    Audio: [
+      "audio",
+      "sound",
+      "attenuation",
+      "reverb",
+      "spatialization",
+      "metasound",
+      "cue",
+    ],
+    Blueprints: [
+      "blueprint",
+      "node",
+      "event",
+      "function",
+      "variable",
+      "cast",
+      "interface",
+    ],
+    Gameplay: [
+      "gameplay",
+      "actor",
+      "component",
+      "pawn",
+      "controller",
+      "input",
+      "collision",
+    ],
+    Lighting: [
+      "light",
+      "lumen",
+      "shadow",
+      "reflection",
+      "gi",
+      "global illumination",
+      "exposure",
+    ],
+    Materials: [
+      "material",
+      "shader",
+      "texture",
+      "parameter",
+      "blend",
+      "opacity",
+      "roughness",
+    ],
+    Niagara: [
+      "niagara",
+      "particle",
+      "emitter",
+      "module",
+      "system",
+      "vfx",
+      "effect",
+    ],
+    Performance: [
+      "performance",
+      "optimization",
+      "profiler",
+      "fps",
+      "memory",
+      "cpu",
+      "gpu",
+    ],
+    Rendering: [
+      "render",
+      "nanite",
+      "lumen",
+      "vsm",
+      "virtual shadow",
+      "post process",
+      "anti-aliasing",
+    ],
+    Scripting: ["c++", "code", "class", "function", "header", "module", "api"],
+    UI: ["umg", "widget", "ui", "hud", "canvas", "slate", "menu"],
+    "World Building": [
+      "landscape",
+      "foliage",
+      "terrain",
+      "world partition",
+      "level",
+      "streaming",
+    ],
+  };
 
-    return keywordMap[discipline] || [];
+  return keywordMap[discipline] || [];
 };
 
 /**
@@ -42,18 +122,18 @@ const getDisciplineKeywords = (discipline) => {
  * @returns {number} Relevance score
  */
 const scoreRelevance = (text, keywords) => {
-    const lowerText = text.toLowerCase();
-    let score = 0;
+  const lowerText = text.toLowerCase();
+  let score = 0;
 
-    keywords.forEach(keyword => {
-        const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
-        const matches = lowerText.match(regex);
-        if (matches) {
-            score += matches.length;
-        }
-    });
+  keywords.forEach((keyword) => {
+    const regex = new RegExp(`\\b${keyword}\\b`, "gi");
+    const matches = lowerText.match(regex);
+    if (matches) {
+      score += matches.length;
+    }
+  });
 
-    return score;
+  return score;
 };
 
 /**
@@ -63,24 +143,27 @@ const scoreRelevance = (text, keywords) => {
  * @returns {string[]} Array of text chunks
  */
 const splitIntoChunks = (text, chunkSize = 1000) => {
-    const chunks = [];
-    const lines = text.split('\n');
-    let currentChunk = '';
+  const chunks = [];
+  const lines = text.split("\n");
+  let currentChunk = "";
 
-    for (const line of lines) {
-        if (currentChunk.length + line.length > chunkSize && currentChunk.length > 0) {
-            chunks.push(currentChunk.trim());
-            currentChunk = line;
-        } else {
-            currentChunk += (currentChunk ? '\n' : '') + line;
-        }
+  for (const line of lines) {
+    if (
+      currentChunk.length + line.length > chunkSize &&
+      currentChunk.length > 0
+    ) {
+      chunks.push(currentChunk.trim());
+      currentChunk = line;
+    } else {
+      currentChunk += (currentChunk ? "\n" : "") + line;
     }
+  }
 
-    if (currentChunk) {
-        chunks.push(currentChunk.trim());
-    }
+  if (currentChunk) {
+    chunks.push(currentChunk.trim());
+  }
 
-    return chunks;
+  return chunks;
 };
 
 /**
@@ -91,30 +174,30 @@ const splitIntoChunks = (text, chunkSize = 1000) => {
  * @returns {string[]} Array of relevant excerpts
  */
 export const extractRelevantExcerpts = (text, discipline, maxExcerpts = 4) => {
-    if (!text) return [];
+  if (!text) return [];
 
-    const keywords = getDisciplineKeywords(discipline);
-    const chunks = splitIntoChunks(text, 1000);
+  const keywords = getDisciplineKeywords(discipline);
+  const chunks = splitIntoChunks(text, 1000);
 
-    // Score each chunk
-    const scoredChunks = chunks.map(chunk => ({
-        text: chunk,
-        score: scoreRelevance(chunk, keywords)
-    }));
+  // Score each chunk
+  const scoredChunks = chunks.map((chunk) => ({
+    text: chunk,
+    score: scoreRelevance(chunk, keywords),
+  }));
 
-    // Sort by relevance and take top excerpts
-    const topChunks = scoredChunks
-        .sort((a, b) => b.score - a.score)
-        .slice(0, maxExcerpts)
-        .filter(chunk => chunk.score > 0); // Only include chunks with keywords
+  // Sort by relevance and take top excerpts
+  const topChunks = scoredChunks
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxExcerpts)
+    .filter((chunk) => chunk.score > 0); // Only include chunks with keywords
 
-    // Truncate excerpts to max length
-    return topChunks.map(chunk => {
-        if (chunk.text.length <= MAX_EXCERPT_LENGTH) {
-            return chunk.text;
-        }
-        return chunk.text.substring(0, MAX_EXCERPT_LENGTH) + '...';
-    });
+  // Truncate excerpts to max length
+  return topChunks.map((chunk) => {
+    if (chunk.text.length <= MAX_EXCERPT_LENGTH) {
+      return chunk.text;
+    }
+    return chunk.text.substring(0, MAX_EXCERPT_LENGTH) + "...";
+  });
 };
 
 /**
@@ -124,35 +207,40 @@ export const extractRelevantExcerpts = (text, discipline, maxExcerpts = 4) => {
  * @returns {string} Optimized context string
  */
 export const optimizeContext = (fileContent, discipline) => {
-    if (!fileContent) return '';
+  if (!fileContent) return "";
 
-    // First, check if we're already under the limit
-    const initialTokens = estimateTokens(fileContent);
-    if (initialTokens <= MAX_CONTEXT_TOKENS) {
-        return fileContent;
-    }
+  // First, check if we're already under the limit
+  const initialTokens = estimateTokens(fileContent);
+  if (initialTokens <= MAX_CONTEXT_TOKENS) {
+    return fileContent;
+  }
 
-    // Extract relevant excerpts
-    const excerpts = extractRelevantExcerpts(fileContent, discipline);
+  // Extract relevant excerpts
+  const excerpts = extractRelevantExcerpts(fileContent, discipline);
 
-    if (excerpts.length === 0) {
-        // No relevant excerpts found, truncate intelligently
-        const targetChars = MAX_CONTEXT_TOKENS * 4; // Approximate characters
-        return fileContent.substring(0, targetChars) + '\n\n[Content truncated for token limit]';
-    }
+  if (excerpts.length === 0) {
+    // No relevant excerpts found, truncate intelligently
+    const targetChars = MAX_CONTEXT_TOKENS * 4; // Approximate characters
+    return (
+      fileContent.substring(0, targetChars) +
+      "\n\n[Content truncated for token limit]"
+    );
+  }
 
-    // Combine excerpts
-    let optimizedContext = excerpts.join('\n\n---\n\n');
+  // Combine excerpts
+  let optimizedContext = excerpts.join("\n\n---\n\n");
 
-    // Check if still too long
-    const optimizedTokens = estimateTokens(optimizedContext);
-    if (optimizedTokens > MAX_CONTEXT_TOKENS) {
-        // Further truncate
-        const targetChars = MAX_CONTEXT_TOKENS * 4;
-        optimizedContext = optimizedContext.substring(0, targetChars) + '\n\n[Content truncated for token limit]';
-    }
+  // Check if still too long
+  const optimizedTokens = estimateTokens(optimizedContext);
+  if (optimizedTokens > MAX_CONTEXT_TOKENS) {
+    // Further truncate
+    const targetChars = MAX_CONTEXT_TOKENS * 4;
+    optimizedContext =
+      optimizedContext.substring(0, targetChars) +
+      "\n\n[Content truncated for token limit]";
+  }
 
-    return optimizedContext;
+  return optimizedContext;
 };
 
 /**
@@ -162,24 +250,24 @@ export const optimizeContext = (fileContent, discipline) => {
  * @returns {string} Combined optimized context
  */
 export const processMultipleFiles = (files, discipline) => {
-    if (!files || files.length === 0) return '';
+  if (!files || files.length === 0) return "";
 
-    const tokensPerFile = Math.floor(MAX_CONTEXT_TOKENS / files.length);
+  const tokensPerFile = Math.floor(MAX_CONTEXT_TOKENS / files.length);
 
-    const processedFiles = files.map(file => {
-        const optimized = optimizeContext(file.content, discipline);
-        const tokens = estimateTokens(optimized);
+  const processedFiles = files.map((file) => {
+    const optimized = optimizeContext(file.content, discipline);
+    const tokens = estimateTokens(optimized);
 
-        // If this file is using too many tokens, truncate further
-        if (tokens > tokensPerFile) {
-            const targetChars = tokensPerFile * 4;
-            return `## ${file.name}\n${optimized.substring(0, targetChars)}...`;
-        }
+    // If this file is using too many tokens, truncate further
+    if (tokens > tokensPerFile) {
+      const targetChars = tokensPerFile * 4;
+      return `## ${file.name}\n${optimized.substring(0, targetChars)}...`;
+    }
 
-        return `## ${file.name}\n${optimized}`;
-    });
+    return `## ${file.name}\n${optimized}`;
+  });
 
-    return processedFiles.join('\n\n');
+  return processedFiles.join("\n\n");
 };
 
 /**
@@ -189,25 +277,26 @@ export const processMultipleFiles = (files, discipline) => {
  * @returns {object} Analysis results
  */
 export const analyzeOptimization = (original, optimized) => {
-    const originalTokens = estimateTokens(original);
-    const optimizedTokens = estimateTokens(optimized);
-    const reduction = originalTokens - optimizedTokens;
-    const percentage = originalTokens > 0 ? Math.round((reduction / originalTokens) * 100) : 0;
+  const originalTokens = estimateTokens(original);
+  const optimizedTokens = estimateTokens(optimized);
+  const reduction = originalTokens - optimizedTokens;
+  const percentage =
+    originalTokens > 0 ? Math.round((reduction / originalTokens) * 100) : 0;
 
-    return {
-        original: {
-            tokens: originalTokens,
-            chars: original.length
-        },
-        optimized: {
-            tokens: optimizedTokens,
-            chars: optimized.length
-        },
-        reduction: {
-            tokens: reduction,
-            chars: original.length - optimized.length,
-            percentage
-        },
-        withinLimit: optimizedTokens <= MAX_CONTEXT_TOKENS
-    };
+  return {
+    original: {
+      tokens: originalTokens,
+      chars: original.length,
+    },
+    optimized: {
+      tokens: optimizedTokens,
+      chars: optimized.length,
+    },
+    reduction: {
+      tokens: reduction,
+      chars: original.length - optimized.length,
+      percentage,
+    },
+    withinLimit: optimizedTokens <= MAX_CONTEXT_TOKENS,
+  };
 };

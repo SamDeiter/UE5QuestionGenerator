@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   APP_MODES,
   QUESTION_STATUS,
-  QUESTION_DIFFICULTY,
   TOAST_DURATION,
   QUALITY_THRESHOLDS,
 } from "../utils/constants";
@@ -19,22 +18,36 @@ import QuestionActions from "./QuestionItem/QuestionActions";
 import ValidationWarnings from "./QuestionItem/ValidationWarnings";
 import ExplanationDisplay from "./QuestionItem/ExplanationDisplay";
 import SourceContextCard from "./QuestionItem/SourceContextCard";
+import NeedsResearchBadge, {
+  NeedsResearchButton,
+} from "./QuestionItem/NeedsResearchBadge";
 import ImprovementModal from "./ImprovementModal";
 import VerifyConfirmModal from "./VerifyConfirmModal";
+import VersionComparisonModal from "./VersionComparisonModal";
 
 import QuestionNotesField from "./QuestionItem/QuestionNotesField";
 import QuestionHeader from "./QuestionItem/QuestionHeader";
 
-import { useEditLock } from "../hooks/useEditLock";
 import { logger } from "../utils/logger";
 import { useAuth } from "../hooks/useAuth";
 import { useAccessibility } from "../contexts/AccessibilityContext";
+import { useEditLock } from "../hooks/useEditLock";
+import {
+  getLockColor,
+  getLockTooltip,
+  getLockIcon,
+  getLockLabel,
+  getStatusStyle,
+  getDifficultyGradient,
+  buildVerifyDocsData,
+  buildVerifySearchData,
+  buildRejectVerificationData,
+  buildFlagUnverifiedData,
+} from "../utils/questionItemHelpers";
 
 import { saveTrainingPair } from "../services/trainingDataService";
 
-// Helper functions (updated to use constants where appropriate, though display text might differ)
-// ...
-
+// Stage 2.1: Using extracted helpers from questionItemHelpers.js
 const QuestionItem = ({
   q,
   appMode,
@@ -48,6 +61,8 @@ const QuestionItem = ({
   onDelete,
   onUpdateQuestion,
   onKickBack, // NEW: Handler for kicking question back to review
+  onRevertToOriginal, // NEW: Handler for reverting to original version
+  onUseAIRewrite, // NEW: Handler for re-applying AI rewrite
   availableVariants,
   isProcessing,
   showMessage,
@@ -80,6 +95,7 @@ const QuestionItem = ({
   const [editedText, setEditedText] = useState("");
   const [showImprovementModal, setShowImprovementModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(null); // null or "docs" or "search"
+  const [showVersionModal, setShowVersionModal] = useState(false); // Version comparison modal
   const lastProcessedCritiqueRef = useRef(null);
 
   // Display question (supports language variants)
@@ -101,50 +117,8 @@ const QuestionItem = ({
     setShowImprovementModal(false);
   }, [q.id]);
 
-  // Lock status color helper - refactored to avoid nested ternaries
-  const lockColor = (hasLockArg, isLockedArg, type) => {
-    if (hasLockArg) {
-      if (type === "container") {
-        return cb
-          ? "bg-blue-900/30 border border-blue-500/50"
-          : "bg-green-900/30 border border-green-500/50";
-      }
-      return cb ? "text-blue-400" : "text-green-400";
-    }
-    if (isLockedArg) {
-      if (type === "container") {
-        return cb
-          ? "bg-rose-900/30 border border-rose-500/50"
-          : "bg-red-900/30 border border-red-500/50";
-      }
-      return cb ? "text-rose-400" : "text-red-400";
-    }
-    if (type === "container") {
-      return "bg-slate-800/50 border border-slate-600/50";
-    }
-    return "text-slate-400";
-  };
-
-  // Lock tooltip helper
-  const getLockTooltip = (hasLockVal, isLockedVal, lockedByEmail) => {
-    if (hasLockVal) return "You have the edit lock";
-    if (isLockedVal) return `Locked by ${lockedByEmail || "another user"}`;
-    return "Available for editing";
-  };
-
-  // Lock icon name helper (avoids nested ternary)
-  const getLockIcon = (hasLockVal, isLockedVal) => {
-    if (hasLockVal) return "edit-3";
-    if (isLockedVal) return "lock";
-    return "unlock";
-  };
-
-  // Lock label text helper (avoids nested ternary)
-  const getLockLabel = (hasLockVal, isLockedVal) => {
-    if (hasLockVal) return "Editing";
-    if (isLockedVal) return "Locked";
-    return "Available";
-  };
+  // Lock helpers: Using imported functions from questionItemHelpers.js
+  // - getLockColor, getLockTooltip, getLockIcon, getLockLabel
 
   // Auto-open improvement modal when critique arrives or updates
   // Track the last seen critiqueScore/attempts to detect re-critiques DURING THIS SESSION
@@ -209,22 +183,12 @@ const QuestionItem = ({
     setShowVerifyModal(true);
   }, []);
 
-  // NEW: Verification handlers for Traffic Light outcomes
-  // Include click tracking for accountability
+  // Verification handlers using extracted data builders
   const handleVerifyViaDocs = useCallback(
     (clickInfo = {}) => {
       if (!onUpdateQuestion) return;
-      onUpdateQuestion(q.id, {
-        humanVerified: true,
-        humanVerifiedBy: userEmail || "Unknown",
-        humanVerifiedAt: new Date().toISOString(),
-        verificationSource: "epic_docs",
-        verificationClickedDocs: clickInfo.clickedDocs || false,
-        verificationClickedSearch: clickInfo.clickedSearch || false,
-      });
-      if (showMessage) {
-        showMessage("✅ Verified via Epic Docs!", TOAST_DURATION.MEDIUM);
-      }
+      onUpdateQuestion(q.id, buildVerifyDocsData(userEmail, clickInfo));
+      showMessage?.("✅ Verified via Epic Docs!", TOAST_DURATION.MEDIUM);
     },
     [q.id, onUpdateQuestion, userEmail, showMessage]
   );
@@ -232,17 +196,8 @@ const QuestionItem = ({
   const handleVerifyViaSearch = useCallback(
     (clickInfo = {}) => {
       if (!onUpdateQuestion) return;
-      onUpdateQuestion(q.id, {
-        humanVerified: true,
-        humanVerifiedBy: userEmail || "Unknown",
-        humanVerifiedAt: new Date().toISOString(),
-        verificationSource: "google_search",
-        verificationClickedDocs: clickInfo.clickedDocs || false,
-        verificationClickedSearch: clickInfo.clickedSearch || false,
-      });
-      if (showMessage) {
-        showMessage("✅ Verified via Google Search!", TOAST_DURATION.MEDIUM);
-      }
+      onUpdateQuestion(q.id, buildVerifySearchData(userEmail, clickInfo));
+      showMessage?.("✅ Verified via Google Search!", TOAST_DURATION.MEDIUM);
     },
     [q.id, onUpdateQuestion, userEmail, showMessage]
   );
@@ -250,57 +205,71 @@ const QuestionItem = ({
   const handleRejectVerification = useCallback(
     (reasonId, clickInfo = {}) => {
       if (!onUpdateQuestion) return;
-      // Save rejection info to question document
-      onUpdateQuestion(q.id, {
-        humanVerified: false,
-        verificationRejected: true,
-        verificationRejectedBy: userEmail || "Unknown",
-        verificationRejectedAt: new Date().toISOString(),
-        verificationRejectReason: reasonId,
-        verificationClickedDocs: clickInfo.clickedDocs || false,
-        verificationClickedSearch: clickInfo.clickedSearch || false,
-      });
-      // Also update status to rejected
-      if (onUpdateStatus) {
-        onUpdateStatus(q.id, QUESTION_STATUS.REJECTED, reasonId);
-      }
-      if (showMessage) {
-        showMessage(
-          "❌ Question rejected - source not verified",
-          TOAST_DURATION.LONG
-        );
-      }
+      onUpdateQuestion(
+        q.id,
+        buildRejectVerificationData(userEmail, reasonId, clickInfo)
+      );
+      onUpdateStatus?.(q.id, QUESTION_STATUS.REJECTED, reasonId);
+      showMessage?.(
+        "❌ Question rejected - source not verified",
+        TOAST_DURATION.LONG
+      );
     },
     [q.id, onUpdateQuestion, onUpdateStatus, userEmail, showMessage]
   );
 
-  // NEW: Flag as unverified but don't reject - question advances to Accept with warning
+  // Flag as unverified but don't reject - question advances to Accept with warning
   const handleFlagUnverified = useCallback(
     (clickInfo = {}) => {
       if (!onUpdateQuestion) return;
-      onUpdateQuestion(q.id, {
-        // Mark as verified so it advances to Accept step
-        humanVerified: true,
-        humanVerifiedBy: userEmail || "Unknown",
-        humanVerifiedAt: new Date().toISOString(),
-        verificationSource: "flagged_unverified",
-        // But also flag as source unverified
-        sourceUnverified: true,
-        sourceUnverifiedBy: userEmail || "Unknown",
-        sourceUnverifiedAt: new Date().toISOString(),
-        sourceUnverifiedReason: "not_found_anywhere",
-        verificationClickedDocs: clickInfo.clickedDocs || false,
-        verificationClickedSearch: clickInfo.clickedSearch || false,
-      });
-      if (showMessage) {
-        showMessage(
-          "🚩 Flagged - source unverified, ready for Accept/Reject",
-          TOAST_DURATION.LONG
-        );
-      }
+      onUpdateQuestion(q.id, buildFlagUnverifiedData(userEmail, clickInfo));
+      showMessage?.(
+        "🚩 Flagged - source unverified, ready for Accept/Reject",
+        TOAST_DURATION.LONG
+      );
     },
     [q.id, onUpdateQuestion, userEmail, showMessage]
   );
+
+  // Handle doc link updates from the DocLinkEditor component (Phase 1)
+  const handleDocLinkUpdate = useCallback(
+    (updates) => {
+      if (!onUpdateQuestion) return;
+      // Include the modifiedBy field automatically
+      onUpdateQuestion(q.id, {
+        ...updates,
+        docLinkModifiedBy: userEmail,
+      });
+    },
+    [q.id, onUpdateQuestion, userEmail]
+  );
+
+  // Note: Answer/DocLink state now handled in ImprovementModal  // Handle marking a question for research (Phase 4)
+  const handleMarkForResearch = useCallback(() => {
+    if (!onUpdateQuestion) return;
+    const reason = window.prompt(
+      "Why does this question need research?\n(e.g., 'Unsure if this API still exists in UE5.4')"
+    );
+    if (reason === null) return; // User cancelled
+
+    onUpdateQuestion(q.id, {
+      needsResearch: true,
+      needsResearchReason: reason || "Needs manual verification",
+      needsResearchAt: new Date().toISOString(),
+      needsResearchBy: userEmail,
+    });
+    showMessage?.("🔬 Marked for research", TOAST_DURATION.MEDIUM);
+  }, [q.id, onUpdateQuestion, userEmail, showMessage]);
+
+  // Handle clearing research flag (Phase 4)
+  const handleClearResearch = useCallback(() => {
+    if (!onUpdateQuestion) return;
+    onUpdateQuestion(q.id, {
+      needsResearch: false,
+      // Keep the reason/metadata for audit trail
+    });
+    showMessage?.("✅ Research flag cleared", TOAST_DURATION.MEDIUM);
+  }, [q.id, onUpdateQuestion, showMessage]);
 
   const handleFix = useCallback(() => {
     if (onApplyRewrite) {
@@ -321,6 +290,16 @@ const QuestionItem = ({
       return;
     }
 
+    // NEEDS RESEARCH BLOCK (Phase 4): Cannot accept if flagged for research
+    if (q.needsResearch) {
+      if (showMessage)
+        showMessage(
+          "🔬 This question is marked for research. Clear the flag or reject it.",
+          TOAST_DURATION.LONG
+        );
+      return;
+    }
+
     // LOW-SCORE WARNING: Confirm before accepting low-quality questions
     const passThreshold = QUALITY_THRESHOLDS?.PASS || 70;
     if (q.critiqueScore < passThreshold) {
@@ -331,47 +310,21 @@ const QuestionItem = ({
     }
 
     onUpdateStatus(q.id, QUESTION_STATUS.ACCEPTED);
-  }, [q.critiqueScore, q.humanVerified, q.id, onUpdateStatus, showMessage]);
+  }, [
+    q.critiqueScore,
+    q.humanVerified,
+    q.needsResearch,
+    q.id,
+    onUpdateStatus,
+    showMessage,
+  ]);
 
-  // Status style helper
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case QUESTION_STATUS.ACCEPTED:
-        return "ring-1 ring-green-500/50";
-      case QUESTION_STATUS.REJECTED:
-        return "border-red-900/50 bg-slate-950/80 opacity-50 grayscale";
-      default:
-        return "";
-    }
-  };
-
-  const getGradient = (d) => {
-    // Normalize to handle "Easy" vs "Beginner" legacy data
-    const difficulty = d?.toLowerCase();
-    if (
-      difficulty === "easy" ||
-      difficulty === QUESTION_DIFFICULTY.BEGINNER.toLowerCase()
-    ) {
-      return "bg-gradient-to-br from-slate-900/50 to-green-950 border-green-700 shadow-[0_0_15px_-5px_rgba(34,197,94,0.3)]";
-    }
-    if (
-      difficulty === "medium" ||
-      difficulty === QUESTION_DIFFICULTY.INTERMEDIATE.toLowerCase()
-    ) {
-      return "bg-gradient-to-br from-slate-900/50 to-yellow-950 border-yellow-700 shadow-[0_0_15px_-5px_rgba(234,179,8,0.3)]";
-    }
-    if (
-      difficulty === "hard" ||
-      difficulty === QUESTION_DIFFICULTY.EXPERT.toLowerCase()
-    ) {
-      return "bg-gradient-to-br from-slate-900/50 to-red-950 border-red-700 shadow-[0_0_15px_-5px_rgba(239,68,68,0.3)]";
-    }
-    return "bg-slate-900 border-slate-800";
-  };
+  // Style helpers: Using imported functions from questionItemHelpers.js
+  // - getStatusStyle, getDifficultyGradient
 
   return (
     <div
-      className={`group rounded-lg border shadow-sm transition-all p-4 relative ${getGradient(
+      className={`group rounded-lg border shadow-sm transition-all p-4 relative ${getDifficultyGradient(
         q.difficulty
       )} ${getStatusStyle(q.status)}`}
     >
@@ -393,21 +346,54 @@ const QuestionItem = ({
       {/* Active Lock Indicator */}
       {appMode === APP_MODES.REVIEW && (
         <div
-          className={`ml-6 mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all duration-500 ${lockColor(
+          className={`ml-6 mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all duration-500 ${getLockColor(
             hasLock,
             isLocked,
-            "container"
+            "container",
+            cb
           )}`}
           title={getLockTooltip(hasLock, isLocked, lockedBy?.email)}
         >
           <Icon
             name={getLockIcon(hasLock, isLocked)}
             size={12}
-            className={lockColor(hasLock, isLocked, "icon")}
+            className={getLockColor(hasLock, isLocked, "icon", cb)}
           />
-          <span className={lockColor(hasLock, isLocked, "icon")}>
+          <span className={getLockColor(hasLock, isLocked, "icon", cb)}>
             {getLockLabel(hasLock, isLocked)}
           </span>
+        </div>
+      )}
+
+      {/* Version Source Badge - Shows if question was rewritten */}
+      {q.versionSource && q.versionSource !== "original" && (
+        <div
+          className={`ml-6 mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs cursor-pointer transition-all hover:opacity-80 ${
+            q.versionSource === "ai_rewrite"
+              ? "bg-purple-900/30 border border-purple-500/50 text-purple-300"
+              : "bg-blue-900/30 border border-blue-500/50 text-blue-300"
+          }`}
+          title={
+            q.originalVersion
+              ? "Click to compare versions"
+              : `Version source: ${q.versionSource}`
+          }
+          onClick={() => {
+            if (q.originalVersion) {
+              setShowVersionModal(true);
+            }
+          }}
+        >
+          <Icon
+            name={q.versionSource === "ai_rewrite" ? "zap" : "edit-3"}
+            size={12}
+          />
+          <span>
+            {q.versionSource === "ai_rewrite" ? "AI Rewrite" : "Edited"}
+          </span>
+          {q.originalVersion && (
+            <Icon name="chevron-right" size={10} className="opacity-60" />
+          )}
         </div>
       )}
 
@@ -415,20 +401,7 @@ const QuestionItem = ({
         <QuestionHeader
           q={displayQuestion}
           originalQ={q}
-          getDiffBadgeColor={(d) => {
-            const diff = d?.toLowerCase();
-            if (diff === "beginner" || diff === "easy")
-              return cb
-                ? "bg-blue-950 text-blue-400 border-blue-800"
-                : "bg-green-950 text-green-400 border-green-800";
-            if (diff === "intermediate" || diff === "medium")
-              return "bg-yellow-950 text-yellow-400 border-yellow-800";
-            if (diff === "expert" || diff === "hard")
-              return cb
-                ? "bg-rose-950 text-rose-400 border-rose-800"
-                : "bg-red-950 text-red-400 border-red-800";
-            return "bg-slate-800 text-slate-400 border-slate-700";
-          }}
+          colorblindMode={cb}
           appMode={appMode}
           onOpenCritiqueModal={() => setShowImprovementModal(true)}
           onUpdateQuestion={onUpdateQuestion}
@@ -505,7 +478,36 @@ const QuestionItem = ({
           onVerifySearch={handleOpenSearch}
           showMessage={showMessage}
           canVerify={q.critiqueScore >= (QUALITY_THRESHOLDS?.PASS || 70)}
+          // Doc link management props (Phase 1)
+          docLinkSource={q.docLinkSource}
+          docLinkModifiedBy={q.docLinkModifiedBy}
+          docLinkModificationNote={q.docLinkModificationNote}
+          originalSourceUrl={q.originalSourceUrl}
+          originalSourceExcerpt={q.originalSourceExcerpt}
+          onDocLinkUpdate={handleDocLinkUpdate}
+          canEdit={appMode === APP_MODES.REVIEW}
         />
+
+        {/* Needs Research Badge - Show if question is flagged (Phase 4) */}
+        <NeedsResearchBadge
+          needsResearch={q.needsResearch}
+          needsResearchReason={q.needsResearchReason}
+          needsResearchBy={q.needsResearchBy}
+          needsResearchAt={q.needsResearchAt}
+          onClearResearch={handleClearResearch}
+          canClear={appMode === APP_MODES.REVIEW}
+        />
+
+        {/* Mark for Research button (Phase 4) - standalone quick action */}
+        {appMode === APP_MODES.REVIEW && (
+          <div className="mb-3">
+            <NeedsResearchButton
+              needsResearch={q.needsResearch}
+              onMarkForResearch={handleMarkForResearch}
+              disabled={isLocked}
+            />
+          </div>
+        )}
 
         <CritiqueSection
           q={q}
@@ -624,12 +626,14 @@ const QuestionItem = ({
           <VerifyConfirmModal
             sourceUrl={q.sourceUrl || q.SourceURL || q.SourceUrl}
             sourceExcerpt={q.sourceExcerpt}
-            onVerifyDocs={() => {
-              handleVerifyViaDocs();
+            onVerifyDocs={(verifyData) => {
+              // verifyData now includes { clickedDocs, clickedSearch, answerState, docLinkState }
+              handleVerifyViaDocs(verifyData);
               setShowVerifyModal(null);
             }}
-            onVerifySearch={() => {
-              handleVerifyViaSearch();
+            onVerifySearch={(verifyData) => {
+              // verifyData now includes { clickedDocs, clickedSearch, answerState, docLinkState }
+              handleVerifyViaSearch(verifyData);
               setShowVerifyModal(null);
             }}
             onReject={(reasonId) => {
@@ -640,7 +644,29 @@ const QuestionItem = ({
               handleFlagUnverified(clickInfo);
               setShowVerifyModal(null);
             }}
+            onDocLinkUpdate={(updates) => {
+              // Save the fixed URL - this allows fixing broken URLs without rejecting
+              handleDocLinkUpdate(updates);
+            }}
             onDismiss={() => setShowVerifyModal(null)}
+          />
+        )}
+
+        {/* Version Comparison Modal - Original vs AI Rewrite */}
+        {showVersionModal && (q.originalVersion || q.suggestedRewrite) && (
+          <VersionComparisonModal
+            isOpen={showVersionModal}
+            onClose={() => setShowVersionModal(false)}
+            originalVersion={q.originalVersion}
+            aiRewrite={q.suggestedRewrite}
+            _currentQuestion={q}
+            versionSource={q.versionSource || "original"}
+            onUseOriginal={() => {
+              if (onRevertToOriginal) onRevertToOriginal(q);
+            }}
+            onUseAIRewrite={() => {
+              if (onUseAIRewrite) onUseAIRewrite(q);
+            }}
           />
         )}
       </div>
@@ -660,6 +686,10 @@ const arePropsEqual = (prevProps, nextProps) => {
   if (prevProps.q?.improvementsApplied !== nextProps.q?.improvementsApplied)
     return false;
   if (prevProps.isProcessing !== nextProps.isProcessing) return false;
+
+  // FIX: Always re-render if source content changed (fixes stale clipboard bug)
+  if (prevProps.q?.sourceExcerpt !== nextProps.q?.sourceExcerpt) return false;
+  if (prevProps.q?.sourceUrl !== nextProps.q?.sourceUrl) return false;
 
   // Standard shallow comparison for other props
   const prevKeys = Object.keys(prevProps);

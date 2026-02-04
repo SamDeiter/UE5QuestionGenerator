@@ -40,16 +40,16 @@ function scheduleLockRelease(questionId, releaseCallback) {
   if (existing?.timeoutId) {
     clearTimeout(existing.timeoutId);
   }
-  
+
   const timeoutId = setTimeout(() => {
     logger.log(`[useEditLock] Executing delayed release for: ${questionId}`);
     globalLockState.activeLocks.delete(questionId);
     releaseCallback();
   }, 2000); // 2 second delay allows component to remount and cancel
-  
-  globalLockState.activeLocks.set(questionId, { 
-    ...existing, 
-    timeoutId 
+
+  globalLockState.activeLocks.set(questionId, {
+    ...existing,
+    timeoutId,
   });
 }
 
@@ -143,7 +143,7 @@ export function useEditLock(
         setLockStatus("acquired");
         setLockInfo(result.lock);
         setLockedBy(null);
-        
+
         // Mark lock active in global state to survive remounts
         markLockActive(questionId, userId);
 
@@ -183,21 +183,29 @@ export function useEditLock(
       if (!result.success) {
         if (result.isNetworkError) {
           consecutiveFailuresRef.current++;
-          logger.warn(`[useEditLock] Lock renewal network failure (${consecutiveFailuresRef.current}):`, result.error);
-          
+          logger.warn(
+            `[useEditLock] Lock renewal network failure (${consecutiveFailuresRef.current}):`,
+            result.error
+          );
+
           // Allow up to 3 consecutive network failures (approx 1.5 mins) before expiring
           if (consecutiveFailuresRef.current >= 3) {
-            logger.error("[useEditLock] Persistent network failure (3 attempts). Expiring lock.");
+            logger.error(
+              "[useEditLock] Persistent network failure (3 attempts). Expiring lock."
+            );
             setLockStatus("expired");
             if (onLockExpired) onLockExpired();
             return result;
           }
-          
+
           // Return special success-like state for network retry
           return { success: true, isRetrying: true };
         }
 
-        logger.warn("[useEditLock] Lock renewal failed (logic error):", result.error);
+        logger.warn(
+          "[useEditLock] Lock renewal failed (logic error):",
+          result.error
+        );
         setLockStatus("expired");
         if (onLockExpired) onLockExpired();
       } else {
@@ -313,7 +321,7 @@ export function useEditLock(
   // Uses delayed release to allow remounts to cancel and keep the lock
   useEffect(() => {
     const qId = String(questionId);
-    
+
     // On mount/update: cancel any pending release for this question
     markLockActive(qId, userId);
 
@@ -344,7 +352,7 @@ export function useEditLock(
       lockAttemptedRef.current = true;
       return;
     }
-    
+
     if (
       !isViewing ||
       lockAttemptedRef.current ||

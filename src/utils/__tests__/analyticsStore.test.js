@@ -1,7 +1,7 @@
 /**
  * analyticsStore - Core analytics functions tests
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   getAnalytics,
   logGeneration,
@@ -32,11 +32,12 @@ const localStorageMock = (() => {
   };
 })();
 
-Object.defineProperty(global, "localStorage", { value: localStorageMock });
+Object.defineProperty(globalThis, "localStorage", { value: localStorageMock });
 
-// Mock crypto.randomUUID
+// Mock crypto.randomUUID with a stable counter for tests
+let uuidCounter = 0;
 vi.stubGlobal("crypto", {
-  randomUUID: () => "test-uuid-" + Math.random().toString(36).slice(2),
+  randomUUID: () => `test-uuid-${++uuidCounter}`,
 });
 
 describe("analyticsStore", () => {

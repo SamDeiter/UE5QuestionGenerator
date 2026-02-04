@@ -192,7 +192,7 @@ const PromptPlayground = ({ config, apiKeyReady, effectiveApiKey }) => {
           </div>
 
           <div className="flex-1 overflow-auto p-6">
-            { }
+            {}
             {error ? (
               <div className="p-4 bg-red-900/20 border border-red-900/50 rounded-lg text-red-200 text-sm">
                 <strong className="block mb-1">Error</strong>

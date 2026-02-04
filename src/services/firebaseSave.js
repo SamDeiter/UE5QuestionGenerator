@@ -16,7 +16,9 @@ import {
 } from "firebase/firestore";
 import { logEvent } from "firebase/analytics";
 import { logger } from "../utils/logger";
+import { logError } from "../utils/AppError";
 import { PROCESSING } from "../utils/constants";
+import { getToastMessage } from "../utils/errorMessages";
 import {
   app,
   auth,
@@ -30,6 +32,8 @@ import { toastError } from "./toastEvents";
 // --- Lazy-load Firestore with Persistence ---
 let _db = null;
 let _persistenceInitialized = false;
+let _persistencePromise = null;
+let _persistenceStatus = "pending"; // "pending" | "enabled" | "failed"
 
 export const getDb = () => {
   if (!_db) {
@@ -38,27 +42,63 @@ export const getDb = () => {
     // Enable persistence in a non-blocking way
     if (!_persistenceInitialized && typeof window !== "undefined") {
       _persistenceInitialized = true;
-      enableMultiTabIndexedDbPersistence(_db)
+      _persistencePromise = enableMultiTabIndexedDbPersistence(_db)
         .then(() => {
           logger.log("✅ Firestore multi-tab persistence enabled");
+          _persistenceStatus = "enabled";
+          return { success: true, status: "enabled" };
         })
         .catch((err) => {
           if (err.code === "failed-precondition") {
             // Multiple tabs open, persistence can only be enabled in one tab at a time.
             logger.warn("⚠️ Firestore persistence failed: Multiple tabs open");
+            _persistenceStatus = "failed";
+            return { success: false, status: "failed", reason: "multi-tab" };
           } else if (err.code === "unimplemented") {
             // The current browser does not support all of the features required to enable persistence
             logger.warn(
               "⚠️ Firestore persistence failed: Browser not supported"
             );
+            _persistenceStatus = "failed";
+            return { success: false, status: "failed", reason: "unsupported" };
           } else {
             logger.error("❌ Firestore persistence error:", err);
+            _persistenceStatus = "failed";
+            return { success: false, status: "failed", reason: err.code };
           }
         });
     }
   }
   return _db;
 };
+
+/**
+ * Q10: Ensure Firestore persistence is enabled before critical operations.
+ *
+ * Call this before operations that depend on offline support:
+ * - Initial app load
+ * - Before queuing offline writes
+ * - Before enabling real-time listeners
+ *
+ * @returns {Promise<{success: boolean, status: string, reason?: string}>}
+ */
+export const ensurePersistence = async () => {
+  // Initialize db if not already done
+  getDb();
+
+  if (_persistencePromise) {
+    return await _persistencePromise;
+  }
+
+  // Browser doesn't support persistence or SSR
+  return { success: false, status: "unavailable", reason: "no-window" };
+};
+
+/**
+ * Get current persistence status synchronously.
+ * @returns {"pending" | "enabled" | "failed"}
+ */
+export const getPersistenceStatus = () => _persistenceStatus;
 
 // NOTE: Analytics disabled - requires Firebase Console configuration
 const analytics = null;
@@ -68,23 +108,119 @@ let offlineQueue = [];
 let isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
 let syncInProgress = false;
 
+// Queue configuration
+const QUEUE_CONFIG = {
+  MAX_AGE_MS: 24 * 60 * 60 * 1000, // 24 hours
+  MAX_RETRY_COUNT: 10,
+  STORAGE_KEY: "ue5_offline_queue",
+  USER_KEY: "ue5_queue_user_id",
+};
+
+/**
+ * Check if queue item has expired or exceeded retries
+ */
+const isQueueItemValid = (item) => {
+  const now = Date.now();
+  const age = now - (item.timestamp || 0);
+  const retryCount = item.retryCount || 0;
+
+  if (age > QUEUE_CONFIG.MAX_AGE_MS) {
+    logger.warn(
+      `[Queue] Expiring stale item (${Math.round(age / 3600000)}h old): ${item.question?.uniqueId}`
+    );
+    return false;
+  }
+
+  if (retryCount >= QUEUE_CONFIG.MAX_RETRY_COUNT) {
+    logger.warn(
+      `[Queue] Expiring item after ${retryCount} failed retries: ${item.question?.uniqueId}`
+    );
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * Clean up queue for current user - removes expired items and mismatched user items
+ */
+export const cleanupQueueForUser = (currentUserId) => {
+  const storedUserId = localStorage.getItem(QUEUE_CONFIG.USER_KEY);
+
+  // If different user, clear the entire queue
+  if (storedUserId && storedUserId !== currentUserId) {
+    logger.log(
+      `[Queue] New user login detected - clearing queue from previous user`
+    );
+    offlineQueue = [];
+    persistQueue();
+    localStorage.setItem(QUEUE_CONFIG.USER_KEY, currentUserId);
+    return { cleared: true, reason: "user_changed" };
+  }
+
+  // Store current user ID
+  localStorage.setItem(QUEUE_CONFIG.USER_KEY, currentUserId);
+
+  // Filter out expired/invalid items
+  const beforeCount = offlineQueue.length;
+  offlineQueue = offlineQueue.filter(isQueueItemValid);
+  const removed = beforeCount - offlineQueue.length;
+
+  if (removed > 0) {
+    logger.log(`[Queue] Cleaned up ${removed} expired/invalid items`);
+    persistQueue();
+  }
+
+  return { cleared: removed > 0, removed, remaining: offlineQueue.length };
+};
+
+/**
+ * Manual queue clear for debugging/recovery
+ */
+export const clearOfflineQueue = () => {
+  const count = offlineQueue.length;
+  offlineQueue = [];
+  persistQueue();
+  logger.log(`[Queue] Manually cleared ${count} items`);
+  notifyConnectionListeners();
+  return { cleared: count };
+};
+
 // Load queued items from localStorage on startup
 try {
-  const savedQueue = localStorage.getItem("ue5_offline_queue");
+  const savedQueue = localStorage.getItem(QUEUE_CONFIG.STORAGE_KEY);
   if (savedQueue) {
     offlineQueue = JSON.parse(savedQueue);
-    logger.log(`📦 Loaded ${offlineQueue.length} queued items from storage`);
+    // Immediately filter expired items on load
+    const beforeCount = offlineQueue.length;
+    offlineQueue = offlineQueue.filter(isQueueItemValid);
+    const expiredCount = beforeCount - offlineQueue.length;
+    if (expiredCount > 0) {
+      logger.log(`[Queue] Expired ${expiredCount} stale items on startup`);
+    }
+    if (offlineQueue.length > 0) {
+      logger.log(`📦 Loaded ${offlineQueue.length} queued items from storage`);
+    }
   }
 } catch (e) {
-  logger.warn("Failed to load offline queue:", e);
+  logError(e, {
+    operation: "loadOfflineQueue",
+    attemptedItems: offlineQueue.length,
+  });
 }
 
 // Save queue to localStorage
 const persistQueue = () => {
   try {
-    localStorage.setItem("ue5_offline_queue", JSON.stringify(offlineQueue));
+    localStorage.setItem(
+      QUEUE_CONFIG.STORAGE_KEY,
+      JSON.stringify(offlineQueue)
+    );
   } catch (e) {
-    logger.warn("Failed to persist offline queue:", e);
+    logError(e, {
+      operation: "persistQueue",
+      queueLength: offlineQueue.length,
+    });
   }
 };
 
@@ -199,7 +335,7 @@ const saveQuestionToFirestoreInternal = async (question) => {
 const processOfflineQueue = async () => {
   // Re-hydrate from localStorage in case items were added by another session/tab
   try {
-    const savedQueue = localStorage.getItem("ue5_offline_queue");
+    const savedQueue = localStorage.getItem(QUEUE_CONFIG.STORAGE_KEY);
     if (savedQueue) {
       const parsed = JSON.parse(savedQueue);
       if (parsed.length > offlineQueue.length) {
@@ -208,13 +344,29 @@ const processOfflineQueue = async () => {
       }
     }
   } catch (e) {
-    logger.warn("Failed to re-hydrate queue:", e);
+    logError(e, {
+      operation: "rehydrateQueue",
+      currentQueueLength: offlineQueue.length,
+    });
+  }
+
+  // Filter out expired items before processing
+  const beforeCount = offlineQueue.length;
+  offlineQueue = offlineQueue.filter(isQueueItemValid);
+  if (beforeCount !== offlineQueue.length) {
+    logger.log(
+      `[Queue] Filtered ${beforeCount - offlineQueue.length} expired items`
+    );
+    persistQueue();
   }
 
   if (syncInProgress || offlineQueue.length === 0) return;
 
   syncInProgress = true;
   logger.log(`🔄 Processing ${offlineQueue.length} queued items...`);
+
+  // Track if we've shown a permission error this cycle (avoid toast spam)
+  let hasShownPermissionToast = false;
 
   try {
     const itemsToProcess = [...offlineQueue];
@@ -227,31 +379,49 @@ const processOfflineQueue = async () => {
         await saveQuestionToFirestoreInternal(item.question);
         logger.log(`✓ Synced queued item: ${item.question.uniqueId}`);
       } catch (err) {
+        // DEBUG: Log full error details for permission debugging
+        console.error("[SYNC DEBUG] Failed to sync question:", {
+          questionId: item.question?.uniqueId,
+          errorCode: err.code,
+          errorMessage: err.message,
+          fullError: err,
+        });
+
         const isPermissionError =
           err.code === "permission-denied" ||
           err.message?.includes("permissions") ||
           err.message?.includes("Missing or insufficient permissions");
 
-        logger.warn(
-          `Failed to sync ${item.question.uniqueId}, re-queuing:`,
-          err
-        );
+        // Increment retry count
+        const updatedItem = {
+          ...item,
+          retryCount: (item.retryCount || 0) + 1,
+          lastRetryAt: Date.now(),
+        };
 
-        // ALWAYS re-queue on failure - never drop user data
-        // Permission errors may be temporary (stale token, rules change, etc.)
-        const alreadyHasNewer = offlineQueue.some(
-          (q) => q.question?.uniqueId === item.question?.uniqueId
-        );
-        if (!alreadyHasNewer) {
-          offlineQueue.push(item);
+        // Check if item should still be kept
+        if (isQueueItemValid(updatedItem)) {
+          logger.warn(
+            `Failed to sync ${item.question.uniqueId} (attempt ${updatedItem.retryCount}), re-queuing:`,
+            err.message
+          );
+
+          const alreadyHasNewer = offlineQueue.some(
+            (q) => q.question?.uniqueId === item.question?.uniqueId
+          );
+          if (!alreadyHasNewer) {
+            offlineQueue.push(updatedItem);
+          }
+        } else {
+          logger.warn(
+            `[Queue] Dropping item after max retries: ${item.question.uniqueId}`
+          );
         }
 
-        // Notify user of permission issues so they can take action
-        if (isPermissionError) {
-          toastError(
-            "⚠️ Permission issue saving questions - please refresh or re-sign in",
-            8000
-          );
+        // Rate-limit permission error toasts (only show once per sync cycle)
+        if (isPermissionError && !hasShownPermissionToast) {
+          toastError(getToastMessage(err, "syncing questions"), 8000);
+          hasShownPermissionToast = true;
         }
       }
     }

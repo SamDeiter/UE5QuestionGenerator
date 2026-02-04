@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { logger } from "../utils/logger";
 import { getCSVContent, segmentQuestions } from "../utils/exportUtils";
 import {
   saveQuestionsToSheets,
@@ -10,11 +11,12 @@ import {
 } from "../services/firebase";
 import { downloadFile, normalizeStatus } from "../utils/questionHelpers";
 import { formatDate } from "../utils/dateHelpers";
-import { logger } from "../utils/logger";
+import { logError } from "../utils/AppError";
 import {
   QUESTION_SOURCES,
   QUESTION_STATUS,
   APP_MODES,
+  FIRESTORE_LIMITS,
 } from "../utils/constants";
 import { validateQuestion } from "../utils/questionValidator";
 
@@ -170,7 +172,11 @@ export const useExport = (
         7000
       );
     } catch (e) {
-      logger.error("Error pushing to Sheets endpoint:", e);
+      logError(e, {
+        operation: "exportToSheets",
+        sheetUrl: config.sheetUrl,
+        questionCount: validQuestions.length,
+      });
       showMessage(
         `Error connecting to endpoint. Check URL/Console: ${e.message}`,
         10000
@@ -270,7 +276,7 @@ export const useExport = (
         );
       }
     } catch (e) {
-      logger.error("Load Error:", e);
+      logError(e, { operation: "loadFromSheets", sheetUrl: config.sheetUrl });
       showMessage(
         `Load Failed: ${e.message}. (Ensure Script Access is set to 'Anyone')`,
         7000
@@ -289,45 +295,108 @@ export const useExport = (
     replaceQuestions,
   ]);
 
+  // PERFORMANCE: Using constants from FIRESTORE_LIMITS for 3-tier loading strategy
+  const { INITIAL_LOAD_COUNT, FULL_SYNC_COUNT, BACKGROUND_SYNC_DELAY_MS } =
+    FIRESTORE_LIMITS;
+
   const handleLoadFromFirestore = useCallback(
-    async (silent = false, limit = 5000) => {
+    async (silent = false, fullSync = false) => {
       setIsProcessing(true);
-      setStatus(silent ? "" : "Loading from Firestore...");
       if (setShowExportMenu) setShowExportMenu(false);
 
-      try {
-        // Use getAllQuestionsFromFirestore for shared database view (all authenticated users can see all questions)
-        const data = await getAllQuestionsFromFirestore(5000, false, limit);
-
-        // PERFORMANCE: Load once to prevent re-render loops
-        const loadedQuestions = data.map((q, index) => ({
+      const processQuestions = (data) => {
+        return data.map((q, index) => ({
           ...q,
           // eslint-disable-next-line sonarjs/pseudo-random
-          id: q.id || Date.now() + index + Math.random(), // Ensure React key
-          status: q.status || QUESTION_STATUS.PENDING, // CRITICAL: Preserve actual status
+          id: q.id || Date.now() + index + Math.random(),
+          status: q.status || QUESTION_STATUS.PENDING,
         }));
+      };
 
-        if (replaceQuestions) {
-          replaceQuestions(loadedQuestions, QUESTION_SOURCES.DATABASE);
-          replaceQuestions(loadedQuestions, QUESTION_SOURCES.IMPORT); // Sync history
-        }
+      try {
+        // TIER 1: Instantly display from IndexedDB cache (0ms perceived load)
+        const { getCachedQuestions } =
+          await import("../services/questionCache");
+        const cachedData = await getCachedQuestions();
 
-        if (!silent) {
-          showMessage(
-            `Loaded ${loadedQuestions.length} questions from Firestore!`,
-            3000
+        if (cachedData.length > 0) {
+          const cachedQuestions = processQuestions(cachedData);
+          if (replaceQuestions) {
+            replaceQuestions(cachedQuestions, QUESTION_SOURCES.DATABASE);
+            replaceQuestions(cachedQuestions, QUESTION_SOURCES.IMPORT);
+          }
+          logger.log(
+            `⚡ TIER 1: Instantly loaded ${cachedQuestions.length} cached questions`
           );
         }
-      } catch (e) {
-        logger.error("Firestore Load Error:", e);
+
+        // TIER 2: Fast initial fetch (100 docs = ~200ms)
         if (!silent) {
-          showMessage(`Firestore Load Failed: ${e.message}`, 7000);
+          setStatus(cachedData.length > 0 ? "Syncing latest..." : "Loading...");
+        }
+
+        const initialLimit = fullSync ? FULL_SYNC_COUNT : INITIAL_LOAD_COUNT;
+        const freshData = await getAllQuestionsFromFirestore(
+          FULL_SYNC_COUNT,
+          true,
+          initialLimit
+        );
+        const freshQuestions = processQuestions(freshData);
+
+        if (replaceQuestions) {
+          replaceQuestions(freshQuestions, QUESTION_SOURCES.DATABASE);
+          replaceQuestions(freshQuestions, QUESTION_SOURCES.IMPORT);
+        }
+
+        logger.log(
+          `⚡ TIER 2: Fetched ${freshQuestions.length} questions from Firestore`
+        );
+
+        if (!silent) {
+          const msg =
+            cachedData.length > 0
+              ? `Synced ${freshQuestions.length} questions`
+              : `Loaded ${freshQuestions.length} questions!`;
+          showMessage(msg, 3000);
+        }
+
+        // TIER 3: Background full sync (if not already done)
+        if (!fullSync && freshData.length >= INITIAL_LOAD_COUNT) {
+          // More data likely exists, trigger background sync
+          setTimeout(async () => {
+            try {
+              logger.log("🔄 TIER 3: Starting background full sync...");
+              const fullData = await getAllQuestionsFromFirestore(
+                FULL_SYNC_COUNT,
+                true,
+                FULL_SYNC_COUNT
+              );
+              if (fullData.length > freshData.length) {
+                const fullQuestions = processQuestions(fullData);
+                if (replaceQuestions) {
+                  replaceQuestions(fullQuestions, QUESTION_SOURCES.DATABASE);
+                  replaceQuestions(fullQuestions, QUESTION_SOURCES.IMPORT);
+                }
+                logger.log(
+                  `✅ TIER 3: Background synced ${fullQuestions.length} total questions`
+                );
+              }
+            } catch (bgError) {
+              logger.warn("Background sync failed:", bgError);
+            }
+          }, BACKGROUND_SYNC_DELAY_MS);
+        }
+      } catch (e) {
+        logError(e, { operation: "loadFromFirestore", silent, fullSync });
+        if (!silent) {
+          showMessage(`Load Failed: ${e.message}`, 7000);
         }
       } finally {
         setIsProcessing(false);
         setStatus("");
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- FIRESTORE_LIMITS constants are module-level, won't change
     [
       setIsProcessing,
       setStatus,
@@ -384,7 +453,10 @@ export const useExport = (
           await saveQuestionsToSheets(config.sheetUrl, questionsToExport);
           showMessage(`Export launched! Check new tab for status.`, 5000);
         } catch (e) {
-          logger.error(e);
+          logError(e, {
+            operation: "bulkExportToSheets",
+            questionCount: questionsToExport.length,
+          });
           showMessage(`Error: ${e.message}`, 5000);
         } finally {
           setIsProcessing(false);

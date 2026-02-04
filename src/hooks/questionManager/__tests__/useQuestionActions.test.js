@@ -203,4 +203,205 @@ describe("useQuestionActions", () => {
     expect(res).toHaveLength(1);
     expect(res[0]._source).toBe("database");
   });
+
+  // ============================================================
+  // DOUBLE-SUBMIT PROTECTION TESTS (QA BLIND SPOT FIX)
+  // ============================================================
+  describe("Double-Submit Protection (QA Blind Spot)", () => {
+    it("CRITICAL: rapid clicks on Accept only trigger one Firestore call", async () => {
+      const { result } = renderHook(() =>
+        useQuestionActions(
+          allQuestions,
+          mockSetAllQuestions,
+          mockBackupToCloud,
+          mockShowMessage,
+          config
+        )
+      );
+
+      saveQuestionAsReviewer.mockResolvedValue({ success: true });
+
+      // Simulate 3 rapid clicks on "Accept" button within single act
+      await act(async () => {
+        // Fire all 3 calls without await (simulating rapid clicks)
+        const p1 = result.current.handleUpdateStatus(
+          1,
+          QUESTION_STATUS.ACCEPTED
+        );
+        const p2 = result.current.handleUpdateStatus(
+          1,
+          QUESTION_STATUS.ACCEPTED
+        );
+        const p3 = result.current.handleUpdateStatus(
+          1,
+          QUESTION_STATUS.ACCEPTED
+        );
+
+        // Wait for all to complete
+        await Promise.all([p1, p2, p3]);
+      });
+
+      // Should only call Firestore ONCE due to double-submit protection
+      expect(saveQuestionAsReviewer).toHaveBeenCalledTimes(1);
+    });
+
+    it("CRITICAL: rapid clicks on Reject only trigger one Firestore call", async () => {
+      const { result } = renderHook(() =>
+        useQuestionActions(
+          allQuestions,
+          mockSetAllQuestions,
+          mockBackupToCloud,
+          mockShowMessage,
+          config
+        )
+      );
+
+      saveQuestionAsReviewer.mockResolvedValue({ success: true });
+
+      // Simulate 3 rapid clicks on "Reject" with same reason within single act
+      await act(async () => {
+        const p1 = result.current.handleUpdateStatus(
+          1,
+          QUESTION_STATUS.REJECTED,
+          "too_easy"
+        );
+        const p2 = result.current.handleUpdateStatus(
+          1,
+          QUESTION_STATUS.REJECTED,
+          "too_easy"
+        );
+        const p3 = result.current.handleUpdateStatus(
+          1,
+          QUESTION_STATUS.REJECTED,
+          "too_easy"
+        );
+
+        await Promise.all([p1, p2, p3]);
+      });
+
+      // Should only call Firestore ONCE
+      expect(saveQuestionAsReviewer).toHaveBeenCalledTimes(1);
+    });
+
+    it("Different questions can be processed in parallel", async () => {
+      const q2 = { id: 2, uniqueId: "u2", _source: "session", text: "Q2" };
+      const twoQuestions = [q1, q2];
+
+      const { result } = renderHook(() =>
+        useQuestionActions(
+          twoQuestions,
+          mockSetAllQuestions,
+          mockBackupToCloud,
+          mockShowMessage,
+          config
+        )
+      );
+
+      saveQuestionAsReviewer.mockResolvedValue({ success: true });
+
+      // Processing different questions simultaneously should be allowed
+      await act(async () => {
+        const p1 = result.current.handleUpdateStatus(
+          1,
+          QUESTION_STATUS.ACCEPTED
+        );
+        const p2 = result.current.handleUpdateStatus(
+          2,
+          QUESTION_STATUS.ACCEPTED
+        );
+        await Promise.all([p1, p2]);
+      });
+
+      // Both questions should be processed (2 Firestore calls)
+      expect(saveQuestionAsReviewer).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // ============================================================
+  // FIRESTORE PERMISSION ERROR TESTS (QA BLIND SPOT FIX)
+  // ============================================================
+  describe("Firestore Permission Errors (QA Blind Spot)", () => {
+    it("CRITICAL: permission-denied shows user-friendly error message", async () => {
+      const { result } = renderHook(() =>
+        useQuestionActions(
+          allQuestions,
+          mockSetAllQuestions,
+          mockBackupToCloud,
+          mockShowMessage,
+          config
+        )
+      );
+
+      // Mock permission-denied error from Firestore
+      saveQuestionAsReviewer.mockRejectedValue({
+        code: "permission-denied",
+        message: "Missing or insufficient permissions",
+      });
+
+      await act(async () => {
+        await result.current.handleUpdateStatus(1, QUESTION_STATUS.ACCEPTED);
+      });
+
+      // Should show specific guidance, not generic error
+      expect(mockShowMessage).toHaveBeenCalledWith(
+        expect.stringMatching(/permission.*refresh.*sign.*in/i),
+        expect.any(Number)
+      );
+    });
+
+    it("CRITICAL: unavailable error should indicate retry", async () => {
+      const { result } = renderHook(() =>
+        useQuestionActions(
+          allQuestions,
+          mockSetAllQuestions,
+          mockBackupToCloud,
+          mockShowMessage,
+          config
+        )
+      );
+
+      // Mock network unavailable error
+      saveQuestionAsReviewer.mockRejectedValue({
+        code: "unavailable",
+        message: "The service is currently unavailable",
+      });
+
+      await act(async () => {
+        await result.current.handleUpdateStatus(1, QUESTION_STATUS.ACCEPTED);
+      });
+
+      // Should indicate network issue or retry
+      expect(mockShowMessage).toHaveBeenCalledWith(
+        expect.stringMatching(/(network|unavailable|retry)/i),
+        expect.any(Number)
+      );
+    });
+
+    it("unauthenticated error should prompt re-login", async () => {
+      const { result } = renderHook(() =>
+        useQuestionActions(
+          allQuestions,
+          mockSetAllQuestions,
+          mockBackupToCloud,
+          mockShowMessage,
+          config
+        )
+      );
+
+      saveQuestionAsReviewer.mockRejectedValue({
+        code: "unauthenticated",
+        message: "User is not authenticated",
+      });
+
+      await act(async () => {
+        await result.current.handleUpdateStatus(1, QUESTION_STATUS.ACCEPTED);
+      });
+
+      // Should prompt user to sign in again
+      expect(mockShowMessage).toHaveBeenCalledWith(
+        expect.stringMatching(/(sign.*in|log.*in|authenticate)/i),
+        expect.any(Number)
+      );
+    });
+  });
 });

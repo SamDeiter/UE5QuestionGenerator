@@ -28,6 +28,7 @@ Object.assign(exports, require("./users/revokeUserAccess"));
 Object.assign(exports, require("./users/checkUserRegistration"));
 Object.assign(exports, require("./users/setupInitialAdmin"));
 Object.assign(exports, require("./users/checkToolAccess"));
+Object.assign(exports, require("./users/logAuthFailure"));
 
 // ============================================================================
 // Migration Functions
@@ -35,8 +36,16 @@ Object.assign(exports, require("./users/checkToolAccess"));
 Object.assign(exports, require("./migrations/migrateTranslations"));
 Object.assign(exports, require("./migrations/importAIScores"));
 Object.assign(exports, require("./migrations/unifiedAccessMigration"));
+Object.assign(exports, require("./migrations/backfillCustomClaims"));
+Object.assign(exports, require("./migrations/cleanupAuditLogs"));
+Object.assign(exports, require("./migrations/backfillQuestionStats"));
 
 // ============================================================================
 // Email Functions
 // ============================================================================
 Object.assign(exports, require("./email/sendReviewerInvites"));
+
+// ============================================================================
+// Firestore Triggers (Aggregations)
+// ============================================================================
+Object.assign(exports, require("./triggers/questionStatsUpdater"));

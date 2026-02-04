@@ -3,6 +3,7 @@ import Icon from "../Icon";
 // FlagIcon available but emoji used instead for simplicity
 import ScoreBadge from "../ScoreBadge";
 import { QUESTION_DIFFICULTY } from "../../utils/constants";
+import { getDiffBadgeColor } from "../../utils/questionItemHelpers";
 
 /**
  * Normalize difficulty value - handles legacy "BALANCED ALL" and other invalid values
@@ -40,10 +41,15 @@ const DIFFICULTY_OPTIONS = [
   { value: QUESTION_DIFFICULTY.EXPERT, label: "Expert", color: "red" },
 ];
 
+const TRUE_FALSE_OPTIONS = [
+  { value: "A", label: "True", color: "emerald" },
+  { value: "B", label: "False", color: "red" },
+];
+
 const QuestionHeader = ({
   q,
   originalQ, // NEW: The base question record
-  getDiffBadgeColor,
+  colorblindMode = false, // NEW: Use colorblind-safe colors
   onKickBack,
   onCritique, // NEW: Allow re-critique from database view
   appMode,
@@ -54,6 +60,34 @@ const QuestionHeader = ({
   const displayDifficulty = normalizeDifficulty(q.difficulty);
   // Language available via q.language if needed
   const [isEditingDifficulty, setIsEditingDifficulty] = useState(false);
+  const [isEditingTrueFalse, setIsEditingTrueFalse] = useState(false);
+
+  // Determine if this is a True/False question
+  const isTrueFalseQuestion = q.type === "True/False" || q.type === "T/F";
+
+  // Get current correct answer for T/F questions (normalize to A or B)
+  const getCurrentTFAnswer = () => {
+    const correct = (q.correct || q.correctLetter || "A")
+      .toString()
+      .toUpperCase();
+    return correct === "B" ? "B" : "A"; // Default to A (True) if unclear
+  };
+
+  // Compute title text to avoid nested ternary in JSX
+  const currentTFLabel = getCurrentTFAnswer() === "A" ? "True" : "False";
+  const tfAnswerTitle = onUpdateQuestion
+    ? "Click to change correct answer"
+    : `Correct: ${currentTFLabel}`;
+
+  const handleTrueFalseChange = async (newAnswer) => {
+    if (onUpdateQuestion && newAnswer !== getCurrentTFAnswer()) {
+      await onUpdateQuestion(q.id, {
+        correct: newAnswer,
+        correctLetter: newAnswer,
+      });
+    }
+    setIsEditingTrueFalse(false);
+  };
 
   const handleDifficultyChange = async (newDifficulty) => {
     if (onUpdateQuestion && newDifficulty !== q.difficulty) {
@@ -85,7 +119,8 @@ const QuestionHeader = ({
             <button
               onClick={() => onUpdateQuestion && setIsEditingDifficulty(true)}
               className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${getDiffBadgeColor(
-                displayDifficulty
+                displayDifficulty,
+                colorblindMode
               )} flex items-center gap-1 ${
                 onUpdateQuestion
                   ? "cursor-pointer hover:opacity-80 transition-opacity"
@@ -110,8 +145,56 @@ const QuestionHeader = ({
             </button>
           )}
           <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border bg-blue-950 text-blue-400 border-blue-900">
-            {q.type === "True/False" ? "T/F" : "MC"}
+            {q.type === "True/False" || q.type === "T/F" ? "T/F" : "MC"}
           </span>
+
+          {/* True/False Answer Toggle - Only for T/F questions */}
+          {isTrueFalseQuestion && (
+            <>
+              {isEditingTrueFalse ? (
+                <select
+                  value={getCurrentTFAnswer()}
+                  onChange={(e) => handleTrueFalseChange(e.target.value)}
+                  onBlur={() => setIsEditingTrueFalse(false)}
+                  autoFocus
+                  className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-slate-800 text-white border border-slate-600 cursor-pointer focus:ring-2 focus:ring-blue-500"
+                >
+                  {TRUE_FALSE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      Answer: {opt.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <button
+                  onClick={() =>
+                    onUpdateQuestion && setIsEditingTrueFalse(true)
+                  }
+                  className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border flex items-center gap-1 ${
+                    getCurrentTFAnswer() === "A"
+                      ? "bg-emerald-950 text-emerald-400 border-emerald-800"
+                      : "bg-red-950 text-red-400 border-red-800"
+                  } ${
+                    onUpdateQuestion
+                      ? "cursor-pointer hover:opacity-80 transition-opacity"
+                      : ""
+                  }`}
+                  title={tfAnswerTitle}
+                  disabled={!onUpdateQuestion}
+                >
+                  <Icon name="check-circle" size={12} />
+                  {getCurrentTFAnswer() === "A" ? "True" : "False"}
+                  {onUpdateQuestion && (
+                    <Icon
+                      name="chevron-down"
+                      size={10}
+                      className="ml-0.5 opacity-50"
+                    />
+                  )}
+                </button>
+              )}
+            </>
+          )}
 
           {/* Variation Badge */}
           {q.isVariation && (
@@ -248,6 +331,23 @@ const QuestionHeader = ({
             >
               <Icon name="sparkles" size={14} />
               Re-Critique
+            </button>
+          )}
+
+        {/* View AI Suggestions Button - Shows for ANY critiqued question with suggestions */}
+        {(appMode === "database" || appMode === "review") &&
+          onOpenCritiqueModal &&
+          q.critiqueScore !== null &&
+          q.critiqueScore !== undefined &&
+          (q.critique || q.suggestedRewrite) && (
+            <button
+              onClick={onOpenCritiqueModal}
+              className="px-3 py-1.5 rounded-lg transition-all bg-indigo-900/30 text-indigo-300 hover:bg-indigo-800/50 hover:text-indigo-200 border border-indigo-700/50 flex items-center gap-2 text-xs font-medium"
+              title="View AI critique details and suggestions"
+              aria-label="View AI Suggestions"
+            >
+              <Icon name="eye" size={14} />
+              View AI Suggestions
             </button>
           )}
         {appMode === "database" && (

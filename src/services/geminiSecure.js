@@ -16,6 +16,8 @@ import {
   generateCritique as generateCritiqueDirect,
 } from "./gemini.js";
 import { logger } from "../utils/logger";
+import { inferCorrectAnswer } from "../utils/answerHelpers";
+import { AI_CONFIG } from "../utils/constants";
 
 /**
  * Secure generate content wrapper
@@ -26,8 +28,8 @@ export const generateContentSecure = async (
   systemPrompt,
   userPrompt,
   setStatus,
-  temperature = 0.2,
-  model = "gemini-2.0-flash"
+  temperature = AI_CONFIG.DEFAULT_TEMPERATURE,
+  model = AI_CONFIG.DEFAULT_MODEL
 ) => {
   // DEBUG: Log authentication status
   logger.log("🔍 [geminiSecure] Checking authentication:", {
@@ -61,7 +63,9 @@ export const generateContentSecure = async (
   // Fallback to direct API only if NOT authenticated
   logger.log(
     "📡 Calling direct API with key:",
-    effectiveKey ? `${effectiveKey.substring(0, 10)}...` : "NONE"
+    effectiveKey
+      ? `${effectiveKey.substring(0, AI_CONFIG.API_KEY_PREVIEW_LENGTH)}...`
+      : "NONE"
   );
   return await generateContentDirect(
     effectiveKey,
@@ -110,19 +114,31 @@ export const generateCritiqueSecure = async (
     );
   }
 
-  if (!question.correct) {
-    logger.error("[CritiqueSecure] Missing 'correct' property. Received:", {
-      id: question.id,
-      correct: question.correct,
-    });
-    throw new Error("Critique failed: Correct answer is missing.");
+  // Use shared utility to infer correct answer if missing
+  const effectiveCorrect = inferCorrectAnswer(question);
+  if (!effectiveCorrect) {
+    logger.error(
+      "[CritiqueSecure] Cannot infer 'correct' property. Received:",
+      {
+        id: question.id,
+        correct: question.correct,
+        type: question.type,
+      }
+    );
+    throw new Error("Critique failed: Could not determine correct answer.");
   }
+
+  // Create normalized question with inferred correct
+  const normalizedQuestion = { ...question, correct: effectiveCorrect };
 
   // Try Cloud Functions first (most secure)
   if (isUserAuthenticated()) {
     try {
       logger.log("🔒 [CritiqueSecure DEBUG] Using Cloud Function for critique");
-      const result = await generateCritiqueViaCloudFunction(question, model);
+      const result = await generateCritiqueViaCloudFunction(
+        normalizedQuestion,
+        model
+      );
       logger.log(
         "🔒 [CritiqueSecure DEBUG] Cloud Function returned score:",
         result.score,
@@ -142,7 +158,7 @@ export const generateCritiqueSecure = async (
 
   // Fallback to direct API only if NOT authenticated
   logger.log("📡 [CritiqueSecure DEBUG] Calling direct API for critique");
-  const result = await generateCritiqueDirect(apiKey, question);
+  const result = await generateCritiqueDirect(apiKey, normalizedQuestion);
   logger.log(
     "📡 [CritiqueSecure DEBUG] Direct API returned score:",
     result.score
@@ -171,8 +187,8 @@ export const generateTagsSecure = async (apiKey, questionText) => {
       systemPrompt,
       userPrompt,
       () => {}, // No status updates needed for fast tagging
-      0.3, // Temp
-      "gemini-2.0-flash-exp" // Model
+      AI_CONFIG.TAGGING_TEMPERATURE,
+      AI_CONFIG.DEFAULT_MODEL
     );
 
     // Parse result - try multiple extraction methods

@@ -92,6 +92,20 @@ export const TOAST_DURATION = {
   EXTENDED: 4000, // Errors & warnings requiring attention
 };
 
+// AI/Gemini Configuration Constants
+export const AI_CONFIG = {
+  // Temperature settings (0.0 = deterministic, 1.0 = creative)
+  DEFAULT_TEMPERATURE: 0.2, // Standard generation temperature
+  TAGGING_TEMPERATURE: 0.3, // Slightly higher for tag classification
+  // Model defaults
+  DEFAULT_MODEL: "gemini-2.0-flash",
+  // Log preview length
+  API_KEY_PREVIEW_LENGTH: 10,
+  // Retry/Loop limits
+  MAX_CRITIQUE_RETRIES: 3,
+  MAX_FEEDBACK_SCORE: 5,
+};
+
 // UI Constants
 export const UI_LABELS = {
   APP_TITLE: "UE5 Question Generator",
@@ -157,6 +171,11 @@ export const TIMING = {
   MAX_POLLING_ATTEMPTS: 20,
   CACHE_TTL_MS: 30 * 1000,
   STALE_AUTH_MS: 45 * 60 * 1000,
+  TOKEN_REFRESH_INTERVAL_MS: 50 * 60 * 1000, // 50 minutes (tokens expire at ~60 min)
+  WRITE_PROBE_INTERVAL_MS: 15 * 60 * 1000, // 15 minutes - verify Firestore access periodically
+  ANALYTICS_REFRESH_MS: 5000, // 5 seconds - refresh local token usage
+  TOAST_SHORT: 2000,
+  TOAST_MEDIUM: 3000,
 };
 
 // Standard Time Multipliers (in ms)
@@ -176,10 +195,19 @@ export const SCORM_DEFAULTS = {
   TIME_LIMIT_MINUTES: 30,
 };
 
-// Firestore Query Limits
+// Firestore Query Limits - Performance Optimization
 export const FIRESTORE_LIMITS = {
   MAX_RESULTS: 500,
   DEFAULT_PAGE_SIZE: 20,
+  MAX_QUERY_LIMIT: 100, // Maximum docs per query (non-admin) - prevents unbounded reads
+  ADMIN_MAX_QUERY_LIMIT: 5000, // Admin maintenance tasks only
+  MAX_BATCH_SIZE: 500, // Firestore batch write limit
+  MAX_LISTENERS: 5, // Max concurrent real-time listeners
+  CACHE_TTL_MS: 5 * 60 * 1000, // 5 minute cache TTL
+  MIN_QUERY_INTERVAL_MS: 1000, // Rate limit between queries (1/sec)
+  INITIAL_LOAD_COUNT: 100, // Tier 2: Fast initial load for perceived performance
+  FULL_SYNC_COUNT: 5000, // Tier 3: Background full sync
+  BACKGROUND_SYNC_DELAY_MS: 500, // Delay before background sync starts
 };
 
 // History Limits
@@ -197,6 +225,16 @@ export const GENERATION_LIMITS = {
   ID_SUBSTRING_LENGTH: 4,
   MAX_RETRIES: 5,
   ERROR_TRUNCATE_LENGTH: 50, // Max chars to show in error messages
+};
+
+// Question Validation Limits
+export const QUESTION_LIMITS = {
+  MIN_CHOICES: 2,
+  MAX_CHOICES: 6,
+  MIN_QUESTION_LENGTH: 10,
+  MAX_QUESTION_LENGTH: 500,
+  MIN_EXPORT_QUESTIONS: 5, // Warn if exporting less than this
+  MAX_EXPORT_QUESTIONS: 100, // Warn if exporting more than this
 };
 
 // Processing Constants
@@ -229,6 +267,21 @@ export const QUESTION_STATUS = {
   ACCEPTED: "accepted",
   REJECTED: "rejected",
   DELETED: "deleted",
+};
+
+// Answer Review States - Explicit reviewer assessment of answer correctness
+export const ANSWER_STATE = {
+  CORRECT: "correct",
+  INCORRECT: "incorrect",
+  UNSURE: "unsure",
+};
+
+// Doc Link Review States - Quality assessment of documentation link
+export const DOC_LINK_STATE = {
+  RELEVANT: "relevant",
+  TOO_BROAD: "too_broad",
+  INCORRECT: "incorrect",
+  MISSING: "missing",
 };
 
 export const QUESTION_DIFFICULTY = {
@@ -290,4 +343,21 @@ export const REVIEWER_ALLOWED_FIELDS = [
   "humanVerifiedAt",
   // Notes
   "notes",
+  // Doc link management (Phase 1)
+  "sourceUrl",
+  "sourceExcerpt",
+  "docLinkSource",
+  "docLinkModifiedBy",
+  "docLinkModifiedAt",
+  "docLinkModificationNote",
+  "originalSourceUrl",
+  "originalSourceExcerpt",
+  // Explicit review states (Phase 2)
+  "answerState",
+  "docLinkState",
+  // Needs research (Phase 4)
+  "needsResearch",
+  "needsResearchReason",
+  "needsResearchAt",
+  "needsResearchBy",
 ];

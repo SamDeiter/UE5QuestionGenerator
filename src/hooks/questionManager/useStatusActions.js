@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   GENERATION_LIMITS,
   PROCESSING,
@@ -34,14 +34,27 @@ export const useStatusActions = ({
   showMessage,
   config,
 }) => {
+  // QA FIX: Double-submit protection - track questions currently being processed
+  const [processing, setProcessing] = useState(new Set());
   /**
    * Handles status updates for questions (accept, reject, delete).
    * Uses saveQuestionAsReviewer to ensure only allowed fields are sent.
    */
   const handleUpdateStatus = useCallback(
     async (id, newStatus, rejectionReason = null) => {
+      // QA FIX: Prevent double-submit from rapid clicks
+      if (processing.has(id)) {
+        if (showMessage) {
+          showMessage("⏳ Processing...", TOAST_DURATION.SHORT);
+        }
+        return;
+      }
+
       const currentQ = allQuestions.find((q) => q.id === id);
       if (!currentQ) return;
+
+      // Mark as processing
+      setProcessing((prev) => new Set(prev).add(id));
 
       // Handle deletion separately
       if (newStatus === QUESTION_STATUS.DELETED) {
@@ -62,6 +75,13 @@ export const useStatusActions = ({
               TOAST_DURATION.MEDIUM
             );
           }
+        } finally {
+          // QA FIX: Always remove from processing set
+          setProcessing((prev) => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
         }
         return;
       }
@@ -222,10 +242,26 @@ export const useStatusActions = ({
           err.code === "permission-denied" ||
           err.message?.includes("PERMISSION_DENIED")
         ) {
-          // Specific error for permission issues (Ghost Reviewer detection)
+          // QA FIX: Specific error for permission issues (Ghost Reviewer detection)
           if (showMessage) {
             showMessage(
-              "🚫 Permission denied: Your account may not be fully registered. Please contact an admin.",
+              "🚫 Permission issue - please refresh or re-sign in. Contact admin if issue persists.",
+              TOAST_DURATION.EXTENDED
+            );
+          }
+        } else if (err.code === "unavailable") {
+          // QA FIX: Network unavailable - suggest retry
+          if (showMessage) {
+            showMessage(
+              "⚠️ Network unavailable - check connection and retry",
+              TOAST_DURATION.EXTENDED
+            );
+          }
+        } else if (err.code === "unauthenticated") {
+          // QA FIX: Token expired - prompt re-login
+          if (showMessage) {
+            showMessage(
+              "🔐 Session expired - please sign in again",
               TOAST_DURATION.EXTENDED
             );
           }
@@ -235,6 +271,13 @@ export const useStatusActions = ({
             TOAST_DURATION.EXTENDED
           );
         }
+      } finally {
+        // QA FIX: Always remove from processing set, even on error
+        setProcessing((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
       }
     },
     [
@@ -244,6 +287,7 @@ export const useStatusActions = ({
       setAllQuestions,
       updateQuestionInState,
       showMessage,
+      processing, // QA FIX: Added to fix React Hook dependency warning
     ]
   );
 

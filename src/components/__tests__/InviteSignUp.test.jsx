@@ -329,7 +329,8 @@ describe("InviteSignUp Component", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/auth cancelled/i)).toBeInTheDocument();
+        // After centralization, generic errors show standardized message
+        expect(screen.getByText(/an error occurred/i)).toBeInTheDocument();
       });
     });
   });

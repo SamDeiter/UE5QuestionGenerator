@@ -16,18 +16,39 @@ service cloud.firestore {
     
     function isAdmin() {
       return request.auth.token.role == 'admin' 
-        || request.auth.token.email == 'sam.deiter@epicgames.com'
-        || get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'admin';
+        // SECURITY: Hardcoded email removed - use custom claims or registeredUsers only
+        || (exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
+            && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'admin');
     }
 
     function isReviewer() {
-      return get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'reviewer';
+      return exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'reviewer';
     }
     
-    // Version control: Prevent version regression
-    function versionNotRegressing() {
+    // Version control: Require version increments by exactly 1 (no skipping)
+    function versionIsIncremented() {
       return !resource.data.keys().hasAny(['version']) || 
-             request.resource.data.version > resource.data.version;
+             request.resource.data.version == resource.data.version + 1;
+    }
+    
+    // SECURITY: Validate question data structure to prevent malformed data
+    function isValidQuestion() {
+      let data = request.resource.data;
+      // Required fields must exist
+      return data.keys().hasAll(['question', 'options', 'correct', 'creatorId', 'creatorEmail'])
+        // Question text must be a non-empty string with reasonable length
+        && data.question is string
+        && data.question.size() > 0
+        && data.question.size() < 5000
+        // Options must be a map (A, B, C, D, E for MC) or string (T/F)
+        && (data.options is map || data.options is string)
+        // Correct answer must be a string
+        && data.correct is string
+        && data.correct.size() > 0
+        // creatorId and creatorEmail must be strings
+        && data.creatorId is string
+        && data.creatorEmail is string;
     }
     
     // ============================================================
@@ -38,51 +59,36 @@ service cloud.firestore {
       // All authenticated users can read questions (for shared review workflow)
       allow read: if isSignedIn();
       
-      // Create: Requires authentication, must set version = 1, must set creatorId
+      // Create: Admins/Creators only - Reviewers cannot create questions
+      // SECURITY: isValidQuestion() enforces schema validation
       allow create: if isSignedIn()
+        && !isReviewer()  // Reviewers cannot create questions
+        && isValidQuestion()  // SECURITY: Enforce valid question structure
         && request.resource.data.creatorId == request.auth.uid
         && request.resource.data.creatorEmail == request.auth.token.email
         && (!request.resource.data.keys().hasAny(['version']) || request.resource.data.version == 1);
       
       // Update: Must be authenticated, version must increment, updatedBy must match auth
-      // Special case: Admins can update any fields
+      // Special case: Admins can update any fields, Reviewers limited to specific fields
       allow update: if isSignedIn() && (
         // Standard update: Owner updates their own question with version increment
         (resource.data.creatorId == request.auth.uid 
          && request.resource.data.creatorId == request.auth.uid
-         && versionNotRegressing())
+         && versionIsIncremented())
         ||
         // Admin FULL override: Admins can update any fields
         isAdmin()
         ||
-        // Reviewer override: Can update specific review-related fields only
+        // Reviewer LIMITED update: Can only modify review-specific fields
+        // SECURITY: Prevents reviewers from stealing ownership or bypassing version control
         (isReviewer()
-         && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly([
-              // Version and timestamps
-              'version', 'updatedAt', 'firestoreUpdatedAt', 'modifiedAt',
-              // Scoring fields
-              'aiScore', 'scoredAt', 'scoreSource', 
-              // Status and rejection fields
-              'status', 'rejectionReason', 'rejectionCategory', 'rejectionNotes', 
-              'rejectedAt', 'rejectedBy', 'acceptedAt', 'acceptedBy',
-              // Review tracking fields
-              'reviewedBy', 'reviewedAt', 'reviewCompletedAt', 
-              'reviewerName', 'reviewDuration', 'reviewStartedAt',
-              // Critique and improvement fields
-              'critique', 'critiqueScore', 'suggestedRewrite', 'improvedScore', 'improvementsApplied',
-              'rewriteChanges', 'critiqueAttempts', 'previousCritiqueScore',
-              // Human verification fields
-              'humanVerified', 'humanVerifiedBy', 'humanVerifiedAt',
-              // Kick back fields
-              'kickedBackAt', 'kickedBackBy', 'kickedBackReason',
-              // Tags and difficulty (for re-critique and manual updates)
-              'tags', 'difficulty',
-              // Backfill metadata fields
-              '_backfilledHumanVerified', '_backfilledAt', 'tagsBackfilledAt',
-              // Notes
-              'notes'
-            ]))
+         && request.resource.data.creatorId == resource.data.creatorId  // Cannot change owner
+         && request.resource.data.creatorEmail == resource.data.creatorEmail  // Cannot change creator email
+         && versionIsIncremented()  // Must increment version (concurrent editing protection)
+         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'rejectionReason', 'reviewedBy', 'reviewedAt', 
+              'updatedAt', 'updatedBy', 'version', 'aiScore', 'critique'
+            ]))  // Can ONLY modify these fields
       );
       
       // Delete: Admins only
@@ -147,8 +153,11 @@ service cloud.firestore {
     match /apiUsage/{docId} {
       // Read: Admins only (for audit trail)
       allow read: if isAdmin();
-      // Create: Any authenticated user (Cloud Functions log usage)
-      allow create: if isSignedIn();
+      // Create: Any authenticated user with required fields to prevent spam
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasAll(['userId', 'timestamp', 'type'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.type in ['generation', 'critique', 'export', 'import'];
       // Immutable - no updates or deletes
       allow update, delete: if false;
     }
@@ -179,8 +188,8 @@ service cloud.firestore {
     // ============================================================
     
     match /admins/{userId} {
-      // Read: Any authenticated user (to check admin status)
-      allow read: if isSignedIn();
+      // Read: Admins only (SECURITY: prevents admin enumeration)
+      allow read: if isAdmin();
       // Write: Admins only
       allow write: if isAdmin();
     }
@@ -220,6 +229,15 @@ service cloud.firestore {
       allow read: if isSignedIn();
       // Write: Admins only
       allow write: if isAdmin();
+    }
+    
+    // ============================================================
+    // RATE LIMITS (Counter-based rate limiting - Server Only)
+    // ============================================================
+    
+    match /rateLimits/{docId} {
+      // Cloud Functions only - clients cannot access counter docs
+      allow read, write: if false;
     }
     
     // ============================================================

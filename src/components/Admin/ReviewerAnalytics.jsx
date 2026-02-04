@@ -1,6 +1,8 @@
 import React from "react";
+import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
+import SafeResponsiveContainer from "../analytics/SafeResponsiveContainer";
 import { useThemeColors } from "../../hooks/useThemeColors";
 
 const ReviewerAnalytics = ({
@@ -106,6 +108,95 @@ const ReviewerAnalytics = ({
               </div>
             </div>
           )}
+
+        {/* Reviewer Activity Bar Chart */}
+        {reviewerAnalytics.reviewerStats.length > 0 && (
+          <div className="bg-slate-800/50 p-4 rounded border border-cyan-500/20 mb-4">
+            <h4 className="text-sm font-bold text-cyan-300 mb-1 text-center">
+              Reviewer Activity
+            </h4>
+            <p className="text-xs text-slate-500 mb-3 text-center">
+              Questions reviewed/verified by each team member
+            </p>
+            {(() => {
+              // Process data for chart - same data as table
+              const chartData = reviewerAnalytics.reviewerStats
+                .map((reviewer) => ({
+                  name: reviewer.name,
+                  value: reviewer.totalQuestionsReviewed,
+                }))
+                .sort((a, b) => b.value - a.value);
+
+              // Dynamic height based on number of reviewers
+              const chartHeight = Math.max(200, chartData.length * 35);
+
+              // Custom tooltip
+              const CustomTooltip = ({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  return (
+                    <div className="bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 shadow-xl">
+                      <p className="text-white font-bold text-sm mb-1">
+                        {data.name}
+                      </p>
+                      <p className="text-cyan-300 text-lg font-mono">
+                        {data.value} questions
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              };
+
+              return (
+                <div style={{ height: chartHeight }}>
+                  <SafeResponsiveContainer
+                    width="100%"
+                    height="100%"
+                    minWidth={0}
+                    minHeight={0}
+                  >
+                    <BarChart
+                      data={chartData}
+                      layout="vertical"
+                      margin={{ top: 5, right: 50, left: 150, bottom: 5 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="#334155"
+                        horizontal={false}
+                      />
+                      <XAxis type="number" stroke="#e2e8f0" />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        stroke="#e2e8f0"
+                        width={145}
+                        tick={{ fontSize: 11, fill: "#cbd5e1" }}
+                        tickLine={false}
+                        interval={0}
+                      />
+                      <Tooltip
+                        content={<CustomTooltip />}
+                        cursor={{ fill: "#475569", opacity: 0.3 }}
+                      />
+                      <Bar
+                        dataKey="value"
+                        fill="#06B6D4"
+                        radius={[0, 4, 4, 0]}
+                        label={{
+                          position: "right",
+                          fill: "#e2e8f0",
+                          fontSize: 10,
+                        }}
+                      />
+                    </BarChart>
+                  </SafeResponsiveContainer>
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         {/* Reviewer Stats Table */}
         <div className="overflow-x-auto">

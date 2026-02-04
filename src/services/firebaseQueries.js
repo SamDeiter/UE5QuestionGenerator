@@ -8,16 +8,29 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
+  doc,
   collection,
   orderBy,
   limit,
   onSnapshot,
   startAfter,
+  getAggregateFromServer,
+  count,
+  sum,
 } from "firebase/firestore";
 import { logger } from "../utils/logger";
-import { TIMING } from "../utils/constants";
+import { TIMING, FIRESTORE_LIMITS, QUESTION_SOURCES } from "../utils/constants";
 import { auth, firebaseConfig } from "./firebaseAuth";
 import { getDb } from "./firebaseSave";
+import {
+  getCachedQuestions,
+  cacheQuestions,
+  isCacheValid,
+  clearCache as clearIndexedDBCache,
+} from "./questionCache";
+import { parseQuestionDoc } from "../utils/questionDocParser";
+import { registerListener, unregisterListener } from "../utils/listenerTracker";
 
 // --- Cache Management ---
 let _questionsCache = null;
@@ -28,10 +41,16 @@ const CACHE_TTL_MS = TIMING.CACHE_TTL_MS;
  * Invalidates the questions cache.
  * Call after saves/deletes to ensure fresh data on next load.
  */
-export const invalidateQuestionsCache = () => {
+export const invalidateQuestionsCache = async () => {
   _questionsCache = null;
   _questionsCacheTimestamp = 0;
-  logger.log("🗑️ Questions cache invalidated");
+  // Also clear IndexedDB cache
+  try {
+    await clearIndexedDBCache();
+  } catch (error) {
+    logger.warn("Failed to clear IndexedDB cache:", error);
+  }
+  logger.log("🗑️ Questions cache invalidated (memory + IndexedDB)");
 };
 
 /**
@@ -84,7 +103,7 @@ export const getQuestionsFromFirestore = async () => {
  * @returns {Promise<Array>} Array of question objects.
  */
 export const getAllQuestionsFromFirestore = async (
-  maxResults = 5000,
+  maxResults = FIRESTORE_LIMITS.MAX_QUERY_LIMIT,
   forceRefresh = false,
   customLimit = null
 ) => {
@@ -95,7 +114,7 @@ export const getAllQuestionsFromFirestore = async (
       return [];
     }
 
-    // PERFORMANCE: Return cached data if fresh (within TTL)
+    // PERFORMANCE: Return in-memory cached data if fresh (within TTL)
     const now = Date.now();
     if (
       !forceRefresh &&
@@ -104,11 +123,35 @@ export const getAllQuestionsFromFirestore = async (
       now - _questionsCacheTimestamp < CACHE_TTL_MS
     ) {
       logger.log(
-        `⚡ Returning ${_questionsCache.length} cached questions (${Math.round(
+        `⚡ Returning ${_questionsCache.length} cached questions (memory, ${Math.round(
           (now - _questionsCacheTimestamp) / 1000
         )}s old)`
       );
       return _questionsCache;
+    }
+
+    // PERFORMANCE: Try IndexedDB cache if memory cache is stale
+    if (!forceRefresh && !customLimit) {
+      try {
+        const idbCacheValid = await isCacheValid();
+        if (idbCacheValid) {
+          const cachedQuestions = await getCachedQuestions();
+          if (cachedQuestions.length > 0) {
+            logger.log(
+              `📦 Returning ${cachedQuestions.length} cached questions (IndexedDB)`
+            );
+            // Update memory cache from IndexedDB
+            _questionsCache = cachedQuestions;
+            _questionsCacheTimestamp = now;
+            return cachedQuestions;
+          }
+        }
+      } catch (idbError) {
+        logger.warn(
+          "IndexedDB cache check failed, falling back to Firestore:",
+          idbError
+        );
+      }
     }
 
     const fetchLimit = customLimit || maxResults;
@@ -145,6 +188,12 @@ export const getAllQuestionsFromFirestore = async (
     if (!customLimit) {
       _questionsCache = questions;
       _questionsCacheTimestamp = now;
+      // Also persist to IndexedDB for offline support
+      try {
+        await cacheQuestions(questions);
+      } catch (idbError) {
+        logger.warn("Failed to cache to IndexedDB:", idbError);
+      }
     }
 
     return questions;
@@ -167,7 +216,10 @@ export const getAllQuestionsFromFirestore = async (
  * @param {number} maxResults - Maximum number of questions to retrieve (default 5000)
  * @returns {Function} Unsubscribe function to stop listening
  */
-export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
+export const subscribeToAllQuestions = (
+  callback,
+  maxResults = FIRESTORE_LIMITS.MAX_QUERY_LIMIT
+) => {
   // Require authentication
   if (!auth.currentUser) {
     logger.log("⚠️ No user signed in, cannot subscribe to questions");
@@ -184,14 +236,35 @@ export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
     limit(maxResults)
   );
 
+  // Q11b: Register listener for observability
+  const listenerId = registerListener("subscribeToAllQuestions");
+
   // Set up real-time listener
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
       const questions = [];
+      let skippedCount = 0;
       snapshot.forEach((docSnapshot) => {
-        questions.push({ id: docSnapshot.id, ...docSnapshot.data() });
+        // Q4b: Validate document structure before passing to UI
+        const result = parseQuestionDoc({
+          id: docSnapshot.id,
+          ...docSnapshot.data(),
+        });
+        if (result.valid) {
+          questions.push(result.question);
+        } else {
+          skippedCount++;
+          logger.warn(
+            `Skipped malformed doc ${docSnapshot.id}:`,
+            result.errors
+          );
+        }
       });
+
+      if (skippedCount > 0) {
+        logger.warn(`⚠️ Skipped ${skippedCount} malformed documents`);
+      }
 
       logger.log(
         `✅ Real-time update: ${questions.length} questions (${
@@ -210,7 +283,12 @@ export const subscribeToAllQuestions = (callback, maxResults = 5000) => {
   );
 
   logger.log("✓ Real-time listener active");
-  return unsubscribe;
+
+  // Return wrapped unsubscribe that also cleans up listener tracking
+  return () => {
+    unregisterListener(listenerId);
+    unsubscribe();
+  };
 };
 
 /**
@@ -255,6 +333,196 @@ export const getQuestionsPaginated = async (
   } catch (error) {
     logger.error("Error fetching paginated questions:", error);
     return { questions: [], lastDoc: null, hasMore: false };
+  }
+};
+
+/**
+ * Enhanced paginated question loading with flexible filtering.
+ * PHASE 1.3: Supports status, discipline, and custom ordering for efficient queries.
+ *
+ * @param {Object} options - Query options
+ * @param {string} options.status - Filter by status (optional)
+ * @param {string} options.discipline - Filter by discipline (optional)
+ * @param {number} options.pageSize - Number of docs per page (default 50)
+ * @param {DocumentSnapshot} options.lastDoc - Last doc from previous page (optional)
+ * @param {string} options.orderByField - Field to order by (default 'firestoreUpdatedAt')
+ * @param {string} options.orderDirection - 'asc' or 'desc' (default 'desc')
+ * @returns {Promise<{questions: Array, lastDoc: DocumentSnapshot, hasMore: boolean}>}
+ */
+export const getQuestionsPaginatedWithFilters = async ({
+  status = null,
+  discipline = null,
+  pageSize = FIRESTORE_LIMITS.DEFAULT_PAGE_SIZE,
+  lastDoc = null,
+  orderByField = "firestoreUpdatedAt",
+  orderDirection = "desc",
+} = {}) => {
+  try {
+    if (!auth.currentUser) {
+      logger.log("⚠️ No user signed in, cannot load questions");
+      return { questions: [], lastDoc: null, hasMore: false };
+    }
+
+    const constraints = [];
+
+    // Add filters
+    if (status) {
+      constraints.push(where("status", "==", status));
+    }
+    if (discipline) {
+      constraints.push(where("discipline", "==", discipline));
+    }
+
+    // Add ordering
+    constraints.push(orderBy(orderByField, orderDirection));
+
+    // Add limit (+1 to check if more exist)
+    constraints.push(limit(pageSize + 1));
+
+    // Add pagination cursor
+    if (lastDoc) {
+      constraints.push(startAfter(lastDoc));
+    }
+
+    const q = query(collection(getDb(), "questions"), ...constraints);
+    const startTime = performance.now();
+    const snapshot = await getDocs(q);
+    const duration = Math.round(performance.now() - startTime);
+
+    const docs = snapshot.docs;
+    const hasMore = docs.length > pageSize;
+
+    // Remove the extra doc if we have more
+    const questions = docs.slice(0, pageSize).map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      _source: QUESTION_SOURCES.DATABASE,
+    }));
+
+    logger.log(
+      `✅ Paginated query: ${questions.length} questions in ${duration}ms ` +
+        `(status=${status || "all"}, discipline=${discipline || "all"})`
+    );
+
+    return {
+      questions,
+      lastDoc: docs[pageSize - 1] || null,
+      hasMore,
+    };
+  } catch (error) {
+    logger.error("Error in paginated query:", error);
+    return { questions: [], lastDoc: null, hasMore: false };
+  }
+};
+
+/**
+ * PHASE 2.1: Get token usage stats for a user using server-side aggregation.
+ * Uses Firestore's getAggregateFromServer with sum() and count() for efficient
+ * calculation without downloading documents.
+ *
+ * PERFORMANCE: 1 aggregation read vs 5000+ document reads
+ * COST: ~0.0001¢ vs ~$0.18 per request
+ *
+ * @param {string} userId - The user's UID
+ * @returns {Promise<{totalCost: number, questionCount: number, estimatedInputTokens: number, estimatedOutputTokens: number}>}
+ */
+export const getUserTokenUsageAggregated = async (userId) => {
+  try {
+    if (!userId) {
+      logger.log("⚠️ No userId provided for token usage aggregation");
+      return {
+        totalCost: 0,
+        questionCount: 0,
+        estimatedInputTokens: 0,
+        estimatedOutputTokens: 0,
+      };
+    }
+
+    const userQuery = query(
+      collection(getDb(), "questions"),
+      where("creatorId", "==", userId)
+    );
+
+    const snapshot = await getAggregateFromServer(userQuery, {
+      totalCost: sum("estimatedCost"),
+      questionCount: count(),
+    });
+
+    const data = snapshot.data();
+    const avgInputTokensPerQuestion = 500;
+    const avgOutputTokensPerQuestion = 200;
+
+    const result = {
+      totalCost: data.totalCost || 0,
+      questionCount: data.questionCount || 0,
+      estimatedInputTokens:
+        (data.questionCount || 0) * avgInputTokensPerQuestion,
+      estimatedOutputTokens:
+        (data.questionCount || 0) * avgOutputTokensPerQuestion,
+    };
+
+    logger.log(
+      `📊 User ${userId.slice(0, 8)}... token usage: ${result.questionCount} questions, $${result.totalCost.toFixed(4)}`
+    );
+
+    return result;
+  } catch (error) {
+    logger.error("Error getting user token usage:", error);
+    return {
+      totalCost: 0,
+      questionCount: 0,
+      estimatedInputTokens: 0,
+      estimatedOutputTokens: 0,
+    };
+  }
+};
+
+/**
+ * PHASE 2.2: Get aggregate statistics for all questions.
+ * Useful for dashboard stats without loading all documents.
+ *
+ * @returns {Promise<{total: number, byStatus: Object}>}
+ */
+export const getQuestionStatsAggregated = async () => {
+  try {
+    if (!auth.currentUser) {
+      return { total: 0, byStatus: {} };
+    }
+
+    // Get total count
+    const totalQuery = query(collection(getDb(), "questions"));
+    const totalSnapshot = await getAggregateFromServer(totalQuery, {
+      total: count(),
+    });
+
+    // Get counts by status (requires separate queries due to Firestore limitations)
+    const statuses = ["pending", "accepted", "rejected"];
+    const byStatus = {};
+
+    for (const status of statuses) {
+      const statusQuery = query(
+        collection(getDb(), "questions"),
+        where("status", "==", status)
+      );
+      const statusSnapshot = await getAggregateFromServer(statusQuery, {
+        count: count(),
+      });
+      byStatus[status] = statusSnapshot.data().count || 0;
+    }
+
+    const result = {
+      total: totalSnapshot.data().total || 0,
+      byStatus,
+    };
+
+    logger.log(
+      `📊 Question stats: ${result.total} total, ${JSON.stringify(result.byStatus)}`
+    );
+
+    return result;
+  } catch (error) {
+    logger.error("Error getting question stats:", error);
+    return { total: 0, byStatus: {} };
   }
 };
 
@@ -409,5 +677,41 @@ export const getCustomTags = async () => {
   } catch (error) {
     logger.error("Error getting custom tags:", error);
     return {};
+  }
+};
+
+/**
+ * Retrieves pre-computed question statistics from the aggregate document.
+ * This is FAR cheaper than counting all questions client-side.
+ *
+ * The aggregate doc is maintained by a Cloud Function trigger.
+ *
+ * @returns {Promise<Object|null>} Stats object or null if not found
+ * @example
+ * const stats = await getQuestionStats();
+ * // stats = {
+ * //   totalQuestions: 4500,
+ * //   byStatus: { pending: 150, accepted: 3800, rejected: 500 },
+ * //   byDiscipline: { blueprints: 1200, materials: 800, ... },
+ * //   byType: { multiple_choice: 3000, true_false: 1500 },
+ * //   byDifficulty: { easy: 1500, medium: 2000, hard: 1000 },
+ * //   lastUpdated: Timestamp
+ * // }
+ */
+export const getQuestionStats = async () => {
+  try {
+    const statsRef = doc(getDb(), "_aggregates", "questionStats");
+    const statsSnap = await getDoc(statsRef);
+
+    if (statsSnap.exists()) {
+      logger.log("📊 Loaded question stats from aggregate doc");
+      return statsSnap.data();
+    }
+
+    logger.warn("⚠️ No aggregate stats found - run backfill script");
+    return null;
+  } catch (error) {
+    logger.error("Error getting question stats:", error);
+    return null;
   }
 };

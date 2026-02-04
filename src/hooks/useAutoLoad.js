@@ -1,0 +1,61 @@
+import { useEffect, useRef, useState } from "react";
+import { logger } from "../utils/logger";
+import { runLocalStorageMigration } from "../utils/migrateScores";
+
+/**
+ * Hook to auto-load database questions on startup.
+ * Runs once when user is authenticated and not loading.
+ *
+ * @param {Object} options - Configuration options
+ * @param {Object|null} options.user - The authenticated user object
+ * @param {boolean} options.authLoading - Whether auth is still loading
+ * @param {Function} options.handleLoadFromFirestore - Function to load questions from Firestore
+ * @returns {Object} { hasAutoLoaded, isInitialLoading }
+ */
+export function useAutoLoad({ user, authLoading, handleLoadFromFirestore }) {
+  const hasAutoLoadedRef = useRef(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  useEffect(() => {
+    // Still waiting for auth to resolve
+    if (authLoading) {
+      return;
+    }
+
+    // User not authenticated - no loading needed
+    if (!user) {
+      setIsInitialLoading(false);
+      return;
+    }
+
+    // Already loaded - done
+    if (hasAutoLoadedRef.current) {
+      setIsInitialLoading(false);
+      return;
+    }
+
+    // First load for authenticated user
+    const loadQuestions = async () => {
+      // One-time migration: Add improvedScore to existing critiques
+      const migrated = runLocalStorageMigration();
+      if (migrated.updated > 0) {
+        logger.log(
+          `🔄 Migrated ${migrated.updated} questions with estimated improved scores`
+        );
+      }
+
+      hasAutoLoadedRef.current = true;
+      logger.log("📊 Loading all questions from Firestore...");
+
+      // Load all questions on startup
+      await handleLoadFromFirestore(true);
+      setIsInitialLoading(false);
+    };
+
+    loadQuestions();
+  }, [user, authLoading, handleLoadFromFirestore]);
+
+  return { hasAutoLoaded: hasAutoLoadedRef.current, isInitialLoading };
+}
+
+export default useAutoLoad;

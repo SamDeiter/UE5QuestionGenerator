@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Icon from "./Icon";
 import {
   exportToScorm,
@@ -10,16 +10,35 @@ import { logger } from "../utils/logger";
  * SCORM Export Modal
  * Allows users to configure and export selected questions as SCORM 1.2 package
  */
-const ScormExportModal = ({ questions, onClose }) => {
+const ScormExportModal = ({ questions, discipline, onClose }) => {
+  // Auto-generate title based on discipline
+  const defaultTitle = discipline
+    ? `UE5 ${discipline} Assessment`
+    : "UE5 Knowledge Assessment";
+
   const [config, setConfig] = useState({
-    title: "UE5 Knowledge Assessment",
-    description: "Test your Unreal Engine 5 knowledge",
+    title: defaultTitle,
+    description: `Test your Unreal Engine 5 ${discipline || "knowledge"}`,
     passingScore: 80,
-    timeLimit: 30, // minutes
+    timeLimit: 60, // minutes (default: 1 hour)
   });
 
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Count questions by difficulty
+  const difficultyBreakdown = useMemo(() => {
+    const easy = questions.filter((q) =>
+      (q.difficulty || "").toLowerCase().includes("easy")
+    ).length;
+    const medium = questions.filter((q) =>
+      (q.difficulty || "").toLowerCase().includes("medium")
+    ).length;
+    const hard = questions.filter((q) =>
+      (q.difficulty || "").toLowerCase().includes("hard")
+    ).length;
+    return { easy, medium, hard, total: questions.length };
+  }, [questions]);
 
   const handleExport = async () => {
     setError(null);
@@ -145,19 +164,33 @@ const ScormExportModal = ({ questions, onClose }) => {
               <option value={15}>15 minutes</option>
               <option value={30}>30 minutes</option>
               <option value={45}>45 minutes</option>
-              <option value={60}>60 minutes</option>
-              <option value={90}>90 minutes</option>
+              <option value={60}>60 minutes (1 hour)</option>
             </select>
           </div>
 
-          {/* Question Count */}
-          <div className="bg-slate-800 rounded p-3 border border-slate-700">
+          {/* Question Bank Info */}
+          <div className="bg-slate-800 rounded p-3 border border-slate-700 space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400">Selected Questions:</span>
+              <span className="text-slate-400">Question Bank:</span>
               <span className="font-bold text-blue-400">
-                {questions.length}
+                {difficultyBreakdown.total} questions
               </span>
             </div>
+            <div className="flex gap-2 text-xs">
+              <span className="px-2 py-1 bg-green-900/30 text-green-400 rounded">
+                Easy: {difficultyBreakdown.easy}
+              </span>
+              <span className="px-2 py-1 bg-yellow-900/30 text-yellow-400 rounded">
+                Med: {difficultyBreakdown.medium}
+              </span>
+              <span className="px-2 py-1 bg-red-900/30 text-red-400 rounded">
+                Hard: {difficultyBreakdown.hard}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              📋 Quiz will select 20 of each difficulty (60 total) randomly per
+              user
+            </p>
           </div>
 
           {/* Error Display */}

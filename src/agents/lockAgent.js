@@ -129,10 +129,10 @@ export class LockAgent {
       } else {
         logger.error("[LockAgent] acquireLock failed:", error);
       }
-      return { 
-        success: false, 
-        error: error.message, 
-        isNetworkError: isNetwork 
+      return {
+        success: false,
+        error: error.message,
+        isNetworkError: isNetwork,
       };
     }
   }
@@ -195,10 +195,10 @@ export class LockAgent {
       } else {
         logger.error("[LockAgent] renewLock failed:", error);
       }
-      return { 
-        success: false, 
-        error: error.message, 
-        isNetworkError: isNetwork 
+      return {
+        success: false,
+        error: error.message,
+        isNetworkError: isNetwork,
       };
     }
   }
@@ -267,11 +267,17 @@ export class LockAgent {
   }
 
   _isNetworkError(error) {
-    const networkCodes = ['unavailable', 'deadline-exceeded', 'resource-exhausted', 'internal', 'unknown'];
+    const networkCodes = [
+      "unavailable",
+      "deadline-exceeded",
+      "resource-exhausted",
+      "internal",
+      "unknown",
+    ];
     return (
-      error.code && networkCodes.includes(error.code) ||
-      error.message?.includes('net::ERR_CONNECTION_CLOSED') ||
-      error.message?.includes('network')
+      (error.code && networkCodes.includes(error.code)) ||
+      error.message?.includes("net::ERR_CONNECTION_CLOSED") ||
+      error.message?.includes("network")
     );
   }
 }

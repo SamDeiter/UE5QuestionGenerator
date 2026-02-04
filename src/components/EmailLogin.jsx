@@ -8,7 +8,7 @@
  * - For users who previously registered
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   signInWithEmail,
   resetPassword,
@@ -24,8 +24,14 @@ const EmailLogin = ({ onSuccess, onBack }) => {
   const [showResetForm, setShowResetForm] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
+  // A1b: Synchronous guard to prevent double-submit race conditions
+  const isSubmittingRef = useRef(false);
+
   const handleLogin = async (e) => {
     e.preventDefault();
+    // A1b: Synchronous guard prevents double-submit
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setError("");
 
@@ -52,6 +58,7 @@ const EmailLogin = ({ onSuccess, onBack }) => {
       setError(err.message || getLoginErrorMessage(err.code));
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -62,6 +69,9 @@ const EmailLogin = ({ onSuccess, onBack }) => {
       return;
     }
 
+    // A1b: Synchronous guard prevents double-submit
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setError("");
 
@@ -80,10 +90,14 @@ const EmailLogin = ({ onSuccess, onBack }) => {
       setError(message);
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
   const handleGoogleLogin = async () => {
+    // A1b: Synchronous guard prevents double-submit
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setError("");
 
@@ -102,6 +116,7 @@ const EmailLogin = ({ onSuccess, onBack }) => {
       setError(message);
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 

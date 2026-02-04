@@ -5,7 +5,7 @@
  * - enforceRequiredFields MUST set creatorId
  * - Queue must NEVER drop items on permission errors
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 
 // Since firebaseSave relies heavily on Firebase, we test the logic patterns
 // These are focused regression tests for specific bugs that occurred
@@ -83,19 +83,12 @@ describe("firebaseSave - Critical Regression Tests", () => {
       const item = { question: { uniqueId: "q1" }, timestamp: Date.now() };
 
       // Simulate permission error handling - should ALWAYS re-queue
-      const isPermissionError = true;
-      const processQueueItem = (item, err) => {
-        // OLD BROKEN CODE: if (!isPermissionError) { offlineQueue.push(item); }
-        // NEW FIXED CODE: Always re-queue
-        const alreadyHasNewer = offlineQueue.some(
-          (q) => q.question?.uniqueId === item.question?.uniqueId
-        );
-        if (!alreadyHasNewer) {
-          offlineQueue.push(item);
-        }
-      };
-
-      processQueueItem(item, { code: "permission-denied" });
+      const hasId = offlineQueue.some(
+        (q) => q.question?.uniqueId === item.question?.uniqueId
+      );
+      if (!hasId) {
+        offlineQueue.push(item);
+      }
 
       // Item should be in queue even with permission error
       expect(offlineQueue).toHaveLength(1);

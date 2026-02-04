@@ -9,7 +9,6 @@ import {
   getMergedTags,
   getAllTags,
   TAGS_BY_DISCIPLINE,
-  TAG_ALIASES,
 } from "../tagTaxonomy";
 
 describe("tagTaxonomy", () => {

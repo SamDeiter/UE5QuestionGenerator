@@ -3,7 +3,8 @@
 A powerful, AI-driven tool for generating, translating, and managing quiz questions for Unreal Engine 5 training. Built with React, Vite, Tailwind CSS, and Google Gemini AI.
 
 [![Deploy Status](https://img.shields.io/badge/deploy-GitHub%20Pages-blue)](https://samdeiter.github.io/UE5QuestionGenerator/)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/SamDeiter/UE5QuestionGenerator)
+[![Tests](https://img.shields.io/badge/tests-891%20passing-brightgreen)](https://github.com/SamDeiter/UE5QuestionGenerator)
+[![Version](https://img.shields.io/badge/version-2.4.0-orange)](https://github.com/SamDeiter/UE5QuestionGenerator)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Live Demo
@@ -74,6 +75,15 @@ All AI operations use secure Firebase Cloud Function endpoints:
 - ✅ Content Security Policy (CSP) headers
 - ✅ Role-based access control (Admin/Reviewer)
 
+### Authentication Security (v2.4.0)
+
+- **AuthManager Singleton**: Centralized auth lifecycle management with `onIdTokenChanged`
+- **Race Condition Protection**: Prevents "Ghost Admin" and "Ghost Reviewer" vulnerabilities
+- **Token Refresh UX**: Proactive refresh with clear user messaging on session issues
+- **Email Verification**: Required for email/password signups
+- **Cleanup Bus**: Automatic listener and agent cleanup on logout/account switch
+- **Claims Reactivity**: Real-time role and permission updates via `getClaims()`/`refreshClaims()`
+
 ## 📦 Installation
 
 1. **Clone the repository:**
@@ -136,17 +146,20 @@ firebase deploy --only functions
 │   │   ├── Header/      # Header sub-components
 │   │   └── QuestionItem/# Question card sub-components
 │   ├── hooks/           # Custom React hooks
+│   │   ├── useAuth.js   # Authentication state management
+│   │   └── useAuthCleanup.js  # Cleanup lifecycle hook
 │   ├── services/        # Firebase & API integrations
-│   │   ├── firebase.js  # Central hub (re-exports)
+│   │   ├── AuthManager.js     # Centralized auth singleton
+│   │   ├── firebase.js        # Central hub (re-exports)
 │   │   ├── firebaseAuth.js
 │   │   ├── firebaseQueries.js
 │   │   └── firebaseSave.js
+│   ├── testUtils/       # Test utilities
+│   │   └── authHarness.js     # Auth edge case simulator
 │   └── utils/           # Helper functions, constants
 ├── functions/           # Firebase Cloud Functions
-├── scripts/             # Utility scripts (Python & JS)
 ├── config/              # Firebase rules and configuration
 ├── docs/                # Documentation
-├── tools/               # Development tools
 ├── MAINTENANCE.md       # Project maintenance guide
 └── public/              # Static assets
 ```

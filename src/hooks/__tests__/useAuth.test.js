@@ -4,14 +4,18 @@
  * Tests the authentication and registration flow to prevent
  * "Ghost Reviewer" issues where users are authenticated but not registered.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+/* eslint-disable sonarjs/no-nested-functions */
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useAuth } from "../useAuth";
 
 // Mock Firebase Auth
 vi.mock("firebase/auth", () => ({
-  onAuthStateChanged: vi.fn(),
+  onIdTokenChanged: vi.fn(),
   getAuth: vi.fn(() => ({})),
+  GoogleAuthProvider: class MockGoogleAuthProvider {},
+  signInWithPopup: vi.fn(),
+  signOut: vi.fn(),
 }));
 
 // Mock Firestore for write probe
@@ -34,6 +38,7 @@ vi.mock("../../services/firebase", () => ({
 vi.mock("../../services/inviteService", () => ({
   checkUserRegistration: vi.fn(),
   setupInitialAdmin: vi.fn(),
+  logAuthFailure: vi.fn(() => Promise.resolve()),
 }));
 
 // Mock logger
@@ -50,7 +55,7 @@ vi.mock("../../utils/analyticsStore", () => ({
   getTokenUsage: vi.fn(() => ({ input: 0, output: 0 })),
 }));
 
-import { onAuthStateChanged } from "firebase/auth";
+import { onIdTokenChanged } from "firebase/auth";
 import {
   checkUserRegistration,
   setupInitialAdmin,
@@ -69,7 +74,7 @@ describe("useAuth", () => {
 
   it("should return registered=false when user is not authenticated", async () => {
     // Mock no user
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(null);
       return () => {};
     });
@@ -87,7 +92,7 @@ describe("useAuth", () => {
   it("should detect registered reviewer from checkUserRegistration", async () => {
     const mockUser = { uid: "test-uid", email: "reviewer@gmail.com" };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
@@ -111,7 +116,7 @@ describe("useAuth", () => {
   it("should auto-register @epicgames.com users as admin via setupInitialAdmin", async () => {
     const mockUser = { uid: "epic-uid", email: "dev@epicgames.com" };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
@@ -137,7 +142,7 @@ describe("useAuth", () => {
   it("should fail closed when Cloud Function errors (no access)", async () => {
     const mockUser = { uid: "error-uid", email: "user@example.com" };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
@@ -159,7 +164,7 @@ describe("useAuth", () => {
   it("should detect Ghost Reviewer state (authenticated but not registered)", async () => {
     const mockUser = { uid: "ghost-uid", email: "ghost@company.com" };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
@@ -191,7 +196,7 @@ describe("useAuth", () => {
       email: "success@epicgames.com",
     };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
@@ -219,7 +224,7 @@ describe("useAuth", () => {
   it("should set permissionError=true when write probe fails with permission-denied", async () => {
     const mockUser = { uid: "probe-fail-uid", email: "fail@epicgames.com" };
 
-    onAuthStateChanged.mockImplementation((auth, callback) => {
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(mockUser);
       return () => {};
     });
@@ -245,5 +250,90 @@ describe("useAuth", () => {
 
     // permissionError should be true - blocking banner will show
     expect(result.current.permissionError).toBe(true);
+  });
+
+  // ============================================================
+  // AUTH RACE CONDITION TESTS (QA BLIND SPOT FIX)
+  // ============================================================
+  describe("Auth Race Conditions (QA Blind Spot)", () => {
+    it("CRITICAL: authLoading starts as true to prevent premature UI render", () => {
+      // This test ensures UI won't show private data before auth resolves
+      onIdTokenChanged.mockImplementation((auth, callback) => {
+        // Don't call callback immediately - simulate async auth check
+        setTimeout(() => callback(null), 100);
+        return () => {};
+      });
+
+      const { result } = renderHook(() => useAuth(mockShowMessage));
+
+      // Auth should be loading initially
+      expect(result.current.authLoading).toBe(true);
+      expect(result.current.user).toBeNull();
+    });
+
+    it("CRITICAL: authLoading becomes false only after auth settles", async () => {
+      let authCallback;
+      onIdTokenChanged.mockImplementation((auth, callback) => {
+        authCallback = callback;
+        return () => {};
+      });
+
+      const { result } = renderHook(() => useAuth(mockShowMessage));
+
+      // Initially loading
+      expect(result.current.authLoading).toBe(true);
+
+      // Simulate auth resolving
+      authCallback(null);
+
+      await waitFor(() => {
+        expect(result.current.authLoading).toBe(false);
+      });
+
+      // Now safe to render UI
+      expect(result.current.authLoading).toBe(false);
+    });
+
+    it("CRITICAL: components should wait for both authLoading and registrationLoading", async () => {
+      const mockUser = { uid: "test-uid", email: "test@example.com" };
+
+      onIdTokenChanged.mockImplementation((auth, callback) => {
+        callback(mockUser);
+        return () => {};
+      });
+
+      // Simulate slow registration check - extracted to reduce nesting
+      const slowRegistrationCheck = () =>
+        new Promise((resolve) => {
+          setTimeout(() => resolve({ registered: true, role: "user" }), 100);
+        });
+
+      checkUserRegistration.mockImplementation(slowRegistrationCheck);
+
+      const { result } = renderHook(() => useAuth(mockShowMessage));
+
+      // Even though auth is resolved, registration is still loading
+      await waitFor(() => {
+        expect(result.current.authLoading).toBe(false);
+      });
+
+      // Registration should still be loading
+      expect(result.current.registrationLoading).toBe(true);
+
+      // UI should check BOTH flags before showing private data
+      const shouldShowPrivateUI =
+        !result.current.authLoading && !result.current.registrationLoading;
+      expect(shouldShowPrivateUI).toBe(false);
+
+      // Wait for registration to finish
+      await waitFor(() => {
+        expect(result.current.registrationLoading).toBe(false);
+      });
+
+      // Now both are ready
+      const canShowUI =
+        !result.current.authLoading && !result.current.registrationLoading;
+      expect(canShowUI).toBe(true);
+    });
   });
 });
