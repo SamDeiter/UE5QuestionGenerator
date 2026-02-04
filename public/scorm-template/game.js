@@ -816,13 +816,11 @@ document.addEventListener("DOMContentLoaded", () => {
         window.close();
         
         // If we're still here, window.close() failed (common in LMS iframes)
-        // Show a message to the user
+        // Hide the button and show a friendly message instead
         if (closeMsg) {
           closeMsg.classList.remove('hidden');
         }
-        closeBtn.textContent = 'Window Close Unavailable';
-        closeBtn.disabled = true;
-        closeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        closeBtn.style.display = 'none';
       });
     }
   }
