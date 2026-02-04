@@ -102,6 +102,37 @@
       return setValue("cmi.core.session_time", secondsToSCORMTime(sec));
     }
 
+    /**
+     * Record an interaction (question response) for LMS tracking
+     * SCORM 1.2 cmi.interactions allows LMS to see each question asked
+     * @param {number} index - Question index (0-based)
+     * @param {Object} data - Interaction data
+     * @param {string} data.id - Question ID
+     * @param {string} data.type - "choice" for MC, "true-false" for T/F
+     * @param {string} data.studentResponse - Learner's response text
+     * @param {string} data.correctResponse - Correct response text
+     * @param {string} data.result - "correct" or "wrong"
+     * @param {number} data.latency - Time spent in seconds
+     */
+    function setInteraction(index, data) {
+      var prefix = "cmi.interactions." + index;
+      try {
+        setValue(prefix + ".id", data.id || "q" + index);
+        setValue(prefix + ".type", data.type || "choice");
+        // SCORM 1.2 uses single letter patterns for MC: a, b, c, d
+        setValue(prefix + ".student_response", data.studentResponse || "");
+        setValue(prefix + ".correct_responses.0.pattern", data.correctResponse || "");
+        setValue(prefix + ".result", data.result || "neutral");
+        if (data.latency) {
+          setValue(prefix + ".latency", secondsToSCORMTime(data.latency));
+        }
+        return true;
+      } catch (e) {
+        console.warn("[SCORM] Failed to set interaction " + index, e);
+        return false;
+      }
+    }
+
     function isConnected() { return connected; }
 
     return {
@@ -114,6 +145,7 @@
       getStatus: getStatus,
       setScoreRaw: setScoreRaw,
       setSessionTimeSeconds: setSessionTimeSeconds,
+      setInteraction: setInteraction,
       secondsToSCORMTime: secondsToSCORMTime,
       isConnected: isConnected,
       getAPI: getAPI
