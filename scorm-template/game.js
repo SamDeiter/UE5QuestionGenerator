@@ -16,10 +16,23 @@ document.addEventListener("DOMContentLoaded", () => {
     totalQuestions: 0,
     questionsPerAttempt: null, // If set, randomly select this many questions per attempt
     shuffleQuestions: true,
+    shuffleChoices: true, // Randomize answer order per question (labels stay A/B/C/D)
     adaptiveDifficulty: true,
   };
 
-  const rawQuestions = window.QUESTIONS || [];
+  // Decode base64 encoded questions (prevents casual view-source cheating)
+  // Performance: one-time decode at page load (~2-5ms for 100+ questions)
+  const rawQuestions = (() => {
+    if (window.QUESTIONS_ENCODED) {
+      try {
+        return JSON.parse(atob(window.QUESTIONS_ENCODED));
+      } catch (e) {
+        console.error('Failed to decode questions:', e);
+        return [];
+      }
+    }
+    return window.QUESTIONS || [];
+  })();
 
   // STATE
   // ═══════════════════════════════════════════════════════════════
@@ -193,8 +206,84 @@ document.addEventListener("DOMContentLoaded", () => {
           e.preventDefault();
           return false;
         }
+        
+        // Prevent copy, cut, paste (Ctrl+C, Ctrl+X, Ctrl+V)
+        if (e.ctrlKey && (e.key === 'c' || e.key === 'x' || e.key === 'v' || e.key === 'C' || e.key === 'X' || e.key === 'V')) {
+          e.preventDefault();
+          console.log('[Quiz Security] Copy/paste attempt blocked');
+          return false;
+        }
+        
+        // Prevent print (Ctrl+P)
+        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
+          e.preventDefault();
+          console.log('[Quiz Security] Print attempt blocked');
+          return false;
+        }
+        
+        // Prevent select all (Ctrl+A)
+        if (e.ctrlKey && (e.key === 'a' || e.key === 'A')) {
+          e.preventDefault();
+          return false;
+        }
       }
     });
+
+    // Prevent text selection via CSS and events
+    document.addEventListener('selectstart', (e) => {
+      if (!quizCompleted) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    // Prevent drag
+    document.addEventListener('dragstart', (e) => {
+      if (!quizCompleted) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    // Prevent copy/paste via clipboard events
+    document.addEventListener('copy', (e) => {
+      if (!quizCompleted) {
+        e.preventDefault();
+        return false;
+      }
+    });
+    
+    document.addEventListener('paste', (e) => {
+      if (!quizCompleted) {
+        e.preventDefault();
+        return false;
+      }
+    });
+    
+    document.addEventListener('cut', (e) => {
+      if (!quizCompleted) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    // DevTools detection via console timing (detects if console is open)
+    let devToolsOpen = false;
+    const detectDevTools = () => {
+      const widthThreshold = window.outerWidth - window.innerWidth > 160;
+      const heightThreshold = window.outerHeight - window.innerHeight > 160;
+      
+      if ((widthThreshold || heightThreshold) && !devToolsOpen && !quizCompleted) {
+        devToolsOpen = true;
+        console.log('[Quiz Security] DevTools detected');
+        showSecurityWarning('Developer tools have been detected. This activity is being recorded.');
+      } else if (!widthThreshold && !heightThreshold) {
+        devToolsOpen = false;
+      }
+    };
+    
+    // Check for DevTools periodically
+    setInterval(detectDevTools, 1000);
 
     // Beforeunload warning
     window.addEventListener('beforeunload', (e) => {
@@ -222,6 +311,19 @@ document.addEventListener("DOMContentLoaded", () => {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+  }
+
+  /**
+   * Shuffle answer choices for a question
+   * Labels (A/B/C/D) stay fixed, content is randomized
+   * @param {Array} choices - Array of choice objects with text and correct properties
+   * @returns {Array} Shuffled choices array
+   */
+  function shuffleChoices(choices) {
+    if (!config.shuffleChoices || !choices || choices.length <= 1) {
+      return choices;
+    }
+    return shuffleArray(choices);
   }
 
   /**
@@ -517,11 +619,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateProgress();
 
+    // Shuffle choices for this question (labels A/B/C/D stay fixed, content shuffles)
+    const shuffledChoices = shuffleChoices(question.choices);
+    // Store shuffled choices on the question for handleAnswer to access
+    question._shuffledChoices = shuffledChoices;
+    
+    const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']; // Support up to 8 choices
+
     const html = `
       <div class="bg-slate-800 rounded-lg p-6 shadow-xl">
         <h2 class="text-2xl font-bold text-blue-300 mb-4">${question.text}</h2>
         <div class="space-y-3">
-          ${question.choices
+          ${shuffledChoices
             .map(
               (choice, index) => `
             <button 
@@ -529,6 +638,7 @@ document.addEventListener("DOMContentLoaded", () => {
               data-index="${index}"
               data-correct="${choice.correct}"
             >
+              <span class="inline-block w-8 h-8 mr-3 bg-slate-600 rounded text-center leading-8 font-bold text-blue-300">${labels[index] || index + 1}</span>
               <span class="font-semibold">${choice.text}</span>
             </button>
           `
@@ -552,11 +662,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const isCorrect = button.dataset.correct === "true";
     const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
 
+    // Use shuffled choices if available (for recording the correct text)
+    const choices = question._shuffledChoices || question.choices;
+
     // Record answer
     answers.push({
       questionId: question.id,
       questionText: question.text,
-      selectedChoice: question.choices[choiceIndex].text,
+      selectedChoice: choices[choiceIndex].text,
       correct: isCorrect,
       timeSpent: timeSpent,
     });
@@ -681,15 +794,35 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         <button 
-          onclick="window.close()" 
+          id="close-assessment-btn"
           class="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
         >
           Close Assessment
         </button>
+        <p id="close-message" class="mt-2 text-sm text-slate-400 hidden">
+          Assessment complete. You may now close this window or navigate away.
+        </p>
       </div>
     `;
 
     resultsContainer.innerHTML = resultHtml;
+
+    // Attach close button handler (window.close() may fail in LMS iframe context)
+    const closeBtn = document.getElementById('close-assessment-btn');
+    const closeMsg = document.getElementById('close-message');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        // Try to close the window
+        window.close();
+        
+        // If we're still here, window.close() failed (common in LMS iframes)
+        // Hide the button and show a friendly message instead
+        if (closeMsg) {
+          closeMsg.classList.remove('hidden');
+        }
+        closeBtn.style.display = 'none';
+      });
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════
