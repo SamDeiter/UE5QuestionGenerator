@@ -14,20 +14,206 @@ document.addEventListener("DOMContentLoaded", () => {
     passingScore: 80,
     timeLimit: 1800, // 30 minutes in seconds
     totalQuestions: 0,
+    questionsPerAttempt: null, // If set, randomly select this many questions per attempt
+    shuffleQuestions: true,
+    adaptiveDifficulty: true,
   };
 
-  // Load all questions from bank
-  const allQuestions = window.QUESTIONS || [];
+  const rawQuestions = window.QUESTIONS || [];
 
-  // ═══════════════════════════════════════════════════════════════
-  // QUESTION SELECTION - 60 total (20 per difficulty)
+  // STATE
   // ═══════════════════════════════════════════════════════════════
 
-  const QUESTIONS_PER_DIFFICULTY = 20;
-  const TARGET_TOTAL = 60;
+  let currentQuestionIndex = 0;
+  let answers = []; // Array of {questionId, selectedChoice, correct, timeSpent}
+  let timeRemaining = config.timeLimit;
+  let timerInterval = null;
+  let questionStartTime = Date.now();
+  let attemptToken = null;
+  let quizCompleted = false;
+  let wrongStreak = 0; // Track consecutive wrong answers for adaptive difficulty
+  let questions = []; // Shuffled/balanced question list
+
+  // ═══════════════════════════════════════════════════════════════
+  // SECURITY STATE
+  // ═══════════════════════════════════════════════════════════════
+  
+  let tabSwitchCount = 0;
+  let isLocked = false;
+  const ATTEMPT_STORAGE_KEY = 'scorm_quiz_attempt';
+  const TAB_ID_KEY = 'scorm_quiz_tab_id';
+  const MAX_TAB_SWITCHES = 3; // Allow 3 tab switches before warning
+
+  // ═══════════════════════════════════════════════════════════════
+  // SECURITY FUNCTIONS  
+  // ═══════════════════════════════════════════════════════════════
 
   /**
-   * Shuffle array using Fisher-Yates algorithm
+   * Generate unique attempt token
+   */
+  function generateAttemptToken() {
+    const timestamp = Date.now().toString(36);
+    const randomPart = Math.random().toString(36).substring(2, 10);
+    return `attempt_${timestamp}_${randomPart}`;
+  }
+
+  /**
+   * Get or create tab ID
+   */
+  function getTabId() {
+    let tabId = sessionStorage.getItem(TAB_ID_KEY);
+    if (!tabId) {
+      tabId = `tab_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      sessionStorage.setItem(TAB_ID_KEY, tabId);
+    }
+    return tabId;
+  }
+
+  /**
+   * Lock the current attempt to prevent restart
+   */
+  function lockAttempt() {
+    const existing = sessionStorage.getItem(ATTEMPT_STORAGE_KEY);
+    if (existing && !isLocked) {
+      // There's already an active attempt
+      const attemptData = JSON.parse(existing);
+      if (attemptData.tabId !== getTabId()) {
+        showSecurityWarning('This quiz is already open in another tab. Please close other tabs to continue.');
+        isLocked = true;
+        return false;
+      }
+    }
+    
+    attemptToken = generateAttemptToken();
+    const attemptData = {
+      token: attemptToken,
+      tabId: getTabId(),
+      startedAt: new Date().toISOString()
+    };
+    
+    sessionStorage.setItem(ATTEMPT_STORAGE_KEY, JSON.stringify(attemptData));
+    console.log('[Quiz Security] Attempt locked:', attemptToken);
+    return true;
+  }
+
+  /**
+   * Clear attempt lock on completion
+   */
+  function clearAttempt() {
+    quizCompleted = true;
+    sessionStorage.removeItem(ATTEMPT_STORAGE_KEY);
+    console.log('[Quiz Security] Attempt cleared - quiz completed');
+  }
+
+  /**
+   * Show security warning overlay
+   */
+  function showSecurityWarning(message) {
+    let overlay = document.getElementById('security-warning-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'security-warning-overlay';
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.9); z-index: 10000;
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column; color: white; text-align: center; padding: 40px;
+      `;
+      document.body.appendChild(overlay);
+    }
+    
+    overlay.innerHTML = `
+      <div style="max-width: 500px;">
+        <svg style="width: 80px; height: 80px; margin-bottom: 20px; color: #f59e0b;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+        <h2 style="font-size: 24px; margin-bottom: 16px;">⚠️ Security Warning</h2>
+        <p style="font-size: 16px; margin-bottom: 24px; opacity: 0.9;">${message}</p>
+        <button onclick="document.getElementById('security-warning-overlay').style.display='none'" 
+                style="padding: 12px 24px; background: #3b82f6; border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 16px;">
+          I Understand
+        </button>
+      </div>
+    `;
+    overlay.style.display = 'flex';
+  }
+
+  /**
+   * Initialize security event listeners
+   */
+  function initSecurityListeners() {
+    // Visibility change detection (tab switching)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && !quizCompleted) {
+        tabSwitchCount++;
+        console.log('[Quiz Security] Tab switch detected. Count:', tabSwitchCount);
+        
+        if (tabSwitchCount >= MAX_TAB_SWITCHES) {
+          showSecurityWarning(
+            `You have switched away from this quiz ${tabSwitchCount} times. ` +
+            'This activity is being recorded. Please stay on this page to complete your assessment.'
+          );
+        }
+      }
+    });
+
+    // Window blur detection
+    window.addEventListener('blur', () => {
+      if (!quizCompleted) {
+        console.log('[Quiz Security] Window lost focus');
+      }
+    });
+
+    // Prevent back button
+    history.pushState(null, '', location.href);
+    window.addEventListener('popstate', () => {
+      if (!quizCompleted) {
+        history.pushState(null, '', location.href);
+        showSecurityWarning('The back button has been disabled during this assessment. Please use the quiz navigation.');
+      }
+    });
+
+    // Context menu prevention (optional - remove right-click)
+    document.addEventListener('contextmenu', (e) => {
+      if (!quizCompleted) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    // Keyboard shortcut prevention (F12, Ctrl+Shift+I, etc.)
+    document.addEventListener('keydown', (e) => {
+      if (!quizCompleted) {
+        // Prevent F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+        if (
+          e.key === 'F12' ||
+          (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+          (e.ctrlKey && e.key === 'u')
+        ) {
+          e.preventDefault();
+          return false;
+        }
+      }
+    });
+
+    // Beforeunload warning
+    window.addEventListener('beforeunload', (e) => {
+      if (!quizCompleted && currentQuestionIndex > 0) {
+        e.preventDefault();
+        e.returnValue = 'You have an assessment in progress. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    });
+
+    console.log('[Quiz Security] All security listeners initialized');
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // SHUFFLE & ADAPTIVE DIFFICULTY
+  // ═══════════════════════════════════════════════════════════════
+
+  /**
+   * Fisher-Yates shuffle
    */
   function shuffleArray(array) {
     const shuffled = [...array];
@@ -39,103 +225,195 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * Select N random questions from an array
+   * Build balanced question list with difficulty interleaving
+   * Interleaves Easy-Medium-Hard for optimal learning progression
    */
-  function selectRandom(array, count) {
-    if (array.length <= count) return [...array];
-    return shuffleArray(array).slice(0, count);
-  }
-
-  /**
-   * Categorize questions by difficulty
-   */
-  function categorizeByDifficulty(questionList) {
-    const easy = [];
-    const medium = [];
-    const hard = [];
-    const unknown = [];
-
-    questionList.forEach((q) => {
-      const diff = (q.difficulty || "").toLowerCase();
-      if (diff.includes("easy") || diff.includes("beginner")) {
-        easy.push(q);
-      } else if (diff.includes("medium") || diff.includes("intermediate")) {
-        medium.push(q);
-      } else if (
-        diff.includes("hard") ||
-        diff.includes("expert") ||
-        diff.includes("advanced")
-      ) {
-        hard.push(q);
-      } else {
-        unknown.push(q);
-      }
+  function buildBalancedQuestionList(inputQuestions) {
+    const easy = inputQuestions.filter(q => 
+      (q.difficulty || '').toLowerCase().includes('easy')
+    );
+    const medium = inputQuestions.filter(q => 
+      (q.difficulty || '').toLowerCase().includes('medium')
+    );
+    const hard = inputQuestions.filter(q => 
+      (q.difficulty || '').toLowerCase().includes('hard')
+    );
+    const other = inputQuestions.filter(q => {
+      const diff = (q.difficulty || '').toLowerCase();
+      return !diff.includes('easy') && !diff.includes('medium') && !diff.includes('hard');
     });
 
-    return { easy, medium, hard, unknown };
+    // Shuffle each pool
+    const shuffledEasy = shuffleArray(easy);
+    const shuffledMedium = shuffleArray(medium);
+    const shuffledHard = shuffleArray(hard);
+    const shuffledOther = shuffleArray(other);
+
+    // Interleave: E-M-H pattern
+    const distributed = [];
+    const maxLen = Math.max(shuffledEasy.length, shuffledMedium.length, shuffledHard.length);
+
+    for (let i = 0; i < maxLen; i++) {
+      if (shuffledEasy[i]) distributed.push(shuffledEasy[i]);
+      if (shuffledMedium[i]) distributed.push(shuffledMedium[i]);
+      if (shuffledHard[i]) distributed.push(shuffledHard[i]);
+    }
+
+    // Add any uncategorized questions at the end
+    distributed.push(...shuffledOther);
+
+    return distributed;
   }
 
   /**
-   * Select 60 questions: 20 easy, 20 medium, 20 hard
-   * Falls back to more from other categories if one is short
+   * Apply confidence boost - swap in easier question after wrong streak
    */
-  function selectQuizQuestions(questionList) {
-    const { easy, medium, hard, unknown } =
-      categorizeByDifficulty(questionList);
+  function applyConfidenceBoost() {
+    if (!config.adaptiveDifficulty || wrongStreak < 2) return;
 
-    // Select up to 20 from each category
-    let selected = [];
-    let remaining = TARGET_TOTAL;
+    const upcomingQuestions = questions.slice(currentQuestionIndex + 1);
+    const answeredIds = new Set(answers.map(a => a.questionId));
 
-    // Try to get 20 from each
-    const easyPick = selectRandom(easy, QUESTIONS_PER_DIFFICULTY);
-    const mediumPick = selectRandom(medium, QUESTIONS_PER_DIFFICULTY);
-    const hardPick = selectRandom(hard, QUESTIONS_PER_DIFFICULTY);
+    const easyIndex = upcomingQuestions.findIndex(q =>
+      (q.difficulty || '').toLowerCase().includes('easy') &&
+      !answeredIds.has(q.id)
+    );
 
-    selected = [...easyPick, ...mediumPick, ...hardPick];
-    remaining = TARGET_TOTAL - selected.length;
-
-    // If we don't have 60 yet, fill from unknown category
-    if (remaining > 0 && unknown.length > 0) {
-      const unknownPick = selectRandom(unknown, remaining);
-      selected = [...selected, ...unknownPick];
-      remaining = TARGET_TOTAL - selected.length;
+    if (easyIndex > 0) {
+      // Swap easier question to next position
+      const realIndex = currentQuestionIndex + 1 + easyIndex;
+      const temp = questions[currentQuestionIndex + 1];
+      questions[currentQuestionIndex + 1] = questions[realIndex];
+      questions[realIndex] = temp;
+      console.log('[Adaptive] Swapped in easier question for confidence boost');
     }
-
-    // If still short, try to get more from categories that have extras
-    if (remaining > 0) {
-      const allUnused = [
-        ...easy.filter((q) => !easyPick.includes(q)),
-        ...medium.filter((q) => !mediumPick.includes(q)),
-        ...hard.filter((q) => !hardPick.includes(q)),
-      ];
-      const extraPick = selectRandom(allUnused, remaining);
-      selected = [...selected, ...extraPick];
-    }
-
-    // Shuffle final selection so difficulties are mixed
-    return shuffleArray(selected);
   }
 
-  // Select questions for this quiz session
-  const questions =
-    allQuestions.length > TARGET_TOTAL
-      ? selectQuizQuestions(allQuestions)
-      : shuffleArray(allQuestions);
-
-  console.log(
-    `Quiz initialized: ${questions.length} questions selected from ${allQuestions.length} in bank`
-  );
-
   // ═══════════════════════════════════════════════════════════════
-  // STATE
+  // ANTI-CHEAT SECURITY
   // ═══════════════════════════════════════════════════════════════
 
-  let currentQuestionIndex = 0;
-  let answers = []; // Array of {questionId, selectedChoice, correct, timeSpent}
-  let timeRemaining = config.timeLimit;
-  let timerInterval = null;
-  let questionStartTime = Date.now();
+  const ATTEMPT_KEY = 'ue5_scorm_active_attempt';
+  const CHANNEL_NAME = 'ue5_scorm_coordination';
+  let broadcastChannel = null;
+
+  /**
+   * Generate unique attempt token
+   */
+  function generateAttemptToken() {
+    const timestamp = Date.now().toString(36);
+    const randomPart = Math.random().toString(36).substring(2, 10);
+    return 'scorm_' + timestamp + '_' + randomPart;
+  }
+
+  /**
+   * Lock attempt in sessionStorage
+   */
+  function lockAttempt(token) {
+    const existing = sessionStorage.getItem(ATTEMPT_KEY);
+    if (existing) {
+      console.warn('[Security] Attempt already active:', existing);
+      return false;
+    }
+    sessionStorage.setItem(ATTEMPT_KEY, JSON.stringify({
+      token: token,
+      startedAt: new Date().toISOString()
+    }));
+    broadcastAttemptStart(token);
+    return true;
+  }
+
+  /**
+   * Check if attempt is active
+   */
+  function isAttemptActive() {
+    return sessionStorage.getItem(ATTEMPT_KEY) !== null;
+  }
+
+  /**
+   * Clear attempt on completion
+   */
+  function clearAttempt() {
+    sessionStorage.removeItem(ATTEMPT_KEY);
+    quizCompleted = true;
+  }
+
+  /**
+   * Prevent back navigation using history API
+   */
+  function preventBackNavigation() {
+    window.history.pushState({ quizActive: true }, '');
+    window.addEventListener('popstate', function() {
+      if (!quizCompleted) {
+        window.history.pushState({ quizActive: true }, '');
+        console.log('[Security] Back navigation blocked');
+      }
+    });
+  }
+
+  /**
+   * Add beforeunload warning
+   */
+  function enableUnloadWarning() {
+    window.addEventListener('beforeunload', function(e) {
+      if (!quizCompleted) {
+        e.preventDefault();
+        e.returnValue = 'You have an active quiz. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    });
+  }
+
+  /**
+   * Initialize multi-tab detection
+   */
+  function initMultiTabDetection() {
+    // Try BroadcastChannel first
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
+        broadcastChannel.onmessage = function(event) {
+          if (event.data.type === 'ATTEMPT_START' && !quizCompleted) {
+            console.warn('[Security] Another tab started a quiz attempt');
+          }
+          if (event.data.type === 'QUERY_ACTIVE' && isAttemptActive()) {
+            broadcastChannel.postMessage({ type: 'ACTIVE_RESPONSE', token: attemptToken });
+          }
+          if (event.data.type === 'ACTIVE_RESPONSE') {
+            showDuplicateWarning();
+          }
+        };
+        // Query other tabs
+        setTimeout(function() {
+          broadcastChannel.postMessage({ type: 'QUERY_ACTIVE' });
+        }, 100);
+      } catch (err) {
+        console.warn('[Security] BroadcastChannel failed:', err);
+      }
+    }
+  }
+
+  /**
+   * Broadcast attempt start
+   */
+  function broadcastAttemptStart(token) {
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({ type: 'ATTEMPT_START', token: token });
+    }
+  }
+
+  /**
+   * Show duplicate attempt warning
+   */
+  function showDuplicateWarning() {
+    questionContainer.innerHTML = `
+      <div class="bg-yellow-900/30 border border-yellow-500 rounded-lg p-8 text-center">
+        <h2 class="text-2xl font-bold text-yellow-400 mb-4">Quiz Already Active</h2>
+        <p class="text-slate-300 mb-4">Another browser tab is already running this quiz.</p>
+        <p class="text-slate-400 text-sm">Please complete or close that attempt first.</p>
+      </div>
+    `;
+  }
 
   // ═══════════════════════════════════════════════════════════════
   // DOM ELEMENTS
@@ -239,8 +517,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateProgress();
 
-    // SECURITY: Do NOT expose correct answer in DOM (no data-correct attribute)
-    // Correctness is checked server-side via question data at answer time
     const html = `
       <div class="bg-slate-800 rounded-lg p-6 shadow-xl">
         <h2 class="text-2xl font-bold text-blue-300 mb-4">${question.text}</h2>
@@ -249,8 +525,9 @@ document.addEventListener("DOMContentLoaded", () => {
             .map(
               (choice, index) => `
             <button 
-              class="choice-btn w-full text-left p-4 bg-slate-700 hover:bg-slate-600 rounded-lg border-2 border-slate-600 hover:border-blue-500 transition-all"
+              class="choice-btn w-full text-left p-4 bg-slate-700 hover:bg-slate-600 rounded-lg border border-slate-600 hover:border-blue-500 transition-all"
               data-index="${index}"
+              data-correct="${choice.correct}"
             >
               <span class="font-semibold">${choice.text}</span>
             </button>
@@ -272,8 +549,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleAnswer(button) {
     const question = questions[currentQuestionIndex];
     const choiceIndex = parseInt(button.dataset.index);
-    // SECURITY: Check correctness from question data, not DOM attribute
-    const isCorrect = question.choices[choiceIndex].correct === true;
+    const isCorrect = button.dataset.correct === "true";
     const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
 
     // Record answer
@@ -285,28 +561,36 @@ document.addEventListener("DOMContentLoaded", () => {
       timeSpent: timeSpent,
     });
 
-    // Testing mode: No correct/incorrect feedback - just show selection
-    // This prevents test-takers from learning answers during the test
+    // Track wrong streak for adaptive difficulty
+    if (isCorrect) {
+      wrongStreak = 0;
+    } else {
+      wrongStreak++;
+    }
 
-    // Disable all buttons to prevent double-click
+    // Visual feedback
+    if (isCorrect) {
+      button.classList.add("bg-green-600", "border-green-500");
+    } else {
+      button.classList.add("bg-red-600", "border-red-500");
+      // Highlight correct answer
+      document.querySelectorAll(".choice-btn").forEach((btn) => {
+        if (btn.dataset.correct === "true") {
+          btn.classList.add("bg-green-600", "border-green-500");
+        }
+      });
+    }
+
+    // Disable all buttons
     document.querySelectorAll(".choice-btn").forEach((btn) => {
       btn.disabled = true;
-      btn.classList.add("cursor-not-allowed", "opacity-40");
+      btn.classList.add("cursor-not-allowed");
     });
 
-    // IMPROVED: Show clear "selected" indicator on chosen answer
-    button.classList.remove("opacity-40", "bg-slate-700", "border-slate-600");
-    button.classList.add(
-      "bg-blue-600",
-      "border-blue-400",
-      "ring-2",
-      "ring-blue-400",
-      "ring-offset-2",
-      "ring-offset-slate-800",
-      "opacity-100"
-    );
+    // Apply confidence boost before moving to next question
+    applyConfidenceBoost();
 
-    // Move to next question after brief delay (long enough to show selection clearly)
+    // Move to next question after delay
     setTimeout(() => {
       currentQuestionIndex++;
       if (currentQuestionIndex < questions.length) {
@@ -314,7 +598,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         endQuiz("completed");
       }
-    }, 600);
+    }, 1500);
   }
 
   function calculateScore() {
@@ -339,6 +623,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Report to SCORM
     reportScoreToSCORM(score.percentage, score.passed);
+
+    // Clear the attempt lock on completion
+    clearAttempt();
 
     // Show results
     questionContainer.classList.add("hidden");
@@ -413,8 +700,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize SCORM
     initializeSCORM();
 
+    // Initialize security features
+    initSecurityListeners();
+
+    // Lock the attempt  
+    if (!lockAttempt()) {
+      console.warn('[Security] Could not lock attempt - quiz may be open in another tab');
+    }
+
     // Validate questions
-    if (!questions || questions.length === 0) {
+    if (!rawQuestions || rawQuestions.length === 0) {
       questionContainer.innerHTML = `
         <div class="bg-red-900/20 border border-red-500 rounded-lg p-6 text-center">
           <h2 class="text-xl font-bold text-red-400 mb-2">No Questions Available</h2>
@@ -422,6 +717,20 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
       return;
+    }
+
+    // Build balanced, shuffled question list
+    if (config.shuffleQuestions) {
+      questions = buildBalancedQuestionList(rawQuestions);
+      console.log('[Quiz] Shuffled and balanced', questions.length, 'questions');
+    } else {
+      questions = [...rawQuestions];
+    }
+
+    // Limit to questionsPerAttempt if configured (runtime random selection)
+    if (config.questionsPerAttempt && config.questionsPerAttempt < questions.length) {
+      questions = questions.slice(0, config.questionsPerAttempt);
+      console.log('[Quiz] Limited to', config.questionsPerAttempt, 'questions for this attempt');
     }
 
     // Start quiz
