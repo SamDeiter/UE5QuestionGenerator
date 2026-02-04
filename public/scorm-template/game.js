@@ -193,8 +193,84 @@ document.addEventListener("DOMContentLoaded", () => {
           e.preventDefault();
           return false;
         }
+        
+        // Prevent copy, cut, paste (Ctrl+C, Ctrl+X, Ctrl+V)
+        if (e.ctrlKey && (e.key === 'c' || e.key === 'x' || e.key === 'v' || e.key === 'C' || e.key === 'X' || e.key === 'V')) {
+          e.preventDefault();
+          console.log('[Quiz Security] Copy/paste attempt blocked');
+          return false;
+        }
+        
+        // Prevent print (Ctrl+P)
+        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
+          e.preventDefault();
+          console.log('[Quiz Security] Print attempt blocked');
+          return false;
+        }
+        
+        // Prevent select all (Ctrl+A)
+        if (e.ctrlKey && (e.key === 'a' || e.key === 'A')) {
+          e.preventDefault();
+          return false;
+        }
       }
     });
+
+    // Prevent text selection via CSS and events
+    document.addEventListener('selectstart', (e) => {
+      if (!quizCompleted) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    // Prevent drag
+    document.addEventListener('dragstart', (e) => {
+      if (!quizCompleted) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    // Prevent copy/paste via clipboard events
+    document.addEventListener('copy', (e) => {
+      if (!quizCompleted) {
+        e.preventDefault();
+        return false;
+      }
+    });
+    
+    document.addEventListener('paste', (e) => {
+      if (!quizCompleted) {
+        e.preventDefault();
+        return false;
+      }
+    });
+    
+    document.addEventListener('cut', (e) => {
+      if (!quizCompleted) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    // DevTools detection via console timing (detects if console is open)
+    let devToolsOpen = false;
+    const detectDevTools = () => {
+      const widthThreshold = window.outerWidth - window.innerWidth > 160;
+      const heightThreshold = window.outerHeight - window.innerHeight > 160;
+      
+      if ((widthThreshold || heightThreshold) && !devToolsOpen && !quizCompleted) {
+        devToolsOpen = true;
+        console.log('[Quiz Security] DevTools detected');
+        showSecurityWarning('Developer tools have been detected. This activity is being recorded.');
+      } else if (!widthThreshold && !heightThreshold) {
+        devToolsOpen = false;
+      }
+    };
+    
+    // Check for DevTools periodically
+    setInterval(detectDevTools, 1000);
 
     // Beforeunload warning
     window.addEventListener('beforeunload', (e) => {

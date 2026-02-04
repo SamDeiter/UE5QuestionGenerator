@@ -8,6 +8,51 @@ import { SCORM_DEFAULTS } from "../utils/constants";
  */
 
 /**
+ * Check if text is primarily English (Latin script)
+ * Detects non-Latin scripts: Korean, Chinese, Japanese, Cyrillic, Arabic, Hebrew, Thai, etc.
+ * @param {string} text - Text to check
+ * @returns {boolean} True if text appears to be English/Latin script
+ */
+export function isEnglishText(text) {
+  if (!text || typeof text !== 'string') return true;
+  
+  // Regex to match non-Latin scripts (Korean, Chinese, Japanese, Cyrillic, Arabic, Hebrew, Thai)
+  const nonLatinRegex = /[\u1100-\u11FF\uAC00-\uD7AF\u4E00-\u9FFF\u3040-\u30FF\u0400-\u04FF\u0600-\u06FF\u0590-\u05FF\u0E00-\u0E7F]/;
+  
+  return !nonLatinRegex.test(text);
+}
+
+/**
+ * Filter questions to only include English content
+ * @param {Array} questions - Questions to filter
+ * @returns {Object} { filtered: Array, skipped: number }
+ */
+export function filterEnglishQuestions(questions) {
+  const filtered = [];
+  let skipped = 0;
+  
+  questions.forEach((q) => {
+    const questionText = q.questionText || q.question || "";
+    const optionsText = q.options ? Object.values(q.options).join(' ') : '';
+    const choicesText = Array.isArray(q.choices) ? q.choices.join(' ') : '';
+    const allText = `${questionText} ${optionsText} ${choicesText}`;
+    
+    if (isEnglishText(allText)) {
+      filtered.push(q);
+    } else {
+      skipped++;
+      logger.info(`Skipping non-English question: ${(questionText).substring(0, 50)}...`);
+    }
+  });
+  
+  if (skipped > 0) {
+    logger.info(`Filtered out ${skipped} non-English question(s)`);
+  }
+  
+  return { filtered, skipped };
+}
+
+/**
  * Convert a Firestore question to SCORM quiz format
  * Handles both field naming conventions:
  * - Legacy: questionText, choices (array), correctAnswer (text)
@@ -145,8 +190,19 @@ export async function exportToScorm(questions, config = {}) {
   }
 
   try {
-    // Generate package files
-    const files = await generateScormPackageFiles(questions, config);
+    // Filter to English-only questions
+    const { filtered: englishQuestions, skipped } = filterEnglishQuestions(questions);
+    
+    if (englishQuestions.length === 0) {
+      throw new Error("No English questions found after filtering");
+    }
+    
+    if (skipped > 0) {
+      logger.info(`SCORM Export: Filtered out ${skipped} non-English question(s), exporting ${englishQuestions.length} questions`);
+    }
+
+    // Generate package files with filtered questions
+    const files = await generateScormPackageFiles(englishQuestions, config);
 
     // Create ZIP file
     const zip = new JSZip();
@@ -333,16 +389,21 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
           });
         }
 
-        // Filter to only valid questions (instead of skipping entire discipline)
-        const validQuestions = disciplineQuestions.filter((q, index) => {
+        // Filter to only valid AND English questions
+        const validQuestions = disciplineQuestions.filter((q) => {
           const questionText = q.questionText || q.question || "";
           const hasOptions = q.options && typeof q.options === "object";
           const hasChoices = Array.isArray(q.choices) && q.choices.length >= 2;
           const hasCorrect = q.correct || q.correctAnswer;
+          const optionsText = q.options ? Object.values(q.options).join(' ') : '';
+          const choicesText = Array.isArray(q.choices) ? q.choices.join(' ') : '';
+          const allText = `${questionText} ${optionsText} ${choicesText}`;
           
-          const isValid = questionText.trim() && (hasOptions || hasChoices) && hasCorrect;
-          if (!isValid) {
-            logger.warn(`Skipping ${discipline}: Question ${index + 1}: Invalid question data`);
+          const isValid = questionText.trim() && (hasOptions || hasChoices) && hasCorrect && isEnglishText(allText);
+          if (!isValid && !isEnglishText(allText)) {
+            logger.info(`Skipping non-English question in ${discipline}: ${questionText.substring(0, 40)}...`);
+          } else if (!isValid) {
+            logger.warn(`Skipping invalid question in ${discipline}: ${questionText.substring(0, 40)}...`);
           }
           return isValid;
         });
