@@ -40,10 +40,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Force account chooser on every sign-in (fixes mobile issue where 
+// Force account chooser on every sign-in (fixes mobile issue where
 // switching accounts after logout didn't show the account picker)
 googleProvider.setCustomParameters({
-  prompt: 'select_account'
+  prompt: "select_account",
 });
 
 // --- Authentication Functions ---

@@ -144,7 +144,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
     if (quizStarted && !quizGuid) {
       const guid = generateGUID();
       const token = generateAttemptToken();
-      
+
       // Lock the attempt to prevent restarts
       const locked = lockAttempt(token, guid);
       if (!locked) {
@@ -152,16 +152,16 @@ const QuizPreview = ({ questions, config, onClose }) => {
         logger.warn("Cannot start: attempt already active", active);
         // Allow continuing if it's the same session
       }
-      
+
       setAttemptToken(token);
       setQuizGuid(guid);
       setQuizStartTime(Date.now());
       setQuizQuestions(buildBalancedQuestionList(guid));
-      
+
       // Enable security features
       preventBackNavigation();
       enableUnloadWarning();
-      
+
       logger.log("Quiz started with GUID:", guid, "Token:", token);
     }
   }, [quizStarted, quizGuid, buildBalancedQuestionList]);
@@ -172,10 +172,10 @@ const QuizPreview = ({ questions, config, onClose }) => {
       setDuplicateAttemptWarning(duplicateData);
       logger.warn("[QuizPreview] Duplicate attempt detected in another tab");
     });
-    
+
     // Query other tabs for active attempts
     queryOtherTabs();
-    
+
     return () => {
       cleanupMultiTabDetection();
     };
@@ -459,7 +459,7 @@ const QuizPreview = ({ questions, config, onClose }) => {
     if (showResults && quizGuid && quizStartTime) {
       const timeSpent = Math.floor((Date.now() - quizStartTime) / 1000);
       reportToSCORM(results, quizGuid, timeSpent);
-      
+
       // Clear the attempt lock on completion
       if (attemptToken) {
         clearAttempt(attemptToken);
@@ -499,8 +499,8 @@ const QuizPreview = ({ questions, config, onClose }) => {
             Quiz Already Active
           </h3>
           <p className="text-slate-400 mb-6">
-            A quiz attempt is already in progress in another browser tab.
-            Please complete or close that attempt first.
+            A quiz attempt is already in progress in another browser tab. Please
+            complete or close that attempt first.
           </p>
           <button
             onClick={onClose}
@@ -528,7 +528,11 @@ const QuizPreview = ({ questions, config, onClose }) => {
   // Results screen
   if (showResults) {
     return (
-      <QuizResultsScreen results={results} config={config} onClose={handleClose} />
+      <QuizResultsScreen
+        results={results}
+        config={config}
+        onClose={handleClose}
+      />
     );
   }
 

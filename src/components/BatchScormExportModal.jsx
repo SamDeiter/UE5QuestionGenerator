@@ -64,8 +64,8 @@ const BatchScormExportModal = ({ questions, onClose }) => {
 
     try {
       // Filter to only selected disciplines
-      const selectedQuestions = questions.filter(
-        (q) => selectedDisciplines.has(q.discipline)
+      const selectedQuestions = questions.filter((q) =>
+        selectedDisciplines.has(q.discipline)
       );
 
       if (selectedQuestions.length === 0) {
@@ -82,7 +82,7 @@ const BatchScormExportModal = ({ questions, onClose }) => {
           onProgress: (p) => setProgress(p),
         }
       );
-      
+
       logger.log("Batch SCORM export successful:", exportResult);
       setResult(exportResult);
     } catch (err) {
@@ -116,7 +116,8 @@ const BatchScormExportModal = ({ questions, onClose }) => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-bold text-slate-300">
-                Packages to Export ({selectedDisciplines.size} of {disciplines.length})
+                Packages to Export ({selectedDisciplines.size} of{" "}
+                {disciplines.length})
               </label>
               <div className="flex gap-2 text-xs">
                 <button
@@ -155,7 +156,9 @@ const BatchScormExportModal = ({ questions, onClose }) => {
                         className="w-4 h-4 accent-blue-500"
                         disabled={isExporting}
                       />
-                      <span className="text-sm text-slate-300">{discipline}</span>
+                      <span className="text-sm text-slate-300">
+                        {discipline}
+                      </span>
                     </div>
                     <span className="text-xs text-slate-500">
                       {questionCount} questions
@@ -236,20 +239,26 @@ const BatchScormExportModal = ({ questions, onClose }) => {
                 max="200"
                 value={config.questionsPerAttempt || ""}
                 onChange={(e) =>
-                  setConfig({ ...config, questionsPerAttempt: e.target.value ? parseInt(e.target.value) : null })
+                  setConfig({
+                    ...config,
+                    questionsPerAttempt: e.target.value
+                      ? parseInt(e.target.value)
+                      : null,
+                  })
                 }
                 className="w-24 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white focus:border-blue-500 outline-none"
                 placeholder="All"
                 disabled={isExporting}
               />
               <span className="text-xs text-slate-500">
-                {config.questionsPerAttempt 
-                  ? `Each test loads ${config.questionsPerAttempt} random questions` 
+                {config.questionsPerAttempt
+                  ? `Each test loads ${config.questionsPerAttempt} random questions`
                   : "Use all available questions"}
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              All questions are exported; a random subset is selected each time the test loads.
+              All questions are exported; a random subset is selected each time
+              the test loads.
             </p>
           </div>
 
@@ -281,7 +290,10 @@ const BatchScormExportModal = ({ questions, onClose }) => {
                 type="checkbox"
                 checked={options.downloadAsSingleZip}
                 onChange={(e) =>
-                  setOptions({ ...options, downloadAsSingleZip: e.target.checked })
+                  setOptions({
+                    ...options,
+                    downloadAsSingleZip: e.target.checked,
+                  })
                 }
                 className="w-4 h-4 accent-blue-500"
                 disabled={isExporting}
@@ -318,7 +330,8 @@ const BatchScormExportModal = ({ questions, onClose }) => {
               </div>
               {progress.discipline && (
                 <p className="text-xs text-slate-500 mt-2">
-                  Processing: {progress.discipline} ({progress.questionCount} questions)
+                  Processing: {progress.discipline} ({progress.questionCount}{" "}
+                  questions)
                 </p>
               )}
             </div>
@@ -332,7 +345,8 @@ const BatchScormExportModal = ({ questions, onClose }) => {
                 <span className="font-bold">Export Complete!</span>
               </div>
               <p className="text-sm text-slate-300">
-                Generated {result.successfulExports} of {result.totalDisciplines} packages
+                Generated {result.successfulExports} of{" "}
+                {result.totalDisciplines} packages
               </p>
               {result.masterFilename && (
                 <p className="text-xs text-slate-500 mt-1">
@@ -353,7 +367,8 @@ const BatchScormExportModal = ({ questions, onClose }) => {
         {/* Footer */}
         <div className="flex items-center justify-between gap-3 p-6 border-t border-slate-700 shrink-0">
           <p className="text-xs text-slate-500">
-            Total: {questions.length} questions across {disciplines.length} disciplines
+            Total: {questions.length} questions across {disciplines.length}{" "}
+            disciplines
           </p>
           <div className="flex gap-3">
             <button

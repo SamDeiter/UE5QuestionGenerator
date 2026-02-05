@@ -434,7 +434,7 @@ describe("AuthManager - Claims Methods", () => {
 
 /**
  * Duplicate Account Prevention Tests (The "Ruben Incident")
- * 
+ *
  * Cover scenarios where a user might inadvertently create duplicate accounts:
  * - Same email, different auth provider (Google vs Email/Password)
  * - Session switching between accounts
@@ -476,17 +476,17 @@ describe("AuthManager - Duplicate Account Prevention", () => {
 
     // Different user logs in (simulating account switch)
     const user2 = {
-      uid: "user-2-uid",  // Different UID!
+      uid: "user-2-uid", // Different UID!
       email: "user2@example.com",
       getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "user" } }),
     };
-    
+
     // Simulate logout first (proper flow)
     await tokenCallback(null);
-    
+
     // Cleanup should have been called
     expect(cleanup).toHaveBeenCalled();
-    
+
     // Then new user logs in
     await tokenCallback(user2);
     expect(manager.getUser().uid).toBe("user-2-uid");
@@ -511,13 +511,13 @@ describe("AuthManager - Duplicate Account Prevention", () => {
 
     // User logs in via email/password (would create duplicate in old system)
     const emailUser = {
-      uid: "email-uid-67890",  // Different UID for same email!
+      uid: "email-uid-67890", // Different UID for same email!
       email: "ruben@example.com",
       providerData: [{ providerId: "password" }],
       getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "user" } }),
     };
     await tokenCallback(emailUser);
-    
+
     // Manager should track the new user correctly
     expect(manager.getUser().uid).toBe("email-uid-67890");
     expect(manager.getUser().email).toBe("ruben@example.com");
@@ -528,7 +528,7 @@ describe("AuthManager - Duplicate Account Prevention", () => {
 
     const listener = vi.fn();
     const cleanup = vi.fn();
-    
+
     manager.onAuthChange(listener);
     manager.registerCleanup(cleanup);
 
@@ -536,15 +536,17 @@ describe("AuthManager - Duplicate Account Prevention", () => {
     const user1 = {
       uid: "original-uid",
       email: "test@example.com",
-      getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "admin" } }),
+      getIdTokenResult: vi
+        .fn()
+        .mockResolvedValue({ claims: { role: "admin" } }),
     };
     await tokenCallback(user1);
-    
+
     expect(manager.getUser()).toBeTruthy();
-    
+
     // User logs out
     await tokenCallback(null);
-    
+
     // Verify cleanup happened
     expect(cleanup).toHaveBeenCalled();
     expect(manager.getUser()).toBeNull();
@@ -561,19 +563,19 @@ describe("AuthManager - Duplicate Account Prevention", () => {
       getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "user" } }),
     };
     await tokenCallback(initialUser);
-    
+
     // Simulate user linking another provider (token refresh with updated providerData)
     const linkedUser = {
-      uid: "multi-provider-uid",  // Same UID
+      uid: "multi-provider-uid", // Same UID
       email: "linked@example.com",
       providerData: [
         { providerId: "google.com" },
-        { providerId: "password" },  // Now has both
+        { providerId: "password" }, // Now has both
       ],
       getIdTokenResult: vi.fn().mockResolvedValue({ claims: { role: "user" } }),
     };
     await tokenCallback(linkedUser);
-    
+
     // Should still be same user, just with more providers
     expect(manager.getUser().uid).toBe("multi-provider-uid");
     expect(manager.getUser().providerData).toHaveLength(2);

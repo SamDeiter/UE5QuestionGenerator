@@ -14,11 +14,12 @@ import { SCORM_DEFAULTS } from "../utils/constants";
  * @returns {boolean} True if text appears to be English/Latin script
  */
 export function isEnglishText(text) {
-  if (!text || typeof text !== 'string') return true;
-  
+  if (!text || typeof text !== "string") return true;
+
   // Regex to match non-Latin scripts (Korean, Chinese, Japanese, Cyrillic, Arabic, Hebrew, Thai)
-  const nonLatinRegex = /[\u1100-\u11FF\uAC00-\uD7AF\u4E00-\u9FFF\u3040-\u30FF\u0400-\u04FF\u0600-\u06FF\u0590-\u05FF\u0E00-\u0E7F]/;
-  
+  const nonLatinRegex =
+    /[\u1100-\u11FF\uAC00-\uD7AF\u4E00-\u9FFF\u3040-\u30FF\u0400-\u04FF\u0600-\u06FF\u0590-\u05FF\u0E00-\u0E7F]/;
+
   return !nonLatinRegex.test(text);
 }
 
@@ -32,28 +33,30 @@ export function filterEnglishQuestions(questions) {
   if (!questions || !Array.isArray(questions)) {
     return { filtered: [], skipped: 0 };
   }
-  
+
   const filtered = [];
   let skipped = 0;
-  
+
   questions.forEach((q) => {
     const questionText = q.questionText || q.question || "";
-    const optionsText = q.options ? Object.values(q.options).join(' ') : '';
-    const choicesText = Array.isArray(q.choices) ? q.choices.join(' ') : '';
+    const optionsText = q.options ? Object.values(q.options).join(" ") : "";
+    const choicesText = Array.isArray(q.choices) ? q.choices.join(" ") : "";
     const allText = `${questionText} ${optionsText} ${choicesText}`;
-    
+
     if (isEnglishText(allText)) {
       filtered.push(q);
     } else {
       skipped++;
-      logger.info(`Skipping non-English question: ${(questionText).substring(0, 50)}...`);
+      logger.info(
+        `Skipping non-English question: ${questionText.substring(0, 50)}...`
+      );
     }
   });
-  
+
   if (skipped > 0) {
     logger.info(`Filtered out ${skipped} non-English question(s)`);
   }
-  
+
   return { filtered, skipped };
 }
 
@@ -199,14 +202,17 @@ export async function exportToScorm(questions, config = {}) {
 
   try {
     // Filter to English-only questions
-    const { filtered: englishQuestions, skipped } = filterEnglishQuestions(questions);
-    
+    const { filtered: englishQuestions, skipped } =
+      filterEnglishQuestions(questions);
+
     if (englishQuestions.length === 0) {
       throw new Error("No English questions found after filtering");
     }
-    
+
     if (skipped > 0) {
-      logger.info(`SCORM Export: Filtered out ${skipped} non-English question(s), exporting ${englishQuestions.length} questions`);
+      logger.info(
+        `SCORM Export: Filtered out ${skipped} non-English question(s), exporting ${englishQuestions.length} questions`
+      );
     }
 
     // Generate package files with filtered questions
@@ -229,10 +235,10 @@ export async function exportToScorm(questions, config = {}) {
     link.href = url;
 
     // Generate filename with version and timestamp (helps distinguish between exports)
-    const version = 'v2.4.20'; // SCORM export version
+    const version = "v2.4.20"; // SCORM export version
     // Generate timestamp with time for unique exports (YYYY-MM-DD_HH-MM)
     const now = new Date();
-    const timestamp = `${now.toISOString().split("T")[0]}_${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
+    const timestamp = `${now.toISOString().split("T")[0]}_${now.getHours().toString().padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
     const sanitizedTitle = (config.title || "UE5_Quiz")
       .replace(/[^a-z0-9]/gi, "_")
       .toLowerCase();
@@ -283,7 +289,10 @@ export function validateQuestionsForExport(questions) {
       hasCorrect: !!sample.correct,
       hasCorrectAnswer: !!sample.correctAnswer,
       correct: sample.correct,
-      questionPreview: (sample.question || sample.questionText || "").substring(0, 50),
+      questionPreview: (sample.question || sample.questionText || "").substring(
+        0,
+        50
+      ),
     });
   }
 
@@ -339,7 +348,7 @@ export function validateQuestionsForExport(questions) {
  */
 export function groupQuestionsByDiscipline(questions) {
   const groups = {};
-  
+
   questions.forEach((q) => {
     const discipline = q.discipline || q.category || "General";
     if (!groups[discipline]) {
@@ -347,7 +356,7 @@ export function groupQuestionsByDiscipline(questions) {
     }
     groups[discipline].push(q);
   });
-  
+
   return groups;
 }
 
@@ -359,7 +368,11 @@ export function groupQuestionsByDiscipline(questions) {
  * @param {Object} options - Batch options
  * @returns {Object} Export results
  */
-export async function batchExportByDiscipline(questions, baseConfig = {}, options = {}) {
+export async function batchExportByDiscipline(
+  questions,
+  baseConfig = {},
+  options = {}
+) {
   const {
     downloadAsSingleZip = true, // If true, creates one master zip containing all packages
     onProgress = null, // Callback for progress updates
@@ -372,26 +385,26 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
   // Group by discipline
   const groups = groupQuestionsByDiscipline(questions);
   const disciplines = Object.keys(groups);
-  
+
   if (disciplines.length === 0) {
     throw new Error("No disciplines found in questions");
   }
 
   const results = [];
-  const version = 'v2.4.20'; // SCORM export version
+  const version = "v2.4.20"; // SCORM export version
   // Generate timestamp with time for unique exports (YYYY-MM-DD_HH-MM)
   const now = new Date();
-  const timestamp = `${now.toISOString().split("T")[0]}_${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}`;
+  const timestamp = `${now.toISOString().split("T")[0]}_${now.getHours().toString().padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
 
   try {
     if (downloadAsSingleZip) {
       // Create master zip containing all discipline packages
       const masterZip = new JSZip();
-      
+
       for (let i = 0; i < disciplines.length; i++) {
         const discipline = disciplines[i];
         const disciplineQuestions = groups[discipline];
-        
+
         if (onProgress) {
           onProgress({
             current: i + 1,
@@ -407,15 +420,27 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
           const hasOptions = q.options && typeof q.options === "object";
           const hasChoices = Array.isArray(q.choices) && q.choices.length >= 2;
           const hasCorrect = q.correct || q.correctAnswer;
-          const optionsText = q.options ? Object.values(q.options).join(' ') : '';
-          const choicesText = Array.isArray(q.choices) ? q.choices.join(' ') : '';
+          const optionsText = q.options
+            ? Object.values(q.options).join(" ")
+            : "";
+          const choicesText = Array.isArray(q.choices)
+            ? q.choices.join(" ")
+            : "";
           const allText = `${questionText} ${optionsText} ${choicesText}`;
-          
-          const isValid = questionText.trim() && (hasOptions || hasChoices) && hasCorrect && isEnglishText(allText);
+
+          const isValid =
+            questionText.trim() &&
+            (hasOptions || hasChoices) &&
+            hasCorrect &&
+            isEnglishText(allText);
           if (!isValid && !isEnglishText(allText)) {
-            logger.info(`Skipping non-English question in ${discipline}: ${questionText.substring(0, 40)}...`);
+            logger.info(
+              `Skipping non-English question in ${discipline}: ${questionText.substring(0, 40)}...`
+            );
           } else if (!isValid) {
-            logger.warn(`Skipping invalid question in ${discipline}: ${questionText.substring(0, 40)}...`);
+            logger.warn(
+              `Skipping invalid question in ${discipline}: ${questionText.substring(0, 40)}...`
+            );
           }
           return isValid;
         });
@@ -430,7 +455,9 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
           continue;
         }
 
-        logger.info(`${discipline}: Exporting ${validQuestions.length} of ${disciplineQuestions.length} questions`);
+        logger.info(
+          `${discipline}: Exporting ${validQuestions.length} of ${disciplineQuestions.length} questions`
+        );
 
         // Generate package files using valid questions only
         const config = {
@@ -438,22 +465,26 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
           title: `${baseConfig.title || "UE5 Assessment"} - ${discipline}`,
           description: `${baseConfig.description || "Assessment"} for ${discipline}`,
         };
-        
+
         const files = await generateScormPackageFiles(validQuestions, config);
-        
+
         // Create discipline zip
         const disciplineZip = new JSZip();
         Object.entries(files).forEach(([filename, content]) => {
           disciplineZip.file(filename, content);
         });
-        
-        const disciplineBlob = await disciplineZip.generateAsync({ type: "blob" });
-        const sanitizedDiscipline = discipline.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+
+        const disciplineBlob = await disciplineZip.generateAsync({
+          type: "blob",
+        });
+        const sanitizedDiscipline = discipline
+          .replace(/[^a-z0-9]/gi, "_")
+          .toLowerCase();
         const filename = `${sanitizedDiscipline}_${version}_${timestamp}_scorm12.zip`;
-        
+
         // Add to master zip
         masterZip.file(filename, disciplineBlob);
-        
+
         results.push({
           discipline,
           success: true,
@@ -468,7 +499,7 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
       const link = document.createElement("a");
       link.href = url;
       link.download = `all_disciplines_${version}_${timestamp}_scorm_packages.zip`;
-      
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -487,7 +518,7 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
       for (let i = 0; i < disciplines.length; i++) {
         const discipline = disciplines[i];
         const disciplineQuestions = groups[discipline];
-        
+
         if (onProgress) {
           onProgress({
             current: i + 1,
@@ -502,13 +533,13 @@ export async function batchExportByDiscipline(questions, baseConfig = {}, option
             ...baseConfig,
             title: `${baseConfig.title || "UE5 Assessment"} - ${discipline}`,
           };
-          
+
           const result = await exportToScorm(disciplineQuestions, config);
           results.push({
             discipline,
             ...result,
           });
-          
+
           // Small delay between downloads to prevent browser issues
           if (i < disciplines.length - 1) {
             await new Promise((resolve) => setTimeout(resolve, 500));

@@ -1,7 +1,7 @@
 /**
  * Quiz Session Manager
  * Handles attempt tracking, session locking, and multi-tab detection for quiz security.
- * 
+ *
  * Features:
  * - Unique attempt token generation (session-scoped)
  * - Session locking to prevent restart during active attempt
@@ -9,11 +9,11 @@
  * - History API manipulation for back-button prevention
  */
 
-import { logger } from './logger';
+import { logger } from "./logger";
 
 // Storage keys
-const ATTEMPT_KEY = 'ue5_quiz_active_attempt';
-const CHANNEL_NAME = 'ue5_quiz_coordination';
+const ATTEMPT_KEY = "ue5_quiz_active_attempt";
+const CHANNEL_NAME = "ue5_quiz_coordination";
 
 /**
  * Generate unique attempt token
@@ -35,23 +35,23 @@ export function generateAttemptToken() {
 export function lockAttempt(token, quizGuid) {
   const existing = sessionStorage.getItem(ATTEMPT_KEY);
   if (existing) {
-    logger.warn('[QuizSession] Attempt already locked:', existing);
+    logger.warn("[QuizSession] Attempt already locked:", existing);
     return false;
   }
-  
+
   const attemptData = {
     token,
     quizGuid,
     startedAt: new Date().toISOString(),
-    tabId: getTabId()
+    tabId: getTabId(),
   };
-  
+
   sessionStorage.setItem(ATTEMPT_KEY, JSON.stringify(attemptData));
-  logger.log('[QuizSession] Attempt locked:', token);
-  
+  logger.log("[QuizSession] Attempt locked:", token);
+
   // Broadcast to other tabs
   broadcastAttemptStart(attemptData);
-  
+
   return true;
 }
 
@@ -62,7 +62,7 @@ export function lockAttempt(token, quizGuid) {
 export function getActiveAttempt() {
   const data = sessionStorage.getItem(ATTEMPT_KEY);
   if (!data) return null;
-  
+
   try {
     return JSON.parse(data);
   } catch {
@@ -85,23 +85,23 @@ export function isAttemptActive() {
  */
 export function clearAttempt(token) {
   const active = getActiveAttempt();
-  
+
   if (!active) {
-    logger.warn('[QuizSession] No active attempt to clear');
+    logger.warn("[QuizSession] No active attempt to clear");
     return false;
   }
-  
+
   if (token && active.token !== token) {
-    logger.warn('[QuizSession] Token mismatch, not clearing');
+    logger.warn("[QuizSession] Token mismatch, not clearing");
     return false;
   }
-  
+
   sessionStorage.removeItem(ATTEMPT_KEY);
-  logger.log('[QuizSession] Attempt cleared:', token || active.token);
-  
+  logger.log("[QuizSession] Attempt cleared:", token || active.token);
+
   // Broadcast completion to other tabs
   broadcastAttemptEnd(active);
-  
+
   return true;
 }
 
@@ -113,7 +113,7 @@ export function forceAbandonAttempt() {
   if (active) {
     sessionStorage.removeItem(ATTEMPT_KEY);
     broadcastAttemptEnd(active);
-    logger.log('[QuizSession] Attempt abandoned:', active.token);
+    logger.log("[QuizSession] Attempt abandoned:", active.token);
   }
 }
 
@@ -130,19 +130,22 @@ let popstateHandler = null;
  */
 export function preventBackNavigation() {
   // Push an extra history state
-  window.history.pushState({ quizActive: true, count: historyPushCount++ }, '');
-  
+  window.history.pushState({ quizActive: true, count: historyPushCount++ }, "");
+
   // Handle popstate (back button)
   popstateHandler = (_e) => {
     if (isAttemptActive()) {
       // Push state again to prevent leaving
-      window.history.pushState({ quizActive: true, count: historyPushCount++ }, '');
-      logger.log('[QuizSession] Back navigation blocked');
+      window.history.pushState(
+        { quizActive: true, count: historyPushCount++ },
+        ""
+      );
+      logger.log("[QuizSession] Back navigation blocked");
     }
   };
-  
-  window.addEventListener('popstate', popstateHandler);
-  logger.log('[QuizSession] Back navigation prevention enabled');
+
+  window.addEventListener("popstate", popstateHandler);
+  logger.log("[QuizSession] Back navigation prevention enabled");
 }
 
 /**
@@ -150,9 +153,9 @@ export function preventBackNavigation() {
  */
 export function restoreBackNavigation() {
   if (popstateHandler) {
-    window.removeEventListener('popstate', popstateHandler);
+    window.removeEventListener("popstate", popstateHandler);
     popstateHandler = null;
-    logger.log('[QuizSession] Back navigation prevention disabled');
+    logger.log("[QuizSession] Back navigation prevention disabled");
   }
 }
 
@@ -170,13 +173,14 @@ export function enableUnloadWarning() {
     if (isAttemptActive()) {
       e.preventDefault();
       // Modern browsers ignore custom messages but require returnValue
-      e.returnValue = 'You have an active quiz. Are you sure you want to leave?';
+      e.returnValue =
+        "You have an active quiz. Are you sure you want to leave?";
       return e.returnValue;
     }
   };
-  
-  window.addEventListener('beforeunload', beforeUnloadHandler);
-  logger.log('[QuizSession] Unload warning enabled');
+
+  window.addEventListener("beforeunload", beforeUnloadHandler);
+  logger.log("[QuizSession] Unload warning enabled");
 }
 
 /**
@@ -184,9 +188,9 @@ export function enableUnloadWarning() {
  */
 export function disableUnloadWarning() {
   if (beforeUnloadHandler) {
-    window.removeEventListener('beforeunload', beforeUnloadHandler);
+    window.removeEventListener("beforeunload", beforeUnloadHandler);
     beforeUnloadHandler = null;
-    logger.log('[QuizSession] Unload warning disabled');
+    logger.log("[QuizSession] Unload warning disabled");
   }
 }
 
@@ -202,11 +206,11 @@ let onDuplicateAttemptCallback = null;
  * @returns {string}
  */
 function getTabId() {
-  let tabId = sessionStorage.getItem('ue5_quiz_tab_id');
+  let tabId = sessionStorage.getItem("ue5_quiz_tab_id");
   if (!tabId) {
     // eslint-disable-next-line sonarjs/pseudo-random -- Non-cryptographic unique ID
     tabId = `tab_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-    sessionStorage.setItem('ue5_quiz_tab_id', tabId);
+    sessionStorage.setItem("ue5_quiz_tab_id", tabId);
   }
   return tabId;
 }
@@ -217,22 +221,24 @@ function getTabId() {
  */
 export function initMultiTabDetection(onDuplicate) {
   onDuplicateAttemptCallback = onDuplicate;
-  
+
   // Try BroadcastChannel first (modern browsers)
-  if (typeof BroadcastChannel !== 'undefined') {
+  if (typeof BroadcastChannel !== "undefined") {
     try {
       broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
       broadcastChannel.onmessage = handleBroadcastMessage;
-      logger.log('[QuizSession] BroadcastChannel initialized');
+      logger.log("[QuizSession] BroadcastChannel initialized");
       return;
     } catch (err) {
-      logger.warn('[QuizSession] BroadcastChannel failed:', err);
+      logger.warn("[QuizSession] BroadcastChannel failed:", err);
     }
   }
-  
+
   // Fallback: localStorage events
-  window.addEventListener('storage', handleStorageEvent);
-  logger.log('[QuizSession] Using localStorage fallback for multi-tab detection');
+  window.addEventListener("storage", handleStorageEvent);
+  logger.log(
+    "[QuizSession] Using localStorage fallback for multi-tab detection"
+  );
 }
 
 /**
@@ -243,7 +249,7 @@ export function cleanupMultiTabDetection() {
     broadcastChannel.close();
     broadcastChannel = null;
   }
-  window.removeEventListener('storage', handleStorageEvent);
+  window.removeEventListener("storage", handleStorageEvent);
   onDuplicateAttemptCallback = null;
 }
 
@@ -252,16 +258,19 @@ export function cleanupMultiTabDetection() {
  * @param {Object} attemptData
  */
 function broadcastAttemptStart(attemptData) {
-  const message = { type: 'ATTEMPT_START', ...attemptData };
-  
+  const message = { type: "ATTEMPT_START", ...attemptData };
+
   if (broadcastChannel) {
     broadcastChannel.postMessage(message);
   } else {
     // Fallback: use localStorage
-    localStorage.setItem('ue5_quiz_broadcast', JSON.stringify({
-      ...message,
-      timestamp: Date.now()
-    }));
+    localStorage.setItem(
+      "ue5_quiz_broadcast",
+      JSON.stringify({
+        ...message,
+        timestamp: Date.now(),
+      })
+    );
   }
 }
 
@@ -270,15 +279,18 @@ function broadcastAttemptStart(attemptData) {
  * @param {Object} attemptData
  */
 function broadcastAttemptEnd(attemptData) {
-  const message = { type: 'ATTEMPT_END', ...attemptData };
-  
+  const message = { type: "ATTEMPT_END", ...attemptData };
+
   if (broadcastChannel) {
     broadcastChannel.postMessage(message);
   } else {
-    localStorage.setItem('ue5_quiz_broadcast', JSON.stringify({
-      ...message,
-      timestamp: Date.now()
-    }));
+    localStorage.setItem(
+      "ue5_quiz_broadcast",
+      JSON.stringify({
+        ...message,
+        timestamp: Date.now(),
+      })
+    );
   }
 }
 
@@ -286,15 +298,18 @@ function broadcastAttemptEnd(attemptData) {
  * Request active attempt info from other tabs
  */
 export function queryOtherTabs() {
-  const message = { type: 'QUERY_ACTIVE', tabId: getTabId() };
-  
+  const message = { type: "QUERY_ACTIVE", tabId: getTabId() };
+
   if (broadcastChannel) {
     broadcastChannel.postMessage(message);
   } else {
-    localStorage.setItem('ue5_quiz_broadcast', JSON.stringify({
-      ...message,
-      timestamp: Date.now()
-    }));
+    localStorage.setItem(
+      "ue5_quiz_broadcast",
+      JSON.stringify({
+        ...message,
+        timestamp: Date.now(),
+      })
+    );
   }
 }
 
@@ -305,31 +320,31 @@ export function queryOtherTabs() {
 function handleBroadcastMessage(event) {
   const data = event.data;
   const myTabId = getTabId();
-  
+
   if (data.tabId === myTabId) return; // Ignore own messages
-  
+
   switch (data.type) {
-    case 'ATTEMPT_START':
-      logger.log('[QuizSession] Another tab started attempt:', data.token);
+    case "ATTEMPT_START":
+      logger.log("[QuizSession] Another tab started attempt:", data.token);
       if (onDuplicateAttemptCallback) {
         onDuplicateAttemptCallback(data);
       }
       break;
-      
-    case 'QUERY_ACTIVE': {
+
+    case "QUERY_ACTIVE": {
       // Respond if we have an active attempt
       const active = getActiveAttempt();
       if (active && broadcastChannel) {
         broadcastChannel.postMessage({
-          type: 'ACTIVE_RESPONSE',
-          ...active
+          type: "ACTIVE_RESPONSE",
+          ...active,
         });
       }
       break;
     }
-      
-    case 'ACTIVE_RESPONSE':
-      logger.log('[QuizSession] Found active attempt in another tab');
+
+    case "ACTIVE_RESPONSE":
+      logger.log("[QuizSession] Found active attempt in another tab");
       if (onDuplicateAttemptCallback) {
         onDuplicateAttemptCallback(data);
       }
@@ -342,8 +357,8 @@ function handleBroadcastMessage(event) {
  * @param {StorageEvent} event
  */
 function handleStorageEvent(event) {
-  if (event.key !== 'ue5_quiz_broadcast') return;
-  
+  if (event.key !== "ue5_quiz_broadcast") return;
+
   try {
     const data = JSON.parse(event.newValue);
     // Simulate broadcast message

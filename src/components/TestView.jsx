@@ -79,7 +79,7 @@ const TestView = ({
     if (selectedQuestionIds.size === 0) {
       // If none selected, use filtered questions up to questionCount
       // Shuffle questions for quiz variety (non-security random)
-       
+
       const shuffled = quizConfig.shuffleQuestions
         ? [...filteredQuestions].sort(() => Math.random() - 0.5)
         : filteredQuestions;

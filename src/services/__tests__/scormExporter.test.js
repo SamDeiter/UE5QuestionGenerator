@@ -492,7 +492,12 @@ describe("SCORM Exporter Service", () => {
     const koreanQuestion = {
       ...firestoreQuestion,
       question: "언리얼 엔진 5의 나나이트란 무엇인가요?",
-      choices: ["가상화된 지오메트리 시스템", "조명 시스템", "사운드 시스템", "물리 엔진"],
+      choices: [
+        "가상화된 지오메트리 시스템",
+        "조명 시스템",
+        "사운드 시스템",
+        "물리 엔진",
+      ],
       correctAnswer: "가상화된 지오메트리 시스템",
       language: "Korean",
     };
@@ -500,7 +505,12 @@ describe("SCORM Exporter Service", () => {
     const japaneseQuestion = {
       ...firestoreQuestion,
       question: "Naniteとは何ですか?",
-      choices: ["ジオメトリシステム", "照明システム", "サウンドシステム", "物理エンジン"],
+      choices: [
+        "ジオメトリシステム",
+        "照明システム",
+        "サウンドシステム",
+        "物理エンジン",
+      ],
       correctAnswer: "ジオメトリシステム",
       language: "Japanese",
     };
@@ -516,7 +526,12 @@ describe("SCORM Exporter Service", () => {
     const mixedQuestion = {
       ...firestoreQuestion,
       question: "What is Nanite? 나나이트란 무엇인가요?",
-      choices: ["Virtualized geometry system", "가상화된 지오메트리", "Sound", "Physics"],
+      choices: [
+        "Virtualized geometry system",
+        "가상화된 지오메트리",
+        "Sound",
+        "Physics",
+      ],
       correctAnswer: "Virtualized geometry system",
       language: "English",
     };
@@ -529,7 +544,9 @@ describe("SCORM Exporter Service", () => {
       });
 
       it("CRITICAL: should reject Korean text", () => {
-        expect(isEnglishText("언리얼 엔진 5의 나나이트란 무엇인가요?")).toBe(false);
+        expect(isEnglishText("언리얼 엔진 5의 나나이트란 무엇인가요?")).toBe(
+          false
+        );
         expect(isEnglishText("가상화된 지오메트리 시스템")).toBe(false);
       });
 
@@ -571,7 +588,9 @@ describe("SCORM Exporter Service", () => {
         const questions = [firestoreQuestion, koreanQuestion];
         const result = filterEnglishQuestions(questions);
         expect(result.filtered).toHaveLength(1);
-        expect(result.filtered[0].question).toBe("What is Nanite in Unreal Engine 5?");
+        expect(result.filtered[0].question).toBe(
+          "What is Nanite in Unreal Engine 5?"
+        );
         expect(result.skipped).toBe(1);
       });
 
@@ -592,7 +611,12 @@ describe("SCORM Exporter Service", () => {
       it("CRITICAL: should filter questions with non-Latin choices", () => {
         const questionWithKoreanChoices = {
           ...firestoreQuestion,
-          choices: ["Virtualized geometry", "가상화된 지오메트리", "Sound", "Physics"],
+          choices: [
+            "Virtualized geometry",
+            "가상화된 지오메트리",
+            "Sound",
+            "Physics",
+          ],
           correctAnswer: "Virtualized geometry",
         };
         const questions = [firestoreQuestion, questionWithKoreanChoices];
