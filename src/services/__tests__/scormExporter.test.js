@@ -111,6 +111,127 @@ describe("SCORM Exporter Service", () => {
       );
     });
 
+    // =====================================================
+    // TRUE/FALSE REGRESSION TESTS - CRITICAL BUG FIX
+    // Prevents: T/F questions showing 4 choices all labeled "F"
+    // Root cause: Database had options {a, b, c, d} for T/F questions
+    // =====================================================
+    describe("True/False Question Filtering (Regression)", () => {
+      it("CRITICAL: should filter T/F question with 4 options to only 2 choices", () => {
+        // This is the REAL bug scenario - T/F question with 4 options in database
+        const malformedTrueFalse = {
+          id: "tf-bug",
+          question: "Nanite uses mesh shaders.",
+          type: "True/False",
+          difficulty: "Medium",
+          options: {
+            a: "True",
+            b: "False",
+            c: "Sometimes",
+            d: "Only on PC",
+          },
+          correct: "a",
+        };
+        const result = convertQuestionToScormFormat(malformedTrueFalse);
+
+        // MUST be exactly 2 choices
+        expect(result.choices).toHaveLength(2);
+        // MUST only contain True and False
+        expect(result.choices.map((c) => c.text).sort()).toEqual([
+          "False",
+          "True",
+        ]);
+        // Correct answer should be True
+        expect(result.choices.find((c) => c.text === "True").correct).toBe(
+          true
+        );
+        expect(result.choices.find((c) => c.text === "False").correct).toBe(
+          false
+        );
+      });
+
+      it("CRITICAL: should handle T/F type variations", () => {
+        const tfQuestion = {
+          id: "tf-variant",
+          question: "Lumen works on mobile.",
+          type: "T/F", // Variant spelling
+          difficulty: "Easy",
+          options: {
+            a: "True",
+            b: "False",
+            c: "Depends",
+            d: "N/A",
+          },
+          correct: "b",
+        };
+        const result = convertQuestionToScormFormat(tfQuestion);
+
+        expect(result.choices).toHaveLength(2);
+        expect(result.choices.find((c) => c.text === "False").correct).toBe(
+          true
+        );
+      });
+
+      it("should preserve 2-choice T/F questions as-is", () => {
+        // Already correct format - should not modify
+        const correctTF = {
+          id: "tf-correct",
+          question: "UE5 is free to use.",
+          type: "True/False",
+          difficulty: "Easy",
+          options: {
+            a: "True",
+            b: "False",
+          },
+          correct: "a",
+        };
+        const result = convertQuestionToScormFormat(correctTF);
+
+        expect(result.choices).toHaveLength(2);
+        expect(result.choices.find((c) => c.text === "True").correct).toBe(
+          true
+        );
+      });
+
+      it("should handle T/F with legacy choices array format", () => {
+        const legacyTF = {
+          id: "tf-legacy",
+          question: "Blueprint is visual scripting.",
+          type: "True/False",
+          difficulty: "Easy",
+          choices: ["True", "False", "Maybe", "Unknown"], // 4 choices
+          correctAnswer: "True",
+        };
+        const result = convertQuestionToScormFormat(legacyTF);
+
+        expect(result.choices).toHaveLength(2);
+        expect(result.choices.find((c) => c.text === "True").correct).toBe(
+          true
+        );
+      });
+
+      it("should NOT filter Multiple Choice questions with 4 options", () => {
+        // MC questions should keep all 4 choices
+        const mcQuestion = {
+          id: "mc-normal",
+          question: "What is Nanite?",
+          type: "Multiple Choice",
+          difficulty: "Medium",
+          options: {
+            a: "Geometry system",
+            b: "Lighting system",
+            c: "Sound system",
+            d: "Physics engine",
+          },
+          correct: "a",
+        };
+        const result = convertQuestionToScormFormat(mcQuestion);
+
+        // MC keeps all 4 choices
+        expect(result.choices).toHaveLength(4);
+      });
+    });
+
     it("should handle legacy 'questionText' field (backward compatibility)", () => {
       const result = convertQuestionToScormFormat(legacyQuestion);
 

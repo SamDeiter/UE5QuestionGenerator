@@ -167,6 +167,7 @@ export function convertQuestionToScormFormat(question) {
   // This prevents malformed exports where T/F questions have 4+ choices all labeled "F"
   const isTrueFalseType = type === "True/False" || type === "T/F";
   if (isTrueFalseType && scormChoices.length > 2) {
+    const originalCount = scormChoices.length; // Capture before filtering
     // Filter to only keep choices with text "True" or "False" (case-sensitive)
     const tfChoices = scormChoices.filter(
       (choice) => choice.text === "True" || choice.text === "False"
@@ -176,7 +177,7 @@ export function convertQuestionToScormFormat(question) {
     if (tfChoices.length === 2) {
       scormChoices = tfChoices;
       logger.info(
-        `Fixed T/F question "${questionText.substring(0, 40)}..." - filtered from ${scormChoices.length} to 2 choices`
+        `Fixed T/F question "${questionText.substring(0, 40)}..." - filtered from ${originalCount} to 2 choices`
       );
     } else if (tfChoices.length > 0) {
       // We found some but not both - log warning but use what we have
