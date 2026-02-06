@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/UE5QuestionGenerator/sw.js', { scope: '/UE5QuestionGenerator/' })})}
