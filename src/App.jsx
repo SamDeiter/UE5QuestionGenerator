@@ -684,6 +684,7 @@ const App = () => {
           onStartTutorial={handleStartTutorial}
           isAdmin={isAdmin}
           user={user}
+          userRole={userRole}
         />
 
         {/* Warning Banners - Registration & Permission Errors */}

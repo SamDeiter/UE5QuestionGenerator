@@ -48,12 +48,15 @@ const Header = ({
   isAdmin,
   onSignOut,
   user,
+  userRole,
 }) => {
-  // Super Admin check - case-insensitive with trim
+  // Super Admin check - prefer Firestore role, fall back to env var
   const userEmail = user?.email?.toLowerCase();
   const envSuperAdmin =
     import.meta.env.VITE_SUPER_ADMIN_EMAIL?.trim()?.toLowerCase();
-  const isSuperAdmin = userEmail === envSuperAdmin && envSuperAdmin;
+  const isSuperAdmin =
+    userRole === "super_admin" ||
+    (userEmail === envSuperAdmin && envSuperAdmin);
   const connectionStatus = useConnectionStatus();
   const { colorblindMode, toggleColorblindMode } = useAccessibility();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

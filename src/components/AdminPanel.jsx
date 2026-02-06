@@ -41,12 +41,15 @@ const AdminPanel = ({
   customTags,
   onSaveCustomTags,
   currentUser,
+  userRole,
 }) => {
-  // Super Admin check
+  // Super Admin check - prefer Firestore role, fall back to env var
   const userEmail = currentUser?.email?.toLowerCase();
   const envSuperAdmin =
     import.meta.env.VITE_SUPER_ADMIN_EMAIL?.trim()?.toLowerCase();
-  const isSuperAdmin = userEmail === envSuperAdmin && envSuperAdmin;
+  const isSuperAdmin =
+    userRole === "super_admin" ||
+    (userEmail === envSuperAdmin && envSuperAdmin);
 
   // Panel Logic Hook
   const {

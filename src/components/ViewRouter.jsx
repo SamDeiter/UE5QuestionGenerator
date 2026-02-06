@@ -180,6 +180,7 @@ const ViewRouter = ({
           customTags={state.customTags}
           onSaveCustomTags={handlers.handleSaveCustomTags}
           currentUser={state.currentUser}
+          userRole={userRole}
         />
       ),
       [APP_MODES.TRANSLATE]: isAdmin && (

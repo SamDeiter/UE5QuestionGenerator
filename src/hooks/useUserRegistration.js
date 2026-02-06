@@ -94,7 +94,9 @@ export function useUserRegistration(currentUser) {
         if (isCancelled) return;
         setIsRegistered(regStatus.registered);
         setUserRole(regStatus.role || "user");
-        setIsAdmin(regStatus.role === "admin");
+        setIsAdmin(
+          regStatus.role === "admin" || regStatus.role === "super_admin"
+        );
         if (regStatus.registered) {
           try {
             await setDoc(

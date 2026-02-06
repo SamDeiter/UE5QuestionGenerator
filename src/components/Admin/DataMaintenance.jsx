@@ -8,6 +8,7 @@
 
 import { useState } from "react";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { app } from "../../services/firebase";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
@@ -20,6 +21,7 @@ import {
 } from "../../services/firebaseQueries";
 
 const db = getFirestore(app);
+const functions = getFunctions(app, "us-central1");
 
 // Magic Number Constants - Simplified
 const MAX_SUSPICIOUS_LOGS = 10;
@@ -185,6 +187,77 @@ const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
             </p>
           </div>
         )}
+
+        {/* Cloud Functions Migrations - Firestore Optimization */}
+        <div className="p-3 bg-indigo-950/30 border-2 border-indigo-700/50 rounded">
+          <h4 className="text-sm font-bold text-indigo-200 mb-2 flex items-center gap-2">
+            <Icon name="cloud" size={14} className="text-indigo-400" />
+            Cloud Function Migrations (Firestore Optimization)
+          </h4>
+          <p className="text-xs text-indigo-300/80 mb-3">
+            Run these to enable server-side aggregations and custom claims.
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={async () => {
+                setProcessing(true);
+                setProgress("Running backfillQuestionStats...");
+                try {
+                  const fn = httpsCallable(functions, "backfillQuestionStats");
+                  const result = await fn({});
+                  logger.log("backfillQuestionStats result:", result.data);
+                  setLastResult(result.data);
+                  showMessage(
+                    `✅ Question stats backfill complete`,
+                    TOAST_DURATION.EXTENDED
+                  );
+                } catch (error) {
+                  logger.error("backfillQuestionStats failed:", error);
+                  showMessage(
+                    `❌ Failed: ${error.message}`,
+                    TOAST_DURATION.EXTENDED
+                  );
+                } finally {
+                  setProcessing(false);
+                  setProgress("");
+                }
+              }}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-indigo-700 hover:bg-indigo-600 text-white rounded font-bold disabled:opacity-50"
+            >
+              Backfill Question Stats
+            </button>
+            <button
+              onClick={async () => {
+                setProcessing(true);
+                setProgress("Running backfillCustomClaims...");
+                try {
+                  const fn = httpsCallable(functions, "backfillCustomClaims");
+                  const result = await fn({});
+                  logger.log("backfillCustomClaims result:", result.data);
+                  setLastResult(result.data);
+                  showMessage(
+                    `✅ Custom claims backfill complete`,
+                    TOAST_DURATION.EXTENDED
+                  );
+                } catch (error) {
+                  logger.error("backfillCustomClaims failed:", error);
+                  showMessage(
+                    `❌ Failed: ${error.message}`,
+                    TOAST_DURATION.EXTENDED
+                  );
+                } finally {
+                  setProcessing(false);
+                  setProgress("");
+                }
+              }}
+              disabled={processing}
+              className="px-3 py-1.5 text-xs bg-purple-700 hover:bg-purple-600 text-white rounded font-bold disabled:opacity-50"
+            >
+              Backfill Custom Claims
+            </button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <MaintenanceActionCard
