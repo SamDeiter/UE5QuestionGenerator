@@ -146,10 +146,12 @@ export function convertQuestionToScormFormat(question) {
     // Current format: options is an object like {a: "...", b: "...", c: "...", d: "..."}
     // correct is the key like "a" or "b"
     const correctKey = question.correct || question.correctAnswer;
-    scormChoices = Object.entries(question.options).map(([key, text]) => ({
-      text: sanitizeQuestionText(text),
-      correct: key === correctKey,
-    }));
+    scormChoices = Object.entries(question.options)
+      .map(([key, text]) => ({
+        text: sanitizeQuestionText(text),
+        correct: key === correctKey,
+      }))
+      .filter((choice) => choice.text && choice.text.trim() !== ""); // Filter out empty choices
   } else if (Array.isArray(question.choices)) {
     // Legacy format: choices is an array, correctAnswer is the text value
     const correctAnswer = question.correctAnswer;
