@@ -56,7 +56,17 @@ const QuizQuestion = ({
         {/* Options */}
         <div className="space-y-4" role="listbox" aria-label="Answer options">
           {Object.entries(options)
-            .sort(([a], [b]) => a.localeCompare(b))
+            .sort(([, textA], [, textB]) => {
+              // For True/False: ensure True is always first, False always last
+              const aLower = textA.toLowerCase();
+              const bLower = textB.toLowerCase();
+              if (aLower === "true" || aLower === "true.") return -1;
+              if (bLower === "true" || bLower === "true.") return 1;
+              if (aLower === "false" || aLower === "false.") return 1;
+              if (bLower === "false" || bLower === "false.") return -1;
+              // Fallback to alphabetical for other options
+              return aLower.localeCompare(bLower);
+            })
             .map(([key, text], index) => {
               const isSelected = selectedAnswer === key;
               const isFocused = index === focusedOptionIndex;
