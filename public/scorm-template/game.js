@@ -338,6 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /**
    * Shuffle answer choices for a question
    * Labels (A/B/C/D) stay fixed, content is randomized
+   * True/False questions are NEVER shuffled - True always appears first
    * @param {Array} choices - Array of choice objects with text and correct properties
    * @returns {Array} Shuffled choices array
    */
@@ -345,6 +346,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!config.shuffleChoices || !choices || choices.length <= 1) {
       return choices;
     }
+
+    // Detect True/False questions - never shuffle these
+    const isTrueFalse =
+      choices.length === 2 &&
+      choices.some((c) => c.text === "True") &&
+      choices.some((c) => c.text === "False");
+
+    if (isTrueFalse) {
+      // Ensure True is always first, False second (standard convention)
+      return [...choices].sort((a) => (a.text === "True" ? -1 : 1));
+    }
+
     return shuffleArray(choices);
   }
 
@@ -662,7 +675,23 @@ document.addEventListener("DOMContentLoaded", () => {
     // Store shuffled choices on the question for handleAnswer to access
     question._shuffledChoices = shuffledChoices;
 
+    // Detect True/False question type (via type property or choice detection)
+    const isTrueFalse =
+      question.type === "True/False" ||
+      (shuffledChoices.length === 2 &&
+        shuffledChoices.some((c) => c.text === "True") &&
+        shuffledChoices.some((c) => c.text === "False"));
+
     const labels = ["A", "B", "C", "D", "E", "F", "G", "H"]; // Support up to 8 choices
+
+    // Get appropriate label for choice
+    const getLabel = (index, choiceText) => {
+      if (isTrueFalse) {
+        // Use T/F labels for True/False questions
+        return choiceText === "True" ? "T" : "F";
+      }
+      return labels[index] || String(index + 1);
+    };
 
     const html = `
       <div class="bg-slate-800 rounded-lg p-6 shadow-xl">
@@ -676,7 +705,7 @@ document.addEventListener("DOMContentLoaded", () => {
               data-index="${index}"
               data-correct="${choice.correct}"
             >
-              <span class="inline-block w-8 h-8 mr-3 bg-slate-600 rounded text-center leading-8 font-bold text-blue-300">${labels[index] || index + 1}</span>
+              <span class="inline-block w-8 h-8 mr-3 bg-slate-600 rounded text-center leading-8 font-bold text-blue-300">${getLabel(index, choice.text)}</span>
               <span class="font-semibold">${choice.text}</span>
             </button>
           `

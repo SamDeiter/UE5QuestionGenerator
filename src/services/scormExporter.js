@@ -8,6 +8,69 @@ import { SCORM_DEFAULTS } from "../utils/constants";
  */
 
 /**
+ * Sanitize question text for SCORM display
+ * Removes markdown formatting, trailing asterisks, and normalizes whitespace
+ * @param {string} text - Raw text to sanitize
+ * @returns {string} Cleaned text
+ */
+export function sanitizeQuestionText(text) {
+  if (!text || typeof text !== "string") return "";
+
+  let result = text;
+
+  // Decode common HTML entities to their character equivalents
+  const htmlEntities = {
+    "&nbsp;": " ",
+    "&copy;": "©",
+    "&trade;": "™",
+    "&reg;": "®",
+    "&mdash;": "—",
+    "&ndash;": "–",
+    "&hellip;": "…",
+    "&ldquo;": '"',
+    "&rdquo;": '"',
+    "&lsquo;": "'",
+    "&rsquo;": "'",
+    "&bull;": "•",
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
+    "&quot;": '"',
+  };
+
+  // Replace named HTML entities
+  for (const [entity, char] of Object.entries(htmlEntities)) {
+    result = result.split(entity).join(char);
+  }
+
+  // Remove any remaining unknown named entities (e.g., &unknown;)
+  result = result.replace(/&[a-zA-Z]+;/g, "");
+
+  // Decode numeric entities (&#160;)
+  result = result.replace(/&#(\d+);/g, (_, code) => {
+    const num = parseInt(code, 10);
+    return num === 160 ? " " : String.fromCharCode(num);
+  });
+
+  // Decode hex entities (&#xA0;)
+  result = result.replace(/&#x([\da-fA-F]+);/g, (_, hex) => {
+    const num = parseInt(hex, 16);
+    return num === 160 ? " " : String.fromCharCode(num);
+  });
+
+  // Remove markdown bold (**text**)
+  result = result.replace(/\*\*([\s\S]*?)\*\*/g, "$1");
+  // Remove markdown bold (__text__)
+  result = result.replace(/__([\s\S]*?)__/g, "$1");
+  // Remove trailing asterisks (footnote markers like "FLWC*")
+  result = result.replace(/\*+\s*$/, ""); // eslint-disable-line sonarjs/slow-regex -- Safe: bounded pattern, no nested quantifiers
+  // Normalize multiple spaces to single space
+  result = result.replace(/ {2,}/g, " ");
+
+  return result.trim();
+}
+
+/**
  * Check if text is primarily English (Latin script)
  * Detects non-Latin scripts: Korean, Chinese, Japanese, Cyrillic, Arabic, Hebrew, Thai, etc.
  * @param {string} text - Text to check
@@ -69,11 +132,12 @@ export function filterEnglishQuestions(questions) {
  * @returns {Object} SCORM-formatted question
  */
 export function convertQuestionToScormFormat(question) {
-  // Handle both field name conventions
-  const questionText = question.questionText || question.question || "";
+  // Handle both field name conventions - prefer 'question' over 'questionText'
+  const questionText = question.question || question.questionText || "";
   const type = question.type || "Multiple Choice";
   const difficulty = question.difficulty || "Medium";
-  const guid = question.guid || question.id || question.uniqueId;
+  // Prefer 'id' over 'guid' to match test expectations
+  const questionId = question.id || question.guid || question.uniqueId;
 
   let scormChoices = [];
 
@@ -83,29 +147,27 @@ export function convertQuestionToScormFormat(question) {
     // correct is the key like "a" or "b"
     const correctKey = question.correct || question.correctAnswer;
     scormChoices = Object.entries(question.options).map(([key, text]) => ({
-      text: text,
+      text: sanitizeQuestionText(text),
       correct: key === correctKey,
     }));
   } else if (Array.isArray(question.choices)) {
     // Legacy format: choices is an array, correctAnswer is the text value
     const correctAnswer = question.correctAnswer;
     scormChoices = question.choices.map((choiceText) => ({
-      text: choiceText,
+      text: sanitizeQuestionText(choiceText),
       correct: choiceText === correctAnswer,
     }));
   } else {
-    // Fallback for True/False without proper structure
-    logger.warn("Question has no valid choices/options:", guid);
-    scormChoices = [
-      { text: "True", correct: false },
-      { text: "False", correct: false },
-    ];
+    // No valid choices - return empty array, let caller handle
+    // Don't log warning for every question, just return empty
+    scormChoices = [];
   }
 
   return {
-    // eslint-disable-next-line sonarjs/pseudo-random
-    id: guid || `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    text: questionText,
+    id:
+      questionId ||
+      `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // eslint-disable-line sonarjs/pseudo-random -- ID is for display, not security
+    text: sanitizeQuestionText(questionText),
     type: type,
     difficulty: difficulty,
     choices: scormChoices,

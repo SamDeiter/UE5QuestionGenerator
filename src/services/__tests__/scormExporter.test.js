@@ -147,8 +147,8 @@ describe("SCORM Exporter Service", () => {
         guid: undefined,
       };
       const result = convertQuestionToScormFormat(noGuidQuestion);
-      // normalizeQuestion generates a UUID when id is missing
-      expect(result.id).toMatch(/^[a-f0-9-]{36}$/);
+      // Fallback ID format: q-{timestamp}-{random}
+      expect(result.id).toMatch(/^q-\d+-[a-z0-9]+$/);
     });
   });
 
@@ -195,24 +195,28 @@ describe("SCORM Exporter Service", () => {
     });
 
     it("should detect missing correct answer", () => {
-      // With format conversion, if correctAnswer is undefined, correct defaults to "A"
-      // So this question actually becomes valid (option A is used)
+      // When correctAnswer is undefined, validation detects missing correct answer
       const noAnswer = { ...firestoreQuestion, correctAnswer: undefined };
       const result = validateQuestionsForExport([noAnswer]);
-      // After normalization, correct defaults to "A" which is valid
-      expect(result.valid).toBe(true);
+      // Validation correctly detects missing correct answer
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes("correct answer"))).toBe(
+        true
+      );
     });
 
     it("should detect correct answer not in choices", () => {
-      // When correctAnswer is not found in choices, the conversion fails to map it
-      // and correct stays as default "A", which points to a valid choice
+      // When correctAnswer is not found in choices, validation detects this error
       const wrongAnswer = {
         ...firestoreQuestion,
         correctAnswer: "Not in list",
       };
       const result = validateQuestionsForExport([wrongAnswer]);
-      // After normalization with invalid correctAnswer, correct defaults to "A"
-      expect(result.valid).toBe(true);
+      // Validation correctly detects that correctAnswer is not in choices
+      expect(result.valid).toBe(false);
+      expect(
+        result.errors.some((e) => e.includes("not found in choices"))
+      ).toBe(true);
     });
 
     it("should warn on low question count", () => {
@@ -268,8 +272,15 @@ describe("SCORM Exporter Service", () => {
       );
       expect(files["questions.js"]).toContain("passingScore: 80");
       expect(files["questions.js"]).toContain("timeLimit: 3600"); // 60 * 60
-      expect(files["questions.js"]).toContain(
-        '"text": "What is Nanite in Unreal Engine 5?"'
+
+      // Questions are Base64 encoded - decode and check
+      const encodedMatch = files["questions.js"].match(
+        /QUESTIONS_ENCODED = "([^"]+)"/
+      );
+      expect(encodedMatch).not.toBeNull();
+      const decodedQuestions = JSON.parse(atob(encodedMatch[1]));
+      expect(decodedQuestions[0].text).toBe(
+        "What is Nanite in Unreal Engine 5?"
       );
     });
 
@@ -448,7 +459,8 @@ describe("SCORM Exporter Service", () => {
 
       // Unknown entities should be removed
       expect(result.text).not.toMatch(/&[a-zA-Z]+;/);
-      expect(result.text).toBe("What is  and  system?");
+      // After removing entities and normalizing whitespace
+      expect(result.text).toBe("What is and system?");
     });
 
     it("should handle mix of valid and invalid entities", () => {
