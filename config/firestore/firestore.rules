@@ -16,14 +16,19 @@ service cloud.firestore {
     
     function isAdmin() {
       return request.auth.token.role == 'admin' 
-        // SECURITY: Hardcoded email removed - use custom claims or registeredUsers only
-        || (exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
+        // Fallback for users without claims (legacy support - can be removed after migration)
+        || (request.auth.token.role == null
+            && exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
             && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'admin');
     }
 
     function isReviewer() {
-      return exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
-        && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'reviewer';
+      return request.auth.token.role == 'reviewer'
+        || request.auth.token.role == 'admin'
+        // Fallback for users without claims (legacy support - can be removed after migration)
+        || (request.auth.token.role == null
+            && exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
+            && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'reviewer');
     }
     
     // Version control: Require version increments by exactly 1 (no skipping)
@@ -86,9 +91,29 @@ service cloud.firestore {
          && request.resource.data.creatorEmail == resource.data.creatorEmail  // Cannot change creator email
          && versionIsIncremented()  // Must increment version (concurrent editing protection)
          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-              'status', 'rejectionReason', 'reviewedBy', 'reviewedAt', 
-              'updatedAt', 'updatedBy', 'version', 'aiScore', 'critique'
-            ]))  // Can ONLY modify these fields
+              // Version and timestamps
+              'version', 'updatedAt', 'firestoreUpdatedAt', 'modifiedAt', 'updatedBy',
+              // Scoring fields
+              'aiScore', 'scoredAt', 'scoreSource', 
+              // Status and rejection fields
+              'status', 'rejectionReason', 'rejectionCategory', 'rejectionNotes', 
+              'rejectedAt', 'rejectedBy', 'acceptedAt', 'acceptedBy',
+              // Review tracking fields
+              'reviewedBy', 'reviewedAt', 'reviewCompletedAt', 
+              'reviewerName', 'reviewDuration', 'reviewStartedAt',
+              // Critique fields (AI-generated, not content)
+              'critique', 'critiqueScore', 'suggestedRewrite', 'improvedScore',
+              'critiqueAttempts', 'previousCritiqueScore',
+              // Verification fields
+              'humanVerified', 'humanVerifiedBy', 'humanVerifiedAt',
+              'kickedBackAt', 'kickedBackBy', 'kickedBackReason',
+              // Tags and difficulty
+              'tags', 'difficulty',
+              // Backfill metadata
+              '_backfilledHumanVerified', '_backfilledAt', 'tagsBackfilledAt',
+              // Notes
+              'notes'
+            ]))  // SECURITY: Reviewers cannot modify question content
       );
       
       // Delete: Admins only
@@ -214,8 +239,10 @@ service cloud.firestore {
     match /training_data/{docId} {
       // Read: Admins only (for export)
       allow read: if isAdmin();
-      // Create: Any authenticated reviewer/admin
-      allow create: if isSignedIn() && (isAdmin() || isReviewer());
+      // Create: Any authenticated reviewer/admin with required fields
+      allow create: if isSignedIn() && (isAdmin() || isReviewer())
+        && request.resource.data.keys().hasAll(['questionId', 'original', 'corrected', 'createdBy', 'createdAt'])
+        && request.resource.data.createdBy == request.auth.token.email;
       // Immutable - no updates or deletes
       allow update, delete: if false;
     }
