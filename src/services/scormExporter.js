@@ -168,9 +168,11 @@ export function convertQuestionToScormFormat(question) {
   const isTrueFalseType = type === "True/False" || type === "T/F";
   if (isTrueFalseType && scormChoices.length > 2) {
     const originalCount = scormChoices.length; // Capture before filtering
-    // Filter to only keep choices with text "True" or "False" (case-sensitive)
+    // Filter to only keep choices with text "True" or "False" (case-insensitive)
     const tfChoices = scormChoices.filter(
-      (choice) => choice.text === "True" || choice.text === "False"
+      (choice) =>
+        choice.text.toLowerCase() === "true" ||
+        choice.text.toLowerCase() === "false"
     );
 
     // If we found valid True/False choices, use them

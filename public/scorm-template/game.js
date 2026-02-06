@@ -350,12 +350,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // Detect True/False questions - never shuffle these
     const isTrueFalse =
       choices.length === 2 &&
-      choices.some((c) => c.text === "True") &&
-      choices.some((c) => c.text === "False");
+      choices.some((c) => c.text.toLowerCase() === "true") &&
+      choices.some((c) => c.text.toLowerCase() === "false");
 
     if (isTrueFalse) {
       // Ensure True is always first, False second (standard convention)
-      return [...choices].sort((a) => (a.text === "True" ? -1 : 1));
+      return [...choices].sort((a) =>
+        a.text.toLowerCase() === "true" ? -1 : 1
+      );
     }
 
     return shuffleArray(choices);
@@ -679,16 +681,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const isTrueFalse =
       question.type === "True/False" ||
       (shuffledChoices.length === 2 &&
-        shuffledChoices.some((c) => c.text === "True") &&
-        shuffledChoices.some((c) => c.text === "False"));
+        shuffledChoices.some((c) => c.text.toLowerCase() === "true") &&
+        shuffledChoices.some((c) => c.text.toLowerCase() === "false"));
 
     const labels = ["A", "B", "C", "D", "E", "F", "G", "H"]; // Support up to 8 choices
 
     // Get appropriate label for choice
     const getLabel = (index, choiceText) => {
       if (isTrueFalse) {
-        // Use T/F labels for True/False questions
-        return choiceText === "True" ? "T" : "F";
+        // Use T/F labels for True/False questions (case-insensitive comparison)
+        return choiceText.toLowerCase() === "true" ? "T" : "F";
       }
       return labels[index] || String(index + 1);
     };
