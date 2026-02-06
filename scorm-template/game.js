@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         return JSON.parse(atob(window.QUESTIONS_ENCODED));
       } catch (e) {
-        console.error('Failed to decode questions:', e);
+        console.error("Failed to decode questions:", e);
         return [];
       }
     }
@@ -50,15 +50,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // ═══════════════════════════════════════════════════════════════
   // SECURITY STATE
   // ═══════════════════════════════════════════════════════════════
-  
+
   let tabSwitchCount = 0;
   let isLocked = false;
-  const ATTEMPT_STORAGE_KEY = 'scorm_quiz_attempt';
-  const TAB_ID_KEY = 'scorm_quiz_tab_id';
+  const ATTEMPT_STORAGE_KEY = "scorm_quiz_attempt";
+  const TAB_ID_KEY = "scorm_quiz_tab_id";
   const MAX_TAB_SWITCHES = 3; // Allow 3 tab switches before warning
 
   // ═══════════════════════════════════════════════════════════════
-  // SECURITY FUNCTIONS  
+  // SECURITY FUNCTIONS
   // ═══════════════════════════════════════════════════════════════
 
   /**
@@ -91,21 +91,23 @@ document.addEventListener("DOMContentLoaded", () => {
       // There's already an active attempt
       const attemptData = JSON.parse(existing);
       if (attemptData.tabId !== getTabId()) {
-        showSecurityWarning('This quiz is already open in another tab. Please close other tabs to continue.');
+        showSecurityWarning(
+          "This quiz is already open in another tab. Please close other tabs to continue."
+        );
         isLocked = true;
         return false;
       }
     }
-    
+
     attemptToken = generateAttemptToken();
     const attemptData = {
       token: attemptToken,
       tabId: getTabId(),
-      startedAt: new Date().toISOString()
+      startedAt: new Date().toISOString(),
     };
-    
+
     sessionStorage.setItem(ATTEMPT_STORAGE_KEY, JSON.stringify(attemptData));
-    console.log('[Quiz Security] Attempt locked:', attemptToken);
+    console.log("[Quiz Security] Attempt locked:", attemptToken);
     return true;
   }
 
@@ -115,17 +117,17 @@ document.addEventListener("DOMContentLoaded", () => {
   function clearAttempt() {
     quizCompleted = true;
     sessionStorage.removeItem(ATTEMPT_STORAGE_KEY);
-    console.log('[Quiz Security] Attempt cleared - quiz completed');
+    console.log("[Quiz Security] Attempt cleared - quiz completed");
   }
 
   /**
    * Show security warning overlay
    */
   function showSecurityWarning(message) {
-    let overlay = document.getElementById('security-warning-overlay');
+    let overlay = document.getElementById("security-warning-overlay");
     if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'security-warning-overlay';
+      overlay = document.createElement("div");
+      overlay.id = "security-warning-overlay";
       overlay.style.cssText = `
         position: fixed; top: 0; left: 0; right: 0; bottom: 0;
         background: rgba(0,0,0,0.9); z-index: 10000;
@@ -134,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
       document.body.appendChild(overlay);
     }
-    
+
     overlay.innerHTML = `
       <div style="max-width: 500px;">
         <svg style="width: 80px; height: 80px; margin-bottom: 20px; color: #f59e0b;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </button>
       </div>
     `;
-    overlay.style.display = 'flex';
+    overlay.style.display = "flex";
   }
 
   /**
@@ -156,38 +158,43 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function initSecurityListeners() {
     // Visibility change detection (tab switching)
-    document.addEventListener('visibilitychange', () => {
+    document.addEventListener("visibilitychange", () => {
       if (document.hidden && !quizCompleted) {
         tabSwitchCount++;
-        console.log('[Quiz Security] Tab switch detected. Count:', tabSwitchCount);
-        
+        console.log(
+          "[Quiz Security] Tab switch detected. Count:",
+          tabSwitchCount
+        );
+
         if (tabSwitchCount >= MAX_TAB_SWITCHES) {
           showSecurityWarning(
             `You have switched away from this quiz ${tabSwitchCount} times. ` +
-            'This activity is being recorded. Please stay on this page to complete your assessment.'
+              "This activity is being recorded. Please stay on this page to complete your assessment."
           );
         }
       }
     });
 
     // Window blur detection
-    window.addEventListener('blur', () => {
+    window.addEventListener("blur", () => {
       if (!quizCompleted) {
-        console.log('[Quiz Security] Window lost focus');
+        console.log("[Quiz Security] Window lost focus");
       }
     });
 
     // Prevent back button
-    history.pushState(null, '', location.href);
-    window.addEventListener('popstate', () => {
+    history.pushState(null, "", location.href);
+    window.addEventListener("popstate", () => {
       if (!quizCompleted) {
-        history.pushState(null, '', location.href);
-        showSecurityWarning('The back button has been disabled during this assessment. Please use the quiz navigation.');
+        history.pushState(null, "", location.href);
+        showSecurityWarning(
+          "The back button has been disabled during this assessment. Please use the quiz navigation."
+        );
       }
     });
 
     // Context menu prevention (optional - remove right-click)
-    document.addEventListener('contextmenu', (e) => {
+    document.addEventListener("contextmenu", (e) => {
       if (!quizCompleted) {
         e.preventDefault();
         return false;
@@ -195,34 +202,42 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Keyboard shortcut prevention (F12, Ctrl+Shift+I, etc.)
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener("keydown", (e) => {
       if (!quizCompleted) {
         // Prevent F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
         if (
-          e.key === 'F12' ||
-          (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
-          (e.ctrlKey && e.key === 'u')
+          e.key === "F12" ||
+          (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) ||
+          (e.ctrlKey && e.key === "u")
         ) {
           e.preventDefault();
           return false;
         }
-        
+
         // Prevent copy, cut, paste (Ctrl+C, Ctrl+X, Ctrl+V)
-        if (e.ctrlKey && (e.key === 'c' || e.key === 'x' || e.key === 'v' || e.key === 'C' || e.key === 'X' || e.key === 'V')) {
+        if (
+          e.ctrlKey &&
+          (e.key === "c" ||
+            e.key === "x" ||
+            e.key === "v" ||
+            e.key === "C" ||
+            e.key === "X" ||
+            e.key === "V")
+        ) {
           e.preventDefault();
-          console.log('[Quiz Security] Copy/paste attempt blocked');
+          console.log("[Quiz Security] Copy/paste attempt blocked");
           return false;
         }
-        
+
         // Prevent print (Ctrl+P)
-        if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
+        if (e.ctrlKey && (e.key === "p" || e.key === "P")) {
           e.preventDefault();
-          console.log('[Quiz Security] Print attempt blocked');
+          console.log("[Quiz Security] Print attempt blocked");
           return false;
         }
-        
+
         // Prevent select all (Ctrl+A)
-        if (e.ctrlKey && (e.key === 'a' || e.key === 'A')) {
+        if (e.ctrlKey && (e.key === "a" || e.key === "A")) {
           e.preventDefault();
           return false;
         }
@@ -230,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Prevent text selection via CSS and events
-    document.addEventListener('selectstart', (e) => {
+    document.addEventListener("selectstart", (e) => {
       if (!quizCompleted) {
         e.preventDefault();
         return false;
@@ -238,7 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Prevent drag
-    document.addEventListener('dragstart', (e) => {
+    document.addEventListener("dragstart", (e) => {
       if (!quizCompleted) {
         e.preventDefault();
         return false;
@@ -246,21 +261,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Prevent copy/paste via clipboard events
-    document.addEventListener('copy', (e) => {
+    document.addEventListener("copy", (e) => {
       if (!quizCompleted) {
         e.preventDefault();
         return false;
       }
     });
-    
-    document.addEventListener('paste', (e) => {
+
+    document.addEventListener("paste", (e) => {
       if (!quizCompleted) {
         e.preventDefault();
         return false;
       }
     });
-    
-    document.addEventListener('cut', (e) => {
+
+    document.addEventListener("cut", (e) => {
       if (!quizCompleted) {
         e.preventDefault();
         return false;
@@ -272,29 +287,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const detectDevTools = () => {
       const widthThreshold = window.outerWidth - window.innerWidth > 160;
       const heightThreshold = window.outerHeight - window.innerHeight > 160;
-      
-      if ((widthThreshold || heightThreshold) && !devToolsOpen && !quizCompleted) {
+
+      if (
+        (widthThreshold || heightThreshold) &&
+        !devToolsOpen &&
+        !quizCompleted
+      ) {
         devToolsOpen = true;
-        console.log('[Quiz Security] DevTools detected');
-        showSecurityWarning('Developer tools have been detected. This activity is being recorded.');
+        console.log("[Quiz Security] DevTools detected");
+        showSecurityWarning(
+          "Developer tools have been detected. This activity is being recorded."
+        );
       } else if (!widthThreshold && !heightThreshold) {
         devToolsOpen = false;
       }
     };
-    
+
     // Check for DevTools periodically
     setInterval(detectDevTools, 1000);
 
     // Beforeunload warning
-    window.addEventListener('beforeunload', (e) => {
+    window.addEventListener("beforeunload", (e) => {
       if (!quizCompleted && currentQuestionIndex > 0) {
         e.preventDefault();
-        e.returnValue = 'You have an assessment in progress. Are you sure you want to leave?';
+        e.returnValue =
+          "You have an assessment in progress. Are you sure you want to leave?";
         return e.returnValue;
       }
     });
 
-    console.log('[Quiz Security] All security listeners initialized');
+    console.log("[Quiz Security] All security listeners initialized");
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -316,6 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /**
    * Shuffle answer choices for a question
    * Labels (A/B/C/D) stay fixed, content is randomized
+   * True/False questions are NEVER shuffled - True always appears first
    * @param {Array} choices - Array of choice objects with text and correct properties
    * @returns {Array} Shuffled choices array
    */
@@ -323,6 +346,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!config.shuffleChoices || !choices || choices.length <= 1) {
       return choices;
     }
+
+    // Detect True/False questions - never shuffle these
+    const isTrueFalse =
+      choices.length === 2 &&
+      choices.some((c) => c.text === "True") &&
+      choices.some((c) => c.text === "False");
+
+    if (isTrueFalse) {
+      // Ensure True is always first, False second (standard convention)
+      return [...choices].sort((a) => (a.text === "True" ? -1 : 1));
+    }
+
     return shuffleArray(choices);
   }
 
@@ -331,18 +366,22 @@ document.addEventListener("DOMContentLoaded", () => {
    * Interleaves Easy-Medium-Hard for optimal learning progression
    */
   function buildBalancedQuestionList(inputQuestions) {
-    const easy = inputQuestions.filter(q => 
-      (q.difficulty || '').toLowerCase().includes('easy')
+    const easy = inputQuestions.filter((q) =>
+      (q.difficulty || "").toLowerCase().includes("easy")
     );
-    const medium = inputQuestions.filter(q => 
-      (q.difficulty || '').toLowerCase().includes('medium')
+    const medium = inputQuestions.filter((q) =>
+      (q.difficulty || "").toLowerCase().includes("medium")
     );
-    const hard = inputQuestions.filter(q => 
-      (q.difficulty || '').toLowerCase().includes('hard')
+    const hard = inputQuestions.filter((q) =>
+      (q.difficulty || "").toLowerCase().includes("hard")
     );
-    const other = inputQuestions.filter(q => {
-      const diff = (q.difficulty || '').toLowerCase();
-      return !diff.includes('easy') && !diff.includes('medium') && !diff.includes('hard');
+    const other = inputQuestions.filter((q) => {
+      const diff = (q.difficulty || "").toLowerCase();
+      return (
+        !diff.includes("easy") &&
+        !diff.includes("medium") &&
+        !diff.includes("hard")
+      );
     });
 
     // Shuffle each pool
@@ -353,7 +392,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Interleave: E-M-H pattern
     const distributed = [];
-    const maxLen = Math.max(shuffledEasy.length, shuffledMedium.length, shuffledHard.length);
+    const maxLen = Math.max(
+      shuffledEasy.length,
+      shuffledMedium.length,
+      shuffledHard.length
+    );
 
     for (let i = 0; i < maxLen; i++) {
       if (shuffledEasy[i]) distributed.push(shuffledEasy[i]);
@@ -374,11 +417,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!config.adaptiveDifficulty || wrongStreak < 2) return;
 
     const upcomingQuestions = questions.slice(currentQuestionIndex + 1);
-    const answeredIds = new Set(answers.map(a => a.questionId));
+    const answeredIds = new Set(answers.map((a) => a.questionId));
 
-    const easyIndex = upcomingQuestions.findIndex(q =>
-      (q.difficulty || '').toLowerCase().includes('easy') &&
-      !answeredIds.has(q.id)
+    const easyIndex = upcomingQuestions.findIndex(
+      (q) =>
+        (q.difficulty || "").toLowerCase().includes("easy") &&
+        !answeredIds.has(q.id)
     );
 
     if (easyIndex > 0) {
@@ -387,7 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const temp = questions[currentQuestionIndex + 1];
       questions[currentQuestionIndex + 1] = questions[realIndex];
       questions[realIndex] = temp;
-      console.log('[Adaptive] Swapped in easier question for confidence boost');
+      console.log("[Adaptive] Swapped in easier question for confidence boost");
     }
   }
 
@@ -395,8 +439,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ANTI-CHEAT SECURITY
   // ═══════════════════════════════════════════════════════════════
 
-  const ATTEMPT_KEY = 'ue5_scorm_active_attempt';
-  const CHANNEL_NAME = 'ue5_scorm_coordination';
+  const ATTEMPT_KEY = "ue5_scorm_active_attempt";
+  const CHANNEL_NAME = "ue5_scorm_coordination";
   let broadcastChannel = null;
 
   /**
@@ -405,7 +449,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function generateAttemptToken() {
     const timestamp = Date.now().toString(36);
     const randomPart = Math.random().toString(36).substring(2, 10);
-    return 'scorm_' + timestamp + '_' + randomPart;
+    return "scorm_" + timestamp + "_" + randomPart;
   }
 
   /**
@@ -414,13 +458,16 @@ document.addEventListener("DOMContentLoaded", () => {
   function lockAttempt(token) {
     const existing = sessionStorage.getItem(ATTEMPT_KEY);
     if (existing) {
-      console.warn('[Security] Attempt already active:', existing);
+      console.warn("[Security] Attempt already active:", existing);
       return false;
     }
-    sessionStorage.setItem(ATTEMPT_KEY, JSON.stringify({
-      token: token,
-      startedAt: new Date().toISOString()
-    }));
+    sessionStorage.setItem(
+      ATTEMPT_KEY,
+      JSON.stringify({
+        token: token,
+        startedAt: new Date().toISOString(),
+      })
+    );
     broadcastAttemptStart(token);
     return true;
   }
@@ -444,11 +491,11 @@ document.addEventListener("DOMContentLoaded", () => {
    * Prevent back navigation using history API
    */
   function preventBackNavigation() {
-    window.history.pushState({ quizActive: true }, '');
-    window.addEventListener('popstate', function() {
+    window.history.pushState({ quizActive: true }, "");
+    window.addEventListener("popstate", function () {
       if (!quizCompleted) {
-        window.history.pushState({ quizActive: true }, '');
-        console.log('[Security] Back navigation blocked');
+        window.history.pushState({ quizActive: true }, "");
+        console.log("[Security] Back navigation blocked");
       }
     });
   }
@@ -457,10 +504,11 @@ document.addEventListener("DOMContentLoaded", () => {
    * Add beforeunload warning
    */
   function enableUnloadWarning() {
-    window.addEventListener('beforeunload', function(e) {
+    window.addEventListener("beforeunload", function (e) {
       if (!quizCompleted) {
         e.preventDefault();
-        e.returnValue = 'You have an active quiz. Are you sure you want to leave?';
+        e.returnValue =
+          "You have an active quiz. Are you sure you want to leave?";
         return e.returnValue;
       }
     });
@@ -471,26 +519,29 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function initMultiTabDetection() {
     // Try BroadcastChannel first
-    if (typeof BroadcastChannel !== 'undefined') {
+    if (typeof BroadcastChannel !== "undefined") {
       try {
         broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
-        broadcastChannel.onmessage = function(event) {
-          if (event.data.type === 'ATTEMPT_START' && !quizCompleted) {
-            console.warn('[Security] Another tab started a quiz attempt');
+        broadcastChannel.onmessage = function (event) {
+          if (event.data.type === "ATTEMPT_START" && !quizCompleted) {
+            console.warn("[Security] Another tab started a quiz attempt");
           }
-          if (event.data.type === 'QUERY_ACTIVE' && isAttemptActive()) {
-            broadcastChannel.postMessage({ type: 'ACTIVE_RESPONSE', token: attemptToken });
+          if (event.data.type === "QUERY_ACTIVE" && isAttemptActive()) {
+            broadcastChannel.postMessage({
+              type: "ACTIVE_RESPONSE",
+              token: attemptToken,
+            });
           }
-          if (event.data.type === 'ACTIVE_RESPONSE') {
+          if (event.data.type === "ACTIVE_RESPONSE") {
             showDuplicateWarning();
           }
         };
         // Query other tabs
-        setTimeout(function() {
-          broadcastChannel.postMessage({ type: 'QUERY_ACTIVE' });
+        setTimeout(function () {
+          broadcastChannel.postMessage({ type: "QUERY_ACTIVE" });
         }, 100);
       } catch (err) {
-        console.warn('[Security] BroadcastChannel failed:', err);
+        console.warn("[Security] BroadcastChannel failed:", err);
       }
     }
   }
@@ -500,7 +551,7 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function broadcastAttemptStart(token) {
     if (broadcastChannel) {
-      broadcastChannel.postMessage({ type: 'ATTEMPT_START', token: token });
+      broadcastChannel.postMessage({ type: "ATTEMPT_START", token: token });
     }
   }
 
@@ -623,8 +674,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const shuffledChoices = shuffleChoices(question.choices);
     // Store shuffled choices on the question for handleAnswer to access
     question._shuffledChoices = shuffledChoices;
-    
-    const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']; // Support up to 8 choices
+
+    // Detect True/False question type (via type property or choice detection)
+    const isTrueFalse =
+      question.type === "True/False" ||
+      (shuffledChoices.length === 2 &&
+        shuffledChoices.some((c) => c.text === "True") &&
+        shuffledChoices.some((c) => c.text === "False"));
+
+    const labels = ["A", "B", "C", "D", "E", "F", "G", "H"]; // Support up to 8 choices
+
+    // Get appropriate label for choice
+    const getLabel = (index, choiceText) => {
+      if (isTrueFalse) {
+        // Use T/F labels for True/False questions
+        return choiceText === "True" ? "T" : "F";
+      }
+      return labels[index] || String(index + 1);
+    };
 
     const html = `
       <div class="bg-slate-800 rounded-lg p-6 shadow-xl">
@@ -638,7 +705,7 @@ document.addEventListener("DOMContentLoaded", () => {
               data-index="${index}"
               data-correct="${choice.correct}"
             >
-              <span class="inline-block w-8 h-8 mr-3 bg-slate-600 rounded text-center leading-8 font-bold text-blue-300">${labels[index] || index + 1}</span>
+              <span class="inline-block w-8 h-8 mr-3 bg-slate-600 rounded text-center leading-8 font-bold text-blue-300">${getLabel(index, choice.text)}</span>
               <span class="font-semibold">${choice.text}</span>
             </button>
           `
@@ -677,23 +744,30 @@ document.addEventListener("DOMContentLoaded", () => {
     // Report to SCORM as cmi.interactions (optional, non-breaking)
     // This allows LMS to show which questions were asked and how learner responded
     try {
-      if (typeof window.SCORM12 !== "undefined" && window.SCORM12.isConnected() && window.SCORM12.setInteraction) {
+      if (
+        typeof window.SCORM12 !== "undefined" &&
+        window.SCORM12.isConnected() &&
+        window.SCORM12.setInteraction
+      ) {
         // Find correct answer text
-        const correctChoice = choices.find(c => c.correct);
+        const correctChoice = choices.find((c) => c.correct);
         const correctText = correctChoice ? correctChoice.text : "";
-        
+
         window.SCORM12.setInteraction(currentQuestionIndex, {
           id: question.id || "q" + currentQuestionIndex,
           type: "choice",
           studentResponse: choices[choiceIndex].text.substring(0, 255), // SCORM 1.2 length limit
           correctResponse: correctText.substring(0, 255),
           result: isCorrect ? "correct" : "wrong",
-          latency: timeSpent
+          latency: timeSpent,
         });
       }
     } catch (interactionError) {
       // Never break quiz for interaction tracking failure
-      console.warn("[SCORM] Interaction tracking failed (non-critical):", interactionError);
+      console.warn(
+        "[SCORM] Interaction tracking failed (non-critical):",
+        interactionError
+      );
     }
 
     // Track wrong streak for adaptive difficulty
@@ -703,18 +777,10 @@ document.addEventListener("DOMContentLoaded", () => {
       wrongStreak++;
     }
 
-    // Visual feedback
-    if (isCorrect) {
-      button.classList.add("bg-green-600", "border-green-500");
-    } else {
-      button.classList.add("bg-red-600", "border-red-500");
-      // Highlight correct answer
-      document.querySelectorAll(".choice-btn").forEach((btn) => {
-        if (btn.dataset.correct === "true") {
-          btn.classList.add("bg-green-600", "border-green-500");
-        }
-      });
-    }
+    // Visual feedback - neutral "selected" style (does NOT reveal correctness)
+    // Uses blue highlight to indicate the selected answer without showing right/wrong
+    button.style.cssText =
+      "background: #2563eb !important; border-color: #3b82f6 !important; color: white !important;";
 
     // Disable all buttons
     document.querySelectorAll(".choice-btn").forEach((btn) => {
@@ -830,19 +896,19 @@ document.addEventListener("DOMContentLoaded", () => {
     resultsContainer.innerHTML = resultHtml;
 
     // Attach close button handler (window.close() may fail in LMS iframe context)
-    const closeBtn = document.getElementById('close-assessment-btn');
-    const closeMsg = document.getElementById('close-message');
+    const closeBtn = document.getElementById("close-assessment-btn");
+    const closeMsg = document.getElementById("close-message");
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
+      closeBtn.addEventListener("click", () => {
         // Try to close the window
         window.close();
-        
+
         // If we're still here, window.close() failed (common in LMS iframes)
         // Hide the button and show a friendly message instead
         if (closeMsg) {
-          closeMsg.classList.remove('hidden');
+          closeMsg.classList.remove("hidden");
         }
-        closeBtn.style.display = 'none';
+        closeBtn.style.display = "none";
       });
     }
   }
@@ -858,9 +924,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize security features
     initSecurityListeners();
 
-    // Lock the attempt  
+    // Lock the attempt
     if (!lockAttempt()) {
-      console.warn('[Security] Could not lock attempt - quiz may be open in another tab');
+      console.warn(
+        "[Security] Could not lock attempt - quiz may be open in another tab"
+      );
     }
 
     // Validate questions
@@ -877,15 +945,26 @@ document.addEventListener("DOMContentLoaded", () => {
     // Build balanced, shuffled question list
     if (config.shuffleQuestions) {
       questions = buildBalancedQuestionList(rawQuestions);
-      console.log('[Quiz] Shuffled and balanced', questions.length, 'questions');
+      console.log(
+        "[Quiz] Shuffled and balanced",
+        questions.length,
+        "questions"
+      );
     } else {
       questions = [...rawQuestions];
     }
 
     // Limit to questionsPerAttempt if configured (runtime random selection)
-    if (config.questionsPerAttempt && config.questionsPerAttempt < questions.length) {
+    if (
+      config.questionsPerAttempt &&
+      config.questionsPerAttempt < questions.length
+    ) {
       questions = questions.slice(0, config.questionsPerAttempt);
-      console.log('[Quiz] Limited to', config.questionsPerAttempt, 'questions for this attempt');
+      console.log(
+        "[Quiz] Limited to",
+        config.questionsPerAttempt,
+        "questions for this attempt"
+      );
     }
 
     // Start quiz
