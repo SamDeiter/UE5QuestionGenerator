@@ -68,9 +68,7 @@ const QuizQuestion = ({
                   disabled={isAnswered}
                   role="option"
                   aria-selected={isSelected}
-                  aria-label={`Option ${key}: ${text}${
-                    isSelected ? ", selected" : ""
-                  }`}
+                  aria-label={`${text}${isSelected ? ", selected" : ""}`}
                   className={`w-full text-left p-4 rounded-lg border-2 transition-all focus:outline-none ${
                     isFocused
                       ? "ring-4 ring-yellow-400 ring-offset-2 ring-offset-slate-900"
@@ -83,14 +81,10 @@ const QuizQuestion = ({
                 >
                   <div className="flex items-center gap-4">
                     <span
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                        isSelected
-                          ? "bg-blue-500 text-white"
-                          : "bg-slate-700 text-slate-300"
+                      className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                        isSelected ? "bg-blue-500" : "bg-slate-500"
                       }`}
-                    >
-                      {key}
-                    </span>
+                    />
                     <span
                       className="text-white flex-1"
                       dangerouslySetInnerHTML={sanitizeText(text)}
