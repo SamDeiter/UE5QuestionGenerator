@@ -55,48 +55,50 @@ const QuizQuestion = ({
 
         {/* Options */}
         <div className="space-y-4" role="listbox" aria-label="Answer options">
-          {Object.entries(options).map(([key, text], index) => {
-            const isSelected = selectedAnswer === key;
-            const isFocused = index === focusedOptionIndex;
+          {Object.entries(options)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, text], index) => {
+              const isSelected = selectedAnswer === key;
+              const isFocused = index === focusedOptionIndex;
 
-            return (
-              <button
-                key={key}
-                onClick={() => !isAnswered && onAnswerSelect(key)}
-                disabled={isAnswered}
-                role="option"
-                aria-selected={isSelected}
-                aria-label={`Option ${key}: ${text}${
-                  isSelected ? ", selected" : ""
-                }`}
-                className={`w-full text-left p-4 rounded-lg border-2 transition-all focus:outline-none ${
-                  isFocused
-                    ? "ring-4 ring-yellow-400 ring-offset-2 ring-offset-slate-900"
-                    : ""
-                } ${
-                  isSelected
-                    ? "border-blue-500 bg-blue-900/30"
-                    : "border-slate-600 hover:border-slate-500 bg-slate-800"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <span
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      isSelected
-                        ? "bg-blue-500 text-white"
-                        : "bg-slate-700 text-slate-300"
-                    }`}
-                  >
-                    {key}
-                  </span>
-                  <span
-                    className="text-white flex-1"
-                    dangerouslySetInnerHTML={sanitizeText(text)}
-                  />
-                </div>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={key}
+                  onClick={() => !isAnswered && onAnswerSelect(key)}
+                  disabled={isAnswered}
+                  role="option"
+                  aria-selected={isSelected}
+                  aria-label={`Option ${key}: ${text}${
+                    isSelected ? ", selected" : ""
+                  }`}
+                  className={`w-full text-left p-4 rounded-lg border-2 transition-all focus:outline-none ${
+                    isFocused
+                      ? "ring-4 ring-yellow-400 ring-offset-2 ring-offset-slate-900"
+                      : ""
+                  } ${
+                    isSelected
+                      ? "border-blue-500 bg-blue-900/30"
+                      : "border-slate-600 hover:border-slate-500 bg-slate-800"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <span
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        isSelected
+                          ? "bg-blue-500 text-white"
+                          : "bg-slate-700 text-slate-300"
+                      }`}
+                    >
+                      {key}
+                    </span>
+                    <span
+                      className="text-white flex-1"
+                      dangerouslySetInnerHTML={sanitizeText(text)}
+                    />
+                  </div>
+                </button>
+              );
+            })}
         </div>
 
         {/* Next button */}
