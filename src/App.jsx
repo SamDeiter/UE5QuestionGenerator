@@ -10,8 +10,6 @@ import Header from "./components/Header";
 import AppBanners from "./components/AppBanners";
 import ToastContainer from "./components/ToastContainer";
 import Footer from "./components/Footer";
-import SignIn from "./components/SignIn";
-import InviteSignUp from "./components/InviteSignUp";
 // ApiKeyModal moved to GlobalModals - lazy loaded when needed
 import ConflictModal from "./components/ConflictModal";
 import { getInviteFromUrl } from "./services/inviteService";
@@ -23,6 +21,9 @@ const GlobalModals = lazy(() => import("./components/GlobalModals"));
 const CrashRecoveryPrompt = lazy(
   () => import("./components/CrashRecoveryPrompt")
 );
+// PERFORMANCE: Lazy load auth components (only needed when logged out)
+const SignIn = lazy(() => import("./components/SignIn"));
+const InviteSignUp = lazy(() => import("./components/InviteSignUp"));
 
 // Custom Hooks
 import { useAppConfig } from "./hooks/useAppConfig";

@@ -1,5 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
+import viteCompression from "vite-plugin-compression";
 import { execSync } from "child_process";
 import { readFileSync } from "fs";
 import { resolve } from "path";
@@ -21,7 +23,96 @@ const getGitCommitHash = () => {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+
+    // PERFORMANCE: Gzip compression for smaller transfers
+    viteCompression({
+      algorithm: "gzip",
+      ext: ".gz",
+      threshold: 1024, // Only compress files > 1KB
+    }),
+
+    // PERFORMANCE: Brotli compression (even better than gzip)
+    viteCompression({
+      algorithm: "brotliCompress",
+      ext: ".br",
+      threshold: 1024,
+    }),
+
+    // PERFORMANCE: Service Worker for offline support and caching
+    VitePWA({
+      registerType: "autoUpdate",
+      injectRegister: "auto",
+      workbox: {
+        // Cache all static assets aggressively
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Runtime caching strategies
+        runtimeCaching: [
+          {
+            // Cache Firebase API responses (auth, firestore)
+            urlPattern:
+              /^https:\/\/(identitytoolkit|securetoken|firestore)\.googleapis\.com/,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "firebase-api-cache",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60, // 1 hour
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Cache Google Fonts
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts-cache",
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+            },
+          },
+          {
+            // Cache images with stale-while-revalidate
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "images-cache",
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+            },
+          },
+        ],
+      },
+      includeAssets: ["logos/*.svg", "logos/*.png"],
+      manifest: {
+        name: "UE5 Question Generator",
+        short_name: "UE5 Questions",
+        description:
+          "AI-powered question generation for Unreal Engine 5 educational content",
+        theme_color: "#1a1a2e",
+        background_color: "#1a1a2e",
+        display: "standalone",
+        start_url: "/UE5QuestionGenerator/",
+        scope: "/UE5QuestionGenerator/",
+        icons: [
+          {
+            src: "logos/UE-Icon-2023-White.svg",
+            sizes: "any",
+            type: "image/svg+xml",
+            purpose: "any maskable",
+          },
+        ],
+      },
+    }),
+  ],
   base: "/UE5QuestionGenerator/",
   define: {
     __GIT_COMMIT__: JSON.stringify(getGitCommitHash()),
@@ -43,6 +134,12 @@ export default defineConfig({
     drop: ["console", "debugger"],
   },
   build: {
+    // Enable source maps for debugging (won't affect load time)
+    sourcemap: false,
+    // Minify aggressively
+    minify: "esbuild",
+    // Target modern browsers for smaller bundles
+    target: "es2020",
     rollupOptions: {
       output: {
         manualChunks: {
@@ -54,7 +151,6 @@ export default defineConfig({
             "firebase/app",
             "firebase/auth",
             "firebase/firestore",
-            "firebase/analytics",
           ],
 
           // Icons vendor chunk (~150 KB)
@@ -74,12 +170,14 @@ export default defineConfig({
             "./src/agents/sessionAgent.js",
           ],
 
-          // UI Components (~150 KB)
-          "ui-components": [
+          // Core UI Components - kept on critical path
+          "ui-core": [
             "./src/components/QuestionItem.jsx",
             "./src/components/QuestionList.jsx",
-            "./src/components/ViewRouter.jsx",
           ],
+
+          // View Router - separate chunk for lazy loading
+          "ui-router": ["./src/components/ViewRouter.jsx"],
         },
       },
     },
