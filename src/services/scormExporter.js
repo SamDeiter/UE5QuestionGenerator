@@ -1,6 +1,10 @@
 import JSZip from "jszip";
 import { logger } from "../utils/logger";
 import { SCORM_DEFAULTS } from "../utils/constants";
+import packageJson from "../../package.json";
+
+// Dynamic version from package.json - no more manual updates
+const SCORM_VERSION = `v${packageJson.version}`;
 
 /**
  * SCORM 1.2 Exporter Service
@@ -327,7 +331,7 @@ export async function exportToScorm(questions, config = {}) {
     link.href = url;
 
     // Generate filename with version and timestamp (helps distinguish between exports)
-    const version = "v2.4.20"; // SCORM export version
+    const version = SCORM_VERSION;
     // Generate timestamp with time for unique exports (YYYY-MM-DD_HH-MM)
     const now = new Date();
     const timestamp = `${now.toISOString().split("T")[0]}_${now.getHours().toString().padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
@@ -483,7 +487,7 @@ export async function batchExportByDiscipline(
   }
 
   const results = [];
-  const version = "v2.4.20"; // SCORM export version
+  const version = SCORM_VERSION;
   // Generate timestamp with time for unique exports (YYYY-MM-DD_HH-MM)
   const now = new Date();
   const timestamp = `${now.toISOString().split("T")[0]}_${now.getHours().toString().padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
