@@ -17,7 +17,9 @@ import { setDoc } from "firebase/firestore";
 vi.mock("firebase/auth", () => ({
   onIdTokenChanged: vi.fn(),
   getAuth: vi.fn(() => ({})),
-  GoogleAuthProvider: vi.fn(),
+  GoogleAuthProvider: class {
+    setCustomParameters() {}
+  },
 }));
 
 vi.mock("firebase/firestore", () => ({

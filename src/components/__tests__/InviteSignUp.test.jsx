@@ -39,7 +39,9 @@ vi.mock("firebase/analytics", () => ({
 
 vi.mock("firebase/auth", () => ({
   getAuth: vi.fn(() => ({ currentUser: null })),
-  GoogleAuthProvider: vi.fn(),
+  GoogleAuthProvider: class {
+    setCustomParameters() {}
+  },
   signInWithPopup: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),
   createUserWithEmailAndPassword: vi.fn(),
@@ -206,7 +208,9 @@ describe("InviteSignUp Component", () => {
 
       await waitFor(() => {
         expect(screen.getByText(/valid invite/i)).toBeInTheDocument();
-        expect(screen.getByText(/admin/i)).toBeInTheDocument();
+        expect(
+          screen.getByText("admin", { selector: "strong" })
+        ).toBeInTheDocument();
       });
     });
 

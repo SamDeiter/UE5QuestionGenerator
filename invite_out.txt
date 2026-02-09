@@ -1,0 +1,28 @@
+
+ RUN  v4.0.17 C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator
+
+ Γ¥» src/components/__tests__/InviteSignUp.test.jsx (18 tests | 1 failed) 4332ms
+       Γ£ô renders invite code input field 43ms
+       Γ£ô renders validate button initially 135ms
+       Γ£ô renders cancel button when onCancel is provided 40ms
+       Γ£ô does not render cancel button when onCancel is not provided 17ms
+       Γ£ô auto-populates invite code from URL 18ms
+       Γ£ô auto-validates invite code from URL 11ms
+       Γ£ô converts input to uppercase 193ms
+       Γ£ô disables input after successful validation 215ms
+       Γ£ô shows loading state during validation  309ms
+       ├ù shows success message for valid invite 1314ms
+       Γ£ô shows error message for invalid invite 283ms
+       Γ£ô shows rate limit error when exceeded 292ms
+       Γ£ô shows Google sign-in button after valid invite 291ms
+       Γ£ô calls onSuccess after successful sign-in and invite consumption  401ms
+       Γ£ô shows error when authentication fails  415ms
+       Γ£ô calls onCancel when cancel button is clicked 62ms
+       Γ£ô input has proper aria-labels 4ms
+       Γ£ô input shows aria-invalid when validation fails 287ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 17 passed (18)
+   Start at  13:29:32
+   Duration  6.24s (transform 249ms, setup 140ms, import 546ms, tests 4.33s, environment 951ms)
+

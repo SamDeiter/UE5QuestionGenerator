@@ -187,8 +187,8 @@ describe("Field Schema Compatibility", () => {
       };
 
       const result = convertQuestionToScormFormat(noDifficultyQuestion);
-      // normalizeQuestion defaults difficulty to "Easy"
-      expect(result.difficulty).toBe("Easy");
+      // convertQuestionToScormFormat defaults difficulty to "Medium"
+      expect(result.difficulty).toBe("Medium");
     });
   });
 });

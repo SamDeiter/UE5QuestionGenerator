@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import {
   GENERATION_LIMITS,
   PROCESSING,
@@ -35,7 +35,8 @@ export const useStatusActions = ({
   config,
 }) => {
   // QA FIX: Double-submit protection - track questions currently being processed
-  const [processing, setProcessing] = useState(new Set());
+  // Using useRef (not useState) so the guard is synchronous within the same tick
+  const processingRef = useRef(new Set());
   /**
    * Handles status updates for questions (accept, reject, delete).
    * Uses saveQuestionAsReviewer to ensure only allowed fields are sent.
@@ -43,7 +44,7 @@ export const useStatusActions = ({
   const handleUpdateStatus = useCallback(
     async (id, newStatus, rejectionReason = null) => {
       // QA FIX: Prevent double-submit from rapid clicks
-      if (processing.has(id)) {
+      if (processingRef.current.has(id)) {
         if (showMessage) {
           showMessage("⏳ Processing...", TOAST_DURATION.SHORT);
         }
@@ -53,8 +54,8 @@ export const useStatusActions = ({
       const currentQ = allQuestions.find((q) => q.id === id);
       if (!currentQ) return;
 
-      // Mark as processing
-      setProcessing((prev) => new Set(prev).add(id));
+      // Mark as processing (synchronous - blocks concurrent calls in same tick)
+      processingRef.current.add(id);
 
       // Handle deletion separately
       if (newStatus === QUESTION_STATUS.DELETED) {
@@ -77,11 +78,7 @@ export const useStatusActions = ({
           }
         } finally {
           // QA FIX: Always remove from processing set
-          setProcessing((prev) => {
-            const next = new Set(prev);
-            next.delete(id);
-            return next;
-          });
+          processingRef.current.delete(id);
         }
         return;
       }
@@ -273,11 +270,7 @@ export const useStatusActions = ({
         }
       } finally {
         // QA FIX: Always remove from processing set, even on error
-        setProcessing((prev) => {
-          const next = new Set(prev);
-          next.delete(id);
-          return next;
-        });
+        processingRef.current.delete(id);
       }
     },
     [
@@ -287,7 +280,7 @@ export const useStatusActions = ({
       setAllQuestions,
       updateQuestionInState,
       showMessage,
-      processing, // QA FIX: Added to fix React Hook dependency warning
+      // processingRef is a ref - no dependency needed
     ]
   );
 

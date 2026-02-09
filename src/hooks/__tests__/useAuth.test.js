@@ -13,7 +13,9 @@ import { useAuth } from "../useAuth";
 vi.mock("firebase/auth", () => ({
   onIdTokenChanged: vi.fn(),
   getAuth: vi.fn(() => ({})),
-  GoogleAuthProvider: class MockGoogleAuthProvider {},
+  GoogleAuthProvider: class {
+    setCustomParameters() {}
+  },
   signInWithPopup: vi.fn(),
   signOut: vi.fn(),
 }));
