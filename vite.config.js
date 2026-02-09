@@ -171,12 +171,6 @@ export default defineConfig({
             "./src/agents/sessionAgent.js",
           ],
 
-          // Portkey service (~15 KB) - only loaded when Portkey mode active
-          "portkey-service": [
-            "./src/services/portkey.js",
-            "./src/services/portkeySecure.js",
-          ],
-
           // Core UI - QuestionList only (QuestionItem loads naturally)
           "ui-core": ["./src/components/QuestionList.jsx"],
 
