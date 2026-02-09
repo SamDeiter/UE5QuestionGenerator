@@ -19,7 +19,7 @@ describe("Security: Bundle Secret Detection", () => {
     const files = readdirSync(distDir).filter((f) => f.endsWith(".js"));
     const geminiKeyPattern = /AIza[A-Za-z0-9_-]{35}/g;
     const allowedKeys = [
-      "AIzaSyBLC5QzwPMY1qqqle9zrTJYMHyZbEtnDMI", // Firebase public key (SAFE)
+      "AIzaSyDHtXGk_e5ntXOqTBAr5whLnVU8LaWsqOQ", // Firebase public key (SAFE - from .env.production)
     ];
 
     for (const file of files) {
@@ -85,7 +85,7 @@ describe("Security: Bundle Secret Detection", () => {
     expect(uniqueKeys.length).toBeLessThanOrEqual(1);
 
     if (uniqueKeys.length === 1) {
-      expect(uniqueKeys[0]).toBe("AIzaSyBLC5QzwPMY1qqqle9zrTJYMHyZbEtnDMI");
+      expect(uniqueKeys[0]).toBe("AIzaSyDHtXGk_e5ntXOqTBAr5whLnVU8LaWsqOQ");
     }
   });
 });
