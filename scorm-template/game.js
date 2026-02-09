@@ -335,6 +335,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return shuffled;
   }
 
+  // Helper: normalize text for True/False detection
+  // Handles variants like "True.", " True ", "TRUE", "true" etc.
+  const normalizeTF = (text) =>
+    (text || "").trim().replace(/\.$/, "").toLowerCase();
+
   /**
    * Shuffle answer choices for a question
    * Labels (A/B/C/D) stay fixed, content is randomized
@@ -343,25 +348,33 @@ document.addEventListener("DOMContentLoaded", () => {
    * @returns {Array} Shuffled choices array
    */
   function shuffleChoices(choices) {
-    if (!config.shuffleChoices || !choices || choices.length <= 1) {
+    if (!choices || choices.length <= 1) {
       return choices;
     }
 
-    // Detect True/False questions - never shuffle these
+    // normalizeTF is defined at module scope above
+
+    // Detect True/False questions - ALWAYS enforce True-first ordering
+    // regardless of whether shuffle is enabled
     const isTrueFalse =
       choices.length === 2 &&
-      choices.some((c) => c.text.toLowerCase() === "true") &&
-      choices.some((c) => c.text.toLowerCase() === "false");
+      choices.some((c) => normalizeTF(c.text) === "true") &&
+      choices.some((c) => normalizeTF(c.text) === "false");
 
     if (isTrueFalse) {
       // Ensure True is always first, False second (standard convention)
       return [...choices].sort((a, b) => {
-        const aIsTrue = a.text.toLowerCase() === "true";
-        const bIsTrue = b.text.toLowerCase() === "true";
+        const aIsTrue = normalizeTF(a.text) === "true";
+        const bIsTrue = normalizeTF(b.text) === "true";
         if (aIsTrue && !bIsTrue) return -1;
         if (!aIsTrue && bIsTrue) return 1;
         return 0;
       });
+    }
+
+    // For non-T/F questions, only shuffle if enabled
+    if (!config.shuffleChoices) {
+      return choices;
     }
 
     return shuffleArray(choices);
@@ -685,8 +698,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const isTrueFalse =
       question.type === "True/False" ||
       (shuffledChoices.length === 2 &&
-        shuffledChoices.some((c) => c.text.toLowerCase() === "true") &&
-        shuffledChoices.some((c) => c.text.toLowerCase() === "false"));
+        shuffledChoices.some((c) => normalizeTF(c.text) === "true") &&
+        shuffledChoices.some((c) => normalizeTF(c.text) === "false"));
 
     const labels = ["A", "B", "C", "D", "E", "F", "G", "H"]; // Support up to 8 choices
 
