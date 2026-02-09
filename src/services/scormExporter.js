@@ -199,14 +199,16 @@ export function convertQuestionToScormFormat(question) {
 
   // CRITICAL: Always sort True/False choices so True is first, False second.
   // This is belt-and-suspenders with game.js shuffleChoices() sorting.
+  // Use trimmed, period-stripped comparison for robust matching
+  const normTF = (t) => (t || "").trim().replace(/\.$/, "").toLowerCase();
   if (
     scormChoices.length === 2 &&
-    scormChoices.some((c) => c.text.toLowerCase() === "true") &&
-    scormChoices.some((c) => c.text.toLowerCase() === "false")
+    scormChoices.some((c) => normTF(c.text) === "true") &&
+    scormChoices.some((c) => normTF(c.text) === "false")
   ) {
     scormChoices.sort((a, b) => {
-      if (a.text.toLowerCase() === "true") return -1;
-      if (b.text.toLowerCase() === "true") return 1;
+      if (normTF(a.text) === "true") return -1;
+      if (normTF(b.text) === "true") return 1;
       return 0;
     });
   }
