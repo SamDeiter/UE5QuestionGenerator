@@ -355,9 +355,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (isTrueFalse) {
       // Ensure True is always first, False second (standard convention)
-      return [...choices].sort((a) =>
-        a.text.toLowerCase() === "true" ? -1 : 1
-      );
+      return [...choices].sort((a, b) => {
+        const aIsTrue = a.text.toLowerCase() === "true";
+        const bIsTrue = b.text.toLowerCase() === "true";
+        if (aIsTrue && !bIsTrue) return -1;
+        if (!aIsTrue && bIsTrue) return 1;
+        return 0;
+      });
     }
 
     return shuffleArray(choices);
@@ -687,11 +691,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const labels = ["A", "B", "C", "D", "E", "F", "G", "H"]; // Support up to 8 choices
 
     // Get appropriate label for choice
-    const getLabel = (index, choiceText) => {
-      if (isTrueFalse) {
-        // Use T/F labels for True/False questions (case-insensitive comparison)
-        return choiceText.toLowerCase() === "true" ? "T" : "F";
-      }
+    const getLabel = (index) => {
       return labels[index] || String(index + 1);
     };
 
@@ -707,7 +707,7 @@ document.addEventListener("DOMContentLoaded", () => {
               data-index="${index}"
               data-correct="${choice.correct}"
             >
-              <span class="inline-block w-8 h-8 mr-3 bg-slate-600 rounded text-center leading-8 font-bold text-blue-300">${getLabel(index, choice.text)}</span>
+              ${isTrueFalse ? "" : `<span class="inline-block w-8 h-8 mr-3 bg-slate-600 rounded text-center leading-8 font-bold text-blue-300">${getLabel(index)}</span>`}
               <span class="font-semibold">${choice.text}</span>
             </button>
           `
