@@ -58,12 +58,12 @@ const QuizQuestion = ({
           {Object.entries(options)
             .sort(([, textA], [, textB]) => {
               // For True/False: ensure True is always first, False always last
-              const aLower = textA.toLowerCase();
-              const bLower = textB.toLowerCase();
-              if (aLower === "true" || aLower === "true.") return -1;
-              if (bLower === "true" || bLower === "true.") return 1;
-              if (aLower === "false" || aLower === "false.") return 1;
-              if (bLower === "false" || bLower === "false.") return -1;
+              const aLower = textA.toLowerCase().replace(/\.$/, "");
+              const bLower = textB.toLowerCase().replace(/\.$/, "");
+              const aIsTrue = aLower === "true";
+              const bIsTrue = bLower === "true";
+              if (aIsTrue && !bIsTrue) return -1;
+              if (!aIsTrue && bIsTrue) return 1;
               // Fallback to alphabetical for other options
               return aLower.localeCompare(bLower);
             })
