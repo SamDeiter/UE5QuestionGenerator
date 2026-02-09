@@ -99,6 +99,8 @@ import {
   X,
   XCircle,
   Zap,
+  ClipboardCheck,
+  ShieldX,
 } from "lucide-react";
 import { logger } from "../utils/logger";
 
@@ -204,6 +206,8 @@ const ICON_MAP = {
   x: X,
   "x-circle": XCircle,
   zap: Zap,
+  "clipboard-check": ClipboardCheck,
+  "shield-x": ShieldX,
 };
 
 const DEFAULT_ICON_SIZE = 16;

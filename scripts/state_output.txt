@@ -1,0 +1,31 @@
+--- 20 Most Recently Modified Files ---
+2026-02-09 14:28:23 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\scripts\state_output.txt
+2026-02-09 14:28:05 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\scripts\investigate_state.py
+2026-02-09 14:25:31 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\AGENTS.md
+2026-02-09 13:51:03 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\test_results.txt
+2026-02-09 13:30:47 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\knip_baseline.txt
+2026-02-09 13:29:59 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\__tests__\InviteSignUp.test.jsx
+2026-02-09 13:29:39 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\invite_err.txt
+2026-02-09 13:29:39 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\invite_out.txt
+2026-02-09 13:26:39 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\__tests__\useAuth.integration.test.js
+2026-02-09 13:26:39 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\__tests__\useAuth.test.js
+2026-02-09 13:26:39 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\__tests__\feedbackLoop.integration.test.jsx
+2026-02-09 13:26:31 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\fix_tests.py
+2026-02-09 13:25:27 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\setupTests.js
+2026-02-09 13:18:47 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\smoke_err.txt
+2026-02-09 13:17:41 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useStatusActions.js
+2026-02-09 13:17:41 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\fieldSchemaCompatibility.test.js
+2026-02-09 13:03:06 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scorm-validator.test.js
+2026-02-09 13:02:46 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scorm-converter.test.js
+2026-02-09 13:02:21 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scorm-sanitize.test.js
+2026-02-09 13:01:04 | c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\dist\workbox-3f626378.js
+
+--- Searching for InviteSignUp.test.jsx ---
+Found: c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\__tests__\InviteSignUp.test.jsx
+
+--- Searching for SCORM related tests ---
+Found: c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\docs\verification\SCORM_TEST_GUIDE.md
+Found: c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scorm-converter.test.js
+Found: c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scorm-sanitize.test.js
+Found: c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scorm-validator.test.js
+Found: c:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\__tests__\scormExporter.test.js

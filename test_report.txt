@@ -1,0 +1,30 @@
+
+ RUN  v4.0.17 C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator
+
+ Γ£ô src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should translate a question to target language 146ms
+stderr | src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should handle translation errors gracefully
+Γ¥î [19:38:25] [UNKNOWN] Translation failed { operation: 'translateSingle', questionId: 123, targetLang: 'Korean' }
+Γ¥î [19:38:25] Stack trace: Error: Translation failed
+    at Module.simulateError (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/mocks/gemini.mock.js:239:41)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/translation.integration.test.jsx:234:18
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+
+ Γ£ô src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should preserve question metadata during translation 125ms
+ Γ£ô src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should handle translation errors gracefully 11ms
+ Γ£ô src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Bulk Translation > should translate multiple questions to target languages 328ms
+ Γ£ô src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Bulk Translation > should skip already translated questions 237ms
+ Γ£ô src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Bulk Translation > should show progress during bulk translation 347ms
+ Γ£ô src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Bulk Translation > should not translate rejected questions 17ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  14:38:23
+   Duration  2.92s (transform 325ms, setup 141ms, import 486ms, tests 1.21s, environment 859ms)
+

@@ -1,0 +1,654 @@
+Not implemented: Window's open() method
+Not implemented: Window's open() method
+stderr | src/utils/__tests__/normalizeQuestion.test.js > normalizeQuestion > normalizeQuestion > returns null for invalid input
+ΓÜá∩╕Å [19:30:02] normalizeQuestion received invalid input: null
+ΓÜá∩╕Å [19:30:02] normalizeQuestion received invalid input: undefined
+ΓÜá∩╕Å [19:30:02] normalizeQuestion received invalid input: string
+
+stderr | src/utils/__tests__/normalizeQuestion.test.js > normalizeQuestion > normalizeQuestions > filters out null entries from invalid inputs
+ΓÜá∩╕Å [19:30:02] normalizeQuestion received invalid input: null
+
+stderr | src/utils/__tests__/normalizeQuestion.test.js > normalizeQuestion > normalizeQuestions > returns empty array for non-array input
+ΓÜá∩╕Å [19:30:02] normalizeQuestions received non-array: null
+ΓÜá∩╕Å [19:30:02] normalizeQuestions received non-array: string
+
+stderr | src/services/__tests__/firestore.rules.test.js > Firestore Rules - User Profile Access
+ΓÜá∩╕Å Firestore Emulator not running on port 8080. Run: firebase emulators:start --only firestore
+
+stderr | src/services/__tests__/firestore.rules.test.js > Firestore Rules - Smoke Tests
+ΓÜá∩╕Å Skipping smoke tests - emulator not running
+
+stderr | src/utils/__tests__/authHealthCheck.test.js > authHealthCheck > runAuthHealthCheck with user > returns unhealthy when token refresh fails
+Γ¥î [19:30:02] Γ¥î [AuthHealthCheck] Token refresh failed: Error: 403 Forbidden
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/utils/__tests__/authHealthCheck.test.js:57:28
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:915:20
+
+stderr | src/utils/__tests__/authHealthCheck.test.js > authHealthCheck > runAuthHealthCheck with user > detects blocked requests from ad blockers
+Γ¥î [19:30:02] Γ¥î [AuthHealthCheck] Token refresh failed: Error: Failed to fetch
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/utils/__tests__/authHealthCheck.test.js:71:28
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:915:20
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Rendering > renders the modal with header
+ΓÜá∩╕Å [19:30:02] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Rendering > displays the source excerpt
+ΓÜá∩╕Å [19:30:02] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Rendering > shows Epic Documentation button when URL is valid
+ΓÜá∩╕Å [19:30:02] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Rendering > shows Search Excerpt button
+ΓÜá∩╕Å [19:30:02] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Rendering > shows three outcome buttons
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Rendering > shows Cancel button
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Open Source Buttons > shows checkmark after Epic Docs button clicked
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Open Source Buttons > shows checkmark and clipboard message after Search button clicked
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Verification Outcomes > calls onVerifyDocs with click tracking when 'Found in Epic Docs' clicked
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Verification Outcomes > calls onVerifySearch with click tracking when 'Found in Google Search' clicked
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Initial Render > renders invite code input field
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Verification Outcomes > shows rejection menu when 'Cannot Verify' clicked
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/hooks/helpers/__tests__/questionManagerHelpers.test.js > questionManagerHelpers > validateDocumentId > should convert numeric IDs to strings
+ΓÜá∩╕Å [19:30:03] Converting numeric ID to string: 12345
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Verification Outcomes > calls onReject with reason when rejection reason selected
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Modal Dismiss > calls onDismiss when Cancel button clicked
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Modal Dismiss > calls onDismiss when backdrop clicked
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Invalid URL Handling > shows disabled button when URL is invalid
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Invalid URL Handling > shows disabled button when URL is missing
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should translate a question to target language
+Γ¥î [19:30:03] [UNKNOWN] Unexpected token '|', "| ID | Dis"... is not valid JSON {
+  operation: 'parseTranslationJSON',
+  targetLang: 'Chinese (Simplified)'
+}
+Γ¥î [19:30:03] Stack trace: SyntaxError: Unexpected token '|', "| ID | Dis"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Object.handleTranslateSingle (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionTranslation.js:62:33)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/translation.integration.test.jsx:147:9
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Flag Unverified Feature > shows flag unverified button in rejection menu
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Flag Unverified Feature > calls onFlagUnverified when flag button clicked
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/VerifyConfirmModal.test.jsx > VerifyConfirmModal > Flag Unverified Feature > flag option appears before rejection reasons
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+ΓÜá∩╕Å [19:30:03] Icon "clipboard-check" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Initial Render > renders validate button initially
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/utils/__tests__/secureStorage.test.js > secureStorage > getSecureItem > returns null for invalid JSON
+ΓÜá∩╕Å [19:30:03] Could not parse invalid, returning null
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Initial Render > renders cancel button when onCancel is provided
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should preserve question metadata during translation
+Γ¥î [19:30:03] [UNKNOWN] Unexpected token '|', "| ID | Dis"... is not valid JSON { operation: 'parseTranslationJSON', targetLang: 'Japanese' }
+Γ¥î [19:30:03] Stack trace: SyntaxError: Unexpected token '|', "| ID | Dis"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Object.handleTranslateSingle (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionTranslation.js:62:33)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/translation.integration.test.jsx:211:9
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Initial Render > does not render cancel button when onCancel is not provided
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should handle translation errors gracefully
+Γ¥î [19:30:03] [UNKNOWN] Translation failed { operation: 'translateSingle', questionId: 123, targetLang: 'Korean' }
+Γ¥î [19:30:03] Stack trace: Error: Translation failed
+    at Module.simulateError (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/mocks/gemini.mock.js:239:41)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/translation.integration.test.jsx:232:18
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > URL Invite Code Detection > auto-populates invite code from URL
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > URL Invite Code Detection > auto-populates invite code from URL
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > URL Invite Code Detection > auto-validates invite code from URL
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > URL Invite Code Detection > auto-validates invite code from URL
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > converts input to uppercase
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > converts input to uppercase
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > converts input to uppercase
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > converts input to uppercase
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > converts input to uppercase
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/hooks/__tests__/useAuth.test.js > useAuth > Auth Race Conditions (QA Blind Spot) > CRITICAL: authLoading becomes false only after auth settles
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\node_modules\@testing-library\react\dist\pure.js:329:5)
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > converts input to uppercase
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > converts input to uppercase
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > converts input to uppercase
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > converts input to uppercase
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > converts input to uppercase
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/__tests__/questionGeneration.integration.test.jsx > Question Generation Integration Tests > Question Variations > should generate critique for question
+Γ¥î [19:30:03] [Critique] Failed to save critique results to Firestore: TypeError: googleProvider.setCustomParameters is not a function
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/services/firebaseAuth.js:45:16
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at VitestModuleEvaluator._runInlinedModule (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/module-evaluator.js:197:4)
+    at VitestModuleRunner.directRequest (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vite/dist/node/module-runner.js:1146:59)
+    at VitestModuleRunner.cachedRequest (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vite/dist/node/module-runner.js:1053:73)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/services/firebase.js:10:1
+    at VitestModuleEvaluator._runInlinedModule (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/module-evaluator.js:197:4)
+    at VitestModuleRunner.directRequest (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vite/dist/node/module-runner.js:1146:59)
+    at VitestModuleRunner.cachedRequest (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vite/dist/node/module-runner.js:1053:73)
+    at Object.handleCritique (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionCritique.js:224:13)
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Input Handling > disables input after successful validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:03] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows loading state during validation
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows success message for valid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows error message for invalid invite
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:04] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Validation Flow > shows rate limit error when exceeded
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows Google sign-in button after valid invite
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > calls onSuccess after successful sign-in and invite consumption
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:05] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Authentication Flow > shows error when authentication fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+Γ¥î [19:30:06] Failed to sign in with Google: Error: Auth cancelled
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/__tests__/InviteSignUp.test.jsx:316:51
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+    at runTest (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1653:12)
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Cancel Flow > calls onCancel when cancel button is clicked
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input has proper aria-labels
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+
+stderr | src/components/__tests__/InviteSignUp.test.jsx > InviteSignUp Component > Accessibility > input shows aria-invalid when validation fails
+ΓÜá∩╕Å [19:30:06] Icon "shield-x" not found in refactored ICON_MAP. Please add it.
+

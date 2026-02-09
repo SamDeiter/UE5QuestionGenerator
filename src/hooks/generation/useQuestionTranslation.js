@@ -58,8 +58,12 @@ export const useQuestionTranslation = ({
         // Attempt to parse JSON response
         let translatedData = null;
         try {
-          const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
-          translatedData = JSON.parse(cleanText);
+          // Skip parsing if it looks like a markdown table (starts with |)
+          const looksLikeTable = text.trim().startsWith("|");
+          if (!looksLikeTable) {
+            const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
+            translatedData = JSON.parse(cleanText);
+          }
         } catch (e) {
           logError(e, { operation: "parseTranslationJSON", targetLang });
         }
@@ -214,8 +218,12 @@ export const useQuestionTranslation = ({
 
         let translatedData = null;
         try {
-          const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
-          translatedData = JSON.parse(cleanText);
+          // Skip parsing if it looks like a markdown table (starts with |)
+          const looksLikeTable = text.trim().startsWith("|");
+          if (!looksLikeTable) {
+            const cleanText = text.replace(/```json\n?|\n?```/g, "").trim();
+            translatedData = JSON.parse(cleanText);
+          }
         } catch {
           // ignore
         }

@@ -1,0 +1,1187 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.17 [39m[90mC:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator[39m
+
+ [32mΓ£ô[39m src/utils/__tests__/nameValidation.test.js [2m([22m[2m31 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/stringHelpers.test.js [2m([22m[2m34 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/tagTaxonomy.test.js [2m([22m[2m18 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32mΓ£ô[39m tests/security/bundle-secrets.test.js [2m([22m[2m4 tests[22m[2m)[22m[32m 84[2mms[22m[39m
+[90mstdout[2m | src/utils/__tests__/exportUtils.test.js[2m > [22m[2mexportUtils[2m > [22m[2mgetCSVContent[2m > [22m[2mhandles missing optional fields
+[22m[39m≡ƒô¥ [19:30:02] DEBUG CSV ROW: "1","u1","Tech Art","Multiple Choice","Easy","Q1","A","B","","","A","2026-02-09","","Excerpt","Unknown","No","","","Sam","Rev","English","","","","pending","",""
+
+ [32mΓ£ô[39m src/utils/__tests__/exportUtils.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 68[2mms[22m[39m
+[90mstdout[2m | functions/test/identityLifecycle.test.js
+[22m[39mΓ£à Identity Lifecycle tests defined. Run with: cd functions && npm test
+
+ [32mΓ£ô[39m src/utils/__tests__/constants.test.js [2m([22m[2m20 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useToast.test.js [2m([22m[2m22 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32mΓ£ô[39m functions/test/identityLifecycle.test.js [2m([22m[2m18 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/permissionRegression.test.js [2m([22m[2m14 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/analyticsStore.test.js [2m([22m[2m19 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32mΓ£ô[39m src/data/parsers/__tests__/parseQuestion.test.js [2m([22m[2m20 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/googleSheets.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/quizUtils.test.js [2m([22m[2m15 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+[90mstdout[2m | src/services/__tests__/scorm-sanitize.test.js[2m > [22m[2mscorm/sanitize[2m > [22m[2mfilterEnglishQuestions[2m > [22m[2mfilters non-English questions
+[22m[39mΓä╣∩╕Å [19:30:02] Skipping non-English question: δéÿδéÿ∞¥┤φè╕δ₧Ç δ¼┤∞ùç∞¥╕Ω░Ç?...
+Γä╣∩╕Å [19:30:02] Filtered out 1 non-English question(s)
+
+ [32mΓ£ô[39m src/utils/__tests__/questionHistory.test.js [2m([22m[2m17 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/toastEvents.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+[90mstdout[2m | src/services/__tests__/scorm-validator.test.js[2m > [22m[2mscorm/validator[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mreturns valid for well-formed questions (current format)
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mtrue[39m,
+  optionsType: [32m'object'[39m,
+  optionsKeys: [ [32m'a'[39m, [32m'b'[39m ],
+  hasCorrect: [33mtrue[39m,
+  hasCorrectAnswer: [33mfalse[39m,
+  correct: [32m'a'[39m,
+  questionPreview: [32m'What is Nanite?'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scorm-validator.test.js[2m > [22m[2mscorm/validator[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mwarns when less than 5 questions
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mtrue[39m,
+  optionsType: [32m'object'[39m,
+  optionsKeys: [ [32m'a'[39m, [32m'b'[39m ],
+  hasCorrect: [33mtrue[39m,
+  hasCorrectAnswer: [33mfalse[39m,
+  correct: [32m'a'[39m,
+  questionPreview: [32m'What is Nanite?'[39m
+}
+
+ [32mΓ£ô[39m src/hooks/__tests__/useAppConfig.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32mΓ£ô[39m src/components/AnalyticsDashboard/__tests__/SharedChartComponents.test.jsx [2m([22m[2m36 tests[22m[2m)[22m[32m 68[2mms[22m[39m
+[90mstdout[2m | src/utils/__tests__/csrf.test.js[2m > [22m[2mcsrf[2m > [22m[2mgetCSRFToken[2m > [22m[2mreturns a string token
+[22m[39m≡ƒô¥ [19:30:02] [CSRF] Token generated
+
+[90mstdout[2m | src/services/__tests__/scorm-validator.test.js[2m > [22m[2mscorm/validator[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mwarns when more than 100 questions
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mtrue[39m,
+  optionsType: [32m'object'[39m,
+  optionsKeys: [ [32m'a'[39m, [32m'b'[39m ],
+  hasCorrect: [33mtrue[39m,
+  hasCorrectAnswer: [33mfalse[39m,
+  correct: [32m'a'[39m,
+  questionPreview: [32m'Question 0'[39m
+}
+
+ [32mΓ£ô[39m src/services/__tests__/scorm-sanitize.test.js [2m([22m[2m23 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/rateLimitState.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/tokenCounter.test.js [2m([22m[2m19 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/themeColors.test.js [2m([22m[2m27 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/validation.test.js [2m([22m[2m24 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/normalizeQuestion.test.js [2m([22m[2m23 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+[90mstdout[2m | src/utils/__tests__/csrf.test.js[2m > [22m[2mcsrf[2m > [22m[2mrefreshCSRFToken[2m > [22m[2mreturns a new token
+[22m[39m≡ƒô¥ [19:30:02] [CSRF] Token refreshed
+
+[90mstdout[2m | src/services/__tests__/scorm-converter.test.js[2m > [22m[2mscorm/converter[2m > [22m[2mconvertQuestionToScormFormat[2m > [22m[2mTrue/False handling[2m > [22m[2mfilters T/F questions with 4+ choices to only 2
+[22m[39mΓä╣∩╕Å [19:30:02] Fixed T/F question "Test T/F question..." - filtered from 4 to 2 choices
+
+[90mstdout[2m | src/services/__tests__/scorm-validator.test.js[2m > [22m[2mscorm/validator[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2merrors on missing question text
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mfalse[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mtrue[39m,
+  optionsType: [32m'object'[39m,
+  optionsKeys: [ [32m'a'[39m, [32m'b'[39m ],
+  hasCorrect: [33mtrue[39m,
+  hasCorrectAnswer: [33mfalse[39m,
+  correct: [32m'a'[39m,
+  questionPreview: [32m''[39m
+}
+
+ [32mΓ£ô[39m src/utils/__tests__/quotaEnforcement.test.js [2m([22m[2m18 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+[90mstdout[2m | src/utils/__tests__/csrf.test.js[2m > [22m[2mcsrf[2m > [22m[2mrefreshCSRFToken[2m > [22m[2mnew token validates
+[22m[39m≡ƒô¥ [19:30:02] [CSRF] Token refreshed
+
+[90mstdout[2m | src/services/__tests__/scorm-validator.test.js[2m > [22m[2mscorm/validator[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2merrors on missing choices
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mtrue[39m,
+  hasCorrectAnswer: [33mfalse[39m,
+  correct: [32m'a'[39m,
+  questionPreview: [32m'What?'[39m
+}
+
+[90mstdout[2m | src/utils/__tests__/authHealthCheck.test.js[2m > [22m[2mauthHealthCheck[2m > [22m[2mrunAuthHealthCheck[2m > [22m[2mreturns healthy status when no user is logged in
+[22m[39m≡ƒô¥ [19:30:02] ≡ƒÅÑ [AuthHealthCheck] Starting auth health check...
+≡ƒô¥ [19:30:02] ≡ƒÅÑ [AuthHealthCheck] No user logged in - skipping token test
+
+ [32mΓ£ô[39m src/utils/__tests__/sanitize.test.js [2m([22m[2m16 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+[90mstdout[2m | src/utils/__tests__/csrf.test.js[2m > [22m[2mcsrf[2m > [22m[2mrefreshCSRFToken[2m > [22m[2mold token no longer validates after refresh
+[22m[39m≡ƒô¥ [19:30:02] [CSRF] Token refreshed
+
+[90mstdout[2m | src/services/__tests__/scorm-validator.test.js[2m > [22m[2mscorm/validator[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2merrors on missing correct answer
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mtrue[39m,
+  optionsType: [32m'object'[39m,
+  optionsKeys: [ [32m'a'[39m, [32m'b'[39m ],
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mfalse[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'What?'[39m
+}
+
+[90mstdout[2m | src/utils/__tests__/authHealthCheck.test.js[2m > [22m[2mauthHealthCheck[2m > [22m[2mrunAuthHealthCheck with user[2m > [22m[2mreturns healthy with tokenRefreshOk when token refresh succeeds
+[22m[39m≡ƒô¥ [19:30:02] ≡ƒÅÑ [AuthHealthCheck] Starting auth health check...
+≡ƒô¥ [19:30:02] ≡ƒÅÑ [AuthHealthCheck] Testing token refresh...
+
+[90mstdout[2m | src/utils/__tests__/tutorialAnalytics.test.js[2m > [22m[2mtutorialAnalytics[2m > [22m[2mlogTutorialEvent[2m > [22m[2mlogs event to localStorage
+[22m[39m≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_started'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.465Z'[39m,
+  scenarioId: [32m'demo'[39m
+}
+
+ [32mΓ£ô[39m src/components/analytics/__tests__/StatCard.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/scorm-converter.test.js [2m([22m[2m13 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+[90mstdout[2m | src/services/__tests__/scorm-validator.test.js[2m > [22m[2mscorm/validator[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2merrors when legacy correctAnswer not in choices
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'Test'[39m
+}
+
+ [32mΓ£ô[39m src/utils/__tests__/helpers.test.js [2m([22m[2m14 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+[90mstdout[2m | src/utils/__tests__/authHealthCheck.test.js[2m > [22m[2mauthHealthCheck[2m > [22m[2mrunAuthHealthCheck with user[2m > [22m[2mreturns healthy with tokenRefreshOk when token refresh succeeds
+[22m[39m≡ƒô¥ [19:30:02] Γ£à [AuthHealthCheck] Token refresh successful
+≡ƒô¥ [19:30:02] ≡ƒÅÑ [AuthHealthCheck] Complete in 1ms. Healthy: true
+
+[90mstdout[2m | src/utils/__tests__/tutorialAnalytics.test.js[2m > [22m[2mtutorialAnalytics[2m > [22m[2mlogTutorialEvent[2m > [22m[2mincludes timestamp
+[22m[39m≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_started'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.468Z'[39m,
+  scenarioId: [32m'demo'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scorm-validator.test.js[2m > [22m[2mscorm/validator[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mreturns questionCount in result
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mtrue[39m,
+  optionsType: [32m'object'[39m,
+  optionsKeys: [ [32m'a'[39m, [32m'b'[39m ],
+  hasCorrect: [33mtrue[39m,
+  hasCorrectAnswer: [33mfalse[39m,
+  correct: [32m'a'[39m,
+  questionPreview: [32m'Test'[39m
+}
+
+[90mstdout[2m | src/utils/__tests__/authHealthCheck.test.js[2m > [22m[2mauthHealthCheck[2m > [22m[2mrunAuthHealthCheck with user[2m > [22m[2mreturns unhealthy when token refresh fails
+[22m[39m≡ƒô¥ [19:30:02] ≡ƒÅÑ [AuthHealthCheck] Starting auth health check...
+≡ƒô¥ [19:30:02] ≡ƒÅÑ [AuthHealthCheck] Testing token refresh...
+
+[90mstdout[2m | src/utils/__tests__/tutorialAnalytics.test.js[2m > [22m[2mtutorialAnalytics[2m > [22m[2mlogTutorialEvent[2m > [22m[2mpreserves payload data
+[22m[39m≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.469Z'[39m,
+  scenarioId: [32m'demo'[39m,
+  stepId: [32m'step1'[39m,
+  stepIndex: [33m0[39m
+}
+
+ [32mΓ£ô[39m src/utils/__tests__/csrf.test.js [2m([22m[2m12 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+[90mstdout[2m | src/services/__tests__/scorm-validator.test.js[2m > [22m[2mscorm/validator[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mvalidates legacy format (questionText + choices)
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mfalse[39m,
+  hasQuestionText: [33mtrue[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'Legacy question'[39m
+}
+
+ [32mΓ£ô[39m src/services/__tests__/firestore.rules.test.js [2m([22m[2m15 tests[22m[2m | [22m[33m15 skipped[39m[2m)[22m[32m 21[2mms[22m[39m
+[90mstdout[2m | src/utils/__tests__/tutorialAnalytics.test.js[2m > [22m[2mtutorialAnalytics[2m > [22m[2mlogTutorialEvent[2m > [22m[2mlimits to 100 events
+[22m[39m≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.469Z'[39m,
+  stepIndex: [33m0[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.470Z'[39m,
+  stepIndex: [33m1[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.470Z'[39m,
+  stepIndex: [33m2[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.470Z'[39m,
+  stepIndex: [33m3[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.470Z'[39m,
+  stepIndex: [33m4[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.470Z'[39m,
+  stepIndex: [33m5[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.471Z'[39m,
+  stepIndex: [33m6[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.471Z'[39m,
+  stepIndex: [33m7[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.471Z'[39m,
+  stepIndex: [33m8[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.471Z'[39m,
+  stepIndex: [33m9[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.471Z'[39m,
+  stepIndex: [33m10[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.471Z'[39m,
+  stepIndex: [33m11[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.471Z'[39m,
+  stepIndex: [33m12[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m13[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m14[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m15[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m16[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m17[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m18[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m19[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m20[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m21[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m22[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m23[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m24[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m25[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m26[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m27[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m28[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.472Z'[39m,
+  stepIndex: [33m29[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m30[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m31[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m32[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m33[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m34[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m35[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m36[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m37[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m38[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m39[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m40[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m41[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m42[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m43[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m44[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.473Z'[39m,
+  stepIndex: [33m45[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m46[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m47[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m48[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m49[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m50[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m51[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m52[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m53[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m54[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m55[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m56[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m57[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.474Z'[39m,
+  stepIndex: [33m58[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m59[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m60[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m61[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m62[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m63[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m64[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m65[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m66[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m67[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m68[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m69[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m70[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.475Z'[39m,
+  stepIndex: [33m71[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.476Z'[39m,
+  stepIndex: [33m72[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.476Z'[39m,
+  stepIndex: [33m73[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.476Z'[39m,
+  stepIndex: [33m74[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.476Z'[39m,
+  stepIndex: [33m75[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.476Z'[39m,
+  stepIndex: [33m76[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.476Z'[39m,
+  stepIndex: [33m77[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.476Z'[39m,
+  stepIndex: [33m78[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.476Z'[39m,
+  stepIndex: [33m79[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.476Z'[39m,
+  stepIndex: [33m80[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.476Z'[39m,
+  stepIndex: [33m81[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.476Z'[39m,
+  stepIndex: [33m82[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.477Z'[39m,
+  stepIndex: [33m83[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.477Z'[39m,
+  stepIndex: [33m84[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.477Z'[39m,
+  stepIndex: [33m85[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.477Z'[39m,
+  stepIndex: [33m86[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.477Z'[39m,
+  stepIndex: [33m87[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.477Z'[39m,
+  stepIndex: [33m88[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.477Z'[39m,
+  stepIndex: [33m89[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.477Z'[39m,
+  stepIndex: [33m90[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.477Z'[39m,
+  stepIndex: [33m91[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.477Z'[39m,
+  stepIndex: [33m92[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.477Z'[39m,
+  stepIndex: [33m93[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.478Z'[39m,
+  stepIndex: [33m94[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.478Z'[39m,
+  stepIndex: [33m95[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.478Z'[39m,
+  stepIndex: [33m96[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.478Z'[39m,
+  stepIndex: [33m97[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.478Z'[39m,
+  stepIndex: [33m98[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.478Z'[39m,
+  stepIndex: [33m99[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.478Z'[39m,
+  stepIndex: [33m100[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.478Z'[39m,
+  stepIndex: [33m101[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.478Z'[39m,
+  stepIndex: [33m102[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.479Z'[39m,
+  stepIndex: [33m103[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.479Z'[39m,
+  stepIndex: [33m104[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.479Z'[39m,
+  stepIndex: [33m105[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.479Z'[39m,
+  stepIndex: [33m106[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.479Z'[39m,
+  stepIndex: [33m107[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.479Z'[39m,
+  stepIndex: [33m108[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_step_changed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.479Z'[39m,
+  stepIndex: [33m109[39m
+}
+
+[90mstdout[2m | src/utils/__tests__/authHealthCheck.test.js[2m > [22m[2mauthHealthCheck[2m > [22m[2mrunAuthHealthCheck with user[2m > [22m[2mreturns unhealthy when token refresh fails
+[22m[39m≡ƒô¥ [19:30:02] ≡ƒÅÑ [AuthHealthCheck] Complete in 4ms. Healthy: false
+
+[90mstdout[2m | src/utils/__tests__/tutorialAnalytics.test.js[2m > [22m[2mtutorialAnalytics[2m > [22m[2mgetTutorialEvents[2m > [22m[2mreturns all logged events
+[22m[39m≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_started'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.481Z'[39m,
+  scenarioId: [32m'demo1'[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_completed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.481Z'[39m,
+  scenarioId: [32m'demo1'[39m
+}
+
+[90mstdout[2m | src/utils/__tests__/authHealthCheck.test.js[2m > [22m[2mauthHealthCheck[2m > [22m[2mrunAuthHealthCheck with user[2m > [22m[2mdetects blocked requests from ad blockers
+[22m[39m≡ƒô¥ [19:30:02] ≡ƒÅÑ [AuthHealthCheck] Starting auth health check...
+≡ƒô¥ [19:30:02] ≡ƒÅÑ [AuthHealthCheck] Testing token refresh...
+
+[90mstdout[2m | src/utils/__tests__/tutorialAnalytics.test.js[2m > [22m[2mtutorialAnalytics[2m > [22m[2mclearTutorialEvents[2m > [22m[2mremoves all events
+[22m[39m≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_started'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.482Z'[39m,
+  scenarioId: [32m'demo'[39m
+}
+
+ [32mΓ£ô[39m src/services/__tests__/scorm-validator.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+[90mstdout[2m | src/utils/__tests__/tutorialAnalytics.test.js[2m > [22m[2mtutorialAnalytics[2m > [22m[2mgetTutorialStats[2m > [22m[2mcounts starts and completions
+[22m[39m≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_started'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.483Z'[39m,
+  scenarioId: [32m'demo'[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_started'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.483Z'[39m,
+  scenarioId: [32m'demo'[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_completed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.483Z'[39m,
+  scenarioId: [32m'demo'[39m
+}
+
+[90mstdout[2m | src/utils/__tests__/authHealthCheck.test.js[2m > [22m[2mauthHealthCheck[2m > [22m[2mrunAuthHealthCheck with user[2m > [22m[2mdetects blocked requests from ad blockers
+[22m[39m≡ƒô¥ [19:30:02] ≡ƒÅÑ [AuthHealthCheck] Complete in 1ms. Healthy: false
+
+[90mstdout[2m | src/utils/__tests__/tutorialAnalytics.test.js[2m > [22m[2mtutorialAnalytics[2m > [22m[2mgetTutorialStats[2m > [22m[2mgroups by scenario
+[22m[39m≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_started'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.483Z'[39m,
+  scenarioId: [32m'demo1'[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_started'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.483Z'[39m,
+  scenarioId: [32m'demo2'[39m
+}
+≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_completed'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.484Z'[39m,
+  scenarioId: [32m'demo1'[39m
+}
+
+[90mstdout[2m | src/utils/__tests__/tutorialAnalytics.test.js[2m > [22m[2mtutorialAnalytics[2m > [22m[2mgetTutorialStats[2m > [22m[2mcounts element not found events
+[22m[39m≡ƒô¥ [19:30:02] [Tutorial Analytics] {
+  event: [32m'tutorial_element_not_found'[39m,
+  timestamp: [32m'2026-02-09T19:30:02.484Z'[39m,
+  scenarioId: [32m'demo'[39m,
+  stepId: [32m'step1'[39m
+}
+
+ [32mΓ£ô[39m src/utils/__tests__/authHealthCheck.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/usePendingCount.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/tutorialAnalytics.test.js [2m([22m[2m12 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useNavigationAfterLanguageSwitch.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/questionManager/__tests__/useQuestionDerivedData.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/questionManager/__tests__/useQuestionSync.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/firestoreSave.integration.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/AuthManager.test.js [2m([22m[2m27 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32mΓ£ô[39m src/services/firestore/__tests__/questionRepository.test.js [2m([22m[2m16 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useInviteFlow.test.js [2m([22m[2m4 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+[90mstdout[2m | src/services/__tests__/fieldSchemaCompatibility.test.js[2m > [22m[2mField Schema Compatibility[2m > [22m[2mValidator - Question Field Support[2m > [22m[2mCRITICAL: should validate 'question' field (Firestore format)
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'Valid question text'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/fieldSchemaCompatibility.test.js[2m > [22m[2mField Schema Compatibility[2m > [22m[2mValidator - Question Field Support[2m > [22m[2mshould validate legacy 'questionText' field
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mfalse[39m,
+  hasQuestionText: [33mtrue[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'Valid question text'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mconvertQuestionToScormFormat[2m > [22m[2mTrue/False Question Filtering (Regression)[2m > [22m[2mCRITICAL: should filter T/F question with 4 options to only 2 choices
+[22m[39mΓä╣∩╕Å [19:30:02] Fixed T/F question "Nanite uses mesh shaders...." - filtered from 4 to 2 choices
+
+[90mstdout[2m | src/services/__tests__/fieldSchemaCompatibility.test.js[2m > [22m[2mField Schema Compatibility[2m > [22m[2mValidator - Question Field Support[2m > [22m[2mshould reject when neither field exists
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mfalse[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m''[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mconvertQuestionToScormFormat[2m > [22m[2mTrue/False Question Filtering (Regression)[2m > [22m[2mCRITICAL: should handle T/F type variations
+[22m[39mΓä╣∩╕Å [19:30:02] Fixed T/F question "Lumen works on mobile...." - filtered from 4 to 2 choices
+
+[90mstdout[2m | src/services/__tests__/fieldSchemaCompatibility.test.js[2m > [22m[2mField Schema Compatibility[2m > [22m[2mValidation Error Detection[2m > [22m[2mshould detect all common validation errors
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mfalse[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m''[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mconvertQuestionToScormFormat[2m > [22m[2mTrue/False Question Filtering (Regression)[2m > [22m[2mshould handle T/F with legacy choices array format
+[22m[39mΓä╣∩╕Å [19:30:02] Fixed T/F question "Blueprint is visual scripting...." - filtered from 4 to 2 choices
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mCRITICAL: should validate Firestore questions with 'question' field
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'What is Nanite in Unreal Engine 5?'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mshould validate True/False questions
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m"Lumen is UE5's global illumination system."[39m
+}
+
+ [32mΓ£ô[39m src/services/__tests__/fieldSchemaCompatibility.test.js [2m([22m[2m13 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mshould validate legacy questions with 'questionText' field
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mfalse[39m,
+  hasQuestionText: [33mtrue[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'What is Nanite?'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mshould detect empty question text
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mfalse[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m''[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mshould detect missing question field entirely
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mfalse[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m''[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mshould detect insufficient choices
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'What is Nanite in Unreal Engine 5?'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mshould detect missing correct answer
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mfalse[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'What is Nanite in Unreal Engine 5?'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mshould detect correct answer not in choices
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'What is Nanite in Unreal Engine 5?'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mshould warn on low question count
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'What is Nanite in Unreal Engine 5?'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mvalidateQuestionsForExport[2m > [22m[2mshould validate multiple questions and report all errors
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'What is Nanite in Unreal Engine 5?'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mProduction Batch Validation[2m > [22m[2mshould handle 60+ questions (production quiz size)
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'What is Nanite in Unreal Engine 5?'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mProduction Batch Validation[2m > [22m[2mshould handle 200+ questions (full question bank)
+[22m[39mΓä╣∩╕Å [19:30:02] Sample question structure for validation: {
+  hasQuestion: [33mtrue[39m,
+  hasQuestionText: [33mfalse[39m,
+  hasOptions: [33mfalse[39m,
+  optionsType: [32m'undefined'[39m,
+  optionsKeys: [1mnull[22m,
+  hasCorrect: [33mfalse[39m,
+  hasCorrectAnswer: [33mtrue[39m,
+  correct: [90mundefined[39m,
+  questionPreview: [32m'What is Nanite in Unreal Engine 5?'[39m
+}
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mEnglish Language Filtering (Regression Tests)[2m > [22m[2mfilterEnglishQuestions[2m > [22m[2mCRITICAL: should filter out Korean questions
+[22m[39mΓä╣∩╕Å [19:30:02] Skipping non-English question: ∞û╕δª¼∞û╝ ∞ùö∞ºä 5∞¥ÿ δéÿδéÿ∞¥┤φè╕δ₧Ç δ¼┤∞ùç∞¥╕Ω░Ç∞Üö?...
+Γä╣∩╕Å [19:30:02] Filtered out 1 non-English question(s)
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mEnglish Language Filtering (Regression Tests)[2m > [22m[2mfilterEnglishQuestions[2m > [22m[2mCRITICAL: should filter out Japanese questions
+[22m[39mΓä╣∩╕Å [19:30:02] Skipping non-English question: Naniteπü¿πü»Σ╜òπüºπüÖπüï?...
+Γä╣∩╕Å [19:30:02] Filtered out 1 non-English question(s)
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mEnglish Language Filtering (Regression Tests)[2m > [22m[2mfilterEnglishQuestions[2m > [22m[2mCRITICAL: should filter out Chinese questions
+[22m[39mΓä╣∩╕Å [19:30:02] Skipping non-English question: Σ╗ÇΣ╣êµÿ»ΦÖÜσ╣╗σ╝òµôÄ5τÜäNanite?...
+Γä╣∩╕Å [19:30:02] Filtered out 1 non-English question(s)
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mEnglish Language Filtering (Regression Tests)[2m > [22m[2mfilterEnglishQuestions[2m > [22m[2mCRITICAL: should filter questions with non-Latin choices
+[22m[39mΓä╣∩╕Å [19:30:02] Skipping non-English question: What is Nanite in Unreal Engine 5?...
+Γä╣∩╕Å [19:30:02] Filtered out 1 non-English question(s)
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mEnglish Language Filtering (Regression Tests)[2m > [22m[2mfilterEnglishQuestions[2m > [22m[2mCRITICAL: should filter mixed language content
+[22m[39mΓä╣∩╕Å [19:30:02] Skipping non-English question: What is Nanite? δéÿδéÿ∞¥┤φè╕δ₧Ç δ¼┤∞ùç∞¥╕Ω░Ç∞Üö?...
+Γä╣∩╕Å [19:30:02] Filtered out 1 non-English question(s)
+
+[90mstdout[2m | src/services/__tests__/scormExporter.test.js[2m > [22m[2mSCORM Exporter Service[2m > [22m[2mEnglish Language Filtering (Regression Tests)[2m > [22m[2mfilterEnglishQuestions[2m > [22m[2mshould return empty array when all questions are non-English
+[22m[39mΓä╣∩╕Å [19:30:02] Skipping non-English question: ∞û╕δª¼∞û╝ ∞ùö∞ºä 5∞¥ÿ δéÿδéÿ∞¥┤φè╕δ₧Ç δ¼┤∞ùç∞¥╕Ω░Ç∞Üö?...
+Γä╣∩╕Å [19:30:02] Skipping non-English question: Naniteπü¿πü»Σ╜òπüºπüÖπüï?...
+Γä╣∩╕Å [19:30:02] Skipping non-English question: Σ╗ÇΣ╣êµÿ»ΦÖÜσ╣╗σ╝òµôÄ5τÜäNanite?...
+Γä╣∩╕Å [19:30:02] Filtered out 3 non-English question(s)
+
+ [32mΓ£ô[39m src/services/__tests__/scormExporter.test.js [2m([22m[2m52 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/questionManager/__tests__/useQuestionState.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 242[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/Footer.test.jsx [2m([22m[2m9 tests[22m[2m)[22m[33m 382[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/importExport.integration.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[32m 166[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useAuth.integration.test.js [2m([22m[2m9 tests[22m[2m)[22m[32m 125[2mms[22m[39m
+[90mstdout[2m | src/__tests__/feedbackLoop.integration.test.jsx[2m > [22m[2mFeedback Loop Integration Tests[2m > [22m[2mshould include rejected questions in the system prompt
+[22m[39m≡ƒô¥ [19:30:03] ≡ƒöì [geminiSecure] Checking authentication: {
+  isAuthenticated: [33mfalse[39m,
+  hasEffectiveKey: [33mtrue[39m,
+  effectiveKeyLength: [33m12[39m
+}
+≡ƒô¥ [19:30:03] Γ¥ô User not authenticated - using direct API
+≡ƒô¥ [19:30:03] ≡ƒôí Calling direct API with key: test-api-k...
+
+ [32mΓ£ô[39m src/components/__tests__/AppBanners.test.jsx [2m([22m[2m12 tests[22m[2m)[22m[32m 228[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/helpers/__tests__/questionManagerHelpers.test.js [2m([22m[2m18 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useQuestionManager.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/questionManager/__tests__/useQuestionActions.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/answerValidator.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+[90mstdout[2m | src/__tests__/feedbackLoop.integration.test.jsx[2m > [22m[2mFeedback Loop Integration Tests[2m > [22m[2mshould NOT include rejected questions from other disciplines
+[22m[39m≡ƒô¥ [19:30:03] ≡ƒöì [geminiSecure] Checking authentication: {
+  isAuthenticated: [33mfalse[39m,
+  hasEffectiveKey: [33mtrue[39m,
+  effectiveKeyLength: [33m12[39m
+}
+≡ƒô¥ [19:30:03] Γ¥ô User not authenticated - using direct API
+≡ƒô¥ [19:30:03] ≡ƒôí Calling direct API with key: test-api-k...
+
+ [32mΓ£ô[39m src/hooks/generation/__tests__/useQuestionGenerator.test.js [2m([22m[2m13 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/VerifyConfirmModal.test.jsx [2m([22m[2m19 tests[22m[2m)[22m[33m 430[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/LanguageControls.test.jsx [2m([22m[2m5 tests[22m[2m)[22m[33m 411[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/secureStorage.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/logger.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/feedbackLoop.integration.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[32m 258[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/CriticalUI.regression.test.jsx [2m([22m[2m11 tests[22m[2m)[22m[33m 371[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/googleSheets.integration.test.jsx [2m([22m[2m10 tests[22m[2m)[22m[33m 1636[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m should fetch CSV from valid Google Sheets URL [33m 335[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m should import from Sheets and re-export successfully [33m 358[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/Header.test.jsx [2m([22m[2m18 tests[22m[2m)[22m[33m 506[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/QuestionItem.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useAuth.test.js [2m([22m[2m10 tests[22m[2m)[22m[33m 730[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/generationUtils.test.js [2m([22m[2m14 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/questionGeneration.integration.test.jsx [2m([22m[2m9 tests[22m[2m)[22m[33m 635[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/questionFilters.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/metricsUtils.test.js [2m([22m[2m14 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | functions/test/invite.test.js
+[22m[39mΓ£à All invite system tests defined. Run with: npm test
+
+ [32mΓ£ô[39m src/services/firestore/__tests__/cacheManager.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mΓ£ô[39m functions/test/invite.test.js [2m([22m[2m25 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/contextOptimizer.test.js [2m([22m[2m14 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/fileProcessor.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstdout[2m | functions/test/security.test.js
+[22m[39mΓ£à Security tests defined. Run with: cd functions && npm test
+
+ [32mΓ£ô[39m src/services/firestore/__tests__/userRepository.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/diffUtils.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32mΓ£ô[39m functions/test/security.test.js [2m([22m[2m12 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/ContentSanitization.test.jsx [2m([22m[2m9 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstdout[2m | functions/test/epicEmployeeAccess.test.js
+[22m[39mΓ£à Epic Employee Access tests defined. Run with: cd functions && npm test
+
+ [32mΓ£ô[39m functions/test/epicEmployeeAccess.test.js [2m([22m[2m13 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/questionHelpers.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/importValidation.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mΓ£ô[39m src/services/firestore/__tests__/connectionMonitor.test.js [2m([22m[2m8 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/urlValidator.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/analyticsFiltering.test.js [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32mΓ£ô[39m src/services/__tests__/firebaseSave.regression.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mΓ£ô[39m tests/security/input-sanitization.test.js [2m([22m[2m9 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mΓ£ô[39m src/utils/__tests__/dateHelpers.test.js [2m([22m[2m8 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/debug.test.js [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/translation.integration.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1243[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m should translate multiple questions to target languages [33m 341[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m should show progress during bulk translation [33m 356[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/SmokeTests.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[33m 4483[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m AdminPanel can be imported [33m 1734[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m GlobalModals can be imported [33m 2149[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m MainLayout can be imported [33m 422[2mms[22m[39m
+ [32mΓ£ô[39m src/components/__tests__/InviteSignUp.test.jsx [2m([22m[2m18 tests[22m[2m)[22m[33m 3567[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m disables input after successful validation [33m 309[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows loading state during validation [33m 312[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows success message for valid invite [33m 321[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows error message for invalid invite [33m 323[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows rate limit error when exceeded [33m 328[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows Google sign-in button after valid invite [33m 320[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m calls onSuccess after successful sign-in and invite consumption [33m 355[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m shows error when authentication fails [33m 417[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m input shows aria-invalid when validation fails [33m 307[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m88 passed[39m[22m[90m (88)[39m
+[2m      Tests [22m [1m[32m1105 passed[39m[22m[2m | [22m[33m15 skipped[39m[90m (1120)[39m
+[2m   Start at [22m 14:29:57
+[2m   Duration [22m 9.45s[2m (transform 40.08s, setup 23.29s, import 57.20s, tests 16.75s, environment 213.57s)[22m
+

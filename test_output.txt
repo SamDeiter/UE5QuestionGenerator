@@ -1,0 +1,30 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.17 [39m[90mC:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator[39m
+
+ [32mΓ£ô[39m src/__tests__/translation.integration.test.jsx[2m > [22mTranslation Integration Tests[2m > [22mSingle Question Translation[2m > [22mshould translate a question to target language[32m 134[2mms[22m[39m
+stderr | src/__tests__/translation.integration.test.jsx > Translation Integration Tests > Single Question Translation > should handle translation errors gracefully
+Γ¥î [19:38:16] [UNKNOWN] Translation failed { operation: 'translateSingle', questionId: 123, targetLang: 'Korean' }
+Γ¥î [19:38:16] Stack trace: Error: Translation failed
+    at Module.simulateError (C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/mocks/gemini.mock.js:239:41)
+    at C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/__tests__/translation.integration.test.jsx:234:18
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+
+ [32mΓ£ô[39m src/__tests__/translation.integration.test.jsx[2m > [22mTranslation Integration Tests[2m > [22mSingle Question Translation[2m > [22mshould preserve question metadata during translation[32m 130[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/translation.integration.test.jsx[2m > [22mTranslation Integration Tests[2m > [22mSingle Question Translation[2m > [22mshould handle translation errors gracefully[32m 16[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/translation.integration.test.jsx[2m > [22mTranslation Integration Tests[2m > [22mBulk Translation[2m > [22mshould translate multiple questions to target languages[33m 347[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/translation.integration.test.jsx[2m > [22mTranslation Integration Tests[2m > [22mBulk Translation[2m > [22mshould skip already translated questions[32m 222[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/translation.integration.test.jsx[2m > [22mTranslation Integration Tests[2m > [22mBulk Translation[2m > [22mshould show progress during bulk translation[33m 338[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/translation.integration.test.jsx[2m > [22mTranslation Integration Tests[2m > [22mBulk Translation[2m > [22mshould not translate rejected questions[32m 17[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 14:38:14
+[2m   Duration [22m 2.91s[2m (transform 324ms, setup 138ms, import 480ms, tests 1.21s, environment 855ms)[22m
+

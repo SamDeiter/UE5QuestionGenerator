@@ -35,7 +35,9 @@ vi.mock("firebase/analytics", () => ({
 
 vi.mock("firebase/auth", () => ({
   getAuth: vi.fn(() => ({ currentUser: null })),
-  GoogleAuthProvider: vi.fn(),
+  GoogleAuthProvider: class {
+    setCustomParameters() {}
+  },
   signInWithPopup: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),
   createUserWithEmailAndPassword: vi.fn(),

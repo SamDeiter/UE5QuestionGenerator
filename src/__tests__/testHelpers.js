@@ -116,9 +116,25 @@ export const mockGeminiResponses = {
   },
 
   translation: {
-    text: () => `| ID | Discipline | Type | Difficulty | Question | Answer | OptionA | OptionB | OptionC | OptionD | CorrectLetter | SourceURL | SourceExcerpt |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Graphics | Multiple Choice | Medium | 虚幻引擎5中的主要渲染管线是什么？ | | 前向渲染 | 延迟渲染 | Nanite | Lumen | B | https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine | Unreal Engine 5 uses deferred rendering by default to handle dynamic lighting efficiently. |`,
+    text: () =>
+      JSON.stringify([
+        {
+          id: 1,
+          discipline: "Graphics",
+          type: "Multiple Choice",
+          difficulty: "Medium",
+          question: "虚幻引擎5中的主要渲染管线是什么？",
+          optionA: "前向渲染",
+          optionB: "延迟渲染",
+          optionC: "Nanite",
+          optionD: "Lumen",
+          correctLetter: "B",
+          sourceUrl:
+            "https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine",
+          sourceExcerpt:
+            "Unreal Engine 5 uses deferred rendering by default to handle dynamic lighting efficiently.",
+        },
+      ]),
   },
 
   explanation: {
