@@ -116,3 +116,22 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Critique markdown: descendant selectors replace inline class attributes
+   for DOMPurify-sanitized HTML (SECURITY: no attributes allowed) */
+.critique-markdown strong {
+  font-weight: 600;
+  color: white;
+}
+
+.critique-markdown em {
+  font-style: italic;
+  color: #e2e8f0; /* slate-200 */
+}
+
+.critique-markdown code {
+  background-color: #1e293b; /* slate-800 */
+  padding: 0 0.25rem;
+  border-radius: 0.25rem;
+  color: #fdba74; /* orange-300 */
+}

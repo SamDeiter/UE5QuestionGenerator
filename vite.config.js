@@ -151,6 +151,7 @@ export default defineConfig({
             "firebase/app",
             "firebase/auth",
             "firebase/firestore",
+            "firebase/functions",
           ],
 
           // Icons vendor chunk (~150 KB)
@@ -170,11 +171,14 @@ export default defineConfig({
             "./src/agents/sessionAgent.js",
           ],
 
-          // Core UI Components - kept on critical path
-          "ui-core": [
-            "./src/components/QuestionItem.jsx",
-            "./src/components/QuestionList.jsx",
+          // Portkey service (~15 KB) - only loaded when Portkey mode active
+          "portkey-service": [
+            "./src/services/portkey.js",
+            "./src/services/portkeySecure.js",
           ],
+
+          // Core UI - QuestionList only (QuestionItem loads naturally)
+          "ui-core": ["./src/components/QuestionList.jsx"],
 
           // View Router - separate chunk for lazy loading
           "ui-router": ["./src/components/ViewRouter.jsx"],

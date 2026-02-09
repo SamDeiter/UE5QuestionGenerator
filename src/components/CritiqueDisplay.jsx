@@ -13,31 +13,24 @@ import { useThemeColors } from "../hooks/useThemeColors";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 
 // Simple markdown to HTML converter with XSS protection
+// SECURITY: No class attributes allowed in sanitized HTML — styling uses
+// CSS descendant selectors on the parent .critique-markdown container.
 const parseMarkdown = (text) => {
   if (!text) return "";
 
   // Convert **bold** to <strong>
-  let html = text.replace(
-    /\*\*(.+?)\*\*/g,
-    '<strong class="font-semibold text-white">$1</strong>'
-  );
+  let html = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
   // Convert *italic* to <em> (must be done after bold to avoid conflicts)
-  html = html.replace(
-    /\*([^*]+)\*/g,
-    '<em class="italic text-slate-200">$1</em>'
-  );
+  html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
 
   // Convert `code` to <code>
-  html = html.replace(
-    /`([^`]+)`/g,
-    '<code class="bg-slate-800 px-1 rounded text-orange-300">$1</code>'
-  );
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
 
-  // SECURITY: Sanitize output to prevent XSS from AI-generated content
+  // SECURITY: Sanitize output — no attributes allowed at all
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ["strong", "em", "code"],
-    ALLOWED_ATTR: ["class"],
+    ALLOWED_ATTR: [],
   });
 };
 
@@ -193,7 +186,7 @@ const CritiqueDisplay = ({
           )}
         </div>
       </div>
-      <div className="text-xs text-slate-300 leading-relaxed space-y-1.5">
+      <div className="critique-markdown text-xs text-slate-300 leading-relaxed space-y-1.5">
         {renderContent()}
       </div>
 

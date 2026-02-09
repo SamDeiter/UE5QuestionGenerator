@@ -10,6 +10,7 @@ admin.initializeApp();
 // ============================================================================
 Object.assign(exports, require("./ai/generateQuestions"));
 Object.assign(exports, require("./ai/generateCritique"));
+Object.assign(exports, require("./ai/portkeyProxy"));
 
 // ============================================================================
 // Invite Functions

@@ -1,68 +1,35 @@
 /**
- * Portkey.ai Service Adapter
+ * Portkey.ai Service Adapter — Secure Cloud Function Proxy
  *
- * This module provides an adapter layer for using Vertex AI models through Portkey.ai.
- * It translates Gemini-style API calls to Portkey's OpenAI-compatible format.
+ * This module routes Portkey AI calls through a Firebase Cloud Function,
+ * keeping the Portkey API key server-side. The client never touches the key.
  *
- * IMPORTANT: This is an ADDITIONAL service option alongside existing methods:
- * - Direct Gemini API calls
- * - Firebase Cloud Functions
- * - Portkey Gateway (this file)
+ * Service Selection Priority:
+ * 1. Firebase Cloud Functions (when authenticated) — DEFAULT
+ * 2. Portkey via Cloud Function proxy (this file)
+ * 3. Direct Gemini API (fallback)
  */
 
-import Portkey from "portkey-ai";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { logger } from "../utils/logger";
 
 /**
- * Initialize Portkey client
- * @returns {Portkey} Configured Portkey client
+ * Get the portkeyGenerate callable function.
+ * @returns {import("firebase/functions").HttpsCallable}
  */
-const getPortkeyClient = () => {
-  const apiKey = import.meta.env.VITE_PORTKEY_API_KEY;
-  const virtualKey = import.meta.env.VITE_PORTKEY_VIRTUAL_KEY;
-
-  if (!apiKey) {
-    throw new Error("VITE_PORTKEY_API_KEY not configured");
-  }
-
-  return new Portkey({
-    apiKey,
-    virtualKey, // Optional: for Vertex AI authentication via Portkey Virtual Keys
-  });
+const getPortkeyCallable = () => {
+  const functions = getFunctions();
+  return httpsCallable(functions, "portkeyGenerate");
 };
 
 /**
- * Convert Gemini-style system/user prompts to OpenAI messages format
- * @param {string} systemPrompt
- * @param {string} userPrompt
- * @returns {Array} OpenAI-compatible messages array
- */
-const convertToMessages = (systemPrompt, userPrompt) => {
-  const messages = [];
-
-  if (systemPrompt) {
-    messages.push({
-      role: "system",
-      content: systemPrompt,
-    });
-  }
-
-  messages.push({
-    role: "user",
-    content: userPrompt,
-  });
-
-  return messages;
-};
-
-/**
- * Generate content using Portkey's Vertex AI integration
- * @param {string} effectiveKey - Not used for Portkey (uses env vars)
- * @param {string} systemPrompt
- * @param {string} userPrompt
+ * Generate content using Portkey via Cloud Function proxy.
+ * @param {string} effectiveKey - Not used (key is server-side)
+ * @param {string} systemPrompt - System prompt text
+ * @param {string} userPrompt - User prompt text
  * @param {function} setStatus - Status callback
- * @param {number} temperature
- * @param {string} model - Model name (will be prefixed with @VERTEX_PROVIDER/)
+ * @param {number} temperature - Temperature parameter
+ * @param {string} model - Model name
  * @returns {Promise<string>} Generated text
  */
 export const generateContent = async (
@@ -74,33 +41,19 @@ export const generateContent = async (
   model = "gemini-1.5-flash"
 ) => {
   try {
-    setStatus("Connecting to Portkey...");
+    setStatus("Connecting to Portkey (secure)...");
 
-    const portkey = getPortkeyClient();
-    const messages = convertToMessages(systemPrompt, userPrompt);
-
-    // Portkey uses @VERTEX_PROVIDER/ prefix for Vertex AI models
-    const portkeyModel = model.startsWith("@VERTEX_PROVIDER/")
-      ? model
-      : `@VERTEX_PROVIDER/${model}`;
-
-    setStatus("Generating content via Portkey...");
-
-    const completion = await portkey.chat.completions.create({
-      messages,
-      model: portkeyModel,
+    const portkeyCallable = getPortkeyCallable();
+    const result = await portkeyCallable({
+      systemPrompt,
+      userPrompt,
       temperature,
-      max_tokens: 8192,
+      model,
+      action: "generate",
     });
 
-    const content = completion.choices?.[0]?.message?.content;
-
-    if (!content) {
-      throw new Error("No content generated from Portkey");
-    }
-
     setStatus("Content generated successfully");
-    return content;
+    return result.data.textResponse;
   } catch (error) {
     logger.error("Portkey generation error:", error);
     throw new Error(`Portkey generation failed: ${error.message}`);
@@ -108,8 +61,8 @@ export const generateContent = async (
 };
 
 /**
- * Generate critique using Portkey
- * @param {string} apiKey - Not used for Portkey
+ * Generate critique using Portkey via Cloud Function proxy.
+ * @param {string} apiKey - Not used (key is server-side)
  * @param {object} question - Question object
  * @param {string} model - Model to use
  * @returns {Promise<object>} Critique result
@@ -119,9 +72,6 @@ export const generateCritique = async (
   question,
   model = "gemini-1.5-flash"
 ) => {
-  const systemPrompt =
-    "Expert UE5 Technical Reviewer. Output valid JSON only. Evaluate objectively and provide constructive feedback.";
-
   let strictnessInstruction = "";
   if (question.modeLabel === "Strict") {
     strictnessInstruction = `
@@ -137,6 +87,9 @@ export const generateCritique = async (
   }
 
   const optionsStr = JSON.stringify(question.options);
+
+  const systemPrompt =
+    "Expert UE5 Technical Reviewer. Output valid JSON only. Evaluate objectively and provide constructive feedback.";
 
   const userPrompt = `Evaluate this UE5 question as a Senior Technical Reviewer for a professional certification exam.
     ${strictnessInstruction}
@@ -162,15 +115,15 @@ export const generateCritique = async (
     
     MANDATORY OUTPUT FORMAT: Return ONLY a raw JSON object (no markdown formatting) with this EXACT structure:
     {
-        "originalScore": 75,  // REQUIRED: Score (0-100) for ORIGINAL question
-        "critique": "string", // Detailed feedback with specific suggestions
+        "originalScore": 75,
+        "critique": "string",
         "rewrite": {
-            "question": "string", // Improved question text with **bold** markdown for key technical terms
+            "question": "string",
             "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
-            "correct": "string" // Correct letter (A, B, C, or D)
+            "correct": "string"
         },
-        "improvedScore": 92,  // REQUIRED: Score (0-100) for IMPROVED version (must be > originalScore)
-        "changes": "string" // Brief explanation of what was changed and why
+        "improvedScore": 92,
+        "changes": "string"
     }
     
     IMPORTANT: Both originalScore AND improvedScore are REQUIRED fields. Do not omit either one.
@@ -180,45 +133,37 @@ export const generateCritique = async (
     Correct: ${question.correct}`;
 
   try {
-    const portkey = getPortkeyClient();
-    const messages = convertToMessages(systemPrompt, userPrompt);
-
-    const portkeyModel = model.startsWith("@VERTEX_PROVIDER/")
-      ? model
-      : `@VERTEX_PROVIDER/${model}`;
-
-    const completion = await portkey.chat.completions.create({
-      messages,
-      model: portkeyModel,
+    const portkeyCallable = getPortkeyCallable();
+    const result = await portkeyCallable({
+      systemPrompt,
+      userPrompt,
       temperature: 0.2,
-      max_tokens: 8192,
-      response_format: { type: "json_object" }, // Request JSON response
+      model,
+      action: "critique",
     });
 
-    const rawText = completion.choices?.[0]?.message?.content || "";
-
+    const rawText = result.data.textResponse || "";
     logger.log(
       "[Portkey Critique DEBUG] Raw response:",
       rawText.substring(0, 500)
     );
 
-    // Parse JSON response
     const cleanJson = rawText.replace(/```json\n?|\n?```/g, "").trim();
-    const result = JSON.parse(cleanJson);
+    const parsed = JSON.parse(cleanJson);
 
     logger.log(
       "[Portkey Critique DEBUG] Scores - Original:",
-      result.originalScore,
+      parsed.originalScore,
       "| Improved:",
-      result.improvedScore
+      parsed.improvedScore
     );
 
     return {
-      score: result.originalScore || result.score || 0,
-      text: result.critique || result.text,
-      rewrite: result.rewrite,
-      improvedScore: result.improvedScore,
-      changes: result.changes,
+      score: parsed.originalScore || parsed.score || 0,
+      text: parsed.critique || parsed.text,
+      rewrite: parsed.rewrite,
+      improvedScore: parsed.improvedScore,
+      changes: parsed.changes,
     };
   } catch (error) {
     logger.error("Portkey critique error:", error);
@@ -227,8 +172,8 @@ export const generateCritique = async (
 };
 
 /**
- * Rewrite question using Portkey
- * @param {string} apiKey - Not used for Portkey
+ * Rewrite question using Portkey via Cloud Function proxy.
+ * @param {string} apiKey - Not used (key is server-side)
  * @param {object} question - Original question
  * @param {string} critiqueText - Critique feedback
  * @returns {Promise<string>} Rewritten question
@@ -252,17 +197,16 @@ export const rewriteQuestion = async (apiKey, question, critiqueText) => {
   }`;
 
   try {
-    const portkey = getPortkeyClient();
-    const messages = convertToMessages(systemPrompt, userPrompt);
-
-    const completion = await portkey.chat.completions.create({
-      messages,
-      model: "@VERTEX_PROVIDER/gemini-1.5-flash",
+    const portkeyCallable = getPortkeyCallable();
+    const result = await portkeyCallable({
+      systemPrompt,
+      userPrompt,
       temperature: 0.5,
-      max_tokens: 8192,
+      model: "gemini-1.5-flash",
+      action: "generate",
     });
 
-    return completion.choices?.[0]?.message?.content || "";
+    return result.data.textResponse || "";
   } catch (error) {
     logger.error("Portkey rewrite error:", error);
     throw new Error(`Portkey rewrite failed: ${error.message}`);
@@ -270,9 +214,9 @@ export const rewriteQuestion = async (apiKey, question, critiqueText) => {
 };
 
 /**
- * Classify question discipline using Portkey
- * @param {string} apiKey - Not used for Portkey
- * @param {string} questionText
+ * Classify question discipline using Portkey via Cloud Function proxy.
+ * @param {string} apiKey - Not used (key is server-side)
+ * @param {string} questionText - Question text
  * @returns {Promise<string>} Discipline name
  */
 export const classifyQuestionDiscipline = async (apiKey, questionText) => {
@@ -291,17 +235,16 @@ export const classifyQuestionDiscipline = async (apiKey, questionText) => {
   const userPrompt = `Classify this question: "${questionText}"`;
 
   try {
-    const portkey = getPortkeyClient();
-    const messages = convertToMessages(systemPrompt, userPrompt);
-
-    const completion = await portkey.chat.completions.create({
-      messages,
-      model: "@VERTEX_PROVIDER/gemini-1.5-flash",
+    const portkeyCallable = getPortkeyCallable();
+    const result = await portkeyCallable({
+      systemPrompt,
+      userPrompt,
       temperature: 0.1,
-      max_tokens: 20,
+      model: "gemini-1.5-flash",
+      action: "classify",
     });
 
-    return (completion.choices?.[0]?.message?.content || "").trim();
+    return (result.data.textResponse || "").trim();
   } catch (error) {
     logger.error("Portkey classification error:", error);
     throw new Error(`Portkey classification failed: ${error.message}`);
@@ -309,9 +252,9 @@ export const classifyQuestionDiscipline = async (apiKey, questionText) => {
 };
 
 /**
- * Generate tags using Portkey
- * @param {string} apiKey - Not used for Portkey
- * @param {string} questionText
+ * Generate tags using Portkey via Cloud Function proxy.
+ * @param {string} apiKey - Not used (key is server-side)
+ * @param {string} questionText - Question text
  * @returns {Promise<string[]>} Array of tags
  */
 export const generateTagsForQuestion = async (apiKey, questionText) => {
@@ -325,18 +268,16 @@ export const generateTagsForQuestion = async (apiKey, questionText) => {
   const userPrompt = `Tags for: "${questionText}"`;
 
   try {
-    const portkey = getPortkeyClient();
-    const messages = convertToMessages(systemPrompt, userPrompt);
-
-    const completion = await portkey.chat.completions.create({
-      messages,
-      model: "@VERTEX_PROVIDER/gemini-1.5-flash",
+    const portkeyCallable = getPortkeyCallable();
+    const result = await portkeyCallable({
+      systemPrompt,
+      userPrompt,
       temperature: 0.3,
-      max_tokens: 100,
-      response_format: { type: "json_object" },
+      model: "gemini-1.5-flash",
+      action: "tags",
     });
 
-    const text = completion.choices?.[0]?.message?.content || "[]";
+    const text = result.data.textResponse || "[]";
     return JSON.parse(text);
   } catch (error) {
     logger.error("Portkey tags error:", error);

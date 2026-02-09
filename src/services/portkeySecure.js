@@ -2,11 +2,12 @@
  * Portkey Secure Service Wrapper
  *
  * This module provides a wrapper for Portkey.ai integration.
- * It can be used as an alternative to direct Gemini API or Cloud Functions.
+ * Portkey calls are now proxied through a Firebase Cloud Function,
+ * so the API key never touches the client.
  *
  * Service Selection Priority:
  * 1. Firebase Cloud Functions (when authenticated)
- * 2. Portkey Gateway (when VITE_AI_SERVICE=portkey)
+ * 2. Portkey Gateway via Cloud Function (when VITE_AI_SERVICE=portkey)
  * 3. Direct Gemini API (fallback)
  */
 
@@ -20,18 +21,18 @@ import {
 import { logger } from "../utils/logger";
 
 /**
- * Check if Portkey is configured and should be used
+ * Check if Portkey mode is configured.
+ * Note: The API key is now server-side, so we only check the service flag.
  * @returns {boolean}
  */
 const shouldUsePortkey = () => {
   const aiService = import.meta.env.VITE_AI_SERVICE;
-  const hasPortkeyKey = !!import.meta.env.VITE_PORTKEY_API_KEY;
-
-  return aiService === "portkey" && hasPortkeyKey;
+  return aiService === "portkey";
 };
 
 /**
- * Secure generate content wrapper with Portkey support
+ * Secure generate content wrapper with Portkey support.
+ * Falls back gracefully if Portkey is not configured.
  */
 export const generateContentSecure = async (
   effectiveKey,
@@ -42,7 +43,7 @@ export const generateContentSecure = async (
   model = "gemini-1.5-flash"
 ) => {
   if (shouldUsePortkey()) {
-    logger.log("🌐 Using Portkey Gateway for generation");
+    logger.log("🌐 Using Portkey Gateway (Cloud Function proxy)");
     return await generateContentPortkey(
       effectiveKey,
       systemPrompt,
@@ -53,14 +54,17 @@ export const generateContentSecure = async (
     );
   }
 
-  // This should not be reached - import from geminiSecure instead
+  // Graceful fallback: not configured for Portkey
+  logger.warn(
+    "Portkey not configured (VITE_AI_SERVICE !== 'portkey'), falling back to standard Gemini."
+  );
   throw new Error(
     "portkeySecure should only be used when Portkey is configured"
   );
 };
 
 /**
- * Secure critique wrapper with Portkey support
+ * Secure critique wrapper with Portkey support.
  */
 export const generateCritiqueSecure = async (
   apiKey,
@@ -68,24 +72,26 @@ export const generateCritiqueSecure = async (
   model = "gemini-1.5-flash"
 ) => {
   if (shouldUsePortkey()) {
-    logger.log("🌐 Using Portkey Gateway for critique");
+    logger.log("🌐 Using Portkey Gateway (Cloud Function proxy) for critique");
     return await generateCritiquePortkey(apiKey, question, model);
   }
 
+  logger.warn("Portkey not configured, falling back to standard Gemini.");
   throw new Error(
     "portkeySecure should only be used when Portkey is configured"
   );
 };
 
 /**
- * Secure tags generator with Portkey support
+ * Secure tags generator with Portkey support.
  */
 export const generateTagsSecure = async (apiKey, questionText) => {
   if (shouldUsePortkey()) {
-    logger.log("🌐 Using Portkey Gateway for tags");
+    logger.log("🌐 Using Portkey Gateway (Cloud Function proxy) for tags");
     return await generateTagsForQuestionPortkey(apiKey, questionText);
   }
 
+  logger.warn("Portkey not configured, falling back to standard Gemini.");
   throw new Error(
     "portkeySecure should only be used when Portkey is configured"
   );

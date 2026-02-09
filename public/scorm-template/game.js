@@ -343,11 +343,12 @@ document.addEventListener("DOMContentLoaded", () => {
    * @returns {Array} Shuffled choices array
    */
   function shuffleChoices(choices) {
-    if (!config.shuffleChoices || !choices || choices.length <= 1) {
+    if (!choices || choices.length <= 1) {
       return choices;
     }
 
-    // Detect True/False questions - never shuffle these
+    // Detect True/False questions - ALWAYS enforce True-first ordering
+    // regardless of whether shuffle is enabled
     const isTrueFalse =
       choices.length === 2 &&
       choices.some((c) => c.text.toLowerCase() === "true") &&
@@ -362,6 +363,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!aIsTrue && bIsTrue) return 1;
         return 0;
       });
+    }
+
+    // For non-T/F questions, only shuffle if enabled
+    if (!config.shuffleChoices) {
+      return choices;
     }
 
     return shuffleArray(choices);

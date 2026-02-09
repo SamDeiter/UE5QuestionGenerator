@@ -197,6 +197,20 @@ export function convertQuestionToScormFormat(question) {
     // If no True/False choices found, keep original (validation will catch this later)
   }
 
+  // CRITICAL: Always sort True/False choices so True is first, False second.
+  // This is belt-and-suspenders with game.js shuffleChoices() sorting.
+  if (
+    scormChoices.length === 2 &&
+    scormChoices.some((c) => c.text.toLowerCase() === "true") &&
+    scormChoices.some((c) => c.text.toLowerCase() === "false")
+  ) {
+    scormChoices.sort((a, b) => {
+      if (a.text.toLowerCase() === "true") return -1;
+      if (b.text.toLowerCase() === "true") return 1;
+      return 0;
+    });
+  }
+
   return {
     id:
       questionId ||
