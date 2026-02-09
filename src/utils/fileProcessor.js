@@ -144,7 +144,7 @@ export const parseCSVQuestions = (content, fileName, defaultCreatorName) => {
  * @param {File} file - The file to read.
  * @returns {Promise<string>} - The file content.
  */
-export const readFileContent = (file) => {
+const readFileContent = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (ev) => resolve(ev.target.result);

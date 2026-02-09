@@ -413,7 +413,7 @@ export const getActionColor = (action, colorblindMode = false) => {
  * @param {number} score - Quality score (0-100)
  * @returns {string} Severity tier name
  */
-export const getSeverityTier = (score) => {
+const getSeverityTier = (score) => {
   if (score === null || score === undefined) return "unknown";
   if (score >= 90) return "excellent";
   if (score >= 70) return "good";

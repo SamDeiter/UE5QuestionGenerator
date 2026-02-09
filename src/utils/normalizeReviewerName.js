@@ -87,7 +87,7 @@ export const normalizeReviewerName = (rawName) => {
  * @param {Object} question - The question object
  * @returns {string|null} Normalized reviewer name, or null if none found
  */
-export const getReviewerFromQuestion = (question) => {
+const getReviewerFromQuestion = (question) => {
   if (!question) return null;
 
   // Check fields in priority order for review actions
@@ -103,7 +103,7 @@ export const getReviewerFromQuestion = (question) => {
  * @param {string} email - The email address
  * @param {string} displayName - The display name to use
  */
-export const addEmailMapping = (email, displayName) => {
+const addEmailMapping = (email, displayName) => {
   if (email && displayName) {
     EMAIL_TO_NAME_MAP[email.toLowerCase()] = displayName;
   }

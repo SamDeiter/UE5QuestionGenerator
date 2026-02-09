@@ -32,7 +32,7 @@ const estimateImprovedScore = (originalScore) => {
  * @param {Array} questions - Array of question objects
  * @returns {Object} - { updated: number, migrated: Array }
  */
-export const migrateQuestionsWithImprovedScores = (questions) => {
+const migrateQuestionsWithImprovedScores = (questions) => {
   let updatedCount = 0;
   const migratedQuestions = questions.map((q) => {
     // Only migrate if:

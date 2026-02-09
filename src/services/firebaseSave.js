@@ -82,7 +82,7 @@ export const getDb = () => {
  *
  * @returns {Promise<{success: boolean, status: string, reason?: string}>}
  */
-export const ensurePersistence = async () => {
+const ensurePersistence = async () => {
   // Initialize db if not already done
   getDb();
 
@@ -98,7 +98,7 @@ export const ensurePersistence = async () => {
  * Get current persistence status synchronously.
  * @returns {"pending" | "enabled" | "failed"}
  */
-export const getPersistenceStatus = () => _persistenceStatus;
+const getPersistenceStatus = () => _persistenceStatus;
 
 // NOTE: Analytics disabled - requires Firebase Console configuration
 const analytics = null;

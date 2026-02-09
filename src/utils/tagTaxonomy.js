@@ -181,7 +181,7 @@ export const TAGS_BY_DISCIPLINE = {
 /**
  * Tag Aliases - Normalize variations to canonical form
  */
-export const TAG_ALIASES = {
+const TAG_ALIASES = {
   // Abbreviations
   "#VSM": "#VirtualShadowMaps",
   "#GAS": "#GameplayAbilitySystem",

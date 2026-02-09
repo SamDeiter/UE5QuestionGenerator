@@ -44,7 +44,7 @@ const VELOCITY_DECIMAL_PLACES = 2;
  * Fetches all questions that have been reviewed (have reviewCompletedAt timestamp)
  * @returns {Promise<Array>} Array of reviewed question objects
  */
-export const fetchReviewedQuestions = async () => {
+const fetchReviewedQuestions = async () => {
   try {
     // Query the questions collection for reviewed questions (accepted or rejected)
     const questionsRef = collection(getDb(), "questions");
@@ -121,7 +121,7 @@ export const fetchReviewedQuestions = async () => {
  * @param {Array} questions - Array of question objects
  * @returns {Array} Array of reviewer stats objects
  */
-export const aggregateReviewerStats = (questions) => {
+const aggregateReviewerStats = (questions) => {
   const reviewerMap = new Map();
 
   /**

@@ -17,7 +17,7 @@ const SCORM_VERSION = `v${packageJson.version}`;
  * @param {string} text - Raw text to sanitize
  * @returns {string} Cleaned text
  */
-export function sanitizeQuestionText(text) {
+function sanitizeQuestionText(text) {
   if (!text || typeof text !== "string") return "";
 
   let result = text;

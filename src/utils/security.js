@@ -54,7 +54,7 @@ export const validateFile = (file) => {
  * @param {string} text - The text to sanitize.
  * @returns {string} - The sanitized text.
  */
-export const sanitizeCSVField = (text) => {
+const sanitizeCSVField = (text) => {
   if (!text) return "";
   const str = String(text);
   // If the field starts with =, +, -, or @, prepend a single quote to force it as text

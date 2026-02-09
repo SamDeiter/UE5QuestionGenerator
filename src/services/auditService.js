@@ -55,7 +55,7 @@ export const logAuditEvent = async (questionId, action, details = {}) => {
  * @param {Array<string>} questionIds - Array of affected question IDs
  * @param {object} details - Additional details
  */
-export const logBulkOperation = async (action, questionIds, details = {}) => {
+const logBulkOperation = async (action, questionIds, details = {}) => {
   try {
     const db = getDb();
     const auth = getAuth();

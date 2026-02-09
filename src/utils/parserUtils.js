@@ -12,7 +12,7 @@ import { QUESTION_STATUS } from "./constants";
 /**
  * Strips code fences and conversational prefixes from AI text.
  */
-export const cleanJsonResponse = (text) => {
+const cleanJsonResponse = (text) => {
   if (!text) return "";
 
   // Remove markdown code blocks
@@ -51,7 +51,7 @@ export const normalizeStatus = (status) => {
 /**
  * Remove near-duplicate questions from an array.
  */
-export const removeDuplicateQuestions = (questions, threshold = 0.85) => {
+const removeDuplicateQuestions = (questions, threshold = 0.85) => {
   if (!questions || questions.length <= 1) return questions;
 
   const unique = [];

@@ -122,7 +122,7 @@ export function isEpicLink(url) {
   );
 }
 
-export function validateURLsBatch(questions) {
+function validateURLsBatch(questions) {
   return questions.map((q) => ({
     ...q,
     urlValidation: validateURL(q.SourceURL || q.sourceUrl),

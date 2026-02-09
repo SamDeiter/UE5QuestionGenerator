@@ -81,7 +81,7 @@ export const saveTrainingPair = async (
  * @param {number} maxRecords - Maximum number of records to export
  * @returns {Promise<{success: boolean, data?: string, count?: number, error?: string}>}
  */
-export const exportTrainingData = async (maxRecords = 1000) => {
+const exportTrainingData = async (maxRecords = 1000) => {
   try {
     if (!auth.currentUser) {
       return { success: false, error: "Not authenticated" };
@@ -187,7 +187,7 @@ export const downloadTrainingDataAsFile = async () => {
  * @param {number} maxRecords - Maximum number of records to export
  * @returns {Promise<{success: boolean, data?: string, count?: number, error?: string}>}
  */
-export const exportRejectedQuestions = async (maxRecords = 500) => {
+const exportRejectedQuestions = async (maxRecords = 500) => {
   try {
     if (!auth.currentUser) {
       return { success: false, error: "Not authenticated" };

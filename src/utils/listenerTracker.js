@@ -51,14 +51,14 @@ export const unregisterListener = (id) => {
  *
  * @returns {number} - Current active listener count
  */
-export const getListenerCount = () => activeListenerCount;
+const getListenerCount = () => activeListenerCount;
 
 /**
  * Get detailed information about all active listeners.
  *
  * @returns {Array<{id: string, name: string, startTime: number, durationMs: number}>}
  */
-export const getListenerDetails = () =>
+const getListenerDetails = () =>
   Array.from(listenerRegistry.entries()).map(([id, info]) => ({
     id,
     ...info,
@@ -68,7 +68,7 @@ export const getListenerDetails = () =>
 /**
  * Clear all registered listeners (for testing/cleanup).
  */
-export const clearAllListeners = () => {
+const clearAllListeners = () => {
   listenerRegistry.clear();
   activeListenerCount = 0;
 };

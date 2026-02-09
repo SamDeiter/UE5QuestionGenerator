@@ -3,7 +3,7 @@
  * Centralizes error categorization and user messaging logic.
  */
 
-export const ERROR_TYPES = {
+const ERROR_TYPES = {
   PERMISSION_DENIED: "permission-denied",
   UNAUTHENTICATED: "unauthenticated",
   NETWORK_ERROR: "network-error",
@@ -18,14 +18,14 @@ export const ERROR_TYPES = {
   UNKNOWN: "unknown",
 };
 
-export const isSafari = () => {
+const isSafari = () => {
   const ua = navigator.userAgent.toLowerCase();
   return (
     ua.includes("safari") && !ua.includes("chrome") && !ua.includes("chromium")
   );
 };
 
-export const getBrowserName = () => {
+const getBrowserName = () => {
   const ua = navigator.userAgent;
   if (ua.includes("Brave")) return "Brave";
   if (ua.includes("Edg/")) return "Edge";
@@ -45,7 +45,7 @@ const matchError = (error, patterns) => {
   return patterns.some((p) => code === p || message.includes(p));
 };
 
-export const categorizeError = (error) => {
+const categorizeError = (error) => {
   const code = error?.code || "";
   const message = error?.message || "";
 
@@ -215,10 +215,10 @@ export const getToastMessage = (error, context = "saving") => {
   return toasts[type] || toasts[ERROR_TYPES.UNKNOWN];
 };
 
-export const isRecoverableError = (error) =>
+const isRecoverableError = (error) =>
   categorizeError(error) !== ERROR_TYPES.UNAUTHENTICATED;
 
-export const shouldPromptReauth = (error) => {
+const shouldPromptReauth = (error) => {
   const type = categorizeError(error);
   return (
     type === ERROR_TYPES.UNAUTHENTICATED ||

@@ -110,7 +110,7 @@ export const getCachedQuestions = async ({
  * @param {string} uniqueId - The question's unique ID
  * @returns {Promise<Object|null>}
  */
-export const getCachedQuestion = async (uniqueId) => {
+const getCachedQuestion = async (uniqueId) => {
   try {
     const db = await getDB();
     return await db.get(QUESTIONS_STORE, uniqueId);
@@ -144,7 +144,7 @@ export const isCacheValid = async (
  * Gets the timestamp of when the cache was last updated.
  * @returns {Promise<number|null>}
  */
-export const getLastCacheTime = async () => {
+const getLastCacheTime = async () => {
   try {
     const db = await getDB();
     return (await db.get(META_STORE, "lastCached")) || null;
@@ -173,7 +173,7 @@ export const clearCache = async () => {
  * @param {Object} question - The question to update
  * @returns {Promise<void>}
  */
-export const updateCachedQuestion = async (question) => {
+const updateCachedQuestion = async (question) => {
   if (!question?.uniqueId) return;
 
   try {
@@ -189,7 +189,7 @@ export const updateCachedQuestion = async (question) => {
  * @param {string} uniqueId - The question's unique ID
  * @returns {Promise<void>}
  */
-export const deleteCachedQuestion = async (uniqueId) => {
+const deleteCachedQuestion = async (uniqueId) => {
   try {
     const db = await getDB();
     await db.delete(QUESTIONS_STORE, uniqueId);
@@ -202,7 +202,7 @@ export const deleteCachedQuestion = async (uniqueId) => {
  * Gets cache statistics.
  * @returns {Promise<{count: number, lastUpdated: number|null, isValid: boolean}>}
  */
-export const getCacheStats = async () => {
+const getCacheStats = async () => {
   try {
     const db = await getDB();
     const count = await db.count(QUESTIONS_STORE);

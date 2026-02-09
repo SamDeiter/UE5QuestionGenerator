@@ -12,15 +12,14 @@ import { logger } from "./logger";
 /**
  * Valid answer keys for multiple choice questions.
  */
-export const VALID_ANSWER_KEYS = ["A", "B", "C", "D"];
+const VALID_ANSWER_KEYS = ["A", "B", "C", "D"];
 
 /**
  * Check if a question is a True/False type.
  * @param {Object} q - Question object
  * @returns {boolean} True if T/F question
  */
-export const isTrueFalseQuestion = (q) =>
-  q.type === "True/False" || q.type === "T/F";
+const isTrueFalseQuestion = (q) => q.type === "True/False" || q.type === "T/F";
 
 /**
  * Normalize a correct answer value to a standard key.
@@ -29,7 +28,7 @@ export const isTrueFalseQuestion = (q) =>
  * @param {string} value - Raw correct answer value
  * @returns {string|null} Normalized answer key or null if invalid
  */
-export const normalizeAnswerKey = (value) => {
+const normalizeAnswerKey = (value) => {
   if (!value || typeof value !== "string") return null;
 
   const normalized = value.trim().toUpperCase();
@@ -128,4 +127,4 @@ export const inferCorrectAnswer = (q) => {
  * @param {Object} q - Question object
  * @returns {boolean} True if correct answer is valid or inferable
  */
-export const hasValidCorrectAnswer = (q) => inferCorrectAnswer(q) !== null;
+const hasValidCorrectAnswer = (q) => inferCorrectAnswer(q) !== null;

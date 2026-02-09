@@ -53,7 +53,7 @@ export const QUALITY_PASS_THRESHOLD = QUALITY_THRESHOLDS.PASS;
 
 // Colorblind-Safe Color Palette
 // Uses blue/orange/purple instead of green/yellow/red for better visibility
-export const COLORBLIND_COLORS = {
+const COLORBLIND_COLORS = {
   EXCELLENT: {
     bg: "bg-blue-900/30",
     border: "border-blue-700/50",
@@ -133,7 +133,7 @@ export const DEFAULT_CONFIG = {
   tags: [],
 };
 
-export const ERROR_MESSAGES = {
+const ERROR_MESSAGES = {
   NO_API_KEY: "Please enter your Google Gemini API Key in Settings.",
   NO_SHEET_URL: "Please configure Google Sheets URL in settings first.",
   GEN_FAILED: "Generation failed. Please check your API key and try again.",
@@ -158,7 +158,7 @@ export const CONTEXT_LIMITS = {
 };
 
 // Token Usage Warning Levels (percentage thresholds)
-export const TOKEN_WARNING_LEVELS = {
+const TOKEN_WARNING_LEVELS = {
   DANGER: 90, // >= 90%: Critical, near limit
   WARNING: 70, // >= 70%: Caution, approaching limit
 };
@@ -211,7 +211,7 @@ export const FIRESTORE_LIMITS = {
 };
 
 // History Limits
-export const HISTORY_LIMITS = {
+const HISTORY_LIMITS = {
   MAX_STATES_PER_QUESTION: 10,
 };
 
@@ -228,7 +228,7 @@ export const GENERATION_LIMITS = {
 };
 
 // Question Validation Limits
-export const QUESTION_LIMITS = {
+const QUESTION_LIMITS = {
   MIN_CHOICES: 2,
   MAX_CHOICES: 6,
   MIN_QUESTION_LENGTH: 10,

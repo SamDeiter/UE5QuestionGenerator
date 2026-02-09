@@ -12,7 +12,7 @@
 import { logger } from "./logger";
 
 /** @constant {Object} QUESTION_DOC_LIMITS - Validation limits for document fields */
-export const QUESTION_DOC_LIMITS = {
+const QUESTION_DOC_LIMITS = {
   QUESTION_MAX_LENGTH: 2000,
   ANSWER_MAX_COUNT: 10,
   ANSWER_MAX_LENGTH: 500,
@@ -112,7 +112,7 @@ export const parseQuestionDoc = (raw) => {
  * @param {number} maxLength - Maximum length before truncation (default 100)
  * @returns {string} - Question text or placeholder
  */
-export const getQuestionText = (question, maxLength = 100) => {
+const getQuestionText = (question, maxLength = 100) => {
   if (!question?.question) return "[No question text]";
   return question.question.length > maxLength
     ? question.question.slice(0, maxLength) + "..."
@@ -125,7 +125,7 @@ export const getQuestionText = (question, maxLength = 100) => {
  * @param {Object} question - Question object
  * @returns {boolean} - True if displayable
  */
-export const isDisplayable = (question) => {
+const isDisplayable = (question) => {
   return Boolean(
     question &&
     (question.id || question.uniqueId) &&

@@ -80,7 +80,7 @@ export function validateQuestion(question) {
  * @param {Array} questions
  * @returns {Array} Questions with validation metadata attached
  */
-export function validateQuestionsBatch(questions) {
+function validateQuestionsBatch(questions) {
   return questions.map((q) => {
     const validation = validateQuestion(q);
     return {

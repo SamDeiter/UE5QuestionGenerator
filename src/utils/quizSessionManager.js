@@ -74,7 +74,7 @@ export function getActiveAttempt() {
  * Check if an attempt is currently active
  * @returns {boolean}
  */
-export function isAttemptActive() {
+function isAttemptActive() {
   return getActiveAttempt() !== null;
 }
 
