@@ -10,7 +10,7 @@ description: Pre-edit checklist to consult before making any code changes
 
 Before making ANY edits to project files, you MUST:
 
-1. **Check ANCHOR_MANIFEST.md** (`docs/reference/ANCHOR_MANIFEST.md`)
+1. **Check ANCHOR_MANIFEST.md** (if it exists)
    - Verify the file you're editing is documented
    - Understand its role in the project architecture
    - Check for any known issues related to this file
@@ -25,12 +25,7 @@ Before making ANY edits to project files, you MUST:
 
 ## Step 2: Apply Relevant Standards
 
-Based on the file type, ensure you're following:
-
-- **React Components**: Rules from `react-architecture.md`
-- **Python Code**: Rules from `code-style-guide.md`
-- **Security-Sensitive Code**: Rules from `testing-security-policy.md`
-- **Any Code**: Check `workflow-file-management.md` for naming conventions
+Based on the file type, ensure you're following project-specific rules in `.agent/rules/`.
 
 ## Step 3: Proceed with Edit
 

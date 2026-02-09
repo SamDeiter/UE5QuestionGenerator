@@ -2,36 +2,30 @@
 trigger: always_on
 ---
 
-# 🧠 Orchestration and Delegation Protocol
+# Orchestration & Execution Protocol
 
-**Purpose:** Defines the non-negotiable process for task execution, ensuring that all specialized rules and workflows are appropriately engaged before declaring a task complete.
+**Purpose:** Defines the non-negotiable process for task execution on Windows 11, preventing UI lag and ensuring quality.
+
+## ⚠️ Windows Lag Prevention
+
+1. **Single-Threaded Execution** — Never run multiple complex sub-agents in parallel. Delegation must be sequential.
+2. **Atomic Steps** — Break requests into a numbered list. Execute Step 1 fully, verify, then proceed to Step 2.
+3. **Phase Your Work** — For major features, explicitly ask: "I will tackle this in phases. Phase 1 is [Task]. Proceed?"
 
 ## ⛔ Prohibited Actions
 
-1. **NO Direct Code to Production:** The agent must never bypass a mandated review step or security check.
-2. **NO Undocumented Decisions:** All major architectural or code decisions MUST be documented and justified in the final output artifact.
+1. **NO Direct Code to Production** — Never bypass a mandated review step or security check.
+2. **NO Undocumented Decisions** — All major architectural or code decisions MUST be documented.
+3. **NO Root Folder Deletion** — Never delete the root folder of any project or directory structure.
 
-## ✅ Required Standards (Passive Enforcement)
+## ✅ Required Standards
 
-1. **Mandatory Delegation:** Every implementation plan MUST include specific steps that delegate review to the following Rule-Agents before completion:
-    * **Security Review:** Must invoke the constraints defined in [javasec-guardrails.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/rules/javasec-guardrails.md:0:0-0:0) and [testing-security-policy.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/rules/testing-security-policy.md:0:0-0:0).
-    * **Quality Review:** Must invoke the constraints defined in [test-coverage-policy.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/rules/test-coverage-policy.md:0:0-0:0) and [code-style-guide.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/rules/code-style-guide.md:0:0-0:0).
-    * **Accessibility Review:** Must invoke the constraints defined in [a11y-standards.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/rules/a11y-standards.md:0:0-0:0).
-2. **Artifact Generation:** All tasks resulting in code must conclude by generating a Summary Artifact that confirms all passive rules were successfully applied and checked.
+1. **Planning First** — For non-trivial tasks (multiple files, new features, complex refactoring), generate an implementation plan and get user approval before writing code.
+2. **Artifact Generation** — Tasks resulting in code must conclude with a summary confirming all checks passed.
+3. **Frequent Git Commits** — Commit after every major atomic step. Back up to git as often as possible.
 
-## 🎯 Specialized Prime Delegation
+## 🧠 Context Management
 
-The following delegation rules define when to engage specialized Prime agents:
-
-| Task Type | Delegate To | File |
-|-----------|-------------|------|
-| **Feature Initiation** (New Code) | Feature Implementer Prime | [workflows/Feature-Implementer-Prime.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/workflows/Feature-Implementer-Prime.md:0:0-0:0) |
-| **Strategic Planning** (Future Work/Tech Debt) | Vision Architect Prime | [workflows/Vision-Architect-Prime.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/workflows/Vision-Architect-Prime.md:0:0-0:0) |
-| **Deployment & Release** (Final Gate) | Deployment Relay Prime | [workflows/Deployment-Relay-Prime.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/workflows/Deployment-Relay-Prime.md:0:0-0:0) |
-| **React UI/UX** (Frontend Components) | React UIUX Architect | [React-UIUX-Architect.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/React-UIUX-Architect.md:0:0-0:0) |
-| **Async/Concurrency** (Background Tasks) | Async Architect Prime | [Async-Architect-Prime.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/Async-Architect-Prime.md:0:0-0:0) |
-| **Full-Stack Implementation** | Omni Dev Prime | [Omni-Dev-Prime.md](cci:7://file:///c:/Users/Sam%20Deiter/Documents/GitHub/UE5QuestionGenerator/.agent/Omni-Dev-Prime.md:0:0-0:0) |
-
-## 🖼️ UI/UX Delegation Rule
-
-When the plan involves writing code for a specific user-facing component (e.g., a button, a form, a complex layout, or handling user interaction/state logic), the task MUST be delegated to the **Interface-Engineer-Prime.md**.
+1. **Debug Filter Rule** — NEVER save full stack traces or massive error logs. Focus only on root cause and final fix.
+2. **Session Handoff** — Before ending a session, update `NEXT_SESSION.md` (if it exists) with Decisions, Status, and Next Steps.
+3. **Resumption** — When starting a fresh chat, read `AGENTS.md` and `NEXT_SESSION.md` first to restore context.
