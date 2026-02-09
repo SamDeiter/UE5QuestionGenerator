@@ -142,40 +142,59 @@ export default defineConfig({
     target: "es2020",
     rollupOptions: {
       output: {
-        manualChunks: {
-          // React vendor chunk (~150 KB)
-          "vendor-react": ["react", "react-dom"],
+        manualChunks: (id) => {
+          // React vendor chunk
+          if (id.includes("node_modules/react") || id.includes("node_modules/react-dom") || id.includes("node_modules/scheduler")) {
+            return "vendor-react";
+          }
 
-          // Firebase vendor chunk (~300 KB)
-          "vendor-firebase": [
-            "firebase/app",
-            "firebase/auth",
-            "firebase/firestore",
-            "firebase/functions",
-          ],
+          // Firebase Auth chunk
+          if (id.includes("node_modules/@firebase/auth") || id.includes("node_modules/firebase/auth")) {
+            return "vendor-firebase-auth";
+          }
 
-          // Icons vendor chunk (~150 KB)
-          "vendor-icons": ["lucide-react"],
+          // Firebase Firestore chunk
+          if (id.includes("node_modules/@firebase/firestore") || id.includes("node_modules/firebase/firestore")) {
+            return "vendor-firebase-firestore";
+          }
 
-          // Charts vendor chunk (~200 KB) - only loaded in Analytics view
-          "vendor-charts": ["recharts"],
+          // Rest of Firebase
+          if (id.includes("node_modules/firebase") || id.includes("node_modules/@firebase")) {
+            return "vendor-firebase-core";
+          }
 
-          // Export utilities (~100 KB) - only loaded when exporting
-          "vendor-export": ["jszip"],
+          // Charts vendor chunk - heavy, isolate it
+          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3")) {
+            return "vendor-charts";
+          }
 
-          // Agents and Logic (~100 KB)
-          "agents-logic": [
-            "./src/agents/index.js",
-            "./src/agents/lockAgent.js",
-            "./src/agents/auditAgent.js",
-            "./src/agents/sessionAgent.js",
-          ],
+          // Icons vendor chunk
+          if (id.includes("node_modules/lucide-react")) {
+            return "vendor-icons";
+          }
 
-          // Core UI - QuestionList only (QuestionItem loads naturally)
-          "ui-core": ["./src/components/QuestionList.jsx"],
+          // Export utilities (jszip)
+          if (id.includes("node_modules/jszip")) {
+            return "vendor-export";
+          }
 
-          // View Router - separate chunk for lazy loading
-          "ui-router": ["./src/components/ViewRouter.jsx"],
+          // Admin components grouping
+          if (id.includes("src/components/AdminPanel") || 
+              id.includes("src/components/InviteManagement") || 
+              id.includes("src/components/UserList") ||
+              id.includes("src/components/AuditLogs")) {
+            return "view-admin";
+          }
+
+          // Analytics components grouping
+          if (id.includes("src/components/Analytics") || id.includes("src/components/AnalyticsDashboard")) {
+            return "view-analytics";
+          }
+
+          // Core UI logic
+          if (id.includes("src/agents/")) {
+            return "agents-logic";
+          }
         },
       },
     },

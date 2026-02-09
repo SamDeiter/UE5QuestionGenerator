@@ -24,6 +24,7 @@ import {
 } from "../../utils/generationUtils";
 import { logger } from "../../utils/logger";
 import { logError } from "../../utils/AppError";
+import { TAGS_BY_DISCIPLINE } from "../../utils/tagTaxonomy";
 
 /**
  * Hook to handle question generation, explanation, and variation.
@@ -307,7 +308,6 @@ export const useQuestionGenerator = ({
       .slice(-GENERATION_LIMITS.REJECTED_EXAMPLES_COUNT);
 
     // AUTO-DETECT COVERAGE GAPS
-    const { TAGS_BY_DISCIPLINE } = await import("../../utils/tagTaxonomy");
     const availableTags = TAGS_BY_DISCIPLINE[config.discipline] || [];
     const coverageGaps = calculateCoverageGaps(
       config.discipline,

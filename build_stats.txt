@@ -1,0 +1,158 @@
+
+> ue5-question-generator@2.4.29 build
+> vite build
+
+[36mvite v7.2.4 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 2806 modules transformed.
+rendering chunks...
+[plugin vite:reporter] 
+(!) C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/utils/tagTaxonomy.js is dynamically imported by C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/hooks/generation/useQuestionGenerator.js but also statically imported by C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/AnalyticsDashboard/TopicCoverageAnalysis.jsx, C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/AnalyticsView.jsx, C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/ContextToolbar/ReviewModeToolbar.jsx, C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/sidebar/CoverageGapSuggester.jsx, C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/components/sidebar/GenerationSettings.jsx, C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/src/services/promptBuilder.js, dynamic import will not move module into another chunk.
+
+computing gzip size...
+[2mdist/[22m[32mregisterSW.js                                 [39m[1m[2m  0.18 kB[22m[1m[22m
+[2mdist/[22m[32mmanifest.webmanifest                          [39m[1m[2m  0.42 kB[22m[1m[22m
+[2mdist/[22m[32mindex.html                                    [39m[1m[2m  5.83 kB[22m[1m[22m[2m Γöé gzip:   1.88 kB[22m
+[2mdist/[22m[35massets/index-3WbzLr-s.css                     [39m[1m[2m 85.49 kB[22m[1m[22m[2m Γöé gzip:  14.36 kB[22m
+[2mdist/[22m[36massets/CustomTagsEditor-tUUZxi6p.js           [39m[1m[2m  1.04 kB[22m[1m[22m[2m Γöé gzip:   0.59 kB[22m
+[2mdist/[22m[36massets/SafeResponsiveContainer-y83agC9J.js    [39m[1m[2m  1.13 kB[22m[1m[22m[2m Γöé gzip:   0.61 kB[22m
+[2mdist/[22m[36massets/EnvironmentInfo-BFOV5q67.js            [39m[1m[2m  2.41 kB[22m[1m[22m[2m Γöé gzip:   0.92 kB[22m
+[2mdist/[22m[36massets/ApiConfig-Cnrbp2tP.js                  [39m[1m[2m  2.56 kB[22m[1m[22m[2m Γöé gzip:   0.87 kB[22m
+[2mdist/[22m[36massets/TrainingDataExport-CkxdeyV6.js         [39m[1m[2m  2.87 kB[22m[1m[22m[2m Γöé gzip:   1.04 kB[22m
+[2mdist/[22m[36massets/databaseCleanup-BoSYZqV3.js            [39m[1m[2m  3.10 kB[22m[1m[22m[2m Γöé gzip:   1.33 kB[22m
+[2mdist/[22m[36massets/CrashRecoveryPrompt-CKSRjcB1.js        [39m[1m[2m  3.82 kB[22m[1m[22m[2m Γöé gzip:   1.29 kB[22m
+[2mdist/[22m[36massets/UserList-COfci8fE.js                   [39m[1m[2m  4.10 kB[22m[1m[22m[2m Γöé gzip:   1.73 kB[22m
+[2mdist/[22m[36massets/DatabaseManagement-uCQJfUvE.js         [39m[1m[2m  4.43 kB[22m[1m[22m[2m Γöé gzip:   1.76 kB[22m
+[2mdist/[22m[36massets/AuditLogs-B8xMBJsi.js                  [39m[1m[2m  4.71 kB[22m[1m[22m[2m Γöé gzip:   1.91 kB[22m
+[2mdist/[22m[36massets/TranslationManagementView-CLQL6YKd.js  [39m[1m[2m  5.42 kB[22m[1m[22m[2m Γöé gzip:   2.02 kB[22m
+[2mdist/[22m[36massets/SystemHealth-BvvfTqD4.js               [39m[1m[2m  5.57 kB[22m[1m[22m[2m Γöé gzip:   1.83 kB[22m
+[2mdist/[22m[36massets/PromptPlayground-Byi2i2Bd.js           [39m[1m[2m  5.64 kB[22m[1m[22m[2m Γöé gzip:   1.89 kB[22m
+[2mdist/[22m[36massets/LandingPage-C2fQNM4G.js                [39m[1m[2m  7.43 kB[22m[1m[22m[2m Γöé gzip:   2.49 kB[22m
+[2mdist/[22m[36massets/SignIn-DK5zsFdm.js                     [39m[1m[2m  7.95 kB[22m[1m[22m[2m Γöé gzip:   2.68 kB[22m
+[2mdist/[22m[36massets/ReviewerAnalytics-C4EI5hRf.js          [39m[1m[2m  8.10 kB[22m[1m[22m[2m Γöé gzip:   2.53 kB[22m
+[2mdist/[22m[36massets/InviteManagement-DCQvLRdR.js           [39m[1m[2m  9.58 kB[22m[1m[22m[2m Γöé gzip:   2.97 kB[22m
+[2mdist/[22m[36massets/agents-logic-D04BUpDH.js               [39m[1m[2m 11.36 kB[22m[1m[22m[2m Γöé gzip:   3.53 kB[22m
+[2mdist/[22m[36massets/ui-router-CfT2DlPa.js                  [39m[1m[2m 11.44 kB[22m[1m[22m[2m Γöé gzip:   4.02 kB[22m
+[2mdist/[22m[36massets/AdminPanel-BSRvhfQ_.js                 [39m[1m[2m 11.92 kB[22m[1m[22m[2m Γöé gzip:   3.33 kB[22m
+[2mdist/[22m[36massets/DataMaintenance-CAaXlMG3.js            [39m[1m[2m 14.71 kB[22m[1m[22m[2m Γöé gzip:   4.21 kB[22m
+[2mdist/[22m[36massets/InviteSignUp-ZR9kRlnd.js               [39m[1m[2m 14.80 kB[22m[1m[22m[2m Γöé gzip:   3.94 kB[22m
+[2mdist/[22m[36massets/DatabaseView-BWJ5nDW-.js               [39m[1m[2m 22.25 kB[22m[1m[22m[2m Γöé gzip:   6.84 kB[22m
+[2mdist/[22m[36massets/vendor-icons-FQnf4AFT.js               [39m[1m[2m 24.63 kB[22m[1m[22m[2m Γöé gzip:   8.07 kB[22m
+[2mdist/[22m[36massets/AnalyticsView-CYQCnrj8.js              [39m[1m[2m 29.43 kB[22m[1m[22m[2m Γöé gzip:   8.27 kB[22m
+[2mdist/[22m[36massets/MainLayout-Cbb7YSep.js                 [39m[1m[2m 37.75 kB[22m[1m[22m[2m Γöé gzip:  10.10 kB[22m
+[2mdist/[22m[36massets/TestView-BHsM4qf-.js                   [39m[1m[2m 52.12 kB[22m[1m[22m[2m Γöé gzip:  14.33 kB[22m
+[2mdist/[22m[36massets/GlobalModals-C5D1q5lQ.js               [39m[1m[2m 83.97 kB[22m[1m[22m[2m Γöé gzip:  23.13 kB[22m
+[2mdist/[22m[36massets/vendor-export-D_vGEcqu.js              [39m[1m[2m 96.73 kB[22m[1m[22m[2m Γöé gzip:  29.88 kB[22m
+[2mdist/[22m[36massets/vendor-react-C5vGbBff.js               [39m[1m[2m140.88 kB[22m[1m[22m[2m Γöé gzip:  45.25 kB[22m
+[2mdist/[22m[36massets/index-ChDcMgiv.js                      [39m[1m[2m196.64 kB[22m[1m[22m[2m Γöé gzip:  63.15 kB[22m
+[2mdist/[22m[36massets/ui-core-pu0fjomY.js                    [39m[1m[2m295.11 kB[22m[1m[22m[2m Γöé gzip:  88.88 kB[22m
+[2mdist/[22m[36massets/vendor-charts-Cg6M_0k3.js              [39m[1m[2m386.82 kB[22m[1m[22m[2m Γöé gzip: 112.92 kB[22m
+[2mdist/[22m[36massets/vendor-firebase-Qv4tLCGo.js            [39m[1m[2m437.57 kB[22m[1m[22m[2m Γöé gzip: 134.36 kB[22m
+[32mΓ£ô built in 9.76s[39m
+
+Γ£¿ [vite-plugin-compression]:algorithm=gzip - compressed file successfully: 
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/CustomTagsEditor-tUUZxi6p.js.gz            1.02kb / gzip: 0.58kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/AuditLogs-B8xMBJsi.js.gz                   4.60kb / gzip: 1.86kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/AdminPanel-BSRvhfQ_.js.gz                  11.64kb / gzip: 3.25kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/ApiConfig-Cnrbp2tP.js.gz                   2.50kb / gzip: 0.85kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/agents-logic-D04BUpDH.js.gz                11.09kb / gzip: 3.45kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/CrashRecoveryPrompt-CKSRjcB1.js.gz         3.73kb / gzip: 1.26kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/DatabaseManagement-uCQJfUvE.js.gz          4.33kb / gzip: 1.72kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/databaseCleanup-BoSYZqV3.js.gz             3.03kb / gzip: 1.29kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/EnvironmentInfo-BFOV5q67.js.gz             2.35kb / gzip: 0.90kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/AnalyticsView-CYQCnrj8.js.gz               28.74kb / gzip: 8.06kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/InviteManagement-DCQvLRdR.js.gz            9.36kb / gzip: 2.89kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/DatabaseView-BWJ5nDW-.js.gz                21.73kb / gzip: 6.67kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/DataMaintenance-CAaXlMG3.js.gz             14.37kb / gzip: 4.11kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/LandingPage-C2fQNM4G.js.gz                 7.26kb / gzip: 2.43kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/InviteSignUp-ZR9kRlnd.js.gz                14.45kb / gzip: 3.84kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/MainLayout-Cbb7YSep.js.gz                  36.86kb / gzip: 9.83kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/ReviewerAnalytics-C4EI5hRf.js.gz           7.91kb / gzip: 2.48kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/SafeResponsiveContainer-y83agC9J.js.gz     1.10kb / gzip: 0.60kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/PromptPlayground-Byi2i2Bd.js.gz            5.51kb / gzip: 1.84kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/SystemHealth-BvvfTqD4.js.gz                5.44kb / gzip: 1.79kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/TranslationManagementView-CLQL6YKd.js.gz   5.29kb / gzip: 1.97kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/TrainingDataExport-CkxdeyV6.js.gz          2.81kb / gzip: 1.01kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/index-3WbzLr-s.css.gz                      83.49kb / gzip: 13.84kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/SignIn-DK5zsFdm.js.gz                      7.76kb / gzip: 2.62kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/UserList-COfci8fE.js.gz                    4.01kb / gzip: 1.69kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/ui-router-CfT2DlPa.js.gz                   11.17kb / gzip: 3.93kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/TestView-BHsM4qf-.js.gz                    50.90kb / gzip: 13.95kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/index.html.gz                                     5.70kb / gzip: 1.84kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/vendor-icons-FQnf4AFT.js.gz                24.05kb / gzip: 7.78kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/review-sdk/ReviewFirebase.js.gz                   2.18kb / gzip: 0.80kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/review-sdk/ScenarioLoader.js.gz                   3.24kb / gzip: 1.26kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/review-sdk/ReviewCore.js.gz                       3.08kb / gzip: 1.02kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/review-sdk/ReviewStorage.js.gz                    1.97kb / gzip: 0.77kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/scorm-template/index.html.gz                      2.89kb / gzip: 1.00kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/review-sdk/ReviewUI.js.gz                         20.04kb / gzip: 4.69kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/scorm-template/style.css.gz                       2.20kb / gzip: 0.96kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/scorm-template/scorm.js.gz                        4.98kb / gzip: 1.42kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/scorm-template/game.js.gz                         34.31kb / gzip: 8.57kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/GlobalModals-C5D1q5lQ.js.gz                82.00kb / gzip: 22.51kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/vendor-export-D_vGEcqu.js.gz               94.47kb / gzip: 29.09kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/scorm-template/questions.js.gz                    88.24kb / gzip: 23.00kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/vendor-react-C5vGbBff.js.gz                137.57kb / gzip: 44.12kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/index-ChDcMgiv.js.gz                       192.03kb / gzip: 61.58kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/ui-core-pu0fjomY.js.gz                     288.19kb / gzip: 86.63kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/vendor-charts-Cg6M_0k3.js.gz               377.75kb / gzip: 110.06kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/vendor-firebase-Qv4tLCGo.js.gz             427.31kb / gzip: 130.95kb
+
+
+
+Γ£¿ [vite-plugin-compression]:algorithm=brotliCompress - compressed file successfully: 
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/AdminPanel-BSRvhfQ_.js.br                  11.64kb / brotliCompress: 2.85kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/agents-logic-D04BUpDH.js.br                11.09kb / brotliCompress: 2.99kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/AnalyticsView-CYQCnrj8.js.br               28.74kb / brotliCompress: 7.16kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/AuditLogs-B8xMBJsi.js.br                   4.60kb / brotliCompress: 1.67kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/CrashRecoveryPrompt-CKSRjcB1.js.br         3.73kb / brotliCompress: 1.08kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/CustomTagsEditor-tUUZxi6p.js.br            1.02kb / brotliCompress: 0.48kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/ApiConfig-Cnrbp2tP.js.br                   2.50kb / brotliCompress: 0.74kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/databaseCleanup-BoSYZqV3.js.br             3.03kb / brotliCompress: 1.13kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/DatabaseManagement-uCQJfUvE.js.br          4.33kb / brotliCompress: 1.43kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/EnvironmentInfo-BFOV5q67.js.br             2.35kb / brotliCompress: 0.75kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/DatabaseView-BWJ5nDW-.js.br                21.73kb / brotliCompress: 5.81kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/DataMaintenance-CAaXlMG3.js.br             14.37kb / brotliCompress: 3.63kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/LandingPage-C2fQNM4G.js.br                 7.26kb / brotliCompress: 2.08kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/InviteManagement-DCQvLRdR.js.br            9.36kb / brotliCompress: 2.54kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/PromptPlayground-Byi2i2Bd.js.br            5.51kb / brotliCompress: 1.60kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/ReviewerAnalytics-C4EI5hRf.js.br           7.91kb / brotliCompress: 2.20kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/SystemHealth-BvvfTqD4.js.br                5.44kb / brotliCompress: 1.57kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/index-3WbzLr-s.css.br                      83.49kb / brotliCompress: 10.77kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/InviteSignUp-ZR9kRlnd.js.br                14.45kb / brotliCompress: 3.36kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/SafeResponsiveContainer-y83agC9J.js.br     1.10kb / brotliCompress: 0.51kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/TranslationManagementView-CLQL6YKd.js.br   5.29kb / brotliCompress: 1.72kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/ui-router-CfT2DlPa.js.br                   11.17kb / brotliCompress: 3.38kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/MainLayout-Cbb7YSep.js.br                  36.86kb / brotliCompress: 8.65kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/TrainingDataExport-CkxdeyV6.js.br          2.81kb / brotliCompress: 0.87kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/SignIn-DK5zsFdm.js.br                      7.76kb / brotliCompress: 2.27kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/UserList-COfci8fE.js.br                    4.01kb / brotliCompress: 1.51kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/vendor-icons-FQnf4AFT.js.br                24.05kb / brotliCompress: 6.65kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/TestView-BHsM4qf-.js.br                    50.90kb / brotliCompress: 12.18kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/index.html.br                                     5.70kb / brotliCompress: 1.45kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/review-sdk/ReviewCore.js.br                       3.08kb / brotliCompress: 0.88kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/review-sdk/ReviewStorage.js.br                    1.97kb / brotliCompress: 0.63kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/review-sdk/ScenarioLoader.js.br                   3.24kb / brotliCompress: 1.03kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/review-sdk/ReviewFirebase.js.br                   2.18kb / brotliCompress: 0.68kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/scorm-template/style.css.br                       2.20kb / brotliCompress: 0.78kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/scorm-template/index.html.br                      2.89kb / brotliCompress: 0.76kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/scorm-template/scorm.js.br                        4.98kb / brotliCompress: 1.23kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/review-sdk/ReviewUI.js.br                         20.04kb / brotliCompress: 3.99kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/GlobalModals-C5D1q5lQ.js.br                82.00kb / brotliCompress: 18.99kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/scorm-template/game.js.br                         34.31kb / brotliCompress: 7.19kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/vendor-export-D_vGEcqu.js.br               94.47kb / brotliCompress: 25.85kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/scorm-template/questions.js.br                    88.24kb / brotliCompress: 19.41kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/vendor-react-C5vGbBff.js.br                137.57kb / brotliCompress: 38.76kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/index-ChDcMgiv.js.br                       192.03kb / brotliCompress: 52.09kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/ui-core-pu0fjomY.js.br                     288.19kb / brotliCompress: 74.08kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/vendor-firebase-Qv4tLCGo.js.br             427.31kb / brotliCompress: 111.55kb
+dist/C:/Users/Sam Deiter/Documents/GitHub/UE5QuestionGenerator/assets/vendor-charts-Cg6M_0k3.js.br               377.75kb / brotliCompress: 91.98kb
+
+
+
+PWA v1.2.0
+mode      generateSW
+precache  72 entries (2559.85 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-3f626378.js

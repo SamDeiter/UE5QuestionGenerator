@@ -426,7 +426,7 @@ export const getQuestionsPaginatedWithFilters = async ({
  * @param {string} userId - The user's UID
  * @returns {Promise<{totalCost: number, questionCount: number, estimatedInputTokens: number, estimatedOutputTokens: number}>}
  */
-const getUserTokenUsageAggregated = async (userId) => {
+export const getUserTokenUsageAggregated = async (userId) => {
   try {
     if (!userId) {
       logger.log("⚠️ No userId provided for token usage aggregation");
@@ -483,7 +483,7 @@ const getUserTokenUsageAggregated = async (userId) => {
  *
  * @returns {Promise<{total: number, byStatus: Object}>}
  */
-const getQuestionStatsAggregated = async () => {
+export const getQuestionStatsAggregated = async () => {
   try {
     if (!auth.currentUser) {
       return { total: 0, byStatus: {} };
@@ -698,7 +698,7 @@ export const getCustomTags = async () => {
  * //   lastUpdated: Timestamp
  * // }
  */
-const getQuestionStats = async () => {
+export const getQuestionStats = async () => {
   try {
     const statsRef = doc(getDb(), "_aggregates", "questionStats");
     const statsSnap = await getDoc(statsRef);

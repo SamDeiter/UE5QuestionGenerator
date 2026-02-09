@@ -343,6 +343,7 @@ export const getReviewerAnalytics = async () => {
   try {
     const reviewedQuestions = await fetchReviewedQuestions();
     const reviewerStats = aggregateReviewerStats(reviewedQuestions);
+    const timelineData = aggregateReviewTimeline(reviewedQuestions);
 
     // Aggregate overall rejection reasons
     const overallRejectionReasons = {};
@@ -357,6 +358,7 @@ export const getReviewerAnalytics = async () => {
 
     return {
       reviewerStats,
+      timelineData,
       metadata: {
         totalQuestionsReviewed: reviewedQuestions.length,
         totalReviewers: reviewerStats.length,
@@ -375,6 +377,7 @@ export const getReviewerAnalytics = async () => {
       );
       return {
         reviewerStats: [],
+        timelineData: [],
         metadata: {
           totalQuestionsReviewed: 0,
           totalReviewers: 0,
@@ -386,4 +389,39 @@ export const getReviewerAnalytics = async () => {
     logError(error, { operation: "getReviewerAnalytics" });
     throw error;
   }
+};
+
+/**
+ * Aggregates review actions by day for a timeline chart
+ * @param {Array} questions - Array of reviewed questions
+ * @returns {Array} Array of { date, count } objects sorted by date
+ */
+export const aggregateReviewTimeline = (questions) => {
+  if (!questions || questions.length === 0) return [];
+
+  const timelineMap = new Map();
+
+  questions.forEach((q) => {
+    const reviewDateStr = q.reviewCompletedAt || q.acceptedAt;
+    if (!reviewDateStr) return;
+
+    try {
+      const date = new Date(reviewDateStr);
+      if (isNaN(date.getTime())) return;
+
+      // Extract only the YYYY-MM-DD part
+      const dateKey = date.toISOString().split("T")[0];
+
+      timelineMap.set(dateKey, (timelineMap.get(dateKey) || 0) + 1);
+    } catch (e) {
+      logger.warn(
+        `Invalid review date encountered in timeline aggregation: ${e.message}`
+      );
+    }
+  });
+
+  // Convert to array of objects
+  return Array.from(timelineMap.entries())
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 };

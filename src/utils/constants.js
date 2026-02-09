@@ -53,7 +53,7 @@ export const QUALITY_PASS_THRESHOLD = QUALITY_THRESHOLDS.PASS;
 
 // Colorblind-Safe Color Palette
 // Uses blue/orange/purple instead of green/yellow/red for better visibility
-const COLORBLIND_COLORS = {
+export const COLORBLIND_COLORS = {
   EXCELLENT: {
     bg: "bg-blue-900/30",
     border: "border-blue-700/50",
@@ -133,7 +133,7 @@ export const DEFAULT_CONFIG = {
   tags: [],
 };
 
-const ERROR_MESSAGES = {
+export const ERROR_MESSAGES = {
   NO_API_KEY: "Please enter your Google Gemini API Key in Settings.",
   NO_SHEET_URL: "Please configure Google Sheets URL in settings first.",
   GEN_FAILED: "Generation failed. Please check your API key and try again.",
@@ -158,9 +158,15 @@ export const CONTEXT_LIMITS = {
 };
 
 // Token Usage Warning Levels (percentage thresholds)
-const TOKEN_WARNING_LEVELS = {
+export const TOKEN_WARNING_LEVELS = {
   DANGER: 90, // >= 90%: Critical, near limit
   WARNING: 70, // >= 70%: Caution, approaching limit
+};
+
+/** Token cost thresholds for monitoring */
+export const TOKEN_THRESHOLDS = {
+  WARNING: 0.5, // $0.50 (Amber)
+  CRITICAL: 1.0, // $1.00 (Red)
 };
 
 // UI Timing Constants
@@ -211,7 +217,7 @@ export const FIRESTORE_LIMITS = {
 };
 
 // History Limits
-const HISTORY_LIMITS = {
+export const HISTORY_LIMITS = {
   MAX_STATES_PER_QUESTION: 10,
 };
 
@@ -228,7 +234,7 @@ export const GENERATION_LIMITS = {
 };
 
 // Question Validation Limits
-const QUESTION_LIMITS = {
+export const QUESTION_LIMITS = {
   MIN_CHOICES: 2,
   MAX_CHOICES: 6,
   MIN_QUESTION_LENGTH: 10,
@@ -250,8 +256,27 @@ export const TUTORIAL = {
   RESIZE_THROTTLE: 100,
 };
 
+/** Tutorial system detailed config */
+export const TUTORIAL_CONFIG = {
+  MAX_ATTEMPTS: 20,
+  POLL_INTERVAL: 100,
+  THROTTLE_DELAY: 100,
+  HIGHLIGHT_PADDING: 10,
+  RESIZE_THROTTLE: 100,
+  SECONDARY_SCROLL_DELAY: 500,
+  FINAL_SCROLL_DELAY: 1500,
+  Z_INDEX_BASE: 9999,
+  Z_INDEX_TOOLTIP: 10000,
+};
+
 export const MAINTENANCE = {
   NUKE_BATCH_SIZE: 10,
+};
+
+/** Data maintenance and danger zone config */
+export const MAINTENANCE_CONFIG = {
+  NUKE_BATCH_SIZE: 10,
+  MODAL_Z_INDEX: 50,
 };
 
 // Question Sources

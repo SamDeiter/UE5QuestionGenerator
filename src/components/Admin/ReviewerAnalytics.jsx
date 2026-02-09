@@ -1,5 +1,14 @@
 import React from "react";
-import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
+import {
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  LineChart,
+  Line,
+} from "recharts";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import SafeResponsiveContainer from "../analytics/SafeResponsiveContainer";
@@ -105,6 +114,56 @@ const ReviewerAnalytics = ({
                       </div>
                     );
                   })}
+              </div>
+            </div>
+          )}
+
+        {/* Recent Activity Timeline */}
+        {reviewerAnalytics.timelineData &&
+          reviewerAnalytics.timelineData.length > 0 && (
+            <div className="bg-slate-800/50 p-4 rounded border border-cyan-500/20 mb-4">
+              <h4 className="text-sm font-bold text-cyan-300 mb-1 text-center">
+                Review Activity Timeline
+              </h4>
+              <p className="text-xs text-slate-500 mb-3 text-center">
+                Number of reviews completed per day
+              </p>
+              <div style={{ height: 180 }}>
+                <SafeResponsiveContainer width="100%" height="100%">
+                  <LineChart data={reviewerAnalytics.timelineData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#334155"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      stroke="#94a3b8"
+                      fontSize={10}
+                      tickFormatter={(val) => {
+                        const d = new Date(val);
+                        return `${d.getMonth() + 1}/${d.getDate()}`;
+                      }}
+                    />
+                    <YAxis stroke="#94a3b8" fontSize={10} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "1px solid #334155",
+                        fontSize: "11px",
+                      }}
+                      labelStyle={{ color: "#94a3b8" }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke="#06b6d4"
+                      strokeWidth={2}
+                      dot={{ fill: "#06b6d4", r: 3 }}
+                      activeDot={{ r: 5, strokeWidth: 0 }}
+                    />
+                  </LineChart>
+                </SafeResponsiveContainer>
               </div>
             </div>
           )}

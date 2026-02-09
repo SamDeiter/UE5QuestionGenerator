@@ -1,0 +1,106 @@
+
+> ue5-question-generator@2.4.30 lint
+> eslint .
+
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\App.jsx
+  89:29  warning  'setDatabaseQuestions' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  89:29  error    Remove the declaration of the unused 'setDatabaseQuestions' variable                             sonarjs/no-unused-vars
+  89:29  error    Remove this useless assignment to variable "setDatabaseQuestions"                                sonarjs/no-dead-store
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\AuthenticatedApp.jsx
+    2:20  warning  'lazy' is defined but never used. Allowed unused vars must match /^_/u                      no-unused-vars
+    2:20  error    Remove this unused import of 'lazy'                                                         sonarjs/unused-import
+    2:36  warning  'useRef' is defined but never used. Allowed unused vars must match /^_/u                    no-unused-vars
+    2:36  error    Remove this unused import of 'useRef'                                                       sonarjs/unused-import
+   34:29  warning  'LoadingSpinner' is defined but never used. Allowed unused vars must match /^_/u            no-unused-vars
+   34:29  error    Remove this unused import of 'LoadingSpinner'                                               sonarjs/unused-import
+   42:3   warning  'isRegistered' is defined but never used. Allowed unused args must match /^_/u              no-unused-vars
+   43:3   warning  'markAsRegistered' is defined but never used. Allowed unused args must match /^_/u          no-unused-vars
+   82:3   warning  'handleRestartTutorial' is defined but never used. Allowed unused args must match /^_/u     no-unused-vars
+  136:24  warning  'setIsProcessing' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  136:24  error    Remove the declaration of the unused 'setIsProcessing' variable                             sonarjs/no-unused-vars
+  136:24  error    Remove this useless assignment to variable "setIsProcessing"                                sonarjs/no-dead-store
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\components\AnalyticsDashboard\SharedChartComponents.jsx
+   63:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   73:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   83:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   88:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   97:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  111:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\contexts\AccessibilityContext.jsx
+  23:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  61:6   warning  React Hook useEffect has a missing dependency: 'prefs.reducedMotion'. Either include it or remove the dependency array          react-hooks/exhaustive-deps
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\contexts\ErrorReporterContext.jsx
+  23:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\questionManager\useQuestionActions.js
+  161:5  warning  React Hook useCallback has a missing dependency: 'config.creatorName'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\hooks\useDatabaseActions.js
+  63:5  warning  React Hook useCallback has an unnecessary dependency: 'showMessage'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\auditService.js
+  58:7  warning  'logBulkOperation' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\firebaseQueries.js
+  429:7  warning  'getUserTokenUsageAggregated' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  486:7  warning  'getQuestionStatsAggregated' is assigned a value but never used. Allowed unused vars must match /^_/u   no-unused-vars
+  701:7  warning  'getQuestionStats' is assigned a value but never used. Allowed unused vars must match /^_/u             no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\firebaseSave.js
+   85:7  warning  'ensurePersistence' is assigned a value but never used. Allowed unused vars must match /^_/u     no-unused-vars
+  101:7  warning  'getPersistenceStatus' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\gemini.js
+  397:7  warning  'rewriteQuestion' is assigned a value but never used. Allowed unused vars must match /^_/u             no-unused-vars
+  436:7  warning  'classifyQuestionDiscipline' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  474:7  warning  'generateTagsForQuestion' is assigned a value but never used. Allowed unused vars must match /^_/u     no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\services\questionCache.js
+  113:7  warning  'getCachedQuestion' is assigned a value but never used. Allowed unused vars must match /^_/u     no-unused-vars
+  147:7  warning  'getLastCacheTime' is assigned a value but never used. Allowed unused vars must match /^_/u      no-unused-vars
+  176:7  warning  'updateCachedQuestion' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  192:7  warning  'deleteCachedQuestion' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  205:7  warning  'getCacheStats' is assigned a value but never used. Allowed unused vars must match /^_/u         no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\test\testUtils.jsx
+   54:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   61:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   75:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  103:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  123:16  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\answerHelpers.js
+  130:7  warning  'hasValidCorrectAnswer' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\errorMessages.js
+  218:7  warning  'isRecoverableError' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  221:7  warning  'shouldPromptReauth' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\externalCritique.js
+   94:7  warning  'importCritiqueScores' is assigned a value but never used. Allowed unused vars must match /^_/u   no-unused-vars
+  152:7  warning  'downloadScoreTemplate' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\normalizeReviewerName.js
+   90:7  warning  'getReviewerFromQuestion' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  106:7  warning  'addEmailMapping' is assigned a value but never used. Allowed unused vars must match /^_/u          no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\questionDocParser.js
+  115:7  warning  'getQuestionText' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+  128:7  warning  'isDisplayable' is assigned a value but never used. Allowed unused vars must match /^_/u    no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\questionValidator.js
+  83:10  warning  'validateQuestionsBatch' is defined but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\security.js
+  57:7  warning  'sanitizeCSVField' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\utils\urlValidator.js
+  125:10  warning  'validateURLsBatch' is defined but never used. Allowed unused vars must match /^_/u  no-unused-vars
+
+Γ£û 57 problems (7 errors, 50 warnings)
+

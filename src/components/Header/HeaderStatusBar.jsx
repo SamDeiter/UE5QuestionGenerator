@@ -4,6 +4,7 @@
 import Icon from "../Icon";
 import { triggerManualSync, clearOfflineQueue } from "../../services/firebase";
 import { useAccessibility } from "../../contexts/AccessibilityContext";
+import { TOKEN_THRESHOLDS } from "../../utils/constants";
 
 const HeaderStatusBar = ({
   formattedTokens,
@@ -20,18 +21,41 @@ const HeaderStatusBar = ({
   const errorText = cb ? "text-rose-400" : "text-red-400";
   const successBg = cb ? "bg-blue-500" : "bg-green-500";
 
+  // Token cost status determination
+  const totalCost = tokenUsage.totalCost || 0;
+  const isCriticalUsage = totalCost >= TOKEN_THRESHOLDS.CRITICAL;
+  const isWarningUsage = totalCost >= TOKEN_THRESHOLDS.WARNING;
+
+  let usageColorClass = "text-purple-400";
+  if (isCriticalUsage) {
+    usageColorClass = errorText;
+  } else if (isWarningUsage) {
+    usageColorClass = "text-amber-400";
+  }
+
+  let usageTooltip = `Input: ${tokenUsage.inputTokens || 0} | Output: ${
+    tokenUsage.outputTokens || 0
+  }`;
+  if (isCriticalUsage) {
+    usageTooltip = `Critical Cost Alert: $${totalCost.toFixed(3)} - Please review usage.`;
+  } else if (isWarningUsage) {
+    usageTooltip = `High Cost Warning: $${totalCost.toFixed(3)}`;
+  }
+
   return (
     <div
       className="flex items-center h-7 gap-1.5 px-2 rounded border border-slate-700 whitespace-nowrap text-[10px]"
       role="status"
       aria-live="polite"
-      title={`Input: ${tokenUsage.inputTokens || 0} | Output: ${
-        tokenUsage.outputTokens || 0
-      }`}
+      title={usageTooltip}
     >
       {/* Token Display */}
-      <div className="flex items-center gap-1 text-purple-400">
-        <Icon name="zap" size={10} />
+      <div className={`flex items-center gap-1 ${usageColorClass}`}>
+        <Icon
+          name="zap"
+          size={10}
+          className={isCriticalUsage ? "animate-bounce" : ""}
+        />
         <span className="font-semibold">{formattedTokens}</span>
       </div>
       <div className="w-px h-3 bg-slate-700"></div>

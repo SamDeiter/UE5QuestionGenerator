@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Icon from "./Icon";
 import { throttle, trapFocus } from "../utils/tutorial/domHelpers";
 import { logTutorialEvent, TUTORIAL_EVENTS } from "../utils/tutorialAnalytics";
-import { TUTORIAL } from "../utils/constants";
+import { TUTORIAL, TUTORIAL_CONFIG } from "../utils/constants";
 
 const TutorialOverlay = ({
   steps,
@@ -23,7 +23,8 @@ const TutorialOverlay = ({
     let pollInterval;
     let resizeObserver;
     let attemptCount = 0;
-    const MAX_ATTEMPTS = TUTORIAL.MAX_ATTEMPT_COUNT || 20;
+    const MAX_ATTEMPTS =
+      TUTORIAL.MAX_ATTEMPT_COUNT || TUTORIAL_CONFIG.MAX_ATTEMPTS;
 
     setElementNotFound(false);
 
@@ -60,16 +61,20 @@ const TutorialOverlay = ({
         if (pollInterval) clearInterval(pollInterval);
 
         // Calculate position with padding for highlight
+        const padding = TUTORIAL_CONFIG.HIGHLIGHT_PADDING;
         setTargetRect({
-          top: rect.top - 10,
-          left: rect.left - 10,
-          width: rect.width + 20,
-          height: rect.height + 20,
+          top: rect.top - padding,
+          left: rect.left - padding,
+          width: rect.width + padding * 2,
+          height: rect.height + padding * 2,
         });
 
         // Observe element for resize/movement (throttled)
         if (!resizeObserver) {
-          const throttledUpdate = throttle(updatePosition, 100);
+          const throttledUpdate = throttle(
+            updatePosition,
+            TUTORIAL_CONFIG.THROTTLE_DELAY
+          );
           resizeObserver = new ResizeObserver(throttledUpdate);
           resizeObserver.observe(element);
         }
@@ -110,7 +115,7 @@ const TutorialOverlay = ({
 
     if (step.target) {
       // Poll for element existence (handles conditionally rendered elements)
-      pollInterval = setInterval(updatePosition, 100);
+      pollInterval = setInterval(updatePosition, TUTORIAL_CONFIG.POLL_INTERVAL);
 
       // Try scrolling again after a delay if found (handles late transitions)
       const secondaryScroll = setTimeout(() => {
@@ -123,7 +128,7 @@ const TutorialOverlay = ({
           });
           updatePosition();
         }
-      }, 500);
+      }, TUTORIAL_CONFIG.SECONDARY_SCROLL_DELAY);
 
       // Final attempt for mobile/slow connections
       const finalScroll = setTimeout(() => {
@@ -132,12 +137,12 @@ const TutorialOverlay = ({
           el.scrollIntoView({ behavior: "auto", block: "center" });
           updatePosition();
         }
-      }, 1500);
+      }, TUTORIAL_CONFIG.FINAL_SCROLL_DELAY);
 
       // Throttled event listeners
       const throttledUpdate = throttle(
         updatePosition,
-        TUTORIAL.RESIZE_THROTTLE || 100
+        TUTORIAL.RESIZE_THROTTLE || TUTORIAL_CONFIG.RESIZE_THROTTLE
       );
       window.addEventListener("resize", throttledUpdate);
       window.addEventListener("scroll", throttledUpdate, true);
@@ -184,7 +189,10 @@ const TutorialOverlay = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-hidden">
+    <div
+      className="fixed inset-0 overflow-hidden"
+      style={{ zIndex: TUTORIAL_CONFIG.Z_INDEX_BASE }}
+    >
       {/* Dimmed Background with Cutout */}
       {targetRect ? (
         <div
@@ -228,7 +236,10 @@ const TutorialOverlay = ({
       )}
 
       {/* Tooltip Card - always centered using flex wrapper */}
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[10000]">
+      <div
+        className="fixed inset-0 flex items-center justify-center pointer-events-none"
+        style={{ zIndex: TUTORIAL_CONFIG.Z_INDEX_TOOLTIP }}
+      >
         <div
           ref={overlayRef}
           role="dialog"

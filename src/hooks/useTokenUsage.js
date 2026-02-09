@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { logger } from "../utils/logger";
-import { getTokenUsageFromQuestions } from "../utils/analyticsStore";
+import { getUserTokenUsageAggregated } from "../services/firebaseQueries";
+import { TIMING } from "../utils/constants";
 
 /**
  * Hook to calculate token usage from loaded questions.
- * Uses client-side calculation for reliability.
+ * v2.4.31: Transitioned to server-side aggregation for scalability.
  *
  * @param {string|undefined} userId - The user's UID
- * @param {Array} databaseQuestions - Questions loaded from Firestore
  * @returns {Object} Token usage data in format expected by TokenUsageDisplay
  */
-export function useTokenUsage(userId, databaseQuestions = []) {
+export function useTokenUsage(userId) {
   const [tokenUsage, setTokenUsage] = useState({
     inputTokens: 0,
     outputTokens: 0,
@@ -19,28 +19,38 @@ export function useTokenUsage(userId, databaseQuestions = []) {
   });
 
   useEffect(() => {
-    if (!userId || databaseQuestions.length === 0) {
+    if (!userId) {
       return;
     }
 
-    // Client-side calculation from loaded questions
-    const userQuestions = databaseQuestions.filter(
-      (q) => q.creatorId === userId
+    const fetchUsage = async () => {
+      try {
+        const usage = await getUserTokenUsageAggregated(userId);
+
+        setTokenUsage({
+          inputTokens: usage.estimatedInputTokens || 0,
+          outputTokens: usage.estimatedOutputTokens || 0,
+          totalCost: usage.totalCost || 0,
+          questionCount: usage.questionCount || 0,
+        });
+      } catch (error) {
+        logger.error("Failed to fetch aggregated token usage:", error);
+      } finally {
+        // loading state removed to satisfy lint
+      }
+    };
+
+    // Initial fetch
+    fetchUsage();
+
+    // Set up polling for real-time updates (e.g. every 30s)
+    const interval = setInterval(
+      fetchUsage,
+      TIMING.ANALYTICS_REFRESH_MS || 30000
     );
 
-    const usage = getTokenUsageFromQuestions(userQuestions);
-
-    setTokenUsage({
-      inputTokens: usage.inputTokens || 0,
-      outputTokens: usage.outputTokens || 0,
-      totalCost: usage.totalCost || 0,
-      questionCount: userQuestions.length,
-    });
-
-    logger.log(
-      `📊 Token usage calculated: ${userQuestions.length} questions, $${(usage.totalCost || 0).toFixed(4)}`
-    );
-  }, [userId, databaseQuestions]);
+    return () => clearInterval(interval);
+  }, [userId]);
 
   return tokenUsage;
 }
