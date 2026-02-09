@@ -110,7 +110,7 @@ export const getCachedQuestions = async ({
  * @param {string} uniqueId - The question's unique ID
  * @returns {Promise<Object|null>}
  */
-const getCachedQuestion = async (uniqueId) => {
+export const getCachedQuestion = async (uniqueId) => {
   try {
     const db = await getDB();
     return await db.get(QUESTIONS_STORE, uniqueId);
@@ -144,7 +144,7 @@ export const isCacheValid = async (
  * Gets the timestamp of when the cache was last updated.
  * @returns {Promise<number|null>}
  */
-const getLastCacheTime = async () => {
+export const getLastCacheTime = async () => {
   try {
     const db = await getDB();
     return (await db.get(META_STORE, "lastCached")) || null;
@@ -169,11 +169,43 @@ export const clearCache = async () => {
 };
 
 /**
+ * Caches generic metadata to IndexedDB.
+ * @param {string} key - The metadata key
+ * @param {any} data - The data to cache
+ * @returns {Promise<void>}
+ */
+export const cacheMetadata = async (key, data) => {
+  if (!key) return;
+  try {
+    const db = await getDB();
+    await db.put(META_STORE, data, key);
+  } catch (error) {
+    logger.error(`Failed to cache metadata [${key}]:`, error);
+  }
+};
+
+/**
+ * Retrieves cached metadata from IndexedDB.
+ * @param {string} key - The metadata key
+ * @returns {Promise<any|null>}
+ */
+export const getCachedMetadata = async (key) => {
+  if (!key) return null;
+  try {
+    const db = await getDB();
+    return (await db.get(META_STORE, key)) || null;
+  } catch (error) {
+    logger.error(`Failed to read metadata [${key}] from cache:`, error);
+    return null;
+  }
+};
+
+/**
  * Updates a single question in the cache.
  * @param {Object} question - The question to update
  * @returns {Promise<void>}
  */
-const updateCachedQuestion = async (question) => {
+export const updateCachedQuestion = async (question) => {
   if (!question?.uniqueId) return;
 
   try {
@@ -189,7 +221,7 @@ const updateCachedQuestion = async (question) => {
  * @param {string} uniqueId - The question's unique ID
  * @returns {Promise<void>}
  */
-const deleteCachedQuestion = async (uniqueId) => {
+export const deleteCachedQuestion = async (uniqueId) => {
   try {
     const db = await getDB();
     await db.delete(QUESTIONS_STORE, uniqueId);
@@ -202,7 +234,7 @@ const deleteCachedQuestion = async (uniqueId) => {
  * Gets cache statistics.
  * @returns {Promise<{count: number, lastUpdated: number|null, isValid: boolean}>}
  */
-const getCacheStats = async () => {
+export const getCacheStats = async () => {
   try {
     const db = await getDB();
     const count = await db.count(QUESTIONS_STORE);
@@ -217,4 +249,18 @@ const getCacheStats = async () => {
   } catch {
     return { count: 0, lastUpdated: null, isValid: false };
   }
+};
+
+export default {
+  cacheQuestions,
+  getCachedQuestions,
+  getCachedQuestion,
+  cacheMetadata,
+  getCachedMetadata,
+  updateCachedQuestion,
+  deleteCachedQuestion,
+  isCacheValid,
+  getLastCacheTime,
+  clearCache,
+  getCacheStats,
 };

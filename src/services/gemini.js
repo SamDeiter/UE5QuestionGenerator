@@ -394,7 +394,7 @@ export const generateCritique = async (apiKey, q) => {
  * @param {string} critiqueText - The feedback text from generateCritique
  * @returns {Promise<string>} - The raw text of the rewritten question table (needs parsing)
  */
-const rewriteQuestion = async (apiKey, q, critiqueText) => {
+export const rewriteQuestion = async (apiKey, q, critiqueText) => {
   const systemPrompt = `Role: Senior Epic Games Tech Writer. Task: Rewrite the question to fix errors found in the critique.
     Format: Pipe-delimited table, NO headers. Cols: |ID|Discipline|Type|Difficulty|Question|OptionA|OptionB|OptionC|OptionD|CorrectLetter|SourceURL|Excerpt|QualityScore|
     Critique to Address: ${critiqueText}
@@ -433,7 +433,7 @@ const rewriteQuestion = async (apiKey, q, critiqueText) => {
  * @param {string} questionText
  * @returns {Promise<string>} The discipline name
  */
-const classifyQuestionDiscipline = async (apiKey, questionText) => {
+export const classifyQuestionDiscipline = async (apiKey, questionText) => {
   const systemPrompt = `You are an expert UE5 classifier.
   Classify the following question into exactly ONE of these disciplines:
   - Worldbuilding
@@ -471,7 +471,7 @@ const classifyQuestionDiscipline = async (apiKey, questionText) => {
  * @param {string} questionText
  * @returns {Promise<string[]>} Array of tags
  */
-const generateTagsForQuestion = async (apiKey, questionText) => {
+export const generateTagsForQuestion = async (apiKey, questionText) => {
   const systemPrompt = `You are an expert UE5 tagger.
     Generate 3-5 relevant technical tags for the provided question.
     - Tags should be specific (e.g., "Blueprints", "Lumen", "Niagara").

@@ -51,7 +51,7 @@ export const normalizeStatus = (status) => {
 /**
  * Remove near-duplicate questions from an array.
  */
-const removeDuplicateQuestions = (questions, threshold = 0.85) => {
+export const removeDuplicateQuestions = (questions, threshold = 0.85) => {
   if (!questions || questions.length <= 1) return questions;
 
   const unique = [];
