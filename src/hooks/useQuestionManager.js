@@ -7,12 +7,12 @@ import { useQuestionActions } from "./questionManager/useQuestionActions";
  * Main orchestrator hook for question management.
  * Refactored to use modular sub-hooks for better maintainability.
  */
-export const useQuestionManager = (config, showMessage) => {
+export const useQuestionManager = (config, showMessage, categoryStats = {}, globalStats = null) => {
   // 1. Core State & Persistence
   const [allQuestions, setAllQuestions] = useQuestionState(config);
 
   // 2. Derived Views & Memoized Data (depends on allQuestions)
-  const derived = useQuestionDerivedData(allQuestions, config);
+  const derived = useQuestionDerivedData(allQuestions, config, categoryStats, globalStats);
 
   // 3. External Synchronization & Backups
   const { backupToCloud } = useQuestionSync(allQuestions, setAllQuestions);

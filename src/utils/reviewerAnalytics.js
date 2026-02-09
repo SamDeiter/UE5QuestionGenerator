@@ -5,7 +5,7 @@
  * from Firestore question data.
  */
 
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import { getDb } from "../services/firebase";
 import { logger } from "../utils/logger";
 import { logError } from "../utils/AppError";
@@ -41,21 +41,36 @@ const MS_PER_DAY =
 const VELOCITY_DECIMAL_PLACES = 2;
 
 /**
- * Fetches all questions that have been reviewed (have reviewCompletedAt timestamp)
+ * Fetches questions that have been reviewed (have reviewCompletedAt timestamp)
+ * v2.4.31: Added support for date filters and safety limits.
+ *
+ * @param {Object} options - Query options
+ * @param {Date} options.startDate - Optional start date filter
+ * @param {Date} options.endDate - Optional end date filter
+ * @param {number} options.limitCount - Safety limit (default 1000)
  * @returns {Promise<Array>} Array of reviewed question objects
  */
-const fetchReviewedQuestions = async () => {
+export const fetchReviewedQuestions = async ({
+  startDate = null,
+  endDate = null,
+  limitCount = 1000
+} = {}) => {
   try {
-    // Query the questions collection for reviewed questions (accepted or rejected)
     const questionsRef = collection(getDb(), "questions");
+    const constraints = [where("status", "in", ["accepted", "rejected"])];
 
-    // Query for questions that have been reviewed (have status of accepted or rejected)
-    const q = query(
-      questionsRef,
-      where("status", "in", ["accepted", "rejected"]),
-      orderBy("reviewCompletedAt", "desc")
-    );
+    if (startDate) {
+      constraints.push(where("reviewCompletedAt", ">=", startDate));
+    }
+    if (endDate) {
+      constraints.push(where("reviewCompletedAt", "<=", endDate));
+    }
 
+    // Always order by date if we have an index
+    constraints.push(orderBy("reviewCompletedAt", "desc"));
+    constraints.push(limit(limitCount));
+
+    const q = query(questionsRef, ...constraints);
     const querySnapshot = await getDocs(q);
     const questions = [];
 
@@ -67,52 +82,33 @@ const fetchReviewedQuestions = async () => {
     });
 
     logger.log(
-      `📊 [ReviewerAnalytics] Found ${questions.length} reviewed questions`
+      `📊 [ReviewerAnalytics] Found ${questions.length} reviewed questions (Safety Limit: ${limitCount})`
     );
     return questions;
   } catch (error) {
-    // Handle permission errors gracefully - user may not be admin
-    if (
-      error.code === "permission-denied" ||
-      error.message?.includes("insufficient permissions")
-    ) {
-      logger.warn(
-        "User does not have permission to access reviewer analytics. Admin access required."
-      );
-      return []; // Return empty array instead of throwing
+    logger.error("Error in fetchReviewedQuestions:", error);
+    
+    // Handle permission and index errors as before
+    if (error.code === "permission-denied") {
+      return [];
     }
 
-    // Handle index errors - reviewCompletedAt index might not exist
-    if (error.message?.includes("index")) {
-      logger.warn(
-        "Firestore index required for reviewCompletedAt query. Falling back to simple query."
+    // Fallback: Query without ordering or date filters if index is missing
+    try {
+      const questionsRef = collection(getDb(), "questions");
+      const fallbackQuery = query(
+        questionsRef,
+        where("status", "in", ["accepted", "rejected"]),
+        limit(limitCount)
       );
-      // Fallback: Query without ordering by reviewCompletedAt
-      try {
-        const questionsRef = collection(getDb(), "questions");
-        const fallbackQuery = query(
-          questionsRef,
-          where("status", "in", ["accepted", "rejected"])
-        );
-        const fallbackSnapshot = await getDocs(fallbackQuery);
-        const fallbackQuestions = [];
-        fallbackSnapshot.forEach((doc) => {
-          fallbackQuestions.push({ id: doc.id, ...doc.data() });
-        });
-        logger.log(
-          `📊 [ReviewerAnalytics] Fallback found ${fallbackQuestions.length} reviewed questions`
-        );
-        return fallbackQuestions;
-      } catch (fallbackError) {
-        logError(fallbackError, {
-          operation: "fetchReviewedQuestionsFallback",
-        });
-        return [];
-      }
+      const fallbackSnapshot = await getDocs(fallbackQuery);
+      return fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (fallbackError) {
+      logError(fallbackError, {
+        operation: "fetchReviewedQuestionsFallback",
+      });
+      return [];
     }
-
-    logError(error, { operation: "fetchReviewedQuestions" });
-    throw error;
   }
 };
 
@@ -337,13 +333,16 @@ export const formatDate = (dateVal) => {
 
 /**
  * Main function to fetch and aggregate reviewer analytics
+ * v2.4.31: Supports parameterized options for date filtering and limits.
+ * 
+ * @param {Object} options - Query options passed to fetchReviewedQuestions
  * @returns {Promise<Object>} Analytics data with reviewer stats and metadata
  */
-export const getReviewerAnalytics = async () => {
+export const getReviewerAnalytics = async (options = {}) => {
   try {
-    const reviewedQuestions = await fetchReviewedQuestions();
-    const reviewerStats = aggregateReviewerStats(reviewedQuestions);
-    const timelineData = aggregateReviewTimeline(reviewedQuestions);
+    const questions = await fetchReviewedQuestions(options);
+    const reviewerStats = aggregateReviewerStats(questions);
+    const timelineData = aggregateReviewTimeline(questions);
 
     // Aggregate overall rejection reasons
     const overallRejectionReasons = {};
@@ -360,7 +359,7 @@ export const getReviewerAnalytics = async () => {
       reviewerStats,
       timelineData,
       metadata: {
-        totalQuestionsReviewed: reviewedQuestions.length,
+        totalQuestionsReviewed: questions.length,
         totalReviewers: reviewerStats.length,
         lastUpdated: new Date().toISOString(),
         rejectionReasons: overallRejectionReasons,

@@ -4,11 +4,30 @@ import { getAnalytics } from "../utils/analyticsStore";
 import DistributionCharts from "./analytics/DistributionCharts";
 import TrendCharts from "./analytics/TrendCharts";
 import Icon from "./Icon";
-const MetricsDashboard = ({ questions }) => {
+const MetricsDashboard = ({ questions, globalStats = null }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [analyticsData, setAnalyticsData] = useState({ generations: [] });
 
   const metrics = useMemo(() => calculateMetrics(questions), [questions]);
+
+  // v2.4.33: Prefer globalStats for high-level counts
+  const displayMetrics = useMemo(() => {
+    if (!globalStats) return metrics;
+    
+    return {
+      ...metrics,
+      uniqueQuestions: globalStats.totalQuestions || metrics.uniqueQuestions,
+      byType: {
+        "Multiple Choice": globalStats.byType?.multiple_choice || metrics.byType["Multiple Choice"],
+        "True/False": globalStats.byType?.true_false || metrics.byType["True/False"],
+      },
+      byDifficulty: {
+        Easy: globalStats.byDifficulty?.easy || metrics.byDifficulty.Easy,
+        Medium: globalStats.byDifficulty?.medium || metrics.byDifficulty.Medium,
+        Hard: globalStats.byDifficulty?.hard || metrics.byDifficulty.Hard,
+      }
+    };
+  }, [metrics, globalStats]);
 
   useEffect(() => {
     // Load analytics data for trends
@@ -67,20 +86,20 @@ const MetricsDashboard = ({ questions }) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div className="bg-slate-800 p-3 rounded border border-slate-700">
                 <div className="text-2xl font-bold text-white">
-                  {metrics.uniqueQuestions}
+                  {displayMetrics.uniqueQuestions}
                 </div>
                 <div className="text-[10px] text-slate-400 uppercase">
                   Unique Questions
                 </div>
-                {metrics.total !== metrics.uniqueQuestions && (
+                {displayMetrics.total !== displayMetrics.uniqueQuestions && (
                   <div className="text-[9px] text-slate-500 mt-1">
-                    {metrics.total - metrics.uniqueQuestions} translations
+                    {displayMetrics.total - displayMetrics.uniqueQuestions} translations
                   </div>
                 )}
               </div>
               <div className="bg-slate-800 p-3 rounded border border-slate-700">
                 <div className="text-2xl font-bold text-indigo-400">
-                  {metrics.avgQuality}
+                  {displayMetrics.avgQuality}
                 </div>
                 <div className="text-[10px] text-slate-400 uppercase">
                   Avg Quality
@@ -88,7 +107,7 @@ const MetricsDashboard = ({ questions }) => {
               </div>
               <div className="bg-slate-800 p-3 rounded border border-slate-700">
                 <div className="text-2xl font-bold text-emerald-400">
-                  {metrics.byType["Multiple Choice"]}
+                  {displayMetrics.byType["Multiple Choice"]}
                 </div>
                 <div className="text-[10px] text-slate-400 uppercase">
                   Multiple Choice
@@ -96,7 +115,7 @@ const MetricsDashboard = ({ questions }) => {
               </div>
               <div className="bg-slate-800 p-3 rounded border border-slate-700">
                 <div className="text-2xl font-bold text-blue-400">
-                  {metrics.byType["True/False"]}
+                  {displayMetrics.byType["True/False"]}
                 </div>
                 <div className="text-[10px] text-slate-400 uppercase">
                   True/False
@@ -114,28 +133,28 @@ const MetricsDashboard = ({ questions }) => {
                     className="bg-green-500"
                     style={{
                       width: `${
-                        (metrics.byDifficulty.Easy / metrics.total) * 100
+                        (displayMetrics.byDifficulty.Easy / displayMetrics.uniqueQuestions) * 100
                       }%`,
                     }}
-                    title={`Easy: ${metrics.byDifficulty.Easy}`}
+                    title={`Easy: ${displayMetrics.byDifficulty.Easy}`}
                   ></div>
                   <div
                     className="bg-yellow-500"
                     style={{
                       width: `${
-                        (metrics.byDifficulty.Medium / metrics.total) * 100
+                        (displayMetrics.byDifficulty.Medium / displayMetrics.uniqueQuestions) * 100
                       }%`,
                     }}
-                    title={`Medium: ${metrics.byDifficulty.Medium}`}
+                    title={`Medium: ${displayMetrics.byDifficulty.Medium}`}
                   ></div>
                   <div
                     className="bg-red-500"
                     style={{
                       width: `${
-                        (metrics.byDifficulty.Hard / metrics.total) * 100
+                        (displayMetrics.byDifficulty.Hard / displayMetrics.uniqueQuestions) * 100
                       }%`,
                     }}
-                    title={`Hard: ${metrics.byDifficulty.Hard}`}
+                    title={`Hard: ${displayMetrics.byDifficulty.Hard}`}
                   ></div>
                 </div>
                 <div className="flex justify-between text-[10px] text-slate-500 mt-1">

@@ -12,10 +12,10 @@ export const useAdminAnalytics = (showMessage) => {
   const [reviewerAnalytics, setReviewerAnalytics] = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
-  const loadReviewerAnalytics = useCallback(async () => {
+  const loadReviewerAnalytics = useCallback(async (options = {}) => {
     setAnalyticsLoading(true);
     try {
-      const data = await getReviewerAnalytics();
+      const data = await getReviewerAnalytics(options);
       setReviewerAnalytics(data);
     } catch (error) {
       logger.error("Failed to load reviewer analytics:", error);

@@ -9,6 +9,8 @@ import { useQuestionManager } from "./hooks/useQuestionManager";
 import { useGeneration } from "./hooks/useGeneration";
 import { useExport } from "./hooks/useExport";
 import { useReviewActions } from "./hooks/useReviewActions";
+import { useCategoryStats } from "./hooks/useCategoryStats";
+import useGlobalStats from "./hooks/useGlobalStats";
 import { useDatabaseActions } from "./hooks/useDatabaseActions";
 import { useFiltering } from "./hooks/useFiltering";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -89,21 +91,20 @@ const AuthenticatedApp = ({
   setShowAgeGate,
   setTermsAccepted,
 }) => {
-  // 1. Question Data Management
+  // 3. Core Domain Hooks
+  const { globalStats } = useGlobalStats();
+  const { categoryStats } = useCategoryStats(config.discipline);
   const {
     questions,
     historicalQuestions,
     databaseQuestions,
     allQuestionsMap,
     translationMap,
-    addQuestionsToState,
-    updateQuestionInState,
-    updateAllVariantsInState,
-    handleUpdateStatus,
+    unifiedQuestions,
     approvedCounts,
     approvedCount,
+    totalApproved,
     overallPercentage,
-    pendingCount: totalApproved,
     isTargetMet,
     maxBatchSize,
     deleteConfirmId,
@@ -113,8 +114,11 @@ const AuthenticatedApp = ({
     handleDelete,
     confirmDelete,
     handleDeleteAllQuestions,
+    addQuestionsToState,
+    updateQuestionInState,
+    updateAllVariantsInState,
+    handleUpdateStatus,
     checkAndStoreQuestions,
-    unifiedQuestions,
     handleUpdateQuestion,
     conflictData,
     showConflictModal,
@@ -122,7 +126,13 @@ const AuthenticatedApp = ({
     replaceQuestions,
     bulkDeleteQuestions,
     moveQuestion,
-  } = useQuestionManager(config, showMessage);
+  } = useQuestionManager(
+    config,
+    showMessage,
+    categoryStats,
+    globalStats
+  );
+
 
   // 2. Lifecycle & Data Loading
   useAgentLifecycle({ user, authLoading });
@@ -520,6 +530,16 @@ const AuthenticatedApp = ({
           handlers={globalModalsHandlers}
         />
       </Suspense>
+
+      {/* Dashboard Metrics (only shown in database mode) */}
+      {appMode === APP_MODES.DATABASE &&
+        !showAnalytics &&
+        !showDangerZone && (
+          <MetricsDashboard
+            questions={unifiedQuestions}
+            globalStats={globalStats}
+          />
+        )}
 
       {appMode === APP_MODES.LANDING ? (
         <LandingPage

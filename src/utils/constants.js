@@ -182,6 +182,7 @@ export const TIMING = {
   ANALYTICS_REFRESH_MS: 5000, // 5 seconds - refresh local token usage
   TOAST_SHORT: 2000,
   TOAST_MEDIUM: 3000,
+  STATS_POLL_INTERVAL: 5 * 60 * 1000, // 5 minutes
 };
 
 // Standard Time Multipliers (in ms)

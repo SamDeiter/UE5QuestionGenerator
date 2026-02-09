@@ -9,8 +9,14 @@ import {
 
 /**
  * Hook for deriving various views, maps, and statistics from the main allQuestions state.
+ * v2.4.33: Merges server-side categoryStats and globalStats for accurate progress tracking.
  */
-export const useQuestionDerivedData = (allQuestions, config) => {
+export const useQuestionDerivedData = (
+  allQuestions,
+  config,
+  categoryStats = {},
+  globalStats = null
+) => {
   // Derived arrays for specific sources
   const questions = useMemo(
     () => allQuestions.filter((q) => q._source === QUESTION_SOURCES.SESSION),
@@ -77,7 +83,7 @@ export const useQuestionDerivedData = (allQuestions, config) => {
     });
   }, [allQuestionsMap]);
 
-  // Statistics
+  // Statistics (Discipline-specific)
   const approvedCounts = useMemo(() => {
     const counts = CATEGORY_KEYS.reduce(
       (acc, key) => ({ ...acc, [key]: 0 }),
@@ -98,41 +104,63 @@ export const useQuestionDerivedData = (allQuestions, config) => {
         }
       }
     });
+
+    // Merge with server-side "Ground Truth" counts (discipline-specific)
+    Object.keys(categoryStats).forEach((key) => {
+      if (Object.hasOwn(counts, key)) {
+        counts[key] = Math.max(counts[key], categoryStats[key]);
+      }
+    });
+
     return counts;
-  }, [unifiedQuestions, config.discipline]);
+  }, [unifiedQuestions, config.discipline, categoryStats]);
 
-  const approvedCount = useMemo(
-    () =>
-      unifiedQuestions.filter((q) => q.status === QUESTION_STATUS.ACCEPTED)
-        .length,
-    [unifiedQuestions]
-  );
-  const rejectedCount = useMemo(
-    () =>
-      unifiedQuestions.filter((q) => q.status === QUESTION_STATUS.REJECTED)
-        .length,
-    [unifiedQuestions]
-  );
-  const pendingCount = useMemo(
-    () =>
-      unifiedQuestions.filter(
-        (q) => !q.status || q.status === QUESTION_STATUS.PENDING
-      ).length,
-    [unifiedQuestions]
-  );
-  const otherCount = useMemo(
-    () =>
-      unifiedQuestions.filter(
-        (q) =>
-          q.status && !["accepted", "rejected", "pending"].includes(q.status)
-      ).length,
-    [unifiedQuestions]
-  );
+  // Global Status Counts (for overall progress)
+  const approvedCount = useMemo(() => {
+    if (globalStats?.byStatus?.accepted !== undefined) {
+      return globalStats.byStatus.accepted;
+    }
+    return unifiedQuestions.filter((q) => q.status === QUESTION_STATUS.ACCEPTED).length;
+  }, [unifiedQuestions, globalStats]);
 
-  const totalApproved = useMemo(
-    () => Object.values(approvedCounts).reduce((a, b) => a + b, 0),
-    [approvedCounts]
-  );
+  const rejectedCount = useMemo(() => {
+    if (globalStats?.byStatus?.rejected !== undefined) {
+      return globalStats.byStatus.rejected;
+    }
+    return unifiedQuestions.filter((q) => q.status === QUESTION_STATUS.REJECTED).length;
+  }, [unifiedQuestions, globalStats]);
+
+  const pendingCount = useMemo(() => {
+    if (globalStats?.byStatus?.pending !== undefined) {
+      return globalStats.byStatus.pending;
+    }
+    return unifiedQuestions.filter(
+      (q) => !q.status || q.status === QUESTION_STATUS.PENDING
+    ).length;
+  }, [unifiedQuestions, globalStats]);
+
+  const otherCount = useMemo(() => {
+    if (globalStats?.byStatus) {
+      // Calculate from globalStats if available
+      const known = ["accepted", "rejected", "pending"];
+      return Object.entries(globalStats.byStatus)
+        .filter(([status]) => !known.includes(status))
+        .reduce((sum, [, count]) => sum + count, 0);
+    }
+    return unifiedQuestions.filter(
+      (q) => q.status && !["accepted", "rejected", "pending"].includes(q.status)
+    ).length;
+  }, [unifiedQuestions, globalStats]);
+
+  const totalApproved = useMemo(() => {
+    // If we have global approved count, use it. Otherwise fallback to discipline-specific sum.
+    // NOTE: Sidebar usually prefers overall count, so this is correct.
+    if (globalStats?.byStatus?.accepted !== undefined) {
+      return globalStats.byStatus.accepted;
+    }
+    return Object.values(approvedCounts).reduce((a, b) => a + b, 0);
+  }, [approvedCounts, globalStats]);
+
   const overallPercentage = useMemo(
     () => Math.min(100, (totalApproved / TARGET_TOTAL) * 100),
     [totalApproved]

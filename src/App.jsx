@@ -6,7 +6,6 @@ import Header from "./components/Header";
 import AppBanners from "./components/AppBanners";
 import ToastContainer from "./components/ToastContainer";
 import Footer from "./components/Footer";
-import { getInviteFromUrl } from "./services/inviteService";
 
 // Lazy load heavy Authenticated logic
 const AuthenticatedApp = lazy(() => import("./AuthenticatedApp"));
@@ -25,7 +24,8 @@ import { useAuthRefresh } from "./hooks/useAuthRefresh";
 import { useAuthHealthCheck } from "./hooks/useAuthHealthCheck";
 import { useGlobalToastSubscription } from "./hooks/useGlobalToastSubscription";
 
-// Utilities
+// Services & Utilities
+import { getInviteFromUrl } from "./services/inviteService";
 import { APP_MODES } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 
@@ -83,7 +83,7 @@ const App = () => {
   } = useAppConfig({ user });
 
   const tutorial = useTutorial(showMessage);
-
+  
   const firestoreTokenUsage = useTokenUsage(user?.uid);
 
   const handleGoHome = () => {
