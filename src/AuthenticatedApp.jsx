@@ -38,6 +38,7 @@ import { useUrlModeSync } from "./hooks/useUrlModeSync";
 import { APP_MODES } from "./utils/constants";
 // import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import LandingPage from "./components/LandingPage";
+import MetricsDashboard from "./components/MetricsDashboard";
 
 const AuthenticatedApp = ({
   user,
@@ -126,13 +127,7 @@ const AuthenticatedApp = ({
     replaceQuestions,
     bulkDeleteQuestions,
     moveQuestion,
-  } = useQuestionManager(
-    config,
-    showMessage,
-    categoryStats,
-    globalStats
-  );
-
+  } = useQuestionManager(config, showMessage, categoryStats, globalStats);
 
   // 2. Lifecycle & Data Loading
   useAgentLifecycle({ user, authLoading });
@@ -532,14 +527,12 @@ const AuthenticatedApp = ({
       </Suspense>
 
       {/* Dashboard Metrics (only shown in database mode) */}
-      {appMode === APP_MODES.DATABASE &&
-        !showAnalytics &&
-        !showDangerZone && (
-          <MetricsDashboard
-            questions={unifiedQuestions}
-            globalStats={globalStats}
-          />
-        )}
+      {appMode === APP_MODES.DATABASE && !showAnalytics && !showDangerZone && (
+        <MetricsDashboard
+          questions={unifiedQuestions}
+          globalStats={globalStats}
+        />
+      )}
 
       {appMode === APP_MODES.LANDING ? (
         <LandingPage
