@@ -143,8 +143,20 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // React vendor chunk
-          if (id.includes("node_modules/react") || id.includes("node_modules/react-dom") || id.includes("node_modules/scheduler")) {
+          // React vendor chunk — includes React core + packages that
+          // use React.forwardRef/createElement at module init time.
+          // react-smooth and react-transition-group are recharts deps
+          // that crash if React isn't resolved in the same chunk.
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("node_modules/scheduler") ||
+            id.includes("node_modules/react-is") ||
+            id.includes("node_modules/react-smooth") ||
+            id.includes("node_modules/react-transition-group") ||
+            id.includes("node_modules/react-redux") ||
+            id.includes("node_modules/use-sync-external-store")
+          ) {
             return "vendor-react";
           }
 
@@ -163,10 +175,9 @@ export default defineConfig({
             return "vendor-firebase-core";
           }
 
-          // Charts vendor chunk - heavy, isolate it
-          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3")) {
-            return "vendor-charts";
-          }
+          // NOTE: recharts + d3 are NOT manually chunked here.
+          // Recharts v3 calls React.forwardRef at module init time,
+          // and splitting it from React breaks the import resolution.
 
           // Icons vendor chunk
           if (id.includes("node_modules/lucide-react")) {
