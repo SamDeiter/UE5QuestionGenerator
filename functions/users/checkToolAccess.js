@@ -60,7 +60,6 @@ exports.checkToolAccess = functions
         return {
           hasAccess: hasAccess,
           role: userData.role || "reviewer",
-          tools: tools,
         };
       }
 

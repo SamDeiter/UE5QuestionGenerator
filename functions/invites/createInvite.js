@@ -60,12 +60,27 @@ exports.createInvite = functions
         sanitizedEmail = forEmail.toLowerCase().trim();
       }
 
-      // 3. Validate tools array
+      // 3. Validate tools array against allowlist
+      const VALID_TOOLS = [
+        "questions",
+        "blueprint",
+        "scenario",
+        "materials",
+        "learning-path",
+      ];
+
       if (!Array.isArray(tools)) {
         throw new functions.https.HttpsError(
           "invalid-argument",
           "tools must be an array",
         );
+      }
+
+      const sanitizedTools = tools.filter(
+        (t) => typeof t === "string" && VALID_TOOLS.includes(t),
+      );
+      if (sanitizedTools.length === 0) {
+        sanitizedTools.push("questions"); // Default fallback
       }
 
       // 4. Generate cryptographically secure code
@@ -95,13 +110,13 @@ exports.createInvite = functions
         isActive: true,
         note: (note || "").substring(0, 200),
         forEmail: sanitizedEmail,
-        tools: tools, // Store granted tools in the invite
+        tools: sanitizedTools, // Only validated tool IDs
       };
 
       await db.collection("invites").doc(code).set(inviteData);
 
       console.log(
-        `Invite ${code} created by ${context.auth.token.email} with tools: ${tools.join(", ")}`,
+        `Invite ${code} created by ${context.auth.token.email} with tools: ${sanitizedTools.join(", ")}`,
       );
 
       // 6. Build invite URL

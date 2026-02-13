@@ -1,10 +1,17 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
+// Rate limit constants
+const MAX_CALLS_PER_WINDOW = 10;
+const WINDOW_SECONDS = 300; // 5 minutes
+
 /**
  * Cloud Function: logAuthFailure
  * Logs authentication failures to Firestore for admin monitoring.
  * Called client-side when auth-blocking errors (like securetoken 403) are detected.
+ *
+ * SECURITY: Rate limited to 10 calls per IP per 5-minute window.
+ * SECURITY: Input fields are length-capped to prevent storage abuse.
  */
 exports.logAuthFailure = functions
   .runWith({ timeoutSeconds: 10, memory: "128MB" })
@@ -13,19 +20,76 @@ exports.logAuthFailure = functions
     // (user might fail to authenticate, that's what we're logging)
     const db = admin.firestore();
 
+    // --- Rate Limiting (IP-based) ---
+    const callerIp =
+      context.rawRequest?.ip ||
+      context.rawRequest?.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      "unknown";
+
+    // Create a safe document ID from the IP
+    const ipDocId = callerIp.replace(/[^a-zA-Z0-9]/g, "_").substring(0, 64);
+
+    try {
+      const rateLimitRef = db.collection("rateLimits").doc(`authfail_${ipDocId}`);
+      const rateLimitDoc = await rateLimitRef.get();
+
+      if (rateLimitDoc.exists) {
+        const rlData = rateLimitDoc.data();
+        const windowStart = rlData.windowStart?.toDate?.() || new Date(0);
+        const now = new Date();
+        const elapsed = (now - windowStart) / 1000;
+
+        if (elapsed < WINDOW_SECONDS) {
+          // Still within the window
+          if (rlData.count >= MAX_CALLS_PER_WINDOW) {
+            console.warn(
+              `[logAuthFailure] Rate limited IP: ${callerIp} (${rlData.count} calls)`,
+            );
+            return { success: false, error: "Rate limited. Try again later." };
+          }
+          // Increment counter
+          await rateLimitRef.update({
+            count: admin.firestore.FieldValue.increment(1),
+          });
+        } else {
+          // Window expired — reset
+          await rateLimitRef.set({
+            count: 1,
+            windowStart: admin.firestore.Timestamp.now(),
+          });
+        }
+      } else {
+        // First call from this IP — create counter
+        await rateLimitRef.set({
+          count: 1,
+          windowStart: admin.firestore.Timestamp.now(),
+        });
+      }
+    } catch (rlError) {
+      // Rate limit check failed — log but don't block (fail open for logging)
+      console.warn("[logAuthFailure] Rate limit check failed:", rlError.message);
+    }
+
+    // --- Input Sanitization ---
     const { errorCode, errorMessage, userAgent, timestamp } = data || {};
+
+    // Cap string lengths to prevent storage abuse
+    const safeErrorCode = String(errorCode || "unknown").substring(0, 50);
+    const safeErrorMessage = String(errorMessage || "No message provided").substring(0, 500);
+    const safeUserAgent = String(userAgent || "unknown").substring(0, 500);
 
     try {
       // Create auth failure log entry
       const logEntry = {
-        errorCode: errorCode || "unknown",
-        errorMessage: errorMessage || "No message provided",
-        userAgent: userAgent || "unknown",
+        errorCode: safeErrorCode,
+        errorMessage: safeErrorMessage,
+        userAgent: safeUserAgent,
         timestamp: timestamp
           ? new Date(timestamp)
           : admin.firestore.FieldValue.serverTimestamp(),
         userId: context.auth?.uid || null,
         userEmail: context.auth?.token?.email || null,
+        callerIp: callerIp,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       };
 
@@ -33,13 +97,12 @@ exports.logAuthFailure = functions
       const docRef = await db.collection("authFailures").add(logEntry);
 
       console.log(`[logAuthFailure] Logged auth failure: ${docRef.id}`, {
-        errorCode,
+        errorCode: safeErrorCode,
         userEmail: logEntry.userEmail,
       });
 
       // Optional: Send email notification to admin for critical errors
-      if (errorCode === "403" || errorCode === "auth/internal-error") {
-        // Could integrate with SendGrid/Mailgun here
+      if (safeErrorCode === "403" || safeErrorCode === "auth/internal-error") {
         console.log(
           "[logAuthFailure] CRITICAL: Token Service API may be disabled",
         );
