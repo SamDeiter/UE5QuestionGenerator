@@ -10,7 +10,8 @@ admin.initializeApp();
 // ============================================================================
 Object.assign(exports, require("./ai/generateQuestions"));
 Object.assign(exports, require("./ai/generateCritique"));
-Object.assign(exports, require("./ai/portkeyProxy"));
+// TODO: Uncomment when PORTKEY_API_KEY and PORTKEY_VIRTUAL_KEY secrets are set
+// Object.assign(exports, require("./ai/portkeyProxy"));
 
 // ============================================================================
 // Invite Functions
