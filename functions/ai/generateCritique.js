@@ -49,12 +49,28 @@ exports.generateQuestions = functions
       );
     }
 
-    // 4. Rate limiting check
-    const rateLimitCheck = await checkRateLimit(userId);
-    if (!rateLimitCheck.allowed) {
+    // Rate limiting (SECURITY: Prevents AI cost abuse)
+    const [hourlyLimit, dailyLimit] = await Promise.all([
+      checkRateLimit(userId, "AI_HOURLY"),
+      checkRateLimit(userId, "AI_DAILY"),
+    ]);
+
+    if (!hourlyLimit.allowed) {
       throw new functions.https.HttpsError(
         "resource-exhausted",
-        `Rate limit exceeded. ${rateLimitCheck.message}`
+        hourlyLimit.reason || "Rate limit exceeded",
+        {
+          resetAt: hourlyLimit.resetAt?.toISOString(),
+        }
+      );
+    }
+    if (!dailyLimit.allowed) {
+      throw new functions.https.HttpsError(
+        "resource-exhausted",
+        dailyLimit.reason || "Daily rate limit exceeded",
+        {
+          resetAt: dailyLimit.resetAt?.toISOString(),
+        }
       );
     }
 
@@ -78,14 +94,8 @@ exports.generateQuestions = functions
 
       // ... rest of logic
 
-      console.log("[DEBUG] API key found, length:", apiKey.length);
-
       // 5. Call Gemini API
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      console.log(
-        "[DEBUG] Calling Gemini API (SKIPPED FOR DEBUGGING) with model:",
-        model
-      );
 
       const payload = {
         contents: [{ parts: [{ text: userPrompt }] }],
@@ -101,7 +111,6 @@ exports.generateQuestions = functions
         },
       };
 
-      console.log("[DEBUG] Payload prepared, calling fetch...");
 
       const response = await fetch(url, {
         method: "POST",
@@ -133,11 +142,11 @@ exports.generateQuestions = functions
         throw new Error("No content generated from Gemini");
       }
 
-      // Log usage
-      await logApiUsage(userId, {
+      // Log usage (fire-and-forget — don't block return)
+      logApiUsage(userId, {
         model: model,
         type: "generation",
-      });
+      }).catch((err) => console.warn("[logApiUsage] failed:", err.message));
 
       return {
         success: true,
@@ -197,24 +206,26 @@ exports.generateCritique = functions
     const sanitizedCorrect = sanitizeInput(correct);
 
     // Rate limiting (SECURITY: Prevents AI cost abuse)
-    const hourlyLimit = await checkRateLimit(userId, "AI_HOURLY");
-    if (!hourlyLimit.allowed) {
+    const [hourlyLimit2, dailyLimit2] = await Promise.all([
+      checkRateLimit(userId, "AI_HOURLY"),
+      checkRateLimit(userId, "AI_DAILY"),
+    ]);
+
+    if (!hourlyLimit2.allowed) {
       throw new functions.https.HttpsError(
         "resource-exhausted",
-        hourlyLimit.reason || "Rate limit exceeded",
+        hourlyLimit2.reason || "Rate limit exceeded",
         {
-          resetAt: hourlyLimit.resetAt?.toISOString(),
+          resetAt: hourlyLimit2.resetAt?.toISOString(),
         }
       );
     }
-
-    const dailyLimit = await checkRateLimit(userId, "AI_DAILY");
-    if (!dailyLimit.allowed) {
+    if (!dailyLimit2.allowed) {
       throw new functions.https.HttpsError(
         "resource-exhausted",
-        dailyLimit.reason || "Daily rate limit exceeded",
+        dailyLimit2.reason || "Daily rate limit exceeded",
         {
-          resetAt: dailyLimit.resetAt?.toISOString(),
+          resetAt: dailyLimit2.resetAt?.toISOString(),
         }
       );
     }
@@ -398,13 +409,12 @@ exports.generateCritique = functions
         };
       }
 
-      // Log usage
-      await logApiUsage(userId, {
+      // Log usage (fire-and-forget — don't block return)
+      logApiUsage(userId, {
         model: usedModel,
-
         type: "critique",
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      }).catch((err) => console.warn("[logApiUsage] failed:", err.message));
 
       return {
         success: true,

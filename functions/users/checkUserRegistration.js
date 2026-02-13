@@ -1,8 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
-// Import utility functions
-const { isAdminUser } = require("../utils/isAdminUser");
+// isAdminUser no longer needed — registeredUsers and admins are checked directly
 
 /**
  * Helper: Migrate orphaned registeredUsers document to new UID
@@ -106,7 +105,17 @@ exports.checkUserRegistration = functions
         };
       }
 
-      // 2. Check registeredUsers by UID
+      // 2. Check custom claims first (zero Firestore reads)
+      const claims = context.auth.token;
+      if (claims.role && claims.tools && Array.isArray(claims.tools)) {
+        return {
+          registered: true,
+          role: claims.role,
+          tools: claims.tools,
+        };
+      }
+
+      // 3. Check registeredUsers by UID
       const userDoc = await db.collection("registeredUsers").doc(userId).get();
 
       if (userDoc.exists) {
@@ -164,9 +173,11 @@ exports.checkUserRegistration = functions
         }
       }
 
-      // 4. Check if admin (admins don't need invites)
-      const isAdmin = await isAdminUser(userId);
-      if (isAdmin) {
+      // 5. Check admins collection directly (legacy fallback)
+      // NOTE: registeredUsers was already checked above, so we only
+      // need the admins collection — no need for fullisAdminUser().
+      const adminDoc = await db.collection("admins").doc(userId).get();
+      if (adminDoc.exists) {
         return {
           registered: true,
           role: "admin",

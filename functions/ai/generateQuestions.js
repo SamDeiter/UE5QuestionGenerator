@@ -61,7 +61,11 @@ exports.generateQuestions = functions
     validateNoPromptInjection(sanitizedUserPrompt);
 
     // 3. Rate limiting check (SECURITY: Prevents AI cost abuse)
-    const hourlyLimit = await checkRateLimit(userId, "AI_HOURLY");
+    const [hourlyLimit, dailyLimit] = await Promise.all([
+      checkRateLimit(userId, "AI_HOURLY"),
+      checkRateLimit(userId, "AI_DAILY"),
+    ]);
+
     if (!hourlyLimit.allowed) {
       throw new functions.https.HttpsError(
         "resource-exhausted",
@@ -72,8 +76,6 @@ exports.generateQuestions = functions
         }
       );
     }
-
-    const dailyLimit = await checkRateLimit(userId, "AI_DAILY");
     if (!dailyLimit.allowed) {
       throw new functions.https.HttpsError(
         "resource-exhausted",
@@ -104,14 +106,8 @@ exports.generateQuestions = functions
 
       // ... rest of logic
 
-      console.log("[DEBUG] API key found, length:", apiKey.length);
-
       // 5. Call Gemini API
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      console.log(
-        "[DEBUG] Calling Gemini API (SKIPPED FOR DEBUGGING) with model:",
-        model
-      );
 
       const payload = {
         contents: [{ parts: [{ text: sanitizedUserPrompt }] }],
@@ -127,7 +123,6 @@ exports.generateQuestions = functions
         },
       };
 
-      console.log("[DEBUG] Payload prepared, calling fetch...");
 
       const response = await fetch(url, {
         method: "POST",
@@ -159,11 +154,11 @@ exports.generateQuestions = functions
         throw new Error("No content generated from Gemini");
       }
 
-      // Log usage
-      await logApiUsage(userId, {
+      // Log usage (fire-and-forget — don't block return)
+      logApiUsage(userId, {
         model: model,
         type: "generation",
-      });
+      }).catch((err) => console.warn("[logApiUsage] failed:", err.message));
 
       return {
         success: true,

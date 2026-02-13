@@ -29,6 +29,7 @@ exports.checkToolAccess = functions
 
     const email = context.auth.token.email;
     const userId = context.auth.uid;
+    const claims = context.auth.token;
     const db = admin.firestore();
 
     try {
@@ -43,6 +44,14 @@ exports.checkToolAccess = functions
           hasAccess: true,
           role: "admin",
           isEmployee: true,
+        };
+      }
+
+      // 2a. Custom claims short-circuit (zero Firestore reads)
+      if (claims.tools && Array.isArray(claims.tools)) {
+        return {
+          hasAccess: claims.tools.includes(toolId),
+          role: claims.role || "reviewer",
         };
       }
 
