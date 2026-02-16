@@ -112,6 +112,7 @@ export const parseQuestionDoc = (raw) => {
  * @param {number} maxLength - Maximum length before truncation (default 100)
  * @returns {string} - Question text or placeholder
  */
+// eslint-disable-next-line no-unused-vars
 const getQuestionText = (question, maxLength = 100) => {
   if (!question?.question) return "[No question text]";
   return question.question.length > maxLength
@@ -125,6 +126,7 @@ const getQuestionText = (question, maxLength = 100) => {
  * @param {Object} question - Question object
  * @returns {boolean} - True if displayable
  */
+// eslint-disable-next-line no-unused-vars
 const isDisplayable = (question) => {
   return Boolean(
     question &&

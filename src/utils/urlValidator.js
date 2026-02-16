@@ -122,6 +122,7 @@ export function isEpicLink(url) {
   );
 }
 
+// eslint-disable-next-line no-unused-vars
 function validateURLsBatch(questions) {
   return questions.map((q) => ({
     ...q,

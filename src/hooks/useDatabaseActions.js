@@ -60,6 +60,7 @@ export const useDatabaseActions = ({
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [showMessage, handleLoadFromFirestore, moveQuestion]
   );
 

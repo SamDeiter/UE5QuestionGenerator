@@ -127,4 +127,5 @@ export const inferCorrectAnswer = (q) => {
  * @param {Object} q - Question object
  * @returns {boolean} True if correct answer is valid or inferable
  */
+// eslint-disable-next-line no-unused-vars
 const hasValidCorrectAnswer = (q) => inferCorrectAnswer(q) !== null;

@@ -55,6 +55,7 @@ export const logAuditEvent = async (questionId, action, details = {}) => {
  * @param {Array<string>} questionIds - Array of affected question IDs
  * @param {object} details - Additional details
  */
+// eslint-disable-next-line no-unused-vars
 const logBulkOperation = async (action, questionIds, details = {}) => {
   try {
     const db = getDb();

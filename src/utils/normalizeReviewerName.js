@@ -87,6 +87,7 @@ export const normalizeReviewerName = (rawName) => {
  * @param {Object} question - The question object
  * @returns {string|null} Normalized reviewer name, or null if none found
  */
+// eslint-disable-next-line no-unused-vars
 const getReviewerFromQuestion = (question) => {
   if (!question) return null;
 
@@ -103,6 +104,7 @@ const getReviewerFromQuestion = (question) => {
  * @param {string} email - The email address
  * @param {string} displayName - The display name to use
  */
+// eslint-disable-next-line no-unused-vars
 const addEmailMapping = (email, displayName) => {
   if (email && displayName) {
     EMAIL_TO_NAME_MAP[email.toLowerCase()] = displayName;

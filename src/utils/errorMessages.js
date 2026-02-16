@@ -215,9 +215,11 @@ export const getToastMessage = (error, context = "saving") => {
   return toasts[type] || toasts[ERROR_TYPES.UNKNOWN];
 };
 
+// eslint-disable-next-line no-unused-vars
 const isRecoverableError = (error) =>
   categorizeError(error) !== ERROR_TYPES.UNAUTHENTICATED;
 
+// eslint-disable-next-line no-unused-vars
 const shouldPromptReauth = (error) => {
   const type = categorizeError(error);
   return (

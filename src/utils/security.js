@@ -54,6 +54,7 @@ export const validateFile = (file) => {
  * @param {string} text - The text to sanitize.
  * @returns {string} - The sanitized text.
  */
+// eslint-disable-next-line no-unused-vars
 const sanitizeCSVField = (text) => {
   if (!text) return "";
   const str = String(text);

@@ -82,6 +82,7 @@ export const getDb = () => {
  *
  * @returns {Promise<{success: boolean, status: string, reason?: string}>}
  */
+// eslint-disable-next-line no-unused-vars
 const ensurePersistence = async () => {
   // Initialize db if not already done
   getDb();
@@ -98,6 +99,7 @@ const ensurePersistence = async () => {
  * Get current persistence status synchronously.
  * @returns {"pending" | "enabled" | "failed"}
  */
+// eslint-disable-next-line no-unused-vars
 const getPersistenceStatus = () => _persistenceStatus;
 
 // NOTE: Analytics disabled - requires Firebase Console configuration

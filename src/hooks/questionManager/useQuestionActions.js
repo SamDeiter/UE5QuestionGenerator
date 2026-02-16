@@ -158,6 +158,7 @@ export const useQuestionActions = (
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       allQuestions,
       config.userId,

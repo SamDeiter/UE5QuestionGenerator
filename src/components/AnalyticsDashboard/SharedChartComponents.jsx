@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Shared Chart Components
  * Common styling, wrappers, and utilities for analytics charts

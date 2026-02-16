@@ -1,0 +1,11 @@
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\index.js
+  13:37  error  Complete the task associated to this "TODO" comment  sonarjs/todo-tag
+
+C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\src\contexts\AccessibilityContext.jsx
+  61:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  63:6  warning  React Hook useEffect has a missing dependency: 'prefs.reducedMotion'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+Γ£û 3 problems (1 error, 2 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

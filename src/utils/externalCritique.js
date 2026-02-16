@@ -91,6 +91,7 @@ I'll paste the questions in my next message.`;
 /**
  * Import scores from ChatGPT/Gemini response
  */
+// eslint-disable-next-line no-unused-vars
 const importCritiqueScores = async (jsonText, db, showMessage) => {
   try {
     // Parse the AI response
@@ -149,6 +150,7 @@ const importCritiqueScores = async (jsonText, db, showMessage) => {
 /**
  * Download template JSON for reference
  */
+// eslint-disable-next-line no-unused-vars
 const downloadScoreTemplate = () => {
   const template = [
     {

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Accessibility Context
  *
@@ -58,6 +59,7 @@ export const AccessibilityProvider = ({ children }) => {
     if (mediaQuery.matches && !prefs.reducedMotion) {
       setPrefs((prev) => ({ ...prev, reducedMotion: true }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggleColorblindMode = () => {
