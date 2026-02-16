@@ -1,6 +1,0 @@
-
-C:\Users\Sam Deiter\Documents\GitHub\UE5QuestionGenerator\functions\index.js
-  13:37  error  Complete the task associated to this "TODO" comment  sonarjs/todo-tag
-
-Γ£û 1 problem (1 error, 0 warnings)
-
