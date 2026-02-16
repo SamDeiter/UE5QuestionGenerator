@@ -13,19 +13,22 @@ const MetricsDashboard = ({ questions, globalStats = null }) => {
   // v2.4.33: Prefer globalStats for high-level counts
   const displayMetrics = useMemo(() => {
     if (!globalStats) return metrics;
-    
+
     return {
       ...metrics,
       uniqueQuestions: globalStats.totalQuestions || metrics.uniqueQuestions,
       byType: {
-        "Multiple Choice": globalStats.byType?.multiple_choice || metrics.byType["Multiple Choice"],
-        "True/False": globalStats.byType?.true_false || metrics.byType["True/False"],
+        "Multiple Choice":
+          globalStats.byType?.multiple_choice ||
+          metrics.byType["Multiple Choice"],
+        "True/False":
+          globalStats.byType?.true_false || metrics.byType["True/False"],
       },
       byDifficulty: {
         Easy: globalStats.byDifficulty?.easy || metrics.byDifficulty.Easy,
         Medium: globalStats.byDifficulty?.medium || metrics.byDifficulty.Medium,
         Hard: globalStats.byDifficulty?.hard || metrics.byDifficulty.Hard,
-      }
+      },
     };
   }, [metrics, globalStats]);
 
@@ -93,7 +96,8 @@ const MetricsDashboard = ({ questions, globalStats = null }) => {
                 </div>
                 {displayMetrics.total !== displayMetrics.uniqueQuestions && (
                   <div className="text-[9px] text-slate-500 mt-1">
-                    {displayMetrics.total - displayMetrics.uniqueQuestions} translations
+                    {displayMetrics.total - displayMetrics.uniqueQuestions}{" "}
+                    translations
                   </div>
                 )}
               </div>
@@ -133,7 +137,9 @@ const MetricsDashboard = ({ questions, globalStats = null }) => {
                     className="bg-green-500"
                     style={{
                       width: `${
-                        (displayMetrics.byDifficulty.Easy / displayMetrics.uniqueQuestions) * 100
+                        (displayMetrics.byDifficulty.Easy /
+                          displayMetrics.uniqueQuestions) *
+                        100
                       }%`,
                     }}
                     title={`Easy: ${displayMetrics.byDifficulty.Easy}`}
@@ -142,7 +148,9 @@ const MetricsDashboard = ({ questions, globalStats = null }) => {
                     className="bg-yellow-500"
                     style={{
                       width: `${
-                        (displayMetrics.byDifficulty.Medium / displayMetrics.uniqueQuestions) * 100
+                        (displayMetrics.byDifficulty.Medium /
+                          displayMetrics.uniqueQuestions) *
+                        100
                       }%`,
                     }}
                     title={`Medium: ${displayMetrics.byDifficulty.Medium}`}
@@ -151,7 +159,9 @@ const MetricsDashboard = ({ questions, globalStats = null }) => {
                     className="bg-red-500"
                     style={{
                       width: `${
-                        (displayMetrics.byDifficulty.Hard / displayMetrics.uniqueQuestions) * 100
+                        (displayMetrics.byDifficulty.Hard /
+                          displayMetrics.uniqueQuestions) *
+                        100
                       }%`,
                     }}
                     title={`Hard: ${displayMetrics.byDifficulty.Hard}`}

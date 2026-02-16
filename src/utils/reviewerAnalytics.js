@@ -5,7 +5,14 @@
  * from Firestore question data.
  */
 
-import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
+  limit,
+} from "firebase/firestore";
 import { getDb } from "../services/firebase";
 import { logger } from "../utils/logger";
 import { logError } from "../utils/AppError";
@@ -53,7 +60,7 @@ const VELOCITY_DECIMAL_PLACES = 2;
 export const fetchReviewedQuestions = async ({
   startDate = null,
   endDate = null,
-  limitCount = 1000
+  limitCount = 1000,
 } = {}) => {
   try {
     const questionsRef = collection(getDb(), "questions");
@@ -87,7 +94,7 @@ export const fetchReviewedQuestions = async ({
     return questions;
   } catch (error) {
     logger.error("Error in fetchReviewedQuestions:", error);
-    
+
     // Handle permission and index errors as before
     if (error.code === "permission-denied") {
       return [];
@@ -102,7 +109,10 @@ export const fetchReviewedQuestions = async ({
         limit(limitCount)
       );
       const fallbackSnapshot = await getDocs(fallbackQuery);
-      return fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return fallbackSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
     } catch (fallbackError) {
       logError(fallbackError, {
         operation: "fetchReviewedQuestionsFallback",
@@ -334,7 +344,7 @@ export const formatDate = (dateVal) => {
 /**
  * Main function to fetch and aggregate reviewer analytics
  * v2.4.31: Supports parameterized options for date filtering and limits.
- * 
+ *
  * @param {Object} options - Query options passed to fetchReviewedQuestions
  * @returns {Promise<Object>} Analytics data with reviewer stats and metadata
  */

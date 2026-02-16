@@ -6,7 +6,7 @@ import { TIMING } from "../utils/constants";
 /**
  * Hook to fetch server-side category stats for a discipline.
  * Used to provide "Ground Truth" counts even when local data is limited.
- * 
+ *
  * @param {string} discipline - Current discipline
  * @returns {Object} { categoryStats, loading }
  */
@@ -23,17 +23,23 @@ export function useCategoryStats(discipline) {
         const stats = await getCategoryStatsAggregated(discipline);
         setCategoryStats(stats);
       } catch (error) {
-        logger.error(`Failed to fetch category stats for ${discipline}:`, error);
+        logger.error(
+          `Failed to fetch category stats for ${discipline}:`,
+          error
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-    
+
     // Poll for updates every 60 seconds (or constant defined in TIMING)
-    const interval = setInterval(fetchStats, TIMING.ANALYTICS_REFRESH_MS || 60000);
-    
+    const interval = setInterval(
+      fetchStats,
+      TIMING.ANALYTICS_REFRESH_MS || 60000
+    );
+
     return () => clearInterval(interval);
   }, [discipline]);
 

@@ -120,14 +120,16 @@ export const useQuestionDerivedData = (
     if (globalStats?.byStatus?.accepted !== undefined) {
       return globalStats.byStatus.accepted;
     }
-    return unifiedQuestions.filter((q) => q.status === QUESTION_STATUS.ACCEPTED).length;
+    return unifiedQuestions.filter((q) => q.status === QUESTION_STATUS.ACCEPTED)
+      .length;
   }, [unifiedQuestions, globalStats]);
 
   const rejectedCount = useMemo(() => {
     if (globalStats?.byStatus?.rejected !== undefined) {
       return globalStats.byStatus.rejected;
     }
-    return unifiedQuestions.filter((q) => q.status === QUESTION_STATUS.REJECTED).length;
+    return unifiedQuestions.filter((q) => q.status === QUESTION_STATUS.REJECTED)
+      .length;
   }, [unifiedQuestions, globalStats]);
 
   const pendingCount = useMemo(() => {

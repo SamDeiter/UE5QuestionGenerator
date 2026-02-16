@@ -83,7 +83,7 @@ const App = () => {
   } = useAppConfig({ user });
 
   const tutorial = useTutorial(showMessage);
-  
+
   const firestoreTokenUsage = useTokenUsage(user?.uid);
 
   const handleGoHome = () => {

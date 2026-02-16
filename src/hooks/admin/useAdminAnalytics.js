@@ -12,21 +12,24 @@ export const useAdminAnalytics = (showMessage) => {
   const [reviewerAnalytics, setReviewerAnalytics] = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
-  const loadReviewerAnalytics = useCallback(async (options = {}) => {
-    setAnalyticsLoading(true);
-    try {
-      const data = await getReviewerAnalytics(options);
-      setReviewerAnalytics(data);
-    } catch (error) {
-      logger.error("Failed to load reviewer analytics:", error);
-      showMessage(
-        `❌ Failed to load analytics: ${error.message}`,
-        TOAST_DURATION.EXTENDED
-      );
-    } finally {
-      setAnalyticsLoading(false);
-    }
-  }, [showMessage]);
+  const loadReviewerAnalytics = useCallback(
+    async (options = {}) => {
+      setAnalyticsLoading(true);
+      try {
+        const data = await getReviewerAnalytics(options);
+        setReviewerAnalytics(data);
+      } catch (error) {
+        logger.error("Failed to load reviewer analytics:", error);
+        showMessage(
+          `❌ Failed to load analytics: ${error.message}`,
+          TOAST_DURATION.EXTENDED
+        );
+      } finally {
+        setAnalyticsLoading(false);
+      }
+    },
+    [showMessage]
+  );
 
   return {
     reviewerAnalytics,
