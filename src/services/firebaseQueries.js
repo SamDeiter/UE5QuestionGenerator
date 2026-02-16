@@ -419,19 +419,19 @@ export const getQuestionsPaginatedWithFilters = async ({
 /**
  * PHASE 2.3: Get category-specific stats for a discipline using server-side aggregation.
  * Calculates counts for all 6 categories (Beginner MC, Beginner T/F, etc.) in one go.
- * 
+ *
  * @param {string} discipline - The discipline to count for (e.g. "Tech Art")
  * @returns {Promise<Object>} Map of category keys to counts
  */
 export const getCategoryStatsAggregated = async (discipline) => {
   try {
     const questionsRef = collection(getDb(), "questions");
-    
+
     // We want counts for status: accepted OR pending
-    // Firestore count() doesn't support 'OR' natively in a single count() call easily 
+    // Firestore count() doesn't support 'OR' natively in a single count() call easily
     // without complex Query constraints, but we can query by discipline and filter status.
     // However, to keep it O(1) reads, we'll fetch counts for each category.
-    
+
     const results = {};
     const categories = [
       { diff: "Beginner", type: "Multiple Choice", key: "Beginner MC" },
@@ -439,34 +439,36 @@ export const getCategoryStatsAggregated = async (discipline) => {
       { diff: "Intermediate", type: "Multiple Choice", key: "Intermediate MC" },
       { diff: "Intermediate", type: "True/False", key: "Intermediate T/F" },
       { diff: "Expert", type: "Multiple Choice", key: "Expert MC" },
-      { diff: "Expert", type: "True/False", key: "Expert T/F" }
+      { diff: "Expert", type: "True/False", key: "Expert T/F" },
     ];
 
-    await Promise.all(categories.map(async (cat) => {
-      // Query for both 'accepted' and 'pending' (merged logic)
-      const qAccepted = query(
-        questionsRef,
-        where("discipline", "==", discipline),
-        where("difficulty", "==", cat.diff),
-        where("type", "==", cat.type),
-        where("status", "==", "accepted")
-      );
-      
-      const qPending = query(
-        questionsRef,
-        where("discipline", "==", discipline),
-        where("difficulty", "==", cat.diff),
-        where("type", "==", cat.type),
-        where("status", "in", ["pending", ""]) // Handle missing status as pending
-      );
+    await Promise.all(
+      categories.map(async (cat) => {
+        // Query for both 'accepted' and 'pending' (merged logic)
+        const qAccepted = query(
+          questionsRef,
+          where("discipline", "==", discipline),
+          where("difficulty", "==", cat.diff),
+          where("type", "==", cat.type),
+          where("status", "==", "accepted")
+        );
 
-      const [snapAccepted, snapPending] = await Promise.all([
-        getCountFromServer(qAccepted),
-        getCountFromServer(qPending)
-      ]);
+        const qPending = query(
+          questionsRef,
+          where("discipline", "==", discipline),
+          where("difficulty", "==", cat.diff),
+          where("type", "==", cat.type),
+          where("status", "in", ["pending", ""]) // Handle missing status as pending
+        );
 
-      results[cat.key] = snapAccepted.data().count + snapPending.data().count;
-    }));
+        const [snapAccepted, snapPending] = await Promise.all([
+          getCountFromServer(qAccepted),
+          getCountFromServer(qPending),
+        ]);
+
+        results[cat.key] = snapAccepted.data().count + snapPending.data().count;
+      })
+    );
 
     return results;
   } catch (error) {
