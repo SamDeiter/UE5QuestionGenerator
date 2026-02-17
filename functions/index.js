@@ -56,3 +56,8 @@ Object.assign(exports, require("./triggers/questionStatsUpdater"));
 // Screenshot Functions
 // ============================================================================
 Object.assign(exports, require("./screenshots/uploadScreenshot"));
+
+// ============================================================================
+// Review Data Functions
+// ============================================================================
+Object.assign(exports, require("./reviews/saveReview"));
