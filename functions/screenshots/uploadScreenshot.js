@@ -1,15 +1,11 @@
 const { onRequest } = require("firebase-functions/v2/https");
-const { defineSecret } = require("firebase-functions/params");
-const { google } = require("googleapis");
+const admin = require("firebase-admin");
 
-// Service account key stored as Firebase secret
-const DRIVE_SA_KEY = defineSecret("DRIVE_SA_KEY");
-
-// Google Drive folder ID for screenshots (personal Drive)
-const SCREENSHOT_FOLDER_ID = "1KddsOq_uNJoLipneso9l8RopwsHAFmUM";
+// Firebase Storage bucket (default bucket)
+const BUCKET_NAME = "ue5-questions-prod.firebasestorage.app";
 
 /**
- * Upload a screenshot to Google Drive using a service account.
+ * Upload a screenshot to Firebase Storage.
  *
  * Expects POST with JSON body:
  * {
@@ -22,9 +18,8 @@ const SCREENSHOT_FOLDER_ID = "1KddsOq_uNJoLipneso9l8RopwsHAFmUM";
  * Returns JSON:
  * {
  *   success: true,
- *   fileId: "...",
- *   viewUrl: "https://drive.google.com/file/d/.../view",
- *   thumbnailUrl: "https://drive.google.com/thumbnail?id=...&sz=w400"
+ *   viewUrl: "https://storage.googleapis.com/...",
+ *   thumbnailUrl: "https://storage.googleapis.com/..."
  * }
  */
 exports.uploadScreenshot = onRequest(
@@ -33,7 +28,6 @@ exports.uploadScreenshot = onRequest(
     maxInstances: 5,
     timeoutSeconds: 60,
     memory: "256MiB",
-    secrets: [DRIVE_SA_KEY],
   },
   async (req, res) => {
     // Only allow POST
@@ -56,59 +50,38 @@ exports.uploadScreenshot = onRequest(
 
       // Build filename
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const fileName = `${toolId || "unknown"}_${itemId || "unknown"}_${timestamp}.png`;
+      const fileName = `screenshots/${toolId || "unknown"}/${itemId || "unknown"}_${timestamp}.png`;
 
-      // Authenticate with service account
-      const saKey = JSON.parse(DRIVE_SA_KEY.value());
-      const auth = new google.auth.GoogleAuth({
-        credentials: saKey,
-        scopes: ["https://www.googleapis.com/auth/drive.file"],
-      });
+      // Upload to Firebase Storage
+      const bucket = admin.storage().bucket(BUCKET_NAME);
+      const file = bucket.file(fileName);
 
-      const drive = google.drive({ version: "v3", auth });
+      const buffer = Buffer.from(base64Data, "base64");
 
-      // Upload file to Drive
-      const fileBuffer = Buffer.from(base64Data, "base64");
-      const { Readable } = require("stream");
-      const stream = new Readable();
-      stream.push(fileBuffer);
-      stream.push(null);
-
-      const createResponse = await drive.files.create({
-        requestBody: {
-          name: fileName,
-          parents: [SCREENSHOT_FOLDER_ID],
-          mimeType: "image/png",
-          description: `Screenshot by ${reviewerEmail || "unknown"} for ${toolId}/${itemId}`,
-        },
-        media: {
-          mimeType: "image/png",
-          body: stream,
-        },
-        fields: "id, webViewLink",
-      });
-
-      const fileId = createResponse.data.id;
-
-      // Make file publicly viewable
-      await drive.permissions.create({
-        fileId: fileId,
-        requestBody: {
-          role: "reader",
-          type: "anyone",
+      await file.save(buffer, {
+        metadata: {
+          contentType: "image/png",
+          metadata: {
+            reviewerEmail: reviewerEmail || "unknown",
+            toolId: toolId || "",
+            itemId: itemId || "",
+            uploadedAt: new Date().toISOString(),
+          },
         },
       });
 
-      const viewUrl = `https://drive.google.com/file/d/${fileId}/view`;
-      const thumbnailUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
+      // Make file publicly readable
+      await file.makePublic();
 
-      console.log(`[uploadScreenshot] Uploaded ${fileName} (${fileId}) by ${reviewerEmail}`);
+      // Get the public URL
+      const viewUrl = `https://storage.googleapis.com/${BUCKET_NAME}/${fileName}`;
+
+      console.log(`[uploadScreenshot] Uploaded ${fileName} by ${reviewerEmail}`);
 
       return res.status(200).json({
         success: true,
-        fileId,
         viewUrl,
-        thumbnailUrl,
+        thumbnailUrl: viewUrl, // Same URL for Firebase Storage
         fileName,
       });
     } catch (err) {
