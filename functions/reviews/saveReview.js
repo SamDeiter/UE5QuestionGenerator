@@ -6,7 +6,7 @@ const { google } = require("googleapis");
 const DRIVE_SA_KEY = defineSecret("DRIVE_SA_KEY");
 
 // Target spreadsheet ID
-const SPREADSHEET_ID = "1BQ6T9K8dJhnjems7ZUHAHaU67qPUdZ8fZezZZxalzjs";
+const SPREADSHEET_ID = "1Hp-vJ-ZtjQTXNQ_rmIZyGm41EcO2JJ3pSL3Q3ZRrmLs";
 
 /**
  * Save review data to Google Sheet.
