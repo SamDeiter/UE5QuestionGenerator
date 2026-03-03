@@ -17,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
     questionsPerAttempt: null, // If set, randomly select this many questions per attempt
     shuffleQuestions: true,
     shuffleChoices: true, // Randomize answer order per question (labels stay A/B/C/D)
-    adaptiveDifficulty: true,
   };
 
   // Decode base64 encoded questions (prevents casual view-source cheating)
@@ -44,7 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let questionStartTime = Date.now();
   let attemptToken = null;
   let quizCompleted = false;
-  let wrongStreak = 0; // Track consecutive wrong answers for adaptive difficulty
   let questions = []; // Shuffled/balanced question list
 
   // ═══════════════════════════════════════════════════════════════
@@ -381,8 +379,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * Build balanced question list with difficulty interleaving
-   * Interleaves Easy-Medium-Hard for optimal learning progression
+   * Build weighted question list with difficulty distribution
+   * Allocates questions using configurable weights (default: 15% Easy, 35% Medium, 50% Hard)
+   * to ensure exams are appropriately challenging for certification.
+   * Falls back gracefully when a pool doesn't have enough questions.
    */
   function buildBalancedQuestionList(inputQuestions) {
     const easy = inputQuestions.filter((q) =>
@@ -409,49 +409,68 @@ document.addEventListener("DOMContentLoaded", () => {
     const shuffledHard = shuffleArray(hard);
     const shuffledOther = shuffleArray(other);
 
-    // Interleave: E-M-H pattern
+    // Determine total questions for this attempt
+    const totalAvailable = inputQuestions.length;
+    const targetTotal = config.questionsPerAttempt
+      ? Math.min(config.questionsPerAttempt, totalAvailable)
+      : totalAvailable;
+
+    // Weighted allocation: 15% Easy, 35% Medium, 50% Hard
+    // These weights ensure certification exams are appropriately challenging
+    const weights = config.difficultyWeights || {
+      easy: 0.15,
+      medium: 0.35,
+      hard: 0.5,
+    };
+    let targetEasy = Math.round(targetTotal * weights.easy);
+    let targetMedium = Math.round(targetTotal * weights.medium);
+    let targetHard = targetTotal - targetEasy - targetMedium; // Remainder goes to hard
+
+    // Clamp to available questions in each pool
+    const actualEasy = Math.min(targetEasy, shuffledEasy.length);
+    const actualMedium = Math.min(targetMedium, shuffledMedium.length);
+    const actualHard = Math.min(targetHard, shuffledHard.length);
+
+    // Redistribute shortfall to harder pools first, then easier
+    let surplus =
+      targetEasy -
+      actualEasy +
+      (targetMedium - actualMedium) +
+      (targetHard - actualHard);
+    let extraHard = Math.min(surplus, shuffledHard.length - actualHard);
+    surplus -= extraHard;
+    let extraMedium = Math.min(surplus, shuffledMedium.length - actualMedium);
+    surplus -= extraMedium;
+    let extraEasy = Math.min(surplus, shuffledEasy.length - actualEasy);
+
+    const selectedEasy = shuffledEasy.slice(0, actualEasy + extraEasy);
+    const selectedMedium = shuffledMedium.slice(0, actualMedium + extraMedium);
+    const selectedHard = shuffledHard.slice(0, actualHard + extraHard);
+
+    // Interleave: E-M-H pattern (with weighted counts, hard questions appear more often)
     const distributed = [];
     const maxLen = Math.max(
-      shuffledEasy.length,
-      shuffledMedium.length,
-      shuffledHard.length
+      selectedEasy.length,
+      selectedMedium.length,
+      selectedHard.length
     );
 
     for (let i = 0; i < maxLen; i++) {
-      if (shuffledEasy[i]) distributed.push(shuffledEasy[i]);
-      if (shuffledMedium[i]) distributed.push(shuffledMedium[i]);
-      if (shuffledHard[i]) distributed.push(shuffledHard[i]);
+      if (selectedEasy[i]) distributed.push(selectedEasy[i]);
+      if (selectedMedium[i]) distributed.push(selectedMedium[i]);
+      if (selectedHard[i]) distributed.push(selectedHard[i]);
     }
 
     // Add any uncategorized questions at the end
     distributed.push(...shuffledOther);
 
-    return distributed;
-  }
-
-  /**
-   * Apply confidence boost - swap in easier question after wrong streak
-   */
-  function applyConfidenceBoost() {
-    if (!config.adaptiveDifficulty || wrongStreak < 2) return;
-
-    const upcomingQuestions = questions.slice(currentQuestionIndex + 1);
-    const answeredIds = new Set(answers.map((a) => a.questionId));
-
-    const easyIndex = upcomingQuestions.findIndex(
-      (q) =>
-        (q.difficulty || "").toLowerCase().includes("easy") &&
-        !answeredIds.has(q.id)
+    console.log(
+      `[Quiz] Weighted distribution: ${selectedEasy.length} easy (${Math.round((selectedEasy.length / distributed.length) * 100)}%), ` +
+        `${selectedMedium.length} medium (${Math.round((selectedMedium.length / distributed.length) * 100)}%), ` +
+        `${selectedHard.length} hard (${Math.round((selectedHard.length / distributed.length) * 100)}%) = ${distributed.length} total`
     );
 
-    if (easyIndex > 0) {
-      // Swap easier question to next position
-      const realIndex = currentQuestionIndex + 1 + easyIndex;
-      const temp = questions[currentQuestionIndex + 1];
-      questions[currentQuestionIndex + 1] = questions[realIndex];
-      questions[realIndex] = temp;
-      console.log("[Adaptive] Swapped in easier question for confidence boost");
-    }
+    return distributed;
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -785,13 +804,6 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
 
-    // Track wrong streak for adaptive difficulty
-    if (isCorrect) {
-      wrongStreak = 0;
-    } else {
-      wrongStreak++;
-    }
-
     // Visual feedback - neutral "selected" style (does NOT reveal correctness)
     // Uses blue highlight to indicate the selected answer without showing right/wrong
     button.style.cssText =
@@ -802,9 +814,6 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.disabled = true;
       btn.classList.add("cursor-not-allowed");
     });
-
-    // Apply confidence boost before moving to next question
-    applyConfidenceBoost();
 
     // Move to next question after delay
     setTimeout(() => {

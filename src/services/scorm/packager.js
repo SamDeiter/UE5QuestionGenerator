@@ -66,8 +66,7 @@ window.QUIZ_CONFIG = {
   timeLimit: ${timeLimit * 60}, // Convert minutes to seconds
   totalQuestions: ${scormQuestions.length},
   questionsPerAttempt: ${questionsPerAttempt}, // Random selection per attempt
-  shuffleQuestions: true,
-  adaptiveDifficulty: true
+  shuffleQuestions: true
 };
 
 // Base64 encode questions to prevent casual view-source cheating

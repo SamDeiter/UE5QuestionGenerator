@@ -202,6 +202,15 @@ export const SCORM_DEFAULTS = {
   TIME_LIMIT_MINUTES: 30,
 };
 
+// Difficulty Distribution Weights for Quiz Question Selection
+// Controls how many questions of each difficulty are selected per attempt.
+// Shifted from equal thirds (33/33/33) to harder distribution to combat inflated scores.
+export const DIFFICULTY_WEIGHTS = {
+  EASY: 0.15, // 15% Easy questions (was ~33%)
+  MEDIUM: 0.35, // 35% Medium questions (was ~33%)
+  HARD: 0.5, // 50% Hard questions (was ~33%)
+};
+
 // Firestore Query Limits - Performance Optimization
 export const FIRESTORE_LIMITS = {
   MAX_RESULTS: 500,

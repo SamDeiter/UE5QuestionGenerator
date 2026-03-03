@@ -40,7 +40,7 @@ import QuizQuestion from "./QuizPreview/QuizQuestion";
  *
  * Features:
  * - Balanced difficulty distribution (interleaves Easy/Medium/Hard)
- * - Confidence boost: gives easy question after 2 wrong in a row
+ * - Weighted difficulty distribution (15% Easy, 35% Medium, 50% Hard)
  * - Fixed question count and timer
  * - Static A, B, C, D answer display
  */
@@ -50,7 +50,6 @@ const QuizPreview = ({ questions, config, onClose }) => {
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [wrongStreak, setWrongStreak] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(config.timeLimit * 60);
   const [quizStarted, setQuizStarted] = useState(false);
@@ -71,14 +70,13 @@ const QuizPreview = ({ questions, config, onClose }) => {
   const isAnswered = selectedAnswer !== undefined;
 
   /**
-   * Build a balanced question list at quiz start
-   * Selects 20 Easy + 20 Medium + 20 Hard = 60 questions
+   * Build a weighted question list at quiz start
+   * Allocates 15% Easy + 35% Medium + 50% Hard (target 60 questions)
    * Starts with an easy question for confidence, then interleaves E-M-H
    */
   const buildBalancedQuestionList = useCallback(
     (guid) => {
       const randomFn = createSeededRandom(guid);
-      const QUESTIONS_PER_DIFFICULTY = 20;
 
       // Filter to English-only questions first
       const englishQuestions = questions.filter((q) => {
@@ -101,10 +99,39 @@ const QuizPreview = ({ questions, config, onClose }) => {
       const shuffledMedium = seededShuffle(medium, randomFn);
       const shuffledHard = seededShuffle(hard, randomFn);
 
-      // Select exactly 20 from each difficulty (or as many as available)
-      const selectedEasy = shuffledEasy.slice(0, QUESTIONS_PER_DIFFICULTY);
-      const selectedMedium = shuffledMedium.slice(0, QUESTIONS_PER_DIFFICULTY);
-      const selectedHard = shuffledHard.slice(0, QUESTIONS_PER_DIFFICULTY);
+      // Weighted allocation: 15% Easy, 35% Medium, 50% Hard
+      // These weights ensure certification exams are appropriately challenging
+      const TOTAL_TARGET = 60;
+      const targetEasy = Math.round(TOTAL_TARGET * 0.15); // 9
+      const targetMedium = Math.round(TOTAL_TARGET * 0.35); // 21
+      const targetHard = TOTAL_TARGET - targetEasy - targetMedium; // 30
+
+      // Select up to target from each pool (or as many as available)
+      const actualEasy = Math.min(targetEasy, shuffledEasy.length);
+      const actualMedium = Math.min(targetMedium, shuffledMedium.length);
+      const actualHard = Math.min(targetHard, shuffledHard.length);
+
+      // Redistribute shortfall to harder pools first
+      let surplus =
+        targetEasy -
+        actualEasy +
+        (targetMedium - actualMedium) +
+        (targetHard - actualHard);
+      const extraHard = Math.min(surplus, shuffledHard.length - actualHard);
+      surplus -= extraHard;
+      const extraMedium = Math.min(
+        surplus,
+        shuffledMedium.length - actualMedium
+      );
+      surplus -= extraMedium;
+      const extraEasy = Math.min(surplus, shuffledEasy.length - actualEasy);
+
+      const selectedEasy = shuffledEasy.slice(0, actualEasy + extraEasy);
+      const selectedMedium = shuffledMedium.slice(
+        0,
+        actualMedium + extraMedium
+      );
+      const selectedHard = shuffledHard.slice(0, actualHard + extraHard);
 
       // Build the question order:
       // 1. Start with ONE easy question for confidence
@@ -254,15 +281,8 @@ const QuizPreview = ({ questions, config, onClose }) => {
       if (!currentQuestion) return;
 
       const qId = currentQuestion.id || currentQuestion.uniqueId;
-      const isCorrect = selectedKey === currentQuestion.correct;
 
       setAnswers((prev) => ({ ...prev, [qId]: selectedKey }));
-
-      if (isCorrect) {
-        setWrongStreak(0);
-      } else {
-        setWrongStreak((prev) => prev + 1);
-      }
     },
     [currentQuestion]
   );
@@ -281,56 +301,8 @@ const QuizPreview = ({ questions, config, onClose }) => {
       return;
     }
 
-    // Confidence boost: if 2+ wrong in a row, inject 2 easy questions next
-    if (wrongStreak >= 2) {
-      const answeredIds = new Set(Object.keys(answers));
-      const upcomingQuestions = quizQuestions.slice(currentIndex + 1);
-
-      // Find all easy questions in upcoming that haven't been answered
-      const easyIndices = [];
-      upcomingQuestions.forEach((q, idx) => {
-        if (
-          (q.difficulty || "").toLowerCase().includes("easy") &&
-          !answeredIds.has(q.id || q.uniqueId)
-        ) {
-          easyIndices.push(idx);
-        }
-      });
-
-      // Move up to 2 easy questions to the front
-      const numToMove = Math.min(2, easyIndices.length);
-      if (numToMove > 0) {
-        const newQuestions = [...quizQuestions];
-        let insertPosition = currentIndex + 1;
-
-        for (let i = 0; i < numToMove; i++) {
-          const easyIdx = easyIndices[i];
-          // Only swap if the easy question isn't already at the insert position
-          if (currentIndex + 1 + easyIdx > insertPosition) {
-            const easyQ = newQuestions[currentIndex + 1 + easyIdx];
-            const displaced = newQuestions[insertPosition];
-            newQuestions[insertPosition] = easyQ;
-            newQuestions[currentIndex + 1 + easyIdx] = displaced;
-            insertPosition++;
-          }
-        }
-
-        setQuizQuestions(newQuestions);
-        logger.log(
-          `Confidence boost: Moved ${numToMove} easy questions forward after ${wrongStreak} wrong`
-        );
-      }
-    }
-
     setCurrentIndex((prev) => prev + 1);
-  }, [
-    currentIndex,
-    totalQuestions,
-    wrongStreak,
-    answers,
-    quizQuestions,
-    isAnswered,
-  ]);
+  }, [currentIndex, totalQuestions, isAnswered]);
 
   // Accessibility: Keyboard navigation for quiz questions
   useEffect(() => {
