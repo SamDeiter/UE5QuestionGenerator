@@ -50,6 +50,7 @@ REVIEWER_CONTACTS.md
 # Temp development files (kept locally, not in git)
 temp_*.*
 test-output.txt
+test-results*.json
 *-test-data.*
 *-sample-data.*
 test_log.txt
