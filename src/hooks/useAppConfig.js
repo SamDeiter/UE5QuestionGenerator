@@ -30,8 +30,8 @@ export const useAppConfig = ({ user = null } = {}) => {
   const isInternalEnvironment =
     typeof window !== "undefined" && typeof window.__app_id !== "undefined";
 
-  // Authentication status - always ready for local/Sheets operations
-  const isAuthReady = true;
+  // Authentication status — true when Firebase user is resolved
+  const isAuthReady = !!user;
 
   // SECURITY WARNING: Storing API keys in localStorage is insecure!
   // This is a temporary solution. For production:

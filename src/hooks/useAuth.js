@@ -10,8 +10,8 @@
  * - Age verification and terms acceptance modals (extracted to useCompliance)
  */
 import { useState, useEffect } from "react";
-import { onIdTokenChanged } from "firebase/auth";
-import { auth, getCustomTags, saveCustomTags } from "../services/firebase";
+import { getCustomTags, saveCustomTags } from "../services/firebase";
+import { authManager } from "../services/AuthManager";
 import { logger } from "../utils/logger";
 import { TIMING } from "../utils/constants";
 
@@ -67,9 +67,9 @@ export function useAuth(showMessage) {
   // EFFECTS
   // ========================================================================
 
-  // Listen for auth state changes AND token refreshes (for custom claims)
+  // Listen for auth state changes via centralized AuthManager (single listener)
   useEffect(() => {
-    const unsubscribe = onIdTokenChanged(auth, (currentUser) => {
+    const unsubscribe = authManager.onAuthChange((currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
 
