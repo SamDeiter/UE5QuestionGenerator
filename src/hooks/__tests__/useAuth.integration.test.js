@@ -6,16 +6,34 @@
  * - Write probe failure handling
  * - Listener cleanup on unmount
  *
+ * NOTE: useAuth subscribes to auth state via authManager.onAuthChange (centralized).
+ * Tests mock AuthManager to control when auth state changes fire.
+ *
  * Run with: npm test -- --grep "useAuth"
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { onIdTokenChanged } from "firebase/auth";
 import { setDoc } from "firebase/firestore";
+
+// =====================================================================
+// AuthManager mock — captures the onAuthChange callback so tests can
+// simulate auth state changes by calling authChangeCallback(user|null)
+// =====================================================================
+let authChangeCallback = null;
+const mockAuthUnsubscribe = vi.fn();
+vi.mock("../../services/AuthManager", () => ({
+  authManager: {
+    onAuthChange: vi.fn((cb) => {
+      authChangeCallback = cb;
+      return mockAuthUnsubscribe;
+    }),
+    getUser: vi.fn(() => null),
+    init: vi.fn(),
+  },
+}));
 
 // Setup mocks before imports
 vi.mock("firebase/auth", () => ({
-  onIdTokenChanged: vi.fn(),
   getAuth: vi.fn(() => ({})),
   GoogleAuthProvider: class {
     setCustomParameters() {}
@@ -42,8 +60,6 @@ vi.mock("../../services/inviteService", () => ({
   logAuthFailure: vi.fn(() => Promise.resolve()),
 }));
 
-// firebaseQueries removed as it no longer contains logAuthFailure
-
 vi.mock("../../utils/logger", () => ({
   logger: {
     log: vi.fn(),
@@ -53,21 +69,20 @@ vi.mock("../../utils/logger", () => ({
 }));
 
 import { useAuth } from "../useAuth";
+import { authManager } from "../../services/AuthManager";
 import {
   checkUserRegistration,
   setupInitialAdmin,
 } from "../../services/inviteService";
 
 describe("useAuth - Race Condition Protection", () => {
-  let mockUnsubscribe;
-  let authStateCallback;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUnsubscribe = vi.fn();
-    onIdTokenChanged.mockImplementation((auth, callback) => {
-      authStateCallback = callback;
-      return mockUnsubscribe;
+    authChangeCallback = null;
+    // Default: defer callback so tests control timing
+    authManager.onAuthChange.mockImplementation((cb) => {
+      authChangeCallback = cb;
+      return mockAuthUnsubscribe;
     });
 
     // Default mock implementations
@@ -87,7 +102,6 @@ describe("useAuth - Race Condition Protection", () => {
   it("ignores stale auth state after user logs out mid-fetch", async () => {
     const showMessage = vi.fn();
 
-    // Create a delay helper to reduce nesting
     const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
     // Slow cloud function that takes 1 second
@@ -102,20 +116,18 @@ describe("useAuth - Race Condition Protection", () => {
     const user = { uid: "test-uid", email: "test@example.com" };
 
     await act(async () => {
-      authStateCallback(user);
+      authChangeCallback(user);
     });
 
     // Immediately simulate logout BEFORE checkUserRegistration completes
     await act(async () => {
-      authStateCallback(null);
+      authChangeCallback(null);
     });
 
     // Wait for states to settle
     await waitFor(
       () => {
-        // User should be null (logged out)
         expect(result.current.user).toBeNull();
-        // Should NOT have stale admin state from cancelled request
         expect(result.current.isAdmin).toBe(false);
         expect(result.current.isRegistered).toBe(false);
       },
@@ -129,13 +141,13 @@ describe("useAuth - Race Condition Protection", () => {
   // Test: Listener Cleanup
   // ========================================
 
-  it("unsubscribes from onIdTokenChanged on unmount", () => {
+  it("unsubscribes from authManager.onAuthChange on unmount", () => {
     const showMessage = vi.fn();
     const { unmount } = renderHook(() => useAuth(showMessage));
 
     unmount();
 
-    expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(mockAuthUnsubscribe).toHaveBeenCalledTimes(1);
   });
 
   // ========================================
@@ -145,7 +157,6 @@ describe("useAuth - Race Condition Protection", () => {
   it("revokes isRegistered when write probe fails with permission-denied", async () => {
     const showMessage = vi.fn();
 
-    // User is "registered" according to cloud function
     checkUserRegistration.mockResolvedValue({
       registered: true,
       role: "reviewer",
@@ -159,14 +170,12 @@ describe("useAuth - Race Condition Protection", () => {
     const user = { uid: "ghost-uid", email: "ghost@example.com" };
 
     await act(async () => {
-      authStateCallback(user);
+      authChangeCallback(user);
     });
 
     await waitFor(
       () => {
-        // Critical: Should revoke registration if write fails
         expect(result.current.permissionError).toBe(true);
-        // CRITICAL FIX: isRegistered should be false after write probe fails
         expect(result.current.isRegistered).toBe(false);
         expect(result.current.isAdmin).toBe(false);
       },
@@ -195,7 +204,7 @@ describe("useAuth - Race Condition Protection", () => {
     };
 
     await act(async () => {
-      authStateCallback(user);
+      authChangeCallback(user);
     });
 
     await waitFor(
@@ -227,7 +236,7 @@ describe("useAuth - Race Condition Protection", () => {
     const user = { uid: "new-uid", email: "newuser@example.com" };
 
     await act(async () => {
-      authStateCallback(user);
+      authChangeCallback(user);
     });
 
     await waitFor(
@@ -247,7 +256,6 @@ describe("useAuth - Race Condition Protection", () => {
   it("handles network errors gracefully (fail closed)", async () => {
     const showMessage = vi.fn();
 
-    // Simulate network error
     checkUserRegistration.mockRejectedValue(
       new Error("Network request failed")
     );
@@ -257,12 +265,11 @@ describe("useAuth - Race Condition Protection", () => {
     const user = { uid: "test-uid", email: "test@example.com" };
 
     await act(async () => {
-      authStateCallback(user);
+      authChangeCallback(user);
     });
 
     await waitFor(
       () => {
-        // SECURITY: Fail closed - no access on error
         expect(result.current.isRegistered).toBe(false);
         expect(result.current.isAdmin).toBe(false);
       },
@@ -272,13 +279,12 @@ describe("useAuth - Race Condition Protection", () => {
 });
 
 describe("useAuth - State Management", () => {
-  let authStateCallback;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    onIdTokenChanged.mockImplementation((auth, callback) => {
-      authStateCallback = callback;
-      return vi.fn();
+    authChangeCallback = null;
+    authManager.onAuthChange.mockImplementation((cb) => {
+      authChangeCallback = cb;
+      return mockAuthUnsubscribe;
     });
     checkUserRegistration.mockResolvedValue({ registered: true, role: "user" });
     setDoc.mockResolvedValue();
@@ -291,7 +297,7 @@ describe("useAuth - State Management", () => {
     // Login
     const user = { uid: "test-uid", email: "test@example.com" };
     await act(async () => {
-      authStateCallback(user);
+      authChangeCallback(user);
     });
 
     await waitFor(() => {
@@ -300,7 +306,7 @@ describe("useAuth - State Management", () => {
 
     // Logout
     await act(async () => {
-      authStateCallback(null);
+      authChangeCallback(null);
     });
 
     await waitFor(() => {
@@ -323,7 +329,7 @@ describe("useAuth - State Management", () => {
     const { result } = renderHook(() => useAuth(showMessage));
 
     await act(async () => {
-      authStateCallback(null);
+      authChangeCallback(null);
     });
 
     await waitFor(() => {

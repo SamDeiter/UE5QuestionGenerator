@@ -3,15 +3,34 @@
  *
  * Tests the authentication and registration flow to prevent
  * "Ghost Reviewer" issues where users are authenticated but not registered.
+ *
+ * NOTE: useAuth subscribes to auth state via authManager.onAuthChange (centralized).
+ * Tests mock AuthManager to control when auth state changes fire.
  */
 /* eslint-disable sonarjs/no-nested-functions */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useAuth } from "../useAuth";
 
-// Mock Firebase Auth
+// =====================================================================
+// AuthManager mock — captures the onAuthChange callback so tests can
+// simulate auth state changes by calling authChangeCallback(user|null)
+// =====================================================================
+let authChangeCallback = null;
+const mockAuthUnsubscribe = vi.fn();
+vi.mock("../../services/AuthManager", () => ({
+  authManager: {
+    onAuthChange: vi.fn((cb) => {
+      authChangeCallback = cb;
+      return mockAuthUnsubscribe;
+    }),
+    getUser: vi.fn(() => null),
+    init: vi.fn(),
+  },
+}));
+
+// Mock Firebase Auth (still needed for signInWithPopup/signOut APIs)
 vi.mock("firebase/auth", () => ({
-  onIdTokenChanged: vi.fn(),
   getAuth: vi.fn(() => ({})),
   GoogleAuthProvider: class {
     setCustomParameters() {}
@@ -57,28 +76,35 @@ vi.mock("../../utils/analyticsStore", () => ({
   getTokenUsage: vi.fn(() => ({ input: 0, output: 0 })),
 }));
 
-import { onIdTokenChanged } from "firebase/auth";
 import {
   checkUserRegistration,
   setupInitialAdmin,
 } from "../../services/inviteService";
+import { authManager } from "../../services/AuthManager";
 
 describe("useAuth", () => {
   const mockShowMessage = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    authChangeCallback = null;
     localStorage.clear();
     // Set compliance flags to avoid modal triggers
     localStorage.setItem("ue5_age_verified", "true");
     localStorage.setItem("ue5_terms_accepted", "true");
+    // Reset the mock to re-capture callback on next render
+    authManager.onAuthChange.mockImplementation((cb) => {
+      authChangeCallback = cb;
+      return mockAuthUnsubscribe;
+    });
   });
 
   it("should return registered=false when user is not authenticated", async () => {
-    // Mock no user
-    onIdTokenChanged.mockImplementation((auth, callback) => {
-      callback(null);
-      return () => {};
+    // Configure mock to fire with null user on subscribe
+    authManager.onAuthChange.mockImplementation((cb) => {
+      authChangeCallback = cb;
+      cb(null);
+      return mockAuthUnsubscribe;
     });
 
     const { result } = renderHook(() => useAuth(mockShowMessage));
@@ -94,9 +120,10 @@ describe("useAuth", () => {
   it("should detect registered reviewer from checkUserRegistration", async () => {
     const mockUser = { uid: "test-uid", email: "reviewer@gmail.com" };
 
-    onIdTokenChanged.mockImplementation((auth, callback) => {
-      callback(mockUser);
-      return () => {};
+    authManager.onAuthChange.mockImplementation((cb) => {
+      authChangeCallback = cb;
+      cb(mockUser);
+      return mockAuthUnsubscribe;
     });
 
     checkUserRegistration.mockResolvedValue({
@@ -118,15 +145,13 @@ describe("useAuth", () => {
   it("should auto-register @epicgames.com users as admin via setupInitialAdmin", async () => {
     const mockUser = { uid: "epic-uid", email: "dev@epicgames.com" };
 
-    onIdTokenChanged.mockImplementation((auth, callback) => {
-      callback(mockUser);
-      return () => {};
+    authManager.onAuthChange.mockImplementation((cb) => {
+      authChangeCallback = cb;
+      cb(mockUser);
+      return mockAuthUnsubscribe;
     });
 
-    // First check returns not registered
     checkUserRegistration.mockResolvedValue({ registered: false });
-
-    // setupInitialAdmin succeeds for Epic emails
     setupInitialAdmin.mockResolvedValue({ success: true, role: "admin" });
 
     const { result } = renderHook(() => useAuth(mockShowMessage));
@@ -144,12 +169,12 @@ describe("useAuth", () => {
   it("should fail closed when Cloud Function errors (no access)", async () => {
     const mockUser = { uid: "error-uid", email: "user@example.com" };
 
-    onIdTokenChanged.mockImplementation((auth, callback) => {
-      callback(mockUser);
-      return () => {};
+    authManager.onAuthChange.mockImplementation((cb) => {
+      authChangeCallback = cb;
+      cb(mockUser);
+      return mockAuthUnsubscribe;
     });
 
-    // Cloud function fails
     checkUserRegistration.mockRejectedValue(new Error("Network error"));
 
     const { result } = renderHook(() => useAuth(mockShowMessage));
@@ -158,7 +183,6 @@ describe("useAuth", () => {
       expect(result.current.registrationLoading).toBe(false);
     });
 
-    // Should fail closed - no access granted on error
     expect(result.current.isRegistered).toBe(false);
     expect(result.current.isAdmin).toBe(false);
   });
@@ -166,15 +190,13 @@ describe("useAuth", () => {
   it("should detect Ghost Reviewer state (authenticated but not registered)", async () => {
     const mockUser = { uid: "ghost-uid", email: "ghost@company.com" };
 
-    onIdTokenChanged.mockImplementation((auth, callback) => {
-      callback(mockUser);
-      return () => {};
+    authManager.onAuthChange.mockImplementation((cb) => {
+      authChangeCallback = cb;
+      cb(mockUser);
+      return mockAuthUnsubscribe;
     });
 
-    // Not registered
     checkUserRegistration.mockResolvedValue({ registered: false });
-
-    // Not an Epic email, so setupInitialAdmin will throw
     setupInitialAdmin.mockRejectedValue(
       new Error("Not authorized for initial admin setup")
     );
@@ -185,11 +207,8 @@ describe("useAuth", () => {
       expect(result.current.registrationLoading).toBe(false);
     });
 
-    // User is authenticated (user exists)
     expect(result.current.user).not.toBeNull();
-    // But NOT registered
     expect(result.current.isRegistered).toBe(false);
-    // This is the "Ghost Reviewer" state that triggers the warning banner
   });
 
   it("should set permissionError=false when write probe succeeds", async () => {
@@ -198,9 +217,10 @@ describe("useAuth", () => {
       email: "success@epicgames.com",
     };
 
-    onIdTokenChanged.mockImplementation((auth, callback) => {
-      callback(mockUser);
-      return () => {};
+    authManager.onAuthChange.mockImplementation((cb) => {
+      authChangeCallback = cb;
+      cb(mockUser);
+      return mockAuthUnsubscribe;
     });
 
     checkUserRegistration.mockResolvedValue({
@@ -208,7 +228,6 @@ describe("useAuth", () => {
       role: "admin",
     });
 
-    // Write probe succeeds
     mockSetDoc.mockResolvedValue(undefined);
 
     const { result } = renderHook(() => useAuth(mockShowMessage));
@@ -217,18 +236,17 @@ describe("useAuth", () => {
       expect(result.current.registrationLoading).toBe(false);
     });
 
-    // Probe should have been called
     expect(mockSetDoc).toHaveBeenCalled();
-    // permissionError should be false
     expect(result.current.permissionError).toBe(false);
   });
 
   it("should set permissionError=true when write probe fails with permission-denied", async () => {
     const mockUser = { uid: "probe-fail-uid", email: "fail@epicgames.com" };
 
-    onIdTokenChanged.mockImplementation((auth, callback) => {
-      callback(mockUser);
-      return () => {};
+    authManager.onAuthChange.mockImplementation((cb) => {
+      authChangeCallback = cb;
+      cb(mockUser);
+      return mockAuthUnsubscribe;
     });
 
     checkUserRegistration.mockResolvedValue({
@@ -236,7 +254,6 @@ describe("useAuth", () => {
       role: "admin",
     });
 
-    // Write probe fails with permission-denied
     mockSetDoc.mockRejectedValue({ code: "permission-denied" });
 
     const { result } = renderHook(() => useAuth(mockShowMessage));
@@ -245,12 +262,10 @@ describe("useAuth", () => {
       expect(result.current.registrationLoading).toBe(false);
     });
 
-    // Wait for the probe to complete
     await waitFor(() => {
       expect(result.current.permissionError).toBe(true);
     });
 
-    // permissionError should be true - blocking banner will show
     expect(result.current.permissionError).toBe(true);
   });
 
@@ -259,25 +274,24 @@ describe("useAuth", () => {
   // ============================================================
   describe("Auth Race Conditions (QA Blind Spot)", () => {
     it("CRITICAL: authLoading starts as true to prevent premature UI render", () => {
-      // This test ensures UI won't show private data before auth resolves
-      onIdTokenChanged.mockImplementation((auth, callback) => {
-        // Don't call callback immediately - simulate async auth check
-        setTimeout(() => callback(null), 100);
-        return () => {};
+      // Don't call the callback immediately - simulate async auth check
+      authManager.onAuthChange.mockImplementation((cb) => {
+        authChangeCallback = cb;
+        setTimeout(() => cb(null), 100);
+        return mockAuthUnsubscribe;
       });
 
       const { result } = renderHook(() => useAuth(mockShowMessage));
 
-      // Auth should be loading initially
       expect(result.current.authLoading).toBe(true);
       expect(result.current.user).toBeNull();
     });
 
     it("CRITICAL: authLoading becomes false only after auth settles", async () => {
-      let authCallback;
-      onIdTokenChanged.mockImplementation((auth, callback) => {
-        authCallback = callback;
-        return () => {};
+      // Defer callback so we can control timing
+      authManager.onAuthChange.mockImplementation((cb) => {
+        authChangeCallback = cb;
+        return mockAuthUnsubscribe;
       });
 
       const { result } = renderHook(() => useAuth(mockShowMessage));
@@ -286,25 +300,25 @@ describe("useAuth", () => {
       expect(result.current.authLoading).toBe(true);
 
       // Simulate auth resolving
-      authCallback(null);
+      authChangeCallback(null);
 
       await waitFor(() => {
         expect(result.current.authLoading).toBe(false);
       });
 
-      // Now safe to render UI
       expect(result.current.authLoading).toBe(false);
     });
 
     it("CRITICAL: components should wait for both authLoading and registrationLoading", async () => {
       const mockUser = { uid: "test-uid", email: "test@example.com" };
 
-      onIdTokenChanged.mockImplementation((auth, callback) => {
-        callback(mockUser);
-        return () => {};
+      authManager.onAuthChange.mockImplementation((cb) => {
+        authChangeCallback = cb;
+        cb(mockUser);
+        return mockAuthUnsubscribe;
       });
 
-      // Simulate slow registration check - extracted to reduce nesting
+      // Simulate slow registration check
       const slowRegistrationCheck = () =>
         new Promise((resolve) => {
           setTimeout(() => resolve({ registered: true, role: "user" }), 100);
@@ -319,20 +333,16 @@ describe("useAuth", () => {
         expect(result.current.authLoading).toBe(false);
       });
 
-      // Registration should still be loading
       expect(result.current.registrationLoading).toBe(true);
 
-      // UI should check BOTH flags before showing private data
       const shouldShowPrivateUI =
         !result.current.authLoading && !result.current.registrationLoading;
       expect(shouldShowPrivateUI).toBe(false);
 
-      // Wait for registration to finish
       await waitFor(() => {
         expect(result.current.registrationLoading).toBe(false);
       });
 
-      // Now both are ready
       const canShowUI =
         !result.current.authLoading && !result.current.registrationLoading;
       expect(canShowUI).toBe(true);

@@ -31,7 +31,7 @@ describe("useAppConfig", () => {
     expect(result.current.config).toEqual(
       expect.objectContaining(DEFAULT_CONFIG)
     );
-    expect(result.current.apiKeyStatus).toBe("Cloud Functions"); // Default auth ready
+    expect(result.current.apiKeyStatus).toBe("Not Set"); // No user = not auth ready
   });
 
   it("should load config from secure storage", () => {
