@@ -26,7 +26,9 @@ initAuthDeferred();
 
 // Import cleanup utility to expose window.cleanupProductionDatabase for console access
 // Lazy load debug tools to avoid bundling Firestore in the main chunk
-window.loadDebugTools = () => import("./utils/databaseCleanup.js");
+if (import.meta.env.DEV) {
+  window.loadDebugTools = () => import("./utils/databaseCleanup.js");
+}
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

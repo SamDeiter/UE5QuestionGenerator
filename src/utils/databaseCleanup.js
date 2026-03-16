@@ -267,8 +267,8 @@ export const migrateDifficultyNames = async () => {
   return { migrated: needsMigration };
 };
 
-// Make it available globally in production
-if (typeof window !== "undefined") {
+// DEV-ONLY: Expose debug tools on window for console access during development
+if (typeof window !== "undefined" && import.meta.env.DEV) {
   window.cleanupProductionDatabase = cleanupProductionDatabase;
   window.auditDatabaseCategories = auditDatabaseCategories;
   window.migrateDifficultyNames = migrateDifficultyNames;
