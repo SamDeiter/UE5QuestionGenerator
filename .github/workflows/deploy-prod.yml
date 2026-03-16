@@ -7,12 +7,11 @@ jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Install Dependencies
         run: npm ci
-      # TODO: Fix test mocking for Firebase - temporarily disabled
-      # - name: Run Tests
-      #   run: npm test -- run --exclude=**/**.integration.test.{jsx,js}
+      - name: Run Tests
+        run: npx vitest run --exclude="**/**.integration.test.{jsx,js}"
       - name: Build
         run: npm run build
         env:
@@ -22,9 +21,19 @@ jobs:
           VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
-          VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
-          VITE_SUPER_ADMIN_EMAIL: ${{ secrets.VITE_SUPER_ADMIN_EMAIL }}
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Post-build bundle inspection
+        run: |
+          echo "🔍 Checking production bundle for forbidden secrets..."
+          if grep -r "generativelanguage.googleapis.com" dist/assets/*.js; then
+            echo "❌ FAIL: Direct Gemini API endpoint found in bundle"
+            exit 1
+          fi
+          if grep -rP "AIza[A-Za-z0-9_-]{35}" dist/assets/*.js | grep -v "AIzaSyDHtXGk_e5ntXOqTBAr5whLnVU8LaWsqOQ"; then
+            echo "❌ FAIL: Unauthorized API key found in bundle"
+            exit 1
+          fi
+          echo "✅ Bundle inspection passed"
+      - uses: FirebaseExtended/action-hosting-deploy@120e124148ab7016bec2374e5050f15051571a43 # v0.7.1
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_UE5_QUESTIONS_PROD }}"
