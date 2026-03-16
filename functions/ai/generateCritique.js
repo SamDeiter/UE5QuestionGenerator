@@ -4,7 +4,6 @@ const admin = require("firebase-admin");
 
 // Import utility functions
 const { logApiUsage } = require("../utils/apiUsage");
-const { extractGroundingSources } = require("../utils/grounding");
 const { sanitizeInput } = require("../utils/inputSanitizer");
 
 
