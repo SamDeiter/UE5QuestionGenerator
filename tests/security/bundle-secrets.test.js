@@ -88,4 +88,22 @@ describe("Security: Bundle Secret Detection", () => {
       expect(uniqueKeys[0]).toBe("AIzaSyDHtXGk_e5ntXOqTBAr5whLnVU8LaWsqOQ");
     }
   });
+
+  it("CRITICAL: Must not contain direct Gemini REST endpoint URLs", () => {
+    if (!existsSync(distDir)) {
+      console.warn("dist/assets directory not found - skipping bundle test");
+      return;
+    }
+
+    const files = readdirSync(distDir).filter((f) => f.endsWith(".js"));
+
+    for (const file of files) {
+      const content = readFileSync(join(distDir, file), "utf-8");
+      // Direct Gemini API calls should go through Cloud Functions, not client-side
+      expect(
+        content,
+        `Direct Gemini endpoint found in ${file} — AI calls must go through Cloud Functions`
+      ).not.toContain("generativelanguage.googleapis.com");
+    }
+  });
 });
