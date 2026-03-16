@@ -2,8 +2,9 @@
  * Secure Gemini Service Wrapper
  *
  * This module provides a secure interface for calling Gemini AI.
- * It automatically uses Cloud Functions when the user is authenticated,
- * otherwise falls back to direct API calls.
+ * It automatically uses Cloud Functions when the user is authenticated.
+ * In production, unauthenticated calls are blocked.
+ * In development, falls back to direct API calls for local testing.
  */
 
 import {
@@ -60,9 +61,16 @@ export const generateContentSecure = async (
     logger.log("❓ User not authenticated - using direct API");
   }
 
-  // Fallback to direct API only if NOT authenticated
+  // PRODUCTION: Block unauthenticated AI calls — all prod AI must go through Cloud Functions
+  if (import.meta.env.PROD) {
+    throw new Error(
+      "User must be authenticated to use AI features in production."
+    );
+  }
+
+  // DEV-ONLY: Fallback to direct API for local development/testing
   logger.log(
-    "📡 Calling direct API with key:",
+    "📡 [DEV] Calling direct API with key:",
     effectiveKey
       ? `${effectiveKey.substring(0, AI_CONFIG.API_KEY_PREVIEW_LENGTH)}...`
       : "NONE"
@@ -156,13 +164,17 @@ export const generateCritiqueSecure = async (
     );
   }
 
-  // Fallback to direct API only if NOT authenticated
-  logger.log("📡 [CritiqueSecure DEBUG] Calling direct API for critique");
+  // PRODUCTION: Block unauthenticated AI calls
+  if (import.meta.env.PROD) {
+    throw new Error(
+      "User must be authenticated to use AI features in production."
+    );
+  }
+
+  // DEV-ONLY: Fallback to direct API for local development/testing
+  logger.log("📡 [DEV] Calling direct API for critique");
   const result = await generateCritiqueDirect(apiKey, normalizedQuestion);
-  logger.log(
-    "📡 [CritiqueSecure DEBUG] Direct API returned score:",
-    result.score
-  );
+  logger.log("📡 [DEV] Direct API returned score:", result.score);
   return result;
 };
 
