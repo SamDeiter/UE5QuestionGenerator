@@ -8,7 +8,7 @@ const admin = require("firebase-admin");
 exports.importAIScores = onCall(
   {
     region: "us-central1",
-    cors: true,
+    cors: ["https://samdeiter.github.io", "https://ue5-questions-prod.web.app"],
   },
   async (request) => {
     // Verify admin
@@ -36,16 +36,16 @@ exports.importAIScores = onCall(
       const chunk = scores.slice(i, i + 500);
       const batchOp = db.batch();
 
-      for (const entry of chunk) {
-        const questionId = String(entry.id);
-        const score = entry.originalScore;
-        const docRef = db.collection("questions").doc(questionId);
+      // PERFORMANCE: Fetch all docs in one round-trip instead of N+1 queries
+      const docRefs = chunk.map((entry) =>
+        db.collection("questions").doc(String(entry.id))
+      );
+      const docs = await db.getAll(...docRefs);
 
-        // Check if document exists first
-        const doc = await docRef.get();
+      docs.forEach((doc, idx) => {
         if (doc.exists) {
-          batchOp.update(docRef, {
-            aiScore: score,
+          batchOp.update(doc.ref, {
+            aiScore: chunk[idx].originalScore,
             scoredAt: timestamp,
             scoreSource: "Strict_AI_Batch_Import",
           });
@@ -53,7 +53,7 @@ exports.importAIScores = onCall(
         } else {
           notFound++;
         }
-      }
+      });
 
       // Commit this batch
       await batchOp.commit();

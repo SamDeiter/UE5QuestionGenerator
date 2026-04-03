@@ -3,38 +3,21 @@
 // ============================================================================
 
 const functions = require("firebase-functions");
-const admin = require("firebase-admin");
 const sgMail = require("@sendgrid/mail");
+const { isAdminUser } = require("../utils/isAdminUser");
 
 /**
- * Helper: Check if user is admin
- * (duplicated from main index.js to make this module independent)
+ * SECURITY: Escape HTML special characters to prevent injection in email templates.
+ * @param {string} str - Untrusted string to escape
+ * @returns {string} HTML-safe string
  */
-async function isAdminUser(uid) {
-  try {
-    const db = admin.firestore();
-    const adminDoc = await db.collection("admins").doc(uid).get();
-
-    if (adminDoc.exists) {
-      return true;
-    }
-
-    // Also check Super Admin email
-    const userRecord = await admin.auth().getUser(uid);
-    const userEmail = userRecord.email?.toLowerCase().trim();
-    const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || "")
-      .toLowerCase()
-      .trim();
-
-    if (userEmail && superAdminEmail && userEmail === superAdminEmail) {
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    console.error("Error checking admin status:", error);
-    return false;
-  }
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 /**
@@ -126,6 +109,14 @@ exports.sendReviewerInvites = functions
           usesText = `${maxUses} use${maxUses !== 1 ? "s" : ""}`;
         }
 
+        // SECURITY: Escape all user-derived values before interpolating into HTML
+        const safeReviewerName = escapeHtml(reviewerName);
+        const safeEmail = escapeHtml(email);
+        const safeInviteUrl = escapeHtml(inviteUrl);
+        const safeCode = escapeHtml(code);
+        const safeExpirationText = escapeHtml(expirationText);
+        const safeUsesText = escapeHtml(usesText);
+
         const msg = {
           to: email,
           from: "sam.deiter@epicgames.com", // Must be verified sender in SendGrid
@@ -153,37 +144,37 @@ exports.sendReviewerInvites = functions
     <h1 style="margin: 0;">🎮 UE5 Question Generator</h1>
     <p style="margin: 10px 0 0 0; opacity: 0.9;">Reviewer Access Invitation</p>
   </div>
-  
+
   <div class="content">
-    <p>Hi <strong>${reviewerName}</strong>,</p>
-    
+    <p>Hi <strong>${safeReviewerName}</strong>,</p>
+
     <p>You've been invited to join the <strong>UE5 Question Generator</strong> as a Reviewer!</p>
-    
+
     <h3>🔗 Your Personalized Invite Link</h3>
     <p>Click the button below to get started:</p>
-    
+
     <center>
-      <a href="${inviteUrl}" class="button">Accept Invitation</a>
+      <a href="${safeInviteUrl}" class="button">Accept Invitation</a>
     </center>
-    
-    <p style="font-size: 12px; color: #666;">Or copy this link: <code>${inviteUrl}</code></p>
-    
-    <p>This link is personalized for <strong>${email}</strong>.</p>
-    <p><strong>⏰ Expires in:</strong> ${expirationText} | <strong>🎫 Can be used:</strong> ${usesText}</p>
-    
+
+    <p style="font-size: 12px; color: #666;">Or copy this link: <code>${safeInviteUrl}</code></p>
+
+    <p>This link is personalized for <strong>${safeEmail}</strong>.</p>
+    <p><strong>⏰ Expires in:</strong> ${safeExpirationText} | <strong>🎫 Can be used:</strong> ${safeUsesText}</p>
+
     <h3>📚 How It Works</h3>
     <p>For a complete guide on how to review questions, please read the documentation:</p>
     <center>
       <a href="https://epicgames.box.com/s/5pm328c5svam08ae0xmqmjmk87qsmevy" class="doc-button">📄 View Documentation PDF</a>
     </center>
-    
+
     <h3>📋 What We Need From You</h3>
     <ul>
       <li><strong>Time commitment</strong>: Approximately 2-3 hours per week</li>
       <li><strong>Focus areas</strong>: Unreal Engine 5 (Blueprints, C++, Lighting, Materials, etc.)</li>
       <li><strong>Target</strong>: Review 20-30 questions per week</li>
     </ul>
-    
+
     <div class="checklist">
       <h3 style="margin-top: 0;">✅ Before You Start</h3>
       <ul style="list-style: none; padding: 0;">
@@ -193,14 +184,14 @@ exports.sendReviewerInvites = functions
         <li>✅ Built-in <strong>tutorial</strong> will guide you through the app</li>
       </ul>
     </div>
-    
+
     <h3>💬 Need Help?</h3>
     <p>Contact: <a href="mailto:sam.deiter@epicgames.com">sam.deiter@epicgames.com</a></p>
   </div>
-  
+
   <div class="footer">
     <p>This invite link is unique to you. Please do not share it with others.</p>
-    <p>Invite Code: <code>${code}</code></p>
+    <p>Invite Code: <code>${safeCode}</code></p>
   </div>
 </body>
 </html>

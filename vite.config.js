@@ -50,12 +50,12 @@ export default defineConfig({
         // Runtime caching strategies
         runtimeCaching: [
           {
-            // Cache Firebase API responses (auth, firestore)
+            // Cache Firestore API responses (NOT auth — caching auth tokens causes stale-session issues)
             urlPattern:
-              /^https:\/\/(identitytoolkit|securetoken|firestore)\.googleapis\.com/,
+              /^https:\/\/firestore\.googleapis\.com/,
             handler: "NetworkFirst",
             options: {
-              cacheName: "firebase-api-cache",
+              cacheName: "firebase-firestore-cache",
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60, // 1 hour

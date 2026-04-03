@@ -1,15 +1,51 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const { google } = require("googleapis");
+const admin = require("firebase-admin");
 
 // The service account key stored as a Firebase secret
 const DRIVE_SA_KEY = defineSecret("DRIVE_SA_KEY");
 
-// Target spreadsheet ID
-const SPREADSHEET_ID = "1Hp-vJ-ZtjQTXNQ_rmIZyGm41EcO2JJ3pSL3Q3ZRrmLs";
+// Target spreadsheet ID — stored as env/secret for portability
+const SPREADSHEET_ID =
+  process.env.REVIEW_SPREADSHEET_ID ||
+  "1Hp-vJ-ZtjQTXNQ_rmIZyGm41EcO2JJ3pSL3Q3ZRrmLs";
+
+/**
+ * SECURITY: Verify Firebase Auth Bearer token from request headers.
+ * @param {object} req - Express request object
+ * @returns {Promise<object>} Decoded token with uid, email, etc.
+ * @throws {Error} If token is missing or invalid
+ */
+async function verifyAuth(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error("Missing or invalid Authorization header");
+  }
+  const idToken = authHeader.split("Bearer ")[1];
+  return admin.auth().verifyIdToken(idToken);
+}
+
+/**
+ * SECURITY: Sanitize JSONP callback to prevent XSS.
+ * Only allows alphanumeric, underscore, dot, and dollar sign.
+ * @param {string} cb - Raw callback parameter
+ * @returns {string|null} Sanitized callback or null if invalid
+ */
+function sanitizeCallback(cb) {
+  if (!cb || typeof cb !== "string") return null;
+  const sanitized = cb.replace(/[^a-zA-Z0-9_$.]/g, "");
+  // Must start with a letter, underscore, or dollar sign
+  if (!/^[a-zA-Z_$]/.test(sanitized)) return null;
+  // Max length to prevent abuse
+  if (sanitized.length > 128) return null;
+  return sanitized;
+}
 
 /**
  * Save review data to Google Sheet.
+ *
+ * Requires: Authorization: Bearer <Firebase ID Token>
  *
  * Expects POST with JSON body:
  * {
@@ -24,8 +60,7 @@ const SPREADSHEET_ID = "1Hp-vJ-ZtjQTXNQ_rmIZyGm41EcO2JJ3pSL3Q3ZRrmLs";
  *   reviewerName: "Sam"
  * }
  *
- * GET with ?toolId=xxx&email=xxx returns all reviews for that tool.
- * GET with ?toolId=xxx&email=xxx&callback=fn returns JSONP.
+ * GET with ?toolId=xxx returns all reviews for that tool.
  */
 exports.saveReview = onRequest(
   {
@@ -37,6 +72,9 @@ exports.saveReview = onRequest(
   },
   async (req, res) => {
     try {
+      // SECURITY: Verify authentication
+      const decodedToken = await verifyAuth(req);
+
       // Authenticate with service account
       const saKey = JSON.parse(DRIVE_SA_KEY.value());
       const auth = new google.auth.JWT(
@@ -48,15 +86,23 @@ exports.saveReview = onRequest(
       const sheets = google.sheets({ version: "v4", auth });
 
       if (req.method === "GET") {
-        return await handleGet(req, res, sheets);
+        return await handleGet(req, res, sheets, decodedToken);
       } else if (req.method === "POST") {
-        return await handlePost(req, res, sheets);
+        return await handlePost(req, res, sheets, decodedToken);
       } else {
         return res.status(405).json({ success: false, error: "Method not allowed" });
       }
     } catch (err) {
+      // SECURITY: Return 401 for auth failures
+      if (
+        err.message.includes("Authorization") ||
+        err.code === "auth/id-token-expired" ||
+        err.code === "auth/argument-error"
+      ) {
+        return res.status(401).json({ success: false, error: "Authentication required" });
+      }
       console.error("[saveReview] Error:", err.message);
-      return res.status(500).json({ success: false, error: err.message });
+      return res.status(500).json({ success: false, error: "Internal server error" });
     }
   }
 );
@@ -64,12 +110,13 @@ exports.saveReview = onRequest(
 /**
  * Handle GET — return reviews for a tool/email combination.
  */
-async function handleGet(req, res, sheets) {
+async function handleGet(req, res, sheets, _decodedToken) {
   const { toolId, email, callback } = req.query;
 
   if (!toolId) {
     const errResp = { success: false, error: "toolId is required" };
-    if (callback) return res.send(`${callback}(${JSON.stringify(errResp)})`);
+    const safeCb = sanitizeCallback(callback);
+    if (safeCb) return res.send(`${safeCb}(${JSON.stringify(errResp)})`);
     return res.status(400).json(errResp);
   }
 
@@ -94,9 +141,12 @@ async function handleGet(req, res, sheets) {
     .filter((r) => !email || r.reviewerEmail === email);
 
   const response = { success: true, reviews };
-  if (callback) {
+
+  // SECURITY: Sanitize JSONP callback to prevent XSS
+  const safeCb = sanitizeCallback(callback);
+  if (safeCb) {
     res.set("Content-Type", "application/javascript");
-    return res.send(`${callback}(${JSON.stringify(response)})`);
+    return res.send(`${safeCb}(${JSON.stringify(response)})`);
   }
   return res.json(response);
 }
@@ -104,7 +154,7 @@ async function handleGet(req, res, sheets) {
 /**
  * Handle POST — upsert a review row.
  */
-async function handlePost(req, res, sheets) {
+async function handlePost(req, res, sheets, decodedToken) {
   // Support both JSON body and form-encoded data
   const data = req.body || {};
   const {
@@ -125,6 +175,9 @@ async function handlePost(req, res, sheets) {
       error: "toolId and itemId are required",
     });
   }
+
+  // SECURITY: Use authenticated email as the reviewer identity
+  const authenticatedEmail = decodedToken.email || reviewerEmail || "unknown";
 
   const timestamp = new Date().toISOString();
   const highlightsStr =
@@ -147,7 +200,7 @@ async function handlePost(req, res, sheets) {
       if (
         rows[i][0] === toolId &&
         rows[i][1] === itemId &&
-        rows[i][6] === (reviewerEmail || "")
+        rows[i][6] === authenticatedEmail
       ) {
         existingRowIndex = i;
         break;
@@ -162,7 +215,7 @@ async function handlePost(req, res, sheets) {
     status || "",
     note || "",
     highlightsStr,
-    reviewerEmail || "",
+    authenticatedEmail,
     reviewerName || "",
     screenshotUrl || "",
     timestamp,

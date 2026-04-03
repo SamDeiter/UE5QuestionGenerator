@@ -1,4 +1,5 @@
 import React from "react";
+import DOMPurify from "dompurify";
 import Icon from "../Icon";
 import { renderMarkdown } from "../../utils/stringHelpers";
 
@@ -14,7 +15,9 @@ const ExplanationDisplay = ({ explanation }) => {
       </div>
       <div
         className="text-sm text-slate-300 leading-relaxed"
-        dangerouslySetInnerHTML={{ __html: renderMarkdown(explanation) }}
+        dangerouslySetInnerHTML={{
+          __html: DOMPurify.sanitize(renderMarkdown(explanation)),
+        }}
       />
     </div>
   );

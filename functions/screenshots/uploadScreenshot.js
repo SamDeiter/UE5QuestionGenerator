@@ -4,6 +4,24 @@ const admin = require("firebase-admin");
 // Firebase Storage bucket (default bucket)
 const BUCKET_NAME = "ue5-questions-prod.firebasestorage.app";
 
+// SECURITY: Max file size (5MB)
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+/**
+ * SECURITY: Verify Firebase Auth Bearer token from request headers.
+ * @param {object} req - Express request object
+ * @returns {Promise<object>} Decoded token with uid, email, etc.
+ * @throws {Error} If token is missing or invalid
+ */
+async function verifyAuth(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error("Missing or invalid Authorization header");
+  }
+  const idToken = authHeader.split("Bearer ")[1];
+  return admin.auth().verifyIdToken(idToken);
+}
+
 /**
  * Upload a screenshot to Firebase Storage.
  *
@@ -14,6 +32,8 @@ const BUCKET_NAME = "ue5-questions-prod.firebasestorage.app";
  *   itemId: "module-1",
  *   reviewerEmail: "user@example.com"
  * }
+ *
+ * Requires: Authorization: Bearer <Firebase ID Token>
  *
  * Returns JSON:
  * {
@@ -36,6 +56,10 @@ exports.uploadScreenshot = onRequest(
     }
 
     try {
+      // SECURITY: Verify authentication
+      const decodedToken = await verifyAuth(req);
+      const authenticatedEmail = decodedToken.email || "unknown";
+
       const { imageData, toolId, itemId, reviewerEmail } = req.body;
 
       if (!imageData) {
@@ -48,6 +72,16 @@ exports.uploadScreenshot = onRequest(
         base64Data = base64Data.split(",")[1];
       }
 
+      const buffer = Buffer.from(base64Data, "base64");
+
+      // SECURITY: Enforce file size limit
+      if (buffer.length > MAX_FILE_SIZE) {
+        return res.status(400).json({
+          success: false,
+          error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`,
+        });
+      }
+
       // Build filename
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const fileName = `screenshots/${toolId || "unknown"}/${itemId || "unknown"}_${timestamp}.png`;
@@ -56,13 +90,12 @@ exports.uploadScreenshot = onRequest(
       const bucket = admin.storage().bucket(BUCKET_NAME);
       const file = bucket.file(fileName);
 
-      const buffer = Buffer.from(base64Data, "base64");
-
       await file.save(buffer, {
         metadata: {
           contentType: "image/png",
           metadata: {
-            reviewerEmail: reviewerEmail || "unknown",
+            reviewerEmail: reviewerEmail || authenticatedEmail,
+            uploadedBy: decodedToken.uid,
             toolId: toolId || "",
             itemId: itemId || "",
             uploadedAt: new Date().toISOString(),
@@ -76,19 +109,23 @@ exports.uploadScreenshot = onRequest(
       // Get the public URL
       const viewUrl = `https://storage.googleapis.com/${BUCKET_NAME}/${fileName}`;
 
-      console.log(`[uploadScreenshot] Uploaded ${fileName} by ${reviewerEmail}`);
+      console.log(`[uploadScreenshot] Uploaded ${fileName} by ${authenticatedEmail}`);
 
       return res.status(200).json({
         success: true,
         viewUrl,
-        thumbnailUrl: viewUrl, // Same URL for Firebase Storage
+        thumbnailUrl: viewUrl,
         fileName,
       });
     } catch (err) {
+      // SECURITY: Return 401 for auth failures, 500 for others
+      if (err.message.includes("Authorization") || err.code === "auth/id-token-expired" || err.code === "auth/argument-error") {
+        return res.status(401).json({ success: false, error: "Authentication required" });
+      }
       console.error("[uploadScreenshot] Error:", err.message);
       return res.status(500).json({
         success: false,
-        error: err.message || "Internal server error",
+        error: "Internal server error",
       });
     }
   }
