@@ -76,7 +76,7 @@ async function migrateOrphanedRegistration(db, orphanedDoc, newUserId, email) {
  * registeredUsers document is automatically migrated to the new UID.
  */
 exports.checkUserRegistration = functions
-  .runWith({ timeoutSeconds: 15, memory: "128MB" })
+  .runWith({ timeoutSeconds: 15, memory: "256MB" })
   .https.onCall(async (data, context) => {
     if (!context.auth) {
       return { registered: false };

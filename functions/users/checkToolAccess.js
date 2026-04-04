@@ -8,7 +8,7 @@ const admin = require("firebase-admin");
  * External users must be registered with the tool in their 'tools' array.
  */
 exports.checkToolAccess = functions
-  .runWith({ timeoutSeconds: 15, memory: "128MB" })
+  .runWith({ timeoutSeconds: 15, memory: "256MB" })
   .https.onCall(async (data, context) => {
     // 1. Authentication check
     if (!context.auth) {

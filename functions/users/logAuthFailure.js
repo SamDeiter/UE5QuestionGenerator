@@ -14,7 +14,7 @@ const WINDOW_SECONDS = 300; // 5 minutes
  * SECURITY: Input fields are length-capped to prevent storage abuse.
  */
 exports.logAuthFailure = functions
-  .runWith({ timeoutSeconds: 10, memory: "128MB" })
+  .runWith({ timeoutSeconds: 10, memory: "256MB" })
   .https.onCall(async (data, context) => {
     // Allow both authenticated and unauthenticated calls
     // (user might fail to authenticate, that's what we're logging)
@@ -122,7 +122,7 @@ exports.logAuthFailure = functions
  * Admin-only function.
  */
 exports.getRecentAuthFailures = functions
-  .runWith({ timeoutSeconds: 15, memory: "128MB" })
+  .runWith({ timeoutSeconds: 15, memory: "256MB" })
   .https.onCall(async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError(
