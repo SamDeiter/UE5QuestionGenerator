@@ -95,15 +95,7 @@ exports.generateCritique = functions
     }
 
     try {
-      let apiKey = process.env.GEMINI_API_KEY;
-
-      if (!apiKey) {
-        try {
-          apiKey = functions.config().gemini?.api_key;
-        } catch {
-          // Ignore functions.config() errors
-        }
-      }
+      const apiKey = process.env.GEMINI_API_KEY;
 
       if (!apiKey) {
         throw new functions.https.HttpsError(

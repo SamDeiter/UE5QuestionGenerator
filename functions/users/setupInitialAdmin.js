@@ -13,7 +13,7 @@ const admin = require("firebase-admin");
  * and functions/users/. See functions/index.js for the canonical export map.
  */
 exports.setupInitialAdmin = functions
-  .runWith({ timeoutSeconds: 30, memory: "128MB" })
+  .runWith({ timeoutSeconds: 30, memory: "256MB" })
   .https.onCall(async (data, context) => {
     // Must be authenticated
     if (!context.auth) {

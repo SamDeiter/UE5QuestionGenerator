@@ -87,14 +87,8 @@ exports.generateQuestions = functions
     }
 
     try {
-      // 4. Get API key from Secrets or Config
-      // secrets using .runWith() are available in process.env
-      let apiKey = process.env.GEMINI_API_KEY;
-
-      if (!apiKey) {
-        // Fallback for local emulator or legacy config
-        apiKey = functions.config().gemini?.api_key;
-      }
+      // 4. Get API key from Secret Manager (injected via process.env)
+      const apiKey = process.env.GEMINI_API_KEY;
 
       if (!apiKey) {
         console.error("[ERROR] GEMINI_API_KEY secret is not set.");

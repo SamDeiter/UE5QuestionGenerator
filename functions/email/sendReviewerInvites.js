@@ -26,7 +26,7 @@ function escapeHtml(str) {
  * ADMIN ONLY
  */
 exports.sendReviewerInvites = functions
-  .runWith({ timeoutSeconds: 60, memory: "256MB" })
+  .runWith({ timeoutSeconds: 60, memory: "256MB", secrets: ["SENDGRID_API_KEY"] })
   .https.onCall(async (data, context) => {
     // ADMIN CHECK
     if (!context.auth) {
@@ -44,8 +44,8 @@ exports.sendReviewerInvites = functions
       );
     }
 
-    // Get SendGrid API key from Firebase config
-    const apiKey = functions.config().sendgrid?.api_key;
+    // Get SendGrid API key from Secret Manager (via process.env)
+    const apiKey = process.env.SENDGRID_API_KEY;
     if (!apiKey) {
       throw new functions.https.HttpsError(
         "failed-precondition",
