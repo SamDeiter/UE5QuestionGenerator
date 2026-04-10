@@ -30,12 +30,19 @@ exports.generateCritique = functions
     const userId = context.auth.uid;
     const {
       question,
-      options,
+      options: rawOptions,
       correct,
       type = "Multiple Choice", // Question type: "True/False" or "Multiple Choice"
       modeLabel,
       model = "gemini-2.0-flash",
     } = data;
+
+    // Normalize options: accept both array ["A","B"] and object {A:"...",B:"..."}
+    const options = Array.isArray(rawOptions)
+      ? rawOptions
+      : (rawOptions && typeof rawOptions === "object")
+        ? Object.values(rawOptions)
+        : rawOptions;
 
     // Input validation (strict type/shape checks)
     if (!question || typeof question !== "string" || question.trim().length === 0) {
