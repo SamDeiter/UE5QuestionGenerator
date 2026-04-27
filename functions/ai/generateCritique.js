@@ -38,11 +38,14 @@ exports.generateCritique = functions
     } = data;
 
     // Normalize options: accept both array ["A","B"] and object {A:"...",B:"..."}
-    const options = Array.isArray(rawOptions)
-      ? rawOptions
-      : (rawOptions && typeof rawOptions === "object")
-        ? Object.values(rawOptions)
-        : rawOptions;
+    let options;
+    if (Array.isArray(rawOptions)) {
+      options = rawOptions;
+    } else if (rawOptions && typeof rawOptions === "object") {
+      options = Object.values(rawOptions);
+    } else {
+      options = rawOptions;
+    }
 
     // Input validation (strict type/shape checks)
     if (!question || typeof question !== "string" || question.trim().length === 0) {
