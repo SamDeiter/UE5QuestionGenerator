@@ -6,33 +6,33 @@
  * For more accurate counting, consider using tiktoken or similar libraries
  */
 
-// Pricing per 1M tokens (as of Nov 2024)
+// Pricing per 1M tokens (Gemini 2.5 series, 2026)
 const PRICING = {
-  "gemini-2.0-flash": {
-    input: 0.075, // $0.075 per 1M input tokens
-    output: 0.3, // $0.30 per 1M output tokens
+  "gemini-2.5-flash": {
+    input: 0.3,
+    output: 2.5,
   },
-  "gemini-1.5-pro": {
-    input: 1.25, // $1.25 per 1M input tokens
-    output: 5.0, // $5.00 per 1M output tokens
+  "gemini-2.5-flash-lite": {
+    input: 0.1,
+    output: 0.4,
   },
-  "gemini-2.0-flash-exp": {
-    input: 0.075, // Using Flash pricing for value estimation
-    output: 0.3,
+  "gemini-2.5-pro": {
+    input: 1.25,
+    output: 10.0,
   },
 };
 
 // Token limits per model
 const TOKEN_LIMITS = {
-  "gemini-2.0-flash": {
+  "gemini-2.5-flash": {
     input: 1000000,
     output: 8192,
   },
-  "gemini-1.5-pro": {
-    input: 2000000,
+  "gemini-2.5-flash-lite": {
+    input: 1000000,
     output: 8192,
   },
-  "gemini-2.0-flash-exp": {
+  "gemini-2.5-pro": {
     input: 1000000,
     output: 8192,
   },
@@ -60,9 +60,9 @@ export const estimateTokens = (text) => {
 export const calculateCost = (
   inputTokens,
   outputTokens,
-  model = "gemini-2.0-flash"
+  model = "gemini-2.5-flash"
 ) => {
-  const pricing = PRICING[model] || PRICING["gemini-2.0-flash"];
+  const pricing = PRICING[model] || PRICING["gemini-2.5-flash"];
 
   const inputCost = (inputTokens / 1000000) * pricing.input;
   const outputCost = (outputTokens / 1000000) * pricing.output;
@@ -92,9 +92,9 @@ export const formatCost = (cost) => {
 export const checkTokenLimit = (
   tokens,
   type = "input",
-  model = "gemini-2.0-flash"
+  model = "gemini-2.5-flash"
 ) => {
-  const limits = TOKEN_LIMITS[model] || TOKEN_LIMITS["gemini-2.0-flash"];
+  const limits = TOKEN_LIMITS[model] || TOKEN_LIMITS["gemini-2.5-flash"];
   const limit = limits[type];
   const percentage = (tokens / limit) * 100;
 
@@ -115,7 +115,7 @@ export const checkTokenLimit = (
 export const getTokenWarningLevel = (
   tokens,
   type = "input",
-  model = "gemini-2.0-flash"
+  model = "gemini-2.5-flash"
 ) => {
   const { percentage } = checkTokenLimit(tokens, type, model);
 
@@ -136,7 +136,7 @@ export const analyzeRequest = (
   systemPrompt,
   userPrompt,
   expectedOutputTokens = 2000,
-  model = "gemini-2.0-flash"
+  model = "gemini-2.5-flash"
 ) => {
   const systemTokens = estimateTokens(systemPrompt);
   const userTokens = estimateTokens(userPrompt);

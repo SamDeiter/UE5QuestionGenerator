@@ -124,7 +124,7 @@ export const enrichGeneratedQuestions = (questions, context) => {
       creatorName: config.creatorName || "Unknown",
       estimatedCost: costPerQuestion,
       generationTime: duration,
-      model: config.model || "gemini-2.0-flash",
+      model: config.model || "gemini-2.5-flash",
       groundingSources:
         groundingSources.length > GENERATION_LIMITS.MAX_GROUNDING_SOURCES
           ? groundingSources.slice(0, GENERATION_LIMITS.MAX_GROUNDING_SOURCES)

@@ -98,7 +98,7 @@ export const AI_CONFIG = {
   DEFAULT_TEMPERATURE: 0.2, // Standard generation temperature
   TAGGING_TEMPERATURE: 0.3, // Slightly higher for tag classification
   // Model defaults
-  DEFAULT_MODEL: "gemini-2.0-flash",
+  DEFAULT_MODEL: "gemini-2.5-flash",
   // Log preview length
   API_KEY_PREVIEW_LENGTH: 10,
   // Retry/Loop limits
@@ -129,7 +129,7 @@ export const DEFAULT_CONFIG = {
   type: "Multiple Choice",
   language: "English",
   batchSize: "6",
-  model: "gemini-2.0-flash",
+  model: "gemini-2.5-flash",
   tags: [],
 };
 

@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { logger } from "../../utils/logger";
 import { SCORM_DEFAULTS } from "../../utils/constants";
 import packageJson from "../../../package.json";
-import { filterEnglishQuestions, isEnglishText } from "./sanitize";
+import { filterEnglishQuestions } from "./sanitize";
 import { convertQuestionToScormFormat } from "./converter";
 
 // Dynamic version from package.json - no more manual updates
@@ -178,6 +178,27 @@ export function groupQuestionsByDiscipline(questions) {
 }
 
 /**
+ * Group questions by language + discipline. Each group becomes its own SCORM package.
+ * @param {Array} questions
+ * @returns {Object} Map of "Language__Discipline" -> { language, discipline, questions }
+ */
+export function groupQuestionsByLanguageAndDiscipline(questions) {
+  const groups = {};
+
+  questions.forEach((q) => {
+    const language = q.language || "English";
+    const discipline = q.discipline || q.category || "General";
+    const key = `${language}__${discipline}`;
+    if (!groups[key]) {
+      groups[key] = { language, discipline, questions: [] };
+    }
+    groups[key].questions.push(q);
+  });
+
+  return groups;
+}
+
+/**
  * Batch export multiple SCORM packages grouped by discipline
  * Downloads individual zips or a single master zip containing all packages
  * @param {Array} questions - All questions to export
@@ -199,12 +220,12 @@ export async function batchExportByDiscipline(
     throw new Error("No questions provided for batch export");
   }
 
-  // Group by discipline
-  const groups = groupQuestionsByDiscipline(questions);
-  const disciplines = Object.keys(groups);
+  // Group by language + discipline so each language gets its own package
+  const groups = groupQuestionsByLanguageAndDiscipline(questions);
+  const groupKeys = Object.keys(groups);
 
-  if (disciplines.length === 0) {
-    throw new Error("No disciplines found in questions");
+  if (groupKeys.length === 0) {
+    throw new Error("No questions to export");
   }
 
   const results = [];
@@ -214,57 +235,48 @@ export async function batchExportByDiscipline(
   const timestamp = `${now.toISOString().split("T")[0]}_${now.getHours().toString().padStart(2, "0")}-${now.getMinutes().toString().padStart(2, "0")}`;
 
   try {
+    const sanitize = (s) => s.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+
+    const filterValidQuestions = (groupQuestions, label) =>
+      groupQuestions.filter((q) => {
+        const questionText = q.questionText || q.question || "";
+        const hasOptions = q.options && typeof q.options === "object";
+        const hasChoices = Array.isArray(q.choices) && q.choices.length >= 2;
+        const hasCorrect = q.correct || q.correctAnswer;
+        const isValid =
+          questionText.trim() && (hasOptions || hasChoices) && hasCorrect;
+        if (!isValid) {
+          logger.warn(
+            `Skipping invalid question in ${label}: ${questionText.substring(0, 40)}...`
+          );
+        }
+        return isValid;
+      });
+
     if (downloadAsSingleZip) {
-      // Create master zip containing all discipline packages
+      // Create master zip containing all language+discipline packages
       const masterZip = new JSZip();
 
-      for (let i = 0; i < disciplines.length; i++) {
-        const discipline = disciplines[i];
-        const disciplineQuestions = groups[discipline];
+      for (let i = 0; i < groupKeys.length; i++) {
+        const key = groupKeys[i];
+        const { language, discipline, questions: groupQuestions } = groups[key];
+        const label = `${language} - ${discipline}`;
 
         if (onProgress) {
           onProgress({
             current: i + 1,
-            total: disciplines.length,
-            discipline,
-            questionCount: disciplineQuestions.length,
+            total: groupKeys.length,
+            discipline: label,
+            questionCount: groupQuestions.length,
           });
         }
 
-        // Filter to only valid AND English questions
-        const validQuestions = disciplineQuestions.filter((q) => {
-          const questionText = q.questionText || q.question || "";
-          const hasOptions = q.options && typeof q.options === "object";
-          const hasChoices = Array.isArray(q.choices) && q.choices.length >= 2;
-          const hasCorrect = q.correct || q.correctAnswer;
-          const optionsText = q.options
-            ? Object.values(q.options).join(" ")
-            : "";
-          const choicesText = Array.isArray(q.choices)
-            ? q.choices.join(" ")
-            : "";
-          const allText = `${questionText} ${optionsText} ${choicesText}`;
-
-          const isValid =
-            questionText.trim() &&
-            (hasOptions || hasChoices) &&
-            hasCorrect &&
-            isEnglishText(allText);
-          if (!isValid && !isEnglishText(allText)) {
-            logger.info(
-              `Skipping non-English question in ${discipline}: ${questionText.substring(0, 40)}...`
-            );
-          } else if (!isValid) {
-            logger.warn(
-              `Skipping invalid question in ${discipline}: ${questionText.substring(0, 40)}...`
-            );
-          }
-          return isValid;
-        });
+        const validQuestions = filterValidQuestions(groupQuestions, label);
 
         if (validQuestions.length === 0) {
-          logger.warn(`Skipping ${discipline}: No valid questions found`);
+          logger.warn(`Skipping ${label}: No valid questions found`);
           results.push({
+            language,
             discipline,
             success: false,
             error: "No valid questions found",
@@ -273,19 +285,17 @@ export async function batchExportByDiscipline(
         }
 
         logger.info(
-          `${discipline}: Exporting ${validQuestions.length} of ${disciplineQuestions.length} questions`
+          `${label}: Exporting ${validQuestions.length} of ${groupQuestions.length} questions`
         );
 
-        // Generate package files using valid questions only
         const config = {
           ...baseConfig,
-          title: `${baseConfig.title || "UE5 Assessment"} - ${discipline}`,
-          description: `${baseConfig.description || "Assessment"} for ${discipline}`,
+          title: `${baseConfig.title || "UE5 Assessment"} - ${language} - ${discipline}`,
+          description: `${baseConfig.description || "Assessment"} for ${discipline} (${language})`,
         };
 
         const files = await generateScormPackageFiles(validQuestions, config);
 
-        // Create discipline zip
         const disciplineZip = new JSZip();
         Object.entries(files).forEach(([filename, content]) => {
           disciplineZip.file(filename, content);
@@ -294,28 +304,24 @@ export async function batchExportByDiscipline(
         const disciplineBlob = await disciplineZip.generateAsync({
           type: "blob",
         });
-        const sanitizedDiscipline = discipline
-          .replace(/[^a-z0-9]/gi, "_")
-          .toLowerCase();
-        const filename = `${sanitizedDiscipline}_${version}_${timestamp}_scorm12.zip`;
+        const filename = `${sanitize(language)}_${sanitize(discipline)}_${version}_${timestamp}_scorm12.zip`;
 
-        // Add to master zip
         masterZip.file(filename, disciplineBlob);
 
         results.push({
+          language,
           discipline,
           success: true,
           filename,
-          questionCount: disciplineQuestions.length,
+          questionCount: groupQuestions.length,
         });
       }
 
-      // Generate and download master zip
       const masterBlob = await masterZip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(masterBlob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `all_disciplines_${version}_${timestamp}_scorm_packages.zip`;
+      link.download = `all_languages_disciplines_${version}_${timestamp}_scorm_packages.zip`;
 
       document.body.appendChild(link);
       link.click();
@@ -327,42 +333,72 @@ export async function batchExportByDiscipline(
         method: "single_zip",
         masterFilename: link.download,
         packages: results,
-        totalDisciplines: disciplines.length,
+        totalDisciplines: groupKeys.length,
         successfulExports: results.filter((r) => r.success).length,
       };
     } else {
-      // Download each discipline as separate file with small delay
-      for (let i = 0; i < disciplines.length; i++) {
-        const discipline = disciplines[i];
-        const disciplineQuestions = groups[discipline];
+      // Download each language+discipline as a separate file with small delay
+      for (let i = 0; i < groupKeys.length; i++) {
+        const key = groupKeys[i];
+        const { language, discipline, questions: groupQuestions } = groups[key];
+        const label = `${language} - ${discipline}`;
 
         if (onProgress) {
           onProgress({
             current: i + 1,
-            total: disciplines.length,
-            discipline,
-            questionCount: disciplineQuestions.length,
+            total: groupKeys.length,
+            discipline: label,
+            questionCount: groupQuestions.length,
           });
         }
 
         try {
+          const validQuestions = filterValidQuestions(groupQuestions, label);
+          if (validQuestions.length === 0) {
+            results.push({
+              language,
+              discipline,
+              success: false,
+              error: "No valid questions found",
+            });
+            continue;
+          }
+
           const config = {
             ...baseConfig,
-            title: `${baseConfig.title || "UE5 Assessment"} - ${discipline}`,
+            title: `${baseConfig.title || "UE5 Assessment"} - ${language} - ${discipline}`,
           };
 
-          const result = await exportToScorm(disciplineQuestions, config);
+          const files = await generateScormPackageFiles(validQuestions, config);
+          const zip = new JSZip();
+          Object.entries(files).forEach(([filename, content]) => {
+            zip.file(filename, content);
+          });
+          const blob = await zip.generateAsync({ type: "blob" });
+          const filename = `${sanitize(language)}_${sanitize(discipline)}_${version}_${timestamp}_scorm12.zip`;
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+
           results.push({
+            language,
             discipline,
-            ...result,
+            success: true,
+            filename,
+            questionCount: validQuestions.length,
           });
 
-          // Small delay between downloads to prevent browser issues
-          if (i < disciplines.length - 1) {
+          if (i < groupKeys.length - 1) {
             await new Promise((resolve) => setTimeout(resolve, 500));
           }
         } catch (err) {
           results.push({
+            language,
             discipline,
             success: false,
             error: err.message,
@@ -374,7 +410,7 @@ export async function batchExportByDiscipline(
         success: true,
         method: "separate_files",
         packages: results,
-        totalDisciplines: disciplines.length,
+        totalDisciplines: groupKeys.length,
         successfulExports: results.filter((r) => r.success).length,
       };
     }

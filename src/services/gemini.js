@@ -119,7 +119,7 @@ export const generateContent = async (
   userPrompt,
   setStatus,
   temperature = 0.2,
-  model = "gemini-1.5-flash"
+  model = "gemini-2.5-flash"
 ) => {
   // Note: If effectiveKey is "", the platform runtime will inject the correct key.
   const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
@@ -291,7 +291,7 @@ export const generateCritique = async (apiKey, q) => {
   // 3. API Call
   // 3. API Call
   const baseUrl =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
   const url = apiKey ? `${baseUrl}?key=${apiKey}` : baseUrl;
 
   const data = await fetchWithRetry(url, {
@@ -411,7 +411,7 @@ export const rewriteQuestion = async (apiKey, q, critiqueText) => {
   }\nOptions: ${JSON.stringify(q.options)}\nCorrect: ${q.correct}`;
 
   const baseUrl =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
   const url = apiKey ? `${baseUrl}?key=${apiKey}` : baseUrl;
 
   const data = await fetchWithRetry(url, {
@@ -449,7 +449,7 @@ export const classifyQuestionDiscipline = async (apiKey, questionText) => {
   const userPrompt = `Classify this question: "${questionText}"`;
 
   const baseUrl =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
   const url = apiKey ? `${baseUrl}?key=${apiKey}` : baseUrl;
 
   const data = await fetchWithRetry(url, {
@@ -481,7 +481,7 @@ export const generateTagsForQuestion = async (apiKey, questionText) => {
   const userPrompt = `Tags for: "${questionText}"`;
 
   const baseUrl =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
   const url = apiKey ? `${baseUrl}?key=${apiKey}` : baseUrl;
 
   const data = await fetchWithRetry(url, {

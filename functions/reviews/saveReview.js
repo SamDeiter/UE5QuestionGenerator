@@ -1,7 +1,16 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
-const { google } = require("googleapis");
 const admin = require("firebase-admin");
+
+// Lazy-loaded: googleapis is 198MB and causes OOM on cold start for other
+// functions that share this codebase. Only loaded when saveReview is called.
+let _google;
+function getGoogle() {
+  if (!_google) {
+    _google = require("googleapis").google;
+  }
+  return _google;
+}
 
 // The service account key stored as a Firebase secret
 const DRIVE_SA_KEY = defineSecret("DRIVE_SA_KEY");
@@ -76,6 +85,7 @@ exports.saveReview = onRequest(
       const decodedToken = await verifyAuth(req);
 
       // Authenticate with service account
+      const google = getGoogle();
       const saKey = JSON.parse(DRIVE_SA_KEY.value());
       const auth = new google.auth.JWT(
         saKey.client_email,

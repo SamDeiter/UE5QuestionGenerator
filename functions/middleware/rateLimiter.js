@@ -2,10 +2,14 @@
  * Rate Limiter Middleware for Cloud Functions
  * Implements token bucket algorithm using Firestore rateLimits collection
  *
- * Limits:
- * - 10 AI requests per hour per user
- * - 100 AI requests per day per user
- * - 3 requests in 10 seconds burst allowance
+ * Limits (sized for bulk translation on Gemini free tier):
+ * - 250 AI requests per hour per user
+ * - 1500 AI requests per day per user
+ * - 5 requests in 30 seconds burst allowance
+ *
+ * Free-tier Gemini caps (gemini-2.5-flash-lite): 15 RPM, 1000 RPD.
+ * These server-side limits sit slightly above to avoid double-throttling
+ * while still preventing runaway abuse.
  */
 
 const admin = require("firebase-admin");
@@ -14,13 +18,13 @@ const functions = require("firebase-functions");
 // Rate limit configuration
 const RATE_LIMITS = {
   AI_HOURLY: {
-    tokens: 10,
+    tokens: 250,
     windowMs: 60 * 60 * 1000, // 1 hour
-    burstTokens: 3,
-    burstWindowMs: 10 * 1000, // 10 seconds
+    burstTokens: 10,
+    burstWindowMs: 30 * 1000, // 30 seconds — fits client 4.5s throttle (~7 reqs/30s) with headroom
   },
   AI_DAILY: {
-    tokens: 100,
+    tokens: 1500,
     windowMs: 24 * 60 * 60 * 1000, // 24 hours
   },
 };

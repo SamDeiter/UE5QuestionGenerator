@@ -41,7 +41,7 @@ exports.generateQuestions = functions
       systemPrompt,
       userPrompt,
       temperature = 0.2,
-      model = "gemini-1.5-flash", // Updated to stable model (2.0-flash-exp was returning 404)
+      model = "gemini-2.5-flash",
     } = data;
 
     // 2. Input validation and sanitization (SECURITY: Prevent XSS and injection)

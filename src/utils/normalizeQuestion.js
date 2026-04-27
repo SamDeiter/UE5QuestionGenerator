@@ -232,7 +232,7 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
     // Generation metadata (cost tracking, performance)
     estimatedCost: q.estimatedCost || null,
     generationTime: q.generationTime || null,
-    model: q.model || "gemini-2.0-flash",
+    model: q.model || "gemini-2.5-flash",
     groundingSources: q.groundingSources || null,
 
     // Variations/Conversion tracking

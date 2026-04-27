@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import Icon from "./Icon";
 import {
   batchExportByDiscipline,
-  groupQuestionsByDiscipline,
+  groupQuestionsByLanguageAndDiscipline,
 } from "../services/scormExporter";
 import { logger } from "../utils/logger";
 
@@ -29,47 +29,47 @@ const BatchScormExportModal = ({ questions, onClose }) => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  // Group questions and show preview
+  // Group questions by language+discipline; each becomes a separate package
   const groupedQuestions = useMemo(() => {
-    return groupQuestionsByDiscipline(questions);
+    return groupQuestionsByLanguageAndDiscipline(questions);
   }, [questions]);
 
-  const disciplines = Object.keys(groupedQuestions);
+  const groupKeys = Object.keys(groupedQuestions);
 
-  // Track which disciplines are selected for export
-  const [selectedDisciplines, setSelectedDisciplines] = useState(
-    () => new Set(disciplines)
+  // Track which groups (language+discipline combos) are selected for export
+  const [selectedGroups, setSelectedGroups] = useState(
+    () => new Set(groupKeys)
   );
 
-  const toggleDiscipline = (discipline) => {
-    setSelectedDisciplines((prev) => {
+  const toggleGroup = (key) => {
+    setSelectedGroups((prev) => {
       const next = new Set(prev);
-      if (next.has(discipline)) {
-        next.delete(discipline);
+      if (next.has(key)) {
+        next.delete(key);
       } else {
-        next.add(discipline);
+        next.add(key);
       }
       return next;
     });
   };
 
-  const selectAll = () => setSelectedDisciplines(new Set(disciplines));
-  const selectNone = () => setSelectedDisciplines(new Set());
+  const selectAll = () => setSelectedGroups(new Set(groupKeys));
+  const selectNone = () => setSelectedGroups(new Set());
 
   const handleExport = async () => {
     setError(null);
     setResult(null);
-    setProgress({ current: 0, total: disciplines.length });
+    setProgress({ current: 0, total: selectedGroups.size });
     setIsExporting(true);
 
     try {
-      // Filter to only selected disciplines
-      const selectedQuestions = questions.filter((q) =>
-        selectedDisciplines.has(q.discipline)
-      );
+      // Filter to only selected language+discipline groups
+      const selectedQuestions = groupKeys
+        .filter((key) => selectedGroups.has(key))
+        .flatMap((key) => groupedQuestions[key].questions);
 
       if (selectedQuestions.length === 0) {
-        setError("No disciplines selected for export");
+        setError("No packages selected for export");
         setIsExporting(false);
         return;
       }
@@ -116,8 +116,7 @@ const BatchScormExportModal = ({ questions, onClose }) => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-bold text-slate-300">
-                Packages to Export ({selectedDisciplines.size} of{" "}
-                {disciplines.length})
+                Packages to Export ({selectedGroups.size} of {groupKeys.length})
               </label>
               <div className="flex gap-2 text-xs">
                 <button
@@ -137,13 +136,21 @@ const BatchScormExportModal = ({ questions, onClose }) => {
                 </button>
               </div>
             </div>
+            <p className="text-xs text-slate-500 mb-2">
+              Each language + discipline becomes its own SCORM package.
+            </p>
             <div className="bg-slate-800 rounded border border-slate-700 max-h-40 overflow-y-auto">
-              {disciplines.map((discipline) => {
-                const questionCount = groupedQuestions[discipline].length;
-                const isSelected = selectedDisciplines.has(discipline);
+              {groupKeys.map((key) => {
+                const {
+                  language,
+                  discipline,
+                  questions: groupQuestions,
+                } = groupedQuestions[key];
+                const questionCount = groupQuestions.length;
+                const isSelected = selectedGroups.has(key);
                 return (
                   <label
-                    key={discipline}
+                    key={key}
                     className={`flex items-center justify-between px-3 py-2 border-b border-slate-700 last:border-b-0 cursor-pointer hover:bg-slate-700/50 transition-colors ${
                       isSelected ? "" : "opacity-50"
                     }`}
@@ -152,11 +159,14 @@ const BatchScormExportModal = ({ questions, onClose }) => {
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => toggleDiscipline(discipline)}
+                        onChange={() => toggleGroup(key)}
                         className="w-4 h-4 accent-blue-500"
                         disabled={isExporting}
                       />
                       <span className="text-sm text-slate-300">
+                        <span className="text-slate-400 font-mono text-xs mr-2">
+                          {language}
+                        </span>
                         {discipline}
                       </span>
                     </div>
@@ -346,7 +356,8 @@ const BatchScormExportModal = ({ questions, onClose }) => {
               </div>
               <p className="text-sm text-slate-300">
                 Generated {result.successfulExports} of{" "}
-                {result.totalDisciplines} packages
+                {result.totalDisciplines} packages (one per language +
+                discipline)
               </p>
               {result.masterFilename && (
                 <p className="text-xs text-slate-500 mt-1">
@@ -367,8 +378,8 @@ const BatchScormExportModal = ({ questions, onClose }) => {
         {/* Footer */}
         <div className="flex items-center justify-between gap-3 p-6 border-t border-slate-700 shrink-0">
           <p className="text-xs text-slate-500">
-            Total: {questions.length} questions across {disciplines.length}{" "}
-            disciplines
+            Total: {questions.length} questions across {groupKeys.length}{" "}
+            language/discipline packages
           </p>
           <div className="flex gap-3">
             <button
@@ -381,7 +392,7 @@ const BatchScormExportModal = ({ questions, onClose }) => {
             {!result && (
               <button
                 onClick={handleExport}
-                disabled={isExporting || selectedDisciplines.size === 0}
+                disabled={isExporting || selectedGroups.size === 0}
                 className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded font-semibold transition-colors flex items-center gap-2"
               >
                 {isExporting ? (
