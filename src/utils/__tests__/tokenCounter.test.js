@@ -34,10 +34,10 @@ describe("tokenCounter", () => {
   });
 
   describe("calculateCost", () => {
-    it("calculates cost for gemini-2.0-flash", () => {
+    it("calculates cost for gemini-2.5-flash", () => {
       // 1M input + 1M output at flash pricing
-      const cost = calculateCost(1000000, 1000000, "gemini-2.0-flash");
-      expect(cost).toBeCloseTo(0.375, 3);
+      const cost = calculateCost(1000000, 1000000, "gemini-2.5-flash");
+      expect(cost).toBeCloseTo(2.8, 3);
     });
 
     it("uses default model if not specified", () => {
@@ -47,7 +47,7 @@ describe("tokenCounter", () => {
 
     it("falls back to flash pricing for unknown model", () => {
       const cost = calculateCost(1000000, 1000000, "unknown-model");
-      expect(cost).toBeCloseTo(0.375, 3);
+      expect(cost).toBeCloseTo(2.8, 3);
     });
   });
 
@@ -70,12 +70,12 @@ describe("tokenCounter", () => {
     });
 
     it("calculates percentage correctly", () => {
-      const result = checkTokenLimit(500000, "input", "gemini-2.0-flash");
+      const result = checkTokenLimit(500000, "input", "gemini-2.5-flash");
       expect(result.percentage).toBe(50);
     });
 
     it("returns withinLimit false when over limit", () => {
-      const result = checkTokenLimit(2000000, "input", "gemini-2.0-flash");
+      const result = checkTokenLimit(2000000, "input", "gemini-2.5-flash");
       expect(result.withinLimit).toBe(false);
     });
   });
@@ -86,13 +86,13 @@ describe("tokenCounter", () => {
     });
 
     it("returns warning at 70%+", () => {
-      expect(getTokenWarningLevel(750000, "input", "gemini-2.0-flash")).toBe(
+      expect(getTokenWarningLevel(750000, "input", "gemini-2.5-flash")).toBe(
         "warning"
       );
     });
 
     it("returns danger at 90%+", () => {
-      expect(getTokenWarningLevel(950000, "input", "gemini-2.0-flash")).toBe(
+      expect(getTokenWarningLevel(950000, "input", "gemini-2.5-flash")).toBe(
         "danger"
       );
     });

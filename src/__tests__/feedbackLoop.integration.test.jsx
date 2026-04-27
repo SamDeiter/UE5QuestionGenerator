@@ -92,7 +92,7 @@ describe("Feedback Loop Integration Tests", () => {
       language: "English",
       batchSize: 2,
       temperature: 0.7,
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
     };
     allQuestionsMap = new Map();
   });

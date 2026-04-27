@@ -33,7 +33,7 @@ exports.portkeyGenerate = functions
       systemPrompt,
       userPrompt,
       temperature = 0.2,
-      model = "gemini-1.5-flash",
+      model = "gemini-2.5-flash",
       action = "generate", // "generate" | "critique" | "classify" | "tags"
     } = data;
 

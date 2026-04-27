@@ -124,7 +124,7 @@ export const logGeneration = (generationData) => {
     averageQuality: generationData.averageQuality || 0,
     success: generationData.success !== false,
     errorMessage: generationData.errorMessage || null,
-    model: generationData.model || "gemini-2.0-flash",
+    model: generationData.model || "gemini-2.5-flash",
     estimatedCost: generationData.estimatedCost || 0,
   };
 

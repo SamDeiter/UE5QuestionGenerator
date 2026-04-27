@@ -112,7 +112,7 @@ export const rewriteQuestion = vi.fn(async (apiKey, question, critique) => {
  * Mock listModels function
  */
 export const listModels = vi.fn(async (_apiKey) => {
-  return ["gemini-2.0-flash", "gemini-1.5-pro"];
+  return ["gemini-2.5-flash", "gemini-2.5-pro"];
 });
 
 /**

@@ -233,7 +233,7 @@ export const useQuestionGenerator = ({
         questionsGenerated: uniqueQs.length,
         averageQuality: Math.round(avgQual),
         success: true,
-        model: config.model || "gemini-2.0-flash",
+        model: config.model || "gemini-2.5-flash",
         estimatedCost: tokenAnalysis.cost.estimated,
       });
 
@@ -341,7 +341,7 @@ export const useQuestionGenerator = ({
       systemPrompt,
       userPrompt,
       CONTEXT_LIMITS.MAX_TOKENS,
-      config.model || "gemini-2.0-flash"
+      config.model || "gemini-2.5-flash"
     );
 
     return {
@@ -429,7 +429,7 @@ export const useQuestionGenerator = ({
         averageQuality: 0,
         success: false,
         errorMessage: err.message,
-        model: config.model || "gemini-2.0-flash",
+        model: config.model || "gemini-2.5-flash",
         estimatedCost: tokenAnalysis?.cost?.estimated || 0,
       });
       setStatus("Error");

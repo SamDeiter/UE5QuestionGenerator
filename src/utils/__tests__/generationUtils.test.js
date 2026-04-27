@@ -105,7 +105,7 @@ describe("generationUtils", () => {
     const mockContext = {
       config: {
         creatorName: "Test User",
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
         discipline: "Blueprint",
         tags: ["#test"],
       },
@@ -150,7 +150,7 @@ describe("generationUtils", () => {
       const result = enrichGeneratedQuestions(questions, mockContext);
       expect(result[0].estimatedCost).toBe(0.001);
       expect(result[0].generationTime).toBe(5000);
-      expect(result[0].model).toBe("gemini-2.0-flash");
+      expect(result[0].model).toBe("gemini-2.5-flash");
     });
   });
 });

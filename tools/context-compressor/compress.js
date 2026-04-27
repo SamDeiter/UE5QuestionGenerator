@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const MODEL_NAME = 'gemini-1.5-flash';
+const MODEL_NAME = 'gemini-2.5-flash';
 const SYSTEM_INSTRUCTION = `You are a Technical Archivist. Your goal is to reduce token count by 70% while retaining 100% of the technical value.
 
 RULES:

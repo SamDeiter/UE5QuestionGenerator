@@ -46,7 +46,7 @@ const functions = getFunctions(app, "us-central1");
  * @param {string} userPrompt - User's question/request
  * @param {function} setStatus - Optional status callback
  * @param {number} temperature - Temperature for generation (default 0.2)
- * @param {string} model - Model name (default 'gemini-2.0-flash')
+ * @param {string} model - Model name (default 'gemini-2.5-flash')
  * @returns {Promise<string>} Generated text response
  */
 export const generateContentViaCloudFunction = async (
@@ -54,7 +54,7 @@ export const generateContentViaCloudFunction = async (
   userPrompt,
   setStatus = () => {},
   temperature = 0.2,
-  model = "gemini-2.0-flash"
+  model = "gemini-2.5-flash"
 ) => {
   try {
     // Ensure token is fresh before calling Cloud Function
@@ -101,7 +101,7 @@ export const generateContentViaCloudFunction = async (
  */
 export const generateCritiqueViaCloudFunction = async (
   question,
-  model = "gemini-1.5-flash"
+  model = "gemini-2.5-flash"
 ) => {
   try {
     // Defensive validation - catch malformed data before Cloud Function call

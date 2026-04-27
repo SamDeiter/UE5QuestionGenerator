@@ -34,7 +34,7 @@ exports.generateCritique = functions
       correct,
       type = "Multiple Choice", // Question type: "True/False" or "Multiple Choice"
       modeLabel,
-      model = "gemini-2.0-flash",
+      model = "gemini-2.5-flash",
     } = data;
 
     // Normalize options: accept both array ["A","B"] and object {A:"...",B:"..."}
@@ -171,15 +171,12 @@ exports.generateCritique = functions
         Options: ${JSON.stringify(sanitizedOptions)}
         Correct: ${sanitizedCorrect}`;
 
-      // Model fallback list: ALL available text-out models prioritized by quota
+      // Model fallback list: prioritized by quota; gemini-1.5/2.0 retired
       const modelFallbacks = [
-        model, // User-specified or default (gemini-2.0-flash)
-        "gemini-2.0-flash-lite", // 0/4K RPM - huge quota
-        "gemini-2.5-flash-lite", // 0/4K RPM - huge quota
-        "gemini-2.5-flash", // 0/1K RPM - good quota
-        "gemini-2.0-flash-exp", // 8/10 RPM - backup when rate limited
-        "gemini-2.5-pro", // 0/150 RPM - slower but available
-        "gemini-3-pro", // 0/25 RPM - last resort
+        model, // User-specified or default (gemini-2.5-flash)
+        "gemini-2.5-flash-lite", // huge quota, cheapest
+        "gemini-2.5-flash", // good balance
+        "gemini-2.5-pro", // slower but more capable
       ];
 
       let response;

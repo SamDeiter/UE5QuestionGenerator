@@ -92,7 +92,7 @@ export const generateContentSecure = async (
 export const generateCritiqueSecure = async (
   apiKey,
   question,
-  model = "gemini-1.5-flash"
+  model = "gemini-2.5-flash"
 ) => {
   // Validate question object before proceeding
   if (!question) {
