@@ -1,12 +1,25 @@
 import { useState, useCallback } from "react";
 import { generateContentSecure as generateContent } from "../../services/geminiSecure";
 import { parseQuestions } from "../../utils/questionHelpers";
-import { TOAST_DURATION } from "../../utils/constants";
+import { TOAST_DURATION, AI_CONFIG } from "../../utils/constants";
 import {
   getTranslationSystemPrompt,
   getTranslationUserPrompt,
 } from "../../services/prompts/translationPrompts";
 import { logError } from "../../utils/AppError";
+
+// Free-tier (15 RPM) → 1 request per 4s; add 500ms buffer for safety.
+// gemini-2.5-flash-lite gives 1000 RPD vs 250 RPD on flash, so it's the
+// right choice for high-volume translation work.
+const TRANSLATION_MODEL = "gemini-2.5-flash-lite";
+const IS_TEST = import.meta.env?.MODE === "test" || import.meta.env?.VITEST;
+const TRANSLATION_THROTTLE_MS = IS_TEST ? 0 : 4500;
+const RATE_LIMIT_BACKOFF_MS = IS_TEST ? 0 : 60000; // 1 min cooldown if we hit 429
+
+const sleep = (ms) =>
+  ms > 0
+    ? new Promise((resolve) => setTimeout(resolve, ms))
+    : Promise.resolve();
 
 /**
  * Hook for handling question translation logic.
@@ -52,7 +65,9 @@ export const useQuestionTranslation = ({
           effectiveApiKey,
           systemPrompt,
           userPrompt,
-          setStatus
+          setStatus,
+          AI_CONFIG.DEFAULT_TEMPERATURE,
+          TRANSLATION_MODEL
         );
 
         // Attempt to parse JSON response
@@ -198,13 +213,21 @@ export const useQuestionTranslation = ({
     const totalQueueSize = translationQueue.length;
 
     const ID_SUBSTRING_LENGTH = 4;
+    let processedCount = 0;
     for (const { question: q, targetLang } of translationQueue) {
       const systemPrompt = getTranslationSystemPrompt(q.language, targetLang);
       const userPrompt = getTranslationUserPrompt(q);
 
+      // Throttle to stay under free-tier 15 RPM. Skip the wait on the first
+      // request — only inter-request gaps need the buffer.
+      if (processedCount > 0) {
+        await sleep(TRANSLATION_THROTTLE_MS);
+      }
+      processedCount++;
+
       try {
         setStatus(
-          `Translating: ${q.uniqueId.substring(
+          `[${processedCount}/${totalQueueSize}] Translating ${q.uniqueId.substring(
             0,
             ID_SUBSTRING_LENGTH
           )} -> ${targetLang}...`
@@ -213,7 +236,9 @@ export const useQuestionTranslation = ({
           effectiveApiKey,
           systemPrompt,
           userPrompt,
-          setStatus
+          setStatus,
+          AI_CONFIG.DEFAULT_TEMPERATURE,
+          TRANSLATION_MODEL
         );
 
         let translatedData = null;
@@ -256,6 +281,20 @@ export const useQuestionTranslation = ({
           uniqueId: q.uniqueId,
           targetLang,
         });
+
+        // If rate-limited, sleep an extra minute before continuing.
+        const msg = String(e?.message || "").toLowerCase();
+        if (
+          msg.includes("rate limit") ||
+          msg.includes("429") ||
+          msg.includes("resource-exhausted") ||
+          msg.includes("quota")
+        ) {
+          setStatus(
+            `Rate limited — cooling down ${RATE_LIMIT_BACKOFF_MS / 1000}s...`
+          );
+          await sleep(RATE_LIMIT_BACKOFF_MS);
+        }
       }
 
       const PERCENT_CONVERSION = 100;
