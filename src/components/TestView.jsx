@@ -31,6 +31,7 @@ const TestView = ({
   // Filter state
   const [filters, setFilters] = useState({
     discipline: "",
+    language: "English",
   });
 
   // UI state
@@ -63,14 +64,24 @@ const TestView = ({
   // Filter approved questions based on criteria
   const filteredQuestions = useMemo(() => {
     return approvedQuestions.filter((q) => {
-      // If discipline filter is set, only include matching questions
-      return !filters.discipline || q.discipline === filters.discipline;
+      const disciplineMatch =
+        !filters.discipline || q.discipline === filters.discipline;
+      const questionLang = q.language || "English";
+      const languageMatch =
+        !filters.language || questionLang === filters.language;
+      return disciplineMatch && languageMatch;
     });
   }, [approvedQuestions, filters]);
 
   // Get unique disciplines for filter dropdown
   const disciplines = useMemo(() => {
     const set = new Set(approvedQuestions.map((q) => q.discipline));
+    return [...set].filter(Boolean).sort();
+  }, [approvedQuestions]);
+
+  // Get unique languages for filter dropdown
+  const languages = useMemo(() => {
+    const set = new Set(approvedQuestions.map((q) => q.language || "English"));
     return [...set].filter(Boolean).sort();
   }, [approvedQuestions]);
 
@@ -343,6 +354,27 @@ const TestView = ({
                 ))}
               </select>
             </div>
+
+            {/* Language */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-1">
+                Language
+              </label>
+              <select
+                value={filters.language}
+                onChange={(e) =>
+                  setFilters({ ...filters, language: e.target.value })
+                }
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white"
+              >
+                <option value="">All Languages</option>
+                {languages.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Action Buttons */}
@@ -371,7 +403,7 @@ const TestView = ({
               className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
             >
               <Icon name="archive" size={18} />
-              Export All by Discipline
+              Export All by Language &amp; Discipline
             </button>
           </div>
         </div>

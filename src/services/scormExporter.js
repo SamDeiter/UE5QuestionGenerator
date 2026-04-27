@@ -23,5 +23,6 @@ export {
   generateScormPackageFiles,
   exportToScorm,
   groupQuestionsByDiscipline,
+  groupQuestionsByLanguageAndDiscipline,
   batchExportByDiscipline,
 } from "./scorm/packager";
