@@ -30,9 +30,10 @@ const TestView = ({
 
   // Filter state
   const [filters, setFilters] = useState({
-    discipline: "",
+    disciplines: [], // Empty array = all disciplines
     language: "English",
   });
+  const [disciplineDropdownOpen, setDisciplineDropdownOpen] = useState(false);
 
   // UI state
   const [showPreview, setShowPreview] = useState(false);
@@ -65,13 +66,28 @@ const TestView = ({
   const filteredQuestions = useMemo(() => {
     return approvedQuestions.filter((q) => {
       const disciplineMatch =
-        !filters.discipline || q.discipline === filters.discipline;
+        filters.disciplines.length === 0 ||
+        filters.disciplines.includes(q.discipline);
       const questionLang = q.language || "English";
       const languageMatch =
         !filters.language || questionLang === filters.language;
       return disciplineMatch && languageMatch;
     });
   }, [approvedQuestions, filters]);
+
+  const toggleDiscipline = (d) => {
+    setFilters((prev) => ({
+      ...prev,
+      disciplines: prev.disciplines.includes(d)
+        ? prev.disciplines.filter((x) => x !== d)
+        : [...prev.disciplines, d],
+    }));
+  };
+
+  const clearDisciplines = () =>
+    setFilters((prev) => ({ ...prev, disciplines: [] }));
+  const selectAllDisciplines = () =>
+    setFilters((prev) => ({ ...prev, disciplines: [...disciplines] }));
 
   // Get unique disciplines for filter dropdown
   const disciplines = useMemo(() => {
@@ -334,25 +350,76 @@ const TestView = ({
               Question Filters
             </h2>
 
-            {/* Discipline */}
-            <div className="mb-4">
+            {/* Disciplines (multi-select) */}
+            <div className="mb-4 relative">
               <label className="block text-sm font-medium text-slate-300 mb-1">
-                Discipline
+                Disciplines
               </label>
-              <select
-                value={filters.discipline}
-                onChange={(e) =>
-                  setFilters({ ...filters, discipline: e.target.value })
-                }
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white"
+              <button
+                type="button"
+                onClick={() => setDisciplineDropdownOpen((o) => !o)}
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white flex items-center justify-between hover:border-slate-500 transition-colors"
               >
-                <option value="">All Disciplines</option>
-                {disciplines.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+                <span className="truncate text-left">
+                  {(() => {
+                    if (filters.disciplines.length === 0) {
+                      return "All Disciplines";
+                    }
+                    if (filters.disciplines.length === 1) {
+                      return filters.disciplines[0];
+                    }
+                    return `${filters.disciplines.length} selected`;
+                  })()}
+                </span>
+                <Icon
+                  name={disciplineDropdownOpen ? "chevron-up" : "chevron-down"}
+                  size={16}
+                  className="text-slate-400 ml-2"
+                />
+              </button>
+              {disciplineDropdownOpen && (
+                <div className="absolute z-20 mt-1 w-full bg-slate-900 border border-slate-600 rounded shadow-xl max-h-64 overflow-y-auto">
+                  <div className="flex justify-between gap-2 px-3 py-2 border-b border-slate-700 text-xs">
+                    <button
+                      type="button"
+                      onClick={selectAllDisciplines}
+                      className="text-blue-400 hover:text-blue-300"
+                    >
+                      Select All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={clearDisciplines}
+                      className="text-blue-400 hover:text-blue-300"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  {disciplines.length === 0 ? (
+                    <div className="px-3 py-3 text-xs text-slate-500">
+                      No disciplines available
+                    </div>
+                  ) : (
+                    disciplines.map((d) => {
+                      const checked = filters.disciplines.includes(d);
+                      return (
+                        <label
+                          key={d}
+                          className="flex items-center gap-2 px-3 py-2 hover:bg-slate-800 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleDiscipline(d)}
+                            className="w-4 h-4 accent-blue-500"
+                          />
+                          <span className="text-sm text-slate-200">{d}</span>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Language */}
@@ -434,7 +501,7 @@ const TestView = ({
                     className="mx-auto mb-4 opacity-50"
                   />
                   <p>No approved questions match your filters</p>
-                  {filters.discipline === "" && (
+                  {filters.disciplines.length === 0 && (
                     <button
                       onClick={handleGenerateMockData}
                       className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-bold transition-all flex items-center gap-2 mx-auto"
