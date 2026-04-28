@@ -187,39 +187,6 @@ const AuthenticatedApp = ({
   });
 
   const {
-    isGenerating,
-    translationProgress,
-    handleGenerate,
-    handleTranslateSingle,
-    handleExplain,
-    handleVariate,
-    handleCritique,
-    handleApplyRewrite,
-    handleBulkTranslateMissing,
-  } = useGeneration(
-    config,
-    setConfig,
-    effectiveApiKey,
-    isApiReady,
-    isTargetMet,
-    maxBatchSize,
-    getFileContext,
-    checkAndStoreQuestions,
-    addQuestionsToState,
-    updateQuestionInState,
-    updateAllVariantsInState,
-    handleLanguageSwitch,
-    showMessage,
-    setStatus,
-    setShowNameModal,
-    setShowApiError,
-    setShowHistory,
-    translationMap,
-    allQuestionsMap,
-    handleLoadFromFirestore
-  );
-
-  const {
     setShowExportMenu,
     showBulkExportModal,
     setShowBulkExportModal,
@@ -252,6 +219,39 @@ const AuthenticatedApp = ({
     setShowExportMenu,
     setShowBulkExportModal,
     replaceQuestions
+  );
+
+  const {
+    isGenerating,
+    translationProgress,
+    handleGenerate,
+    handleTranslateSingle,
+    handleExplain,
+    handleVariate,
+    handleCritique,
+    handleApplyRewrite,
+    handleBulkTranslateMissing,
+  } = useGeneration(
+    config,
+    setConfig,
+    effectiveApiKey,
+    isApiReady,
+    isTargetMet,
+    maxBatchSize,
+    getFileContext,
+    checkAndStoreQuestions,
+    addQuestionsToState,
+    updateQuestionInState,
+    updateAllVariantsInState,
+    handleLanguageSwitch,
+    showMessage,
+    setStatus,
+    setShowNameModal,
+    setShowApiError,
+    setShowHistory,
+    translationMap,
+    allQuestionsMap,
+    handleLoadFromFirestore
   );
 
   const { isInitialLoading } = useAutoLoad({
