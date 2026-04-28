@@ -70,6 +70,34 @@ def translate_via_ollama(model, system_prompt, user_prompt):
         clean_text = response_text.replace('```json', '').replace('```', '').strip()
         return json.loads(clean_text)
 
+def _assert_safe_translation_write(doc_id, unique_id, target_lang, new_variant):
+    """Raise RuntimeError if a translation write would corrupt the English base doc.
+
+    Three guards (intentionally overlapping for defense-in-depth):
+      1. Refuse non-English writes targeting the bare uniqueId slot.
+      2. Refuse any write to the bare uniqueId slot whose payload language != English.
+      3. Refuse non-English writes whose doc_id lacks the expected `_<lang>` suffix.
+    """
+    if doc_id == unique_id and target_lang != "English":
+        raise RuntimeError(
+            f"REFUSING write: would overwrite English base doc id={unique_id} "
+            f"with {target_lang} content. Translation doc IDs must be suffixed."
+        )
+
+    if doc_id == unique_id and new_variant.get("language") != "English":
+        raise RuntimeError(
+            f"REFUSING write: doc id={unique_id} would have language="
+            f"{new_variant.get('language')!r}, but the base slot must be English."
+        )
+
+    expected_suffix = f"_{target_lang.replace(' ', '_')}"
+    if target_lang != "English" and not doc_id.endswith(expected_suffix):
+        raise RuntimeError(
+            f"REFUSING write: doc id {doc_id!r} doesn't end with expected "
+            f"suffix {expected_suffix!r} for {target_lang}."
+        )
+
+
 def process_translation(db, question_doc, target_lang, model, dry_run=False):
     q_data = question_doc.to_dict()
     unique_id = q_data.get('uniqueId')
@@ -118,6 +146,12 @@ def process_translation(db, question_doc, target_lang, model, dry_run=False):
         # Save to Firestore
         # Use uniqueId + language as a semi-deterministic ID for variants
         doc_id = f"{unique_id}_{target_lang.replace(' ', '_')}"
+
+        # --- Defensive write guards ---
+        # Prevent overwriting the English base doc (id=<uniqueId>) with translation content.
+        # See: prod incident where 21 base docs were overwritten with translation payloads.
+        _assert_safe_translation_write(doc_id, unique_id, target_lang, new_variant)
+
         db.collection('questions').document(doc_id).set(new_variant)
         return "success"
         
