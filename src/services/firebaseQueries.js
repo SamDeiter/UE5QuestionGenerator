@@ -38,6 +38,22 @@ let _questionsCache = null;
 let _questionsCacheTimestamp = 0;
 const CACHE_TTL_MS = TIMING.CACHE_TTL_MS;
 
+// Convert any firestoreUpdatedAt shape (Timestamp, {seconds, nanoseconds}, ISO string, null)
+// into a millisecond epoch for client-side sorting. Defense against historic data drift
+// where some docs stored a plain object instead of a Timestamp.
+const toMillis = (v) => {
+  if (!v) return 0;
+  if (typeof v.toMillis === "function") return v.toMillis();
+  if (typeof v.seconds === "number") {
+    return v.seconds * 1000 + (v.nanoseconds || 0) / 1e6;
+  }
+  if (typeof v === "string") {
+    const parsed = Date.parse(v);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+};
+
 /**
  * Invalidates the questions cache.
  * Call after saves/deletes to ensure fresh data on next load.
@@ -160,12 +176,10 @@ export const getAllQuestionsFromFirestore = async (
     logger.log(`📍 Firebase Project: ${firebaseConfig.projectId}`);
     const startTime = performance.now();
 
-    // Load ALL questions (not filtered by creatorId)
-    const allQuery = query(
-      collection(getDb(), "questions"),
-      orderBy("firestoreUpdatedAt", "desc"),
-      limit(fetchLimit)
-    );
+    // NOTE: No orderBy here — Firestore silently excludes documents where
+    // firestoreUpdatedAt is not a native Timestamp (e.g. legacy docs that stored
+    // it as {seconds, nanoseconds} or an ISO string). Sort client-side instead.
+    const allQuery = query(collection(getDb(), "questions"), limit(fetchLimit));
     const snapshot = await getDocs(allQuery);
 
     const questions = [];
@@ -185,6 +199,10 @@ export const getAllQuestionsFromFirestore = async (
         disciplineCounts[discipline] = (disciplineCounts[discipline] || 0) + 1;
       }
     });
+
+    questions.sort(
+      (a, b) => toMillis(b.firestoreUpdatedAt) - toMillis(a.firestoreUpdatedAt)
+    );
 
     const duration = Math.round(performance.now() - startTime);
     logger.log(

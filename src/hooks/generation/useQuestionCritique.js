@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { Timestamp } from "firebase/firestore";
 import {
   generateCritiqueSecure as generateCritique,
   generateTagsSecure,
@@ -233,7 +234,7 @@ export const useQuestionCritique = ({
             rewriteChanges: changes,
             critiqueAttempts: newAttemptCount,
             tags: suggestedTags.length > 0 ? suggestedTags : q.tags || [],
-            firestoreUpdatedAt: new Date().toISOString(),
+            firestoreUpdatedAt: Timestamp.now(),
             version: (q.version || 1) + 1,
           };
 
