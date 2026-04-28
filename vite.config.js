@@ -42,12 +42,16 @@ export default defineConfig({
 
     // PERFORMANCE: Service Worker for offline support and caching
     VitePWA({
-      registerType: "autoUpdate",
-      injectRegister: "auto",
+      // Use "prompt" so the app gets onNeedRefresh() and can show an
+      // "update available" banner. The banner's Reload button calls
+      // updateSW(true), which triggers skipWaiting + reload.
+      registerType: "prompt",
+      // We register the SW manually from src/main.jsx via virtual:pwa-register
+      // so we can wire up the onNeedRefresh callback.
+      injectRegister: false,
       workbox: {
-        // Take over immediately when a new SW is available — no "waiting" limbo
-        skipWaiting: true,
-        clientsClaim: true,
+        // Do NOT skipWaiting/clientsClaim here — that would auto-activate the
+        // new SW behind the user's back and bypass the update prompt.
         // Cache all static assets aggressively
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         // Runtime caching strategies

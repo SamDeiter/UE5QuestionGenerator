@@ -6,6 +6,7 @@ import Header from "./components/Header";
 import AppBanners from "./components/AppBanners";
 import ToastContainer from "./components/ToastContainer";
 import Footer from "./components/Footer";
+import UpdateAvailableBanner from "./components/UpdateAvailableBanner";
 
 // Lazy load heavy Authenticated logic
 const AuthenticatedApp = lazy(() => import("./AuthenticatedApp"));
@@ -92,19 +93,39 @@ const App = () => {
   };
 
   if (authLoading || registrationLoading) {
-    return <LoadingSpinner />;
+    return (
+      <>
+        <LoadingSpinner />
+        <UpdateAvailableBanner />
+      </>
+    );
   }
 
   if (!user) {
     const inviteCode = getInviteFromUrl();
     if (inviteCode) {
-      return <InviteSignUp onSuccess={(role) => markAsRegistered(role)} />;
+      return (
+        <>
+          <InviteSignUp onSuccess={(role) => markAsRegistered(role)} />
+          <UpdateAvailableBanner />
+        </>
+      );
     }
-    return <SignIn />;
+    return (
+      <>
+        <SignIn />
+        <UpdateAvailableBanner />
+      </>
+    );
   }
 
   if (!_isRegistered) {
-    return <InviteSignUp onSuccess={(role) => markAsRegistered(role)} />;
+    return (
+      <>
+        <InviteSignUp onSuccess={(role) => markAsRegistered(role)} />
+        <UpdateAvailableBanner />
+      </>
+    );
   }
 
   return (
@@ -197,6 +218,7 @@ const App = () => {
 
         <Footer />
         <ToastContainer toasts={toasts} onRemove={removeToast} />
+        <UpdateAvailableBanner />
       </main>
     </div>
   );

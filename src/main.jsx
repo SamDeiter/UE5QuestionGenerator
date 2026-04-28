@@ -5,7 +5,31 @@ import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import ModalProvider from "./contexts/ModalProvider.jsx";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext.jsx";
 import { ErrorReporterProvider } from "./contexts/ErrorReporterContext.jsx";
+import { notifyUpdateAvailable } from "./components/UpdateAvailableBanner.jsx";
 import "./index.css";
+
+// PWA: register the service worker in "prompt" mode so we can show an
+// in-app banner when a new version is waiting. The Reload button in
+// UpdateAvailableBanner calls updateSW(true) -> skipWaiting + reload.
+// In dev (no SW emitted), this import is a no-op stub.
+if (import.meta.env.PROD) {
+  import("virtual:pwa-register")
+    .then(({ registerSW }) => {
+      const updateSW = registerSW({
+        onNeedRefresh() {
+          notifyUpdateAvailable(updateSW);
+        },
+        onRegisterError(err) {
+          // Don't crash the app if SW registration fails
+          // (e.g. blocked by extension, unsupported browser).
+          console.warn("[pwa] SW registration failed", err);
+        },
+      });
+    })
+    .catch((err) => {
+      console.warn("[pwa] virtual:pwa-register import failed", err);
+    });
+}
 
 // Import AuthManager (the import itself is lightweight)
 import { authManager } from "./services/AuthManager";
