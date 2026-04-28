@@ -343,7 +343,10 @@ export const useExport = (
         );
         const freshQuestions = processQuestions(freshData);
 
-        if (replaceQuestions) {
+        // Guard: never overwrite an existing in-memory list with an empty one.
+        // A failed/timed-out Firestore call resolves to [] in our catch path,
+        // and replacing state with [] silently wipes everything the user just had.
+        if (replaceQuestions && freshQuestions.length > 0) {
           replaceQuestions(freshQuestions, QUESTION_SOURCES.DATABASE);
           replaceQuestions(freshQuestions, QUESTION_SOURCES.IMPORT);
         }
@@ -353,10 +356,14 @@ export const useExport = (
         );
 
         if (!silent) {
-          const msg =
-            cachedData.length > 0
-              ? `Synced ${freshQuestions.length} questions`
-              : `Loaded ${freshQuestions.length} questions!`;
+          let msg;
+          if (freshQuestions.length === 0) {
+            msg = "Sync returned 0 questions — keeping existing data.";
+          } else if (cachedData.length > 0) {
+            msg = `Synced ${freshQuestions.length} questions`;
+          } else {
+            msg = `Loaded ${freshQuestions.length} questions!`;
+          }
           showMessage(msg, 3000);
         }
 
