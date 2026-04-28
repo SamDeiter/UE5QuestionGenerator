@@ -300,7 +300,7 @@ export const useExport = (
     FIRESTORE_LIMITS;
 
   const handleLoadFromFirestore = useCallback(
-    async (silent = false, fullSync = false) => {
+    async (silent = false, fullSync = false, onProgress = null) => {
       setIsProcessing(true);
       if (setShowExportMenu) setShowExportMenu(false);
 
@@ -339,7 +339,8 @@ export const useExport = (
         const freshData = await getAllQuestionsFromFirestore(
           FULL_SYNC_COUNT,
           true,
-          initialLimit
+          initialLimit,
+          onProgress
         );
         const freshQuestions = processQuestions(freshData);
 

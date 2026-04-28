@@ -123,7 +123,8 @@ export const getQuestionsFromFirestore = async () => {
 export const getAllQuestionsFromFirestore = async (
   maxResults = FIRESTORE_LIMITS.FULL_SYNC_COUNT,
   forceRefresh = false,
-  customLimit = null
+  customLimit = null,
+  onProgress = null
 ) => {
   try {
     // Require authentication
@@ -212,8 +213,24 @@ export const getAllQuestionsFromFirestore = async (
         }
       });
 
+      if (onProgress) {
+        try {
+          onProgress({ pages, loaded: questions.length, done: false });
+        } catch (cbError) {
+          logger.warn("onProgress callback threw:", cbError);
+        }
+      }
+
       if (snapshot.size < pageLimit) break;
       cursor = snapshot.docs[snapshot.docs.length - 1];
+    }
+
+    if (onProgress) {
+      try {
+        onProgress({ pages, loaded: questions.length, done: true });
+      } catch (cbError) {
+        logger.warn("onProgress callback threw:", cbError);
+      }
     }
 
     logger.log(`📄 Paginated fetch: ${pages} page(s)`);
