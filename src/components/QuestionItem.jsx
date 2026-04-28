@@ -109,7 +109,7 @@ const QuestionItem = ({
         onSwitchLanguage(langCode, force === true, newVariant);
       }
     },
-    [onSwitchLanguage, q.uniqueId]
+    [onSwitchLanguage]
   );
 
   // Helper function for modal dismissal

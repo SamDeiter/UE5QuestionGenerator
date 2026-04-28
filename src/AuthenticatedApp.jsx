@@ -38,7 +38,6 @@ import { useUrlModeSync } from "./hooks/useUrlModeSync";
 import { APP_MODES } from "./utils/constants";
 // import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import LandingPage from "./components/LandingPage";
-import MetricsDashboard from "./components/MetricsDashboard";
 
 const AuthenticatedApp = ({
   user,
@@ -526,7 +525,6 @@ const AuthenticatedApp = ({
           handlers={globalModalsHandlers}
         />
       </Suspense>
-
 
       {appMode === APP_MODES.LANDING ? (
         <LandingPage
