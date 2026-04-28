@@ -133,8 +133,8 @@ const DatabaseView = ({
     // FIRST: Filter to only show ACCEPTED questions in Database view
     // Pending and rejected questions should only appear in Review mode
     // Filter to only show ACCEPTED questions or PENDING translations in Database view
-    let filtered = questions.filter((q) => 
-      q.status === "accepted" || (q.status === "pending" && q.uniqueId)
+    let filtered = questions.filter(
+      (q) => q.status === "accepted" || (q.status === "pending" && q.uniqueId)
     );
 
     // Then filter by search term if provided
@@ -240,7 +240,6 @@ const DatabaseView = ({
   // Handle language switch - swap the card's language in-place
   // Uses allQuestionsMap (global, complete) rather than local questionsByIdAndLang
   // so it works even when the target language variant isn't in the windowed view.
-  const [isSwitching, setIsSwitching] = useState(false);
 
   /**
    * Switches the viewed language for a specific question.
@@ -258,7 +257,6 @@ const DatabaseView = ({
       return;
     }
 
-    setIsSwitching(true);
     logger.log(
       `🌐 Switching language for ${currentQuestion.uniqueId.slice(
         0,
@@ -268,7 +266,7 @@ const DatabaseView = ({
 
     try {
       // 1. Check local state first
-      let variants = allQuestionsMap.get(currentQuestion.uniqueId) || [];
+      const variants = allQuestionsMap.get(currentQuestion.uniqueId) || [];
       let targetQuestion = variants.find(
         (v) => (v.language || "English") === targetLang
       );
@@ -322,8 +320,6 @@ const DatabaseView = ({
     } catch (err) {
       logger.error("Failed to switch language:", err);
       showMessage("❌ Error switching language. Please try again.", 5000);
-    } finally {
-      setIsSwitching(false);
     }
   };
 
@@ -404,7 +400,6 @@ const DatabaseView = ({
                     onExplain={() => {}}
                     onVariate={() => {}}
                     onCritique={() => onCritique?.(q)}
-                    onTranslateSingle={() => {}}
                     onSwitchLanguage={handleSwitchLanguage}
                     onTranslateSingle={onTranslateSingle}
                     onDelete={() => {}}
