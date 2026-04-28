@@ -108,7 +108,6 @@ export const getAllQuestionsFromFirestore = async (
   forceRefresh = false,
   customLimit = null
 ) => {
-
   try {
     // Require authentication
     if (!auth.currentUser) {
@@ -187,7 +186,6 @@ export const getAllQuestionsFromFirestore = async (
       }
     });
 
-
     const duration = Math.round(performance.now() - startTime);
     logger.log(
       `✅ Loaded ${questions.length} questions from Firestore in ${duration}ms`
@@ -220,10 +218,10 @@ export const getAllQuestionsFromFirestore = async (
  *
  * SCALABILITY: Firebase supports thousands of concurrent listeners.
  * PHASE 3.2: Real-time subscription to all questions in the database.
- * 
- * This is the primary synchronization mechanism for keeping the client 
+ *
+ * This is the primary synchronization mechanism for keeping the client
  * in sync with Firestore updates across all language variants.
- * 
+ *
  * @param {Function} onNext - Callback function receiving the latest questions array
  * @returns {Function} Unsubscribe function
  */
@@ -237,9 +235,11 @@ export const subscribeToAllQuestions = (onNext) => {
 
   logger.log("🔄 Setting up real-time question listener...");
 
+  // NOTE: No orderBy here — Firestore silently excludes documents where
+  // firestoreUpdatedAt is not a native Timestamp (e.g. bulk-imported docs
+  // that stored it as a plain JSON object). The UI handles client-side sorting.
   const q = query(
     collection(getDb(), "questions"),
-    orderBy("firestoreUpdatedAt", "desc"),
     limit(FIRESTORE_LIMITS.FULL_SYNC_COUNT)
   );
 
@@ -285,7 +285,6 @@ export const subscribeToAllQuestions = (onNext) => {
     unsubscribe();
   };
 };
-
 
 /**
  * Paginated question loading for better performance.
@@ -440,8 +439,6 @@ export const getQuestionVariantsForId = async (uniqueId) => {
     return [];
   }
 };
-
-
 
 /**
  * PHASE 2.3: Get category-specific stats for a discipline using server-side aggregation.
