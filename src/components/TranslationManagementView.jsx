@@ -35,10 +35,7 @@ const TranslationManagementView = ({
     try {
       await invalidateQuestionsCache();
       if (onRefresh) await onRefresh(false, true); // silent=false, fullSync=true
-      showMessage(
-        "✅ Re-synced from Firestore. Translation flags updated.",
-        4000
-      );
+      showMessage("Re-synced from Firestore. Translation flags updated.", 4000);
     } catch (e) {
       showMessage(`Re-sync failed: ${e.message}`, 5000);
     } finally {
