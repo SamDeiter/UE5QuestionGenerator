@@ -11,6 +11,7 @@ const LOAD_MORE_COUNT = 50;
 
 const DatabaseView = ({
   questions,
+  allQuestionsMap = new Map(), // Global map of all loaded questions by uniqueId
   onUpdateQuestion,
   onKickBack,
   onCritique, // NEW: Enable re-critique in database view
@@ -226,36 +227,12 @@ const DatabaseView = ({
     return () => observer.disconnect();
   }, [hasMore, loadMore]);
 
-  // Calculate available languages for each uniqueId
-  const translationMap = useMemo(() => {
-    if (!questions) return new Map();
-    const map = new Map();
-    questions.forEach((q) => {
-      if (!q.uniqueId) return;
-      if (!map.has(q.uniqueId)) {
-        map.set(q.uniqueId, new Set());
-      }
-      map.get(q.uniqueId).add(q.language || "English");
-    });
-    return map;
-  }, [questions]);
-
-  // Map uniqueId+language -> question for quick lookup
-  const questionsByIdAndLang = useMemo(() => {
-    if (!questions) return new Map();
-    const map = new Map();
-    questions.forEach((q) => {
-      if (!q.uniqueId) return;
-      const key = `${q.uniqueId}::${q.language || "English"}`;
-      map.set(key, q);
-    });
-    return map;
-  }, [questions]);
-
   // Local state to track language overrides for specific question cards
   const [languageOverrides, setLanguageOverrides] = useState({});
 
   // Handle language switch - swap the card's language in-place
+  // Uses allQuestionsMap (global, complete) rather than local questionsByIdAndLang
+  // so it works even when the target language variant isn't in the windowed view.
   const handleSwitchLanguage = (currentQuestion, targetLang) => {
     if (!currentQuestion.uniqueId) {
       showMessage(
@@ -264,8 +241,10 @@ const DatabaseView = ({
       return;
     }
 
-    const key = `${currentQuestion.uniqueId}::${targetLang}`;
-    const targetQuestion = questionsByIdAndLang.get(key);
+    const variants = allQuestionsMap.get(currentQuestion.uniqueId) || [];
+    const targetQuestion = variants.find(
+      (v) => (v.language || "English") === targetLang
+    );
 
     if (targetQuestion) {
       // Swap the language in-place for this card
@@ -275,7 +254,7 @@ const DatabaseView = ({
       }));
     } else {
       showMessage(
-        `${targetLang} version not found in current view. Try using "Sort by Language" to find it.`
+        `${targetLang} version not found. It may not have been translated yet.`
       );
     }
   };
@@ -328,12 +307,16 @@ const DatabaseView = ({
           <>
             {visibleQuestions.map((originalQ, i) => {
               // Apply language override if the user has clicked a translation flag
+              // Use allQuestionsMap to find the variant globally (not limited to windowed view)
               let q = originalQ;
               if (originalQ.uniqueId && languageOverrides[originalQ.uniqueId]) {
-                const targetLang = languageOverrides[originalQ.uniqueId];
-                if (targetLang !== (originalQ.language || "English")) {
-                  const overrideQ = questionsByIdAndLang.get(
-                    `${originalQ.uniqueId}::${targetLang}`
+                const targetLangOverride =
+                  languageOverrides[originalQ.uniqueId];
+                if (targetLangOverride !== (originalQ.language || "English")) {
+                  const variants =
+                    allQuestionsMap.get(originalQ.uniqueId) || [];
+                  const overrideQ = variants.find(
+                    (v) => (v.language || "English") === targetLangOverride
                   );
                   if (overrideQ) {
                     q = overrideQ;
@@ -362,9 +345,7 @@ const DatabaseView = ({
                     onKickBack={onKickBack}
                     availableVariants={
                       q.uniqueId
-                        ? Array.from(translationMap.get(q.uniqueId) || []).map(
-                            (lang) => ({ language: lang })
-                          )
+                        ? Array.from(allQuestionsMap.get(q.uniqueId) || [])
                         : []
                     }
                     isProcessing={false}

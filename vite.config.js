@@ -45,6 +45,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       injectRegister: "auto",
       workbox: {
+        // Take over immediately when a new SW is available — no "waiting" limbo
+        skipWaiting: true,
+        clientsClaim: true,
         // Cache all static assets aggressively
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         // Runtime caching strategies

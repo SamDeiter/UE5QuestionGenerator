@@ -132,6 +132,7 @@ const ViewRouter = ({
       [APP_MODES.DATABASE]: (
         <DatabaseView
           questions={databaseQuestions}
+          allQuestionsMap={allQuestionsMap}
           sheetUrl={config.sheetUrl}
           onLoad={handleLoadFromSheets}
           onLoadFirestore={handleLoadFromFirestore}

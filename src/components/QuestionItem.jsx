@@ -105,7 +105,7 @@ const QuestionItem = ({
   const handleLocalLanguageSwitch = useCallback(
     (langCode) => {
       if (onSwitchLanguage) {
-        onSwitchLanguage(q.id, langCode);
+        onSwitchLanguage(langCode, q.id);
       }
     },
     [onSwitchLanguage, q.id]
