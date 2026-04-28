@@ -1,7 +1,6 @@
-npx vitest run src/components/__tests__/CriticalUI.regression.test.jsx
-TEST_EXIT=$?
+npm run test:ci
 
-if [ $TEST_EXIT -ne 0 ]; then
+if [ $? -ne 0 ]; then
   echo ""
   echo "FAIL: Critical regression tests failed. Fix before pushing."
   echo ""

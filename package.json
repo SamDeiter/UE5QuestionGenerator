@@ -13,6 +13,7 @@
     "format:check": "prettier --check \"src/**/*.{js,jsx,json,css}\"",
     "preview": "vite preview",
     "test": "vitest",
+    "test:ci": "vitest run src/components/__tests__/CriticalUI.regression.test.jsx",
     "test:rules": "firebase emulators:exec --only firestore \"vitest run --testPathPattern=firestore.rules\"",
     "predeploy": "npm run build",
     "deploy": "firebase use prod && firebase deploy --only firestore:rules && gh-pages -d dist",
