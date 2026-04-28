@@ -19,6 +19,7 @@ import {
   getAggregateFromServer,
   sum,
   count,
+  documentId,
 } from "firebase/firestore";
 import { logger } from "../utils/logger";
 import { TIMING, FIRESTORE_LIMITS, QUESTION_SOURCES } from "../utils/constants";
@@ -172,33 +173,50 @@ export const getAllQuestionsFromFirestore = async (
     }
 
     const fetchLimit = customLimit || maxResults;
-    logger.log(`🔄 Fetching ${fetchLimit} questions from Firestore...`);
+    logger.log(`🔄 Fetching up to ${fetchLimit} questions from Firestore...`);
     logger.log(`📍 Firebase Project: ${firebaseConfig.projectId}`);
     const startTime = performance.now();
 
-    // NOTE: No orderBy here — Firestore silently excludes documents where
-    // firestoreUpdatedAt is not a native Timestamp (e.g. legacy docs that stored
-    // it as {seconds, nanoseconds} or an ISO string). Sort client-side instead.
-    const allQuery = query(collection(getDb(), "questions"), limit(fetchLimit));
-    const snapshot = await getDocs(allQuery);
-
+    // Cursor-paginated fetch. Single getDocs() with limit > ~5000 has been
+    // observed to time out / return empty in some sessions. Page by document ID
+    // (always a string, immune to the type-drift problems firestoreUpdatedAt had).
+    const PAGE_SIZE = 2500;
     const questions = [];
     const disciplineCounts = {};
-    snapshot.forEach((docSnapshot) => {
-      const result = parseQuestionDoc({
-        id: docSnapshot.id,
-        ...docSnapshot.data(),
+    let cursor = null;
+    let pages = 0;
+
+    while (questions.length < fetchLimit) {
+      const remaining = fetchLimit - questions.length;
+      const pageLimit = Math.min(PAGE_SIZE, remaining);
+      const constraints = [orderBy(documentId()), limit(pageLimit)];
+      if (cursor) constraints.push(startAfter(cursor));
+
+      const pageQuery = query(collection(getDb(), "questions"), ...constraints);
+      const snapshot = await getDocs(pageQuery);
+      pages++;
+
+      if (snapshot.empty) break;
+
+      snapshot.forEach((docSnapshot) => {
+        const result = parseQuestionDoc({
+          id: docSnapshot.id,
+          ...docSnapshot.data(),
+        });
+        if (result.valid) {
+          const q = result.question;
+          questions.push(q);
+          const discipline = q.discipline || "Unknown";
+          disciplineCounts[discipline] =
+            (disciplineCounts[discipline] || 0) + 1;
+        }
       });
 
-      if (result.valid) {
-        const q = result.question;
-        questions.push(q);
+      if (snapshot.size < pageLimit) break;
+      cursor = snapshot.docs[snapshot.docs.length - 1];
+    }
 
-        // Track discipline counts for debugging
-        const discipline = q.discipline || "Unknown";
-        disciplineCounts[discipline] = (disciplineCounts[discipline] || 0) + 1;
-      }
-    });
+    logger.log(`📄 Paginated fetch: ${pages} page(s)`);
 
     questions.sort(
       (a, b) => toMillis(b.firestoreUpdatedAt) - toMillis(a.firestoreUpdatedAt)
@@ -256,10 +274,11 @@ export const subscribeToAllQuestions = (onNext) => {
   // NOTE: No orderBy here — Firestore silently excludes documents where
   // firestoreUpdatedAt is not a native Timestamp (e.g. bulk-imported docs
   // that stored it as a plain JSON object). The UI handles client-side sorting.
-  const q = query(
-    collection(getDb(), "questions"),
-    limit(FIRESTORE_LIMITS.FULL_SYNC_COUNT)
-  );
+  // Limit kept intentionally small: a single onSnapshot trying to deliver
+  // 20k+ docs has been observed to fail. Bulk loading is handled by the
+  // paginated getAllQuestionsFromFirestore; this listener carries live deltas.
+  const LISTENER_LIMIT = 5000;
+  const q = query(collection(getDb(), "questions"), limit(LISTENER_LIMIT));
 
   // Register listener for observability
   const listenerId = registerListener("subscribeToAllQuestions");
