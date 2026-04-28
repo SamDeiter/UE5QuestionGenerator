@@ -57,6 +57,32 @@ const TranslationManagementView = ({
     handleBulkTranslate(filteredList, targetLang);
   };
 
+  // Local state to track language overrides for specific question cards
+  const [languageOverrides, setLanguageOverrides] = useState({});
+
+  // Handle language switch - swap the card's language in-place
+  const handleLocalSwitchLanguage = (currentQuestion, selectedLang) => {
+    if (!currentQuestion.uniqueId) {
+      showMessage(`Cannot switch: Question has no unique ID.`);
+      return;
+    }
+
+    // Ensure the variant exists
+    const variants = allQuestionsMap.get(currentQuestion.uniqueId) || [];
+    const targetVariant = Array.from(variants).find(
+      (v) => (v.language || "English") === selectedLang
+    );
+
+    if (targetVariant) {
+      setLanguageOverrides((prev) => ({
+        ...prev,
+        [currentQuestion.uniqueId]: selectedLang,
+      }));
+    } else {
+      showMessage(`${selectedLang} version not found for this question.`);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-slate-950">
       {/* Action Bar */}
@@ -186,29 +212,49 @@ const TranslationManagementView = ({
           <Virtuoso
             style={{ height: "100%" }}
             data={filteredList}
-            itemContent={(index, q) => (
-              <div className="px-6 py-4">
-                <QuestionItem
-                  key={q.uniqueId}
-                  q={q}
-                  onUpdateStatus={onUpdateStatus}
-                  onTranslateSingle={onTranslateSingle}
-                  onSwitchLanguage={onSwitchLanguage}
-                  onDelete={onDelete}
-                  onUpdateQuestion={onUpdateQuestion}
-                  availableVariants={Array.from(
-                    allQuestionsMap.get(q.uniqueId) || []
-                  )}
-                  isProcessing={
-                    isProcessing ||
-                    (isBulkProcessing && index === progress.current - 1)
+            itemContent={(index, originalQ) => {
+              // Apply language override if the user has clicked a translation flag
+              let q = originalQ;
+              if (originalQ.uniqueId && languageOverrides[originalQ.uniqueId]) {
+                const targetLang = languageOverrides[originalQ.uniqueId];
+                if (targetLang !== (originalQ.language || "English")) {
+                  const variants =
+                    allQuestionsMap.get(originalQ.uniqueId) || [];
+                  const overrideQ = Array.from(variants).find(
+                    (v) => (v.language || "English") === targetLang
+                  );
+                  if (overrideQ) {
+                    q = overrideQ;
                   }
-                  appMode="translate"
-                  showMessage={showMessage}
-                  userRole={userRole}
-                />
-              </div>
-            )}
+                }
+              }
+
+              return (
+                <div className="px-6 py-4">
+                  <QuestionItem
+                    key={q.uniqueId || q.id}
+                    q={q}
+                    onUpdateStatus={onUpdateStatus}
+                    onTranslateSingle={onTranslateSingle}
+                    onSwitchLanguage={(lang) =>
+                      handleLocalSwitchLanguage(originalQ, lang)
+                    }
+                    onDelete={onDelete}
+                    onUpdateQuestion={onUpdateQuestion}
+                    availableVariants={Array.from(
+                      allQuestionsMap.get(q.uniqueId) || []
+                    )}
+                    isProcessing={
+                      isProcessing ||
+                      (isBulkProcessing && index === progress.current - 1)
+                    }
+                    appMode="translate"
+                    showMessage={showMessage}
+                    userRole={userRole}
+                  />
+                </div>
+              );
+            }}
           />
         )}
       </div>
