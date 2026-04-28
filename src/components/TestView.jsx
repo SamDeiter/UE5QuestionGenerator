@@ -29,9 +29,12 @@ const TestView = ({
   });
 
   // Filter state
+  // language defaults to "" = all languages, so the Preview/Export counts
+  // reflect every accepted question across the database. Users can narrow
+  // to a single language via the dropdown.
   const [filters, setFilters] = useState({
     disciplines: [], // Empty array = all disciplines
-    language: "English",
+    language: "",
   });
   const [disciplineDropdownOpen, setDisciplineDropdownOpen] = useState(false);
 

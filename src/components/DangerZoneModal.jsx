@@ -9,7 +9,13 @@ import {
   deleteQuestionFromFirestore,
   getDb,
 } from "../services/firebase";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  Timestamp,
+} from "firebase/firestore";
 import { logger } from "../utils/logger";
 import { MAINTENANCE } from "../utils/constants";
 import { useAccessibility } from "../contexts/AccessibilityContext";
@@ -236,7 +242,7 @@ const DangerZoneModal = ({
         const docRef = doc(getDb(), "questions", item.id);
         const updates = { status: item.status };
         if (item.needsTimestamp) {
-          updates.firestoreUpdatedAt = new Date().toISOString();
+          updates.firestoreUpdatedAt = Timestamp.now();
         }
         await updateDoc(docRef, updates);
         fixedCount++;

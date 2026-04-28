@@ -22,7 +22,7 @@ const getButtonTitle = (
   if (canTranslate) return `Translate to ${lang}`;
   if (!exists && qStatus !== "accepted")
     return `${lang} (Accept question first)`;
-  return `${lang} (Unavailable)`;
+  return `${lang} (Check for translation)`;
 };
 
 const LanguageControls = ({
@@ -81,15 +81,16 @@ const LanguageControls = ({
 
           if (isCurrent) return; // Do nothing if clicking current
 
-          if (exists) {
-            // Trigger local toggle in QuestionItem
+          if (exists || !canTranslate) {
+            // Switch or check for translation in Firestore
             onSwitchLanguage(lang);
           } else if (canTranslate) {
             setLoadingLang(lang);
             onTranslateSingle(q, lang)
-              .then(() => {
+              .then((newVariant) => {
                 setLoadingLang(null);
-                onSwitchLanguage(lang, true); // Force toggle after generation
+                // Pass the new variant directly to bypass the map lookup race condition
+                onSwitchLanguage(lang, true, newVariant);
               })
               .catch((err) => {
                 logger.error("❌ [LanguageControls] Translation failed:", err);
@@ -116,20 +117,16 @@ const LanguageControls = ({
           containerClass +=
             "border border-slate-700 hover:border-orange-500 hover:bg-slate-800 cursor-pointer opacity-40 hover:opacity-100 grayscale hover:grayscale-0";
         } else {
+          // Unverified state: Not locally known, but maybe in Firestore
           containerClass +=
-            "border border-slate-800 opacity-20 grayscale cursor-not-allowed";
+            "border border-slate-800 opacity-30 grayscale hover:opacity-100 hover:grayscale-0 cursor-pointer";
         }
 
         return (
           <button
             key={lang}
             onClick={handleClick}
-            disabled={
-              isProcessing ||
-              isLoading ||
-              isLocked ||
-              (!exists && !canTranslate)
-            }
+            disabled={isProcessing || isLoading || isLocked || !q.uniqueId}
             className={containerClass}
             title={getButtonTitle(
               lang,

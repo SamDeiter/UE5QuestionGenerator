@@ -10,6 +10,7 @@ import {
   doc,
   writeBatch,
   updateDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { app } from "./firebase";
 import { auth } from "./firebaseAuth";
@@ -58,8 +59,7 @@ export async function repairStatuses(onProgress, dryRun = false) {
     chunk.forEach((item) => {
       const ref = doc(db, "questions", String(item.id));
       const updates = { status: item.normalizedStatus };
-      if (item.needsTimestamp)
-        updates.firestoreUpdatedAt = new Date().toISOString();
+      if (item.needsTimestamp) updates.firestoreUpdatedAt = Timestamp.now();
       batch.update(ref, updates);
     });
     await batch.commit();

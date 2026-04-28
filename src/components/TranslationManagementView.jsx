@@ -25,6 +25,7 @@ const TranslationManagementView = ({
   const [targetLang, setTargetLang] = useState("Japanese");
   const [viewFilter, setViewFilter] = useState("missing"); // 'missing', 'all-accepted', or 'all'
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState(null);
 
   const { handleBulkTranslate, isBulkProcessing, progress } =
     useBulkTranslation(onTranslateSingle, showMessage, onRefresh);
@@ -32,14 +33,18 @@ const TranslationManagementView = ({
   // Force a full cache-busting re-sync from Firestore so bulk-translated flags appear
   const handleForceResync = async () => {
     setIsSyncing(true);
+    setSyncProgress({ pages: 0, loaded: 0, done: false });
     try {
       await invalidateQuestionsCache();
-      if (onRefresh) await onRefresh(false, true); // silent=false, fullSync=true
+      if (onRefresh) {
+        await onRefresh(false, true, (p) => setSyncProgress(p));
+      }
       showMessage("Re-synced from Firestore. Translation flags updated.", 4000);
     } catch (e) {
       showMessage(`Re-sync failed: ${e.message}`, 5000);
     } finally {
       setIsSyncing(false);
+      setSyncProgress(null);
     }
   };
 
@@ -220,7 +225,13 @@ const TranslationManagementView = ({
               size={14}
               className={isSyncing ? "animate-spin text-indigo-400" : ""}
             />
-            {isSyncing ? "Syncing..." : "Force Re-sync"}
+            {(() => {
+              if (!isSyncing) return "Force Re-sync";
+              if (syncProgress && syncProgress.loaded > 0) {
+                return `Syncing… ${syncProgress.loaded.toLocaleString()} loaded (page ${syncProgress.pages})`;
+              }
+              return "Syncing…";
+            })()}
           </button>
           {isBulkProcessing ? (
             <div className="flex items-center gap-3 bg-indigo-950/30 border border-indigo-500/50 px-4 py-2 rounded-xl">

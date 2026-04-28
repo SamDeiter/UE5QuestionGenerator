@@ -137,6 +137,24 @@ const DatabaseView = ({
       (q) => q.status === "accepted" || (q.status === "pending" && q.uniqueId)
     );
 
+    // Deduplicate by uniqueId so each question appears once. Default to the
+    // English variant when available; fall back to whatever exists otherwise.
+    // (A small number of questions in prod have lost their English base and
+    // exist only as translations — those will surface as the first translation
+    // we see for that uniqueId.)
+    const byUid = new Map();
+    for (const q of filtered) {
+      const uid = q.uniqueId || q.id;
+      if (!uid) continue;
+      const existing = byUid.get(uid);
+      const lang = q.language || "English";
+      const shouldReplace =
+        !existing ||
+        (lang === "English" && (existing.language || "English") !== "English");
+      if (shouldReplace) byUid.set(uid, q);
+    }
+    filtered = Array.from(byUid.values());
+
     // Then filter by search term if provided
     if (searchTerm && searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
@@ -400,7 +418,9 @@ const DatabaseView = ({
                     onExplain={() => {}}
                     onVariate={() => {}}
                     onCritique={() => onCritique?.(q)}
-                    onSwitchLanguage={handleSwitchLanguage}
+                    onSwitchLanguage={(lang, force, _newVariant) =>
+                      handleSwitchLanguage(originalQ, lang, force === true)
+                    }
                     onTranslateSingle={onTranslateSingle}
                     onDelete={() => {}}
                     onUpdateQuestion={onUpdateQuestion}
