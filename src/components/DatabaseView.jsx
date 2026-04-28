@@ -252,7 +252,10 @@ const DatabaseView = ({
     return map;
   }, [questions]);
 
-  // Handle language switch - find and scroll to the matching translation
+  // Local state to track language overrides for specific question cards
+  const [languageOverrides, setLanguageOverrides] = useState({});
+
+  // Handle language switch - swap the card's language in-place
   const handleSwitchLanguage = (currentQuestion, targetLang) => {
     if (!currentQuestion.uniqueId) {
       showMessage(
@@ -265,32 +268,11 @@ const DatabaseView = ({
     const targetQuestion = questionsByIdAndLang.get(key);
 
     if (targetQuestion) {
-      // Find the question in the DOM and scroll to it
-      const index = sortedQuestions.findIndex(
-        (q) => q.id === targetQuestion.id
-      );
-      if (index !== -1) {
-        // Ensure the question is rendered by expanding visible count if needed
-        if (index >= visibleCount) {
-          setVisibleCount(index + 10); // Load up to that question plus a few more
-        }
-
-        // Wait for render then scroll
-        setTimeout(() => {
-          const element = document.querySelector(
-            `[data-question-index="${index}"]`
-          );
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
-            element.classList.add("ring-2", "ring-green-500");
-            setTimeout(
-              () => element.classList.remove("ring-2", "ring-green-500"),
-              2000
-            );
-          }
-        }, 100);
-        showMessage(`Scrolled to ${targetLang} version.`);
-      }
+      // Swap the language in-place for this card
+      setLanguageOverrides((prev) => ({
+        ...prev,
+        [currentQuestion.uniqueId]: targetLang,
+      }));
     } else {
       showMessage(
         `${targetLang} version not found in current view. Try using "Sort by Language" to find it.`
@@ -344,34 +326,56 @@ const DatabaseView = ({
           </div>
         ) : (
           <>
-            {visibleQuestions.map((q, i) => (
-              <div
-                key={q.uniqueId || q.id || i}
-                data-question-index={i}
-                className="opacity-75 hover:opacity-100 transition-all"
-              >
-                <QuestionItem
-                  q={q}
-                  onUpdateStatus={() => {}}
-                  onExplain={() => {}}
-                  onVariate={() => {}}
-                  onCritique={() => onCritique?.(q)}
-                  onTranslateSingle={() => {}}
-                  onSwitchLanguage={(targetLang) =>
-                    handleSwitchLanguage(q, targetLang)
+            {visibleQuestions.map((originalQ, i) => {
+              // Apply language override if the user has clicked a translation flag
+              let q = originalQ;
+              if (originalQ.uniqueId && languageOverrides[originalQ.uniqueId]) {
+                const targetLang = languageOverrides[originalQ.uniqueId];
+                if (targetLang !== (originalQ.language || "English")) {
+                  const overrideQ = questionsByIdAndLang.get(
+                    `${originalQ.uniqueId}::${targetLang}`
+                  );
+                  if (overrideQ) {
+                    q = overrideQ;
                   }
-                  onDelete={() => {}}
-                  onUpdateQuestion={onUpdateQuestion}
-                  onKickBack={onKickBack}
-                  availableLanguages={translationMap.get(q.uniqueId)}
-                  isProcessing={false}
-                  appMode="database"
-                  showMessage={showMessage}
-                  userRole={userRole}
-                  isAdmin={isAdmin}
-                />
-              </div>
-            ))}
+                }
+              }
+
+              return (
+                <div
+                  key={q.uniqueId || q.id || i}
+                  data-question-index={i}
+                  className="opacity-75 hover:opacity-100 transition-all"
+                >
+                  <QuestionItem
+                    q={q}
+                    onUpdateStatus={() => {}}
+                    onExplain={() => {}}
+                    onVariate={() => {}}
+                    onCritique={() => onCritique?.(q)}
+                    onTranslateSingle={() => {}}
+                    onSwitchLanguage={(targetLang) =>
+                      handleSwitchLanguage(originalQ, targetLang)
+                    }
+                    onDelete={() => {}}
+                    onUpdateQuestion={onUpdateQuestion}
+                    onKickBack={onKickBack}
+                    availableVariants={
+                      q.uniqueId
+                        ? Array.from(translationMap.get(q.uniqueId) || []).map(
+                            (lang) => ({ language: lang })
+                          )
+                        : []
+                    }
+                    isProcessing={false}
+                    appMode="database"
+                    showMessage={showMessage}
+                    userRole={userRole}
+                    isAdmin={isAdmin}
+                  />
+                </div>
+              );
+            })}
 
             {/* Infinite scroll trigger */}
             {hasMore && (
