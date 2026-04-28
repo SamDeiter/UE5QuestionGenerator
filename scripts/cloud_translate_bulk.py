@@ -19,6 +19,7 @@ import time
 import argparse
 import concurrent.futures
 import threading
+from collections import defaultdict
 from tqdm import tqdm
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -191,35 +192,59 @@ def main():
         print(f"[ERROR] Firebase init failed: {e}")
         return
 
-    # Fetch source questions
-    print("Fetching English questions...")
-    source_docs = list(db.collection("questions").where("language", "==", "English").stream())
-    print(f"  Found {len(source_docs)} English questions.")
+    # 1. Fetch ALL questions to map uniqueIds to variants
+    print("Fetching all question IDs and languages...")
+    all_docs = list(db.collection("questions").select(["uniqueId", "language"]).stream())
+    
+    uid_map = defaultdict(list)
+    for doc in all_docs:
+        d = doc.to_dict()
+        uid = d.get("uniqueId")
+        lang = d.get("language", "English")
+        if uid:
+            uid_map[uid].append(lang)
+    
+    print(f"  Found {len(uid_map)} unique questions.")
 
-    # Fetch existing translations for this language to skip duplicates
-    print(f"Checking for existing {args.lang} translations...")
-    existing = db.collection("questions").where("language", "==", args.lang).select(["uniqueId"]).stream()
-    existing_ids = {doc.to_dict().get("uniqueId") for doc in existing}
-    to_translate = len(source_docs) - len(existing_ids)
-    print(f"  Existing: {len(existing_ids)} | Remaining: {to_translate}\n")
-
-    success_count = 0
-    skipped_count = 0
-    error_count = 0
-    lock = threading.Lock()
-
+    # 2. Identify missing translations for the target language
     tasks = []
-    for q_doc in source_docs:
-        uid = q_doc.to_dict().get("uniqueId")
-        if uid in existing_ids:
-            skipped_count += 1
-            continue
-        tasks.append(q_doc)
-
+    print(f"Identifying questions missing {args.lang}...")
+    for uid, langs in uid_map.items():
+        if args.lang not in langs:
+            # Find a source doc (Prefer English)
+            # We need the full content of the source doc, so we'll fetch it if needed
+            # For performance, we'll collect the UIDs and fetch them in a batch
+            tasks.append(uid)
+            
+    print(f"  Missing: {len(tasks)}")
+    
     if args.limit > 0:
         tasks = tasks[:args.limit]
 
-    pbar = tqdm(total=len(tasks), desc=f"-> {args.lang}", unit="q")
+    if not tasks:
+        print("Everything up to date!")
+        return
+
+    # 3. Fetch source documents for the missing ones
+    print(f"Fetching source documents for {len(tasks)} questions...")
+    source_docs = []
+    # Firestore doesn't support 'in' with more than 30 IDs, so we fetch one by one or in chunks
+    # Given the small number of gaps (~20 per lang), one by one is fine.
+    for uid in tqdm(tasks, desc="Fetching sources"):
+        # Try English first
+        q_docs = list(db.collection("questions").where("uniqueId", "==", uid).where("language", "==", "English").limit(1).stream())
+        if not q_docs:
+            # Fallback to any variant
+            q_docs = list(db.collection("questions").where("uniqueId", "==", uid).limit(1).stream())
+        
+        if q_docs:
+            source_docs.append(q_docs[0])
+
+    pbar = tqdm(total=len(source_docs), desc=f"-> {args.lang}", unit="q")
+
+    success_count = 0
+    error_count = 0
+    lock = threading.Lock()
 
     def worker(q_doc):
         nonlocal success_count, error_count
@@ -230,17 +255,16 @@ def main():
             elif res == "error":
                 error_count += 1
             pbar.update(1)
-            pbar.set_postfix({"New": success_count, "Skip": skipped_count, "Err": error_count})
+            pbar.set_postfix({"New": success_count, "Err": error_count})
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        futures = [executor.submit(worker, q_doc) for q_doc in tasks]
+        futures = [executor.submit(worker, q_doc) for q_doc in source_docs]
         concurrent.futures.wait(futures)
 
     pbar.close()
 
     print(f"\n{'='*40}")
     print(f"  Translated: {success_count}")
-    print(f"  Skipped:    {skipped_count}")
     print(f"  Errors:     {error_count}")
     print(f"{'='*40}\n")
 
