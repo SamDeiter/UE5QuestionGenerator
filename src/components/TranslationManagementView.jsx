@@ -4,6 +4,7 @@ import QuestionItem from "./QuestionItem";
 import { Virtuoso } from "react-virtuoso";
 import { LANGUAGE_FLAGS } from "../utils/constants";
 import { useBulkTranslation } from "../hooks/useBulkTranslation";
+import { invalidateQuestionsCache } from "../services/firebaseQueries";
 
 const TranslationManagementView = ({
   questions,
@@ -23,9 +24,27 @@ const TranslationManagementView = ({
 }) => {
   const [targetLang, setTargetLang] = useState("Japanese");
   const [viewFilter, setViewFilter] = useState("missing"); // 'missing', 'all-accepted', or 'all'
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const { handleBulkTranslate, isBulkProcessing, progress } = 
+  const { handleBulkTranslate, isBulkProcessing, progress } =
     useBulkTranslation(onTranslateSingle, showMessage, onRefresh);
+
+  // Force a full cache-busting re-sync from Firestore so bulk-translated flags appear
+  const handleForceResync = async () => {
+    setIsSyncing(true);
+    try {
+      await invalidateQuestionsCache();
+      if (onRefresh) await onRefresh(false, true); // silent=false, fullSync=true
+      showMessage(
+        "✅ Re-synced from Firestore. Translation flags updated.",
+        4000
+      );
+    } catch (e) {
+      showMessage(`Re-sync failed: ${e.message}`, 5000);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // Filter logic: Only show English questions (base variants) that are Accepted
   const eligibleQuestions = useMemo(() => {
@@ -37,7 +56,7 @@ const TranslationManagementView = ({
   // Sub-filter logic
   const filteredList = useMemo(() => {
     let list = [];
-    
+
     // 1. Apply primary view filter
     if (viewFilter === "all") {
       list = questions.filter((q) => {
@@ -60,15 +79,23 @@ const TranslationManagementView = ({
     // 2. Apply Global Search Term
     if (searchTerm && searchTerm.trim() !== "") {
       const term = searchTerm.toLowerCase();
-      list = list.filter(q => 
-        (q.question && q.question.toLowerCase().includes(term)) ||
-        (q.explanation && q.explanation.toLowerCase().includes(term)) ||
-        (q.uniqueId && q.uniqueId.toLowerCase().includes(term))
+      list = list.filter(
+        (q) =>
+          (q.question && q.question.toLowerCase().includes(term)) ||
+          (q.explanation && q.explanation.toLowerCase().includes(term)) ||
+          (q.uniqueId && q.uniqueId.toLowerCase().includes(term))
       );
     }
 
     return list;
-  }, [eligibleQuestions, questions, viewFilter, targetLang, allQuestionsMap, searchTerm]);
+  }, [
+    eligibleQuestions,
+    questions,
+    viewFilter,
+    targetLang,
+    allQuestionsMap,
+    searchTerm,
+  ]);
 
   const handleBulkAction = () => {
     handleBulkTranslate(filteredList, targetLang);
@@ -76,19 +103,43 @@ const TranslationManagementView = ({
 
   // Local state to track language overrides for specific question cards
   const [languageOverrides, setLanguageOverrides] = useState({});
+  // Cache of newly translated variants to ensure immediate UI feedback
+  const [sessionVariantsCache, setSessionVariantsCache] = useState({});
 
   // Handle language switch - swap the card's language in-place
-  const handleLocalSwitchLanguage = (currentQuestion, selectedLang, force = false) => {
+  const handleLocalSwitchLanguage = (
+    currentQuestion,
+    selectedLang,
+    force = false,
+    newVariant = null
+  ) => {
     if (!currentQuestion.uniqueId) {
       showMessage(`Cannot switch: Question has no unique ID.`);
       return;
     }
 
+    // If a new variant was just generated, cache it immediately
+    if (newVariant) {
+      setSessionVariantsCache((prev) => {
+        const existing = prev[currentQuestion.uniqueId] || [];
+        // Only add if not already in cache to avoid duplicates
+        if (existing.some((v) => v.language === newVariant.language))
+          return prev;
+        return {
+          ...prev,
+          [currentQuestion.uniqueId]: [...existing, newVariant],
+        };
+      });
+    }
+
     // Ensure the variant exists
     const variants = allQuestionsMap.get(currentQuestion.uniqueId) || [];
-    const targetVariant = Array.from(variants).find(
-      (v) => (v.language || "English") === selectedLang
-    );
+    const cachedVariants = sessionVariantsCache[currentQuestion.uniqueId] || [];
+    const allKnownVariants = [...Array.from(variants), ...cachedVariants];
+
+    const targetVariant =
+      newVariant ||
+      allKnownVariants.find((v) => (v.language || "English") === selectedLang);
 
     if (force || targetVariant) {
       setLanguageOverrides((prev) => ({
@@ -160,6 +211,20 @@ const TranslationManagementView = ({
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Force Re-sync button: busts IndexedDB + memory cache, re-fetches all docs */}
+          <button
+            onClick={handleForceResync}
+            disabled={isSyncing || isBulkProcessing || isProcessing}
+            title="Clear cache and reload all translation data from Firestore"
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 hover:text-white text-xs font-medium rounded-lg border border-slate-700 hover:border-slate-500 transition-all"
+          >
+            <Icon
+              name={isSyncing ? "loader" : "refresh-cw"}
+              size={14}
+              className={isSyncing ? "animate-spin text-indigo-400" : ""}
+            />
+            {isSyncing ? "Syncing..." : "Force Re-sync"}
+          </button>
           {isBulkProcessing ? (
             <div className="flex items-center gap-3 bg-indigo-950/30 border border-indigo-500/50 px-4 py-2 rounded-xl">
               <Icon
@@ -232,13 +297,19 @@ const TranslationManagementView = ({
             itemContent={(index, originalQ) => {
               // Apply language override if the user has clicked a translation flag
               let q = originalQ;
+              const variants = allQuestionsMap.get(originalQ.uniqueId) || [];
+              const cachedVariants =
+                sessionVariantsCache[originalQ.uniqueId] || [];
+              const mergedVariants = [
+                ...Array.from(variants),
+                ...cachedVariants,
+              ];
+
               if (originalQ.uniqueId && languageOverrides[originalQ.uniqueId]) {
-                const targetLang = languageOverrides[originalQ.uniqueId];
-                if (targetLang !== (originalQ.language || "English")) {
-                  const variants =
-                    allQuestionsMap.get(originalQ.uniqueId) || [];
-                  const overrideQ = Array.from(variants).find(
-                    (v) => (v.language || "English") === targetLang
+                const overrideLang = languageOverrides[originalQ.uniqueId];
+                if (overrideLang !== (originalQ.language || "English")) {
+                  const overrideQ = mergedVariants.find(
+                    (v) => (v.language || "English") === overrideLang
                   );
                   if (overrideQ) {
                     q = overrideQ;
@@ -253,14 +324,17 @@ const TranslationManagementView = ({
                     q={q}
                     onUpdateStatus={onUpdateStatus}
                     onTranslateSingle={onTranslateSingle}
-                    onSwitchLanguage={(lang, force) =>
-                      handleLocalSwitchLanguage(originalQ, lang, force)
+                    onSwitchLanguage={(lang, force, newVariant) =>
+                      handleLocalSwitchLanguage(
+                        originalQ,
+                        lang,
+                        force,
+                        newVariant
+                      )
                     }
                     onDelete={onDelete}
                     onUpdateQuestion={onUpdateQuestion}
-                    availableVariants={Array.from(
-                      allQuestionsMap.get(q.uniqueId) || []
-                    )}
+                    availableVariants={mergedVariants}
                     isProcessing={
                       isProcessing ||
                       (isBulkProcessing && index === progress.current - 1)

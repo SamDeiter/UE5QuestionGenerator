@@ -109,6 +109,9 @@ export const useQuestionTranslation = ({
             ...tq,
             id: Date.now(),
             uniqueId: q.uniqueId,
+            creatorId: q.creatorId,
+            creatorEmail: q.creatorEmail,
+            creatorName: q.creatorName,
             discipline: q.discipline,
             type: q.type,
             difficulty: q.difficulty,
@@ -125,6 +128,7 @@ export const useQuestionTranslation = ({
           await addQuestionsToState([translatedVariant], false);
 
           showMessage(`✅ Translated to ${targetLang}`, TOAST_DURATION.MEDIUM);
+          return translatedVariant;
         } else {
           throw new Error("Parser returned no questions from translation.");
         }
@@ -262,6 +266,9 @@ export const useQuestionTranslation = ({
             ...tq,
             id: Date.now() + generatedCount,
             uniqueId: q.uniqueId,
+            creatorId: q.creatorId,
+            creatorEmail: q.creatorEmail,
+            creatorName: q.creatorName,
             discipline: q.discipline,
             type: q.type,
             difficulty: q.difficulty,

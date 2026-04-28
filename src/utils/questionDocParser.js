@@ -79,8 +79,17 @@ export const parseQuestionDoc = (raw) => {
   if (!raw.question || typeof raw.question !== "string") {
     errors.push("Missing or invalid question text");
   }
+  // creatorId is strictly required for English base questions,
+  // but we allow variants to fallback to 'system' if missing to avoid UI grayscale flags.
+  const isTranslation = raw.language && raw.language !== "English";
   if (!raw.creatorId || typeof raw.creatorId !== "string") {
-    errors.push("Missing creatorId");
+    if (!isTranslation) {
+      errors.push("Missing creatorId on base question");
+    } else {
+      logger.warn(
+        `Translation variant ${raw.id} missing creatorId, using fallback.`
+      );
+    }
   }
 
   // If critical fields missing, reject entirely
@@ -97,7 +106,7 @@ export const parseQuestionDoc = (raw) => {
     question: (raw.question || "")
       .trim()
       .slice(0, QUESTION_DOC_LIMITS.QUESTION_MAX_LENGTH),
-    creatorId: raw.creatorId,
+    creatorId: raw.creatorId || "system-translation",
     creatorEmail: raw.creatorEmail || "",
     creatorName: raw.creatorName || "",
     answers: Array.isArray(raw.answers)

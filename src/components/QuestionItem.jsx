@@ -103,12 +103,13 @@ const QuestionItem = ({
 
   // Helper function for language switching
   const handleLocalLanguageSwitch = useCallback(
-    (langCode) => {
+    (langCode, force, newVariant) => {
       if (onSwitchLanguage) {
-        onSwitchLanguage(langCode, q.uniqueId);
+        // Pass all arguments up. If force is missing, we pass q.uniqueId for legacy global handlers
+        onSwitchLanguage(langCode, force === true, newVariant);
       }
     },
-    [onSwitchLanguage, q.id]
+    [onSwitchLanguage, q.uniqueId]
   );
 
   // Helper function for modal dismissal
