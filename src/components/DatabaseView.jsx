@@ -400,7 +400,9 @@ const DatabaseView = ({
                     onExplain={() => {}}
                     onVariate={() => {}}
                     onCritique={() => onCritique?.(q)}
-                    onSwitchLanguage={handleSwitchLanguage}
+                    onSwitchLanguage={(lang, force, _newVariant) =>
+                      handleSwitchLanguage(originalQ, lang, force === true)
+                    }
                     onTranslateSingle={onTranslateSingle}
                     onDelete={() => {}}
                     onUpdateQuestion={onUpdateQuestion}
