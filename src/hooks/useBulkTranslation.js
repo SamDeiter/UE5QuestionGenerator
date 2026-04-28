@@ -9,7 +9,36 @@ import { logger } from "../utils/logger";
  * @param {Function} params.showMessage - Function to display toast messages
  * @returns {Object} Bulk translation state and handlers
  */
-export const useBulkTranslation = (onTranslateSingle, showMessage) => {
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Retries a function with exponential backoff.
+ */
+const withRetry = async (fn, maxRetries = 3, baseDelay = 1000) => {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      // Only retry on 429 (Too Many Requests) or network errors
+      const isRateLimit = error.message?.includes('429') || error.status === 429;
+      const isNetworkError = !error.status && error.message?.includes('fetch');
+      
+      if (isRateLimit || isNetworkError) {
+        const waitTime = baseDelay * Math.pow(2, i);
+        logger.warn(`⚠️ [Retry] Rate limit hit. Retrying in ${waitTime}ms (Attempt ${i + 1}/${maxRetries})`);
+        await delay(waitTime);
+        continue;
+      }
+      throw error; // Rethrow other errors immediately
+    }
+  }
+  throw lastError;
+};
+
+export const useBulkTranslation = (onTranslateSingle, showMessage, onComplete) => {
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
@@ -44,7 +73,8 @@ export const useBulkTranslation = (onTranslateSingle, showMessage) => {
         const q = questions[i];
         try {
           setProgress((prev) => ({ ...prev, current: i + 1 }));
-          await onTranslateSingle(q, targetLanguage);
+          // Wrap in retry logic with exponential backoff
+          await withRetry(() => onTranslateSingle(q, targetLanguage));
           successCount++;
         } catch (error) {
           logger.error(
@@ -57,6 +87,7 @@ export const useBulkTranslation = (onTranslateSingle, showMessage) => {
       }
 
       setIsBulkProcessing(false);
+      if (onComplete) onComplete();
       setProgress({ current: 0, total: 0 });
 
       if (failCount > 0) {

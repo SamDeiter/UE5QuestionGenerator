@@ -9,6 +9,9 @@ const TranslationManagementView = ({
   questions,
   allQuestionsMap,
   _translationMap,
+  searchTerm = "",
+  filterMode = "all",
+  onRefresh,
   onTranslateSingle,
   onSwitchLanguage,
   onUpdateStatus,
@@ -21,8 +24,8 @@ const TranslationManagementView = ({
   const [targetLang, setTargetLang] = useState("Japanese");
   const [viewFilter, setViewFilter] = useState("missing"); // 'missing', 'all-accepted', or 'all'
 
-  const { handleBulkTranslate, isBulkProcessing, progress } =
-    useBulkTranslation(onTranslateSingle, showMessage);
+  const { handleBulkTranslate, isBulkProcessing, progress } = 
+    useBulkTranslation(onTranslateSingle, showMessage, onRefresh);
 
   // Filter logic: Only show English questions (base variants) that are Accepted
   const eligibleQuestions = useMemo(() => {
@@ -33,25 +36,39 @@ const TranslationManagementView = ({
 
   // Sub-filter logic
   const filteredList = useMemo(() => {
-    // 1. Everything: All English base questions (regardless of status)
+    let list = [];
+    
+    // 1. Apply primary view filter
     if (viewFilter === "all") {
-      return questions.filter((q) => {
+      list = questions.filter((q) => {
         const isEnglish = (q.language || "English") === "English";
         return isEnglish;
       });
+    } else if (viewFilter === "all-accepted") {
+      list = eligibleQuestions;
+    } else {
+      // Missing (Default): Accepted English questions lacking targetLang variant
+      list = eligibleQuestions.filter((q) => {
+        const variants = allQuestionsMap.get(q.uniqueId) || [];
+        const hasTarget = Array.from(variants).some(
+          (v) => (v.language || "English") === targetLang
+        );
+        return !hasTarget;
+      });
     }
 
-    // 2. Accepted: Only English base questions that are 'accepted'
-    if (viewFilter === "all-accepted") {
-      return eligibleQuestions;
+    // 2. Apply Global Search Term
+    if (searchTerm && searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase();
+      list = list.filter(q => 
+        (q.question && q.question.toLowerCase().includes(term)) ||
+        (q.explanation && q.explanation.toLowerCase().includes(term)) ||
+        (q.uniqueId && q.uniqueId.toLowerCase().includes(term))
+      );
     }
 
-    // 3. Missing (Default): Accepted English questions lacking targetLang variant
-    return eligibleQuestions.filter((q) => {
-      const variants = allQuestionsMap.get(q.uniqueId) || [];
-      return !variants.some((v) => (v.language || "English") === targetLang);
-    });
-  }, [eligibleQuestions, questions, viewFilter, targetLang, allQuestionsMap]);
+    return list;
+  }, [eligibleQuestions, questions, viewFilter, targetLang, allQuestionsMap, searchTerm]);
 
   const handleBulkAction = () => {
     handleBulkTranslate(filteredList, targetLang);
@@ -61,7 +78,7 @@ const TranslationManagementView = ({
   const [languageOverrides, setLanguageOverrides] = useState({});
 
   // Handle language switch - swap the card's language in-place
-  const handleLocalSwitchLanguage = (currentQuestion, selectedLang) => {
+  const handleLocalSwitchLanguage = (currentQuestion, selectedLang, force = false) => {
     if (!currentQuestion.uniqueId) {
       showMessage(`Cannot switch: Question has no unique ID.`);
       return;
@@ -73,7 +90,7 @@ const TranslationManagementView = ({
       (v) => (v.language || "English") === selectedLang
     );
 
-    if (targetVariant) {
+    if (force || targetVariant) {
       setLanguageOverrides((prev) => ({
         ...prev,
         [currentQuestion.uniqueId]: selectedLang,
@@ -236,8 +253,8 @@ const TranslationManagementView = ({
                     q={q}
                     onUpdateStatus={onUpdateStatus}
                     onTranslateSingle={onTranslateSingle}
-                    onSwitchLanguage={(lang) =>
-                      handleLocalSwitchLanguage(originalQ, lang)
+                    onSwitchLanguage={(lang, force) =>
+                      handleLocalSwitchLanguage(originalQ, lang, force)
                     }
                     onDelete={onDelete}
                     onUpdateQuestion={onUpdateQuestion}

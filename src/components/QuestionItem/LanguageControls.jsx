@@ -63,7 +63,6 @@ const LanguageControls = ({
         // Use the variants array passed from parent
         const exists =
           isCurrent ||
-          lang === "English" ||
           availableVariants.some((v) => (v.language || "English") === lang);
 
         const isLoading = loadingLang === lang;
@@ -90,6 +89,7 @@ const LanguageControls = ({
             onTranslateSingle(q, lang)
               .then(() => {
                 setLoadingLang(null);
+                onSwitchLanguage(lang, true); // Force toggle after generation
               })
               .catch((err) => {
                 logger.error("❌ [LanguageControls] Translation failed:", err);

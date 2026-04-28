@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { logger } from "../../utils/logger";
 import { STORAGE_KEYS, QUESTION_SOURCES } from "../../utils/constants";
 import { saveQuestionToFirestore } from "../../services/firebase";
+import { subscribeToAllQuestions } from "../../services/firebaseQueries";
 
 /**
  * Hook for handling external synchronization (storage events, cloud auto-save).
@@ -36,6 +37,52 @@ export const useQuestionSync = (allQuestions, setAllQuestions) => {
 
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
+  }, [setAllQuestions]);
+
+  // PHASE 3.2: Real-time Firestore synchronization
+  useEffect(() => {
+    // Only subscribe if we are in a mode that needs real-time DB updates
+    // (e.g. not just purely local session mode)
+    logger.log("📡 Enabling real-time database synchronization...");
+
+    const unsubscribe = subscribeToAllQuestions((firestoreQuestions) => {
+      if (!firestoreQuestions || firestoreQuestions.length === 0) return;
+
+      logger.log(
+        `📥 Received ${firestoreQuestions.length} real-time updates from Firestore`
+      );
+
+      setAllQuestions((prev) => {
+        // Create a map of the new questions for fast lookup
+        const firestoreMap = new Map(
+          firestoreQuestions.map((q) => [q.id, { ...q, _source: QUESTION_SOURCES.DATABASE }])
+        );
+
+        // Merge logic:
+        // 1. Keep all non-database questions (SESSION, etc.)
+        // 2. For DATABASE questions, if they are in the new batch, use the NEW one
+        // 3. If they are NOT in the new batch, keep them (they might be older ones we loaded earlier)
+        
+        const nonDatabase = prev.filter(q => q._source !== QUESTION_SOURCES.DATABASE);
+        const existingDatabase = prev.filter(q => q._source === QUESTION_SOURCES.DATABASE);
+        
+        // Update existing or add new
+        const updatedDatabase = existingDatabase.map(q => firestoreMap.get(q.id) || q);
+        
+        // Find brand new ones (not in existingDatabase)
+        const existingIds = new Set(existingDatabase.map(q => q.id));
+        const newDatabase = firestoreQuestions
+          .filter(q => !existingIds.has(q.id))
+          .map(q => ({ ...q, _source: QUESTION_SOURCES.DATABASE }));
+
+        return [...nonDatabase, ...updatedDatabase, ...newDatabase];
+      });
+    });
+
+    return () => {
+      logger.log("🔌 Disabling real-time database synchronization");
+      unsubscribe();
+    };
   }, [setAllQuestions]);
 
   /**

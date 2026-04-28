@@ -1,5 +1,16 @@
 import Icon from "./Icon";
 
+const NAV_COLOR_MAP = {
+  green: 'bg-green-600 shadow-green-900/20',
+  indigo: 'bg-indigo-600 shadow-indigo-900/20',
+  blue: 'bg-blue-600 shadow-blue-900/20',
+  emerald: 'bg-emerald-600 shadow-emerald-900/20',
+  orange: 'bg-orange-600 shadow-orange-900/20',
+  purple: 'bg-purple-600 shadow-purple-900/20',
+  amber: 'bg-amber-600 shadow-amber-900/20',
+  red: 'bg-red-600 shadow-red-900/20',
+};
+
 const AppNavigation = ({ activeMode, onNavigate, counts = {}, isAdmin }) => {
   const navItems = [
     {
@@ -70,7 +81,7 @@ const AppNavigation = ({ activeMode, onNavigate, counts = {}, isAdmin }) => {
                     relative px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2
                     ${
                       isActive
-                        ? `bg-${item.color}-600 text-white shadow-lg shadow-${item.color}-900/20`
+                        ? `${NAV_COLOR_MAP[item.color] || 'bg-slate-600'} text-white shadow-lg`
                         : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                     }
                 `;

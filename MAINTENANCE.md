@@ -2,6 +2,11 @@
 
 ## Quick Reference
 
+### Account & API Policy
+> [!IMPORTANT]
+> All API access and cloud processing MUST use the **Epic Games account** (`sam.deiter@epicgames.com`). 
+> Always verify via `gcloud config list account` before running bulk scripts.
+
 ### Before Making Changes
 
 ```bash

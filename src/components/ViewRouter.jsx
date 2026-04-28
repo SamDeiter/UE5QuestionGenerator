@@ -139,6 +139,9 @@ const ViewRouter = ({
           onUpdateQuestion={handleUpdateDatabaseQuestion}
           onKickBack={handleKickBackToReview}
           onCritique={handleCritique}
+          onTranslateSingle={handleTranslateSingle}
+          onSwitchLanguage={handleLanguageSwitch}
+          addQuestionsToState={handlers.addQuestionsToState}
           isProcessing={isProcessing}
           showMessage={showMessage}
           filterMode={state.filterMode}
@@ -197,6 +200,9 @@ const ViewRouter = ({
           isProcessing={isProcessing}
           showMessage={showMessage}
           userRole={userRole}
+          searchTerm={state.searchTerm}
+          filterMode={state.filterMode}
+          onRefresh={handleLoadFromFirestore}
         />
       ),
     };

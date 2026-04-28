@@ -104,10 +104,11 @@ export const getQuestionsFromFirestore = async () => {
  * @returns {Promise<Array>} Array of question objects.
  */
 export const getAllQuestionsFromFirestore = async (
-  maxResults = FIRESTORE_LIMITS.MAX_QUERY_LIMIT,
+  maxResults = FIRESTORE_LIMITS.FULL_SYNC_COUNT,
   forceRefresh = false,
   customLimit = null
 ) => {
+
   try {
     // Require authentication
     if (!auth.currentUser) {
@@ -171,13 +172,21 @@ export const getAllQuestionsFromFirestore = async (
     const questions = [];
     const disciplineCounts = {};
     snapshot.forEach((docSnapshot) => {
-      const q = { id: docSnapshot.id, ...docSnapshot.data() };
-      questions.push(q);
+      const result = parseQuestionDoc({
+        id: docSnapshot.id,
+        ...docSnapshot.data(),
+      });
 
-      // Track discipline counts for debugging
-      const discipline = q.discipline || "Unknown";
-      disciplineCounts[discipline] = (disciplineCounts[discipline] || 0) + 1;
+      if (result.valid) {
+        const q = result.question;
+        questions.push(q);
+
+        // Track discipline counts for debugging
+        const discipline = q.discipline || "Unknown";
+        disciplineCounts[discipline] = (disciplineCounts[discipline] || 0) + 1;
+      }
     });
+
 
     const duration = Math.round(performance.now() - startTime);
     logger.log(
@@ -210,87 +219,73 @@ export const getAllQuestionsFromFirestore = async (
  * All authenticated users will see changes instantly across all devices.
  *
  * SCALABILITY: Firebase supports thousands of concurrent listeners.
- * Free tier: 50K reads/day, 20K writes/day, 1GB storage
- * Blaze (pay-as-you-go): Unlimited with per-operation pricing
- *
- * @param {Function} callback - Called with updated questions array whenever data changes
- * @param {number} maxResults - Maximum number of questions to retrieve (default 5000)
- * @returns {Function} Unsubscribe function to stop listening
+ * PHASE 3.2: Real-time subscription to all questions in the database.
+ * 
+ * This is the primary synchronization mechanism for keeping the client 
+ * in sync with Firestore updates across all language variants.
+ * 
+ * @param {Function} onNext - Callback function receiving the latest questions array
+ * @returns {Function} Unsubscribe function
  */
-export const subscribeToAllQuestions = (
-  callback,
-  maxResults = FIRESTORE_LIMITS.MAX_QUERY_LIMIT
-) => {
+export const subscribeToAllQuestions = (onNext) => {
   // Require authentication
   if (!auth.currentUser) {
     logger.log("⚠️ No user signed in, cannot subscribe to questions");
-    callback([]);
-    return () => {}; // Return no-op unsubscribe
+    onNext([]);
+    return () => {};
   }
 
   logger.log("🔄 Setting up real-time question listener...");
 
-  // Create query for all questions
   const q = query(
     collection(getDb(), "questions"),
     orderBy("firestoreUpdatedAt", "desc"),
-    limit(maxResults)
+    limit(FIRESTORE_LIMITS.FULL_SYNC_COUNT)
   );
 
-  // Q11b: Register listener for observability
+  // Register listener for observability
   const listenerId = registerListener("subscribeToAllQuestions");
 
-  // Set up real-time listener
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
       const questions = [];
       let skippedCount = 0;
-      snapshot.forEach((docSnapshot) => {
+
+      snapshot.docs.forEach((docSnapshot) => {
         // Q4b: Validate document structure before passing to UI
         const result = parseQuestionDoc({
           id: docSnapshot.id,
           ...docSnapshot.data(),
         });
+
         if (result.valid) {
           questions.push(result.question);
         } else {
           skippedCount++;
-          logger.warn(
-            `Skipped malformed doc ${docSnapshot.id}:`,
-            result.errors
-          );
         }
       });
 
       if (skippedCount > 0) {
-        logger.warn(`⚠️ Skipped ${skippedCount} malformed documents`);
+        logger.warn(`Skipped ${skippedCount} malformed documents during sync`);
       }
 
-      logger.log(
-        `✅ Real-time update: ${questions.length} questions (${
-          snapshot.docChanges().length
-        } changes)`
-      );
-
-      // Notify callback with updated data
-      callback(questions);
+      onNext(questions);
     },
     (error) => {
-      logger.error("❌ Error in real-time listener:", error);
-      // On error, fall back to empty array
-      callback([]);
+      logger.error("❌ Firestore real-time sync failed:", error);
+      if (error.code === "permission-denied") {
+        logger.warn("🔐 Permission denied - sync disabled for this session");
+      }
     }
   );
 
-  logger.log("✓ Real-time listener active");
-
-  // Return wrapped unsubscribe that also cleans up listener tracking
   return () => {
     unregisterListener(listenerId);
     unsubscribe();
   };
 };
+
 
 /**
  * Paginated question loading for better performance.
@@ -408,13 +403,45 @@ export const getQuestionsPaginatedWithFilters = async ({
     return {
       questions,
       lastDoc: docs[pageSize - 1] || null,
-      hasMore,
+      hasMore: hasMore,
     };
   } catch (error) {
     logger.error("Error in paginated query:", error);
     return { questions: [], lastDoc: null, hasMore: false };
   }
 };
+
+/**
+ * Fetches all language variants for a specific question ID.
+ * Useful for resolving stale state issues in DatabaseView.
+ *
+ * @param {string} uniqueId - The uniqueId shared by all variants.
+ * @returns {Promise<Array>} Array of question variants.
+ */
+export const getQuestionVariantsForId = async (uniqueId) => {
+  if (!uniqueId) return [];
+
+  try {
+    const q = query(
+      collection(getDb(), "questions"),
+      where("uniqueId", "==", uniqueId)
+    );
+    const snapshot = await getDocs(q);
+
+    const variants = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      _source: QUESTION_SOURCES.DATABASE,
+    }));
+
+    return variants;
+  } catch (error) {
+    logger.error(`Error fetching variants for ${uniqueId}:`, error);
+    return [];
+  }
+};
+
+
 
 /**
  * PHASE 2.3: Get category-specific stats for a discipline using server-side aggregation.

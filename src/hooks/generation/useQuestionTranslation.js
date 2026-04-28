@@ -38,6 +38,7 @@ export const useQuestionTranslation = ({
   translationMap,
   allQuestionsMap,
   setShowHistory,
+  onRefresh,
 }) => {
   const [translationProgress, setTranslationProgress] = useState(0);
 
@@ -121,9 +122,7 @@ export const useQuestionTranslation = ({
             translatedFrom: q.language || "English",
           };
 
-          addQuestionsToState([translatedVariant], false);
-          await checkAndStoreQuestions([translatedVariant]);
-          handleLanguageSwitch(targetLang);
+          await addQuestionsToState([translatedVariant], false);
 
           showMessage(`✅ Translated to ${targetLang}`, TOAST_DURATION.MEDIUM);
         } else {
@@ -308,6 +307,7 @@ export const useQuestionTranslation = ({
       TOAST_DURATION.EXTENDED
     );
     setIsProcessing(false);
+    if (onRefresh) await onRefresh();
   }, [
     isApiReady,
     showMessage,

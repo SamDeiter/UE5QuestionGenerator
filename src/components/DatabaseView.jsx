@@ -4,6 +4,7 @@ import MetricsDashboard from "./MetricsDashboard";
 import QuestionItem from "./QuestionItem.jsx";
 import { exportQuestionsForCritique } from "../utils/externalCritique";
 import { logger } from "../utils/logger";
+import { getQuestionVariantsForId } from "../services/firebaseQueries";
 
 // PERFORMANCE: Number of items to render initially and load per batch
 const INITIAL_RENDER_COUNT = 50;
@@ -15,6 +16,9 @@ const DatabaseView = ({
   onUpdateQuestion,
   onKickBack,
   onCritique, // NEW: Enable re-critique in database view
+  onTranslateSingle, // NEW: Support translation generation
+  onSwitchLanguage: onGlobalSwitchLanguage, // NEW: Support global state updates
+  addQuestionsToState, // NEW: To inject remote variants into local state
   showMessage,
   filterMode = "all", // Default to 'all' if not provided
   sortBy = "default", // Default to 'default' if not provided
@@ -128,7 +132,10 @@ const DatabaseView = ({
 
     // FIRST: Filter to only show ACCEPTED questions in Database view
     // Pending and rejected questions should only appear in Review mode
-    let filtered = questions.filter((q) => q.status === "accepted");
+    // Filter to only show ACCEPTED questions or PENDING translations in Database view
+    let filtered = questions.filter((q) => 
+      q.status === "accepted" || (q.status === "pending" && q.uniqueId)
+    );
 
     // Then filter by search term if provided
     if (searchTerm && searchTerm.trim()) {
@@ -233,29 +240,90 @@ const DatabaseView = ({
   // Handle language switch - swap the card's language in-place
   // Uses allQuestionsMap (global, complete) rather than local questionsByIdAndLang
   // so it works even when the target language variant isn't in the windowed view.
-  const handleSwitchLanguage = (currentQuestion, targetLang) => {
+  const [isSwitching, setIsSwitching] = useState(false);
+
+  /**
+   * Switches the viewed language for a specific question.
+   * If the variant is missing from the local state map, it attempts to fetch from Firestore.
+   */
+  const handleSwitchLanguage = async (
+    currentQuestion,
+    targetLang,
+    force = false
+  ) => {
+    if ((currentQuestion.language || "English") === targetLang) return;
+
     if (!currentQuestion.uniqueId) {
-      showMessage(
-        `Cannot switch: Question has no unique ID for linking translations.`
-      );
+      showMessage("❌ Question ID missing, cannot switch language", 3000);
       return;
     }
 
-    const variants = allQuestionsMap.get(currentQuestion.uniqueId) || [];
-    const targetQuestion = variants.find(
-      (v) => (v.language || "English") === targetLang
+    setIsSwitching(true);
+    logger.log(
+      `🌐 Switching language for ${currentQuestion.uniqueId.slice(
+        0,
+        8
+      )} to ${targetLang}...`
     );
 
-    if (targetQuestion) {
-      // Swap the language in-place for this card
-      setLanguageOverrides((prev) => ({
-        ...prev,
-        [currentQuestion.uniqueId]: targetLang,
-      }));
-    } else {
-      showMessage(
-        `${targetLang} version not found. It may not have been translated yet.`
+    try {
+      // 1. Check local state first
+      let variants = allQuestionsMap.get(currentQuestion.uniqueId) || [];
+      let targetQuestion = variants.find(
+        (v) => (v.language || "English") === targetLang
       );
+
+      // 2. If missing, try fetching from Firestore (resolves race conditions with background script)
+      if (!targetQuestion) {
+        logger.log(
+          `🔍 Variant ${targetLang} missing from local state, fetching from Firestore...`
+        );
+        const remoteVariants = await getQuestionVariantsForId(
+          currentQuestion.uniqueId
+        );
+
+        if (remoteVariants.length > 0 && addQuestionsToState) {
+          // Update global state with newly discovered variants
+          addQuestionsToState(remoteVariants);
+
+          // Find the target again in the fresh batch
+          targetQuestion = remoteVariants.find(
+            (v) => (v.language || "English") === targetLang
+          );
+        }
+      }
+
+      // 3. Final switch logic
+      if (force || targetQuestion) {
+        setLanguageOverrides((prev) => ({
+          ...prev,
+          [currentQuestion.uniqueId]: targetLang,
+        }));
+
+        // If a global listener exists, notify it
+        if (onGlobalSwitchLanguage) {
+          onGlobalSwitchLanguage(targetLang);
+        }
+
+        if (targetQuestion) {
+          logger.log(`✅ Switched to ${targetLang} variant`);
+        } else {
+          logger.warn(
+            `⚠️ Forcing view to ${targetLang} despite no variant data`
+          );
+        }
+      } else {
+        logger.warn(`❌ Translation variant not found for ${targetLang}`);
+        showMessage(
+          `⚠️ Translation for ${targetLang} is not yet available in the database.`,
+          4000
+        );
+      }
+    } catch (err) {
+      logger.error("Failed to switch language:", err);
+      showMessage("❌ Error switching language. Please try again.", 5000);
+    } finally {
+      setIsSwitching(false);
     }
   };
 
@@ -337,9 +405,8 @@ const DatabaseView = ({
                     onVariate={() => {}}
                     onCritique={() => onCritique?.(q)}
                     onTranslateSingle={() => {}}
-                    onSwitchLanguage={(targetLang) =>
-                      handleSwitchLanguage(originalQ, targetLang)
-                    }
+                    onSwitchLanguage={handleSwitchLanguage}
+                    onTranslateSingle={onTranslateSingle}
                     onDelete={() => {}}
                     onUpdateQuestion={onUpdateQuestion}
                     onKickBack={onKickBack}

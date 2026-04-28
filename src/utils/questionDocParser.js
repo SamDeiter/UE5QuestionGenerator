@@ -40,8 +40,27 @@ const KNOWN_FIELDS = [
   "difficulty",
   "explanation",
   "version",
+  "language",
   "firestoreUpdatedAt",
 ];
+
+/**
+ * Normalizes language names to standard values used in constants.js
+ * Handles legacy values like "Chinese" -> "Chinese (Simplified)"
+ *
+ * @param {string} lang - Raw language string
+ * @returns {string} - Normalized language name
+ */
+const normalizeLanguageName = (lang) => {
+  if (!lang || typeof lang !== "string") return "English";
+  const trimmed = lang.trim();
+
+  // Map legacy/shorthand names to standard keys in LANGUAGE_FLAGS
+  if (trimmed === "Chinese") return "Chinese (Simplified)";
+  if (trimmed === "Simplified Chinese") return "Chinese (Simplified)";
+
+  return trimmed;
+};
 
 /**
  * Validate document structure and normalize with safe defaults.
@@ -95,7 +114,9 @@ export const parseQuestionDoc = (raw) => {
       : "medium",
     explanation: raw.explanation || null,
     version: raw.version || 1,
+    language: normalizeLanguageName(raw.language || "English"),
     firestoreUpdatedAt: raw.firestoreUpdatedAt || null,
+
     // Pass through other fields not in KNOWN_FIELDS
     ...Object.fromEntries(
       Object.entries(raw).filter(([key]) => !KNOWN_FIELDS.includes(key))

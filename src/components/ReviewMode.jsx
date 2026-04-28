@@ -135,11 +135,9 @@ const ReviewMode = ({
           onSwitchLanguage={onSwitchLanguage}
           onDelete={onDelete}
           onUpdateQuestion={onUpdateQuestion}
-          availableVariants={
-            translationMap.get(currentQuestion.uniqueId)
-              ? Array.from(allQuestionsMap.get(currentQuestion.uniqueId) || [])
-              : []
-          }
+          availableVariants={Array.from(
+            allQuestionsMap.get(currentQuestion.uniqueId) || []
+          )}
           isProcessing={isProcessing}
           appMode="review"
           showMessage={showMessage}

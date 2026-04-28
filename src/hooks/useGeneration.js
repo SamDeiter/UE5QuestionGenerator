@@ -26,7 +26,8 @@ export const useGeneration = (
   setShowApiError,
   setShowHistory,
   translationMap,
-  allQuestionsMap
+  allQuestionsMap,
+  onRefresh
 ) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -68,6 +69,7 @@ export const useGeneration = (
     translationMap,
     allQuestionsMap,
     setShowHistory,
+    onRefresh,
   });
 
   // 3. Critique sub-hook

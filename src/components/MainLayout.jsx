@@ -151,8 +151,8 @@ const MainLayout = ({
           TARGET_PER_CATEGORY={TARGET_PER_CATEGORY}
         />
       )}
-      <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
-        <div className="flex flex-col border-b border-slate-800 bg-slate-900 z-10">
+      <main className="flex-1 flex flex-col min-w-0 bg-slate-950 relative overflow-hidden">
+        <div className="flex flex-col border-b border-slate-800 bg-slate-900 z-10 sticky top-0 flex-shrink-0">
           <AppNavigation
             activeMode={appMode}
             onNavigate={handleModeChange}

@@ -216,7 +216,8 @@ const AuthenticatedApp = ({
     setShowApiError,
     setShowHistory,
     translationMap,
-    allQuestionsMap
+    allQuestionsMap,
+    handleLoadFromFirestore
   );
 
   const {
@@ -526,13 +527,6 @@ const AuthenticatedApp = ({
         />
       </Suspense>
 
-      {/* Dashboard Metrics (only shown in database mode) */}
-      {appMode === APP_MODES.DATABASE && !showAnalytics && !showDangerZone && (
-        <MetricsDashboard
-          questions={unifiedQuestions}
-          globalStats={globalStats}
-        />
-      )}
 
       {appMode === APP_MODES.LANDING ? (
         <LandingPage
