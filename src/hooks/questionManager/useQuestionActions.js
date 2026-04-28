@@ -71,6 +71,13 @@ export const useQuestionActions = (
       } else {
         targetSource = source;
       }
+
+      // HARDENING: Refresh auth token if potentially stale to prevent save failures
+      if (isAuthPotentiallyStale()) {
+        logger.log("[Auth] Token may be stale, refreshing before bulk save...");
+        await refreshAuthToken();
+      }
+
       await backupToCloud(newItems, targetSource);
       setAllQuestions((prev) => {
         const tagged = newItems.map((q) => ({ ...q, _source: targetSource }));
