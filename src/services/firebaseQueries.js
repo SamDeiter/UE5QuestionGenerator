@@ -178,28 +178,60 @@ export const getAllQuestionsFromFirestore = async (
     logger.log(`📍 Firebase Project: ${firebaseConfig.projectId}`);
     const startTime = performance.now();
 
-    // Cursor-paginated fetch. Single getDocs() with limit > ~5000 has been
-    // observed to time out / return empty in some sessions. Page by document ID
-    // (always a string, immune to the type-drift problems firestoreUpdatedAt had).
+    // PERF: Sliding-window concurrent pagination by document ID.
+    //
+    // Previous implementation was a single while-loop that awaited each
+    // getDocs() before firing the next, so wall-clock = N_pages × RTT.
+    // With ~19.5k docs at 2500/page that's 8 sequential round-trips ≈ 2s.
+    //
+    // Strategy: split the work across CONCURRENCY=4 cursor-paginated
+    // "lanes", each running concurrently. Each lane pages through a
+    // disjoint segment of the document-ID space using cursor pagination
+    // (orderBy(documentId()) + startAfter), so cursor semantics — and
+    // their reliability — are preserved within each lane.
+    //
+    // Lane boundaries are chosen on the document-ID alphabet. Doc IDs in
+    // this collection are crypto.randomUUID() v4 values (lowercase hex with
+    // dashes), which are uniformly distributed across the leading hex
+    // nibble. We split into 4 buckets at "4", "8", "c" — the natural
+    // quartiles of the hex space — each bucket holding ~25% of docs.
+    //
+    // Each lane internally does cursor pagination just like before, so:
+    //   • we still terminate cleanly on short / empty pages,
+    //   • we still honor a per-fetch cap by accumulating into a shared
+    //     counter and short-circuiting other lanes once the cap is hit,
+    //   • onProgress fires per page as it resolves (pages may complete
+    //     out of order across lanes — documented contract).
+    //
+    // Expected speedup: ~4× wall-clock for full fetches when docs are
+    // roughly evenly distributed, since lanes run in parallel and each
+    // does ~1/4 the round-trips of the original sequential loop.
     const PAGE_SIZE = 2500;
+    const CONCURRENCY = 4;
+    // Quartile boundaries for UUIDv4 hex space. Each lane handles
+    //   [start, end)  where start/end are tested via where(documentId() …).
+    // Open-ended bounds at the extremes (no `where` constraint) cover
+    // any non-UUID legacy IDs that fall outside the hex range.
+    const LANE_BOUNDS = [
+      { start: null, end: "4" }, // covers "0"-"3" plus anything before "0"
+      { start: "4", end: "8" }, // "4"-"7"
+      { start: "8", end: "c" }, // "8"-"b"
+      { start: "c", end: null }, // "c"-"f" plus anything past "f"
+    ];
+
     const questions = [];
     const disciplineCounts = {};
-    let cursor = null;
     let pages = 0;
+    let capReached = false; // global stop flag once we hit fetchLimit
+    const collRef = collection(getDb(), "questions");
 
-    while (questions.length < fetchLimit) {
-      const remaining = fetchLimit - questions.length;
-      const pageLimit = Math.min(PAGE_SIZE, remaining);
-      const constraints = [orderBy(documentId()), limit(pageLimit)];
-      if (cursor) constraints.push(startAfter(cursor));
-
-      const pageQuery = query(collection(getDb(), "questions"), ...constraints);
-      const snapshot = await getDocs(pageQuery);
-      pages++;
-
-      if (snapshot.empty) break;
-
+    const ingestSnapshot = (snapshot) => {
       snapshot.forEach((docSnapshot) => {
+        if (capReached) return;
+        if (questions.length >= fetchLimit) {
+          capReached = true;
+          return;
+        }
         const result = parseQuestionDoc({
           id: docSnapshot.id,
           ...docSnapshot.data(),
@@ -212,7 +244,7 @@ export const getAllQuestionsFromFirestore = async (
             (disciplineCounts[discipline] || 0) + 1;
         }
       });
-
+      pages++;
       if (onProgress) {
         try {
           onProgress({ pages, loaded: questions.length, done: false });
@@ -220,10 +252,48 @@ export const getAllQuestionsFromFirestore = async (
           logger.warn("onProgress callback threw:", cbError);
         }
       }
+    };
 
-      if (snapshot.size < pageLimit) break;
-      cursor = snapshot.docs[snapshot.docs.length - 1];
-    }
+    // Run one lane: cursor-paginate within [start, end), pushing into the
+    // shared `questions` / `disciplineCounts`. Stops when its range is
+    // exhausted or when capReached flips true.
+    const runLane = async ({ start, end }) => {
+      let cursor = null;
+      while (!capReached && questions.length < fetchLimit) {
+        // Reserve up to PAGE_SIZE per fetch but never more than the slack
+        // remaining under the global cap. This prevents one lane from
+        // single-handedly overshooting fetchLimit by a full page.
+        const slack = fetchLimit - questions.length;
+        if (slack <= 0) break;
+        const pageLimit = Math.min(PAGE_SIZE, Math.max(slack, 1));
+
+        const constraints = [orderBy(documentId())];
+        if (start !== null) {
+          constraints.push(where(documentId(), ">=", start));
+        }
+        if (end !== null) {
+          constraints.push(where(documentId(), "<", end));
+        }
+        if (cursor) constraints.push(startAfter(cursor));
+        constraints.push(limit(pageLimit));
+
+        const snapshot = await getDocs(query(collRef, ...constraints));
+
+        if (snapshot.empty) break;
+
+        // Capture cursor BEFORE ingest so subsequent iterations can fire
+        // even if ingestSnapshot trips capReached mid-page.
+        const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+        const isShortPage = snapshot.size < pageLimit;
+
+        ingestSnapshot(snapshot);
+
+        if (isShortPage) break; // lane's range fully drained
+        cursor = lastDoc;
+      }
+    };
+
+    await Promise.all(LANE_BOUNDS.map((b) => runLane(b)));
 
     if (onProgress) {
       try {
@@ -233,7 +303,9 @@ export const getAllQuestionsFromFirestore = async (
       }
     }
 
-    logger.log(`📄 Paginated fetch: ${pages} page(s)`);
+    logger.log(
+      `📄 Paginated fetch: ${pages} page(s) across ${CONCURRENCY} lanes`
+    );
 
     questions.sort(
       (a, b) => toMillis(b.firestoreUpdatedAt) - toMillis(a.firestoreUpdatedAt)

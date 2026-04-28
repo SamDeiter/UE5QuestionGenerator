@@ -1,14 +1,11 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { Virtuoso } from "react-virtuoso";
 import Icon from "./Icon";
 import MetricsDashboard from "./MetricsDashboard";
 import QuestionItem from "./QuestionItem.jsx";
 import { exportQuestionsForCritique } from "../utils/externalCritique";
 import { logger } from "../utils/logger";
 import { getQuestionVariantsForId } from "../services/firebaseQueries";
-
-// PERFORMANCE: Number of items to render initially and load per batch
-const INITIAL_RENDER_COUNT = 50;
-const LOAD_MORE_COUNT = 50;
 
 const DatabaseView = ({
   questions,
@@ -30,10 +27,6 @@ const DatabaseView = ({
   const [, setLoadMenuOpen] = useState(false);
   const loadMenuRef = useRef(null);
 
-  // PERFORMANCE: Track how many items to render (windowed rendering)
-  const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
-  const loaderRef = useRef(null);
-
   // Export for external critique (Admin only)
   const handleExport = () => {
     logger.log("📤 Exporting questions for external critique...");
@@ -50,19 +43,19 @@ const DatabaseView = ({
     if (!window.confirm('⚠️ WARNING: This will critique ALL uncritiqued questions (~1700 API calls).\n\nThis will:\n- Take 1-2 hours\n- Use significant API quota\n- Cost money on paid plans\n\nContinue?')) {
       return;
     }
-    
+
     // Get API key
     const config = JSON.parse(localStorage.getItem('ue5_gen_config') || '{}');
     const apiKey = config.geminiApiKey;
-    
+
     if (!apiKey) {
       showMessage('❌ No API key configured. Please set your Gemini API key in settings.', 5000);
       return;
     }
-    
+
     setIsBatchCritiquing(true);
     setBatchProgress({ processed: 0, total: 0, percent: 0 });
-    
+
     try {
       await batchCritiqueAllQuestions(
         apiKey,
@@ -103,11 +96,6 @@ const DatabaseView = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Reset visible count when questions change
-  useEffect(() => {
-    setVisibleCount(INITIAL_RENDER_COUNT);
-  }, [questions]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -218,40 +206,6 @@ const DatabaseView = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions, sortBy, filterMode, searchTerm]);
 
-  // PERFORMANCE: Only render visible items
-  const visibleQuestions = useMemo(() => {
-    return sortedQuestions.slice(0, visibleCount);
-  }, [sortedQuestions, visibleCount]);
-
-  const hasMore = visibleCount < sortedQuestions.length;
-
-  // Load more items when scrolling near bottom
-  const loadMore = useCallback(() => {
-    if (hasMore) {
-      setVisibleCount((prev) =>
-        Math.min(prev + LOAD_MORE_COUNT, sortedQuestions.length)
-      );
-    }
-  }, [hasMore, sortedQuestions.length]);
-
-  // Intersection Observer for infinite scroll
-  useEffect(() => {
-    const loader = loaderRef.current;
-    if (!loader) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(loader);
-    return () => observer.disconnect();
-  }, [hasMore, loadMore]);
-
   // Local state to track language overrides for specific question cards
   const [languageOverrides, setLanguageOverrides] = useState({});
 
@@ -356,9 +310,8 @@ const DatabaseView = ({
               <Icon name="database" /> Database View
             </h2>
             <p className="text-xs text-blue-300/70">
-              Showing {visibleQuestions.length} of {uniqueQuestionCount}{" "}
+              Showing {sortedQuestions.length} of {uniqueQuestionCount}{" "}
               questions
-              {hasMore && ` • scroll for more`}
             </p>
           </div>
 
@@ -386,8 +339,10 @@ const DatabaseView = ({
             No questions loaded from database. Click Refresh.
           </div>
         ) : (
-          <>
-            {visibleQuestions.map((originalQ, i) => {
+          <Virtuoso
+            style={{ height: "calc(100vh - 280px)" }}
+            data={sortedQuestions}
+            itemContent={(i, originalQ) => {
               // Apply language override if the user has clicked a translation flag
               // Use allQuestionsMap to find the variant globally (not limited to windowed view)
               let q = originalQ;
@@ -438,19 +393,8 @@ const DatabaseView = ({
                   />
                 </div>
               );
-            })}
-
-            {/* Infinite scroll trigger */}
-            {hasMore && (
-              <div
-                ref={loaderRef}
-                className="flex items-center justify-center py-8 text-slate-500"
-              >
-                <Icon name="loader" className="animate-spin mr-2" size={16} />
-                <span className="text-sm">Loading more questions...</span>
-              </div>
-            )}
-          </>
+            }}
+          />
         )}
       </div>
     </div>

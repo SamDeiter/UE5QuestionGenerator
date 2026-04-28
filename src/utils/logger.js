@@ -13,6 +13,21 @@
  *   logger.warn('Warning');          // Warning level
  *   logger.error('Error', error);    // Error level (always shown)
  *   logger.debug('Debug info');      // Debug level (verbose)
+ *
+ * Runtime debug toggle (production):
+ *   By default, production builds only emit error-level logs. To enable
+ *   verbose logs (log/info/warn/debug) in production without redeploying,
+ *   open the browser devtools console and either:
+ *
+ *     1. Run: localStorage.setItem('debug', '1') and then reload the page.
+ *     2. Or simply call: window.enableDebug()
+ *
+ *   To turn it back off:
+ *     1. localStorage.removeItem('debug') and reload, or
+ *     2. window.disableDebug()
+ *
+ *   The flag is read once at module load, so a reload is required for the
+ *   change to take effect.
  */
 
 // Check if we're in production mode
@@ -28,8 +43,33 @@ const LOG_LEVELS = {
   DEBUG: 4,
 };
 
-// Set log level based on environment
-const currentLogLevel = isProduction ? LOG_LEVELS.ERROR : LOG_LEVELS.DEBUG;
+// Runtime override: allow developers (or savvy users) to opt into verbose
+// logging in production by setting localStorage.debug = '1' (or 'true').
+// Read once at module load to avoid repeated localStorage hits per log call.
+const debugFlag =
+  typeof window !== "undefined" &&
+  window.localStorage &&
+  (window.localStorage.getItem("debug") === "1" ||
+    window.localStorage.getItem("debug") === "true");
+
+// Set log level based on environment, with runtime override support
+const currentLogLevel =
+  isProduction && !debugFlag ? LOG_LEVELS.ERROR : LOG_LEVELS.DEBUG;
+
+// Expose convenience helpers for toggling debug mode from devtools.
+// Defined once at module init, not on every log call.
+if (typeof window !== "undefined") {
+  window.enableDebug = () => {
+    window.localStorage.setItem("debug", "1");
+    console.log("[logger] Debug logs enabled. Reloading...");
+    window.location.reload();
+  };
+  window.disableDebug = () => {
+    window.localStorage.removeItem("debug");
+    console.log("[logger] Debug logs disabled. Reloading...");
+    window.location.reload();
+  };
+}
 
 /**
  * Format log prefix with timestamp and optional module name

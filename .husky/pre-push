@@ -1,3 +1,4 @@
+#!/usr/bin/env sh
 # Pre-push hook disabled on Windows - vitest cannot run from Git sh.exe environment.
 # Tests are run via lint-staged on pre-commit and via npm run test:ci manually.
 exit 0
