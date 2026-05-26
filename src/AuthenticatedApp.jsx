@@ -545,6 +545,7 @@ const AuthenticatedApp = ({
           handleModeSelect={handleModeSelect}
           handleViewDatabase={handleViewDatabase}
           pendingCount={totalPendingQuestions}
+          isInitialLoading={isInitialLoading}
           toolbarProps={toolbarProps}
           showHistory={showHistory}
           uniqueFilteredQuestions={uniqueFilteredQuestions}
