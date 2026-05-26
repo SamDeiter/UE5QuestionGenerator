@@ -22,8 +22,25 @@ const QUESTION_DOC_LIMITS = {
 /** @constant {string[]} VALID_STATUSES - Valid question status values */
 const VALID_STATUSES = ["pending", "accepted", "rejected", "deleted"];
 
-/** @constant {string[]} VALID_DIFFICULTIES - Valid difficulty levels */
-const VALID_DIFFICULTIES = ["easy", "medium", "hard"];
+/**
+ * @constant {string[]} VALID_DIFFICULTIES
+ * Accepts the canonical Firestore vocabulary (Beginner/Intermediate/Expert),
+ * the legacy vocabulary still present in some records (Easy/Medium/Hard),
+ * and the lowercase tier names used by mock data. Downstream rendering
+ * (QuestionHeader.normalizeDifficulty, quizUtils.classifyDifficulty) handles
+ * all three forms, so we pass the value through unchanged.
+ */
+const VALID_DIFFICULTIES = [
+  "Beginner",
+  "Intermediate",
+  "Expert",
+  "Easy",
+  "Medium",
+  "Hard",
+  "easy",
+  "medium",
+  "hard",
+];
 
 /** @constant {string[]} KNOWN_FIELDS - Fields handled by normalization */
 const KNOWN_FIELDS = [
@@ -120,7 +137,7 @@ export const parseQuestionDoc = (raw) => {
     discipline: raw.discipline || "Unknown",
     difficulty: VALID_DIFFICULTIES.includes(raw.difficulty)
       ? raw.difficulty
-      : "medium",
+      : "Intermediate",
     explanation: raw.explanation || null,
     version: raw.version || 1,
     language: normalizeLanguageName(raw.language || "English"),
