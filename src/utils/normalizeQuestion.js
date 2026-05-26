@@ -439,42 +439,6 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
 };
 
 /**
- * Normalizes an array of questions
- * @param {Array} questions - Array of question objects
- * @param {Object} contextDefaults - Optional context-specific defaults
- * @returns {Array} Array of normalized questions
- */
-export const normalizeQuestions = (questions, contextDefaults = {}) => {
-  if (!Array.isArray(questions)) {
-    logger.warn("normalizeQuestions received non-array:", questions);
-    return [];
-  }
-
-  return questions
-    .map((q) => normalizeQuestion(q, contextDefaults))
-    .filter((q) => q !== null);
-};
-
-/**
- * Starts tracking review time for a question
- * @param {Object} question - The question being reviewed
- * @returns {Object} Question with reviewStartedAt timestamp
- */
-export const startReviewTracking = (question) => {
-  if (!question) return question;
-
-  // Only set if not already started (prevents restarting on re-renders)
-  if (question.reviewStartedAt) {
-    return question;
-  }
-
-  return {
-    ...question,
-    reviewStartedAt: new Date().toISOString(),
-  };
-};
-
-/**
  * Completes review tracking and calculates duration
  * @param {Object} question - The question that was reviewed
  * @param {string} reviewerName - Name of the reviewer
@@ -501,27 +465,6 @@ export const completeReviewTracking = (question, reviewerName = null) => {
     reviewerName: reviewerName || question.reviewerName || "Unknown",
     reviewCompletedAt: new Date().toISOString(),
   };
-};
-
-/**
- * Formats review duration for display
- * @param {number} seconds - Duration in seconds
- * @returns {string} Human-readable duration string
- */
-export const formatReviewDuration = (seconds) => {
-  if (!seconds || seconds < 0) return "--";
-
-  if (seconds < 60) {
-    return `${seconds}s`;
-  } else if (seconds < 3600) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
-  } else {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-  }
 };
 
 export default normalizeQuestion;

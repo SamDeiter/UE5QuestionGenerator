@@ -11,7 +11,7 @@ const VALID_POSITIONS = ["top", "bottom", "left", "right", "center"];
  * @param {number} stepIndex - Step index in array
  * @returns {string[]} Array of error messages
  */
-export const validateStep = (step, scenarioId, stepIndex) => {
+const validateStep = (step, scenarioId, stepIndex) => {
   const errors = [];
 
   if (!step.id || typeof step.id !== "string") {
@@ -69,19 +69,4 @@ export const validateScenario = (scenario, scenarioId) => {
   });
 
   return errors;
-};
-
-/**
- * Validate all scenarios in the TUTORIAL_SCENARIOS object
- * @param {Object} scenarios - TUTORIAL_SCENARIOS object
- * @returns {Object} Validation results by scenario ID
- */
-export const validateAllScenarios = (scenarios) => {
-  const results = {};
-
-  Object.entries(scenarios).forEach(([id, scenario]) => {
-    results[id] = validateScenario(scenario, id);
-  });
-
-  return results;
 };

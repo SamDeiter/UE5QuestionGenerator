@@ -40,9 +40,3 @@ export const emitToast = (message, type = "error", duration) => {
  */
 export const toastError = (message, duration) =>
   emitToast(message, "error", duration);
-export const toastWarning = (message, duration) =>
-  emitToast(message, "warning", duration);
-export const toastSuccess = (message, duration) =>
-  emitToast(message, "success", duration);
-export const toastInfo = (message, duration) =>
-  emitToast(message, "info", duration);

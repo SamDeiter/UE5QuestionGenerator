@@ -463,47 +463,6 @@ export const classifyQuestionDiscipline = async (apiKey, questionText) => {
 };
 
 /**
- * Generates 3-5 relevant tags for a question.
- * @param {string} apiKey
- * @param {string} questionText
- * @returns {Promise<string[]>} Array of tags
- */
-export const generateTagsForQuestion = async (apiKey, questionText) => {
-  const systemPrompt = `You are an expert UE5 tagger.
-    Generate 3-5 relevant technical tags for the provided question.
-    - Tags should be specific (e.g., "Blueprints", "Lumen", "Niagara").
-    - Return ONLY a valid JSON array of strings.
-    - Example: ["Blueprints", "Actors", "Level Design"]`;
-
-  const userPrompt = `Tags for: "${questionText}"`;
-
-  const baseUrl = buildGeminiEndpoint();
-  const url = apiKey ? `${baseUrl}?key=${apiKey}` : baseUrl;
-
-  const data = await fetchWithRetry(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: userPrompt }] }],
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 100,
-        responseMimeType: "application/json",
-      },
-    }),
-  });
-
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-  try {
-    return JSON.parse(text);
-  } catch (e) {
-    logError(e, { operation: "parseTagsResponse", responseText: text });
-    return [];
-  }
-};
-
-/**
  * Lists available models for the given API key.
  * @param {string} apiKey
  * @returns {Promise<string[]>} List of model names

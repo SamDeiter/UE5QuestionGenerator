@@ -7,11 +7,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  saveQuestionAsOwner,
-  saveQuestionAsReviewer,
-  saveQuestionStatusUpdate,
-} from "../firestoreSave";
+import { saveQuestionAsReviewer } from "../firestoreSave";
 import { REVIEWER_ALLOWED_FIELDS } from "../../utils/constants";
 
 // Mock Firebase
@@ -154,59 +150,6 @@ describe("Firestore Save Integration Tests", () => {
       const result = await saveQuestionAsReviewer(null, { status: "accepted" });
       expect(result.success).toBe(false);
       expect(result.error).toBe("Missing questionId");
-    });
-  });
-
-  describe("saveQuestionAsOwner", () => {
-    it("should save all fields including content", async () => {
-      const question = {
-        uniqueId: "test-id",
-        question: "What is UE5?",
-        options: { A: "a", B: "b", C: "c", D: "d" },
-        correct: "A",
-        status: "pending",
-        creatorId: "owner-123",
-      };
-
-      await saveQuestionAsOwner(question);
-
-      const savedPayload = mockSetDoc.mock.calls[0][1];
-
-      // Should include ALL fields
-      expect(savedPayload.question).toBe("What is UE5?");
-      expect(savedPayload.options).toEqual({ A: "a", B: "b", C: "c", D: "d" });
-      expect(savedPayload.correct).toBe("A");
-      expect(savedPayload.creatorId).toBe("owner-123");
-    });
-
-    it("should add creatorId if missing", async () => {
-      const question = {
-        uniqueId: "test-id",
-        question: "Test",
-        // No creatorId
-      };
-
-      await saveQuestionAsOwner(question);
-
-      const savedPayload = mockSetDoc.mock.calls[0][1];
-      expect(savedPayload.creatorId).toBe("test-user-123");
-      expect(savedPayload.creatorEmail).toBe("test@example.com");
-    });
-  });
-
-  describe("saveQuestionStatusUpdate", () => {
-    it("should delegate to saveQuestionAsReviewer", async () => {
-      await saveQuestionStatusUpdate("test-id", "accepted", {
-        acceptedBy: "reviewer@test.com",
-        reviewerName: "Test Reviewer",
-      });
-
-      expect(mockSetDoc).toHaveBeenCalled();
-      const savedPayload = mockSetDoc.mock.calls[0][1];
-
-      expect(savedPayload.status).toBe("accepted");
-      expect(savedPayload.acceptedBy).toBe("reviewer@test.com");
-      expect(savedPayload.reviewerName).toBe("Test Reviewer");
     });
   });
 });

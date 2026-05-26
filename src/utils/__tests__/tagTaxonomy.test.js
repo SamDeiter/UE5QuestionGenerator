@@ -5,9 +5,7 @@
 import { describe, it, expect } from "vitest";
 import {
   normalizeTag,
-  validateTags,
   getMergedTags,
-  getAllTags,
   TAGS_BY_DISCIPLINE,
 } from "../tagTaxonomy";
 
@@ -52,32 +50,6 @@ describe("tagTaxonomy", () => {
     });
   });
 
-  describe("validateTags", () => {
-    it("validates tags against discipline", () => {
-      const result = validateTags(["#Nanite", "#InvalidTag"], "Tech Art");
-      expect(result.valid).toContain("#Nanite");
-      expect(result.invalid).toContain("#InvalidTag");
-    });
-
-    it("returns normalized versions", () => {
-      const result = validateTags(["VSM"], "Look Dev");
-      expect(result.normalized).toContain("#VirtualShadowMaps");
-    });
-
-    it("allows cross-discipline tags", () => {
-      // A tag valid in one discipline should be allowed in another
-      const result = validateTags(["#Niagara"], "Tech Art");
-      // #Niagara is in VFX, should still be valid
-      expect(result.valid).toContain("#Niagara");
-    });
-
-    it("handles empty input", () => {
-      const result = validateTags([], "Tech Art");
-      expect(result.valid).toEqual([]);
-      expect(result.invalid).toEqual([]);
-    });
-  });
-
   describe("getMergedTags", () => {
     it("returns predefined tags for discipline", () => {
       const tags = getMergedTags("Tech Art");
@@ -101,25 +73,6 @@ describe("tagTaxonomy", () => {
     it("returns empty array for unknown discipline", () => {
       const tags = getMergedTags("Unknown Discipline");
       expect(tags).toEqual([]);
-    });
-  });
-
-  describe("getAllTags", () => {
-    it("returns all unique tags", () => {
-      const allTags = getAllTags();
-      expect(allTags.length).toBeGreaterThan(50);
-    });
-
-    it("returns unique tags (no duplicates)", () => {
-      const allTags = getAllTags();
-      const unique = new Set(allTags);
-      expect(unique.size).toBe(allTags.length);
-    });
-
-    it("all tags start with #", () => {
-      getAllTags().forEach((tag) => {
-        expect(tag.startsWith("#")).toBe(true);
-      });
     });
   });
 });

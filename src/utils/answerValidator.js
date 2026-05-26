@@ -211,16 +211,4 @@ export function validateAnswer(question) {
   };
 }
 
-/**
- * Batch validate answers
- * @param {Array} questions - Array of question objects
- * @returns {Array} Questions with answerValidation field added
- */
-export function validateAnswersBatch(questions) {
-  return questions.map((q) => ({
-    ...q,
-    answerValidation: validateAnswer(q),
-  }));
-}
-
 export default validateAnswer;

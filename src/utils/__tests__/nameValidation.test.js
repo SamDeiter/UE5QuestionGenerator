@@ -1,12 +1,10 @@
 import { describe, it, expect } from "vitest";
-import {
-  validateDisplayName,
-  isValidName,
-  sanitizeName,
-  getFirstName,
-  getInitials,
-  NAME_LIMITS,
-} from "../nameValidation";
+import { validateDisplayName } from "../nameValidation";
+
+// Mirror of the internal NAME_LIMITS constants in nameValidation.js. Kept here
+// so the length-boundary tests still reference real values without requiring
+// the module to re-export them.
+const NAME_LIMITS = { MIN_LENGTH: 2, MAX_LENGTH: 50 };
 
 describe("validateDisplayName", () => {
   describe("valid names", () => {
@@ -142,68 +140,5 @@ describe("validateDisplayName", () => {
       const result = validateDisplayName(12345);
       expect(result.valid).toBe(false); // Starts with number
     });
-  });
-});
-
-describe("isValidName", () => {
-  it("returns boolean for valid names", () => {
-    expect(isValidName("Sam Deiter")).toBe(true);
-  });
-
-  it("returns boolean for invalid names", () => {
-    expect(isValidName("123Sam")).toBe(false);
-  });
-});
-
-describe("sanitizeName", () => {
-  it("trims whitespace", () => {
-    expect(sanitizeName("  Sam  ")).toBe("Sam");
-  });
-
-  it("collapses multiple spaces", () => {
-    expect(sanitizeName("Sam    Deiter")).toBe("Sam Deiter");
-  });
-
-  it("truncates long names", () => {
-    const longName = "A".repeat(100);
-    expect(sanitizeName(longName).length).toBe(NAME_LIMITS.MAX_LENGTH);
-  });
-
-  it("handles null/undefined", () => {
-    expect(sanitizeName(null)).toBe("");
-    expect(sanitizeName(undefined)).toBe("");
-  });
-});
-
-describe("getFirstName", () => {
-  it("extracts first name from full name", () => {
-    expect(getFirstName("Sam Deiter")).toBe("Sam");
-    expect(getFirstName("John Jacob Smith")).toBe("John");
-  });
-
-  it("returns the name if no space", () => {
-    expect(getFirstName("Sam")).toBe("Sam");
-  });
-
-  it("handles empty input", () => {
-    expect(getFirstName("")).toBe("");
-    expect(getFirstName(null)).toBe("");
-  });
-});
-
-describe("getInitials", () => {
-  it("extracts initials from name", () => {
-    expect(getInitials("Sam Deiter")).toBe("SD");
-    expect(getInitials("John")).toBe("J");
-  });
-
-  it("respects maxInitials parameter", () => {
-    expect(getInitials("John Jacob Smith", 2)).toBe("JJ");
-    expect(getInitials("John Jacob Smith", 3)).toBe("JJS");
-  });
-
-  it("handles empty input", () => {
-    expect(getInitials("")).toBe("");
-    expect(getInitials(null)).toBe("");
   });
 });

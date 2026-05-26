@@ -3,7 +3,7 @@
  * Pure functions, no React dependencies
  */
 import { describe, it, expect } from "vitest";
-import validateAnswer, { validateAnswersBatch } from "../answerValidator";
+import validateAnswer from "../answerValidator";
 
 describe("answerValidator", () => {
   describe("validateAnswer", () => {
@@ -91,49 +91,6 @@ describe("answerValidator", () => {
       expect(result.details).toHaveProperty("correctLetter", "D");
       expect(result.details).toHaveProperty("answerTerms");
       expect(result.details).toHaveProperty("matchedTerms");
-    });
-  });
-
-  describe("validateAnswersBatch", () => {
-    it("adds answerValidation to each question", () => {
-      const questions = [
-        {
-          CorrectLetter: "A",
-          OptionA: "Test",
-          SourceExcerpt: "Test content",
-        },
-        {
-          CorrectLetter: "B",
-          OptionB: "Another test",
-          SourceExcerpt: "Another content",
-        },
-      ];
-
-      const result = validateAnswersBatch(questions);
-      expect(result).toHaveLength(2);
-      expect(result[0]).toHaveProperty("answerValidation");
-      expect(result[1]).toHaveProperty("answerValidation");
-    });
-
-    it("handles empty array", () => {
-      const result = validateAnswersBatch([]);
-      expect(result).toEqual([]);
-    });
-
-    it("preserves original question properties", () => {
-      const questions = [
-        {
-          uniqueId: "q1",
-          CorrectLetter: "A",
-          OptionA: "Test",
-          SourceExcerpt: "Test",
-          customField: "custom value",
-        },
-      ];
-
-      const result = validateAnswersBatch(questions);
-      expect(result[0].uniqueId).toBe("q1");
-      expect(result[0].customField).toBe("custom value");
     });
   });
 });

@@ -32,42 +32,11 @@ export const throttle = (func, wait) => {
 };
 
 /**
- * Wait for an element to appear in the DOM
- * @param {string} selector - CSS selector
- * @param {number} timeout - Timeout in milliseconds
- * @returns {Promise<Element>} Promise that resolves with the element
- */
-export const waitForElement = (selector, timeout = 5000) => {
-  return new Promise((resolve, reject) => {
-    const element = document.querySelector(selector);
-    if (element) return resolve(element);
-
-    const observer = new MutationObserver(() => {
-      const el = document.querySelector(selector);
-      if (el) {
-        observer.disconnect();
-        resolve(el);
-      }
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-
-    setTimeout(() => {
-      observer.disconnect();
-      reject(new Error(`Element ${selector} not found within ${timeout}ms`));
-    }, timeout);
-  });
-};
-
-/**
  * Get all focusable elements within a container
  * @param {HTMLElement} container - Container element
  * @returns {HTMLElement[]} Array of focusable elements
  */
-export const getFocusableElements = (container) => {
+const getFocusableElements = (container) => {
   if (!container) return [];
 
   const focusableSelectors = [

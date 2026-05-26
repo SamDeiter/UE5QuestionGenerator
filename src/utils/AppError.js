@@ -10,7 +10,7 @@
 import { logger } from "./logger";
 
 // Error codes for categorization
-export const ERROR_CODES = {
+const ERROR_CODES = {
   // Firebase/Auth errors
   AUTH_BLOCKED: "AUTH_BLOCKED",
   AUTH_EXPIRED: "AUTH_EXPIRED",

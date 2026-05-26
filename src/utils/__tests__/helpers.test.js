@@ -1,26 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
-import { chunkArray, stripHtmlTags, parseCSVLine } from "../stringHelpers";
+import { stripHtmlTags, parseCSVLine } from "../stringHelpers";
 import { formatUrl, filterDuplicateQuestions } from "../parserUtils";
 import { formatDate } from "../dateHelpers";
 
 describe("Helper Functions", () => {
-  describe("chunkArray", () => {
-    it("should split array into chunks of given size", () => {
-      const input = [1, 2, 3, 4, 5];
-      const result = chunkArray(input, 2);
-      expect(result).toEqual([[1, 2], [3, 4], [5]]);
-    });
-
-    it("should handle empty array", () => {
-      expect(chunkArray([], 3)).toEqual([]);
-    });
-
-    it("should handle size larger than array", () => {
-      expect(chunkArray([1, 2], 5)).toEqual([[1, 2]]);
-    });
-  });
-
   describe("formatUrl", () => {
     it("should add https:// if missing", () => {
       expect(formatUrl("google.com")).toBe("https://google.com");

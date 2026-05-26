@@ -202,4 +202,4 @@ export const isAuthPotentiallyStale = () => {
   return Date.now() - lastAuthActivity > STALE_THRESHOLD_MS;
 };
 
-export { app, auth, googleProvider, firebaseConfig };
+export { app, auth, firebaseConfig };

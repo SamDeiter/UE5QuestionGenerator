@@ -857,55 +857,6 @@ export const getUserTokenUsageAggregated = async (userId) => {
   }
 };
 
-/**
- * PHASE 2.2: Get aggregate statistics for all questions.
- * Useful for dashboard stats without loading all documents.
- *
- * @returns {Promise<{total: number, byStatus: Object}>}
- */
-export const getQuestionStatsAggregated = async () => {
-  try {
-    if (!auth.currentUser) {
-      return { total: 0, byStatus: {} };
-    }
-
-    // Get total count
-    const totalQuery = query(collection(getDb(), "questions"));
-    const totalSnapshot = await getAggregateFromServer(totalQuery, {
-      total: count(),
-    });
-
-    // Get counts by status (requires separate queries due to Firestore limitations)
-    const statuses = ["pending", "accepted", "rejected"];
-    const byStatus = {};
-
-    for (const status of statuses) {
-      const statusQuery = query(
-        collection(getDb(), "questions"),
-        where("status", "==", status)
-      );
-      const statusSnapshot = await getAggregateFromServer(statusQuery, {
-        count: count(),
-      });
-      byStatus[status] = statusSnapshot.data().count || 0;
-    }
-
-    const result = {
-      total: totalSnapshot.data().total || 0,
-      byStatus,
-    };
-
-    logger.log(
-      `📊 Question stats: ${result.total} total, ${JSON.stringify(result.byStatus)}`
-    );
-
-    return result;
-  } catch (error) {
-    logger.error("Error getting question stats:", error);
-    return { total: 0, byStatus: {} };
-  }
-};
-
 // --- Delete Operations ---
 
 /**

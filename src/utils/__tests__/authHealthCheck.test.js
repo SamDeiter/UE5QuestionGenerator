@@ -4,11 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  runAuthHealthCheck,
-  isAuthLikelyWorking,
-  formatHealthStatusForUI,
-} from "../authHealthCheck";
+import { runAuthHealthCheck } from "../authHealthCheck";
 
 // Mock Firebase auth
 vi.mock("../../services/firebase", () => ({
@@ -75,34 +71,6 @@ describe("authHealthCheck", () => {
       expect(status.healthy).toBe(false);
       expect(status.errorCode).toBe("blocked");
       expect(status.guidance).toContain("browser extension");
-    });
-  });
-
-  describe("isAuthLikelyWorking", () => {
-    it("returns true when auth module is accessible", () => {
-      expect(isAuthLikelyWorking()).toBe(true);
-    });
-  });
-
-  describe("formatHealthStatusForUI", () => {
-    it("returns success variant for healthy status", () => {
-      const formatted = formatHealthStatusForUI({ healthy: true });
-
-      expect(formatted.variant).toBe("success");
-      expect(formatted.showDetails).toBe(false);
-    });
-
-    it("returns warning variant with guidance for unhealthy status", () => {
-      const formatted = formatHealthStatusForUI({
-        healthy: false,
-        error: "Token Service API may be disabled",
-        guidance: "Enable the API in GCP Console",
-        errorCode: "403",
-      });
-
-      expect(formatted.variant).toBe("warning");
-      expect(formatted.showDetails).toBe(true);
-      expect(formatted.guidance).toBe("Enable the API in GCP Console");
     });
   });
 });
