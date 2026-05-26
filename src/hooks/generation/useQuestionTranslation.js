@@ -153,7 +153,9 @@ export const useQuestionTranslation = ({
       checkAndStoreQuestions,
       addQuestionsToState,
       updateQuestionInState,
-      handleLanguageSwitch,
+      // handleLanguageSwitch removed from deps: the auto-switch behavior
+      // was removed in commit 755415f1; the prop is kept on the hook
+      // signature for callers but is no longer referenced inside the body.
     ]
   );
 
