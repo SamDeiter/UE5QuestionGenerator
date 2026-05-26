@@ -91,5 +91,3 @@ export const AccessibilityProvider = ({ children }) => {
     </AccessibilityContext.Provider>
   );
 };
-
-export default AccessibilityContext;

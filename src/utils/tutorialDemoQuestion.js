@@ -4,7 +4,7 @@
  * Used when the Review Mode tutorial runs with no real questions available
  */
 
-export const TUTORIAL_DEMO_QUESTION = {
+const TUTORIAL_DEMO_QUESTION = {
   id: "tutorial-demo-question",
   uniqueId: "tutorial-demo-question",
   isTutorialDemo: true, // Flag to identify this as demo data

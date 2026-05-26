@@ -1,17 +1,8 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect } from "react";
 
 const ModalContext = createContext();
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const useModal = () => {
-  const context = useContext(ModalContext);
-  if (!context) {
-    throw new Error("useModal must be used within a ModalProvider");
-  }
-  return context;
-};
-
-export const ModalProvider = ({ children }) => {
+const ModalProvider = ({ children }) => {
   const [activeModal, setActiveModal] = useState(null);
   const [modalProps, setModalProps] = useState({});
 
