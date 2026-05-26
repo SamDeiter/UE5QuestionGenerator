@@ -9,9 +9,11 @@ import {
 import { logError } from "../../utils/AppError";
 
 // Free-tier (15 RPM) → 1 request per 4s; add 500ms buffer for safety.
-// gemini-2.5-flash-lite gives 1000 RPD vs 250 RPD on flash, so it's the
-// right choice for high-volume translation work.
-const TRANSLATION_MODEL = "gemini-2.5-flash-lite";
+// The "lite" tier gives ~4x higher RPD than the flagship "flash" tier, so it's
+// the right choice for high-volume translation work. Single source of truth
+// lives in AI_CONFIG.TRANSLATION_MODEL — flip there before the 2.5-series
+// shutdown on 2026-10-16 (replacement: gemini-3.1-flash-lite).
+const TRANSLATION_MODEL = AI_CONFIG.TRANSLATION_MODEL;
 const IS_TEST = import.meta.env?.MODE === "test" || import.meta.env?.VITEST;
 const TRANSLATION_THROTTLE_MS = IS_TEST ? 0 : 4500;
 const RATE_LIMIT_BACKOFF_MS = IS_TEST ? 0 : 60000; // 1 min cooldown if we hit 429

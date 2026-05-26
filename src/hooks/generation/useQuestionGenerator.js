@@ -15,6 +15,7 @@ import {
   GENERATION_LIMITS,
   CONTEXT_LIMITS,
   QUALITY_THRESHOLDS,
+  AI_CONFIG,
 } from "../../utils/constants";
 import {
   calculateCoverageGaps,
@@ -233,7 +234,7 @@ export const useQuestionGenerator = ({
         questionsGenerated: uniqueQs.length,
         averageQuality: Math.round(avgQual),
         success: true,
-        model: config.model || "gemini-2.5-flash",
+        model: config.model || AI_CONFIG.DEFAULT_MODEL,
         estimatedCost: tokenAnalysis.cost.estimated,
       });
 
@@ -341,7 +342,7 @@ export const useQuestionGenerator = ({
       systemPrompt,
       userPrompt,
       CONTEXT_LIMITS.MAX_TOKENS,
-      config.model || "gemini-2.5-flash"
+      config.model || AI_CONFIG.DEFAULT_MODEL
     );
 
     return {
@@ -429,7 +430,7 @@ export const useQuestionGenerator = ({
         averageQuality: 0,
         success: false,
         errorMessage: err.message,
-        model: config.model || "gemini-2.5-flash",
+        model: config.model || AI_CONFIG.DEFAULT_MODEL,
         estimatedCost: tokenAnalysis?.cost?.estimated || 0,
       });
       setStatus("Error");

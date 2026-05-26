@@ -1,5 +1,5 @@
 import { logger } from "../utils/logger";
-import { TIME } from "../utils/constants";
+import { TIME, AI_CONFIG } from "../utils/constants";
 /**
  * Analytics Store
  * Manages analytics data in localStorage with support for:
@@ -124,7 +124,7 @@ export const logGeneration = (generationData) => {
     averageQuality: generationData.averageQuality || 0,
     success: generationData.success !== false,
     errorMessage: generationData.errorMessage || null,
-    model: generationData.model || "gemini-2.5-flash",
+    model: generationData.model || AI_CONFIG.DEFAULT_MODEL,
     estimatedCost: generationData.estimatedCost || 0,
   };
 

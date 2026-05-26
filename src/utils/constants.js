@@ -60,18 +60,32 @@ export const TOAST_DURATION = {
 };
 
 // AI/Gemini Configuration Constants
+//
+// Model lifecycle (per https://ai.google.dev/gemini-api/docs/deprecations):
+//   gemini-2.5-flash       — shutdown 2026-10-16; replacement gemini-3.5-flash
+//   gemini-2.5-flash-lite  — shutdown 2026-10-16; replacement gemini-3.1-flash-lite
+//   gemini-2.5-pro         — shutdown 2026-10-16; replacement gemini-3.1-pro-preview
+// Flip DEFAULT_MODEL / TRANSLATION_MODEL below before October 2026.
 export const AI_CONFIG = {
   // Temperature settings (0.0 = deterministic, 1.0 = creative)
   DEFAULT_TEMPERATURE: 0.2, // Standard generation temperature
   TAGGING_TEMPERATURE: 0.3, // Slightly higher for tag classification
-  // Model defaults
+  // Model defaults — single source of truth, used everywhere instead of literals
   DEFAULT_MODEL: "gemini-2.5-flash",
+  TRANSLATION_MODEL: "gemini-2.5-flash-lite", // cheaper tier for high-volume translation
+  // Gemini REST endpoint base — model name is appended at call site
+  GEMINI_ENDPOINT_BASE:
+    "https://generativelanguage.googleapis.com/v1beta/models",
   // Log preview length
   API_KEY_PREVIEW_LENGTH: 10,
   // Retry/Loop limits
   MAX_CRITIQUE_RETRIES: 3,
   MAX_FEEDBACK_SCORE: 5,
 };
+
+// Helper: build the full generateContent URL for a given model
+export const buildGeminiEndpoint = (model = AI_CONFIG.DEFAULT_MODEL) =>
+  `${AI_CONFIG.GEMINI_ENDPOINT_BASE}/${model}:generateContent`;
 
 // UI Constants
 export const UI_LABELS = {
@@ -96,7 +110,7 @@ export const DEFAULT_CONFIG = {
   type: "Multiple Choice",
   language: "English",
   batchSize: "6",
-  model: "gemini-2.5-flash",
+  model: AI_CONFIG.DEFAULT_MODEL,
   tags: [],
 };
 

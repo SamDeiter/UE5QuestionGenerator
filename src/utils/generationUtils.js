@@ -1,4 +1,4 @@
-import { GENERATION_LIMITS } from "./constants";
+import { GENERATION_LIMITS, AI_CONFIG } from "./constants";
 
 /**
  * Calculates coverage gaps for tags based on existing questions.
@@ -124,7 +124,7 @@ export const enrichGeneratedQuestions = (questions, context) => {
       creatorName: config.creatorName || "Unknown",
       estimatedCost: costPerQuestion,
       generationTime: duration,
-      model: config.model || "gemini-2.5-flash",
+      model: config.model || AI_CONFIG.DEFAULT_MODEL,
       groundingSources:
         groundingSources.length > GENERATION_LIMITS.MAX_GROUNDING_SOURCES
           ? groundingSources.slice(0, GENERATION_LIMITS.MAX_GROUNDING_SOURCES)
