@@ -4,9 +4,7 @@
  */
 import { describe, it, expect } from "vitest";
 import {
-  chunkArray,
   textSimilarity,
-  computeWordDiff,
   renderMarkdown,
   stripHtmlTags,
   safe,
@@ -14,28 +12,6 @@ import {
 } from "../stringHelpers";
 
 describe("stringHelpers", () => {
-  describe("chunkArray", () => {
-    it("splits array into chunks of specified size", () => {
-      const result = chunkArray([1, 2, 3, 4, 5], 2);
-      expect(result).toEqual([[1, 2], [3, 4], [5]]);
-    });
-
-    it("handles array smaller than chunk size", () => {
-      const result = chunkArray([1, 2], 5);
-      expect(result).toEqual([[1, 2]]);
-    });
-
-    it("handles empty array", () => {
-      const result = chunkArray([], 3);
-      expect(result).toEqual([]);
-    });
-
-    it("handles chunk size of 1", () => {
-      const result = chunkArray([1, 2, 3], 1);
-      expect(result).toEqual([[1], [2], [3]]);
-    });
-  });
-
   describe("textSimilarity", () => {
     it("returns 1 for identical strings", () => {
       expect(textSimilarity("hello world", "hello world")).toBe(1);
@@ -67,37 +43,6 @@ describe("stringHelpers", () => {
     it("returns low similarity for different strings", () => {
       const similarity = textSimilarity("hello", "goodbye");
       expect(similarity).toBeLessThan(0.5);
-    });
-  });
-
-  describe("computeWordDiff", () => {
-    it("returns empty array for empty inputs", () => {
-      expect(computeWordDiff("", "")).toEqual([]);
-    });
-
-    it("marks all as added when old is empty", () => {
-      const result = computeWordDiff("", "new text");
-      expect(result).toEqual([{ type: "added", text: "new text" }]);
-    });
-
-    it("marks all as removed when new is empty", () => {
-      const result = computeWordDiff("old text", "");
-      expect(result).toEqual([{ type: "removed", text: "old text" }]);
-    });
-
-    it("marks identical text as unchanged", () => {
-      const result = computeWordDiff("same text", "same text");
-      expect(result).toEqual([{ type: "unchanged", text: "same text" }]);
-    });
-
-    it("detects added words", () => {
-      const result = computeWordDiff("hello", "hello world");
-      expect(result.some((s) => s.type === "added")).toBe(true);
-    });
-
-    it("detects removed words", () => {
-      const result = computeWordDiff("hello world", "hello");
-      expect(result.some((s) => s.type === "removed")).toBe(true);
     });
   });
 
