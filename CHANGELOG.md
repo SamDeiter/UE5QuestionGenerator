@@ -7,9 +7,113 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Codebase audit + cleanup pass — no user-visible behavior changes. Each line
-below is on its own branch and can be reviewed/merged independently. After
-the audit completed, Phase 1-3 was already merged via PR #25.
+Two efforts since 2.5.0:
+
+1. **Phase 6 god-function refactors** (PRs #35–#43) — zero user-visible
+   behavior change. 8 sequential PRs that broke up the biggest files in
+   `src/` along clean seams: two new React contexts (Message, Modal),
+   three hook splits (useExport, useQuestionGenerator, QuestionItem),
+   one service extraction (firebaseStats), and one component subcomponent
+   (QuizConfigForm). Net effect: ~50 prop passes removed from
+   App→AuthenticatedApp→GlobalModals, `useExport.js` 659→71 lines,
+   `useQuestionGenerator.js` 583→~350 lines. Two hooks deleted entirely
+   (`useModalState.js`, `useCompliance.js`) — their state lives in
+   `ModalContext` now. Tests: 974 passing throughout; baseline lint
+   warnings 7→11 (the 4 new ones are expected react-refresh / useEffect
+   deps on the new context files).
+2. **Gemini 2.5 → 3.x migration** (PR #47) — landed ahead of the
+   2026-10-16 shutdown of the 2.5 series.
+
+The audit + cleanup pass below was started earlier and ran in parallel;
+its sections are unchanged.
+
+### ✨ Phase 6 — God-function refactors
+
+- **MessageContext** (`PR #36`, `src/contexts/MessageContext.jsx`) —
+  wraps `useToast` and exposes `useMessage()`. `showMessage` is no
+  longer drilled through 15+ components as a prop; consumers read from
+  context. Removed `showMessage` from the App→AuthenticatedApp boundary
+  and from every leaf that previously received it as a prop (AdminPanel,
+  DatabaseView, TestView, ReviewMode, TranslationManagementView,
+  QuestionItem + 5 sub-components, Sidebar/GenerationSettings/
+  CoverageGapSuggester, 5 Admin/* leaves).
+- **ModalContext** (`PR #37`, `src/contexts/ModalContext.jsx`) — owns
+  14 modal visibility booleans previously scattered across
+  `useModalState` (7), `useCompliance` (3), and `useAppConfig` (4).
+  Side effects preserved verbatim: `window.openDangerZone` global,
+  compliance localStorage check at mount, data-menu click-outside.
+  Deletes `src/hooks/useModalState.js` (93 lines) and
+  `src/hooks/useCompliance.js` (48 lines). AuthenticatedApp loses ~13
+  modal props from its signature; GlobalModals reads visibility from
+  context directly. Tutorial state intentionally stays in `useTutorial`
+  (tightly coupled step machine).
+- **useExport split** (`PR #38`, new `src/hooks/export/`) — 659-line
+  hook broken into three focused sub-hooks composed by a thin facade:
+  - `useExportFormatting.js` — CSV/JSON/Markdown generation, file
+    downloads, segmentation, bulk-export flow
+  - `useSheetsBridge.js` — Google Sheets dual-write + re-import
+  - `useFirestoreSync.js` — three-tier cache → incremental delta →
+    full sync with watermark management
+  `useExport.js` is now 71 lines of facade. Public API unchanged;
+  AuthenticatedApp's call site is untouched.
+- **useQuestionGenerator split** (`PR #39`) — moved auto-critique,
+  explain, and variate handlers into the existing
+  `src/hooks/generation/useQuestionCritique.js` where the rest of the
+  critique/refinement flow lives. `useQuestionGenerator.js` 583→~350
+  lines, focused on the core engine. `useGeneration.js` reorders
+  construction so `useQuestionCritique` runs first and passes
+  `handleAutoCritique` into the generator (keeps the post-generation
+  auto-critique chain intact).
+- **firebaseStats extracted** (`PR #40`,
+  `src/services/firebaseStats.js`) — `getCategoryStatsAggregated`,
+  `getUserTokenUsageAggregated`, `getQuestionStats` moved out of the
+  1058-line `firebaseQueries.js`. Pure server-side aggregations with
+  zero coupling to the in-memory cache. Re-exported from
+  `firebaseQueries.js` for API parity. The full cache/read/stats split
+  the plan called for was scoped down to stats only because the
+  in-memory `_questionsCache` is tightly coupled to
+  `getAllQuestionsFromFirestore` and there are no dedicated tests to
+  catch regressions on a riskier split — see Open Items below.
+- **QuestionItem hooks extracted** (`PR #42`) — two new hooks pulled
+  out of the 740-line component:
+  - `src/hooks/useQuestionVerification.js` — verify/reject/flag/
+    doc-link-update callbacks
+  - `src/hooks/useCritiqueChangeDetection.js` — refs + useEffect that
+    auto-opens the improvement modal when a critique arrives or
+    re-runs mid-session. Exposes `markSeen()` so the apply path can
+    pre-sync the "last seen" cursor.
+  QuestionItem.jsx 740→~580 lines.
+- **QuizConfigForm extracted** (`PR #43`,
+  `src/components/TestView/QuizConfigForm.jsx`) — the 7-field Quiz
+  Settings card pulled out of TestView. Pure presentational; ~145 lines
+  of inline form JSX → single subcomponent invocation. The
+  QuestionFilter card was scoped out of this PR (admin-only view, no
+  test coverage, 5-piece state plumb).
+- **Foundation cleanup** (`PR #35`, `PR #44`) — extracted
+  `toMillis()` to `src/utils/firestoreHelpers.js` (dedup between
+  `firebaseQueries.js` and `useExport.js`); deleted the unused
+  `src/contexts/ModalProvider.jsx` stub. PR #44 was a one-line
+  whitespace fix unblocking GitHub Pages deploy after a prettier
+  --check failure surfaced on the main branch.
+
+### 🔄 Gemini 2.5 → 3.x migration
+
+- **Migrated off the deprecated 2.5 series** (`PR #47`,
+  `src/utils/constants.js` + 3 consumers). Quality-vs-cost split:
+  - `DEFAULT_MODEL`: `gemini-2.5-flash` → `gemini-3.5-flash` —
+    used by generation, critique, explain, variate, tag inference.
+    Pay for better reasoning on the work products. (~5× input / 3.6×
+    output cost vs the 2.5 line.)
+  - `TRANSLATION_MODEL`: `gemini-2.5-flash-lite` →
+    `gemini-3.1-flash-lite` — used by `handleTranslateSingle` /
+    `handleBulkTranslateMissing`. High volume, pattern-matching task;
+    Lite is actually *cheaper* than the 2.5-flash-lite it replaces.
+  - Admin "Most Capable" picker: `gemini-2.5-pro` →
+    `gemini-3.1-pro-preview`.
+  Token-counter default fallbacks flipped to `gemini-3.5-flash`. The
+  2.5-series rows in `PRICING` and `TOKEN_LIMITS` were intentionally
+  kept so historical analytics on pre-migration generations still
+  resolves. Deadline closed well ahead of 2026-10-16.
 
 ### 🔒 Security
 
@@ -65,13 +169,29 @@ the audit completed, Phase 1-3 was already merged via PR #25.
 
 ### 📌 Open items (intentionally deferred)
 
-- **Gemini replacement model decision** — pick `gemini-3.5-flash` (5× / 3.6×
-  cost) vs `gemini-3.1-flash-lite` (cheaper than current 2.5-flash) vs stay
-  on 2.5 until closer to Oct 16. Infrastructure is wired; flipping is a
-  one-line edit in `src/utils/constants.js`.
-- **God-function refactors** — `AuthenticatedApp` (47 props), `GlobalModals`
-  (45 props), `useExport` (641 lines), `QuestionItem` (626), `TestView` (586),
-  etc. Tracked separately; multi-day scope.
+- **firebaseQueries cache/read split** — PR #40 scoped the planned
+  three-way split down to stats only. The remaining cache+read code
+  (~900 lines) is still co-located in `src/services/firebaseQueries.js`
+  because the in-memory `_questionsCache` / `_questionsCacheTimestamp`
+  state is read directly by `getAllQuestionsFromFirestore` and pulling
+  them apart needs either a shared module or a getter/setter dance.
+  Should land alongside characterization tests for the read/cache layer
+  (currently zero dedicated coverage) so regressions are catchable.
+- **TestView QuestionFilter extraction** — PR #43 extracted
+  QuizConfigForm but left the discipline multi-select + language
+  dropdown card in TestView. Cleanly extracting it requires plumbing
+  through 5 pieces of state (filters, disciplines list,
+  acceptedCountsByDiscipline, dropdown-open boolean, ref) plus 3
+  callbacks; admin-only view, no test coverage, so the risk/value didn't
+  justify it this round. Pair with a smoke test for TestView when it
+  comes back.
+- **Watch 3.5-flash output quality post-migration.** PR #47 routes
+  generation/critique/explain/variate to `gemini-3.5-flash` (~5× input
+  cost vs 2.5-flash) on the bet that the quality bump justifies the
+  spend. If a few generation batches feel no different from 2.5-flash,
+  consider downgrading `DEFAULT_MODEL` to `gemini-3.1-flash-lite` for
+  further savings — translation already lives there and the test cases
+  would tell.
 
 ## [2.5.0] - 2026-05-26
 
