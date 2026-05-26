@@ -2,6 +2,7 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 const { isAdminUser } = require("../utils/isAdminUser");
+const { isBootstrapAdmin } = require("../utils/bootstrapAdmin");
 
 /**
  * Cloud Function: createInvite
@@ -20,10 +21,7 @@ exports.createInvite = functions
     }
 
     const isAdmin = await isAdminUser(context.auth.uid);
-    // Explicitly allow owner
-    const isOwner =
-      context.auth.token.email === "samdeiter@gmail.com" ||
-      context.auth.token.email === "samdeiter@epicgames.com";
+    const isOwner = isBootstrapAdmin(context.auth.token.email);
 
     if (!isAdmin && !isOwner) {
       throw new functions.https.HttpsError(
