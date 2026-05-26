@@ -11,7 +11,20 @@ const NAV_COLOR_MAP = {
   red: "bg-red-600 shadow-red-900/20",
 };
 
-const AppNavigation = ({ activeMode, onNavigate, counts = {}, isAdmin }) => {
+const AppNavigation = ({
+  activeMode,
+  onNavigate,
+  counts = {},
+  isAdmin,
+  // While the initial Firestore load is in flight, the only questions
+  // visible to the count machinery are the user's session-stored ones
+  // (from localStorage, see useQuestionState). That set is almost always
+  // tiny — e.g. "2 pending" — and is wildly misleading next to the real
+  // ~19,580-doc bank that lands a moment later. Suppress the badge until
+  // the load settles so users don't see a number that's just going to
+  // jump within ~hundreds of milliseconds.
+  isInitialLoading = false,
+}) => {
   const navItems = [
     {
       id: "create",
@@ -25,7 +38,9 @@ const AppNavigation = ({ activeMode, onNavigate, counts = {}, isAdmin }) => {
       label: "Review",
       icon: "list-checks",
       color: "indigo",
-      badge: counts.pending,
+      // Hide the pending count until the initial load settles to avoid
+      // showing a misleading session-only number that immediately jumps.
+      badge: isInitialLoading ? undefined : counts.pending,
     },
     { id: "database", label: "Database", icon: "database", color: "blue" },
     {

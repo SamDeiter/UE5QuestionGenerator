@@ -110,6 +110,7 @@ const MainLayout = ({
   handleModeSelect,
   handleViewDatabase,
   pendingCount,
+  isInitialLoading,
 
   // Toolbar props
   toolbarProps,
@@ -158,6 +159,7 @@ const MainLayout = ({
             onNavigate={handleModeChange}
             counts={{ pending: pendingCount }}
             isAdmin={isAdmin}
+            isInitialLoading={isInitialLoading}
           />
           <ContextToolbar {...toolbarProps} isAdmin={isAdmin} />
         </div>
