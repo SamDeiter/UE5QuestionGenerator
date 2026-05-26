@@ -20,25 +20,7 @@ import {
   FIRESTORE_LIMITS,
 } from "../utils/constants";
 import { validateQuestion } from "../utils/questionValidator";
-
-// firestoreUpdatedAt may arrive as a Firestore Timestamp, a serialized
-// {seconds, nanoseconds} object (older bulk-imported docs), an ISO string,
-// or null. Mirrors the `toMillis` helper in firebaseQueries.js but kept
-// local so this hook doesn't reach across the service boundary just for one
-// function. Returns 0 when the value is unparseable so callers can safely
-// `Math.max(0, …)` reduce.
-const toMillisCompat = (v) => {
-  if (!v) return 0;
-  if (typeof v.toMillis === "function") return v.toMillis();
-  if (typeof v.seconds === "number") {
-    return v.seconds * 1000 + (v.nanoseconds || 0) / 1e6;
-  }
-  if (typeof v === "string") {
-    const parsed = Date.parse(v);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-  return 0;
-};
+import { toMillis } from "../utils/firestoreHelpers";
 
 export const useExport = (
   config,
@@ -405,7 +387,7 @@ export const useExport = (
           let maxUpdated = lastSyncTime;
           for (const q of updated) {
             if (q?.uniqueId) byUniqueId.set(q.uniqueId, q);
-            const ts = toMillisCompat(q?.firestoreUpdatedAt);
+            const ts = toMillis(q?.firestoreUpdatedAt);
             if (ts > maxUpdated) maxUpdated = ts;
           }
           const merged = Array.from(byUniqueId.values());
@@ -468,7 +450,7 @@ export const useExport = (
         // real data we haven't loaded.
         if (freshQuestions.length > 0) {
           const maxFromFull = freshQuestions.reduce((max, q) => {
-            const ts = toMillisCompat(q.firestoreUpdatedAt);
+            const ts = toMillis(q.firestoreUpdatedAt);
             return ts > max ? ts : max;
           }, 0);
           if (maxFromFull > 0) await setLastSyncTime(maxFromFull);

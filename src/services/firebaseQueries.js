@@ -24,6 +24,7 @@ import {
 } from "firebase/firestore";
 import { logger } from "../utils/logger";
 import { TIMING, FIRESTORE_LIMITS, QUESTION_SOURCES } from "../utils/constants";
+import { toMillis } from "../utils/firestoreHelpers";
 import { auth, firebaseConfig } from "./firebaseAuth";
 import { getDb } from "./firebaseSave";
 import {
@@ -42,22 +43,6 @@ import { registerListener, unregisterListener } from "../utils/listenerTracker";
 let _questionsCache = null;
 let _questionsCacheTimestamp = 0;
 const CACHE_TTL_MS = TIMING.CACHE_TTL_MS;
-
-// Convert any firestoreUpdatedAt shape (Timestamp, {seconds, nanoseconds}, ISO string, null)
-// into a millisecond epoch for client-side sorting. Defense against historic data drift
-// where some docs stored a plain object instead of a Timestamp.
-const toMillis = (v) => {
-  if (!v) return 0;
-  if (typeof v.toMillis === "function") return v.toMillis();
-  if (typeof v.seconds === "number") {
-    return v.seconds * 1000 + (v.nanoseconds || 0) / 1e6;
-  }
-  if (typeof v === "string") {
-    const parsed = Date.parse(v);
-    return isNaN(parsed) ? 0 : parsed;
-  }
-  return 0;
-};
 
 /**
  * Nuke both memory and IndexedDB caches.
