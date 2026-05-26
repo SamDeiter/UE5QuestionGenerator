@@ -172,10 +172,11 @@ describe("Translation Integration Tests", () => {
       );
       expect(translatedQuestion.status).toBe("accepted");
 
-      // Verify language was switched
-      expect(mockHandleLanguageSwitch).toHaveBeenCalledWith(
-        "Chinese (Simplified)"
-      );
+      // Verify the user is NOT yanked to the new language. The auto-switch
+      // was removed in commit 755415f1 ("stabilize translation pipeline")
+      // because mid-flow language flips disoriented reviewers — translation
+      // adds the variant to the bank but leaves the active filter alone.
+      expect(mockHandleLanguageSwitch).not.toHaveBeenCalled();
 
       // Verify success message
       expect(mockShowMessage).toHaveBeenCalledWith(
