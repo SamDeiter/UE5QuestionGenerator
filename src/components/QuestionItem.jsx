@@ -278,6 +278,26 @@ const QuestionItem = ({
     }
   }, [onApplyRewrite, q]);
 
+  const handleVerifyTranslation = useCallback(() => {
+    if (!onUpdateQuestion) return;
+    onUpdateQuestion(q.id, {
+      translationVerified: true,
+      translationVerifiedBy: userEmail,
+      translationVerifiedAt: new Date().toISOString(),
+    });
+    showMessage?.("✅ Translation marked as verified", TOAST_DURATION.MEDIUM);
+  }, [q.id, onUpdateQuestion, userEmail, showMessage]);
+
+  const handleClearTranslationVerification = useCallback(() => {
+    if (!onUpdateQuestion) return;
+    onUpdateQuestion(q.id, {
+      translationVerified: false,
+      translationVerifiedBy: null,
+      translationVerifiedAt: null,
+    });
+    showMessage?.("Translation verification cleared", TOAST_DURATION.MEDIUM);
+  }, [q.id, onUpdateQuestion, showMessage]);
+
   const handleAccept = useCallback(() => {
     // PIPELINE ENFORCEMENT: Critique is required before accept
     if (q.critiqueScore === null || q.critiqueScore === undefined) {
@@ -433,6 +453,8 @@ const QuestionItem = ({
             onVerify={handleOpenDocs}
             onAccept={handleAccept}
             onFix={handleFix}
+            onVerifyTranslation={handleVerifyTranslation}
+            onClearTranslationVerification={handleClearTranslationVerification}
             isProcessing={isProcessing}
           />
         )}

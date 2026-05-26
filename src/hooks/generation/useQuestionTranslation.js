@@ -121,10 +121,10 @@ export const useQuestionTranslation = ({
             status: q.status,
             dateAdded: new Date().toISOString(),
             tags: q.tags,
-            critiqueScore: q.critiqueScore,
             sourceUrl: q.sourceUrl,
             translatedAt: new Date().toISOString(),
             translatedFrom: q.language || "English",
+            translationVerified: false,
           };
 
           await addQuestionsToState([translatedVariant], false);
@@ -279,6 +279,9 @@ export const useQuestionTranslation = ({
             language: targetLang,
             status: "pending",
             dateAdded: new Date().toISOString(),
+            translatedAt: new Date().toISOString(),
+            translatedFrom: q.language || "English",
+            translationVerified: false,
           };
 
           await checkAndStoreQuestions([newQuestion]);

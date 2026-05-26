@@ -231,6 +231,12 @@ const QuestionActions = ({
 
   if (appMode === "database") return null;
 
+  // On translation tabs, REJECT is meaningless — that decision belongs to the
+  // English source. Translation quality is handled via "Mark verified" / "Clear
+  // verification" actions inside ReviewProgressBar.
+  const isTranslationTab = !!q.language && q.language !== "English";
+  if (isTranslationTab && appMode === "review") return null;
+
   return (
     <div
       className={appMode === "review" ? "w-full" : "flex items-center gap-2"}
