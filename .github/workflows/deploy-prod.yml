@@ -12,6 +12,16 @@ jobs:
         run: npm ci
       - name: Run Tests
         run: npx vitest run --exclude="**/**.integration.test.{jsx,js}"
+        # Tests that import firebaseAuth/firebaseFirestore initialize a Firebase
+        # client at module-load time and throw `auth/invalid-api-key` without
+        # these. Mirrors the env block in .github/workflows/deploy.yml.
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
       - name: Build
         run: npm run build
         env:
