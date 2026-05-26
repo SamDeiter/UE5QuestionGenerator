@@ -206,7 +206,7 @@ export const useFirestoreSync = ({
         setStatus("");
       }
     },
-     
+
     [
       setIsProcessing,
       setStatus,
