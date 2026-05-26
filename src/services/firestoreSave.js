@@ -10,7 +10,6 @@
 
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { getDb } from "./firebase";
-import { auth } from "./firebaseAuth";
 import { logger } from "../utils/logger";
 import { REVIEWER_ALLOWED_FIELDS } from "../utils/constants";
 
@@ -26,42 +25,6 @@ const removeUndefined = (obj) => {
       .filter(([, v]) => v !== undefined)
       .map(([k, v]) => [k, removeUndefined(v)])
   );
-};
-
-/**
- * Full save for question owners/creators.
- * Includes all fields and sets creatorId if missing.
- *
- * @param {Object} question - Complete question object
- * @returns {Promise<{success: boolean, error?: string}>}
- */
-export const saveQuestionAsOwner = async (question) => {
-  if (!question?.uniqueId) {
-    logger.error("[SaveAsOwner] Missing uniqueId", question);
-    return { success: false, error: "Missing uniqueId" };
-  }
-
-  try {
-    const docRef = doc(getDb(), "questions", question.uniqueId);
-
-    const payload = removeUndefined({
-      ...question,
-      firestoreUpdatedAt: Timestamp.now(),
-    });
-
-    // Owners should have their ID set
-    if (auth.currentUser && !payload.creatorId) {
-      payload.creatorId = auth.currentUser.uid;
-      payload.creatorEmail = auth.currentUser.email;
-    }
-
-    await setDoc(docRef, payload, { merge: true });
-    logger.log(`[SaveAsOwner] Saved ${question.uniqueId}`);
-    return { success: true };
-  } catch (error) {
-    logger.error(`[SaveAsOwner] Failed for ${question.uniqueId}:`, error);
-    return { success: false, error: error.message };
-  }
 };
 
 /**
@@ -116,26 +79,4 @@ export const saveQuestionAsReviewer = async (questionId, updates) => {
     logger.error(`[SaveAsReviewer] Failed for ${questionId}:`, error);
     return { success: false, error: error.message };
   }
-};
-
-/**
- * Targeted save for status updates (accept/reject).
- * Sends only status-related fields.
- *
- * @param {string} questionId - The question's uniqueId
- * @param {string} status - New status ('accepted', 'rejected', 'pending')
- * @param {Object} metadata - Additional status metadata
- * @returns {Promise<{success: boolean, error?: string}>}
- */
-export const saveQuestionStatusUpdate = async (
-  questionId,
-  status,
-  metadata = {}
-) => {
-  const updates = {
-    status,
-    ...metadata,
-  };
-
-  return saveQuestionAsReviewer(questionId, updates);
 };

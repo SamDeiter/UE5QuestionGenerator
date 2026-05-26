@@ -245,39 +245,6 @@ export const normalizeTag = (tag) => {
 };
 
 /**
- * Validates tags against allowed list for a discipline
- * @param {Array} tags - Array of tags to validate
- * @param {string} discipline - The discipline to validate against
- * @returns {Object} { valid: [], invalid: [], normalized: [] }
- */
-export const validateTags = (tags, discipline) => {
-  const allowedTags = TAGS_BY_DISCIPLINE[discipline] || [];
-  const result = { valid: [], invalid: [], normalized: [] };
-
-  tags.forEach((tag) => {
-    const normalized = normalizeTag(tag);
-    result.normalized.push(normalized);
-
-    if (allowedTags.includes(normalized)) {
-      result.valid.push(normalized);
-    } else {
-      // Check if it's valid in ANY discipline
-      const isValidElsewhere = Object.values(TAGS_BY_DISCIPLINE)
-        .flat()
-        .includes(normalized);
-
-      if (isValidElsewhere) {
-        result.valid.push(normalized); // Allow cross-discipline tags
-      } else {
-        result.invalid.push(normalized);
-      }
-    }
-  });
-
-  return result;
-};
-
-/**
  * Merges predefined tags with user's custom tags for a specific discipline
  * @param {string} discipline - The discipline name
  * @param {Object} customTags - Object mapping discipline names to arrays of custom tags
@@ -290,12 +257,4 @@ export const getMergedTags = (discipline, customTags = {}) => {
   // Combine and remove duplicates, normalizing custom tags
   const normalizedCustom = custom.map(normalizeTag);
   return [...new Set([...predefined, ...normalizedCustom])];
-};
-
-/**
- * Gets all unique tags across all disciplines
- * @returns {Array} All unique tags
- */
-export const getAllTags = () => {
-  return [...new Set(Object.values(TAGS_BY_DISCIPLINE).flat())];
 };

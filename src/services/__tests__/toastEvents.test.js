@@ -2,14 +2,7 @@
  * Toast Events Service Tests
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  subscribeToToasts,
-  emitToast,
-  toastError,
-  toastWarning,
-  toastSuccess,
-  toastInfo,
-} from "../toastEvents";
+import { subscribeToToasts, emitToast, toastError } from "../toastEvents";
 
 describe("toastEvents", () => {
   let callback;
@@ -88,24 +81,9 @@ describe("toastEvents", () => {
       expect(callback).toHaveBeenCalledWith("Error!", "error", undefined);
     });
 
-    it("toastWarning emits warning type", () => {
-      toastWarning("Warning!");
-      expect(callback).toHaveBeenCalledWith("Warning!", "warning", undefined);
-    });
-
-    it("toastSuccess emits success type", () => {
-      toastSuccess("Success!");
-      expect(callback).toHaveBeenCalledWith("Success!", "success", undefined);
-    });
-
-    it("toastInfo emits info type", () => {
-      toastInfo("Info!");
-      expect(callback).toHaveBeenCalledWith("Info!", "info", undefined);
-    });
-
-    it("helpers pass duration", () => {
-      toastSuccess("Quick toast", 1000);
-      expect(callback).toHaveBeenCalledWith("Quick toast", "success", 1000);
+    it("toastError passes duration", () => {
+      toastError("Quick toast", 1000);
+      expect(callback).toHaveBeenCalledWith("Quick toast", "error", 1000);
     });
   });
 });

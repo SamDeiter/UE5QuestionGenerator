@@ -171,15 +171,6 @@ export const SCORM_DEFAULTS = {
   TIME_LIMIT_MINUTES: 30,
 };
 
-// Difficulty Distribution Weights for Quiz Question Selection
-// Controls how many questions of each difficulty are selected per attempt.
-// Shifted from equal thirds (33/33/33) to harder distribution to combat inflated scores.
-export const DIFFICULTY_WEIGHTS = {
-  EASY: 0.15, // 15% Easy questions (was ~33%)
-  MEDIUM: 0.35, // 35% Medium questions (was ~33%)
-  HARD: 0.5, // 50% Hard questions (was ~33%)
-};
-
 // Firestore Query Limits - Performance Optimization
 export const FIRESTORE_LIMITS = {
   MAX_RESULTS: 500,
@@ -193,11 +184,6 @@ export const FIRESTORE_LIMITS = {
   FULL_SYNC_COUNT: 50000, // Cap for full-sync path. Internally paginated in 2500-doc chunks, so this is just an upper bound.
 };
 
-// History Limits
-export const HISTORY_LIMITS = {
-  MAX_STATES_PER_QUESTION: 10,
-};
-
 // Generation & Processing Limits
 export const GENERATION_LIMITS = {
   REJECTED_EXAMPLES_COUNT: 5,
@@ -208,16 +194,6 @@ export const GENERATION_LIMITS = {
   ID_SUBSTRING_LENGTH: 4,
   MAX_RETRIES: 5,
   ERROR_TRUNCATE_LENGTH: 50, // Max chars to show in error messages
-};
-
-// Question Validation Limits
-export const QUESTION_LIMITS = {
-  MIN_CHOICES: 2,
-  MAX_CHOICES: 6,
-  MIN_QUESTION_LENGTH: 10,
-  MAX_QUESTION_LENGTH: 500,
-  MIN_EXPORT_QUESTIONS: 5, // Warn if exporting less than this
-  MAX_EXPORT_QUESTIONS: 100, // Warn if exporting more than this
 };
 
 // Processing Constants

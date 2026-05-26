@@ -1,5 +1,5 @@
 import { logger } from "../utils/logger";
-import { TIME, AI_CONFIG } from "../utils/constants";
+import { AI_CONFIG } from "../utils/constants";
 /**
  * Analytics Store
  * Manages analytics data in localStorage with support for:
@@ -10,7 +10,6 @@ import { TIME, AI_CONFIG } from "../utils/constants";
  */
 
 const STORAGE_KEY = "ue5_analytics";
-const TRAINING_DATA_KEY = "ue5_training_data";
 
 /**
  * Gets analytics data from localStorage
@@ -175,85 +174,6 @@ export const logQuestion = (questionData) => {
 };
 
 /**
- * Gets metrics for a specific time range
- * @param {string} timeRange - 'day' | 'week' | 'month' | 'all'
- * @returns {object} Filtered metrics
- */
-export const getMetrics = (timeRange = "all") => {
-  const data = getAnalytics();
-  const now = new Date();
-  let cutoffDate = new Date(0); // Beginning of time
-
-  switch (timeRange) {
-    case "day":
-      cutoffDate = new Date(now.getTime() - TIME.DAY);
-      break;
-    case "week":
-      cutoffDate = new Date(now.getTime() - TIME.WEEK);
-      break;
-    case "month":
-      cutoffDate = new Date(now.getTime() - TIME.MONTH);
-      break;
-  }
-
-  const filteredGenerations = data.generations.filter(
-    (g) => new Date(g.timestamp) >= cutoffDate
-  );
-
-  const filteredQuestions = data.questions.filter(
-    (q) => new Date(q.created) >= cutoffDate
-  );
-
-  return {
-    generations: filteredGenerations,
-    questions: filteredQuestions,
-    summary: data.summary,
-  };
-};
-
-/**
- * Exports analytics to CSV format
- * @returns {string} CSV content
- */
-export const exportAnalytics = () => {
-  const data = getAnalytics();
-
-  const headers = [
-    "Timestamp",
-    "Discipline",
-    "Difficulty",
-    "Batch Size",
-    "Input Tokens",
-    "Output Tokens",
-    "Duration (ms)",
-    "Questions Generated",
-    "Average Quality",
-    "Success",
-    "Cost ($)",
-  ];
-
-  const rows = data.generations.map((g) => [
-    g.timestamp,
-    g.discipline,
-    g.difficulty,
-    g.batchSize,
-    g.tokensUsed.input,
-    g.tokensUsed.output,
-    g.duration,
-    g.questionsGenerated,
-    g.averageQuality,
-    g.success ? "Yes" : "No",
-    g.estimatedCost.toFixed(6),
-  ]);
-
-  const csv = [headers, ...rows]
-    .map((row) => row.map((cell) => `"${cell}"`).join(","))
-    .join("\n");
-
-  return csv;
-};
-
-/**
  * Exports bad questions as training data for fine-tuning
  * @param {number} minCritiqueScore - Minimum critique score to include (default: 70)
  * @returns {object} Training data in JSONL format
@@ -362,14 +282,6 @@ export const downloadTrainingData = (type = "all") => {
 };
 
 /**
- * Clears all analytics data
- */
-export const clearAnalytics = () => {
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(TRAINING_DATA_KEY);
-};
-
-/**
  * Gets current token usage statistics
  * @returns {object} Token usage stats
  */
@@ -431,68 +343,4 @@ export const getTokenUsage = () => {
     outputTokens,
     totalCost: data.summary.estimatedCost,
   };
-};
-
-/**
- * Calculates token usage from loaded questions (Firestore data)
- * This aggregates estimatedCost from all questions, regardless of localStorage generations
- * @param {Array} questions - Array of question objects from Firestore
- * @returns {object} { inputTokens, outputTokens, totalCost }
- */
-export const getTokenUsageFromQuestions = (questions) => {
-  if (!questions || !Array.isArray(questions)) {
-    return { inputTokens: 0, outputTokens: 0, totalCost: 0 };
-  }
-
-  const totalCost = questions.reduce((sum, q) => {
-    return sum + (q.estimatedCost || 0);
-  }, 0);
-
-  // Estimate tokens based on average (rough approximation)
-  // Using average of 500 input + 200 output tokens per question
-  const avgInputPerQuestion = 500;
-  const avgOutputPerQuestion = 200;
-
-  return {
-    inputTokens: questions.length * avgInputPerQuestion,
-    outputTokens: questions.length * avgOutputPerQuestion,
-    totalCost,
-  };
-};
-
-/**
- * Logs a critique action (apply or reject)
- * @param {Object} actionData - Action data
- * @param {string} actionData.questionId - Question ID
- * @param {string} actionData.action - 'applied' | 'rejected'
- * @param {number} actionData.critiqueScore - Original critique score
- * @param {string} actionData.discipline - Question discipline
- */
-export const logCritiqueAction = (actionData) => {
-  const data = getAnalytics();
-
-  const action = {
-    id: crypto.randomUUID(),
-    timestamp: new Date().toISOString(),
-    questionId: actionData.questionId,
-    action: actionData.action, // 'applied' or 'rejected'
-    critiqueScore: actionData.critiqueScore,
-    discipline: actionData.discipline || "Unknown",
-  };
-
-  if (!data.critiqueActions) {
-    data.critiqueActions = [];
-  }
-
-  data.critiqueActions.push(action);
-
-  // Update critique acceptance rate
-  const totalActions = data.critiqueActions.length;
-  const appliedActions = data.critiqueActions.filter(
-    (a) => a.action === "applied"
-  ).length;
-  data.summary.critiqueAcceptanceRate =
-    totalActions > 0 ? Math.round((appliedActions / totalActions) * 100) : 0;
-
-  saveAnalytics(data);
 };

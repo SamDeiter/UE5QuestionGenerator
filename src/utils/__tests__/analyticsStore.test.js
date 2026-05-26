@@ -6,13 +6,8 @@ import {
   getAnalytics,
   logGeneration,
   logQuestion,
-  getMetrics,
-  exportAnalytics,
-  clearAnalytics,
   getTokenStats,
   getTokenUsage,
-  getTokenUsageFromQuestions,
-  logCritiqueAction,
 } from "../analyticsStore";
 
 // Mock localStorage
@@ -116,46 +111,6 @@ describe("analyticsStore", () => {
     });
   });
 
-  describe("getMetrics", () => {
-    it("returns all metrics by default", () => {
-      const metrics = getMetrics();
-      expect(metrics).toHaveProperty("generations");
-      expect(metrics).toHaveProperty("questions");
-      expect(metrics).toHaveProperty("summary");
-    });
-
-    it("filters by day", () => {
-      const metrics = getMetrics("day");
-      expect(metrics).toHaveProperty("generations");
-    });
-
-    it("filters by week", () => {
-      const metrics = getMetrics("week");
-      expect(metrics).toHaveProperty("generations");
-    });
-
-    it("filters by month", () => {
-      const metrics = getMetrics("month");
-      expect(metrics).toHaveProperty("generations");
-    });
-  });
-
-  describe("exportAnalytics", () => {
-    it("returns CSV format", () => {
-      const csv = exportAnalytics();
-      expect(csv).toContain("Timestamp");
-      expect(csv).toContain("Discipline");
-      expect(csv).toContain("Difficulty");
-    });
-  });
-
-  describe("clearAnalytics", () => {
-    it("removes analytics from localStorage", () => {
-      clearAnalytics();
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith("ue5_analytics");
-    });
-  });
-
   describe("getTokenStats", () => {
     it("returns token statistics", () => {
       const stats = getTokenStats();
@@ -172,46 +127,6 @@ describe("analyticsStore", () => {
       expect(usage).toHaveProperty("inputTokens");
       expect(usage).toHaveProperty("outputTokens");
       expect(usage).toHaveProperty("totalCost");
-    });
-  });
-
-  describe("getTokenUsageFromQuestions", () => {
-    it("handles null input", () => {
-      const usage = getTokenUsageFromQuestions(null);
-      expect(usage).toEqual({ inputTokens: 0, outputTokens: 0, totalCost: 0 });
-    });
-
-    it("handles empty array", () => {
-      const usage = getTokenUsageFromQuestions([]);
-      expect(usage).toEqual({ inputTokens: 0, outputTokens: 0, totalCost: 0 });
-    });
-
-    it("calculates usage from questions", () => {
-      const questions = [{ estimatedCost: 0.01 }, { estimatedCost: 0.02 }];
-      const usage = getTokenUsageFromQuestions(questions);
-      expect(usage.totalCost).toBe(0.03);
-      expect(usage.inputTokens).toBe(1000); // 2 questions * 500
-      expect(usage.outputTokens).toBe(400); // 2 questions * 200
-    });
-  });
-
-  describe("logCritiqueAction", () => {
-    it("logs applied action", () => {
-      logCritiqueAction({
-        questionId: "q1",
-        action: "applied",
-        critiqueScore: 85,
-      });
-      expect(localStorageMock.setItem).toHaveBeenCalled();
-    });
-
-    it("logs rejected action", () => {
-      logCritiqueAction({
-        questionId: "q2",
-        action: "rejected",
-        critiqueScore: 60,
-      });
-      expect(localStorageMock.setItem).toHaveBeenCalled();
     });
   });
 });

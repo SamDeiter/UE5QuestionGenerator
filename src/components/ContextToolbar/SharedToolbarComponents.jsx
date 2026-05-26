@@ -44,51 +44,6 @@ export const SearchInput = ({
 export const ToolbarDivider = () => <div className="h-4 w-px bg-slate-700" />;
 
 /**
- * Status indicator pill
- */
-export const StatusIndicator = ({
-  icon,
-  text,
-  color = "slate",
-  pulse = false,
-}) => (
-  <span
-    className={`text-xs text-${color}-500 font-medium flex items-center gap-1 ${
-      pulse ? "animate-pulse" : ""
-    }`}
-  >
-    <Icon name={icon} size={12} className={pulse ? "animate-spin" : ""} />{" "}
-    {text}
-  </span>
-);
-
-/**
- * Toggle button with active/inactive states
- */
-export const ToggleButton = ({
-  active,
-  onClick,
-  icon,
-  activeLabel,
-  inactiveLabel,
-  activeColor = "blue",
-  title = "",
-}) => (
-  <button
-    onClick={onClick}
-    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2 border ${
-      active
-        ? `bg-${activeColor}-600/20 text-${activeColor}-300 border-${activeColor}-500/50`
-        : "bg-transparent text-slate-400 border-transparent hover:bg-slate-800"
-    }`}
-    title={title}
-  >
-    <Icon name={icon} size={14} />
-    {active ? activeLabel : inactiveLabel}
-  </button>
-);
-
-/**
  * Dropdown menu wrapper with click-outside handling
  */
 export const DropdownMenu = ({ isOpen, children, width = "w-56" }) => {
@@ -122,24 +77,9 @@ export const MenuButton = ({
   </button>
 );
 
-/**
- * Small label with selector styling
- */
-export const LabeledSelector = ({ label, children }) => (
-  <div className="flex items-center gap-1 px-2 py-1 bg-slate-800 rounded border border-slate-700 shadow-sm">
-    <span className="text-[10px] uppercase font-bold text-slate-500 select-none">
-      {label}:
-    </span>
-    {children}
-  </div>
-);
-
 export default {
   SearchInput,
   ToolbarDivider,
-  StatusIndicator,
-  ToggleButton,
   DropdownMenu,
   MenuButton,
-  LabeledSelector,
 };

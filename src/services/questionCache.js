@@ -106,21 +106,6 @@ export const getCachedQuestions = async ({
 };
 
 /**
- * Gets a single question from cache by uniqueId.
- * @param {string} uniqueId - The question's unique ID
- * @returns {Promise<Object|null>}
- */
-export const getCachedQuestion = async (uniqueId) => {
-  try {
-    const db = await getDB();
-    return await db.get(QUESTIONS_STORE, uniqueId);
-  } catch (error) {
-    logger.error("Failed to get cached question:", error);
-    return null;
-  }
-};
-
-/**
  * Checks if the cache is still valid based on TTL.
  * @param {number} [maxAgeMs] - Maximum cache age in milliseconds (default: from constants)
  * @returns {Promise<boolean>}
@@ -137,19 +122,6 @@ export const isCacheValid = async (
   } catch (error) {
     logger.error("Failed to check cache validity:", error);
     return false;
-  }
-};
-
-/**
- * Gets the timestamp of when the cache was last updated.
- * @returns {Promise<number|null>}
- */
-export const getLastCacheTime = async () => {
-  try {
-    const db = await getDB();
-    return (await db.get(META_STORE, "lastCached")) || null;
-  } catch {
-    return null;
   }
 };
 
@@ -300,13 +272,11 @@ export const getCacheStats = async () => {
 export default {
   cacheQuestions,
   getCachedQuestions,
-  getCachedQuestion,
   cacheMetadata,
   getCachedMetadata,
   updateCachedQuestion,
   deleteCachedQuestion,
   isCacheValid,
-  getLastCacheTime,
   getLastSyncTime,
   setLastSyncTime,
   clearCache,
