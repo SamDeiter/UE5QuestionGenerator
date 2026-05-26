@@ -73,6 +73,64 @@ describe("usePendingCount", () => {
     expect(result.current).toBe(1);
   });
 
+  it("should filter by discipline when one is provided", () => {
+    const questionsMap = new Map([
+      [
+        "q1",
+        [
+          {
+            uniqueId: "q1",
+            status: "pending",
+            language: "English",
+            discipline: "Game Dev",
+          },
+        ],
+      ],
+      [
+        "q2",
+        [
+          {
+            uniqueId: "q2",
+            status: "pending",
+            language: "English",
+            discipline: "Look Dev",
+          },
+        ],
+      ],
+      [
+        "q3",
+        [
+          {
+            uniqueId: "q3",
+            status: "pending",
+            language: "English",
+            discipline: "Game Dev",
+          },
+        ],
+      ],
+    ]);
+
+    const { result: gameDev } = renderHook(() =>
+      usePendingCount(questionsMap, "Game Dev")
+    );
+    expect(gameDev.current).toBe(2);
+
+    const { result: lookDev } = renderHook(() =>
+      usePendingCount(questionsMap, "Look Dev")
+    );
+    expect(lookDev.current).toBe(1);
+  });
+
+  it("should count all disciplines when no discipline is provided", () => {
+    const questionsMap = new Map([
+      ["q1", [{ uniqueId: "q1", status: "pending", discipline: "Game Dev" }]],
+      ["q2", [{ uniqueId: "q2", status: "pending", discipline: "Look Dev" }]],
+    ]);
+
+    const { result } = renderHook(() => usePendingCount(questionsMap));
+    expect(result.current).toBe(2);
+  });
+
   it("should memoize the count based on map reference", () => {
     const questionsMap = new Map([
       ["q1", [{ uniqueId: "q1", status: "pending" }]],

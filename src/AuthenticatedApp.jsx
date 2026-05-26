@@ -316,7 +316,10 @@ const AuthenticatedApp = ({
     setCurrentReviewIndex,
   });
 
-  const totalPendingQuestions = usePendingCount(allQuestionsMap);
+  const totalPendingQuestions = usePendingCount(
+    allQuestionsMap,
+    config.discipline
+  );
 
   const {
     showRecoveryPrompt,
