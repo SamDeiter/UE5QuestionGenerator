@@ -2,6 +2,7 @@ import { useState } from "react";
 import { sanitizeText } from "../../utils/stringHelpers";
 import Icon from "../Icon";
 import AnswerChangeConfirmModal from "../AnswerChangeConfirmModal";
+import { useMessage } from "../../contexts/MessageContext";
 
 const QuestionContent = ({
   q,
@@ -10,10 +11,10 @@ const QuestionContent = ({
   setEditedText,
   setIsEditing,
   onUpdateQuestion,
-  showMessage,
   appMode,
   isAdmin = false,
 }) => {
+  const { showMessage } = useMessage();
   // Track which version to display (0 = original, 1+ = alternatives)
   const [alternativeIndex, setAlternativeIndex] = useState(0);
   // Answer change modal state

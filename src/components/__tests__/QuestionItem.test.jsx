@@ -44,6 +44,17 @@ vi.mock("../../contexts/AccessibilityContext", async () => {
   };
 });
 
+vi.mock("../../contexts/MessageContext", () => ({
+  useMessage: () => ({
+    showMessage: vi.fn(),
+    toasts: [],
+    removeToast: vi.fn(),
+    addToast: vi.fn(),
+    updateProgress: vi.fn(),
+    completeProgress: vi.fn(),
+  }),
+}));
+
 vi.mock("../../utils/logger", () => ({
   logger: { log: vi.fn(), warn: vi.fn() },
 }));

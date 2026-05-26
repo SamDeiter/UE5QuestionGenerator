@@ -35,6 +35,7 @@ import { useAutoLoad } from "./hooks/useAutoLoad";
 import { useFileHandler } from "./hooks/useFileHandler";
 import { useConflictResolution } from "./hooks/useConflictResolution";
 import { useUrlModeSync } from "./hooks/useUrlModeSync";
+import { useMessage } from "./contexts/MessageContext";
 import { APP_MODES } from "./utils/constants";
 // import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import LandingPage from "./components/LandingPage";
@@ -48,7 +49,6 @@ const AuthenticatedApp = ({
   // markAsRegistered,
   customTags,
   handleSaveCustomTags,
-  showMessage,
   setStatus,
   status,
   appMode,
@@ -91,6 +91,8 @@ const AuthenticatedApp = ({
   setShowAgeGate,
   setTermsAccepted,
 }) => {
+  const { showMessage } = useMessage();
+
   // 3. Core Domain Hooks
   const { globalStats } = useGlobalStats();
   const { categoryStats } = useCategoryStats(config.discipline);
@@ -393,7 +395,6 @@ const AuthenticatedApp = ({
     handleSelectCategory,
     customTags,
     status,
-    showMessage,
     isAdmin,
   });
 
@@ -563,7 +564,6 @@ const AuthenticatedApp = ({
           viewRouterSetters={{
             setCurrentReviewIndex,
             setFilterByCreator,
-            showMessage,
           }}
           handleGoHome={handleGoHome}
           onStartTutorial={onStartTutorial}

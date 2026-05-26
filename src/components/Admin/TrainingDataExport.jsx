@@ -18,8 +18,10 @@ import {
 } from "../../services/trainingDataService";
 import { logger } from "../../utils/logger";
 import { TOAST_DURATION } from "../../utils/constants";
+import { useMessage } from "../../contexts/MessageContext";
 
-const TrainingDataExport = ({ isCollapsed, onToggle, showMessage }) => {
+const TrainingDataExport = ({ isCollapsed, onToggle }) => {
+  const { showMessage } = useMessage();
   const [isExporting, setIsExporting] = useState(false);
   const [exportType, setExportType] = useState(null);
 

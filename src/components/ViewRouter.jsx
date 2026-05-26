@@ -63,7 +63,7 @@ const ViewRouter = ({
     userRole,
     isInitialLoading,
   } = state;
-  const { setCurrentReviewIndex, setFilterByCreator, showMessage } = setters;
+  const { setCurrentReviewIndex, setFilterByCreator } = setters;
 
   /**
    * Render the appropriate view based on appMode
@@ -143,7 +143,6 @@ const ViewRouter = ({
           onSwitchLanguage={handleLanguageSwitch}
           addQuestionsToState={handlers.addQuestionsToState}
           isProcessing={isProcessing}
-          showMessage={showMessage}
           filterMode={state.filterMode}
           sortBy={state.sortBy}
           searchTerm={state.searchTerm}
@@ -157,7 +156,6 @@ const ViewRouter = ({
           questions={[...questions, ...databaseQuestions]}
           config={config}
           isAdmin={isAdmin}
-          showMessage={showMessage}
         />
       ),
       [APP_MODES.PLAYGROUND]: isAdmin && (
@@ -169,7 +167,6 @@ const ViewRouter = ({
       ),
       [APP_MODES.ADMIN]: isAdmin && (
         <AdminPanel
-          showMessage={showMessage}
           config={config}
           handleChange={handlers.handleChange}
           showApiKey={state.showApiKey}
@@ -198,7 +195,6 @@ const ViewRouter = ({
           onDelete={handleDelete}
           onUpdateQuestion={handleManualUpdate}
           isProcessing={isProcessing}
-          showMessage={showMessage}
           userRole={userRole}
           searchTerm={state.searchTerm}
           filterMode={state.filterMode}
@@ -226,7 +222,6 @@ const ViewRouter = ({
         onSwitchLanguage={handleLanguageSwitch}
         onDelete={handleDelete}
         onUpdateQuestion={handleManualUpdate}
-        showMessage={showMessage}
         userRole={userRole}
         allQuestionsMap={allQuestionsMap}
       />

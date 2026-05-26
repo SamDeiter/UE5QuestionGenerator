@@ -8,8 +8,10 @@ import React from "react";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { useAccessibility } from "../../contexts/AccessibilityContext";
+import { useMessage } from "../../contexts/MessageContext";
 
-const EnvironmentInfo = ({ showMessage, isCollapsed, onToggle }) => {
+const EnvironmentInfo = ({ isCollapsed, onToggle }) => {
+  const { showMessage } = useMessage();
   const { colorblindMode } = useAccessibility();
   const cb = colorblindMode;
 

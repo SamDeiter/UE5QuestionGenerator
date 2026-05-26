@@ -16,7 +16,6 @@ const QuestionList = ({
   onSwitchLanguage,
   onDelete,
   onUpdateQuestion,
-  showMessage,
   userRole, // NEW
   allQuestionsMap,
 }) => {
@@ -45,7 +44,6 @@ const QuestionList = ({
             }
             isProcessing={isProcessing}
             appMode={appMode}
-            showMessage={showMessage}
             userRole={userRole}
             isAdmin={userRole === "admin"}
           />

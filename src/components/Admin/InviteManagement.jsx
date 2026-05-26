@@ -14,15 +14,16 @@ import CollapsibleSection from "../CollapsibleSection";
 import { createInvite, revokeInvite } from "../../services/inviteService";
 import { sendReviewerInvitesViaEmail } from "../../services/cloudFunctions";
 import { logger } from "../../utils/logger";
+import { useMessage } from "../../contexts/MessageContext";
 
 const InviteManagement = ({
   invites,
   onRefresh,
-  showMessage,
   isCollapsed,
   isLoading,
   onToggle,
 }) => {
+  const { showMessage } = useMessage();
   const [newInviteSettings, setNewInviteSettings] = useState({
     role: "reviewer",
     maxUses: 1,

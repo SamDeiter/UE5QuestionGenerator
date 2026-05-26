@@ -62,6 +62,17 @@ vi.mock("../../contexts/AccessibilityContext", () => ({
   }),
 }));
 
+vi.mock("../../contexts/MessageContext", () => ({
+  useMessage: () => ({
+    showMessage: vi.fn(),
+    toasts: [],
+    removeToast: vi.fn(),
+    addToast: vi.fn(),
+    updateProgress: vi.fn(),
+    completeProgress: vi.fn(),
+  }),
+}));
+
 // ============================================================
 // COMPONENT IMPORTS (after mocks)
 // ============================================================
@@ -104,7 +115,6 @@ describe("Critical UI Regression Tests", () => {
           onUpdateStatus={vi.fn()}
           onDelete={vi.fn()}
           appMode={APP_MODES.REVIEW}
-          showMessage={vi.fn()}
         />
       );
 
@@ -123,7 +133,6 @@ describe("Critical UI Regression Tests", () => {
           onUpdateStatus={vi.fn()}
           onDelete={vi.fn()}
           appMode={APP_MODES.REVIEW}
-          showMessage={vi.fn()}
         />
       );
 
@@ -139,7 +148,6 @@ describe("Critical UI Regression Tests", () => {
           onUpdateStatus={vi.fn()}
           onDelete={vi.fn()}
           appMode={APP_MODES.DATABASE}
-          showMessage={vi.fn()}
         />
       );
 
@@ -176,7 +184,6 @@ describe("Critical UI Regression Tests", () => {
           setEditedText={vi.fn()}
           setIsEditing={vi.fn()}
           onUpdateQuestion={vi.fn()}
-          showMessage={vi.fn()}
           appMode={APP_MODES.REVIEW}
         />
       );
@@ -197,7 +204,6 @@ describe("Critical UI Regression Tests", () => {
           setEditedText={vi.fn()}
           setIsEditing={vi.fn()}
           onUpdateQuestion={vi.fn()}
-          showMessage={vi.fn()}
           appMode={APP_MODES.REVIEW}
         />
       );
@@ -216,7 +222,6 @@ describe("Critical UI Regression Tests", () => {
           setEditedText={vi.fn()}
           setIsEditing={vi.fn()}
           onUpdateQuestion={vi.fn()}
-          showMessage={vi.fn()}
           appMode={APP_MODES.REVIEW}
         />
       );
@@ -234,7 +239,6 @@ describe("Critical UI Regression Tests", () => {
           setEditedText={vi.fn()}
           setIsEditing={vi.fn()}
           onUpdateQuestion={vi.fn()}
-          showMessage={vi.fn()}
           appMode={APP_MODES.REVIEW}
         />
       );

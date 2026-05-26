@@ -13,6 +13,7 @@ import AdminSection from "./Admin/AdminSection";
 
 // Hooks
 import { useAdminPanelLogic } from "../hooks/admin/useAdminPanelLogic";
+import { useMessage } from "../contexts/MessageContext";
 
 // Lazy Loaded Admin Components
 const ReviewerAnalytics = React.lazy(() => import("./Admin/ReviewerAnalytics"));
@@ -32,7 +33,6 @@ const AuditLogs = React.lazy(() => import("./Admin/AuditLogs"));
 const DataMaintenance = React.lazy(() => import("./Admin/DataMaintenance"));
 
 const AdminPanel = ({
-  showMessage,
   config,
   handleChange,
   showApiKey,
@@ -43,6 +43,7 @@ const AdminPanel = ({
   currentUser,
   userRole,
 }) => {
+  const { showMessage } = useMessage();
   // Super Admin check - prefer Firestore role, fall back to env var
   const userEmail = currentUser?.email?.toLowerCase();
   const envSuperAdmin =
@@ -128,7 +129,6 @@ const AdminPanel = ({
           <InviteManagement
             invites={invites}
             onRefresh={refreshInvites}
-            showMessage={showMessage}
             isCollapsed={collapsed.inviteManagement}
             isLoading={invitesLoading}
             onToggle={() => {
@@ -207,7 +207,6 @@ const AdminPanel = ({
         {isSuperAdmin && (
           <AdminSection label="Environment Info">
             <EnvironmentInfo
-              showMessage={showMessage}
               isCollapsed={collapsed.envInfo}
               onToggle={() => toggleSection("envInfo")}
             />
@@ -220,7 +219,6 @@ const AdminPanel = ({
             <TrainingDataExport
               isCollapsed={collapsed.trainingData}
               onToggle={() => toggleSection("trainingData")}
-              showMessage={showMessage}
             />
           </AdminSection>
         )}
@@ -229,7 +227,6 @@ const AdminPanel = ({
         {isSuperAdmin && (
           <AdminSection label="Database Management">
             <DatabaseManagement
-              showMessage={showMessage}
               isCollapsed={collapsed.databaseMgmt}
               onToggle={() => toggleSection("databaseMgmt")}
             />
@@ -240,7 +237,6 @@ const AdminPanel = ({
         {isSuperAdmin && (
           <AdminSection label="Data Maintenance">
             <DataMaintenance
-              showMessage={showMessage}
               isCollapsed={collapsed.dataMaintenance}
               onToggle={() => toggleSection("dataMaintenance")}
             />

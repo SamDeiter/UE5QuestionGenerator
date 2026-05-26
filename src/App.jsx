@@ -18,7 +18,7 @@ const InviteSignUp = lazy(() => import("./components/InviteSignUp"));
 // Custom Hooks (Global only)
 import { useAppConfig } from "./hooks/useAppConfig";
 import { useTutorial } from "./hooks/useTutorial";
-import { useToast } from "./hooks/useToast";
+import { useMessage } from "./contexts/MessageContext";
 import { useAuth } from "./hooks/useAuth";
 import { useTokenUsage } from "./hooks/useTokenUsage";
 import { useAuthRefresh } from "./hooks/useAuthRefresh";
@@ -31,7 +31,7 @@ import { APP_MODES } from "./utils/constants";
 import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 
 const App = () => {
-  const { toasts, removeToast, showMessage } = useToast();
+  const { toasts, removeToast, showMessage } = useMessage();
   const [status, setStatus] = useState("");
 
   const {
@@ -171,7 +171,6 @@ const App = () => {
             markAsRegistered={markAsRegistered}
             customTags={customTags}
             handleSaveCustomTags={handleSaveCustomTags}
-            showMessage={showMessage}
             setStatus={setStatus}
             status={status}
             appMode={appMode}
