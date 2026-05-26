@@ -16,9 +16,9 @@ import { logger } from "../utils/logger";
 import { TIMING } from "../utils/constants";
 
 // Extracted focus hooks
-import { useCompliance } from "./useCompliance";
 import { useLocalTokenUsage } from "./useLocalTokenUsage";
 import { useUserRegistration } from "./useUserRegistration";
+import { useModals } from "../contexts/ModalContext";
 
 // SECURITY FIX V-002: Removed client-side FALLBACK_ADMIN_EMAILS
 // Admin detection now happens entirely server-side via checkUserRegistration()
@@ -53,7 +53,7 @@ export function useAuth(showMessage) {
   const [customTags, setCustomTags] = useState({});
   const tokenUsage = useLocalTokenUsage();
 
-  // Compliance state (extracted)
+  // Compliance state (now owned by ModalContext)
   const {
     showTerms,
     setShowTerms,
@@ -61,7 +61,7 @@ export function useAuth(showMessage) {
     setShowAgeGate,
     termsAccepted,
     setTermsAccepted,
-  } = useCompliance();
+  } = useModals();
 
   // ========================================================================
   // EFFECTS

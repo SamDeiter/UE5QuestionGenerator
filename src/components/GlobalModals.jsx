@@ -7,6 +7,7 @@ import TermsOfUseModal from "./TermsOfUseModal";
 import CookieConsentBanner from "./CookieConsentBanner";
 import AgeGateModal from "./AgeGateModal";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
+import { useModals } from "../contexts/ModalContext";
 
 // Lazy-loaded modals. These previously contributed ~132 KB gzip to the
 // initial authenticated bundle even though their render is gated on an
@@ -23,18 +24,24 @@ const DangerZoneModal = lazy(() => import("./DangerZoneModal"));
 const TutorialOverlay = lazy(() => import("./TutorialOverlay"));
 
 const GlobalModals = ({ visibility, state, handlers }) => {
+  // Modal visibility comes from ModalContext now; `visibility` covers the
+  // few flags still owned elsewhere (showClearModal lives in
+  // useQuestionManager, tutorialActive lives in useTutorial,
+  // deleteConfirmId lives in useQuestionManager).
+  const { showClearModal, tutorialActive, deleteConfirmId } = visibility;
+
   const {
     showNameModal,
-    showClearModal,
     showBulkExportModal,
     showAnalytics,
     showDangerZone,
     showApiKeyModal,
     showTerms,
     showAgeGate,
-    tutorialActive,
-    deleteConfirmId,
-  } = visibility;
+    setShowTerms,
+    setShowAgeGate,
+    setTermsAccepted,
+  } = useModals();
 
   const {
     config,
@@ -60,9 +67,6 @@ const GlobalModals = ({ visibility, state, handlers }) => {
     onCloseDangerZone,
     onCloseApiKey,
     handleSaveApiKey,
-    setShowTerms,
-    setTermsAccepted,
-    setShowAgeGate,
     handleTutorialNext,
     handleTutorialPrev,
     handleTutorialSkip,

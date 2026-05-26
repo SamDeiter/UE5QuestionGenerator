@@ -10,6 +10,18 @@
 /* eslint-disable sonarjs/no-nested-functions */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
+
+vi.mock("../../contexts/ModalContext", () => ({
+  useModals: () => ({
+    showTerms: false,
+    setShowTerms: vi.fn(),
+    showAgeGate: false,
+    setShowAgeGate: vi.fn(),
+    termsAccepted: false,
+    setTermsAccepted: vi.fn(),
+  }),
+}));
+
 import { useAuth } from "../useAuth";
 
 // =====================================================================

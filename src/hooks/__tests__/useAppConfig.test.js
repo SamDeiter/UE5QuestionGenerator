@@ -17,6 +17,40 @@ vi.mock("../../utils/logger", () => ({
   },
 }));
 
+vi.mock("../../contexts/ModalContext", () => ({
+  useModals: () => ({
+    showNameModal: false,
+    setShowNameModal: vi.fn(),
+    showGenSettings: true,
+    setShowGenSettings: vi.fn(),
+    showSettings: false,
+    setShowSettings: vi.fn(),
+    showApiKey: false,
+    setShowApiKey: vi.fn(),
+    showTerms: false,
+    setShowTerms: vi.fn(),
+    showAgeGate: false,
+    setShowAgeGate: vi.fn(),
+    termsAccepted: false,
+    setTermsAccepted: vi.fn(),
+    showExportMenu: false,
+    setShowExportMenu: vi.fn(),
+    showBulkExportModal: false,
+    setShowBulkExportModal: vi.fn(),
+    showAnalytics: false,
+    setShowAnalytics: vi.fn(),
+    dataMenuOpen: false,
+    setDataMenuOpen: vi.fn(),
+    dataMenuRef: { current: null },
+    showAdvancedConfig: false,
+    setShowAdvancedConfig: vi.fn(),
+    showDangerZone: false,
+    setShowDangerZone: vi.fn(),
+    showApiKeyModal: false,
+    setShowApiKeyModal: vi.fn(),
+  }),
+}));
+
 describe("useAppConfig", () => {
   beforeEach(() => {
     vi.clearAllMocks();
