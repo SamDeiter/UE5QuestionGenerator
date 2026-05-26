@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/pseudo-random */
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "./Icon";
 import QuizPreview from "./QuizPreview";
 import ScormExportModal from "./ScormExportModal";
@@ -37,6 +37,30 @@ const TestView = ({
     language: "",
   });
   const [disciplineDropdownOpen, setDisciplineDropdownOpen] = useState(false);
+  const disciplineDropdownRef = useRef(null);
+
+  // Close the discipline dropdown on outside click or Escape, matching
+  // standard popover UX (clicking the panel itself stays open).
+  useEffect(() => {
+    if (!disciplineDropdownOpen) return undefined;
+    const handlePointer = (e) => {
+      if (
+        disciplineDropdownRef.current &&
+        !disciplineDropdownRef.current.contains(e.target)
+      ) {
+        setDisciplineDropdownOpen(false);
+      }
+    };
+    const handleKey = (e) => {
+      if (e.key === "Escape") setDisciplineDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [disciplineDropdownOpen]);
 
   // UI state
   const [showPreview, setShowPreview] = useState(false);
@@ -354,7 +378,7 @@ const TestView = ({
             </h2>
 
             {/* Disciplines (multi-select) */}
-            <div className="mb-4 relative">
+            <div className="mb-4 relative" ref={disciplineDropdownRef}>
               <label className="block text-sm font-medium text-slate-300 mb-1">
                 Disciplines
               </label>
