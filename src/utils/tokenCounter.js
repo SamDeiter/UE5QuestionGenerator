@@ -6,7 +6,8 @@
  * For more accurate counting, consider using tiktoken or similar libraries
  */
 
-// Pricing per 1M tokens (Gemini 2.5 series, 2026)
+// Pricing per 1M tokens (USD, 2026 standard rates — global region)
+// 2.5-series shuts down 2026-10-16; 3.x rows are the replacements.
 const PRICING = {
   "gemini-2.5-flash": {
     input: 0.3,
@@ -20,9 +21,21 @@ const PRICING = {
     input: 1.25,
     output: 10.0,
   },
+  "gemini-3.5-flash": {
+    input: 1.5,
+    output: 9.0,
+  },
+  "gemini-3.1-flash-lite": {
+    input: 0.25,
+    output: 1.5,
+  },
+  "gemini-3.1-pro-preview": {
+    input: 2.0,
+    output: 12.0,
+  },
 };
 
-// Token limits per model
+// Token limits per model (input window / max output tokens per request)
 const TOKEN_LIMITS = {
   "gemini-2.5-flash": {
     input: 1000000,
@@ -35,6 +48,18 @@ const TOKEN_LIMITS = {
   "gemini-2.5-pro": {
     input: 1000000,
     output: 8192,
+  },
+  "gemini-3.5-flash": {
+    input: 1048576,
+    output: 65536,
+  },
+  "gemini-3.1-flash-lite": {
+    input: 1048576,
+    output: 65536,
+  },
+  "gemini-3.1-pro-preview": {
+    input: 1048576,
+    output: 65536,
   },
 };
 

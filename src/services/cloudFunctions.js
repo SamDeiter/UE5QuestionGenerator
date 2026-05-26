@@ -9,6 +9,7 @@ import { app, auth } from "./firebase";
 import { refreshAuthToken, isAuthPotentiallyStale } from "./firebaseAuth";
 import { logger } from "../utils/logger";
 import { logError } from "../utils/AppError";
+import { AI_CONFIG } from "../utils/constants";
 
 /**
  * Ensures auth token is fresh before making Cloud Function calls
@@ -46,7 +47,7 @@ const functions = getFunctions(app, "us-central1");
  * @param {string} userPrompt - User's question/request
  * @param {function} setStatus - Optional status callback
  * @param {number} temperature - Temperature for generation (default 0.2)
- * @param {string} model - Model name (default 'gemini-2.5-flash')
+ * @param {string} model - Model name (default AI_CONFIG.DEFAULT_MODEL)
  * @returns {Promise<string>} Generated text response
  */
 export const generateContentViaCloudFunction = async (
@@ -54,7 +55,7 @@ export const generateContentViaCloudFunction = async (
   userPrompt,
   setStatus = () => {},
   temperature = 0.2,
-  model = "gemini-2.5-flash"
+  model = AI_CONFIG.DEFAULT_MODEL
 ) => {
   try {
     // Ensure token is fresh before calling Cloud Function
@@ -101,7 +102,7 @@ export const generateContentViaCloudFunction = async (
  */
 export const generateCritiqueViaCloudFunction = async (
   question,
-  model = "gemini-2.5-flash"
+  model = AI_CONFIG.DEFAULT_MODEL
 ) => {
   try {
     // Defensive validation - catch malformed data before Cloud Function call

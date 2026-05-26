@@ -1,4 +1,5 @@
 import { logger } from "../utils/logger";
+import { AI_CONFIG } from "../utils/constants";
 /**
  * normalizeQuestion.js - Ensures all questions have consistent data fields
  *
@@ -232,7 +233,7 @@ export const normalizeQuestion = (q, contextDefaults = {}) => {
     // Generation metadata (cost tracking, performance)
     estimatedCost: q.estimatedCost || null,
     generationTime: q.generationTime || null,
-    model: q.model || "gemini-2.5-flash",
+    model: q.model || AI_CONFIG.DEFAULT_MODEL,
     groundingSources: q.groundingSources || null,
 
     // Variations/Conversion tracking
