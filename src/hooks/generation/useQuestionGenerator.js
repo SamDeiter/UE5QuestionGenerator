@@ -1,9 +1,5 @@
 import { useState, useCallback } from "react";
-import {
-  generateContentSecure as generateContent,
-  generateCritiqueSecure as generateCritique,
-  generateTagsSecure,
-} from "../../services/geminiSecure";
+import { generateContentSecure as generateContent } from "../../services/geminiSecure";
 import { constructSystemPrompt } from "../../services/promptBuilder";
 import { parseQuestions, convertMCtoTF } from "../../utils/parserUtils";
 import { validateQuestion } from "../../utils/questionValidator";
@@ -14,7 +10,6 @@ import {
   TOAST_DURATION,
   GENERATION_LIMITS,
   CONTEXT_LIMITS,
-  QUALITY_THRESHOLDS,
   AI_CONFIG,
 } from "../../utils/constants";
 import {
@@ -23,12 +18,12 @@ import {
   filterForbiddenSources,
   verifyAndProcessQuestions,
 } from "../../utils/generationUtils";
-import { logger } from "../../utils/logger";
-import { logError } from "../../utils/AppError";
 import { TAGS_BY_DISCIPLINE } from "../../utils/tagTaxonomy";
 
 /**
- * Hook to handle question generation, explanation, and variation.
+ * Hook that owns the question-generation engine. Critique / explain /
+ * variate live in useQuestionCritique; useGeneration plumbs
+ * handleAutoCritique back in here so handleGenerate can chain it.
  */
 export const useQuestionGenerator = ({
   config,
@@ -44,102 +39,9 @@ export const useQuestionGenerator = ({
   getFileContext,
   checkAndStoreQuestions,
   addQuestionsToState,
-  updateQuestionInState,
-  setIsProcessing,
+  handleAutoCritique,
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
-
-  const handleAutoCritique = useCallback(
-    async (questions) => {
-      setStatus("Auto-critiquing...");
-      showMessage(
-        `Running AI critique on ${questions.length} questions...`,
-        TOAST_DURATION.MEDIUM
-      );
-
-      const critiqueQuestion = async (question) => {
-        try {
-          const { score, text, rewrite, changes } = await generateCritique(
-            effectiveApiKey,
-            question
-          );
-
-          let suggestedTags = question.tags || [];
-          if (
-            suggestedTags.length < GENERATION_LIMITS.MIN_TAGS_PER_QUESTION &&
-            rewrite
-          ) {
-            const improvedQuestion = {
-              question: rewrite.question || question.question,
-              optionA: rewrite.optionA || question.options?.A,
-              optionB: rewrite.optionB || question.options?.B,
-              optionC: rewrite.optionC || question.options?.C,
-              optionD: rewrite.optionD || question.options?.D,
-            };
-            const newTags = await generateTagsSecure(
-              effectiveApiKey,
-              improvedQuestion
-            );
-            if (newTags) {
-              suggestedTags = [
-                ...new Set([
-                  ...suggestedTags,
-                  ...newTags.map((t) => t.replace(/^#/, "")),
-                ]),
-              ];
-            }
-          }
-
-          updateQuestionInState(question.id, (item) => ({
-            ...item,
-            critique: text,
-            critiqueScore: score,
-            suggestedRewrite: rewrite
-              ? { ...rewrite, tags: suggestedTags }
-              : null,
-            rewriteChanges: changes,
-          }));
-          return score;
-        } catch {
-          return null;
-        }
-      };
-
-      const batchSize = GENERATION_LIMITS.BATCH_SIZE_PARALLEL_CRITIQUE;
-      const scores = [];
-      for (let i = 0; i < questions.length; i += batchSize) {
-        const batch = questions.slice(i, i + batchSize);
-        const batchScores = await Promise.all(batch.map(critiqueQuestion));
-        scores.push(...batchScores.filter((s) => s !== null));
-      }
-
-      const avgScore =
-        scores.length > 0
-          ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-          : 0;
-
-      const highScoreCount = scores.filter(
-        (s) => s >= QUALITY_THRESHOLDS.PASS
-      ).length;
-      const lowScoreCount = scores.filter(
-        (s) => s < QUALITY_THRESHOLDS.MEDIOCRE
-      ).length;
-
-      if (lowScoreCount > 0) {
-        showMessage(
-          `Critique complete! Avg: ${avgScore}/100. ⚠️ ${lowScoreCount} need improvement.`,
-          TOAST_DURATION.EXTENDED
-        );
-      } else {
-        showMessage(
-          `Critique complete! Avg: ${avgScore}/100. ${highScoreCount} ready to accept!`,
-          TOAST_DURATION.LONG
-        );
-      }
-      setStatus("");
-    },
-    [effectiveApiKey, setStatus, showMessage, updateQuestionInState]
-  );
 
   const handlePerformGeneration = useCallback(
     async ({
@@ -453,131 +355,9 @@ export const useQuestionGenerator = ({
     prepareGenerationContext,
   ]);
 
-  const handleExplain = useCallback(
-    async (q) => {
-      if (!isApiReady) {
-        showMessage("API key required.", TOAST_DURATION.LONG);
-        return;
-      }
-
-      setIsProcessing(true);
-      setStatus("Explaining...");
-      const prompt = `Explain WHY the answer is correct in simple terms: "${
-        q.question
-      }" Answer: "${q.correct === "A" ? q.options.A : q.options.B}"`;
-
-      try {
-        const exp = await generateContent(
-          effectiveApiKey,
-          "Technical Assistant",
-          prompt,
-          setStatus
-        );
-        updateQuestionInState(q.id, (item) => ({ ...item, explanation: exp }));
-        setStatus("");
-      } catch (error) {
-        logger.error("Explanation failed:", error);
-        setStatus("Fail");
-      } finally {
-        setIsProcessing(false);
-      }
-    },
-    [
-      effectiveApiKey,
-      isApiReady,
-      setStatus,
-      showMessage,
-      updateQuestionInState,
-      setIsProcessing,
-    ]
-  );
-
-  const handleVariate = useCallback(
-    async (q) => {
-      if (!isApiReady) {
-        showMessage("API key required.", TOAST_DURATION.LONG);
-        return;
-      }
-
-      setIsProcessing(true);
-      setStatus("Creating improved variations...");
-
-      // Build context-aware prompt that leverages critique feedback
-      const hasCritique = q.critique && q.critiqueScore !== undefined;
-      const critiqueContext = hasCritique
-        ? `\n\nCRITIQUE FEEDBACK (Score: ${q.critiqueScore}/100):\n${q.critique}\n\nYour task: Generate 2 IMPROVED variations that ADDRESS the critique feedback above.`
-        : `\n\nYour task: Generate 2 IMPROVED variations that are MORE CHALLENGING and PROFESSIONAL than the original.`;
-
-      const sys = constructSystemPrompt(config, getFileContext());
-      const prompt = `ORIGINAL QUESTION TO IMPROVE:
-Discipline: ${q.discipline}
-Difficulty: ${q.difficulty}
-Type: ${q.type}
-Question: "${q.question}"
-Options:
-A) ${q.options.A}
-B) ${q.options.B}
-${q.options.C ? `C) ${q.options.C}` : ""}
-${q.options.D ? `D) ${q.options.D}` : ""}
-Correct Answer: ${q.correct}
-${critiqueContext}
-
-REQUIREMENTS FOR VARIATIONS:
-1. Address any weaknesses mentioned in the critique (if provided)
-2. Increase depth and professional relevance
-3. Use scenario-based or application-focused phrasing
-4. Avoid trivial or overly simple questions
-5. Maintain the same difficulty level: ${q.difficulty}
-6. Keep the same type: ${q.type}
-
-Output in Markdown Table format.`;
-
-      try {
-        const text = await generateContent(
-          effectiveApiKey,
-          sys,
-          prompt,
-          setStatus
-        );
-        const newQs = parseQuestions(text);
-        if (newQs.length > 0) {
-          const uniqueNewQuestions = await checkAndStoreQuestions(newQs);
-          addQuestionsToState(uniqueNewQuestions, false);
-          showMessage(
-            `Added ${uniqueNewQuestions.length} improved variations.`,
-            TOAST_DURATION.SHORT
-          );
-        }
-      } catch (e) {
-        logError(e, { operation: "generateVariations", questionId: q?.id });
-        setStatus("Fail");
-        showMessage(
-          `Failed to generate variations: ${e.message}`,
-          TOAST_DURATION.EXTENDED
-        );
-      } finally {
-        setIsProcessing(false);
-      }
-    },
-    [
-      config,
-      effectiveApiKey,
-      isApiReady,
-      setStatus,
-      showMessage,
-      addQuestionsToState,
-      checkAndStoreQuestions,
-      setIsProcessing,
-      getFileContext,
-    ]
-  );
-
   return {
     isGenerating,
     handleGenerate,
-    handleExplain,
-    handleVariate,
     handlePerformGeneration,
-    handleAutoCritique,
   };
 };
