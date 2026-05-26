@@ -576,7 +576,12 @@ const TestView = ({
       {/* SCORM Export Modal */}
       {showExport && (
         <ScormExportModal
-          questions={selectedQuestions}
+          questions={
+            selectedQuestionIds.size > 0 ? selectedQuestions : filteredQuestions
+          }
+          discipline={
+            filters.disciplines.length === 1 ? filters.disciplines[0] : null
+          }
           onClose={() => setShowExport(false)}
         />
       )}
