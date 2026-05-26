@@ -31,6 +31,9 @@ import {
   cacheQuestions,
   isCacheValid,
   clearCache as clearIndexedDBCache,
+  updateCachedQuestion as updateIDBQuestion,
+  deleteCachedQuestion as deleteIDBQuestion,
+  setLastSyncTime,
 } from "./questionCache";
 import { parseQuestionDoc } from "../utils/questionDocParser";
 import { registerListener, unregisterListener } from "../utils/listenerTracker";
@@ -57,19 +60,113 @@ const toMillis = (v) => {
 };
 
 /**
- * Invalidates the questions cache.
- * Call after saves/deletes to ensure fresh data on next load.
+ * Nuke both memory and IndexedDB caches.
+ *
+ * Use ONLY for true wipe-everything operations (e.g. clearAllQuestionsFromFirestore,
+ * mass deletions). For individual saves and deletes, use the surgical
+ * helpers below — wiping the whole IDB cache on every single save was
+ * the root cause of "extraordinarily slow reload after I save anything":
+ * the next load saw an empty IDB, fell out of the incremental path, and
+ * did a cold full sync of all ~19,580 docs.
  */
 export const invalidateQuestionsCache = async () => {
   _questionsCache = null;
   _questionsCacheTimestamp = 0;
-  // Also clear IndexedDB cache
   try {
     await clearIndexedDBCache();
   } catch (error) {
     logger.warn("Failed to clear IndexedDB cache:", error);
   }
   logger.log("🗑️ Questions cache invalidated (memory + IndexedDB)");
+};
+
+/**
+ * Drop the in-memory cache only; leave IndexedDB intact.
+ * Used internally by the surgical save/delete paths so the next
+ * getAllQuestionsFromFirestore() call sees a fresh memory snapshot
+ * while IndexedDB (and the incremental-sync watermark) stay warm.
+ */
+const invalidateMemoryQuestionsCache = () => {
+  _questionsCache = null;
+  _questionsCacheTimestamp = 0;
+};
+
+/**
+ * Surgical IDB write after a single Firestore save.
+ *
+ * Replaces the previous "wipe everything" behavior on save. Updates the
+ * one doc in IDB and advances the incremental-sync watermark so the next
+ * reload still takes the fast incremental path (Tier 1 from IDB, plus a
+ * delta query that returns 0 or near-0 docs).
+ *
+ * @param {Object} question - The just-saved question, with firestoreUpdatedAt set
+ */
+export const cacheSavedQuestion = async (question) => {
+  invalidateMemoryQuestionsCache();
+  if (!question?.uniqueId) return;
+  try {
+    await updateIDBQuestion(question);
+    const ts = toMillis(question.firestoreUpdatedAt);
+    if (ts > 0) await setLastSyncTime(ts);
+  } catch (error) {
+    // Cache-write failures must not break the save itself — log and continue.
+    logger.warn("Failed to update IndexedDB cache after save:", error);
+  }
+};
+
+/**
+ * Surgical IDB writes after a batch Firestore save.
+ *
+ * @param {Array<Object>} questions - Just-saved questions with firestoreUpdatedAt
+ */
+export const cacheSavedQuestions = async (questions) => {
+  invalidateMemoryQuestionsCache();
+  if (!Array.isArray(questions) || questions.length === 0) return;
+  try {
+    await cacheQuestions(questions);
+    let maxTs = 0;
+    for (const q of questions) {
+      const ts = toMillis(q?.firestoreUpdatedAt);
+      if (ts > maxTs) maxTs = ts;
+    }
+    if (maxTs > 0) await setLastSyncTime(maxTs);
+  } catch (error) {
+    logger.warn("Failed to bulk-update IndexedDB cache after save:", error);
+  }
+};
+
+/**
+ * Surgical IDB removal after a single Firestore delete.
+ *
+ * @param {string} uniqueId
+ */
+export const removeCachedQuestion = async (uniqueId) => {
+  invalidateMemoryQuestionsCache();
+  if (!uniqueId) return;
+  try {
+    await deleteIDBQuestion(uniqueId);
+  } catch (error) {
+    logger.warn("Failed to delete from IndexedDB cache:", error);
+  }
+};
+
+/**
+ * Surgical IDB removals after batch Firestore deletes.
+ *
+ * @param {Array<string>} uniqueIds
+ */
+export const removeCachedQuestions = async (uniqueIds) => {
+  invalidateMemoryQuestionsCache();
+  if (!Array.isArray(uniqueIds) || uniqueIds.length === 0) return;
+  try {
+    // questionCache.deleteCachedQuestion is one-by-one but cheap (IDB key
+    // delete). For really large bulk deletes a transactional batch would
+    // be nicer, but soft-delete cleanups are rare and small enough that
+    // this is fine for now.
+    await Promise.all(uniqueIds.map((id) => deleteIDBQuestion(id)));
+  } catch (error) {
+    logger.warn("Failed to bulk-delete from IndexedDB cache:", error);
+  }
 };
 
 /**
@@ -863,11 +960,16 @@ export const deleteSoftDeletedQuestionsFromFirestore = async () => {
 
     const querySnapshot = await getDocs(q);
     let deletedCount = 0;
+    const deletedUniqueIds = [];
 
     const { deleteDoc } = await import("firebase/firestore");
     const deletePromises = [];
     querySnapshot.forEach((docSnapshot) => {
       deletePromises.push(deleteDoc(docSnapshot.ref));
+      // Track uniqueIds so we can mirror the deletes in the IDB cache.
+      // Doc IDs in this collection ARE the uniqueIds (see firebaseSave.js
+      // which uses `doc(getDb(), "questions", question.uniqueId)`).
+      deletedUniqueIds.push(docSnapshot.id);
       deletedCount++;
     });
 
@@ -875,7 +977,10 @@ export const deleteSoftDeletedQuestionsFromFirestore = async () => {
     logger.log(
       `Successfully cleaned up ${deletedCount} soft-deleted questions.`
     );
-    invalidateQuestionsCache();
+    // Surgical bulk removal from IDB — keeps the rest of the cache warm.
+    if (deletedUniqueIds.length > 0) {
+      await removeCachedQuestions(deletedUniqueIds);
+    }
     return deletedCount;
   } catch (error) {
     logger.error("Error cleaning up soft-deleted questions:", error);
@@ -898,7 +1003,9 @@ export const deleteQuestionFromFirestore = async (uniqueId) => {
     const docRef = doc(getDb(), "questions", uniqueId);
     await deleteDoc(docRef);
     logger.log(`Question ${uniqueId} deleted from Firestore.`);
-    invalidateQuestionsCache();
+    // Surgical IDB removal — keeps the rest of the ~19,580-doc cache warm
+    // so the next reload still hits the fast incremental path.
+    await removeCachedQuestion(uniqueId);
   } catch (error) {
     logger.error("Error deleting question from Firestore:", error);
     throw error;

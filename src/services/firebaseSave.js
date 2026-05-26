@@ -26,7 +26,7 @@ import {
   markAuthActivity,
   isAuthPotentiallyStale,
 } from "./firebaseAuth";
-import { invalidateQuestionsCache } from "./firebaseQueries";
+import { cacheSavedQuestion, cacheSavedQuestions } from "./firebaseQueries";
 import { toastError } from "./toastEvents";
 
 // --- Lazy-load Firestore with Persistence ---
@@ -320,7 +320,10 @@ const saveQuestionToFirestoreInternal = async (question) => {
   await setDoc(docRef, payload, { merge: true });
   logger.log(`Question ${enforcedQuestion.uniqueId} saved to Firestore.`);
 
-  invalidateQuestionsCache();
+  // Surgical cache update — see cacheSavedQuestion docstring. Previously
+  // this wiped the entire IndexedDB cache on every save, which made the
+  // next reload do a cold full sync of ~19,580 docs.
+  await cacheSavedQuestion(payload);
 
   if (analytics) {
     logEvent(analytics, "save_question", {
@@ -657,10 +660,18 @@ export const batchSaveQuestions = async (questions) => {
     batches.push(questions.slice(i, i + BATCH_SIZE));
   }
 
+  // Collect successfully-written payloads so we can update IndexedDB
+  // surgically after Firestore confirms the batch. Previously we wiped
+  // the whole IDB cache here; the next reload then did a cold ~19,580-doc
+  // full sync. Keeping the cache warm makes routine save-and-reload
+  // essentially free (Tier 1 + 0-doc incremental delta).
+  const writtenPayloads = [];
+
   for (const batch of batches) {
     try {
       const writeBatchOp = writeBatch(getDb());
 
+      const batchPayloads = [];
       batch.forEach((question) => {
         if (!question?.uniqueId) return;
         const docRef = doc(getDb(), "questions", question.uniqueId);
@@ -671,16 +682,20 @@ export const batchSaveQuestions = async (questions) => {
           creatorEmail: auth.currentUser?.email || question.creatorEmail,
         });
         writeBatchOp.set(docRef, payload, { merge: true });
+        batchPayloads.push(payload);
       });
 
       await writeBatchOp.commit();
       results.success += batch.length;
+      writtenPayloads.push(...batchPayloads);
     } catch (error) {
       logger.warn(
         `⚠️ Batch save failed, falling back to individual saves:`,
         error.message
       );
       for (const q of batch) {
+        // saveQuestionToFirestore takes care of its own surgical IDB update
+        // when it succeeds — no need to track payloads in this branch.
         const result = await saveQuestionToFirestore(q);
         if (result.success) results.success++;
         else if (result.queued) results.queued++;
@@ -689,7 +704,9 @@ export const batchSaveQuestions = async (questions) => {
     }
   }
 
-  invalidateQuestionsCache();
+  if (writtenPayloads.length > 0) {
+    await cacheSavedQuestions(writtenPayloads);
+  }
 
   const duration = Math.round(performance.now() - startTime);
   logger.log(`⚡ Batch saved ${results.success} questions in ${duration}ms`);
