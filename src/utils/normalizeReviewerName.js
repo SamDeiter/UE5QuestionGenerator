@@ -2,34 +2,41 @@
  * normalizeReviewerName.js - Shared reviewer name normalization utility
  *
  * Consolidates reviewer identification across the app by:
- * 1. Mapping known emails to display names
+ * 1. Mapping known emails to display names (map is injected at runtime —
+ *    no PII baked into the bundle)
  * 2. Fixing duplicated names like "Sam DeiterSam Deiter"
  * 3. Filtering out invalid values
+ *
+ * Previously, a hardcoded EMAIL_TO_NAME_MAP shipped real reviewer emails
+ * and names in the client bundle. That data is gone. The default lookup
+ * map is empty; callers that want curated display names should hydrate
+ * it at app startup by calling `setReviewerNameMap()` with data fetched
+ * from a server (e.g., a Firestore /config/reviewerNames document).
+ *
+ * Without a hydrated map, the function still works — emails fall through
+ * to a derived-from-local-part display name (e.g., "sam.deiter@..." →
+ * "Sam Deiter").
  */
 
-// ============================================================================
-// EMAIL TO DISPLAY NAME MAPPING
-// ============================================================================
-// Add new team members here as needed
+// Runtime-injectable email→display-name map. Initially empty.
+let EMAIL_TO_NAME_MAP = Object.create(null);
 
-const EMAIL_TO_NAME_MAP = {
-  // Epic Games team members
-  "sam.deiter@epicgames.com": "Sam Deiter",
-  "sean.spitzer@epicgames.com": "Sean Spitzer",
-  "stephan.rueb.dcc@gmail.com": "Stephan Rüb",
-  "edward.bennett@epicgames.com": "Edward Bennett",
-  "luis.cataldi@ea.epicgames.com": "Luis Cataldi",
-  "luis.cataldi@epicgames.com": "Luis Cataldi",
-  "james.hill@epicgames.com": "James Hill",
-  "emanuele.salvucci@epicgames.com": "Emanuele Salvucci",
-  "stephane.blanc@epicgames.com": "Stephane Blanc",
-  "mahmoud.alkawadri@epicgames.com": "Mahmoud Alkawadri",
-  // Gmail users (extracted from chart data)
-  "samdeiter@gmail.com": "Sam Deiter",
-  "gregbert77@gmail.com": "Greg Berridge",
-  // Name variations that should be normalized
-  Gregbert77: "Greg Berridge",
-  gregbert77: "Greg Berridge",
+/**
+ * Replaces the runtime email-to-name lookup with the supplied object.
+ * Call this once at app startup with data fetched from a trusted server
+ * if you want curated display names.
+ *
+ * @param {Record<string, string>} mapping - { lowercased-email: "Display Name" }
+ */
+export const setReviewerNameMap = (mapping) => {
+  if (!mapping || typeof mapping !== "object") return;
+  const next = Object.create(null);
+  for (const [k, v] of Object.entries(mapping)) {
+    if (typeof k === "string" && typeof v === "string" && v.trim()) {
+      next[k.toLowerCase()] = v.trim();
+    }
+  }
+  EMAIL_TO_NAME_MAP = next;
 };
 
 // Names that should be filtered out entirely
@@ -96,19 +103,6 @@ const getReviewerFromQuestion = (question) => {
     question.humanVerifiedBy || question.acceptedBy || question.reviewerName;
 
   return normalizeReviewerName(rawReviewer);
-};
-
-/**
- * Adds a new email-to-name mapping at runtime
- * (Useful for dynamically discovered team members)
- * @param {string} email - The email address
- * @param {string} displayName - The display name to use
- */
-// eslint-disable-next-line no-unused-vars
-const addEmailMapping = (email, displayName) => {
-  if (email && displayName) {
-    EMAIL_TO_NAME_MAP[email.toLowerCase()] = displayName;
-  }
 };
 
 export default normalizeReviewerName;
