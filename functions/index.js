@@ -20,6 +20,7 @@ Object.assign(exports, require("./invites/validateInvite"));
 Object.assign(exports, require("./invites/consumeInvite"));
 Object.assign(exports, require("./invites/createInvite"));
 Object.assign(exports, require("./invites/revokeInvite"));
+Object.assign(exports, require("./invites/listInvites"));
 
 // ============================================================================
 // User Management Functions
