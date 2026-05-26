@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { isAdminUser } = require("../utils/isAdminUser");
+const { isBootstrapAdmin } = require("../utils/bootstrapAdmin");
 
 /**
  * Cloud Function: runUnifiedAccessMigration
@@ -20,10 +21,7 @@ exports.runUnifiedAccessMigration = functions
     }
 
     const isAdmin = await isAdminUser(context.auth.uid);
-    // Explicitly allow samdeiter@gmail.com for initial bootstrap if needed
-    const isOwner =
-      context.auth.token.email === "samdeiter@gmail.com" ||
-      context.auth.token.email === "samdeiter@epicgames.com";
+    const isOwner = isBootstrapAdmin(context.auth.token.email);
 
     if (!isAdmin && !isOwner) {
       throw new functions.https.HttpsError(
@@ -131,9 +129,7 @@ exports.seedToolRegistry = functions
     }
 
     const isAdmin = await isAdminUser(context.auth.uid);
-    const isOwner =
-      context.auth.token.email === "samdeiter@gmail.com" ||
-      context.auth.token.email === "samdeiter@epicgames.com";
+    const isOwner = isBootstrapAdmin(context.auth.token.email);
 
     if (!isAdmin && !isOwner) {
       throw new functions.https.HttpsError(
