@@ -98,6 +98,14 @@ const QuestionItem = ({
   // Display question (supports language variants)
   const displayQuestion = q;
 
+  // Resolve the English variant from availableVariants so translation tabs can
+  // show the canonical English source excerpt + live English verification
+  // state (instead of the frozen copy inherited at translation time).
+  const englishVariant =
+    availableVariants?.find((v) => (v.language || "English") === "English") ||
+    ((q.language || "English") === "English" ? q : null);
+  const isTranslationTab = !!q.language && q.language !== "English";
+
   // Helper function for language switching
   const handleLocalLanguageSwitch = useCallback(
     (langCode, force, newVariant) => {
@@ -206,6 +214,19 @@ const QuestionItem = ({
     });
     showMessage?.("Translation verification cleared", TOAST_DURATION.MEDIUM);
   }, [q.id, onUpdateQuestion, showMessage]);
+
+  const handleUpdateTranslatedExcerpt = useCallback(
+    (newExcerpt) => {
+      if (!onUpdateQuestion) return;
+      onUpdateQuestion(q.id, {
+        sourceExcerpt: newExcerpt,
+        sourceExcerptEditedBy: userEmail,
+        sourceExcerptEditedAt: new Date().toISOString(),
+      });
+      showMessage?.("✅ Translated excerpt updated", TOAST_DURATION.MEDIUM);
+    },
+    [q.id, onUpdateQuestion, userEmail, showMessage]
+  );
 
   const handleAccept = useCallback(() => {
     // PIPELINE ENFORCEMENT: Critique is required before accept
@@ -399,11 +420,38 @@ const QuestionItem = ({
         />
 
         <SourceContextCard
-          sourceUrl={q.sourceUrl || q.SourceURL || q.SourceUrl}
-          sourceExcerpt={q.sourceExcerpt}
-          isVerified={q.humanVerified}
-          verifiedBy={q.humanVerifiedBy}
-          verifiedAt={q.humanVerifiedAt}
+          // On translation tabs: route source-context fields through the English
+          // variant so the displayed URL + excerpt + verification state match
+          // the actual English Epic docs page (single source of truth, not the
+          // frozen copy inherited on the translation doc at translation time).
+          sourceUrl={
+            isTranslationTab
+              ? englishVariant?.sourceUrl ||
+                englishVariant?.SourceURL ||
+                englishVariant?.SourceUrl ||
+                q.sourceUrl ||
+                q.SourceURL ||
+                q.SourceUrl
+              : q.sourceUrl || q.SourceURL || q.SourceUrl
+          }
+          sourceExcerpt={
+            isTranslationTab
+              ? englishVariant?.sourceExcerpt || q.sourceExcerpt
+              : q.sourceExcerpt
+          }
+          isVerified={
+            isTranslationTab ? englishVariant?.humanVerified : q.humanVerified
+          }
+          verifiedBy={
+            isTranslationTab
+              ? englishVariant?.humanVerifiedBy
+              : q.humanVerifiedBy
+          }
+          verifiedAt={
+            isTranslationTab
+              ? englishVariant?.humanVerifiedAt
+              : q.humanVerifiedAt
+          }
           onVerifyDocs={handleOpenDocs}
           onVerifySearch={handleOpenSearch}
           canVerify={q.critiqueScore >= (QUALITY_THRESHOLDS?.PASS || 70)}
@@ -415,6 +463,20 @@ const QuestionItem = ({
           originalSourceExcerpt={q.originalSourceExcerpt}
           onDocLinkUpdate={handleDocLinkUpdate}
           canEdit={appMode === APP_MODES.REVIEW}
+          // Translation tab toggle: pass the translation variant's own excerpt
+          // + author attribution so the bilingual reviewer can flip to it,
+          // edit it, and have their fix attributed.
+          currentLanguage={q.language || "English"}
+          translatedExcerpt={isTranslationTab ? q.sourceExcerpt : null}
+          translatedExcerptEditedBy={
+            isTranslationTab ? q.sourceExcerptEditedBy : null
+          }
+          translatedExcerptEditedAt={
+            isTranslationTab ? q.sourceExcerptEditedAt : null
+          }
+          onUpdateTranslatedExcerpt={
+            isTranslationTab ? handleUpdateTranslatedExcerpt : null
+          }
         />
 
         {/* Needs Research Badge - Show if question is flagged (Phase 4) */}
