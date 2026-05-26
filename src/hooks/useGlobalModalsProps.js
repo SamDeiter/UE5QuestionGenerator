@@ -2,60 +2,26 @@ import { useMemo, useCallback } from "react";
 import { useAppConfig } from "./useAppConfig";
 
 /**
- * Hook to memoize GlobalModals visibility props
+ * useGlobalModalsVisibility — visibility flags NOT yet in ModalContext.
  *
- * Centralizes all visibility state for global modals to improve
- * code organization and prevent unnecessary re-renders.
- *
- * @param {Object} params - Modal visibility state
- * @returns {Object} - Memoized visibility props object
+ * After the ModalContext migration, most modal booleans live in context
+ * and are read directly by GlobalModals via useModals(). The ones that
+ * remain here are owned by other hooks (useQuestionManager owns
+ * showClearModal + deleteConfirmId; useTutorial owns tutorialActive)
+ * and still need to be plumbed through.
  */
 export function useGlobalModalsVisibility({
-  showNameModal,
   showClearModal,
-  showBulkExportModal,
-  showSettings,
-  showAnalytics,
-  showDangerZone,
-  showApiKeyModal,
-  showTerms,
-  showAgeGate,
   tutorialActive,
   deleteConfirmId,
-  showAdvancedConfig,
-  showApiKey,
 }) {
   return useMemo(
     () => ({
-      showNameModal,
       showClearModal,
-      showBulkExportModal,
-      showSettings,
-      showAnalytics,
-      showDangerZone,
-      showApiKeyModal,
-      showTerms,
-      showAgeGate,
       tutorialActive,
       deleteConfirmId,
-      showAdvancedConfig,
-      showApiKey,
     }),
-    [
-      showNameModal,
-      showClearModal,
-      showBulkExportModal,
-      showSettings,
-      showAnalytics,
-      showDangerZone,
-      showApiKeyModal,
-      showTerms,
-      showAgeGate,
-      tutorialActive,
-      deleteConfirmId,
-      showAdvancedConfig,
-      showApiKey,
-    ]
+    [showClearModal, tutorialActive, deleteConfirmId]
   );
 }
 
@@ -144,9 +110,6 @@ export function useGlobalModalsHandlers({
   setShowApiKeyModal,
   handleChange,
   handleSaveApiKey,
-  setShowTerms,
-  setTermsAccepted,
-  setShowAgeGate,
   setShowClearModal,
   handleTutorialNext,
   handleTutorialPrev,
@@ -205,9 +168,6 @@ export function useGlobalModalsHandlers({
       onCloseApiKey,
       handleChange,
       handleSaveApiKey,
-      setShowTerms,
-      setTermsAccepted,
-      setShowAgeGate,
       setShowClearModal,
       handleTutorialNext,
       handleTutorialPrev,
@@ -236,9 +196,6 @@ export function useGlobalModalsHandlers({
       onCloseApiKey,
       handleChange,
       handleSaveApiKey,
-      setShowTerms,
-      setTermsAccepted,
-      setShowAgeGate,
       setShowClearModal,
       handleTutorialNext,
       handleTutorialPrev,

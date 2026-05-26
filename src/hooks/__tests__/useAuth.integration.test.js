@@ -68,6 +68,17 @@ vi.mock("../../utils/logger", () => ({
   },
 }));
 
+vi.mock("../../contexts/ModalContext", () => ({
+  useModals: () => ({
+    showTerms: false,
+    setShowTerms: vi.fn(),
+    showAgeGate: false,
+    setShowAgeGate: vi.fn(),
+    termsAccepted: false,
+    setTermsAccepted: vi.fn(),
+  }),
+}));
+
 import { useAuth } from "../useAuth";
 import { authManager } from "../../services/AuthManager";
 import {

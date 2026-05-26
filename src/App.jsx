@@ -44,11 +44,6 @@ const App = () => {
     markAsRegistered,
     customTags,
     handleSaveCustomTags,
-    showTerms,
-    setShowTerms,
-    showAgeGate,
-    setShowAgeGate,
-    setTermsAccepted,
     permissionError,
     blockedByExtension,
   } = useAuth(showMessage);
@@ -66,16 +61,8 @@ const App = () => {
     isApiReady,
     effectiveApiKey,
     apiKeyStatus,
-    showNameModal,
-    setShowNameModal,
-    showGenSettings,
-    setShowGenSettings,
     setShowApiError,
     batchSizeWarning,
-    showSettings,
-    setShowSettings,
-    showApiKey,
-    setShowApiKey,
     handleChange,
     handleNameSave,
     handleLanguageSwitch,
@@ -181,16 +168,8 @@ const App = () => {
             isApiReady={isApiReady}
             effectiveApiKey={effectiveApiKey}
             apiKeyStatus={apiKeyStatus}
-            showNameModal={showNameModal}
-            setShowNameModal={setShowNameModal}
-            showGenSettings={showGenSettings}
-            setShowGenSettings={setShowGenSettings}
             setShowApiError={setShowApiError}
             batchSizeWarning={batchSizeWarning}
-            showSettings={showSettings}
-            setShowSettings={setShowSettings}
-            showApiKey={showApiKey}
-            setShowApiKey={setShowApiKey}
             handleChange={handleChange}
             handleNameSave={handleNameSave}
             handleLanguageSwitch={handleLanguageSwitch}
@@ -207,11 +186,6 @@ const App = () => {
             handleTutorialSkip={tutorial.handleTutorialSkip}
             handleTutorialComplete={tutorial.handleTutorialComplete}
             handleRestartTutorial={tutorial.handleRestartTutorial}
-            showTerms={showTerms}
-            setShowTerms={setShowTerms}
-            showAgeGate={showAgeGate}
-            setShowAgeGate={setShowAgeGate}
-            setTermsAccepted={setTermsAccepted}
           />
         </Suspense>
 

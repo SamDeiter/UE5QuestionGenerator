@@ -3,12 +3,26 @@ import { getSecureItem, setSecureItem } from "../utils/secureStorage";
 import { logger } from "../utils/logger";
 import { DEFAULT_CONFIG, STORAGE_KEYS, APP_MODES } from "../utils/constants";
 import { validateDisplayName } from "../utils/nameValidation";
+import { useModals } from "../contexts/ModalContext";
 
 /**
  * @param {Object} options
  * @param {Object} options.user - Firebase user object (optional)
  */
 export const useAppConfig = ({ user = null } = {}) => {
+  // Modal visibility now lives in ModalContext; this hook drives the
+  // setters via business logic (e.g. name validation, language change).
+  const {
+    showNameModal,
+    setShowNameModal,
+    showGenSettings,
+    setShowGenSettings,
+    showSettings,
+    setShowSettings,
+    showApiKey,
+    setShowApiKey,
+  } = useModals();
+
   // Application mode: 'landing' (home screen), 'create' (generation mode), 'review' (review mode), 'database' (view all)
   const [appMode, setAppMode] = useState(() => {
     // 1. Check URL parameters (Highest priority)
@@ -75,13 +89,9 @@ export const useAppConfig = ({ user = null } = {}) => {
     apiKeyStatus = "Not Set";
   }
 
-  // UI States
-  const [showNameModal, setShowNameModal] = useState(false);
-  const [showGenSettings, setShowGenSettings] = useState(true);
+  // UI States (modal visibility moved to ModalContext above)
   const [showApiError, setShowApiError] = useState(false);
   const [batchSizeWarning, setBatchSizeWarning] = useState("");
-  const [showSettings, setShowSettings] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
 
   // Track if this is the initial mount
   const hasInitialized = useRef(false);

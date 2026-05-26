@@ -5,6 +5,7 @@ import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext.jsx";
 import { ErrorReporterProvider } from "./contexts/ErrorReporterContext.jsx";
 import { MessageProvider } from "./contexts/MessageContext.jsx";
+import { ModalProvider } from "./contexts/ModalContext.jsx";
 import { notifyUpdateAvailable } from "./components/UpdateAvailableBanner.jsx";
 import "./index.css";
 
@@ -60,7 +61,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <AccessibilityProvider>
         <ErrorReporterProvider>
           <MessageProvider>
-            <App />
+            <ModalProvider>
+              <App />
+            </ModalProvider>
           </MessageProvider>
         </ErrorReporterProvider>
       </AccessibilityProvider>

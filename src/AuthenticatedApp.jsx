@@ -14,7 +14,6 @@ import useGlobalStats from "./hooks/useGlobalStats";
 import { useDatabaseActions } from "./hooks/useDatabaseActions";
 import { useFiltering } from "./hooks/useFiltering";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
-import { useModalState } from "./hooks/useModalState";
 import { useAppHandlers } from "./hooks/useAppHandlers";
 import { useMigrations } from "./hooks/useMigrations";
 import { usePendingCount } from "./hooks/usePendingCount";
@@ -36,6 +35,7 @@ import { useFileHandler } from "./hooks/useFileHandler";
 import { useConflictResolution } from "./hooks/useConflictResolution";
 import { useUrlModeSync } from "./hooks/useUrlModeSync";
 import { useMessage } from "./contexts/MessageContext";
+import { useModals } from "./contexts/ModalContext";
 import { APP_MODES } from "./utils/constants";
 // import { FullPageSpinner as LoadingSpinner } from "./components/LoadingSpinner";
 import LandingPage from "./components/LandingPage";
@@ -59,16 +59,8 @@ const AuthenticatedApp = ({
   isApiReady,
   effectiveApiKey,
   apiKeyStatus,
-  showNameModal,
-  setShowNameModal,
-  showGenSettings,
-  setShowGenSettings,
   setShowApiError,
   batchSizeWarning,
-  showSettings,
-  setShowSettings,
-  showApiKey,
-  setShowApiKey,
   handleChange,
   handleNameSave,
   handleLanguageSwitch,
@@ -85,13 +77,21 @@ const AuthenticatedApp = ({
   handleTutorialSkip,
   handleTutorialComplete,
   // handleRestartTutorial,
-  showTerms,
-  setShowTerms,
-  showAgeGate,
-  setShowAgeGate,
-  setTermsAccepted,
 }) => {
   const { showMessage } = useMessage();
+  const {
+    setShowNameModal,
+    showGenSettings,
+    setShowGenSettings,
+    setShowSettings,
+    setShowApiKey,
+    setShowExportMenu,
+    setShowBulkExportModal,
+    setShowAnalytics,
+    setShowAdvancedConfig,
+    setShowDangerZone,
+    setShowApiKeyModal,
+  } = useModals();
 
   // 3. Core Domain Hooks
   const { globalStats } = useGlobalStats();
@@ -187,20 +187,6 @@ const AuthenticatedApp = ({
     appMode,
     allQuestionsMap,
   });
-
-  const {
-    setShowExportMenu,
-    showBulkExportModal,
-    setShowBulkExportModal,
-    showAnalytics,
-    setShowAnalytics,
-    showAdvancedConfig,
-    setShowAdvancedConfig,
-    showDangerZone,
-    setShowDangerZone,
-    showApiKeyModal,
-    setShowApiKeyModal,
-  } = useModalState();
 
   const {
     handleExportToSheets,
@@ -450,19 +436,9 @@ const AuthenticatedApp = ({
   });
 
   const globalModalsVisibility = useGlobalModalsVisibility({
-    showNameModal,
     showClearModal,
-    showBulkExportModal,
-    showSettings,
-    showAnalytics,
-    showDangerZone,
-    showApiKeyModal,
-    showTerms,
-    showAgeGate,
     tutorialActive,
     deleteConfirmId,
-    showAdvancedConfig,
-    showApiKey,
   });
 
   const globalModalsState = useGlobalModalsState({
@@ -495,9 +471,6 @@ const AuthenticatedApp = ({
     setShowApiKeyModal,
     handleChange,
     handleSaveApiKey,
-    setShowTerms,
-    setTermsAccepted,
-    setShowAgeGate,
     setShowClearModal,
     handleTutorialNext,
     handleTutorialPrev,
