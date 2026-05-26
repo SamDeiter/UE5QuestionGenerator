@@ -4,6 +4,87 @@ import { logger } from "../utils/logger";
  */
 
 /**
+ * Normalize a raw difficulty string into one of: "easy" | "medium" | "hard" | "other".
+ *
+ * The app uses two interchangeable difficulty vocabularies that must both map
+ * to the same SCORM tier:
+ *   - Canonical (Firestore, default config): "Beginner" / "Intermediate" / "Expert"
+ *   - Legacy (mock data, older records, tests): "Easy" / "Medium" / "Hard"
+ *
+ * Values may also carry a type suffix (e.g. "Easy MC", "Beginner T/F"); we
+ * inspect the substring so suffixed values still classify correctly.
+ *
+ * @param {string} rawDifficulty - Difficulty value from a question record.
+ * @returns {"easy"|"medium"|"hard"|"other"}
+ */
+export function classifyDifficulty(rawDifficulty) {
+  const d = (rawDifficulty || "").toLowerCase();
+  if (!d) return "other";
+  if (d.includes("easy") || d.includes("beginner")) return "easy";
+  if (d.includes("medium") || d.includes("intermediate")) return "medium";
+  if (d.includes("hard") || d.includes("expert") || d.includes("advanced"))
+    return "hard";
+  return "other";
+}
+
+/**
+ * Bucket a list of questions into easy/medium/hard/other counts using
+ * the dual-vocabulary classifier above.
+ *
+ * @param {Array<{difficulty?: string}>} questions
+ * @returns {{easy:number, medium:number, hard:number, other:number, total:number}}
+ */
+export function bucketByDifficulty(questions) {
+  const buckets = { easy: 0, medium: 0, hard: 0, other: 0 };
+  for (const q of questions) {
+    buckets[classifyDifficulty(q.difficulty)] += 1;
+  }
+  return { ...buckets, total: questions.length };
+}
+
+/**
+ * Simulate the weighted distribution that scorm-template/game.js will apply
+ * at quiz launch time. Mirrors buildBalancedQuestionList() so the export
+ * modal can show users what each attempt will actually contain.
+ *
+ * @param {{easy:number, medium:number, hard:number, other:number, total:number}} pool
+ * @param {{questionsPerAttempt?: number, weights?: {easy:number, medium:number, hard:number}}} [config]
+ * @returns {{easy:number, medium:number, hard:number, other:number, total:number}}
+ */
+export function simulateAttemptDistribution(pool, config = {}) {
+  const weights = config.weights || { easy: 0.15, medium: 0.35, hard: 0.5 };
+  const totalAvailable = pool.total;
+  const targetTotal = config.questionsPerAttempt
+    ? Math.min(config.questionsPerAttempt, totalAvailable)
+    : totalAvailable;
+
+  const targetEasy = Math.round(targetTotal * weights.easy);
+  const targetMedium = Math.round(targetTotal * weights.medium);
+  const targetHard = targetTotal - targetEasy - targetMedium;
+
+  const actualEasy = Math.min(targetEasy, pool.easy);
+  const actualMedium = Math.min(targetMedium, pool.medium);
+  const actualHard = Math.min(targetHard, pool.hard);
+
+  let surplus =
+    targetEasy -
+    actualEasy +
+    (targetMedium - actualMedium) +
+    (targetHard - actualHard);
+  const extraHard = Math.min(surplus, pool.hard - actualHard);
+  surplus -= extraHard;
+  const extraMedium = Math.min(surplus, pool.medium - actualMedium);
+  surplus -= extraMedium;
+  const extraEasy = Math.min(surplus, pool.easy - actualEasy);
+
+  const easy = actualEasy + extraEasy;
+  const medium = actualMedium + extraMedium;
+  const hard = actualHard + extraHard;
+  const other = pool.other; // uncategorized always tacked on
+  return { easy, medium, hard, other, total: easy + medium + hard + other };
+}
+
+/**
  * Generate a UUID v4 GUID
  * NOTE: Using Math.random for GUID generation is acceptable here.
  * This is for generating unique identifiers, not for security purposes.

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-05-26
+
+### 🐛 Fixed
+
+- **SCORM weighted draw silently excluded 40% of the question bank.** The classifier in both the export modal and the SCORM runtime template (`game.js`) only matched legacy `Easy/Medium/Hard` substrings. Questions stored with the canonical `Beginner/Intermediate/Expert` vocabulary (~7,790 docs at time of fix) fell into a hidden "other" bucket and never appeared in attempt draws. Same bug also affected the in-app quiz preview.
+- **Misleading caption in `ScormExportModal`.** The static text *"Quiz will select 20 of each difficulty (60 total) randomly per user"* did not reflect actual behavior — the SCORM template uses a weighted distribution (15% Easy / 35% Medium / 50% Hard) on the available pool. Replaced with a computed preview that recomputes per-attempt counts as the user changes settings, plus an amber warning when a tier is empty.
+- **`scorm/converter.js` default difficulty** changed from legacy `"Medium"` to canonical `"Intermediate"`.
+
+### ✨ Added
+
+- **`questionsPerAttempt` control in `ScormExportModal`.** Single-discipline export now exposes the same per-attempt subset control that the batch modal already had. Defaults to 60.
+- **`classifyDifficulty`, `bucketByDifficulty`, `simulateAttemptDistribution` helpers** in [src/utils/quizUtils.js](src/utils/quizUtils.js). Dual-vocabulary classifier accepts both `Easy/Medium/Hard` and `Beginner/Intermediate/Expert` (plus suffixed values like `"Easy MC"`). 18 new unit tests covering both vocabularies, surplus redistribution, empties, and the original-bug regression scenario.
+- **Diagnostic script** [scripts/inspect_difficulty_values.py](scripts/inspect_difficulty_values.py) — scans Firestore and reports every distinct `difficulty` value with classifier output.
+- **Migration script** [scripts/migrate_difficulty_to_canonical.py](scripts/migrate_difficulty_to_canonical.py) — dry-run by default; normalizes legacy `Easy/Medium/Hard` to canonical `Beginner/Intermediate/Expert` with `legacyDifficulty` + `migratedFromLegacyDifficultyAt` audit fields for rollback.
+
+### 🔄 Changed
+
+- **Firestore difficulty data migrated to canonical vocabulary.** 11,790 docs migrated (Easy→Beginner 3190, Medium→Intermediate 4630, Hard→Expert 3970). All 19,580 question docs now use `Beginner/Intermediate/Expert`. Every migrated doc retains `legacyDifficulty` for rollback. After migration, exact-match Firestore queries in [firebaseQueries.js](src/services/firebaseQueries.js) (which look for canonical values) find every relevant doc instead of silently missing ~60% of legacy entries.
+- **Mock question generator** ([mockQuestionGenerator.js](src/utils/mockQuestionGenerator.js)) now emits canonical `Beginner/Intermediate/Expert` to match what the app actually writes to Firestore.
+
 ## [2.4.0] - 2026-01-28
 
 ### 🔒 Security

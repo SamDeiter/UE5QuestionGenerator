@@ -9,7 +9,7 @@
  *   guid: string,            // Unique question identifier
  *   question: string,        // The question text (NOT 'questionText')
  *   type: string,            // "Multiple Choice" | "True/False"
- *   difficulty: string,      // "Easy" | "Medium" | "Hard"
+ *   difficulty: string,      // "Beginner" | "Intermediate" | "Expert"  (canonical; classifier also accepts legacy "Easy"/"Medium"/"Hard" as defensive fallback)
  *   discipline: string,      // Category/topic
  *   choices: string[],       // Array of answer options
  *   correctAnswer: string,   // The correct choice (must be in choices)
@@ -179,7 +179,7 @@ describe("Field Schema Compatibility", () => {
       expect(result.difficulty).toBe("Easy");
     });
 
-    it("should default to 'Medium' when difficulty is missing", () => {
+    it("should default to 'Intermediate' when difficulty is missing", () => {
       const noDifficultyQuestion = {
         question: "No difficulty",
         choices: ["A", "B"],
@@ -187,8 +187,10 @@ describe("Field Schema Compatibility", () => {
       };
 
       const result = convertQuestionToScormFormat(noDifficultyQuestion);
-      // convertQuestionToScormFormat defaults difficulty to "Medium"
-      expect(result.difficulty).toBe("Medium");
+      // convertQuestionToScormFormat defaults to the canonical
+      // "Intermediate" tier (matches DEFAULT_CONFIG.difficulty in
+      // constants.js and the Firestore query schema).
+      expect(result.difficulty).toBe("Intermediate");
     });
   });
 });
