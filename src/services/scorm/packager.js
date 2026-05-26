@@ -1,4 +1,3 @@
-import JSZip from "jszip";
 import { logger } from "../../utils/logger";
 import { SCORM_DEFAULTS } from "../../utils/constants";
 import packageJson from "../../../package.json";
@@ -7,6 +6,21 @@ import { convertQuestionToScormFormat } from "./converter";
 
 // Dynamic version from package.json - no more manual updates
 const SCORM_VERSION = `v${packageJson.version}`;
+
+// jszip is ~95 KB (raw) / ~26 KB (gzip). The static `import JSZip from
+// "jszip"` previously pulled it into whichever chunk first transitively
+// referenced this file, which was the initial authenticated bundle via
+// GlobalModals → BulkExportModal. Switching to a lazy module-level loader
+// keeps it out of that path entirely — the first call to one of the
+// export functions below resolves it; subsequent calls reuse the cached
+// constructor.
+let _JSZip = null;
+const loadJSZip = async () => {
+  if (_JSZip) return _JSZip;
+  const mod = await import("jszip");
+  _JSZip = mod.default;
+  return _JSZip;
+};
 
 /**
  * Generate SCORM package configuration
@@ -114,7 +128,8 @@ export async function exportToScorm(questions, config = {}) {
     const files = await generateScormPackageFiles(englishQuestions, config);
 
     // Create ZIP file
-    const zip = new JSZip();
+    const JSZipCtor = await loadJSZip();
+    const zip = new JSZipCtor();
 
     // Add all files to ZIP
     Object.entries(files).forEach(([filename, content]) => {
@@ -255,7 +270,8 @@ export async function batchExportByDiscipline(
 
     if (downloadAsSingleZip) {
       // Create master zip containing all language+discipline packages
-      const masterZip = new JSZip();
+      const JSZipCtor = await loadJSZip();
+      const masterZip = new JSZipCtor();
 
       for (let i = 0; i < groupKeys.length; i++) {
         const key = groupKeys[i];
@@ -296,7 +312,8 @@ export async function batchExportByDiscipline(
 
         const files = await generateScormPackageFiles(validQuestions, config);
 
-        const disciplineZip = new JSZip();
+        const JSZipCtor = await loadJSZip();
+        const disciplineZip = new JSZipCtor();
         Object.entries(files).forEach(([filename, content]) => {
           disciplineZip.file(filename, content);
         });
@@ -370,7 +387,8 @@ export async function batchExportByDiscipline(
           };
 
           const files = await generateScormPackageFiles(validQuestions, config);
-          const zip = new JSZip();
+          const JSZipCtor = await loadJSZip();
+          const zip = new JSZipCtor();
           Object.entries(files).forEach(([filename, content]) => {
             zip.file(filename, content);
           });
