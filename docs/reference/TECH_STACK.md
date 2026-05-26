@@ -43,7 +43,13 @@
 - **Google Gemini API**
   - Accessed via Firebase Cloud Functions (secure)
   - Direct client-side fallback for development
-  - Models: `gemini-1.5-flash`, `gemini-1.5-pro`
+  - Default model: `AI_CONFIG.DEFAULT_MODEL` (currently `gemini-2.5-flash`)
+  - Translation tier: `AI_CONFIG.TRANSLATION_MODEL` (currently `gemini-2.5-flash-lite`)
+  - Critique fallback chain (see `functions/ai/generateCritique.js`):
+    `gemini-2.5-flash-lite` → `gemini-2.5-flash` → `gemini-2.5-pro`
+  - The 2.5 series shuts down 2026-10-16. Replacements: `gemini-3.5-flash`
+    or `gemini-3.1-flash-lite` (cheaper).
+    Source: <https://ai.google.dev/gemini-api/docs/deprecations>
 
 ### Third-Party Integrations
 

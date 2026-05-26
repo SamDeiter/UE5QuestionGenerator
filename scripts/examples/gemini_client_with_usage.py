@@ -57,7 +57,7 @@ def generate_text_with_usage(model: str, prompt: str, **kwargs):
     Call Gemini's generate_content API and log token usage.
 
     Args:
-        model: model name, e.g. "gemini-2.0-flash"
+        model: model name, e.g. "gemini-2.5-flash"
         prompt: user prompt (string)
         **kwargs: any extra args for generate_content, e.g. generation_config
 
@@ -111,7 +111,7 @@ def generate_stream_with_usage(model: str, prompt: str, **kwargs):
 
 if __name__ == "__main__":
     # Simple manual test (only run if you execute this file directly)
-    model_name = "gemini-2.0-flash"
+    model_name = "gemini-2.5-flash"
     test_prompt = "Say hello and tell me one fun fact."
 
     print(f"Calling Gemini model '{model_name}'...")
