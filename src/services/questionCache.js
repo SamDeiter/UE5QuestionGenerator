@@ -201,6 +201,52 @@ export const getCachedMetadata = async (key) => {
 };
 
 /**
+ * Reads the high-water mark for incremental sync.
+ *
+ * Stores the millisecond epoch of the newest `firestoreUpdatedAt` value we
+ * have ever observed from a server fetch. The next sync only requests docs
+ * with `firestoreUpdatedAt > lastSyncTime`, turning routine page reloads
+ * from a ~19,580-doc full re-fetch into a tiny incremental delta query.
+ *
+ * Returns `null` when the cache is fresh / never synced — callers should
+ * fall back to a full load in that case (we have no baseline to diff from).
+ *
+ * @returns {Promise<number|null>}
+ */
+export const getLastSyncTime = async () => {
+  try {
+    const db = await getDB();
+    const value = await db.get(META_STORE, "lastSyncTime");
+    return typeof value === "number" ? value : null;
+  } catch (error) {
+    logger.error("Failed to read lastSyncTime:", error);
+    return null;
+  }
+};
+
+/**
+ * Writes the high-water mark for incremental sync.
+ *
+ * Only advances the watermark — never moves it backwards — so a sync that
+ * returns older docs (e.g. after a clock anomaly) cannot regress the
+ * baseline and trigger redundant re-fetches.
+ *
+ * @param {number} timestampMs
+ * @returns {Promise<void>}
+ */
+export const setLastSyncTime = async (timestampMs) => {
+  if (typeof timestampMs !== "number" || !Number.isFinite(timestampMs)) return;
+  try {
+    const db = await getDB();
+    const existing = await db.get(META_STORE, "lastSyncTime");
+    if (typeof existing === "number" && existing >= timestampMs) return;
+    await db.put(META_STORE, timestampMs, "lastSyncTime");
+  } catch (error) {
+    logger.error("Failed to write lastSyncTime:", error);
+  }
+};
+
+/**
  * Updates a single question in the cache.
  * @param {Object} question - The question to update
  * @returns {Promise<void>}
@@ -261,6 +307,8 @@ export default {
   deleteCachedQuestion,
   isCacheValid,
   getLastCacheTime,
+  getLastSyncTime,
+  setLastSyncTime,
   clearCache,
   getCacheStats,
 };
