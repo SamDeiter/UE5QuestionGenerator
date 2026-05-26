@@ -315,9 +315,14 @@ export const useExport = (
     replaceQuestions,
   ]);
 
-  // PERFORMANCE: Using constants from FIRESTORE_LIMITS for 3-tier loading strategy
-  const { INITIAL_LOAD_COUNT, FULL_SYNC_COUNT, BACKGROUND_SYNC_DELAY_MS } =
-    FIRESTORE_LIMITS;
+  // Reload uses two paths:
+  //   1. INCREMENTAL (warm cache + watermark present) — delta query only
+  //   2. FULL SYNC (cold cache or explicit refresh) — fetch all docs
+  // The old 3-tier scheme (fast 100-doc + 500ms-delayed background full sync)
+  // was made obsolete by the incremental path: that's now the fast common
+  // case, so the cold path doesn't need to stagger anymore. See PR history
+  // around chore/remove-dead-tier3-fullsync.
+  const { FULL_SYNC_COUNT } = FIRESTORE_LIMITS;
 
   const handleLoadFromFirestore = useCallback(
     async (silent = false, fullSync = false, onProgress = null) => {
@@ -428,19 +433,23 @@ export const useExport = (
           return;
         }
 
-        // FULL-SYNC PATH (cold cache, explicit refresh, or first load after
-        // the incremental-sync feature shipped). This is the legacy 3-tier
-        // path; left intact since it's the only thing that catches deletions
-        // and rebuilds a baseline `lastSyncTime`.
+        // FULL-SYNC PATH — runs when:
+        //   • Caller asked for it (fullSync=true, e.g. the Refresh button)
+        //   • IDB cache is cold (first-ever load or after manual clear)
+        //   • Watermark missing (first reload after the incremental-sync
+        //     feature shipped) — establishes the baseline
+        //
+        // This is also the only path that catches deletions, since the
+        // incremental `firestoreUpdatedAt > sinceMs` query can't see docs
+        // that no longer exist.
         if (!silent) {
           setStatus(cachedData.length > 0 ? "Syncing latest..." : "Loading...");
         }
 
-        const initialLimit = fullSync ? FULL_SYNC_COUNT : INITIAL_LOAD_COUNT;
         const freshData = await getAllQuestionsFromFirestore(
           FULL_SYNC_COUNT,
           true,
-          initialLimit,
+          FULL_SYNC_COUNT,
           onProgress
         );
         const freshQuestions = processQuestions(freshData);
@@ -453,10 +462,10 @@ export const useExport = (
           replaceQuestions(freshQuestions, QUESTION_SOURCES.IMPORT);
         }
 
-        // Establish/refresh the incremental-sync baseline from the highest
-        // server timestamp we just saw. If freshData is empty (no docs or
-        // failure) we skip the watermark write to avoid jumping forward
-        // past real data we haven't loaded.
+        // Seed the incremental-sync watermark from the highest server
+        // timestamp we just saw. Skipped when freshData is empty (no docs
+        // or fetch failure) so we don't jump the watermark forward past
+        // real data we haven't loaded.
         if (freshQuestions.length > 0) {
           const maxFromFull = freshQuestions.reduce((max, q) => {
             const ts = toMillisCompat(q.firestoreUpdatedAt);
@@ -466,7 +475,7 @@ export const useExport = (
         }
 
         logger.log(
-          `⚡ TIER 2: Fetched ${freshQuestions.length} questions from Firestore`
+          `⚡ FULL SYNC: Fetched ${freshQuestions.length} questions from Firestore`
         );
 
         if (!silent) {
@@ -479,39 +488,6 @@ export const useExport = (
             msg = `Loaded ${freshQuestions.length} questions!`;
           }
           showMessage(msg, 3000);
-        }
-
-        // TIER 3: Background full sync (if not already done)
-        if (!fullSync && freshData.length >= INITIAL_LOAD_COUNT) {
-          // More data likely exists, trigger background sync
-          setTimeout(async () => {
-            try {
-              logger.log("🔄 TIER 3: Starting background full sync...");
-              const fullData = await getAllQuestionsFromFirestore(
-                FULL_SYNC_COUNT,
-                true,
-                FULL_SYNC_COUNT
-              );
-              if (fullData.length > freshData.length) {
-                const fullQuestions = processQuestions(fullData);
-                if (replaceQuestions) {
-                  replaceQuestions(fullQuestions, QUESTION_SOURCES.DATABASE);
-                  replaceQuestions(fullQuestions, QUESTION_SOURCES.IMPORT);
-                }
-                // Bump the watermark from the full data we just pulled.
-                const maxFromBg = fullQuestions.reduce((max, q) => {
-                  const ts = toMillisCompat(q.firestoreUpdatedAt);
-                  return ts > max ? ts : max;
-                }, 0);
-                if (maxFromBg > 0) await setLastSyncTime(maxFromBg);
-                logger.log(
-                  `✅ TIER 3: Background synced ${fullQuestions.length} total questions`
-                );
-              }
-            } catch (bgError) {
-              logger.warn("Background sync failed:", bgError);
-            }
-          }, BACKGROUND_SYNC_DELAY_MS);
         }
       } catch (e) {
         logError(e, { operation: "loadFromFirestore", silent, fullSync });
