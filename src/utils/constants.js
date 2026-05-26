@@ -51,39 +51,6 @@ export const QUALITY_THRESHOLDS = {
 // Shorthand for common usage
 export const QUALITY_PASS_THRESHOLD = QUALITY_THRESHOLDS.PASS;
 
-// Colorblind-Safe Color Palette
-// Uses blue/orange/purple instead of green/yellow/red for better visibility
-export const COLORBLIND_COLORS = {
-  EXCELLENT: {
-    bg: "bg-blue-900/30",
-    border: "border-blue-700/50",
-    text: "text-blue-300",
-    icon: "✓",
-    label: "Excellent",
-  },
-  GOOD: {
-    bg: "bg-amber-900/30",
-    border: "border-amber-700/50",
-    text: "text-amber-300",
-    icon: "⚠",
-    label: "Good",
-  },
-  MEDIOCRE: {
-    bg: "bg-purple-900/30",
-    border: "border-purple-700/50",
-    text: "text-purple-300",
-    icon: "⊛",
-    label: "Mediocre",
-  },
-  CRITICAL: {
-    bg: "bg-rose-900/30",
-    border: "border-rose-700/50",
-    text: "text-rose-300",
-    icon: "✗",
-    label: "Critical",
-  },
-};
-
 // Toast Notification Durations (ms) - Kept short to prevent stacking
 export const TOAST_DURATION = {
   SHORT: 1000, // Quick confirmations
@@ -133,12 +100,6 @@ export const DEFAULT_CONFIG = {
   tags: [],
 };
 
-export const ERROR_MESSAGES = {
-  NO_API_KEY: "Please enter your Google Gemini API Key in Settings.",
-  NO_SHEET_URL: "Please configure Google Sheets URL in settings first.",
-  GEN_FAILED: "Generation failed. Please check your API key and try again.",
-};
-
 export const STORAGE_KEYS = {
   CONFIG: "ue5_gen_config",
   QUESTIONS: "ue5_gen_questions",
@@ -155,12 +116,6 @@ export const CONTEXT_LIMITS = {
   MAX_TOKENS: 2000,
   MAX_EXCERPT_LENGTH: 500, // characters per excerpt
   CHUNK_SIZE: 1000,
-};
-
-// Token Usage Warning Levels (percentage thresholds)
-export const TOKEN_WARNING_LEVELS = {
-  DANGER: 90, // >= 90%: Critical, near limit
-  WARNING: 70, // >= 70%: Caution, approaching limit
 };
 
 /** Token cost thresholds for monitoring */
