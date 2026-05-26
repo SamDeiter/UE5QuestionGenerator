@@ -23,12 +23,15 @@ const withRetry = async (fn, maxRetries = 3, baseDelay = 1000) => {
     } catch (error) {
       lastError = error;
       // Only retry on 429 (Too Many Requests) or network errors
-      const isRateLimit = error.message?.includes('429') || error.status === 429;
-      const isNetworkError = !error.status && error.message?.includes('fetch');
-      
+      const isRateLimit =
+        error.message?.includes("429") || error.status === 429;
+      const isNetworkError = !error.status && error.message?.includes("fetch");
+
       if (isRateLimit || isNetworkError) {
         const waitTime = baseDelay * Math.pow(2, i);
-        logger.warn(`⚠️ [Retry] Rate limit hit. Retrying in ${waitTime}ms (Attempt ${i + 1}/${maxRetries})`);
+        logger.warn(
+          `⚠️ [Retry] Rate limit hit. Retrying in ${waitTime}ms (Attempt ${i + 1}/${maxRetries})`
+        );
         await delay(waitTime);
         continue;
       }
@@ -38,7 +41,11 @@ const withRetry = async (fn, maxRetries = 3, baseDelay = 1000) => {
   throw lastError;
 };
 
-export const useBulkTranslation = (onTranslateSingle, showMessage, onComplete) => {
+export const useBulkTranslation = (
+  onTranslateSingle,
+  showMessage,
+  onComplete
+) => {
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
