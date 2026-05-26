@@ -13,7 +13,11 @@ export function convertQuestionToScormFormat(question) {
   // Handle both field name conventions - prefer 'question' over 'questionText'
   const questionText = question.question || question.questionText || "";
   const type = question.type || "Multiple Choice";
-  const difficulty = question.difficulty || "Medium";
+  // Default to canonical "Intermediate" (matches DEFAULT_CONFIG.difficulty
+  // and Firestore query schema). The SCORM runtime classifier maps both
+  // "Intermediate" and legacy "Medium" to the same tier, so existing
+  // questions stamped with either value remain compatible.
+  const difficulty = question.difficulty || "Intermediate";
   // Prefer 'id' over 'guid' to match test expectations
   const questionId = question.id || question.guid || question.uniqueId;
 

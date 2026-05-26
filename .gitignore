@@ -81,6 +81,9 @@ backups/
 .vscode/
 .idea/
 
+# Claude Code agent worktrees (parallel agent working copies, never commit)
+.claude/worktrees/
+
 # OS files
 .DS_Store
 Thumbs.db

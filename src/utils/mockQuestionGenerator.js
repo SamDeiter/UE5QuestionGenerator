@@ -9,7 +9,12 @@
 
 const generateDisciplineQuestions = (discipline, count, startId) => {
   const questions = [];
-  const difficulties = ["Easy", "Medium", "Hard"];
+  // Canonical vocabulary matching DEFAULT_CONFIG.difficulty and the
+  // Firestore queries in firebaseQueries.js (Beginner/Intermediate/Expert).
+  // The classifier in quizUtils.classifyDifficulty also accepts the legacy
+  // Easy/Medium/Hard set, but mocks should mirror what the app actually
+  // writes today.
+  const difficulties = ["Beginner", "Intermediate", "Expert"];
 
   const topics = {
     Worldbuilding: [
@@ -45,7 +50,7 @@ const generateDisciplineQuestions = (discipline, count, startId) => {
 
   for (let i = 0; i < count; i++) {
     const isMC = Math.random() > 0.3; // 70% Multiple Choice
-    // Cycle through difficulties to ensure a mix (Easy -> Medium -> Hard -> Easy...)
+    // Cycle through difficulties to ensure a mix (Beginner -> Intermediate -> Expert -> Beginner...)
     const difficulty = difficulties[i % difficulties.length];
     const topic =
       disciplineTopics[Math.floor(Math.random() * disciplineTopics.length)];

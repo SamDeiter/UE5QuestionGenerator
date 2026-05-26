@@ -384,24 +384,34 @@ document.addEventListener("DOMContentLoaded", () => {
    * to ensure exams are appropriately challenging for certification.
    * Falls back gracefully when a pool doesn't have enough questions.
    */
+  // Difficulty classifier mirrors src/utils/quizUtils.js#classifyDifficulty.
+  // The authoring app uses two interchangeable vocabularies:
+  //   Easy/Medium/Hard  (legacy + mocks)   and
+  //   Beginner/Intermediate/Expert  (canonical)
+  // Both must funnel into the same tier so attempts honour the weighted draw
+  // regardless of which set the package was exported with.
+  function classifyDifficulty(raw) {
+    const d = (raw || "").toLowerCase();
+    if (!d) return "other";
+    if (d.includes("easy") || d.includes("beginner")) return "easy";
+    if (d.includes("medium") || d.includes("intermediate")) return "medium";
+    if (d.includes("hard") || d.includes("expert") || d.includes("advanced"))
+      return "hard";
+    return "other";
+  }
+
   function buildBalancedQuestionList(inputQuestions) {
-    const easy = inputQuestions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("easy")
-    );
-    const medium = inputQuestions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("medium")
-    );
-    const hard = inputQuestions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("hard")
-    );
-    const other = inputQuestions.filter((q) => {
-      const diff = (q.difficulty || "").toLowerCase();
-      return (
-        !diff.includes("easy") &&
-        !diff.includes("medium") &&
-        !diff.includes("hard")
-      );
-    });
+    const easy = [];
+    const medium = [];
+    const hard = [];
+    const other = [];
+    for (const q of inputQuestions) {
+      const tier = classifyDifficulty(q.difficulty);
+      if (tier === "easy") easy.push(q);
+      else if (tier === "medium") medium.push(q);
+      else if (tier === "hard") hard.push(q);
+      else other.push(q);
+    }
 
     // Shuffle each pool
     const shuffledEasy = shuffleArray(easy);

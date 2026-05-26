@@ -12,6 +12,7 @@ import {
   createSeededRandom,
   seededShuffle,
   reportToSCORM,
+  classifyDifficulty,
 } from "../utils/quizUtils";
 import { logger } from "../utils/logger";
 import {
@@ -84,15 +85,18 @@ const QuizPreview = ({ questions, config, onClose }) => {
         return lang === "" || lang === "english" || lang === "en";
       });
 
-      const easy = englishQuestions.filter((q) =>
-        (q.difficulty || "").toLowerCase().includes("easy")
-      );
-      const medium = englishQuestions.filter((q) =>
-        (q.difficulty || "").toLowerCase().includes("medium")
-      );
-      const hard = englishQuestions.filter((q) =>
-        (q.difficulty || "").toLowerCase().includes("hard")
-      );
+      // Use classifyDifficulty so Beginner/Intermediate/Expert questions are
+      // tiered alongside legacy Easy/Medium/Hard values (40% of Firestore
+      // questions otherwise fall through and get excluded from the draw).
+      const easy = [];
+      const medium = [];
+      const hard = [];
+      for (const q of englishQuestions) {
+        const tier = classifyDifficulty(q.difficulty);
+        if (tier === "easy") easy.push(q);
+        else if (tier === "medium") medium.push(q);
+        else if (tier === "hard") hard.push(q);
+      }
 
       // Shuffle each pool using seeded random
       const shuffledEasy = seededShuffle(easy, randomFn);

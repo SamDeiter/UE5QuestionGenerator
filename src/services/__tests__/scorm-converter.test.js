@@ -157,7 +157,7 @@ describe("scorm/converter", () => {
         );
       });
 
-      it("defaults difficulty to Medium", () => {
+      it("defaults difficulty to Intermediate when none is provided", () => {
         const question = {
           id: "q7",
           question: "Test",
@@ -165,7 +165,7 @@ describe("scorm/converter", () => {
           correct: "a",
         };
         expect(convertQuestionToScormFormat(question).difficulty).toBe(
-          "Medium"
+          "Intermediate"
         );
       });
     });

@@ -5,6 +5,10 @@ import {
   validateQuestionsForExport,
 } from "../services/scormExporter";
 import { logger } from "../utils/logger";
+import {
+  bucketByDifficulty,
+  simulateAttemptDistribution,
+} from "../utils/quizUtils";
 
 /**
  * SCORM Export Modal
@@ -21,24 +25,29 @@ const ScormExportModal = ({ questions, discipline, onClose }) => {
     description: `Test your Unreal Engine 5 ${discipline || "knowledge"}`,
     passingScore: 80,
     timeLimit: 60, // minutes (default: 1 hour)
+    questionsPerAttempt: 60, // Random subset drawn per attempt; null = use all
   });
 
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Count questions by difficulty
-  const difficultyBreakdown = useMemo(() => {
-    const easy = questions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("easy")
-    ).length;
-    const medium = questions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("medium")
-    ).length;
-    const hard = questions.filter((q) =>
-      (q.difficulty || "").toLowerCase().includes("hard")
-    ).length;
-    return { easy, medium, hard, total: questions.length };
-  }, [questions]);
+  // Count questions by difficulty (handles both "Easy/Medium/Hard" and
+  // "Beginner/Intermediate/Expert" vocabularies — see classifyDifficulty).
+  const difficultyBreakdown = useMemo(
+    () => bucketByDifficulty(questions),
+    [questions]
+  );
+
+  // Simulate what one quiz attempt will actually contain at runtime, so the
+  // modal reflects the SCORM template's weighted distribution instead of a
+  // hardcoded "20 of each" promise.
+  const attemptPreview = useMemo(
+    () =>
+      simulateAttemptDistribution(difficultyBreakdown, {
+        questionsPerAttempt: config.questionsPerAttempt,
+      }),
+    [difficultyBreakdown, config.questionsPerAttempt]
+  );
 
   const handleExport = async () => {
     setError(null);
@@ -168,6 +177,37 @@ const ScormExportModal = ({ questions, discipline, onClose }) => {
             </select>
           </div>
 
+          {/* Questions Per Attempt */}
+          <div>
+            <label className="block text-sm font-bold text-slate-300 mb-2">
+              Questions Per Attempt
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="1"
+                max="500"
+                value={config.questionsPerAttempt ?? ""}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    questionsPerAttempt: e.target.value
+                      ? parseInt(e.target.value)
+                      : null,
+                  })
+                }
+                className="w-24 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white focus:border-blue-500 outline-none"
+                placeholder="All"
+                disabled={isExporting}
+              />
+              <span className="text-xs text-slate-500">
+                {config.questionsPerAttempt
+                  ? `Each test-taker gets ${config.questionsPerAttempt} random questions`
+                  : "Leave blank to use the full bank per attempt"}
+              </span>
+            </div>
+          </div>
+
           {/* Question Bank Info */}
           <div className="bg-slate-800 rounded p-3 border border-slate-700 space-y-2">
             <div className="flex items-center justify-between text-sm">
@@ -176,7 +216,7 @@ const ScormExportModal = ({ questions, discipline, onClose }) => {
                 {difficultyBreakdown.total} questions
               </span>
             </div>
-            <div className="flex gap-2 text-xs">
+            <div className="flex gap-2 text-xs flex-wrap">
               <span className="px-2 py-1 bg-green-900/30 text-green-400 rounded">
                 Easy: {difficultyBreakdown.easy}
               </span>
@@ -186,11 +226,38 @@ const ScormExportModal = ({ questions, discipline, onClose }) => {
               <span className="px-2 py-1 bg-red-900/30 text-red-400 rounded">
                 Hard: {difficultyBreakdown.hard}
               </span>
+              {difficultyBreakdown.other > 0 && (
+                <span
+                  className="px-2 py-1 bg-slate-700/60 text-slate-300 rounded"
+                  title="Questions whose difficulty value didn't match Easy/Beginner, Medium/Intermediate, or Hard/Expert"
+                >
+                  Other: {difficultyBreakdown.other}
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-500 mt-2">
-              📋 Quiz will select 20 of each difficulty (60 total) randomly per
-              user
+              📋 Each attempt draws ~{attemptPreview.easy} Easy /{" "}
+              {attemptPreview.medium} Medium / {attemptPreview.hard} Hard
+              {attemptPreview.other > 0
+                ? ` + ${attemptPreview.other} uncategorized`
+                : ""}{" "}
+              = {attemptPreview.total} questions (weighted 15% / 35% / 50%,
+              redistributed when a pool is empty).
             </p>
+            {(difficultyBreakdown.easy === 0 ||
+              difficultyBreakdown.hard === 0) && (
+              <p className="text-xs text-amber-400/90 mt-2">
+                ⚠ Your question bank is missing{" "}
+                {[
+                  difficultyBreakdown.easy === 0 && "Easy / Beginner",
+                  difficultyBreakdown.hard === 0 && "Hard / Expert",
+                ]
+                  .filter(Boolean)
+                  .join(" and ")}{" "}
+                questions. Every attempt will skew toward the difficulties you
+                have.
+              </p>
+            )}
           </div>
 
           {/* Error Display */}
