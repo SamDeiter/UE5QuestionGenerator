@@ -5,17 +5,14 @@ import QuizPreview from "./QuizPreview";
 import ScormExportModal from "./ScormExportModal";
 import BatchScormExportModal from "./BatchScormExportModal";
 import { generateMockQuestions } from "../utils/mockQuestionGenerator";
+import { useMessage } from "../contexts/MessageContext";
 
 /**
  * TestView - Admin view for configuring, previewing, and exporting quizzes
  * Allows admins to select approved questions and create assessments
  */
-const TestView = ({
-  questions = [],
-  config: _appConfig,
-  isAdmin,
-  showMessage,
-}) => {
+const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
+  const { showMessage } = useMessage();
   // Quiz configuration state
   const [quizConfig, setQuizConfig] = useState({
     title: "UE5 Knowledge Assessment",
@@ -120,6 +117,25 @@ const TestView = ({
   const disciplines = useMemo(() => {
     const set = new Set(approvedQuestions.map((q) => q.discipline));
     return [...set].filter(Boolean).sort();
+  }, [approvedQuestions]);
+
+  // Count unique accepted questions per discipline. Dedup by uniqueId so a
+  // question with multiple language variants counts once, matching the
+  // Review tab's "Accepted N" semantics.
+  const acceptedCountsByDiscipline = useMemo(() => {
+    const idsByDiscipline = new Map();
+    for (const q of approvedQuestions) {
+      if (!q.discipline) continue;
+      if (!idsByDiscipline.has(q.discipline)) {
+        idsByDiscipline.set(q.discipline, new Set());
+      }
+      idsByDiscipline.get(q.discipline).add(q.uniqueId || q.id);
+    }
+    const counts = {};
+    for (const [discipline, ids] of idsByDiscipline) {
+      counts[discipline] = ids.size;
+    }
+    return counts;
   }, [approvedQuestions]);
 
   // Get unique languages for filter dropdown
@@ -440,7 +456,12 @@ const TestView = ({
                             onChange={() => toggleDiscipline(d)}
                             className="w-4 h-4 accent-blue-500"
                           />
-                          <span className="text-sm text-slate-200">{d}</span>
+                          <span className="text-sm text-slate-200 flex-1">
+                            {d}
+                          </span>
+                          <span className="text-xs text-slate-500 tabular-nums">
+                            {acceptedCountsByDiscipline[d] ?? 0}
+                          </span>
                         </label>
                       );
                     })

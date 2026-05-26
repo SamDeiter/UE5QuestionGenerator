@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { logger } from "../../utils/logger";
+import { useMessage } from "../../contexts/MessageContext";
 
-const QuestionNotesField = ({ question, onUpdateQuestion, showMessage }) => {
+const QuestionNotesField = ({ question, onUpdateQuestion }) => {
+  const { showMessage } = useMessage();
   const [notes, setNotes] = useState(question.notes || "");
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);

@@ -27,7 +27,6 @@ const Sidebar = ({
   handleSelectCategory: _handleSelectCategory,
   customTags = {},
   status = "", // Live generation status text
-  showMessage,
   isAdmin, // Add isAdmin prop
 }) => {
   return (
@@ -42,7 +41,6 @@ const Sidebar = ({
               isOpen={showGenSettings}
               onToggle={() => setShowGenSettings(!showGenSettings)}
               allQuestionsMap={allQuestionsMap}
-              showMessage={showMessage}
               setShowGenSettings={setShowGenSettings}
             />
           </div>

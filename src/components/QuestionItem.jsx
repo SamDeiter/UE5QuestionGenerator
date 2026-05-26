@@ -31,6 +31,7 @@ import QuestionHeader from "./QuestionItem/QuestionHeader";
 import { logger } from "../utils/logger";
 import { useAuth } from "../hooks/useAuth";
 import { useAccessibility } from "../contexts/AccessibilityContext";
+import { useMessage } from "../contexts/MessageContext";
 import { useEditLock } from "../hooks/useEditLock";
 import {
   getLockColor,
@@ -65,10 +66,10 @@ const QuestionItem = ({
   onUseAIRewrite, // NEW: Handler for re-applying AI rewrite
   availableVariants,
   isProcessing,
-  showMessage,
   userRole,
   isAdmin,
 }) => {
+  const { showMessage } = useMessage();
   const { user } = useAuth();
   const { colorblindMode } = useAccessibility();
   const cb = colorblindMode;
@@ -76,8 +77,7 @@ const QuestionItem = ({
   const userEmail = user?.email;
 
   const handleLockExpired = useCallback(() => {
-    if (showMessage)
-      showMessage("⚠️ Edit lock expired - refreshing...", TOAST_DURATION.LONG);
+    showMessage("⚠️ Edit lock expired - refreshing...", TOAST_DURATION.LONG);
   }, [showMessage]);
 
   // Auto-lock on view (review mode)
@@ -450,7 +450,6 @@ const QuestionItem = ({
               onUpdateStatus={onUpdateStatus}
               onDelete={onDelete}
               appMode={appMode}
-              showMessage={showMessage}
             />
           </div>
         )}
@@ -464,7 +463,6 @@ const QuestionItem = ({
           setEditedText={setEditedText}
           setIsEditing={setIsEditing}
           onUpdateQuestion={onUpdateQuestion}
-          showMessage={showMessage}
           appMode={appMode}
           isAdmin={isAdmin}
         />
@@ -477,7 +475,6 @@ const QuestionItem = ({
           verifiedAt={q.humanVerifiedAt}
           onVerifyDocs={handleOpenDocs}
           onVerifySearch={handleOpenSearch}
-          showMessage={showMessage}
           canVerify={q.critiqueScore >= (QUALITY_THRESHOLDS?.PASS || 70)}
           // Doc link management props (Phase 1)
           docLinkSource={q.docLinkSource}
@@ -519,7 +516,6 @@ const QuestionItem = ({
           onVerify={handleOpenDocs}
           availableVariants={availableVariants}
           isProcessing={isProcessing}
-          showMessage={showMessage}
         />
 
         <ExplanationDisplay explanation={displayQuestion.explanation} />
@@ -527,11 +523,7 @@ const QuestionItem = ({
         <QuestionMetadata q={q} />
 
         {/* Internal Notes Field */}
-        <QuestionNotesField
-          question={q}
-          onUpdateQuestion={onUpdateQuestion}
-          showMessage={showMessage}
-        />
+        <QuestionNotesField question={q} onUpdateQuestion={onUpdateQuestion} />
 
         {/* AI Improvement Modal - Shows critique + improvements (if any) */}
         {showImprovementModal && q.critique && (

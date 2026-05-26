@@ -6,6 +6,7 @@ import QuestionItem from "./QuestionItem.jsx";
 import { exportQuestionsForCritique } from "../utils/externalCritique";
 import { logger } from "../utils/logger";
 import { getQuestionVariantsForId } from "../services/firebaseQueries";
+import { useMessage } from "../contexts/MessageContext";
 
 const DatabaseView = ({
   questions,
@@ -16,7 +17,6 @@ const DatabaseView = ({
   onTranslateSingle, // NEW: Support translation generation
   onSwitchLanguage: onGlobalSwitchLanguage, // NEW: Support global state updates
   addQuestionsToState, // NEW: To inject remote variants into local state
-  showMessage,
   filterMode = "all", // Default to 'all' if not provided
   sortBy = "default", // Default to 'default' if not provided
   searchTerm = "", // Search filter from toolbar
@@ -24,6 +24,7 @@ const DatabaseView = ({
   isAdmin = false, // Whether current user is admin
   userRole = "user", // NEW
 }) => {
+  const { showMessage } = useMessage();
   const [, setLoadMenuOpen] = useState(false);
   const loadMenuRef = useRef(null);
 

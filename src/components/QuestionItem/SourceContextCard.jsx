@@ -130,7 +130,6 @@ const SourceContextCard = ({
   originalSourceUrl = null,
   originalSourceExcerpt = null,
   onDocLinkUpdate = null,
-  showMessage = null,
   canEdit = true,
 }) => {
   const hasValidUrl = isEpicLink(sourceUrl);
@@ -220,7 +219,6 @@ const SourceContextCard = ({
             originalSourceUrl={originalSourceUrl}
             originalSourceExcerpt={originalSourceExcerpt}
             onUpdate={onDocLinkUpdate}
-            showMessage={showMessage}
             disabled={!canEdit}
           />
         </div>

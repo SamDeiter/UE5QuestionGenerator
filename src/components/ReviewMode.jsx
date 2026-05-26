@@ -17,7 +17,6 @@ const ReviewMode = ({
   onUpdateQuestion,
   translationMap,
   isProcessing,
-  showMessage,
   onStartTutorial,
   onKickBack, // For restoring rejected questions
   userRole, // NEW
@@ -140,7 +139,6 @@ const ReviewMode = ({
           )}
           isProcessing={isProcessing}
           appMode="review"
-          showMessage={showMessage}
           onKickBack={onKickBack}
           userRole={userRole}
           isAdmin={userRole === "admin"}

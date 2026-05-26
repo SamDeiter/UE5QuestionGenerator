@@ -19,7 +19,6 @@ const GenerationSettings = ({
   isOpen,
   onToggle,
   allQuestionsMap = {},
-  showMessage,
   setShowGenSettings,
 }) => {
   const { colorblindMode } = useAccessibility();
@@ -452,7 +451,6 @@ const GenerationSettings = ({
                 allQuestionsMap={allQuestionsMap}
                 config={config}
                 handleChange={handleChange}
-                showMessage={showMessage}
                 setShowGenSettings={setShowGenSettings}
               />
 

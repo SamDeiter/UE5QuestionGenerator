@@ -6,8 +6,10 @@ import {
   deleteSoftDeletedQuestionsFromFirestore,
 } from "../../services/firebase";
 import { logger } from "../../utils/logger";
+import { useMessage } from "../../contexts/MessageContext";
 
-const DatabaseManagement = ({ showMessage, isCollapsed, onToggle }) => {
+const DatabaseManagement = ({ isCollapsed, onToggle }) => {
+  const { showMessage } = useMessage();
   return (
     <CollapsibleSection
       title="Database Management"

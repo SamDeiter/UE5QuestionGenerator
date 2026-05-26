@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Icon from "../Icon";
 import { isEpicLink } from "../../utils/urlValidator";
 import { TOAST_DURATION } from "../../utils/constants";
+import { useMessage } from "../../contexts/MessageContext";
 
 /**
  * DocLinkEditor - Inline editor for source URL and excerpt
@@ -22,9 +23,9 @@ const DocLinkEditor = ({
   originalSourceUrl = null,
   originalSourceExcerpt = null,
   onUpdate,
-  showMessage,
   disabled = false,
 }) => {
+  const { showMessage } = useMessage();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUrl, setEditedUrl] = useState(sourceUrl || "");
   const [editedExcerpt, setEditedExcerpt] = useState(sourceExcerpt || "");

@@ -13,6 +13,7 @@ import { app } from "../../services/firebase";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { logger } from "../../utils/logger";
+import { useMessage } from "../../contexts/MessageContext";
 import { TOAST_DURATION } from "../../utils/constants";
 import * as tasks from "../../services/dataMaintenanceTasks";
 import {
@@ -79,7 +80,8 @@ const MaintenanceActionCard = ({
   );
 };
 
-const DataMaintenance = ({ showMessage, isCollapsed, onToggle }) => {
+const DataMaintenance = ({ isCollapsed, onToggle }) => {
+  const { showMessage } = useMessage();
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState("");
   const [lastResult, setLastResult] = useState(null);

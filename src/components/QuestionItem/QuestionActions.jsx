@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import Icon from "../Icon";
 import { useAccessibility } from "../../contexts/AccessibilityContext";
+import { useMessage } from "../../contexts/MessageContext";
 import { TOAST_DURATION } from "../../utils/constants";
 
 // Rejection reason options with categories for analytics
@@ -128,8 +129,8 @@ const QuestionActions = ({
   onUpdateStatus,
   onDelete,
   appMode,
-  showMessage,
 }) => {
+  const { showMessage } = useMessage();
   const { colorblindMode } = useAccessibility();
   const [rejectMenuOpen, setRejectMenuOpen] = useState(false);
   const rejectMenuRef = useRef(null);

@@ -30,7 +30,6 @@ export function useSidebarProps({
   handleSelectCategory,
   customTags,
   status,
-  showMessage,
   isAdmin,
 }) {
   return useMemo(
@@ -55,7 +54,6 @@ export function useSidebarProps({
       handleSelectCategory,
       customTags,
       status,
-      showMessage,
       isAdmin,
     }),
     [
@@ -79,7 +77,6 @@ export function useSidebarProps({
       handleSelectCategory,
       customTags,
       status,
-      showMessage,
       isAdmin,
     ]
   );

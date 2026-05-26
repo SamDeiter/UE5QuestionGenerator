@@ -5,6 +5,7 @@ import { Virtuoso } from "react-virtuoso";
 import { LANGUAGE_FLAGS } from "../utils/constants";
 import { useBulkTranslation } from "../hooks/useBulkTranslation";
 import { invalidateQuestionsCache } from "../services/firebaseQueries";
+import { useMessage } from "../contexts/MessageContext";
 
 const TranslationManagementView = ({
   questions,
@@ -19,9 +20,9 @@ const TranslationManagementView = ({
   onDelete,
   onUpdateQuestion,
   isProcessing,
-  showMessage,
   userRole,
 }) => {
+  const { showMessage } = useMessage();
   const [targetLang, setTargetLang] = useState("Japanese");
   const [viewFilter, setViewFilter] = useState("missing"); // 'missing', 'all-accepted', or 'all'
   const [isSyncing, setIsSyncing] = useState(false);
@@ -348,7 +349,6 @@ const TranslationManagementView = ({
                       (isBulkProcessing && index === progress.current - 1)
                     }
                     appMode="translate"
-                    showMessage={showMessage}
                     userRole={userRole}
                   />
                 </div>
