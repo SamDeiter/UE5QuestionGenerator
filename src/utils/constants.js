@@ -176,9 +176,7 @@ export const FIRESTORE_LIMITS = {
   MAX_LISTENERS: 5, // Max concurrent real-time listeners
   CACHE_TTL_MS: 5 * 60 * 1000, // 5 minute cache TTL
   MIN_QUERY_INTERVAL_MS: 1000, // Rate limit between queries (1/sec)
-  INITIAL_LOAD_COUNT: 100, // Tier 2: Fast initial load for perceived performance
-  FULL_SYNC_COUNT: 50000, // Tier 3: Background full sync cap. Internally paginated in 2500-doc chunks, so this is just an upper bound.
-  BACKGROUND_SYNC_DELAY_MS: 500, // Delay before background sync starts
+  FULL_SYNC_COUNT: 50000, // Cap for full-sync path. Internally paginated in 2500-doc chunks, so this is just an upper bound.
 };
 
 // History Limits
