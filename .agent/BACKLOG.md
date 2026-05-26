@@ -4,6 +4,13 @@
 
 ## Priority 1 — Medium Risk
 
+### Fix `scripts/recover_orphan_english.py` auto-accept bug
+
+- [ ] Change the script to write `status: "pending"` instead of `status: "accepted"` — AI reconstructions must go through human review, never auto-publish
+- [ ] Replace hardcoded SA-key path (`backups/assets/ue5-questions-prod-99289c4d03b3.json` — file no longer exists on disk) with `GOOGLE_APPLICATION_CREDENTIALS` env-var fallback
+- **Why this matters:** The last run silently published 21 AI-generated English reconstructions as `accepted`, bypassing review. Cleaned up 2026-05-26 with `scripts/reset_orphan_recovery_to_pending.py` — the 21 docs are now `pending` in the review queue. Re-running the recovery script in its current form would repeat the same mistake.
+- **Est:** ~15 min
+
 ### Firestore Security Rules Audit
 - [ ] Verify rules enforce the invite/role model (reviewer, admin, super_admin)
 - [ ] Check that unauthenticated reads are blocked

@@ -39,6 +39,7 @@ tools/deploy/logs/
 *emails*.json
 *emails*.csv
 *users*.csv
+scripts/*_audit.csv
 user-data/
 user-exports/
 *.sqlite
