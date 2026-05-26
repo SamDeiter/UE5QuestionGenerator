@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   APP_MODES,
   QUESTION_STATUS,
@@ -33,6 +33,8 @@ import { useAuth } from "../hooks/useAuth";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 import { useMessage } from "../contexts/MessageContext";
 import { useEditLock } from "../hooks/useEditLock";
+import { useQuestionVerification } from "../hooks/useQuestionVerification";
+import { useCritiqueChangeDetection } from "../hooks/useCritiqueChangeDetection";
 import {
   getLockColor,
   getLockTooltip,
@@ -40,10 +42,6 @@ import {
   getLockLabel,
   getStatusStyle,
   getDifficultyGradient,
-  buildVerifyDocsData,
-  buildVerifySearchData,
-  buildRejectVerificationData,
-  buildFlagUnverifiedData,
 } from "../utils/questionItemHelpers";
 
 import { saveTrainingPair } from "../services/trainingDataService";
@@ -96,7 +94,6 @@ const QuestionItem = ({
   const [showImprovementModal, setShowImprovementModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(null); // null or "docs" or "search"
   const [showVersionModal, setShowVersionModal] = useState(false); // Version comparison modal
-  const lastProcessedCritiqueRef = useRef(null);
 
   // Display question (supports language variants)
   const displayQuestion = q;
@@ -112,67 +109,26 @@ const QuestionItem = ({
     [onSwitchLanguage]
   );
 
+  // Auto-open improvement modal when critique arrives or updates mid-session.
+  // The returned ref is also used by handleModalDismiss / the apply path
+  // below to mark a dismissal/apply so the effect doesn't re-open.
+  const {
+    lastProcessedRef: lastProcessedCritiqueRef,
+    markSeen: markCritiqueSeen,
+  } = useCritiqueChangeDetection({
+    q,
+    appMode,
+    onShouldOpenModal: () => setShowImprovementModal(true),
+  });
+
   // Helper function for modal dismissal
   const handleModalDismiss = useCallback(() => {
     lastProcessedCritiqueRef.current = `dismissed-${q.id}-${Date.now()}`;
     setShowImprovementModal(false);
-  }, [q.id]);
+  }, [q.id, lastProcessedCritiqueRef]);
 
   // Lock helpers: Using imported functions from questionItemHelpers.js
   // - getLockColor, getLockTooltip, getLockIcon, getLockLabel
-
-  // Auto-open improvement modal when critique arrives or updates
-  // Track the last seen critiqueScore/attempts to detect re-critiques DURING THIS SESSION
-  const lastSeenCritiqueScoreRef = useRef(q.critiqueScore);
-  const lastSeenAttemptsRef = useRef(q.critiqueAttempts || 0);
-  const hasInitializedRef = useRef(false);
-
-  useEffect(() => {
-    // Skip the initial render - we only want to detect CHANGES during the session
-    if (!hasInitializedRef.current) {
-      hasInitializedRef.current = true;
-      lastSeenCritiqueScoreRef.current = q.critiqueScore;
-      lastSeenAttemptsRef.current = q.critiqueAttempts || 0;
-      return;
-    }
-
-    // Detect if critique was just updated
-    // Check score change OR attempts count increase (for re-critiques with same score)
-    const currentAttempts = q.critiqueAttempts || 0;
-    const attemptsChanged = currentAttempts > lastSeenAttemptsRef.current;
-
-    const critiqueJustUpdated =
-      attemptsChanged ||
-      (q.critiqueScore !== undefined &&
-        q.critiqueScore !== lastSeenCritiqueScoreRef.current);
-
-    // If updated, reset the "dismissed" flag to allow modal to show again
-    if (critiqueJustUpdated) {
-      lastProcessedCritiqueRef.current = null;
-      lastSeenAttemptsRef.current = currentAttempts;
-      lastSeenCritiqueScoreRef.current = q.critiqueScore;
-
-      // TRIGGER: Only auto-open if the critique actually just arrived/updated
-      // OR if we have a suggestion that hasn't been handled yet
-      if (
-        appMode === APP_MODES.REVIEW &&
-        q.critique &&
-        !q.improvementsApplied &&
-        !lastProcessedCritiqueRef.current?.startsWith(`dismissed-${q.id}`) &&
-        !lastProcessedCritiqueRef.current?.startsWith(`applied-${q.id}`)
-      ) {
-        setShowImprovementModal(true);
-      }
-    }
-  }, [
-    appMode,
-    q.critique,
-    q.suggestedRewrite,
-    q.id,
-    q.improvementsApplied,
-    q.critiqueScore,
-    q.critiqueAttempts,
-  ]);
 
   const handleOpenDocs = useCallback(() => {
     // Just shows the verify modal - docs will be opened inside the modal
@@ -184,66 +140,19 @@ const QuestionItem = ({
     setShowVerifyModal(true);
   }, []);
 
-  // Verification handlers using extracted data builders
-  const handleVerifyViaDocs = useCallback(
-    (clickInfo = {}) => {
-      if (!onUpdateQuestion) return;
-      onUpdateQuestion(q.id, buildVerifyDocsData(userEmail, clickInfo));
-      showMessage?.("✅ Verified via Epic Docs!", TOAST_DURATION.MEDIUM);
-    },
-    [q.id, onUpdateQuestion, userEmail, showMessage]
-  );
-
-  const handleVerifyViaSearch = useCallback(
-    (clickInfo = {}) => {
-      if (!onUpdateQuestion) return;
-      onUpdateQuestion(q.id, buildVerifySearchData(userEmail, clickInfo));
-      showMessage?.("✅ Verified via Google Search!", TOAST_DURATION.MEDIUM);
-    },
-    [q.id, onUpdateQuestion, userEmail, showMessage]
-  );
-
-  const handleRejectVerification = useCallback(
-    (reasonId, clickInfo = {}) => {
-      if (!onUpdateQuestion) return;
-      onUpdateQuestion(
-        q.id,
-        buildRejectVerificationData(userEmail, reasonId, clickInfo)
-      );
-      onUpdateStatus?.(q.id, QUESTION_STATUS.REJECTED, reasonId);
-      showMessage?.(
-        "❌ Question rejected - source not verified",
-        TOAST_DURATION.LONG
-      );
-    },
-    [q.id, onUpdateQuestion, onUpdateStatus, userEmail, showMessage]
-  );
-
-  // Flag as unverified but don't reject - question advances to Accept with warning
-  const handleFlagUnverified = useCallback(
-    (clickInfo = {}) => {
-      if (!onUpdateQuestion) return;
-      onUpdateQuestion(q.id, buildFlagUnverifiedData(userEmail, clickInfo));
-      showMessage?.(
-        "🚩 Flagged - source unverified, ready for Accept/Reject",
-        TOAST_DURATION.LONG
-      );
-    },
-    [q.id, onUpdateQuestion, userEmail, showMessage]
-  );
-
-  // Handle doc link updates from the DocLinkEditor component (Phase 1)
-  const handleDocLinkUpdate = useCallback(
-    (updates) => {
-      if (!onUpdateQuestion) return;
-      // Include the modifiedBy field automatically
-      onUpdateQuestion(q.id, {
-        ...updates,
-        docLinkModifiedBy: userEmail,
-      });
-    },
-    [q.id, onUpdateQuestion, userEmail]
-  );
+  // Verification / reject / flag / doc-link handlers extracted to a hook.
+  const {
+    handleVerifyViaDocs,
+    handleVerifyViaSearch,
+    handleRejectVerification,
+    handleFlagUnverified,
+    handleDocLinkUpdate,
+  } = useQuestionVerification({
+    q,
+    userEmail,
+    onUpdateQuestion,
+    onUpdateStatus,
+  });
 
   // Note: Answer/DocLink state now handled in ImprovementModal  // Handle marking a question for research (Phase 4)
   const handleMarkForResearch = useCallback(() => {
@@ -590,9 +499,12 @@ const QuestionItem = ({
                 q.id
               }-${Date.now()}`;
 
-              // ALSO: Update the score ref to prevent score-change detection
-              lastSeenCritiqueScoreRef.current =
-                q.improvedScore || q.critiqueScore;
+              // ALSO: pre-sync the change-detection cursor to the score
+              // we're about to flush via onUpdateQuestion, so the effect
+              // doesn't observe a "change" and re-open the modal.
+              markCritiqueSeen({
+                critiqueScore: q.improvedScore || q.critiqueScore,
+              });
 
               // IMMEDIATELY close modal to prevent re-open race
               setShowImprovementModal(false);
