@@ -76,23 +76,3 @@ export function resetAgents() {
   logger.log("[AgentFactory] Resetting agents");
   agentInstances = null;
 }
-
-/**
- * Get a specific agent
- * @param {string} agentName - Name of the agent (sessionAgent, lockAgent, etc.)
- * @returns {object|null} Agent instance or null
- */
-export function getAgent(agentName) {
-  const agents = getAgents();
-  if (!agents) return null;
-
-  if (!agents[agentName]) {
-    logger.error(`[AgentFactory] Agent "${agentName}" not found`);
-    return null;
-  }
-
-  return agents[agentName];
-}
-
-// Named exports for convenience
-export { getSessionAgent };

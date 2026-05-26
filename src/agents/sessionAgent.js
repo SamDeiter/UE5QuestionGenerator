@@ -24,7 +24,7 @@ function generateUUID() {
   });
 }
 
-export class SessionAgent {
+class SessionAgent {
   constructor() {
     this.SESSION_KEY = "EDIT_SESSION_ID";
     this.sessionId = this._initSession();

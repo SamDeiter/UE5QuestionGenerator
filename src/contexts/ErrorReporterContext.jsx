@@ -1,35 +1,15 @@
-/* eslint-disable react-refresh/only-export-components */
 /**
  * Error Reporter Context
  *
  * Captures and displays errors with detailed reports that users can send to support.
  */
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
+import { createContext, useState, useCallback, useMemo } from "react";
 import Icon from "../components/Icon";
 
 const ErrorReporterContext = createContext(null);
 
 // Maximum number of errors to keep in history
 const MAX_ERROR_HISTORY = 10;
-
-/**
- * Hook to access the error reporter
- */
-export const useErrorReporter = () => {
-  const context = useContext(ErrorReporterContext);
-  if (!context) {
-    throw new Error(
-      "useErrorReporter must be used within ErrorReporterProvider"
-    );
-  }
-  return context;
-};
 
 /**
  * Format error report for copying/sending
@@ -307,5 +287,3 @@ export const ErrorReporterProvider = ({ children, userEmail, appVersion }) => {
     </ErrorReporterContext.Provider>
   );
 };
-
-export default ErrorReporterContext;
