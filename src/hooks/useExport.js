@@ -8,6 +8,7 @@ import {
 import {
   saveQuestionToFirestore,
   getAllQuestionsFromFirestore,
+  getQuestionsUpdatedSince,
 } from "../services/firebase";
 import { downloadFile, normalizeStatus } from "../utils/questionHelpers";
 import { formatDate } from "../utils/dateHelpers";
@@ -19,6 +20,25 @@ import {
   FIRESTORE_LIMITS,
 } from "../utils/constants";
 import { validateQuestion } from "../utils/questionValidator";
+
+// firestoreUpdatedAt may arrive as a Firestore Timestamp, a serialized
+// {seconds, nanoseconds} object (older bulk-imported docs), an ISO string,
+// or null. Mirrors the `toMillis` helper in firebaseQueries.js but kept
+// local so this hook doesn't reach across the service boundary just for one
+// function. Returns 0 when the value is unparseable so callers can safely
+// `Math.max(0, …)` reduce.
+const toMillisCompat = (v) => {
+  if (!v) return 0;
+  if (typeof v.toMillis === "function") return v.toMillis();
+  if (typeof v.seconds === "number") {
+    return v.seconds * 1000 + (v.nanoseconds || 0) / 1e6;
+  }
+  if (typeof v === "string") {
+    const parsed = Date.parse(v);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+};
 
 export const useExport = (
   config,
@@ -314,9 +334,15 @@ export const useExport = (
       };
 
       try {
-        // TIER 1: Instantly display from IndexedDB cache (0ms perceived load)
-        const { getCachedQuestions } =
-          await import("../services/questionCache");
+        // TIER 1: Instantly display from IndexedDB cache (0ms perceived load).
+        // We always do this — it's free and gives the user something to look
+        // at while we figure out whether we need a full sync or just a delta.
+        const {
+          getCachedQuestions,
+          cacheQuestions,
+          getLastSyncTime,
+          setLastSyncTime,
+        } = await import("../services/questionCache");
         const cachedData = await getCachedQuestions();
 
         if (cachedData.length > 0) {
@@ -330,7 +356,82 @@ export const useExport = (
           );
         }
 
-        // TIER 2: Fast initial fetch (100 docs = ~200ms)
+        // INCREMENTAL SYNC PATH (the fast common case).
+        //
+        // When we already have IDB data and a recorded high-water mark, the
+        // ONLY thing we need from Firestore is docs updated since that
+        // watermark. For a typical reload that's 0–handful of docs instead
+        // of a full ~19,580-doc re-fetch (which is what the old 3-tier loader
+        // did unconditionally and made reload feel "slow forever").
+        //
+        // Skipped when:
+        //   • fullSync: caller explicitly requested a full refresh (e.g. the
+        //     "Refresh" button) — that path catches deletions, which a
+        //     `firestoreUpdatedAt > X` query cannot.
+        //   • !cachedData.length: cold cache, no baseline to diff from.
+        //   • lastSyncTime missing: this is the user's first load after this
+        //     code shipped — fall through to the full-sync path to establish
+        //     a baseline.
+        const lastSyncTime = !fullSync ? await getLastSyncTime() : null;
+        const canIncrementalSync =
+          !fullSync && cachedData.length > 0 && lastSyncTime !== null;
+
+        if (canIncrementalSync) {
+          if (!silent) setStatus("Checking for updates...");
+
+          const updated = await getQuestionsUpdatedSince(lastSyncTime);
+
+          if (updated.length === 0) {
+            // Cache already represents the latest state.
+            if (!silent) showMessage("Up to date", 1500);
+            // Advance the watermark to now() so the next reload also sees a
+            // clean delta query. Server clock isn't needed for correctness —
+            // we only require monotonicity, and clamping to >= existing keeps
+            // it monotonic across machines.
+            await setLastSyncTime(Date.now());
+            return;
+          }
+
+          // Merge incoming updates into the cached set by uniqueId.
+          const byUniqueId = new Map();
+          for (const q of cachedData) {
+            if (q?.uniqueId) byUniqueId.set(q.uniqueId, q);
+          }
+          let maxUpdated = lastSyncTime;
+          for (const q of updated) {
+            if (q?.uniqueId) byUniqueId.set(q.uniqueId, q);
+            const ts = toMillisCompat(q?.firestoreUpdatedAt);
+            if (ts > maxUpdated) maxUpdated = ts;
+          }
+          const merged = Array.from(byUniqueId.values());
+          const mergedQuestions = processQuestions(merged);
+
+          if (replaceQuestions) {
+            replaceQuestions(mergedQuestions, QUESTION_SOURCES.DATABASE);
+            replaceQuestions(mergedQuestions, QUESTION_SOURCES.IMPORT);
+          }
+          // Only the changed docs need to be written back — IDB upsert by key.
+          await cacheQuestions(updated);
+          await setLastSyncTime(maxUpdated);
+
+          logger.log(
+            `⚡ INCREMENTAL: applied ${updated.length} update(s), total ${mergedQuestions.length}`
+          );
+          if (!silent) {
+            showMessage(
+              updated.length === 1
+                ? "1 question updated"
+                : `${updated.length} questions updated`,
+              2000
+            );
+          }
+          return;
+        }
+
+        // FULL-SYNC PATH (cold cache, explicit refresh, or first load after
+        // the incremental-sync feature shipped). This is the legacy 3-tier
+        // path; left intact since it's the only thing that catches deletions
+        // and rebuilds a baseline `lastSyncTime`.
         if (!silent) {
           setStatus(cachedData.length > 0 ? "Syncing latest..." : "Loading...");
         }
@@ -350,6 +451,18 @@ export const useExport = (
         if (replaceQuestions && freshQuestions.length > 0) {
           replaceQuestions(freshQuestions, QUESTION_SOURCES.DATABASE);
           replaceQuestions(freshQuestions, QUESTION_SOURCES.IMPORT);
+        }
+
+        // Establish/refresh the incremental-sync baseline from the highest
+        // server timestamp we just saw. If freshData is empty (no docs or
+        // failure) we skip the watermark write to avoid jumping forward
+        // past real data we haven't loaded.
+        if (freshQuestions.length > 0) {
+          const maxFromFull = freshQuestions.reduce((max, q) => {
+            const ts = toMillisCompat(q.firestoreUpdatedAt);
+            return ts > max ? ts : max;
+          }, 0);
+          if (maxFromFull > 0) await setLastSyncTime(maxFromFull);
         }
 
         logger.log(
@@ -385,6 +498,12 @@ export const useExport = (
                   replaceQuestions(fullQuestions, QUESTION_SOURCES.DATABASE);
                   replaceQuestions(fullQuestions, QUESTION_SOURCES.IMPORT);
                 }
+                // Bump the watermark from the full data we just pulled.
+                const maxFromBg = fullQuestions.reduce((max, q) => {
+                  const ts = toMillisCompat(q.firestoreUpdatedAt);
+                  return ts > max ? ts : max;
+                }, 0);
+                if (maxFromBg > 0) await setLastSyncTime(maxFromBg);
                 logger.log(
                   `✅ TIER 3: Background synced ${fullQuestions.length} total questions`
                 );

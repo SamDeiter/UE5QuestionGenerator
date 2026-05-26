@@ -41,6 +41,7 @@ export {
 export {
   getQuestionsFromFirestore,
   getAllQuestionsFromFirestore,
+  getQuestionsUpdatedSince,
   subscribeToAllQuestions,
   getQuestionsPaginated,
   invalidateQuestionsCache,

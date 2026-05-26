@@ -69,6 +69,8 @@ import {
   isCacheValid,
   clearCache,
   getCacheStats,
+  getLastSyncTime,
+  setLastSyncTime,
 } from "../questionCache";
 
 describe("questionCache", () => {
@@ -173,6 +175,59 @@ describe("questionCache", () => {
       expect(stats).toHaveProperty("count");
       expect(stats).toHaveProperty("lastUpdated");
       expect(stats).toHaveProperty("isValid");
+    });
+  });
+
+  // ============================================================
+  // lastSyncTime — high-water mark for incremental sync.
+  // Wrong behavior here causes either stale UI (regression) or
+  // redundant full re-fetches (the perf bug we're trying to fix).
+  // ============================================================
+  describe("getLastSyncTime / setLastSyncTime", () => {
+    it("returns null when no watermark has been written", async () => {
+      const value = await getLastSyncTime();
+      expect(value).toBeNull();
+    });
+
+    it("stores and retrieves a numeric watermark", async () => {
+      const ts = 1717000000000;
+      await setLastSyncTime(ts);
+      const value = await getLastSyncTime();
+      expect(value).toBe(ts);
+    });
+
+    it("only advances the watermark (never regresses)", async () => {
+      await setLastSyncTime(2000);
+      await setLastSyncTime(1000); // older — should be ignored
+      const value = await getLastSyncTime();
+      expect(value).toBe(2000);
+    });
+
+    it("allows equal-or-newer writes to no-op without erroring", async () => {
+      await setLastSyncTime(5000);
+      await setLastSyncTime(5000); // equal — accepted as no-op
+      const value = await getLastSyncTime();
+      expect(value).toBe(5000);
+    });
+
+    it("ignores non-numeric or non-finite values", async () => {
+      await setLastSyncTime(3000);
+      await setLastSyncTime(undefined);
+      await setLastSyncTime(null);
+      await setLastSyncTime(NaN);
+      await setLastSyncTime(Infinity);
+      await setLastSyncTime("4000");
+      const value = await getLastSyncTime();
+      expect(value).toBe(3000);
+    });
+
+    it("returns null when the stored value is corrupted to a non-number", async () => {
+      // Simulate a corrupted meta store entry — must not return garbage
+      // because callers branch on `lastSyncTime !== null` to decide whether
+      // to do an incremental sync vs a full one.
+      mockMetaStore.set("lastSyncTime", "not-a-number");
+      const value = await getLastSyncTime();
+      expect(value).toBeNull();
     });
   });
 });

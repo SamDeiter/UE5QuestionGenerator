@@ -20,6 +20,7 @@ import {
   sum,
   count,
   documentId,
+  Timestamp,
 } from "firebase/firestore";
 import { logger } from "../utils/logger";
 import { TIMING, FIRESTORE_LIMITS, QUESTION_SOURCES } from "../utils/constants";
@@ -332,6 +333,76 @@ export const getAllQuestionsFromFirestore = async (
     return questions;
   } catch (error) {
     logger.error("Error getting all questions from Firestore:", error);
+    return [];
+  }
+};
+
+/**
+ * Incremental sync — fetch only docs whose `firestoreUpdatedAt` is strictly
+ * after a high-water-mark timestamp.
+ *
+ * On every page reload, the original 3-tier loader (useExport.js) re-fetched
+ * all ~19,580 docs from Firestore via 4-lane cursor pagination, even though
+ * IndexedDB already had a fresh copy and only a handful of docs had changed.
+ * That round-trip is what made reload feel like "the read takes forever."
+ *
+ * This function does the cheap thing instead: a single ordered query
+ * `firestoreUpdatedAt > sinceMs ORDER BY firestoreUpdatedAt ASC`. The
+ * existing Firestore index on `firestoreUpdatedAt` makes this O(deltas).
+ * Returns `[]` when nothing has changed since `sinceMs`.
+ *
+ * Caller is responsible for:
+ *   - merging the returned docs into IndexedDB and React state
+ *   - advancing the high-water mark to max(firestoreUpdatedAt) of the response
+ *     (use setLastSyncTime in questionCache.js)
+ *
+ * Does NOT detect deletions — a separate periodic full sync is needed for
+ * that. The existing "Refresh" UI button (which calls
+ * getAllQuestionsFromFirestore with forceRefresh=true) covers this use case.
+ *
+ * @param {number} sinceMs - High-water mark in millisecond epoch. Required.
+ * @returns {Promise<Array>} Questions updated after `sinceMs`. May be empty.
+ */
+export const getQuestionsUpdatedSince = async (sinceMs) => {
+  if (
+    typeof sinceMs !== "number" ||
+    !Number.isFinite(sinceMs) ||
+    sinceMs <= 0
+  ) {
+    logger.warn("getQuestionsUpdatedSince called without a valid sinceMs");
+    return [];
+  }
+
+  if (!auth.currentUser) {
+    logger.log("⚠️ No user signed in, cannot fetch incremental updates");
+    return [];
+  }
+
+  try {
+    const startTime = performance.now();
+    const sinceTs = Timestamp.fromMillis(sinceMs);
+    const q = query(
+      collection(getDb(), "questions"),
+      where("firestoreUpdatedAt", ">", sinceTs),
+      orderBy("firestoreUpdatedAt", "asc")
+    );
+
+    const snapshot = await getDocs(q);
+    const questions = [];
+    snapshot.forEach((d) => {
+      const parsed = parseQuestionDoc(d);
+      if (parsed) questions.push(parsed);
+    });
+
+    const elapsed = Math.round(performance.now() - startTime);
+    logger.log(
+      `⚡ Incremental sync: ${questions.length} updated doc(s) since ${new Date(
+        sinceMs
+      ).toISOString()} (${elapsed}ms)`
+    );
+    return questions;
+  } catch (error) {
+    logger.error("Error getting incremental updates from Firestore:", error);
     return [];
   }
 };
