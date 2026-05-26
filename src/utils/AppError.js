@@ -101,49 +101,4 @@ export function logError(error, additionalContext = {}) {
   }
 }
 
-/**
- * Wraps an async function with standardized error handling
- *
- * @param {Function} fn - Async function to wrap
- * @param {string} operation - Name of the operation for logging
- * @param {Object} context - Context to include in error logs
- * @returns {Function} Wrapped function
- */
-export function withErrorHandling(fn, operation, context = {}) {
-  return async (...args) => {
-    try {
-      return await fn(...args);
-    } catch (error) {
-      logError(error, { operation, ...context });
-      throw error; // Re-throw to let caller handle
-    }
-  };
-}
-
-/**
- * Creates an AppError from a Firebase error
- *
- * @param {Error} firebaseError - Original Firebase error
- * @param {Object} context - Additional context
- * @returns {AppError}
- */
-export function fromFirebaseError(firebaseError, context = {}) {
-  const code = firebaseError.code || "";
-  let appErrorCode = ERROR_CODES.UNKNOWN;
-
-  // Map Firebase error codes to AppError codes
-  if (code.includes("permission-denied")) {
-    appErrorCode = ERROR_CODES.PERMISSION_DENIED;
-  } else if (code.includes("auth/")) {
-    appErrorCode = ERROR_CODES.AUTH_BLOCKED;
-  } else if (code.includes("unavailable") || code.includes("network")) {
-    appErrorCode = ERROR_CODES.NETWORK_OFFLINE;
-  }
-
-  return new AppError(firebaseError.message, appErrorCode, {
-    originalCode: code,
-    ...context,
-  });
-}
-
 export default AppError;

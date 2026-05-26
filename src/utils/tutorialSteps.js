@@ -215,23 +215,3 @@ export const TUTORIAL_SCENARIOS = {
     ],
   },
 };
-
-/**
- * Get steps for a specific scenario
- * @param {string} scenarioId - Scenario identifier
- * @returns {TutorialStep[]} Array of steps
- */
-export const getScenarioSteps = (scenarioId) => {
-  return TUTORIAL_SCENARIOS[scenarioId]?.steps || [];
-};
-
-/**
- * Get all scenario IDs
- * @returns {string[]} Array of scenario IDs
- */
-export const getScenarioIds = () => {
-  return Object.keys(TUTORIAL_SCENARIOS);
-};
-
-// Legacy export for backward compatibility
-export const TUTORIAL_STEPS = TUTORIAL_SCENARIOS.welcome.steps;
