@@ -1,6 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionGenerator } from "../useQuestionGenerator";
+import { useQuestionCritique } from "../useQuestionCritique";
 import * as geminiSecure from "../../../services/geminiSecure";
 import * as analyticsStore from "../../../utils/analyticsStore";
 import * as quotaEnforcement from "../../../utils/quotaEnforcement";
@@ -242,7 +243,10 @@ describe("useQuestionGenerator", () => {
     expect(mockProps.setStatus).toHaveBeenCalledWith("Error");
   });
 
-  describe("handleAutoCritique", () => {
+  // handleAutoCritique / handleExplain / handleVariate moved to
+  // useQuestionCritique in the PR 5 split. Tests below render that hook
+  // directly with the same mocks (the public behavior is unchanged).
+  describe("handleAutoCritique (via useQuestionCritique)", () => {
     it("should process questions in batches and update state", async () => {
       geminiSecure.generateCritiqueSecure.mockResolvedValue({
         score: 80,
@@ -253,15 +257,13 @@ describe("useQuestionGenerator", () => {
 
       const questions = [{ id: "q1" }, { id: "q2" }];
 
-      const { result } = renderHook(() => useQuestionGenerator(mockProps));
+      const { result } = renderHook(() => useQuestionCritique(mockProps));
 
       await act(async () => {
         await result.current.handleAutoCritique(questions);
       });
 
       expect(mockProps.setStatus).toHaveBeenCalledWith("Auto-critiquing...");
-      // Batch size is 3, so for 2 questions, it runs in one batch.
-      // It calls critiqueQuestion for each question.
       expect(geminiSecure.generateCritiqueSecure).toHaveBeenCalledTimes(2);
       expect(mockProps.updateQuestionInState).toHaveBeenCalledTimes(2);
     });
@@ -276,13 +278,12 @@ describe("useQuestionGenerator", () => {
       geminiSecure.generateTagsSecure.mockResolvedValue(["NewTag"]);
 
       const questions = [{ id: "q1", tags: ["OldTag"] }];
-      const { result } = renderHook(() => useQuestionGenerator(mockProps));
+      const { result } = renderHook(() => useQuestionCritique(mockProps));
 
       await act(async () => {
         await result.current.handleAutoCritique(questions);
       });
 
-      // 1 tag < 3 min tags, so it should generate tags
       expect(geminiSecure.generateTagsSecure).toHaveBeenCalled();
       expect(mockProps.updateQuestionInState).toHaveBeenCalledWith(
         "q1",
@@ -291,7 +292,7 @@ describe("useQuestionGenerator", () => {
     });
   });
 
-  describe("handleExplain", () => {
+  describe("handleExplain (via useQuestionCritique)", () => {
     it("should call generateContent and update question", async () => {
       const question = {
         id: "q1",
@@ -299,7 +300,7 @@ describe("useQuestionGenerator", () => {
         options: { A: "Ans" },
         correct: "A",
       };
-      const { result } = renderHook(() => useQuestionGenerator(mockProps));
+      const { result } = renderHook(() => useQuestionCritique(mockProps));
 
       await act(async () => {
         await result.current.handleExplain(question);
@@ -315,7 +316,7 @@ describe("useQuestionGenerator", () => {
     });
   });
 
-  describe("handleVariate", () => {
+  describe("handleVariate (via useQuestionCritique)", () => {
     it("should call generateContent and add new questions", async () => {
       const question = {
         id: "q1",
@@ -327,12 +328,11 @@ describe("useQuestionGenerator", () => {
         type: "MC",
       };
 
-      // Ensure parseQuestions returns valid new questions for this specific test
       mockParserUtils.parseQuestions.mockReturnValueOnce([
         { question: "Variation 1", options: { A: "1" }, correct: "A" },
       ]);
 
-      const { result } = renderHook(() => useQuestionGenerator(mockProps));
+      const { result } = renderHook(() => useQuestionCritique(mockProps));
 
       await act(async () => {
         await result.current.handleVariate(question);

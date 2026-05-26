@@ -1,10 +1,18 @@
 import { useCallback } from "react";
 import { Timestamp } from "firebase/firestore";
 import {
+  generateContentSecure as generateContent,
   generateCritiqueSecure as generateCritique,
   generateTagsSecure,
 } from "../../services/geminiSecure";
-import { TOAST_DURATION, AI_CONFIG } from "../../utils/constants";
+import { constructSystemPrompt } from "../../services/promptBuilder";
+import { parseQuestions } from "../../utils/parserUtils";
+import {
+  TOAST_DURATION,
+  AI_CONFIG,
+  GENERATION_LIMITS,
+  QUALITY_THRESHOLDS,
+} from "../../utils/constants";
 import { logger } from "../../utils/logger";
 import { logError } from "../../utils/AppError";
 import { inferCorrectAnswer } from "../../utils/answerHelpers";
@@ -14,6 +22,7 @@ import { inferCorrectAnswer } from "../../utils/answerHelpers";
  * Extracted from useGeneration to reduce complexity.
  */
 export const useQuestionCritique = ({
+  config,
   effectiveApiKey,
   isApiReady,
   showMessage,
@@ -21,7 +30,234 @@ export const useQuestionCritique = ({
   setIsProcessing,
   updateQuestionInState,
   updateAllVariantsInState,
+  addQuestionsToState,
+  checkAndStoreQuestions,
+  getFileContext,
 }) => {
+  /**
+   * Batched auto-critique used after generation. Scores each question in
+   * parallel batches and surfaces a summary message. Also auto-generates
+   * tags for questions that came back tag-thin.
+   */
+  const handleAutoCritique = useCallback(
+    async (questions) => {
+      setStatus("Auto-critiquing...");
+      showMessage(
+        `Running AI critique on ${questions.length} questions...`,
+        TOAST_DURATION.MEDIUM
+      );
+
+      const critiqueQuestion = async (question) => {
+        try {
+          const { score, text, rewrite, changes } = await generateCritique(
+            effectiveApiKey,
+            question
+          );
+
+          let suggestedTags = question.tags || [];
+          if (
+            suggestedTags.length < GENERATION_LIMITS.MIN_TAGS_PER_QUESTION &&
+            rewrite
+          ) {
+            const improvedQuestion = {
+              question: rewrite.question || question.question,
+              optionA: rewrite.optionA || question.options?.A,
+              optionB: rewrite.optionB || question.options?.B,
+              optionC: rewrite.optionC || question.options?.C,
+              optionD: rewrite.optionD || question.options?.D,
+            };
+            const newTags = await generateTagsSecure(
+              effectiveApiKey,
+              improvedQuestion
+            );
+            if (newTags) {
+              suggestedTags = [
+                ...new Set([
+                  ...suggestedTags,
+                  ...newTags.map((t) => t.replace(/^#/, "")),
+                ]),
+              ];
+            }
+          }
+
+          updateQuestionInState(question.id, (item) => ({
+            ...item,
+            critique: text,
+            critiqueScore: score,
+            suggestedRewrite: rewrite
+              ? { ...rewrite, tags: suggestedTags }
+              : null,
+            rewriteChanges: changes,
+          }));
+          return score;
+        } catch {
+          return null;
+        }
+      };
+
+      const batchSize = GENERATION_LIMITS.BATCH_SIZE_PARALLEL_CRITIQUE;
+      const scores = [];
+      for (let i = 0; i < questions.length; i += batchSize) {
+        const batch = questions.slice(i, i + batchSize);
+        const batchScores = await Promise.all(batch.map(critiqueQuestion));
+        scores.push(...batchScores.filter((s) => s !== null));
+      }
+
+      const avgScore =
+        scores.length > 0
+          ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+          : 0;
+
+      const highScoreCount = scores.filter(
+        (s) => s >= QUALITY_THRESHOLDS.PASS
+      ).length;
+      const lowScoreCount = scores.filter(
+        (s) => s < QUALITY_THRESHOLDS.MEDIOCRE
+      ).length;
+
+      if (lowScoreCount > 0) {
+        showMessage(
+          `Critique complete! Avg: ${avgScore}/100. ⚠️ ${lowScoreCount} need improvement.`,
+          TOAST_DURATION.EXTENDED
+        );
+      } else {
+        showMessage(
+          `Critique complete! Avg: ${avgScore}/100. ${highScoreCount} ready to accept!`,
+          TOAST_DURATION.LONG
+        );
+      }
+      setStatus("");
+    },
+    [effectiveApiKey, setStatus, showMessage, updateQuestionInState]
+  );
+
+  /**
+   * Single-question explanation — generates a "why is this correct" blurb
+   * and stores it on the question.
+   */
+  const handleExplain = useCallback(
+    async (q) => {
+      if (!isApiReady) {
+        showMessage("API key required.", TOAST_DURATION.LONG);
+        return;
+      }
+
+      setIsProcessing(true);
+      setStatus("Explaining...");
+      const prompt = `Explain WHY the answer is correct in simple terms: "${
+        q.question
+      }" Answer: "${q.correct === "A" ? q.options.A : q.options.B}"`;
+
+      try {
+        const exp = await generateContent(
+          effectiveApiKey,
+          "Technical Assistant",
+          prompt,
+          setStatus
+        );
+        updateQuestionInState(q.id, (item) => ({ ...item, explanation: exp }));
+        setStatus("");
+      } catch (error) {
+        logger.error("Explanation failed:", error);
+        setStatus("Fail");
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [
+      effectiveApiKey,
+      isApiReady,
+      setStatus,
+      showMessage,
+      updateQuestionInState,
+      setIsProcessing,
+    ]
+  );
+
+  /**
+   * Generate two improved variations of a question. Uses the critique
+   * feedback as the variation prompt when available, otherwise asks for
+   * "more challenging and professional" variants.
+   */
+  const handleVariate = useCallback(
+    async (q) => {
+      if (!isApiReady) {
+        showMessage("API key required.", TOAST_DURATION.LONG);
+        return;
+      }
+
+      setIsProcessing(true);
+      setStatus("Creating improved variations...");
+
+      const hasCritique = q.critique && q.critiqueScore !== undefined;
+      const critiqueContext = hasCritique
+        ? `\n\nCRITIQUE FEEDBACK (Score: ${q.critiqueScore}/100):\n${q.critique}\n\nYour task: Generate 2 IMPROVED variations that ADDRESS the critique feedback above.`
+        : `\n\nYour task: Generate 2 IMPROVED variations that are MORE CHALLENGING and PROFESSIONAL than the original.`;
+
+      const sys = constructSystemPrompt(config, getFileContext());
+      const prompt = `ORIGINAL QUESTION TO IMPROVE:
+Discipline: ${q.discipline}
+Difficulty: ${q.difficulty}
+Type: ${q.type}
+Question: "${q.question}"
+Options:
+A) ${q.options.A}
+B) ${q.options.B}
+${q.options.C ? `C) ${q.options.C}` : ""}
+${q.options.D ? `D) ${q.options.D}` : ""}
+Correct Answer: ${q.correct}
+${critiqueContext}
+
+REQUIREMENTS FOR VARIATIONS:
+1. Address any weaknesses mentioned in the critique (if provided)
+2. Increase depth and professional relevance
+3. Use scenario-based or application-focused phrasing
+4. Avoid trivial or overly simple questions
+5. Maintain the same difficulty level: ${q.difficulty}
+6. Keep the same type: ${q.type}
+
+Output in Markdown Table format.`;
+
+      try {
+        const text = await generateContent(
+          effectiveApiKey,
+          sys,
+          prompt,
+          setStatus
+        );
+        const newQs = parseQuestions(text);
+        if (newQs.length > 0) {
+          const uniqueNewQuestions = await checkAndStoreQuestions(newQs);
+          addQuestionsToState(uniqueNewQuestions, false);
+          showMessage(
+            `Added ${uniqueNewQuestions.length} improved variations.`,
+            TOAST_DURATION.SHORT
+          );
+        }
+      } catch (e) {
+        logError(e, { operation: "generateVariations", questionId: q?.id });
+        setStatus("Fail");
+        showMessage(
+          `Failed to generate variations: ${e.message}`,
+          TOAST_DURATION.EXTENDED
+        );
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [
+      config,
+      effectiveApiKey,
+      isApiReady,
+      setStatus,
+      showMessage,
+      addQuestionsToState,
+      checkAndStoreQuestions,
+      setIsProcessing,
+      getFileContext,
+    ]
+  );
+
   /**
    * Generates a critique and suggested rewrite for a question.
    */
@@ -402,5 +638,8 @@ export const useQuestionCritique = ({
     handleApplyRewrite,
     handleRevertToOriginal,
     handleUseAIRewrite,
+    handleAutoCritique,
+    handleExplain,
+    handleVariate,
   };
 };

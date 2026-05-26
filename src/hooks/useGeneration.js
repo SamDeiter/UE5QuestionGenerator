@@ -6,6 +6,11 @@ import { useQuestionGenerator } from "./generation/useQuestionGenerator";
 /**
  * Main hook for handling all AI-related generation logic.
  * Orchestrates specialized sub-hooks for translation, critique, and generation.
+ *
+ * Note on ordering: useQuestionCritique is constructed first so its
+ * handleAutoCritique can be passed into useQuestionGenerator, which lets
+ * the post-generation auto-critique chain stay intact without
+ * useQuestionGenerator needing to know about critique internals.
  */
 export const useGeneration = (
   config,
@@ -31,27 +36,47 @@ export const useGeneration = (
 ) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // 1. Generation sub-hook
-  const { isGenerating, handleGenerate, handleExplain, handleVariate } =
-    useQuestionGenerator({
-      config,
-      effectiveApiKey,
-      isApiReady,
-      isTargetMet,
-      allQuestionsMap,
-      showMessage,
-      setStatus,
-      setShowNameModal,
-      setShowApiError,
-      setShowHistory,
-      getFileContext,
-      checkAndStoreQuestions,
-      addQuestionsToState,
-      updateQuestionInState,
-      setIsProcessing,
-    });
+  // 1. Critique sub-hook (constructed first so handleAutoCritique can be
+  // wired into the generator)
+  const {
+    handleCritique,
+    handleApplyRewrite,
+    handleAutoCritique,
+    handleExplain,
+    handleVariate,
+  } = useQuestionCritique({
+    config,
+    effectiveApiKey,
+    isApiReady,
+    showMessage,
+    setStatus,
+    setIsProcessing,
+    updateQuestionInState,
+    updateAllVariantsInState,
+    addQuestionsToState,
+    checkAndStoreQuestions,
+    getFileContext,
+  });
 
-  // 2. Translation sub-hook
+  // 2. Generation sub-hook
+  const { isGenerating, handleGenerate } = useQuestionGenerator({
+    config,
+    effectiveApiKey,
+    isApiReady,
+    isTargetMet,
+    allQuestionsMap,
+    showMessage,
+    setStatus,
+    setShowNameModal,
+    setShowApiError,
+    setShowHistory,
+    getFileContext,
+    checkAndStoreQuestions,
+    addQuestionsToState,
+    handleAutoCritique,
+  });
+
+  // 3. Translation sub-hook
   const {
     handleTranslateSingle,
     handleBulkTranslateMissing,
@@ -70,17 +95,6 @@ export const useGeneration = (
     allQuestionsMap,
     setShowHistory,
     onRefresh,
-  });
-
-  // 3. Critique sub-hook
-  const { handleCritique, handleApplyRewrite } = useQuestionCritique({
-    effectiveApiKey,
-    isApiReady,
-    showMessage,
-    setStatus,
-    setIsProcessing,
-    updateQuestionInState,
-    updateAllVariantsInState,
   });
 
   return {
