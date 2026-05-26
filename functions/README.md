@@ -22,10 +22,16 @@ These Cloud Functions provide secure, server-side API key management for the UE5
 - **Purpose**: Securely calls Gemini API for question critique
 - **Authentication**: Required (Firebase Auth)
 - **Rate Limit**: 20 requests/minute per user
-- **Model Fallback**: Automatically tries multiple models in order:
-  1. `gemini-2.0-flash-exp` (experimental, fastest)
-  2. `gemini-1.5-flash` (stable GA version)
-  3. `gemini-1.5-pro` (stable GA fallback)
+- **Model Fallback**: Automatically tries multiple models in order
+  (see `functions/ai/generateCritique.js` for the live list). Currently:
+  1. `gemini-2.5-flash-lite` (highest quota — 1000 RPD on the free tier)
+  2. `gemini-2.5-flash` (balanced default)
+  3. `gemini-2.5-pro` (highest capability, slower)
+
+  The 2.5 series shuts down 2026-10-16
+  (<https://ai.google.dev/gemini-api/docs/deprecations>).
+  Recommended replacements when the time comes: `gemini-3.1-flash-lite`,
+  `gemini-3.5-flash`, `gemini-3.1-pro-preview`.
 - **Parameters**:
   - `question` (string): Question text
   - `options` (object): Answer options {A, B, C, D}
