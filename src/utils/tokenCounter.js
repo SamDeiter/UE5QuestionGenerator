@@ -85,9 +85,9 @@ export const estimateTokens = (text) => {
 export const calculateCost = (
   inputTokens,
   outputTokens,
-  model = "gemini-2.5-flash"
+  model = "gemini-3.5-flash"
 ) => {
-  const pricing = PRICING[model] || PRICING["gemini-2.5-flash"];
+  const pricing = PRICING[model] || PRICING["gemini-3.5-flash"];
 
   const inputCost = (inputTokens / 1000000) * pricing.input;
   const outputCost = (outputTokens / 1000000) * pricing.output;
@@ -117,9 +117,9 @@ export const formatCost = (cost) => {
 export const checkTokenLimit = (
   tokens,
   type = "input",
-  model = "gemini-2.5-flash"
+  model = "gemini-3.5-flash"
 ) => {
-  const limits = TOKEN_LIMITS[model] || TOKEN_LIMITS["gemini-2.5-flash"];
+  const limits = TOKEN_LIMITS[model] || TOKEN_LIMITS["gemini-3.5-flash"];
   const limit = limits[type];
   const percentage = (tokens / limit) * 100;
 
@@ -140,7 +140,7 @@ export const checkTokenLimit = (
 export const getTokenWarningLevel = (
   tokens,
   type = "input",
-  model = "gemini-2.5-flash"
+  model = "gemini-3.5-flash"
 ) => {
   const { percentage } = checkTokenLimit(tokens, type, model);
 
@@ -161,7 +161,7 @@ export const analyzeRequest = (
   systemPrompt,
   userPrompt,
   expectedOutputTokens = 2000,
-  model = "gemini-2.5-flash"
+  model = "gemini-3.5-flash"
 ) => {
   const systemTokens = estimateTokens(systemPrompt);
   const userTokens = estimateTokens(userPrompt);

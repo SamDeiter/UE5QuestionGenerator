@@ -130,7 +130,7 @@ const GenerationSettings = ({
   // Removed showAdvanced from dependency to allow manual collapse
   React.useEffect(() => {
     if (
-      (config.tags?.length > 0 || config.model !== "gemini-2.5-flash") &&
+      (config.tags?.length > 0 || config.model !== "gemini-3.5-flash") &&
       !showAdvanced
     ) {
       setShowAdvanced(true);
@@ -366,14 +366,14 @@ const GenerationSettings = ({
             className="!bg-slate-800/50"
             compact={true}
             badge={
-              config.tags?.length > 0 || config.model !== "gemini-2.5-flash" ? (
+              config.tags?.length > 0 || config.model !== "gemini-3.5-flash" ? (
                 <span className="ml-2 px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded text-[9px]">
                   {config.tags?.length > 0 ? `${config.tags.length} TAGS` : ""}
                   {config.tags?.length > 0 &&
-                  config.model !== "gemini-2.5-flash"
+                  config.model !== "gemini-3.5-flash"
                     ? " + "
                     : ""}
-                  {config.model !== "gemini-2.5-flash" ? "CUSTOM" : ""}
+                  {config.model !== "gemini-3.5-flash" ? "CUSTOM" : ""}
                 </span>
               ) : null
             }
@@ -461,18 +461,18 @@ const GenerationSettings = ({
                 </label>
                 <select
                   name="model"
-                  value={config.model || "gemini-2.5-flash"}
+                  value={config.model || "gemini-3.5-flash"}
                   onChange={handleChange}
                   className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm outline-none focus:border-orange-500"
                 >
-                  <option value="gemini-2.5-flash">
-                    Gemini 2.5 Flash (Recommended)
+                  <option value="gemini-3.5-flash">
+                    Gemini 3.5 Flash (Recommended)
                   </option>
-                  <option value="gemini-2.5-flash-lite">
-                    Gemini 2.5 Flash-Lite (Cheapest)
+                  <option value="gemini-3.1-flash-lite">
+                    Gemini 3.1 Flash-Lite (Cheapest)
                   </option>
-                  <option value="gemini-2.5-pro">
-                    Gemini 2.5 Pro (Most Capable)
+                  <option value="gemini-3.1-pro-preview">
+                    Gemini 3.1 Pro Preview (Most Capable)
                   </option>
                 </select>
                 <button

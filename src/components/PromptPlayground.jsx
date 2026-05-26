@@ -14,7 +14,7 @@ const PromptPlayground = ({ config, apiKeyReady, effectiveApiKey }) => {
     "Generate a set of 3 questions about Nanite in Unreal Engine 5."
   );
   const [temperature, setTemperature] = useState(config.temperature || 0.7);
-  const [model, setModel] = useState(config.model || "gemini-2.5-flash");
+  const [model, setModel] = useState(config.model || "gemini-3.5-flash");
 
   // Execution state
   const [output, setOutput] = useState("");
@@ -93,11 +93,13 @@ const PromptPlayground = ({ config, apiKeyReady, effectiveApiKey }) => {
               onChange={(e) => setModel(e.target.value)}
               className="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs outline-none focus:border-purple-500"
             >
-              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-              <option value="gemini-2.5-flash-lite">
-                Gemini 2.5 Flash-Lite
+              <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+              <option value="gemini-3.1-flash-lite">
+                Gemini 3.1 Flash-Lite
               </option>
-              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+              <option value="gemini-3.1-pro-preview">
+                Gemini 3.1 Pro Preview
+              </option>
             </select>
           </div>
 

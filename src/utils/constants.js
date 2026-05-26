@@ -62,17 +62,26 @@ export const TOAST_DURATION = {
 // AI/Gemini Configuration Constants
 //
 // Model lifecycle (per https://ai.google.dev/gemini-api/docs/deprecations):
-//   gemini-2.5-flash       — shutdown 2026-10-16; replacement gemini-3.5-flash
-//   gemini-2.5-flash-lite  — shutdown 2026-10-16; replacement gemini-3.1-flash-lite
-//   gemini-2.5-pro         — shutdown 2026-10-16; replacement gemini-3.1-pro-preview
-// Flip DEFAULT_MODEL / TRANSLATION_MODEL below before October 2026.
+//   gemini-2.5-flash       — shut down 2026-10-16; migrated to gemini-3.5-flash
+//   gemini-2.5-flash-lite  — shut down 2026-10-16; migrated to gemini-3.1-flash-lite
+//   gemini-2.5-pro         — shut down 2026-10-16; replacement gemini-3.1-pro-preview
+//
+// Migration policy (decided 2026-05-26): quality where it matters,
+// cheap where it doesn't.
+//   DEFAULT_MODEL      = gemini-3.5-flash       — used by generation,
+//     critique, tag inference, explanation, variation. These are the
+//     work products; pay for better reasoning here.
+//   TRANSLATION_MODEL  = gemini-3.1-flash-lite  — used by translation
+//     (handleTranslateSingle, handleBulkTranslateMissing). High volume,
+//     pattern-matching task; Lite is cheaper than the 2.5-flash-lite it
+//     replaces and quality is sufficient for translation.
 export const AI_CONFIG = {
   // Temperature settings (0.0 = deterministic, 1.0 = creative)
   DEFAULT_TEMPERATURE: 0.2, // Standard generation temperature
   TAGGING_TEMPERATURE: 0.3, // Slightly higher for tag classification
   // Model defaults — single source of truth, used everywhere instead of literals
-  DEFAULT_MODEL: "gemini-2.5-flash",
-  TRANSLATION_MODEL: "gemini-2.5-flash-lite", // cheaper tier for high-volume translation
+  DEFAULT_MODEL: "gemini-3.5-flash",
+  TRANSLATION_MODEL: "gemini-3.1-flash-lite", // cheaper tier for high-volume translation
   // Gemini REST endpoint base — model name is appended at call site
   GEMINI_ENDPOINT_BASE:
     "https://generativelanguage.googleapis.com/v1beta/models",
