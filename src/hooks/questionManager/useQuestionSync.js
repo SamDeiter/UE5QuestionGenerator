@@ -55,25 +55,34 @@ export const useQuestionSync = (allQuestions, setAllQuestions) => {
       setAllQuestions((prev) => {
         // Create a map of the new questions for fast lookup
         const firestoreMap = new Map(
-          firestoreQuestions.map((q) => [q.id, { ...q, _source: QUESTION_SOURCES.DATABASE }])
+          firestoreQuestions.map((q) => [
+            q.id,
+            { ...q, _source: QUESTION_SOURCES.DATABASE },
+          ])
         );
 
         // Merge logic:
         // 1. Keep all non-database questions (SESSION, etc.)
         // 2. For DATABASE questions, if they are in the new batch, use the NEW one
         // 3. If they are NOT in the new batch, keep them (they might be older ones we loaded earlier)
-        
-        const nonDatabase = prev.filter(q => q._source !== QUESTION_SOURCES.DATABASE);
-        const existingDatabase = prev.filter(q => q._source === QUESTION_SOURCES.DATABASE);
-        
+
+        const nonDatabase = prev.filter(
+          (q) => q._source !== QUESTION_SOURCES.DATABASE
+        );
+        const existingDatabase = prev.filter(
+          (q) => q._source === QUESTION_SOURCES.DATABASE
+        );
+
         // Update existing or add new
-        const updatedDatabase = existingDatabase.map(q => firestoreMap.get(q.id) || q);
-        
+        const updatedDatabase = existingDatabase.map(
+          (q) => firestoreMap.get(q.id) || q
+        );
+
         // Find brand new ones (not in existingDatabase)
-        const existingIds = new Set(existingDatabase.map(q => q.id));
+        const existingIds = new Set(existingDatabase.map((q) => q.id));
         const newDatabase = firestoreQuestions
-          .filter(q => !existingIds.has(q.id))
-          .map(q => ({ ...q, _source: QUESTION_SOURCES.DATABASE }));
+          .filter((q) => !existingIds.has(q.id))
+          .map((q) => ({ ...q, _source: QUESTION_SOURCES.DATABASE }));
 
         return [...nonDatabase, ...updatedDatabase, ...newDatabase];
       });
