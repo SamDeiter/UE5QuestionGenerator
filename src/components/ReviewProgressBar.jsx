@@ -75,11 +75,78 @@ const ReviewProgressBar = ({
   onVerify,
   onAccept,
   onFix,
+  onVerifyTranslation,
+  onClearTranslationVerification,
   isProcessing,
 }) => {
   const { colorblindMode } = useAccessibility();
   const cb = colorblindMode; // shorthand for helper functions
   const q = question;
+
+  // Translation-tab branch: bilingual sign-off model, not AI critique workflow.
+  // English content approval is the source of truth; translation tabs only ask
+  // "did a human who reads this language confirm the translation is faithful?"
+  const isTranslationTab = !!q.language && q.language !== "English";
+  if (isTranslationTab) {
+    if (q.translationVerified) {
+      return (
+        <div className="flex items-center justify-center gap-3 py-3 px-4 bg-green-950/30 border border-green-900/50 rounded-lg">
+          <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
+            <Icon name="check" size={18} className="text-white" />
+          </div>
+          <div className="flex-1">
+            <div>
+              <span className="text-sm font-bold text-green-400">ACCEPTED</span>
+              <span className="text-xs text-green-400/70 ml-2">
+                Translation verified
+                {q.translationVerifiedBy
+                  ? ` by ${q.translationVerifiedBy}`
+                  : ""}
+              </span>
+            </div>
+          </div>
+          {onClearTranslationVerification && (
+            <button
+              onClick={onClearTranslationVerification}
+              disabled={isLocked || isProcessing}
+              className="px-3 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Remove translation verification (send back for review)"
+            >
+              Clear verification
+            </button>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center justify-between gap-3 py-3 px-4 bg-amber-950/30 border border-amber-900/50 rounded-lg">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center">
+            <Icon name="bot" size={18} className="text-white" />
+          </div>
+          <div>
+            <span className="text-sm font-bold text-amber-400">
+              Machine Translated
+            </span>
+            <span className="text-xs text-amber-400/70 ml-2">
+              Needs bilingual review
+            </span>
+          </div>
+        </div>
+        {onVerifyTranslation && (
+          <button
+            onClick={onVerifyTranslation}
+            disabled={isLocked || isProcessing}
+            className="px-3 py-1.5 text-xs font-bold rounded bg-emerald-700 hover:bg-emerald-600 text-white shadow disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+            title="Mark this translation as verified by a native speaker"
+          >
+            <Icon name="check" size={14} />
+            Mark verified
+          </button>
+        )}
+      </div>
+    );
+  }
 
   // Determine step states
   // Check if critique was done (either score exists OR improvements were applied)

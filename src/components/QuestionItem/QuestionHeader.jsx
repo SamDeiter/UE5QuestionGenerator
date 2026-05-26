@@ -212,7 +212,7 @@ const QuestionHeader = ({
             <ScoreBadge score={q.critiqueScore} />
           )}
 
-          {/* Human Verified Badge */}
+          {/* Human Verified Badge - reflects English-source content verification */}
           {q.humanVerified && (
             <span
               className="px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 bg-emerald-900/50 text-emerald-400 border border-emerald-700/50"
@@ -226,6 +226,33 @@ const QuestionHeader = ({
               VERIFIED
             </span>
           )}
+
+          {/* Translation provenance badge - only on translation tabs */}
+          {q.language &&
+            q.language !== "English" &&
+            (q.translationVerified ? (
+              <span
+                className="px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 bg-emerald-900/50 text-emerald-400 border border-emerald-700/50"
+                title={`Translation verified by ${
+                  q.translationVerifiedBy || "Unknown"
+                }${
+                  q.translationVerifiedAt
+                    ? ` on ${new Date(q.translationVerifiedAt).toLocaleDateString()}`
+                    : ""
+                }`}
+              >
+                <Icon name="check" size={12} />
+                TRANSLATION VERIFIED
+              </span>
+            ) : (
+              <span
+                className="px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1 bg-amber-900/50 text-amber-400 border border-amber-700/50"
+                title="Machine-translated - awaiting bilingual reviewer sign-off"
+              >
+                <Icon name="bot" size={12} />
+                MACHINE TRANSLATED
+              </span>
+            ))}
 
           {/* Source Unverified Warning Badge */}
           {q.sourceUnverified && (
@@ -311,6 +338,25 @@ const QuestionHeader = ({
               }
               return null;
             })()}
+            {/* Translation verifier credit - only on translation tabs when bilingual sign-off exists */}
+            {q.language &&
+              q.language !== "English" &&
+              q.translationVerified &&
+              q.translationVerifiedBy && (
+                <div
+                  className="flex items-center gap-1 text-xs text-slate-500"
+                  title={`Translation verified by ${q.translationVerifiedBy}${
+                    q.translationVerifiedAt
+                      ? ` on ${new Date(q.translationVerifiedAt).toLocaleDateString()}`
+                      : ""
+                  }`}
+                >
+                  <Icon name="check" size={12} />
+                  <span className="font-bold text-indigo-400">
+                    {q.translationVerifiedBy}
+                  </span>
+                </div>
+              )}
           </div>
         </div>
       </div>
@@ -318,7 +364,9 @@ const QuestionHeader = ({
       <div className="flex items-center gap-2">
         {/* Show Re-Critique ONLY for already-critiqued low-score questions (<70) in Database and Review modes */}
         {/* Pending questions that haven't been critiqued should use ReviewProgressBar's Critique button */}
-        {(appMode === "database" || appMode === "review") &&
+        {/* Hidden on translation tabs: AI critique scores the source content, not the translation */}
+        {(!q.language || q.language === "English") &&
+          (appMode === "database" || appMode === "review") &&
           onCritique &&
           q.critiqueScore !== null &&
           q.critiqueScore !== undefined &&
