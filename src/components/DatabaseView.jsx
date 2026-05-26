@@ -37,52 +37,6 @@ const DatabaseView = ({
     );
   };
 
-  // OLD Batch Critique handler (disabled)
-  /*
-  const _handleBatchCritique = async () => {
-    if (!window.confirm('⚠️ WARNING: This will critique ALL uncritiqued questions (~1700 API calls).\n\nThis will:\n- Take 1-2 hours\n- Use significant API quota\n- Cost money on paid plans\n\nContinue?')) {
-      return;
-    }
-
-    // Get API key
-    const config = JSON.parse(localStorage.getItem('ue5_gen_config') || '{}');
-    const apiKey = config.geminiApiKey;
-
-    if (!apiKey) {
-      showMessage('❌ No API key configured. Please set your Gemini API key in settings.', 5000);
-      return;
-    }
-
-    setIsBatchCritiquing(true);
-    setBatchProgress({ processed: 0, total: 0, percent: 0 });
-
-    try {
-      await batchCritiqueAllQuestions(
-        apiKey,
-        // Progress callback
-        (progress) => {
-          setBatchProgress(progress);
-          logger.log(`📊 Progress: ${progress.processed}/${progress.total} (${progress.percent}%)`);
-        },
-        // Complete callback
-        (result) => {
-          if (result.success) {
-            showMessage(`✅ Batch critique complete! Processed ${result.processed} questions`, 5000);
-            setTimeout(() => window.location.reload(), 2000);
-          } else {
-            showMessage(`❌ Batch critique failed: ${result.error}`, 5000);
-          }
-        }
-      );
-    } catch (error) {
-      showMessage(`❌ Batch critique error: ${error.message}`, 5000);
-    } finally {
-      setIsBatchCritiquing(false);
-      setBatchProgress(null);
-    }
-  };
-  */
-
   // Auto-start tutorial if not completed (and compliance modals are done)
   useEffect(() => {
     const isCompleted = localStorage.getItem("ue5_tutorial_database_completed");
