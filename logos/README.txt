@@ -33,7 +33,7 @@ Setup
 
    from gemini_client_with_usage import generate_text_with_usage
 
-   resp = generate_text_with_usage("gemini-2.0-flash", "Explain Unreal Engine Blueprints.")
+   resp = generate_text_with_usage("gemini-2.5-flash", "Explain Unreal Engine Blueprints.")
    print(resp.text)
 
    Each call appends usage info to `gemini_usage_log.jsonl`.
