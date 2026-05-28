@@ -27,6 +27,16 @@ const RATE_LIMITS = {
     tokens: 1500,
     windowMs: 24 * 60 * 60 * 1000, // 24 hours
   },
+  // Bulk-export gate: sized for normal admin workflow (a handful of exports
+  // per day) while making corpus-pull abuse loud.
+  EXPORT_HOURLY: {
+    tokens: 10,
+    windowMs: 60 * 60 * 1000,
+  },
+  EXPORT_DAILY: {
+    tokens: 50,
+    windowMs: 24 * 60 * 60 * 1000,
+  },
 };
 
 /**

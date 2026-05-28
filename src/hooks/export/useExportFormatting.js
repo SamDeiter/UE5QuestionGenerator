@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { getCSVContent, segmentQuestions } from "../../utils/exportUtils";
 import { saveQuestionsToSheets } from "../../services/googleSheets";
+import { recordExportAttempt } from "../../services/cloudFunctions";
 import { downloadFile } from "../../utils/questionHelpers";
 import { formatDate } from "../../utils/dateHelpers";
 import { logError } from "../../utils/AppError";
@@ -173,6 +174,39 @@ export const useExportFormatting = ({
 
       if (questionsToExport.length === 0) {
         showMessage("No questions to export with selected options.", 3000);
+        return;
+      }
+
+      // Server-side gate: admin re-verification, EXPORT_HOURLY / EXPORT_DAILY
+      // rate limit, and an immutable audit-log row for forensics. Throws
+      // HttpsError if the user is rate-limited or somehow not an admin —
+      // we let the message surface to the user and abort the export.
+      try {
+        await recordExportAttempt({
+          scope,
+          format,
+          count: questionsToExport.length,
+          languages,
+        });
+      } catch (err) {
+        const details = err?.details || {};
+        if (err?.code === "functions/resource-exhausted") {
+          const mins = Math.max(
+            1,
+            Math.ceil((details.resetInSeconds || 3600) / 60)
+          );
+          showMessage(
+            `Export rate limit reached. Try again in ~${mins} min.`,
+            6000
+          );
+        } else if (err?.code === "functions/permission-denied") {
+          showMessage("Bulk export is restricted to administrators.", 4000);
+        } else {
+          showMessage(
+            `Export blocked: ${err.message || "unknown error"}`,
+            5000
+          );
+        }
         return;
       }
 
