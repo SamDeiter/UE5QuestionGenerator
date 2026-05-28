@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getSecureItem, setSecureItem } from "../../utils/secureStorage";
+import { getLocalPref, setLocalPref } from "../../utils/localPrefs";
 import { STORAGE_KEYS, QUESTION_SOURCES } from "../../utils/constants";
 
 /**
@@ -17,7 +17,7 @@ export const useQuestionState = (config) => {
       // Yield to main thread
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      const saved = getSecureItem(STORAGE_KEYS.QUESTIONS);
+      const saved = getLocalPref(STORAGE_KEYS.QUESTIONS);
       if (saved && Array.isArray(saved)) {
         // Hydrate saved questions as 'session' source
         setAllQuestions(
@@ -35,7 +35,7 @@ export const useQuestionState = (config) => {
     );
     // Strip the internal _source tag before saving to avoid cluttering storage/exports
     const cleanQuestions = sessionQuestions.map(({ _source, ...q }) => q);
-    setSecureItem(STORAGE_KEYS.QUESTIONS, cleanQuestions);
+    setLocalPref(STORAGE_KEYS.QUESTIONS, cleanQuestions);
   }, [allQuestions]);
 
   // Backfill creatorName on questions missing it (Session only)

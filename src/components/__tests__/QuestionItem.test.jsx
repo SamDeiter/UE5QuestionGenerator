@@ -31,8 +31,8 @@ vi.mock("../../hooks/useEditLock", () => ({
   useEditLock: () => ({ lockedBy: null, isLocked: false, hasLock: false }),
 }));
 
-vi.mock("../../utils/secureStorage", () => ({
-  getSecureItem: () => "TestUser",
+vi.mock("../../utils/localPrefs", () => ({
+  getLocalPref: () => "TestUser",
 }));
 
 // We still mock useAccessibility but it needs a Provider to avoid the error

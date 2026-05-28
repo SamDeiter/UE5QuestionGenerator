@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Icon from "./Icon";
-import { sanitizeText } from "../utils/sanitize";
+import { sanitizeToHtmlProps } from "../utils/sanitize";
 import { logger } from "../utils/logger";
 import { useThemeColors } from "../hooks/useThemeColors";
 import { useAccessibility } from "../contexts/AccessibilityContext";
@@ -187,7 +187,7 @@ const ImprovementModal = ({
                 <div className="bg-slate-800/40 p-3 rounded">
                   <div
                     className="text-sm text-white leading-relaxed"
-                    dangerouslySetInnerHTML={sanitizeText(
+                    dangerouslySetInnerHTML={sanitizeToHtmlProps(
                       originalQuestion.question
                     )}
                   />
@@ -195,7 +195,7 @@ const ImprovementModal = ({
                 <div className="bg-green-900/20 p-3 rounded border border-green-700/30">
                   <div
                     className="text-sm text-white leading-relaxed"
-                    dangerouslySetInnerHTML={sanitizeText(
+                    dangerouslySetInnerHTML={sanitizeToHtmlProps(
                       improvedQuestion?.question || originalQuestion.question
                     )}
                   />

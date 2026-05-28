@@ -3,9 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionManager } from "../useQuestionManager";
 
 // Mock ALL services to test internal wiring without side effects
-vi.mock("../../utils/secureStorage", () => ({
-  getSecureItem: vi.fn(),
-  setSecureItem: vi.fn(),
+vi.mock("../../utils/localPrefs", () => ({
+  getLocalPref: vi.fn(),
+  setLocalPref: vi.fn(),
 }));
 
 vi.mock("../../services/firebase", () => ({
