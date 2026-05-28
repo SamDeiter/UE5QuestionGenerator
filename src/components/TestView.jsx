@@ -125,13 +125,16 @@ const TestView = ({
     return [...set].filter(Boolean).sort();
   }, [approvedQuestions]);
 
-  // Count unique accepted questions per discipline. Dedup by uniqueId so a
-  // question with multiple language variants counts once, matching the
-  // Review tab's "Accepted N" semantics.
+  // Count exportable questions per discipline = number of accepted ENGLISH
+  // uniqueIds (= the canonical "test size" the SCORM modal will use). Orphan
+  // non-English accepted rows are excluded, since they aren't translations
+  // of the English test and the modal won't ship them. Matches the Review
+  // tab's "Accepted N" semantics for the English-anchored corpus.
   const acceptedCountsByDiscipline = useMemo(() => {
     const idsByDiscipline = new Map();
     for (const q of approvedQuestions) {
       if (!q.discipline) continue;
+      if ((q.language || "English") !== "English") continue;
       if (!idsByDiscipline.has(q.discipline)) {
         idsByDiscipline.set(q.discipline, new Set());
       }
