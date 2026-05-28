@@ -394,12 +394,15 @@ describe("SCORM Exporter Service", () => {
       expect(files["questions.js"]).toContain("passingScore: 80");
       expect(files["questions.js"]).toContain("timeLimit: 3600"); // 60 * 60
 
-      // Questions are Base64 encoded - decode and check
+      // Questions are UTF-8 → Base64 encoded - decode and check
       const encodedMatch = files["questions.js"].match(
         /QUESTIONS_ENCODED = "([^"]+)"/
       );
       expect(encodedMatch).not.toBeNull();
-      const decodedQuestions = JSON.parse(atob(encodedMatch[1]));
+      const binary = atob(encodedMatch[1]);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const decodedQuestions = JSON.parse(new TextDecoder().decode(bytes));
       expect(decodedQuestions[0].text).toBe(
         "What is Nanite in Unreal Engine 5?"
       );

@@ -21,10 +21,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Decode base64 encoded questions (prevents casual view-source cheating)
   // Performance: one-time decode at page load (~2-5ms for 100+ questions)
+  // UTF-8 safe: mirrors encodeUtf8Base64() in src/services/scorm/packager.js
+  // so non-Latin1 translations (CJK, accented characters) round-trip cleanly.
+  const decodeUtf8Base64 = (b64) => {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return new TextDecoder().decode(bytes);
+  };
+
   const rawQuestions = (() => {
     if (window.QUESTIONS_ENCODED) {
       try {
-        return JSON.parse(atob(window.QUESTIONS_ENCODED));
+        return JSON.parse(decodeUtf8Base64(window.QUESTIONS_ENCODED));
       } catch (e) {
         console.error("Failed to decode questions:", e);
         return [];

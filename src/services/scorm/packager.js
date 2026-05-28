@@ -41,6 +41,22 @@ export async function generateScormPackageFiles(questions, config = {}) {
   // Convert questions to SCORM format
   const scormQuestions = questions.map(convertQuestionToScormFormat);
 
+  // UTF-8 safe base64: btoa() only handles Latin1, so non-ASCII translations
+  // (CJK, accented Latin, etc.) need to be UTF-8 encoded into bytes first.
+  // Decoded by the mirrored helper in scorm-template/game.js.
+  const encodeUtf8Base64 = (str) => {
+    const bytes = new TextEncoder().encode(str);
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(
+        null,
+        bytes.subarray(i, i + chunkSize)
+      );
+    }
+    return btoa(binary);
+  };
+
   // Load template files from public directory
   // Use Vite's BASE_URL to handle GitHub Pages deployment path
   const basePath = import.meta.env.BASE_URL || "/";
@@ -87,7 +103,7 @@ window.QUIZ_CONFIG = {
 
 // Base64 encode questions to prevent casual view-source cheating
 // Decoded at runtime by game.js - no performance impact (one-time decode)
-window.QUESTIONS_ENCODED = "${btoa(JSON.stringify(scormQuestions))}";
+window.QUESTIONS_ENCODED = "${encodeUtf8Base64(JSON.stringify(scormQuestions))}";
 window.QUESTIONS = null; // Decoded at runtime by game.js
 `;
 
