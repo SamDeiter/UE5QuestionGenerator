@@ -30,6 +30,7 @@ export const useExportFormatting = ({
   setStatus,
   setIsProcessing,
   setShowExportMenu,
+  isAdmin = false,
 }) => {
   const handleExportByGroup = useCallback(() => {
     const sourceList = showHistory
@@ -136,6 +137,14 @@ export const useExportFormatting = ({
 
   const handleBulkExport = useCallback(
     async (exportOptions) => {
+      // Defense-in-depth: toolbar buttons and the keyboard shortcut already
+      // gate on isAdmin; this is the last line before tens of thousands of
+      // rows leave the client.
+      if (!isAdmin) {
+        showMessage("Bulk export is restricted to administrators.", 4000);
+        return;
+      }
+
       const { format, includeRejected, languages, scope, segmentFiles, limit } =
         exportOptions;
 
@@ -262,6 +271,7 @@ export const useExportFormatting = ({
       );
     },
     [
+      isAdmin,
       uniqueFilteredQuestions,
       allQuestionsMap,
       showMessage,

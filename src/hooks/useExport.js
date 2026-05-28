@@ -30,7 +30,8 @@ export const useExport = (
   // AuthenticatedApp call sites don't need to change; the modal toggle
   // now lives in ModalContext.
   _setShowBulkExportModal,
-  replaceQuestions
+  replaceQuestions,
+  isAdmin = false
 ) => {
   const { handleExportByGroup, handleExportCurrentTarget, handleBulkExport } =
     useExportFormatting({
@@ -44,6 +45,7 @@ export const useExport = (
       setStatus,
       setIsProcessing,
       setShowExportMenu,
+      isAdmin,
     });
 
   const { handleExportToSheets, handleLoadFromSheets } = useSheetsBridge({

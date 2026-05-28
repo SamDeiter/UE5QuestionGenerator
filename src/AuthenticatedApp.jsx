@@ -207,7 +207,8 @@ const AuthenticatedApp = ({
     setAppMode,
     setShowExportMenu,
     setShowBulkExportModal,
-    replaceQuestions
+    replaceQuestions,
+    isAdmin
   );
 
   const {
