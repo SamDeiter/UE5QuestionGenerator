@@ -89,33 +89,27 @@ exports.checkUserRegistration = functions
     try {
       console.log(`[checkUserRegistration] Checking email: ${email}`);
 
-      // 1. Epic Games Employee check (always admin)
       const emailLower = email ? email.toLowerCase() : "";
       const isEpicEmployee =
         emailLower.endsWith("@epicgames.com") ||
         emailLower.endsWith("@xa.epicgames.com");
 
-      if (isEpicEmployee) {
-        console.log(`[checkUserRegistration] Epic employee: ${email}`);
-        return {
-          registered: true,
-          role: "admin",
-          isEmployee: true,
-          tools: ["questions", "blueprint", "scenario", "materials"],
-        };
-      }
-
-      // 2. Check custom claims first (zero Firestore reads)
+      // 1. Check custom claims first (zero Firestore reads).
+      // SECURITY: claims are authoritative. The Epic-employee shortcut
+      // that used to live here returned role='admin' even for users
+      // explicitly stored as reviewer — we removed it so the stored
+      // role wins.
       const claims = context.auth.token;
       if (claims.role && claims.tools && Array.isArray(claims.tools)) {
         return {
           registered: true,
           role: claims.role,
           tools: claims.tools,
+          isEmployee: isEpicEmployee,
         };
       }
 
-      // 3. Check registeredUsers by UID
+      // 2. Check registeredUsers by UID — honor whatever role is stored.
       const userDoc = await db.collection("registeredUsers").doc(userId).get();
 
       if (userDoc.exists) {
@@ -125,6 +119,22 @@ exports.checkUserRegistration = functions
           role: userData.role || "reviewer",
           registeredAt: userData.registeredAt?.toDate()?.toISOString(),
           tools: userData.tools || ["questions"],
+          isEmployee: isEpicEmployee,
+        };
+      }
+
+      // 3. Brand-new Epic-domain user with NO record. Phase C policy is
+      // auto-reviewer — the actual create happens via setupInitialAdmin.
+      // Here we just signal that they're eligible to register without
+      // an invite, with role=reviewer. (Old policy returned admin.)
+      if (isEpicEmployee) {
+        console.log(`[checkUserRegistration] Epic employee, no record yet: ${email}`);
+        return {
+          registered: false,
+          eligibleForAutoRegister: true,
+          role: "reviewer",
+          isEmployee: true,
+          tools: ["questions"],
         };
       }
 

@@ -715,6 +715,133 @@ describe("Firestore Rules - Phase A hardening", () => {
   });
 });
 
+// ============================================================
+// Phase C hardening: isAdmin/isReviewer claim-only behavior
+// ============================================================
+
+describe("Firestore Rules - Phase C hardening (claims-only role check)", () => {
+  let testEnv;
+  let emulatorAvailable = false;
+  const PROJECT_ID = "phase-c-" + Date.now();
+
+  beforeAll(async () => {
+    emulatorAvailable = await isEmulatorRunning();
+    if (!emulatorAvailable) {
+      console.warn("⚠️ Skipping Phase C rules tests - emulator not running");
+      return;
+    }
+    const rulesPath = path.join(
+      process.cwd(),
+      "config/firestore/firestore.rules"
+    );
+    const rulesContent = fs.readFileSync(rulesPath, "utf8");
+    testEnv = await initializeTestEnvironment({
+      projectId: PROJECT_ID,
+      firestore: {
+        rules: rulesContent,
+        host: EMULATOR_HOST,
+        port: EMULATOR_PORT,
+      },
+    });
+  });
+
+  afterAll(async () => {
+    if (testEnv) await testEnv.cleanup();
+  });
+
+  beforeEach(async () => {
+    if (testEnv) await testEnv.clearFirestore();
+  });
+
+  it("a user with role='admin' claim can delete a question", async (ctx) => {
+    if (!emulatorAvailable) {
+      expect(emulatorAvailable).toBe(false);
+      ctx.skip();
+      return;
+    }
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "questions/q-claim-admin"), {
+        question: "Q",
+        options: { A: "1", B: "2" },
+        correct: "A",
+        creatorId: "carol-uid",
+        creatorEmail: "carol@example.com",
+        status: "accepted",
+      });
+    });
+    const adminCtx = testEnv.authenticatedContext("alice-uid", {
+      email: "alice@example.com",
+      role: "admin",
+    });
+    const { deleteDoc } = await import("firebase/firestore");
+    const target = doc(adminCtx.firestore(), "questions/q-claim-admin");
+    await assertSucceeds(deleteDoc(target));
+  });
+
+  it("a user with NO claim cannot delete a question even with a doc role='admin'", async (ctx) => {
+    if (!emulatorAvailable) {
+      expect(emulatorAvailable).toBe(false);
+      ctx.skip();
+      return;
+    }
+    // Seed: the user has role='admin' in registeredUsers, but NO claim.
+    // Pre-Phase-C the doc-fallback would let them through; post-Phase-C
+    // it must fail — claims are the only source of truth.
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "registeredUsers/sneaky-uid"), {
+        role: "admin",
+        email: "sneaky@example.com",
+      });
+      await setDoc(doc(context.firestore(), "questions/q-claim-no"), {
+        question: "Q",
+        options: { A: "1", B: "2" },
+        correct: "A",
+        creatorId: "carol-uid",
+        creatorEmail: "carol@example.com",
+        status: "accepted",
+      });
+    });
+    const sneakyCtx = testEnv.authenticatedContext("sneaky-uid", {
+      email: "sneaky@example.com",
+      // intentionally no role claim
+    });
+    const { deleteDoc } = await import("firebase/firestore");
+    const target = doc(sneakyCtx.firestore(), "questions/q-claim-no");
+    await assertFails(deleteDoc(target));
+  });
+
+  it("a user with role='reviewer' claim can update a question's review fields", async (ctx) => {
+    if (!emulatorAvailable) {
+      expect(emulatorAvailable).toBe(false);
+      ctx.skip();
+      return;
+    }
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "questions/q-claim-rev"), {
+        question: "Q",
+        options: { A: "1", B: "2" },
+        correct: "A",
+        creatorId: "carol-uid",
+        creatorEmail: "carol@example.com",
+        status: "pending",
+        version: 1,
+      });
+    });
+    const revCtx = testEnv.authenticatedContext("rev-uid", {
+      email: "rev@example.com",
+      role: "reviewer",
+    });
+    const target = doc(revCtx.firestore(), "questions/q-claim-rev");
+    await assertSucceeds(
+      updateDoc(target, {
+        status: "accepted",
+        acceptedBy: "rev-uid",
+        version: 2,
+      })
+    );
+  });
+});
+
 /**
  * Integration Smoke Test
  */
