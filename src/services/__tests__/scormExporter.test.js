@@ -459,6 +459,18 @@ describe("SCORM Exporter Service", () => {
       );
       expect(files["imsmanifest.xml"]).toContain("com.ue5questiongen");
     });
+
+    it("should default QUIZ_CONFIG language to English when not provided", async () => {
+      const files = await generateScormPackageFiles([firestoreQuestion], {});
+      expect(files["questions.js"]).toContain('language: "English"');
+    });
+
+    it("should plumb config.language into QUIZ_CONFIG", async () => {
+      const files = await generateScormPackageFiles([firestoreQuestion], {
+        language: "French",
+      });
+      expect(files["questions.js"]).toContain('language: "French"');
+    });
   });
 
   // =====================================================

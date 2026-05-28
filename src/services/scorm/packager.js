@@ -1,8 +1,8 @@
 import { logger } from "../../utils/logger";
 import { SCORM_DEFAULTS } from "../../utils/constants";
 import packageJson from "../../../package.json";
-import { filterEnglishQuestions } from "./sanitize";
 import { convertQuestionToScormFormat } from "./converter";
+import { filterExportableQuestions } from "./validator";
 
 // Dynamic version from package.json - no more manual updates
 const SCORM_VERSION = `v${packageJson.version}`;
@@ -35,6 +35,7 @@ export async function generateScormPackageFiles(questions, config = {}) {
     passingScore = SCORM_DEFAULTS.PASSING_SCORE,
     timeLimit = SCORM_DEFAULTS.TIME_LIMIT_MINUTES, // minutes
     questionsPerAttempt = 60, // Random selection per attempt
+    language = "English",
   } = config;
 
   // Convert questions to SCORM format
@@ -76,6 +77,7 @@ export async function generateScormPackageFiles(questions, config = {}) {
 window.QUIZ_CONFIG = {
   title: "${title}",
   description: "${description}",
+  language: "${language}",
   passingScore: ${passingScore},
   timeLimit: ${timeLimit * 60}, // Convert minutes to seconds
   totalQuestions: ${scormQuestions.length},
@@ -110,22 +112,10 @@ export async function exportToScorm(questions, config = {}) {
   }
 
   try {
-    // Filter to English-only questions
-    const { filtered: englishQuestions, skipped } =
-      filterEnglishQuestions(questions);
-
-    if (englishQuestions.length === 0) {
-      throw new Error("No English questions found after filtering");
-    }
-
-    if (skipped > 0) {
-      logger.info(
-        `SCORM Export: Filtered out ${skipped} non-English question(s), exporting ${englishQuestions.length} questions`
-      );
-    }
-
-    // Generate package files with filtered questions
-    const files = await generateScormPackageFiles(englishQuestions, config);
+    // Caller is responsible for passing the correct language-specific
+    // question set. ScormExportModal partitions by language before calling
+    // this; BatchScormExportModal groups by language + discipline upstream.
+    const files = await generateScormPackageFiles(questions, config);
 
     // Create ZIP file
     const JSZipCtor = await loadJSZip();
@@ -152,7 +142,10 @@ export async function exportToScorm(questions, config = {}) {
     const sanitizedTitle = (config.title || "UE5_Quiz")
       .replace(/[^a-z0-9]/gi, "_")
       .toLowerCase();
-    link.download = `${sanitizedTitle}_${version}_${timestamp}_scorm12.zip`;
+    const sanitizedLanguage = (config.language || "english")
+      .replace(/[^a-z0-9]/gi, "_")
+      .toLowerCase();
+    link.download = `${sanitizedTitle}_${sanitizedLanguage}_${version}_${timestamp}_scorm12.zip`;
 
     // Trigger download
     document.body.appendChild(link);
@@ -166,6 +159,7 @@ export async function exportToScorm(questions, config = {}) {
       success: true,
       filename: link.download,
       questionCount: questions.length,
+      language: config.language || "English",
     };
   } catch (error) {
     logger.error("SCORM export failed:", error);
@@ -253,20 +247,7 @@ export async function batchExportByDiscipline(
     const sanitize = (s) => s.replace(/[^a-z0-9]/gi, "_").toLowerCase();
 
     const filterValidQuestions = (groupQuestions, label) =>
-      groupQuestions.filter((q) => {
-        const questionText = q.questionText || q.question || "";
-        const hasOptions = q.options && typeof q.options === "object";
-        const hasChoices = Array.isArray(q.choices) && q.choices.length >= 2;
-        const hasCorrect = q.correct || q.correctAnswer;
-        const isValid =
-          questionText.trim() && (hasOptions || hasChoices) && hasCorrect;
-        if (!isValid) {
-          logger.warn(
-            `Skipping invalid question in ${label}: ${questionText.substring(0, 40)}...`
-          );
-        }
-        return isValid;
-      });
+      filterExportableQuestions(groupQuestions, label).valid;
 
     if (downloadAsSingleZip) {
       // Create master zip containing all language+discipline packages

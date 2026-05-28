@@ -485,6 +485,15 @@ const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
           questions={
             selectedQuestionIds.size > 0 ? selectedQuestions : filteredQuestions
           }
+          allLanguageQuestions={approvedQuestions.filter((q) => {
+            // Same discipline filter as filteredQuestions, but ignore the
+            // language filter so the modal can offer translated variants
+            // (variants share uniqueId — see useQuestionTranslation).
+            return (
+              filters.disciplines.length === 0 ||
+              filters.disciplines.includes(q.discipline)
+            );
+          })}
           discipline={
             filters.disciplines.length === 1 ? filters.disciplines[0] : null
           }

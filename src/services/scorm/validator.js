@@ -77,3 +77,44 @@ export function validateQuestionsForExport(questions) {
     questionCount: questions.length,
   };
 }
+
+/**
+ * Filter to questions that are exportable. Logs a warning for each rejection.
+ * Mirrors the validity rules in validateQuestionsForExport but produces
+ * a usable subset instead of an errors array, so callers can skip-and-ship
+ * rather than block the entire export on one bad row.
+ * @param {Array} questions
+ * @param {string} [label] - Optional label used in skip log lines
+ * @returns {{ valid: Array, skipped: Array }}
+ */
+export function filterExportableQuestions(questions, label = "export") {
+  const valid = [];
+  const skipped = [];
+
+  if (!Array.isArray(questions)) return { valid, skipped };
+
+  questions.forEach((q) => {
+    const questionText = q.questionText || q.question || "";
+    const hasOptions = q.options && typeof q.options === "object";
+    const hasChoices = Array.isArray(q.choices) && q.choices.length >= 2;
+    const hasCorrect = q.correct || q.correctAnswer;
+    const choicesContainAnswer =
+      !q.choices || !q.correctAnswer || q.choices.includes(q.correctAnswer);
+    const isValid =
+      Boolean(questionText.trim()) &&
+      (hasOptions || hasChoices) &&
+      Boolean(hasCorrect) &&
+      choicesContainAnswer;
+
+    if (isValid) {
+      valid.push(q);
+    } else {
+      skipped.push(q);
+      logger.warn(
+        `Skipping invalid question in ${label}: ${questionText.substring(0, 40)}...`
+      );
+    }
+  });
+
+  return { valid, skipped };
+}
