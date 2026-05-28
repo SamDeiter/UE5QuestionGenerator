@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getSecureItem, setSecureItem } from "../utils/secureStorage";
+import { getLocalPref, setLocalPref } from "../utils/localPrefs";
 import { logger } from "../utils/logger";
 import { DEFAULT_CONFIG, STORAGE_KEYS, APP_MODES } from "../utils/constants";
 import { validateDisplayName } from "../utils/nameValidation";
@@ -55,7 +55,7 @@ export const useAppConfig = ({ user = null } = {}) => {
 
   // Main application configuration (persisted to localStorage)
   const [config, setConfig] = useState(() => {
-    const saved = getSecureItem(STORAGE_KEYS.CONFIG);
+    const saved = getLocalPref(STORAGE_KEYS.CONFIG);
 
     // Merge saved config with defaults
     const initialConfig = saved
@@ -102,7 +102,7 @@ export const useAppConfig = ({ user = null } = {}) => {
     if (!hasInitialized.current) {
       hasInitialized.current = true;
       // Only show modal if name is truly empty after initial load
-      const savedConfig = getSecureItem(STORAGE_KEYS.CONFIG);
+      const savedConfig = getLocalPref(STORAGE_KEYS.CONFIG);
       if (!savedConfig?.creatorName && !config.creatorName) {
         setShowNameModal(true);
       }
@@ -139,7 +139,7 @@ export const useAppConfig = ({ user = null } = {}) => {
   }, [user?.displayName, config.creatorName]);
 
   useEffect(() => {
-    setSecureItem(STORAGE_KEYS.CONFIG, config);
+    setLocalPref(STORAGE_KEYS.CONFIG, config);
   }, [config]);
 
   // Persist appMode to localStorage independently for faster restoration

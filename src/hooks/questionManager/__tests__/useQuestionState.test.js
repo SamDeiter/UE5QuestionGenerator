@@ -1,13 +1,13 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionState } from "../useQuestionState";
-import { getSecureItem, setSecureItem } from "../../../utils/secureStorage";
+import { getLocalPref, setLocalPref } from "../../../utils/localPrefs";
 import { STORAGE_KEYS, QUESTION_SOURCES } from "../../../utils/constants";
 
 // Mock dependencies
-vi.mock("../../../utils/secureStorage", () => ({
-  getSecureItem: vi.fn(),
-  setSecureItem: vi.fn(),
+vi.mock("../../../utils/localPrefs", () => ({
+  getLocalPref: vi.fn(),
+  setLocalPref: vi.fn(),
 }));
 
 vi.mock("../../../utils/logger", () => ({
@@ -33,7 +33,7 @@ describe("useQuestionState", () => {
   });
 
   it("should initialize with empty array if storage is empty", () => {
-    getSecureItem.mockReturnValue(null);
+    getLocalPref.mockReturnValue(null);
     const { result } = renderHook(() => useQuestionState({}));
     const [allQuestions] = result.current;
     expect(allQuestions).toEqual([]);
@@ -41,7 +41,7 @@ describe("useQuestionState", () => {
 
   it("should initialize with session questions from storage", async () => {
     const mockSaved = [{ id: 1, text: "foo" }];
-    getSecureItem.mockReturnValue(mockSaved);
+    getLocalPref.mockReturnValue(mockSaved);
     const { result } = renderHook(() => useQuestionState({}));
 
     await waitFor(() => {
@@ -55,7 +55,7 @@ describe("useQuestionState", () => {
   });
 
   it("should persist session questions to storage on change", () => {
-    getSecureItem.mockReturnValue([]);
+    getLocalPref.mockReturnValue([]);
     const { result } = renderHook(() => useQuestionState({}));
     const [, setAllQuestions] = result.current;
 
@@ -64,14 +64,14 @@ describe("useQuestionState", () => {
       setAllQuestions([newQ]);
     });
 
-    expect(setSecureItem).toHaveBeenCalledWith(
+    expect(setLocalPref).toHaveBeenCalledWith(
       STORAGE_KEYS.QUESTIONS,
       [{ id: 2, text: "bar" }] // _source should be removed
     );
   });
 
   it("should not persist non-session questions", () => {
-    getSecureItem.mockReturnValue([]);
+    getLocalPref.mockReturnValue([]);
     const { result } = renderHook(() => useQuestionState({}));
     const [, setAllQuestions] = result.current;
 
@@ -81,12 +81,12 @@ describe("useQuestionState", () => {
     });
 
     // Should filter out database q, leaving empty array
-    expect(setSecureItem).toHaveBeenCalledWith(STORAGE_KEYS.QUESTIONS, []);
+    expect(setLocalPref).toHaveBeenCalledWith(STORAGE_KEYS.QUESTIONS, []);
   });
 
   it("should backfill creatorName if missing for session questions", async () => {
     const mockSaved = [{ id: 1, question: "test" }]; // Missing creatorName, implies session when loaded
-    getSecureItem.mockReturnValue(mockSaved);
+    getLocalPref.mockReturnValue(mockSaved);
 
     const config = { creatorName: "Alice" };
     const { result } = renderHook(() => useQuestionState(config));
@@ -102,7 +102,7 @@ describe("useQuestionState", () => {
 
   it("should NOT backfill creatorName if already present", async () => {
     const mockSaved = [{ id: 1, question: "test", creatorName: "Bob" }];
-    getSecureItem.mockReturnValue(mockSaved);
+    getLocalPref.mockReturnValue(mockSaved);
 
     const config = { creatorName: "Alice" };
     const { result } = renderHook(() => useQuestionState(config));

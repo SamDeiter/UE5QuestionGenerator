@@ -2,12 +2,12 @@ import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useAppConfig } from "../useAppConfig";
 import { STORAGE_KEYS, DEFAULT_CONFIG, APP_MODES } from "../../utils/constants";
-import * as secureStorage from "../../utils/secureStorage";
+import * as localPrefs from "../../utils/localPrefs";
 
 // Mock dependencies
-vi.mock("../../utils/secureStorage", () => ({
-  getSecureItem: vi.fn(),
-  setSecureItem: vi.fn(),
+vi.mock("../../utils/localPrefs", () => ({
+  getLocalPref: vi.fn(),
+  setLocalPref: vi.fn(),
 }));
 
 vi.mock("../../utils/logger", () => ({
@@ -58,7 +58,7 @@ describe("useAppConfig", () => {
   });
 
   it("should initialize with default config and landing mode", () => {
-    secureStorage.getSecureItem.mockReturnValue(null);
+    localPrefs.getLocalPref.mockReturnValue(null);
     const { result } = renderHook(() => useAppConfig());
 
     expect(result.current.appMode).toBe(APP_MODES.LANDING);
@@ -74,7 +74,7 @@ describe("useAppConfig", () => {
       creatorName: "Test User",
       discipline: "Design",
     };
-    secureStorage.getSecureItem.mockReturnValue(savedConfig);
+    localPrefs.getLocalPref.mockReturnValue(savedConfig);
 
     const { result } = renderHook(() => useAppConfig());
 
@@ -92,7 +92,7 @@ describe("useAppConfig", () => {
     });
 
     expect(result.current.config.creatorName).toBe("New User");
-    expect(secureStorage.setSecureItem).toHaveBeenCalledWith(
+    expect(localPrefs.setLocalPref).toHaveBeenCalledWith(
       STORAGE_KEYS.CONFIG,
       expect.objectContaining({ creatorName: "New User" })
     );

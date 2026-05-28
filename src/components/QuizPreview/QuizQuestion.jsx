@@ -1,7 +1,7 @@
 /**
  * QuizQuestion - The main question display with options
  */
-import { sanitizeText } from "../../utils/sanitize";
+import { sanitizeToHtmlProps } from "../../utils/sanitize";
 
 const QuizQuestion = ({
   currentQuestion,
@@ -37,7 +37,9 @@ const QuizQuestion = ({
 
         <h2
           className="text-xl text-white mb-6 leading-relaxed"
-          dangerouslySetInnerHTML={sanitizeText(currentQuestion.question)}
+          dangerouslySetInnerHTML={sanitizeToHtmlProps(
+            currentQuestion.question
+          )}
         />
 
         {/* Calming instruction */}
@@ -97,7 +99,7 @@ const QuizQuestion = ({
                     />
                     <span
                       className="text-white flex-1"
-                      dangerouslySetInnerHTML={sanitizeText(text)}
+                      dangerouslySetInnerHTML={sanitizeToHtmlProps(text)}
                     />
                   </div>
                 </button>
