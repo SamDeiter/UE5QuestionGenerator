@@ -54,12 +54,18 @@ const UpdateAvailableBanner = () => {
 
   if (!needRefresh) return null;
 
-  const handleReload = () => {
-    if (typeof _updateSW === "function") {
-      // updateSW(true) -> skipWaiting + reload
-      _updateSW(true);
-    } else {
-      // Fallback: hard reload if for some reason the updater isn't wired
+  const handleReload = async () => {
+    // vite-plugin-pwa's updateSW(true) only posts SKIP_WAITING; the actual
+    // page reload depends on a `controlling` event firing inside workbox-
+    // window, which can silently no-op (e.g. if clientsClaim is missing or
+    // the SW handshake races the click). Belt-and-suspenders: post
+    // SKIP_WAITING, then force a hard reload ourselves so the button always
+    // does something visible.
+    try {
+      if (typeof _updateSW === "function") {
+        await _updateSW(true);
+      }
+    } finally {
       window.location.reload();
     }
   };

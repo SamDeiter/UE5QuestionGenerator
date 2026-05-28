@@ -50,8 +50,15 @@ export default defineConfig({
       // so we can wire up the onNeedRefresh callback.
       injectRegister: false,
       workbox: {
-        // Do NOT skipWaiting/clientsClaim here — that would auto-activate the
-        // new SW behind the user's back and bypass the update prompt.
+        // Do NOT set skipWaiting — that would auto-activate the new SW behind
+        // the user's back and bypass the update prompt.
+        // clientsClaim IS safe in prompt mode: it only runs after the SW
+        // activates, which only happens after the user clicks Reload (and we
+        // post SKIP_WAITING). Without it, controllerchange never fires on
+        // existing tabs and the auto-reload in vite-plugin-pwa's register
+        // helper silently no-ops — which was the "Reload button does nothing"
+        // bug.
+        clientsClaim: true,
         // Cache all static assets aggressively
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         // Runtime caching strategies
