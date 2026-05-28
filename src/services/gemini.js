@@ -182,9 +182,16 @@ export const generateContent = async (
 
         // Only accept Epic Games documentation
         if (url.includes("dev.epicgames.com/documentation")) {
+          // Cap title length at 100 chars at the parser boundary so we don't
+          // store unbounded AI-supplied text in Firestore or render strings
+          // that blow out the grounding sources list layout.
+          const rawTitle =
+            typeof chunk.web.title === "string" ? chunk.web.title : "";
+          const title =
+            rawTitle.length > 100 ? rawTitle.slice(0, 97) + "..." : rawTitle;
           groundingSources.push({
             url: chunk.web.uri,
-            title: chunk.web.title,
+            title,
           });
         }
       }
