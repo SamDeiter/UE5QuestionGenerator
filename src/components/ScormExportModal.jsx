@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import Icon from "./Icon";
 import {
   exportToScorm,
-  validateQuestionsForExport,
+  filterExportableQuestions,
 } from "../services/scormExporter";
 import { logger } from "../utils/logger";
 import {
@@ -14,7 +14,12 @@ import {
  * SCORM Export Modal
  * Allows users to configure and export selected questions as SCORM 1.2 package
  */
-const ScormExportModal = ({ questions, discipline, onClose }) => {
+const ScormExportModal = ({
+  questions,
+  allLanguageQuestions = [],
+  discipline,
+  onClose,
+}) => {
   // Auto-generate title based on discipline
   const defaultTitle = discipline
     ? `UE5 ${discipline} Assessment`
@@ -30,9 +35,67 @@ const ScormExportModal = ({ questions, discipline, onClose }) => {
 
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState(null);
+  const [skipWarning, setSkipWarning] = useState(null);
 
-  // Count questions by difficulty (handles both "Easy/Medium/Hard" and
-  // "Beginner/Intermediate/Expert" vocabularies — see classifyDifficulty).
+  // Language variants share a uniqueId across rows; group the unfiltered
+  // discipline set by language so we can offer per-language exports for the
+  // same logical questions the user picked.
+  const { questionsByLanguage, availableLanguages, countsByLanguage } =
+    useMemo(() => {
+      const uniqueIds = new Set(
+        questions.map((q) => q.uniqueId || q.id).filter(Boolean)
+      );
+      const variantPool =
+        allLanguageQuestions.length > 0 ? allLanguageQuestions : questions;
+      const byLang = new Map();
+      variantPool.forEach((q) => {
+        const lang = q.language || "English";
+        const key = q.uniqueId || q.id;
+        // Only include variants of the questions the user actually selected.
+        // If we couldn't derive uniqueIds (e.g. mock data missing them),
+        // fall back to including everything so the export still works.
+        if (uniqueIds.size > 0 && !uniqueIds.has(key)) return;
+        if (!byLang.has(lang)) byLang.set(lang, []);
+        byLang.get(lang).push(q);
+      });
+      // Sort with English first, then alphabetical.
+      const langs = [...byLang.keys()].sort((a, b) => {
+        if (a === "English") return -1;
+        if (b === "English") return 1;
+        return a.localeCompare(b);
+      });
+      const counts = {};
+      langs.forEach((l) => {
+        counts[l] = byLang.get(l).length;
+      });
+      return {
+        questionsByLanguage: byLang,
+        availableLanguages: langs,
+        countsByLanguage: counts,
+      };
+    }, [questions, allLanguageQuestions]);
+
+  const [selectedLanguages, setSelectedLanguages] = useState(
+    () =>
+      new Set(
+        availableLanguages.includes("English")
+          ? ["English"]
+          : availableLanguages.slice(0, 1)
+      )
+  );
+
+  const toggleLanguage = (lang) => {
+    setSelectedLanguages((prev) => {
+      const next = new Set(prev);
+      if (next.has(lang)) next.delete(lang);
+      else next.add(lang);
+      return next;
+    });
+  };
+
+  // Difficulty breakdown reflects the primary (user-selected) question set,
+  // not the translated variants — counts are the same per uniqueId, and
+  // showing per-language doesn't add information.
   const difficultyBreakdown = useMemo(
     () => bucketByDifficulty(questions),
     [questions]
@@ -51,32 +114,70 @@ const ScormExportModal = ({ questions, discipline, onClose }) => {
 
   const handleExport = async () => {
     setError(null);
+    setSkipWarning(null);
 
-    // Validate questions
-    const validation = validateQuestionsForExport(questions);
-
-    if (!validation.valid) {
-      setError(validation.errors.join(", "));
+    if (selectedLanguages.size === 0) {
+      setError("Select at least one language to export");
       return;
-    }
-
-    // Show warnings if any
-    if (validation.warnings.length > 0) {
-      logger.warn("SCORM Export Warnings:", validation.warnings);
     }
 
     setIsExporting(true);
 
-    try {
-      const result = await exportToScorm(questions, config);
-      logger.log("SCORM export successful:", result);
+    const failures = [];
+    const skipSummary = [];
+    const langsToExport = availableLanguages.filter((l) =>
+      selectedLanguages.has(l)
+    );
 
-      // Close modal after successful export
-      setTimeout(() => {
-        onClose();
-      }, 1000);
-    } catch (err) {
-      setError(err.message);
+    try {
+      for (let i = 0; i < langsToExport.length; i++) {
+        const lang = langsToExport[i];
+        const langQuestions = questionsByLanguage.get(lang) || [];
+        const { valid, skipped } = filterExportableQuestions(
+          langQuestions,
+          lang
+        );
+        if (skipped.length > 0) {
+          skipSummary.push(`${lang}: ${skipped.length} skipped`);
+        }
+        if (valid.length === 0) {
+          failures.push(`${lang}: no valid questions to export`);
+          continue;
+        }
+        try {
+          const result = await exportToScorm(valid, {
+            ...config,
+            language: lang,
+            title:
+              langsToExport.length > 1
+                ? `${config.title} - ${lang}`
+                : config.title,
+          });
+          logger.log(`SCORM export successful (${lang}):`, result);
+        } catch (err) {
+          logger.error(`SCORM export failed (${lang}):`, err);
+          failures.push(`${lang}: ${err.message}`);
+        }
+        // Stagger downloads so the browser doesn't block subsequent ones.
+        if (i < langsToExport.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+      }
+
+      if (skipSummary.length > 0) {
+        setSkipWarning(
+          `Skipped invalid questions — ${skipSummary.join(", ")}. Check the console for details.`
+        );
+      }
+
+      if (failures.length > 0) {
+        setError(`Some exports failed: ${failures.join("; ")}`);
+      } else if (skipSummary.length === 0) {
+        // Clean run — close after a beat.
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      }
     } finally {
       setIsExporting(false);
     }
@@ -132,6 +233,56 @@ const ScormExportModal = ({ questions, discipline, onClose }) => {
               placeholder="Brief description of the assessment"
               disabled={isExporting}
             />
+          </div>
+
+          {/* Languages */}
+          <div>
+            <label className="block text-sm font-bold text-slate-300 mb-2">
+              Languages to Export
+            </label>
+            {availableLanguages.length === 0 ? (
+              <p className="text-xs text-slate-500">No questions to export.</p>
+            ) : (
+              <>
+                <div className="bg-slate-800 rounded border border-slate-700 max-h-40 overflow-y-auto">
+                  {availableLanguages.map((lang) => {
+                    const isSelected = selectedLanguages.has(lang);
+                    return (
+                      <label
+                        key={lang}
+                        className={`flex items-center justify-between px-3 py-2 border-b border-slate-700 last:border-b-0 cursor-pointer hover:bg-slate-700/50 transition-colors ${
+                          isSelected ? "" : "opacity-60"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleLanguage(lang)}
+                            className="w-4 h-4 accent-blue-500"
+                            disabled={isExporting}
+                          />
+                          <span className="text-sm text-slate-300">{lang}</span>
+                        </div>
+                        <span className="text-xs text-slate-500">
+                          {countsByLanguage[lang]} questions
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  {selectedLanguages.size > 1
+                    ? `Generates ${selectedLanguages.size} separate SCORM zips, one per language.`
+                    : "One SCORM zip will be downloaded."}
+                </p>
+                {availableLanguages.length === 1 && (
+                  <p className="text-xs text-slate-500 mt-1">
+                    No translated variants available for this question set.
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           {/* Passing Score */}
@@ -260,6 +411,13 @@ const ScormExportModal = ({ questions, discipline, onClose }) => {
             )}
           </div>
 
+          {/* Skip Warning */}
+          {skipWarning && (
+            <div className="bg-amber-900/20 border border-amber-500 rounded p-3">
+              <p className="text-sm text-amber-300">{skipWarning}</p>
+            </div>
+          )}
+
           {/* Error Display */}
           {error && (
             <div className="bg-red-900/20 border border-red-500 rounded p-3">
@@ -279,7 +437,11 @@ const ScormExportModal = ({ questions, discipline, onClose }) => {
           </button>
           <button
             onClick={handleExport}
-            disabled={isExporting || questions.length === 0}
+            disabled={
+              isExporting ||
+              questions.length === 0 ||
+              selectedLanguages.size === 0
+            }
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded font-semibold transition-colors flex items-center gap-2"
           >
             {isExporting ? (

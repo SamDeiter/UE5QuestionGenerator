@@ -16,7 +16,10 @@ export {
 export { convertQuestionToScormFormat } from "./scorm/converter";
 
 // Pre-export validation
-export { validateQuestionsForExport } from "./scorm/validator";
+export {
+  validateQuestionsForExport,
+  filterExportableQuestions,
+} from "./scorm/validator";
 
 // ZIP packaging, download, and batch export
 export {
