@@ -13,37 +13,18 @@
  * not "English".
  *
  * Usage:
+ *   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccountKey.json
  *   node scripts/cleanup_translation_critique_fields.js --dry-run   # Preview
  *   node scripts/cleanup_translation_critique_fields.js             # Apply
+ *
+ * See scripts/README.md for the canonical SA-key convention used across
+ * all JS maintenance scripts.
  */
 
-import { initializeApp, cert } from "firebase-admin/app";
+import { initializeApp, applicationDefault } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-const serviceAccountPath = join(
-  __dirname,
-  "..",
-  "config",
-  "serviceAccountKey.json"
-);
-
-let serviceAccount;
-try {
-  serviceAccount = JSON.parse(readFileSync(serviceAccountPath, "utf8"));
-} catch (e) {
-  console.error("❌ Missing serviceAccountKey.json at:", serviceAccountPath);
-  console.error(
-    "   Download from Firebase Console > Project Settings > Service Accounts"
-  );
-  process.exit(1);
-}
-
-initializeApp({ credential: cert(serviceAccount) });
+initializeApp({ credential: applicationDefault() });
 
 const db = getFirestore();
 

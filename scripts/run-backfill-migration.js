@@ -4,9 +4,12 @@
  */
 
 const admin = require("firebase-admin");
-const serviceAccount = require("../functions/.env");
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin using application-default credentials. Set
+// GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccountKey.json before
+// running. The previous `require("../functions/.env")` line was a broken
+// holdover — .env is a dotenv file, not a requireable module, and the
+// variable wasn't used anyway.
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),
 });

@@ -6,39 +6,19 @@
  * explicit verification step was added).
  *
  * Usage:
+ *   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccountKey.json
  *   node scripts/backfill_human_verified.js --dry-run   # Preview changes
  *   node scripts/backfill_human_verified.js             # Apply changes
+ *
+ * See scripts/README.md for the canonical SA-key convention used across
+ * all JS maintenance scripts.
  */
 
-import { initializeApp, cert } from "firebase-admin/app";
+import { initializeApp, applicationDefault } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-// Initialize Firebase Admin
-const serviceAccountPath = join(
-  __dirname,
-  "..",
-  "config",
-  "serviceAccountKey.json"
-);
-
-let serviceAccount;
-try {
-  serviceAccount = JSON.parse(readFileSync(serviceAccountPath, "utf8"));
-} catch (e) {
-  console.error("❌ Missing serviceAccountKey.json at:", serviceAccountPath);
-  console.error(
-    "   Download from Firebase Console > Project Settings > Service Accounts"
-  );
-  process.exit(1);
-}
 
 initializeApp({
-  credential: cert(serviceAccount),
+  credential: applicationDefault(),
 });
 
 const db = getFirestore();
