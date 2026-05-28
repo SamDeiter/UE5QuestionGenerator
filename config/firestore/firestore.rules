@@ -90,16 +90,25 @@ service cloud.firestore {
          && request.resource.data.creatorId == resource.data.creatorId  // Cannot change owner
          && request.resource.data.creatorEmail == resource.data.creatorEmail  // Cannot change creator email
          && versionIsIncremented()  // Must increment version (concurrent editing protection)
+         // SECURITY: Reviewers cannot forge attribution. If they touch acceptedBy/rejectedBy/
+         // humanVerifiedBy, the new value must reflect their own identity. Untouched values
+         // are left alone (the affectedKeys guard below ensures we only constrain on change).
+         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['humanVerifiedBy'])
+             || request.resource.data.humanVerifiedBy == request.auth.token.email)
+         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['acceptedBy'])
+             || request.resource.data.acceptedBy == request.auth.uid)
+         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['rejectedBy'])
+             || request.resource.data.rejectedBy == request.auth.uid)
          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
               // Version and timestamps
               'version', 'updatedAt', 'firestoreUpdatedAt', 'modifiedAt', 'updatedBy',
               // Scoring fields
-              'aiScore', 'scoredAt', 'scoreSource', 
+              'aiScore', 'scoredAt', 'scoreSource',
               // Status and rejection fields
-              'status', 'rejectionReason', 'rejectionCategory', 'rejectionNotes', 
+              'status', 'rejectionReason', 'rejectionCategory', 'rejectionNotes',
               'rejectedAt', 'rejectedBy', 'acceptedAt', 'acceptedBy',
               // Review tracking fields
-              'reviewedBy', 'reviewedAt', 'reviewCompletedAt', 
+              'reviewedBy', 'reviewedAt', 'reviewCompletedAt',
               'reviewerName', 'reviewDuration', 'reviewStartedAt',
               // Critique fields (AI-generated, not content)
               'critique', 'critiqueScore', 'suggestedRewrite', 'improvedScore',
@@ -144,11 +153,41 @@ service cloud.firestore {
     match /audit-log/{eventId} {
       // Read: Admins only
       allow read: if isAdmin();
-      
-      // Create: All authenticated users (write-only logging)
+
+      // Create: signed-in users only, with a strict shape.
+      // SECURITY: Pin userId/userEmail to the caller, restrict eventType to a
+      // known allowlist, and cap the writable key set so an attacker cannot
+      // pad the doc with arbitrary fields. Server-issued events use the
+      // Admin SDK and bypass these rules.
       allow create: if isSignedIn()
-                       && request.resource.data.userId == request.auth.uid;
-      
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userEmail == request.auth.token.email
+        && request.resource.data.eventType is string
+        && request.resource.data.eventType in [
+             'STATUS_CHANGE',
+             'CRITIQUE_APPLIED',
+             'IMPROVEMENT_APPLIED',
+             'QUESTION_VERIFIED',
+             'QUESTION_ACCEPTED',
+             'QUESTION_REJECTED',
+             'QUESTION_RESTORED',
+             'TRANSLATION_ADDED',
+             'TAGS_UPDATED',
+             'BULK_ACCEPT',
+             'BULK_REJECT',
+             'BULK_DELETE',
+             'BULK_CRITIQUE',
+             'REVIEW_ATTEMPT',
+             'REVIEW_SUCCESS',
+             'REVIEW_FAILED'
+           ]
+        && request.resource.data.keys().hasOnly([
+             'questionId', 'eventType', 'timestamp',
+             'userId', 'userEmail', 'details',
+             'sessionId', 'userAgent',
+             'questionCount', 'questionIds'
+           ]);
+
       // No updates or deletes (immutable log)
       allow update, delete: if false;
     }
@@ -178,11 +217,11 @@ service cloud.firestore {
     match /apiUsage/{docId} {
       // Read: Admins only (for audit trail)
       allow read: if isAdmin();
-      // Create: Any authenticated user with required fields to prevent spam
-      allow create: if isSignedIn()
-        && request.resource.data.keys().hasAll(['userId', 'timestamp', 'type'])
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.type in ['generation', 'critique', 'export', 'import'];
+      // Create: Cloud Functions only. functions/utils/apiUsage.js writes via
+      // the Admin SDK (bypasses rules). Clients have no legitimate reason to
+      // write here — the only code path that did, didn't exist — so we lock
+      // it down to prevent log poisoning.
+      allow create: if false;
       // Immutable - no updates or deletes
       allow update, delete: if false;
     }
