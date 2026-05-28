@@ -209,6 +209,46 @@ export const migrateTranslationsViaCloudFunction = async () => {
 };
 
 /**
+ * Calls the recordExportAttempt Cloud Function
+ *
+ * Server-side gate for bulk exports. Verifies admin role, applies the
+ * EXPORT_HOURLY / EXPORT_DAILY rate limits, and writes the audit-log
+ * entry. Must be awaited BEFORE the client-side data fetch and download.
+ *
+ * Caller surfaces the thrown error to the user via the existing toast.
+ * The `resource-exhausted` error carries `details.resetAt` and
+ * `details.resetInSeconds` so the caller can build a friendly message.
+ *
+ * @param {object} payload
+ * @param {"all"|"filtered"} payload.scope - export scope
+ * @param {string} payload.format - "csv" | "json" | "markdown" | "sheets"
+ * @param {number} payload.count - how many rows are about to leave
+ * @param {string[]} payload.languages - language filter
+ * @returns {Promise<{allowed: true}>}
+ */
+export const recordExportAttempt = async ({
+  scope,
+  format,
+  count,
+  languages,
+}) => {
+  try {
+    await ensureFreshToken();
+    const fn = httpsCallable(functions, "recordExportAttempt");
+    const result = await fn({ scope, format, count, languages });
+    return result.data;
+  } catch (error) {
+    logError(error, {
+      operation: "recordExportAttempt",
+      scope,
+      format,
+      count,
+    });
+    throw error;
+  }
+};
+
+/**
  * Calls the sendReviewerInvites Cloud Function
  * Sends personalized invite emails to reviewers via SendGrid
  * ADMIN ONLY
