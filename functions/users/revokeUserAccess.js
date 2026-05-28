@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { isAdminUser } = require("../utils/isAdminUser");
+const { requireRecentAuth } = require("../utils/requireRecentAuth");
 
 /**
  * Cloud Function: revokeUserAccess
@@ -30,6 +31,10 @@ exports.revokeUserAccess = functions
         "Admin access required",
       );
     }
+
+    // Step-up auth: revoking access deletes Firestore records and disables
+    // a user; this needs recent proof of possession.
+    requireRecentAuth(context, 30);
 
     const { userId } = data;
     if (!userId) {

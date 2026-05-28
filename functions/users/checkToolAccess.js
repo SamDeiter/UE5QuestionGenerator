@@ -33,29 +33,25 @@ exports.checkToolAccess = functions
     const db = admin.firestore();
 
     try {
-      // 2. Epic Games Employee auto-approval (main domain and subdomains)
       const emailLower = email ? email.toLowerCase() : "";
-      if (
+      const isEpicEmployee =
         emailLower.endsWith("@epicgames.com") ||
-        emailLower.endsWith("@xa.epicgames.com")
-      ) {
-        console.log(`Auto-approving Epic employee ${email} for tool ${toolId}`);
-        return {
-          hasAccess: true,
-          role: "admin",
-          isEmployee: true,
-        };
-      }
+        emailLower.endsWith("@xa.epicgames.com");
 
-      // 2a. Custom claims short-circuit (zero Firestore reads)
+      // 1. Custom claims short-circuit (zero Firestore reads).
+      // SECURITY: claims are authoritative. The Epic-employee shortcut
+      // that used to live here granted hasAccess=true + role='admin' to
+      // every Epic email regardless of stored role — we removed it so
+      // the stored role + tool list win.
       if (claims.tools && Array.isArray(claims.tools)) {
         return {
           hasAccess: claims.tools.includes(toolId),
           role: claims.role || "reviewer",
+          isEmployee: isEpicEmployee,
         };
       }
 
-      // 3. Check registeredUsers for explicit tool access
+      // 2. Check registeredUsers for explicit tool access.
       const userDoc = await db.collection("registeredUsers").doc(userId).get();
 
       if (userDoc.exists) {
@@ -69,6 +65,19 @@ exports.checkToolAccess = functions
         return {
           hasAccess: hasAccess,
           role: userData.role || "reviewer",
+          isEmployee: isEpicEmployee,
+        };
+      }
+
+      // 3. Brand-new Epic-domain user, no record yet. Phase C auto-reviewer
+      // policy: grant access to the 'questions' tool only — broader grants
+      // are an explicit admin action via changeUserRole/updateUserTools.
+      if (isEpicEmployee) {
+        return {
+          hasAccess: toolId === "questions",
+          role: "reviewer",
+          isEmployee: true,
+          autoGranted: true,
         };
       }
 

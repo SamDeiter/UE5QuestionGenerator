@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { isAdminUser } = require("../utils/isAdminUser");
+const { isBootstrapAdmin } = require("../utils/bootstrapAdmin");
 
 /**
  * Cloud Function: listInvites
@@ -30,9 +31,10 @@ exports.listInvites = functions
     }
 
     const isAdmin = await isAdminUser(context.auth.uid);
-    const isOwner =
-      context.auth.token.email === "samdeiter@gmail.com" ||
-      context.auth.token.email === "samdeiter@epicgames.com";
+    // Single-source bootstrap allowlist (matches createInvite, revokeInvite,
+    // and the access migrations). Previously hardcoded inline here, which
+    // is exactly the drift the helper was created to prevent.
+    const isOwner = isBootstrapAdmin(context.auth.token.email);
 
     if (!isAdmin && !isOwner) {
       throw new functions.https.HttpsError(

@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { isAdminUser } = require("../utils/isAdminUser");
+const { requireRecentAuth } = require("../utils/requireRecentAuth");
 
 /**
  * Cloud Function: changeUserRole
@@ -24,6 +25,11 @@ exports.changeUserRole = functions
         "Admin access required",
       );
     }
+
+    // Step-up auth: changing roles is privilege-escalation territory.
+    // A stolen-tab session with a long-lived token can't promote someone
+    // without recent proof of possession.
+    requireRecentAuth(context, 30);
 
     const { userId, role } = data;
     if (!userId || !role) {

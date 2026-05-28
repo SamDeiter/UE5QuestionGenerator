@@ -14,21 +14,21 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
     
+    // Custom claims are now the single source of truth for role checks.
+    // Prerequisite: backfillCustomClaims MUST be run before these rules
+    // ship — it copies role/tools from registeredUsers into the auth
+    // token for every existing user. The pre-Phase-C registeredUsers
+    // doc-lookup fallback is removed here because (a) doc-lookup gates
+    // cost 2 Firestore reads per rule eval (latency + $$$) and (b) any
+    // future relaxation of registeredUsers writes would silently become
+    // a privilege-escalation cliff.
     function isAdmin() {
-      return request.auth.token.role == 'admin' 
-        // Fallback for users without claims (legacy support - can be removed after migration)
-        || (request.auth.token.role == null
-            && exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
-            && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'admin');
+      return request.auth.token.role == 'admin';
     }
 
     function isReviewer() {
       return request.auth.token.role == 'reviewer'
-        || request.auth.token.role == 'admin'
-        // Fallback for users without claims (legacy support - can be removed after migration)
-        || (request.auth.token.role == null
-            && exists(/databases/$(database)/documents/registeredUsers/$(request.auth.uid))
-            && get(/databases/$(database)/documents/registeredUsers/$(request.auth.uid)).data.role == 'reviewer');
+        || request.auth.token.role == 'admin';
     }
     
     // Version control: Require version increments by exactly 1 (no skipping)
