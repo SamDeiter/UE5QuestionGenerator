@@ -2,7 +2,7 @@
  * Audit Log Service
  *
  * Logs all critical operations to Firestore for traceability and rollback capability.
- * Creates entries in the 'auditLog' collection.
+ * Creates entries in the 'audit-log' collection.
  */
 
 import { getDb } from "./firebase";
@@ -10,13 +10,7 @@ import { getAuth } from "firebase/auth";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { logger } from "../utils/logger";
 
-/**
- * Log a question status change
- * @param {string} questionId - The question ID
- * @param {string} action - The action type (e.g., 'STATUS_CHANGE', 'BULK_ACCEPT', 'REJECTION')
- * @param {object} details - Details about the change
- */
-export const logAuditEvent = async (questionId, action, details = {}) => {
+export const logAuditEvent = async (questionId, eventType, details = {}) => {
   try {
     const db = getDb();
     const auth = getAuth();
@@ -24,24 +18,22 @@ export const logAuditEvent = async (questionId, action, details = {}) => {
 
     const auditEntry = {
       questionId,
-      action,
+      eventType,
       timestamp: serverTimestamp(),
       userId: user?.uid || "system",
       userEmail: user?.email || "system@automated",
       details: {
         ...details,
-        // Capture old and new values for rollback
         oldValue: details.oldValue || null,
         newValue: details.newValue || null,
       },
-      // Browser/session context
       sessionId: localStorage.getItem("ue5_session_agent_id") || "unknown",
-      userAgent: navigator.userAgent.substring(0, 200), // Truncate for storage
+      userAgent: navigator.userAgent.substring(0, 200),
     };
 
-    await addDoc(collection(db, "auditLog"), auditEntry);
+    await addDoc(collection(db, "audit-log"), auditEntry);
     logger.log(
-      `📋 Audit: ${action} on ${questionId?.substring(0, 8) || "bulk"}`
+      `📋 Audit: ${eventType} on ${questionId?.substring(0, 8) || "bulk"}`
     );
   } catch (error) {
     // Don't throw - audit logging should not break the main operation
@@ -63,17 +55,17 @@ const logBulkOperation = async (action, questionIds, details = {}) => {
     const user = auth.currentUser;
 
     const auditEntry = {
-      action: `BULK_${action}`,
+      eventType: `BULK_${action}`,
       timestamp: serverTimestamp(),
       userId: user?.uid || "system",
       userEmail: user?.email || "system@automated",
       questionCount: questionIds.length,
-      questionIds: questionIds.slice(0, 100), // Limit to first 100 for storage
+      questionIds: questionIds.slice(0, 100),
       details,
       sessionId: localStorage.getItem("ue5_session_agent_id") || "unknown",
     };
 
-    await addDoc(collection(db, "auditLog"), auditEntry);
+    await addDoc(collection(db, "audit-log"), auditEntry);
     logger.log(`📋 Bulk Audit: ${action} on ${questionIds.length} questions`);
   } catch (error) {
     logger.error("Failed to log bulk audit event:", error);

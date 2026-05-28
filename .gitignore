@@ -48,6 +48,11 @@ user-exports/
 INVITE_LINKS.txt
 REVIEWER_CONTACTS.md
 
+# Question content exports (must never be re-committed)
+questions_export*.csv
+questions_export*.json
+questions_export*.md
+
 # Temp development files (kept locally, not in git)
 temp_*.*
 test-output.txt
