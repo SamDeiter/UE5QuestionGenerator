@@ -4,10 +4,14 @@ import {
   parseCSVQuestions,
 } from "../fileProcessor";
 
-// Mock helper functions used by fileProcessor
+// Mock helper functions used by fileProcessor (and, indirectly via security.js,
+// stripHtmlTags). Provide a no-op stripHtmlTags so the import doesn't blow up
+// in the test environment; the sanitization behavior itself is covered by
+// security.test.js.
 vi.mock("../stringHelpers", () => ({
   parseCSVLine: (line) => line.split(","), // Simple mock splitter
   FIELD_DELIMITER: ",",
+  stripHtmlTags: (text) => text,
 }));
 
 vi.mock("../constants", () => ({

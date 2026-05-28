@@ -1,5 +1,6 @@
 import Icon from "../Icon";
 import { getDisplayUrl } from "../../utils/questionHelpers";
+import { assertHttpUrl } from "../../utils/urlValidator";
 import { useAccessibility } from "../../contexts/AccessibilityContext";
 
 const getVerificationBadge = (status, cb = false) => {
@@ -143,18 +144,34 @@ const QuestionMetadata = ({ q, onAutoTag, isProcessing }) => {
             Grounding Sources Used:
           </div>
           <div className="flex flex-col gap-1">
-            {q.groundingSources.map((src, i) => (
-              <a
-                key={i}
-                href={src.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] text-indigo-300 hover:text-indigo-200 hover:underline truncate"
-                title={src.url}
-              >
-                {src.title || getDisplayUrl(src.url)}
-              </a>
-            ))}
+            {q.groundingSources.map((src, i) => {
+              // SECURITY: AI-supplied URLs must be gated through assertHttpUrl
+              // so javascript:/data:/file: schemes can't reach an href attribute.
+              const safeUrl = assertHttpUrl(src.url);
+              if (!safeUrl) {
+                return (
+                  <span
+                    key={i}
+                    className="text-[10px] text-slate-500 italic truncate"
+                    title="Source URL rejected: non-http(s) scheme"
+                  >
+                    {src.title || "(blocked source)"}
+                  </span>
+                );
+              }
+              return (
+                <a
+                  key={i}
+                  href={safeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-indigo-300 hover:text-indigo-200 hover:underline truncate"
+                  title={safeUrl}
+                >
+                  {src.title || getDisplayUrl(safeUrl)}
+                </a>
+              );
+            })}
           </div>
         </div>
       )}

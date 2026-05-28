@@ -7,8 +7,25 @@
 /* eslint-disable sonarjs/pseudo-random */
 import { FIELD_DELIMITER, LANGUAGE_FLAGS, LANGUAGE_CODES } from "./constants";
 import { parseCSVLine } from "./stringHelpers";
-import { validateFile, validateCSVContent } from "./security";
+import {
+  validateFile,
+  validateCSVContent,
+  sanitizeImportedField,
+  sanitizeImportedUrl,
+} from "./security";
 import { validateQuestion } from "./questionValidator";
+
+// Per-field length caps for imported CSV rows. These are generous enough to
+// hold legitimate content but bound denial-of-service / storage abuse from a
+// malicious upload.
+const IMPORT_LIMITS = Object.freeze({
+  question: 2000,
+  option: 500,
+  explanation: 5000,
+  sourceExcerpt: 10000,
+  shortField: 100, // discipline, difficulty, type, language, status, correct
+  tag: 30,
+});
 /**
  * Detects the language of a file based on its filename.
  * Checks for full language names (e.g., "Chinese_(Simplified)") and codes (e.g., "_CN_").
@@ -72,28 +89,35 @@ export const parseCSVQuestions = (content, fileName, defaultCreatorName) => {
     const cols = parseCSVLine(line);
     if (cols.length < 10) return;
 
+    // SECURITY: every cell from the CSV is run through sanitizeImportedField
+    // before it is stored. This strips HTML, normalizes whitespace, caps
+    // length, and re-applies the OWASP formula-injection guard so a
+    // re-export of the data stays safe even if the source CSV was poisoned.
+    const text = (raw, maxLength) => sanitizeImportedField(raw, { maxLength });
+    const shortText = (raw) => text(raw, IMPORT_LIMITS.shortField);
+    const url = (raw) => sanitizeImportedUrl(raw);
     let qObj = {};
     if (isV17) {
       // v1.7 Mapping: 0:ID, 1:Unique, 2:Status, 3:Disc, 4:Diff, 5:Type, 6:Q, 7-10:Opts, 11:Ans, 12:Expl, 13:Lang, 14:Src, 15:Exc
       qObj = {
         id: Date.now() + idx + Math.random(),
         uniqueId: cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID(),
-        status: cols[2] || "pending",
-        discipline: cols[3] || "Imported",
-        difficulty: cols[4] || "Easy",
-        type: cols[5] || "Multiple Choice",
-        question: cols[6] || "",
+        status: shortText(cols[2]) || "pending",
+        discipline: shortText(cols[3]) || "Imported",
+        difficulty: shortText(cols[4]) || "Easy",
+        type: shortText(cols[5]) || "Multiple Choice",
+        question: text(cols[6], IMPORT_LIMITS.question),
         options: {
-          A: cols[7] || "",
-          B: cols[8] || "",
-          C: cols[9] || "",
-          D: cols[10] || "",
+          A: text(cols[7], IMPORT_LIMITS.option),
+          B: text(cols[8], IMPORT_LIMITS.option),
+          C: text(cols[9], IMPORT_LIMITS.option),
+          D: text(cols[10], IMPORT_LIMITS.option),
         },
-        correct: cols[11] || "",
-        explanation: cols[12] || "",
-        language: cols[13] || fileLanguage || "English",
-        sourceUrl: cols[14] || "",
-        sourceExcerpt: cols[15] || "",
+        correct: shortText(cols[11]),
+        explanation: text(cols[12], IMPORT_LIMITS.explanation),
+        language: shortText(cols[13]) || fileLanguage || "English",
+        sourceUrl: url(cols[14]),
+        sourceExcerpt: text(cols[15], IMPORT_LIMITS.sourceExcerpt),
         creatorName: defaultCreatorName || "",
         reviewerName: "",
       };
@@ -102,22 +126,22 @@ export const parseCSVQuestions = (content, fileName, defaultCreatorName) => {
       qObj = {
         id: Date.now() + idx + Math.random(),
         uniqueId: cols[1] && cols[1].length > 5 ? cols[1] : crypto.randomUUID(),
-        discipline: cols[2] || "Imported",
-        type: cols[3] || "Multiple Choice",
-        difficulty: cols[4] || "Easy",
-        question: cols[5] || "",
+        discipline: shortText(cols[2]) || "Imported",
+        type: shortText(cols[3]) || "Multiple Choice",
+        difficulty: shortText(cols[4]) || "Easy",
+        question: text(cols[5], IMPORT_LIMITS.question),
         options: {
-          A: cols[6] || "",
-          B: cols[7] || "",
-          C: cols[8] || "",
-          D: cols[9] || "",
+          A: text(cols[6], IMPORT_LIMITS.option),
+          B: text(cols[7], IMPORT_LIMITS.option),
+          C: text(cols[8], IMPORT_LIMITS.option),
+          D: text(cols[9], IMPORT_LIMITS.option),
         },
-        correct: cols[10] || "",
-        sourceUrl: cols[12] || "",
-        sourceExcerpt: cols[13] || "",
+        correct: shortText(cols[10]),
+        sourceUrl: url(cols[12]),
+        sourceExcerpt: text(cols[13], IMPORT_LIMITS.sourceExcerpt),
         creatorName: defaultCreatorName || "",
         reviewerName: "",
-        language: cols[20] || fileLanguage || "English",
+        language: shortText(cols[20]) || fileLanguage || "English",
       };
     }
 
