@@ -58,6 +58,8 @@ describe("requireRecentAuth", () => {
     // 5 minutes old, 10-min window: pass
     expect(() => requireRecentAuth(ctx(nowSec() - 5 * 60), 10)).to.not.throw();
     // 5 minutes old, 1-min window: fail
-    expect(() => requireRecentAuth(ctx(nowSec() - 5 * 60), 1)).to.throw();
+    expect(() => requireRecentAuth(ctx(nowSec() - 5 * 60), 1)).to.throw(
+      /recent authentication/i,
+    );
   });
 });
