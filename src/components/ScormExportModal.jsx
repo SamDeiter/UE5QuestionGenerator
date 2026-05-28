@@ -38,8 +38,9 @@ const ScormExportModal = ({
   const [skipWarning, setSkipWarning] = useState(null);
   // When on, languages with only pending (unreviewed) translations show up
   // in the list and pending rows are included in their respective zips.
-  // Off by default — keeps the default flow shipping only reviewed content.
-  const [includeUnreviewed, setIncludeUnreviewed] = useState(false);
+  // On by default — DRAFT-tagged zips for pending content are the more
+  // useful default; uncheck to ship only reviewed content.
+  const [includeUnreviewed, setIncludeUnreviewed] = useState(true);
 
   // Language variants share a uniqueId across rows; group the discipline-
   // scoped pool by language. Bucket each language's rows by status so the
