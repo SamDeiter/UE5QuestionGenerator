@@ -103,6 +103,7 @@ const AuthenticatedApp = ({
     allQuestionsMap,
     translationMap,
     unifiedQuestions,
+    allLanguageQuestions,
     approvedCounts,
     approvedCount,
     totalApproved,
@@ -532,6 +533,7 @@ const AuthenticatedApp = ({
           config={config}
           isProcessing={isProcessing}
           allQuestionsMap={allQuestionsMap}
+          allLanguageQuestions={allLanguageQuestions}
           viewRouterHandlers={viewRouterHandlers}
           viewRouterState={viewRouterState}
           viewRouterSetters={{

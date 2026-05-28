@@ -36,53 +36,71 @@ const ScormExportModal = ({
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState(null);
   const [skipWarning, setSkipWarning] = useState(null);
+  // When on, languages with only pending (unreviewed) translations show up
+  // in the list and pending rows are included in their respective zips.
+  // Off by default — keeps the default flow shipping only reviewed content.
+  const [includeUnreviewed, setIncludeUnreviewed] = useState(false);
 
-  // Language variants share a uniqueId across rows; group the unfiltered
-  // discipline set by language so we can offer per-language exports for the
-  // same logical questions the user picked.
-  const { questionsByLanguage, availableLanguages, countsByLanguage } =
-    useMemo(() => {
-      const uniqueIds = new Set(
-        questions.map((q) => q.uniqueId || q.id).filter(Boolean)
-      );
-      const variantPool =
-        allLanguageQuestions.length > 0 ? allLanguageQuestions : questions;
-      const byLang = new Map();
-      variantPool.forEach((q) => {
-        const lang = q.language || "English";
-        const key = q.uniqueId || q.id;
-        // Only include variants of the questions the user actually selected.
-        // If we couldn't derive uniqueIds (e.g. mock data missing them),
-        // fall back to including everything so the export still works.
-        if (uniqueIds.size > 0 && !uniqueIds.has(key)) return;
-        if (!byLang.has(lang)) byLang.set(lang, []);
-        byLang.get(lang).push(q);
-      });
-      // Sort with English first, then alphabetical.
-      const langs = [...byLang.keys()].sort((a, b) => {
-        if (a === "English") return -1;
-        if (b === "English") return 1;
-        return a.localeCompare(b);
-      });
-      const counts = {};
-      langs.forEach((l) => {
-        counts[l] = byLang.get(l).length;
-      });
-      return {
-        questionsByLanguage: byLang,
-        availableLanguages: langs,
-        countsByLanguage: counts,
-      };
-    }, [questions, allLanguageQuestions]);
+  // Language variants share a uniqueId across rows; group the discipline-
+  // scoped pool by language. Bucket each language's rows by status so the
+  // UI can show "127 reviewed (90 unreviewed)" and the export can honor
+  // the includeUnreviewed toggle.
+  const {
+    acceptedByLanguage,
+    pendingByLanguage,
+    availableLanguages,
+    languagesWithAccepted,
+  } = useMemo(() => {
+    const uniqueIds = new Set(
+      questions.map((q) => q.uniqueId || q.id).filter(Boolean)
+    );
+    const variantPool =
+      allLanguageQuestions.length > 0 ? allLanguageQuestions : questions;
+    const accepted = new Map();
+    const pending = new Map();
+    variantPool.forEach((q) => {
+      const lang = q.language || "English";
+      const key = q.uniqueId || q.id;
+      // Match only variants of the questions the user actually selected.
+      // Fall back to including everything when uniqueIds aren't derivable
+      // (e.g. mock data), so the export still works in dev.
+      if (uniqueIds.size > 0 && !uniqueIds.has(key)) return;
+      const bucket = q.status === "accepted" ? accepted : pending;
+      if (!bucket.has(lang)) bucket.set(lang, []);
+      bucket.get(lang).push(q);
+    });
+    const sortLangs = (a, b) => {
+      if (a === "English") return -1;
+      if (b === "English") return 1;
+      return a.localeCompare(b);
+    };
+    const acceptedLangs = [...accepted.keys()].sort(sortLangs);
+    const allLangs = new Set([...accepted.keys(), ...pending.keys()]);
+    const fullLangs = [...allLangs].sort(sortLangs);
+    return {
+      acceptedByLanguage: accepted,
+      pendingByLanguage: pending,
+      availableLanguages: fullLangs,
+      languagesWithAccepted: new Set(acceptedLangs),
+    };
+  }, [questions, allLanguageQuestions]);
 
-  const [selectedLanguages, setSelectedLanguages] = useState(
+  // The list rendered in the UI depends on the toggle.
+  const visibleLanguages = useMemo(
     () =>
-      new Set(
-        availableLanguages.includes("English")
-          ? ["English"]
-          : availableLanguages.slice(0, 1)
-      )
+      includeUnreviewed
+        ? availableLanguages
+        : availableLanguages.filter((l) => languagesWithAccepted.has(l)),
+    [includeUnreviewed, availableLanguages, languagesWithAccepted]
   );
+
+  const [selectedLanguages, setSelectedLanguages] = useState(() => {
+    if (languagesWithAccepted.has("English")) return new Set(["English"]);
+    const firstAccepted = availableLanguages.find((l) =>
+      languagesWithAccepted.has(l)
+    );
+    return new Set(firstAccepted ? [firstAccepted] : []);
+  });
 
   const toggleLanguage = (lang) => {
     setSelectedLanguages((prev) => {
@@ -125,18 +143,18 @@ const ScormExportModal = ({
 
     const failures = [];
     const skipSummary = [];
-    const langsToExport = availableLanguages.filter((l) =>
+    const langsToExport = visibleLanguages.filter((l) =>
       selectedLanguages.has(l)
     );
 
     try {
       for (let i = 0; i < langsToExport.length; i++) {
         const lang = langsToExport[i];
-        const langQuestions = questionsByLanguage.get(lang) || [];
-        const { valid, skipped } = filterExportableQuestions(
-          langQuestions,
-          lang
-        );
+        const accepted = acceptedByLanguage.get(lang) || [];
+        const pending = pendingByLanguage.get(lang) || [];
+        const pool = includeUnreviewed ? [...accepted, ...pending] : accepted;
+        const hasUnreviewedContent = includeUnreviewed && pending.length > 0;
+        const { valid, skipped } = filterExportableQuestions(pool, lang);
         if (skipped.length > 0) {
           skipSummary.push(`${lang}: ${skipped.length} skipped`);
         }
@@ -145,13 +163,19 @@ const ScormExportModal = ({
           continue;
         }
         try {
+          const labelSuffix = hasUnreviewedContent
+            ? ` ${lang} (DRAFT)`
+            : ` ${lang}`;
+          let exportTitle = config.title;
+          if (langsToExport.length > 1) {
+            exportTitle = `${config.title} -${labelSuffix}`;
+          } else if (hasUnreviewedContent) {
+            exportTitle = `${config.title} (DRAFT)`;
+          }
           const result = await exportToScorm(valid, {
             ...config,
-            language: lang,
-            title:
-              langsToExport.length > 1
-                ? `${config.title} - ${lang}`
-                : config.title,
+            language: hasUnreviewedContent ? `${lang}_DRAFT` : lang,
+            title: exportTitle,
           });
           logger.log(`SCORM export successful (${lang}):`, result);
         } catch (err) {
@@ -240,13 +264,22 @@ const ScormExportModal = ({
             <label className="block text-sm font-bold text-slate-300 mb-2">
               Languages to Export
             </label>
-            {availableLanguages.length === 0 ? (
+            {visibleLanguages.length === 0 ? (
               <p className="text-xs text-slate-500">No questions to export.</p>
             ) : (
               <>
                 <div className="bg-slate-800 rounded border border-slate-700 max-h-40 overflow-y-auto">
-                  {availableLanguages.map((lang) => {
+                  {visibleLanguages.map((lang) => {
                     const isSelected = selectedLanguages.has(lang);
+                    const acceptedCount = (acceptedByLanguage.get(lang) || [])
+                      .length;
+                    const pendingCount = (pendingByLanguage.get(lang) || [])
+                      .length;
+                    const showPending = includeUnreviewed && pendingCount > 0;
+                    const totalCount = showPending
+                      ? acceptedCount + pendingCount
+                      : acceptedCount;
+                    const draftOnly = acceptedCount === 0 && pendingCount > 0;
                     return (
                       <label
                         key={lang}
@@ -263,24 +296,58 @@ const ScormExportModal = ({
                             disabled={isExporting}
                           />
                           <span className="text-sm text-slate-300">{lang}</span>
+                          {(draftOnly || showPending) && (
+                            <span
+                              className="text-[10px] px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 border border-amber-700/40"
+                              title="Contains unreviewed translations"
+                            >
+                              ⚠ DRAFT
+                            </span>
+                          )}
                         </div>
                         <span className="text-xs text-slate-500">
-                          {countsByLanguage[lang]} questions
+                          {totalCount} questions
+                          {showPending && acceptedCount > 0 && (
+                            <span className="text-amber-300/80 ml-1">
+                              ({pendingCount} unreviewed)
+                            </span>
+                          )}
                         </span>
                       </label>
                     );
                   })}
                 </div>
+                <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={includeUnreviewed}
+                    onChange={(e) => setIncludeUnreviewed(e.target.checked)}
+                    className="w-4 h-4 accent-amber-500"
+                    disabled={isExporting}
+                  />
+                  <span className="text-xs text-slate-300">
+                    Include unreviewed translations (status: pending)
+                  </span>
+                </label>
                 <p className="text-xs text-slate-500 mt-1">
                   {selectedLanguages.size > 1
                     ? `Generates ${selectedLanguages.size} separate SCORM zips, one per language.`
                     : "One SCORM zip will be downloaded."}
+                  {includeUnreviewed && (
+                    <span className="block text-amber-300/80 mt-1">
+                      Languages containing unreviewed content will be tagged
+                      _DRAFT in the filename.
+                    </span>
+                  )}
                 </p>
-                {availableLanguages.length === 1 && (
-                  <p className="text-xs text-slate-500 mt-1">
-                    No translated variants available for this question set.
-                  </p>
-                )}
+                {visibleLanguages.length === 1 &&
+                  visibleLanguages[0] === "English" && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      No reviewed translations available for this question set.
+                      Enable "Include unreviewed translations" to ship pending
+                      Chinese/Japanese/etc. variants as DRAFT zips.
+                    </p>
+                  )}
               </>
             )}
           </div>

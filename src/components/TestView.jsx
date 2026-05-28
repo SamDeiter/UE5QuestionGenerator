@@ -12,7 +12,12 @@ import { useMessage } from "../contexts/MessageContext";
  * TestView - Admin view for configuring, previewing, and exporting quizzes
  * Allows admins to select approved questions and create assessments
  */
-const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
+const TestView = ({
+  questions = [],
+  allLanguageQuestions = [],
+  config: _appConfig,
+  isAdmin,
+}) => {
   const { showMessage } = useMessage();
   // Quiz configuration state
   const [quizConfig, setQuizConfig] = useState({
@@ -485,10 +490,14 @@ const TestView = ({ questions = [], config: _appConfig, isAdmin }) => {
           questions={
             selectedQuestionIds.size > 0 ? selectedQuestions : filteredQuestions
           }
-          allLanguageQuestions={approvedQuestions.filter((q) => {
-            // Same discipline filter as filteredQuestions, but ignore the
-            // language filter so the modal can offer translated variants
-            // (variants share uniqueId — see useQuestionTranslation).
+          allLanguageQuestions={(allLanguageQuestions.length > 0
+            ? allLanguageQuestions
+            : approvedQuestions
+          ).filter((q) => {
+            // Discipline scope only — DO NOT filter by status here, so the
+            // modal can offer pending translations behind its "Include
+            // unreviewed translations" toggle. DO NOT filter by language
+            // either; variants share uniqueId across languages.
             return (
               filters.disciplines.length === 0 ||
               filters.disciplines.includes(q.discipline)

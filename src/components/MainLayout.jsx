@@ -124,6 +124,7 @@ const MainLayout = ({
   config,
   isProcessing,
   allQuestionsMap, // Add this prop
+  allLanguageQuestions,
 
   // ViewRouter props
   viewRouterHandlers,
@@ -197,6 +198,7 @@ const MainLayout = ({
               onNavigateHome={handleGoHome}
               onStartTutorial={onStartTutorial}
               allQuestionsMap={allQuestionsMap}
+              allLanguageQuestions={allLanguageQuestions}
               activeScenario={activeScenario}
             />
           </Suspense>

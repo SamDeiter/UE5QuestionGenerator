@@ -83,6 +83,18 @@ export const useQuestionDerivedData = (
     });
   }, [allQuestionsMap]);
 
+  // Flat list of ALL variants (every language). Used by features that need
+  // the cross-language picture — e.g. the SCORM export modal's per-language
+  // checkbox list. unifiedQuestions intentionally collapses each uniqueId
+  // to one canonical row, so it's the wrong source for that surface.
+  const allLanguageQuestions = useMemo(() => {
+    const all = [];
+    Array.from(allQuestionsMap.values()).forEach((variants) => {
+      variants.forEach((v) => all.push(v));
+    });
+    return all;
+  }, [allQuestionsMap]);
+
   // Statistics (Discipline-specific)
   const approvedCounts = useMemo(() => {
     const counts = CATEGORY_KEYS.reduce(
@@ -181,6 +193,7 @@ export const useQuestionDerivedData = (
     allQuestionsMap,
     translationMap,
     unifiedQuestions,
+    allLanguageQuestions,
     approvedCounts,
     approvedCount,
     rejectedCount,
