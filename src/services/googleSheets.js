@@ -176,12 +176,25 @@ export const clearQuestionsFromSheets = async (sheetUrl) => {
     return;
   }
 
-  // Open a popup window that can be closed programmatically
+  // Open a popup window that can be closed programmatically. We construct
+  // the splash via DOM APIs rather than document.write — document.write on
+  // a same-origin popup is a deprecated escape hatch and triggers static
+  // analysis warnings (and the content here is fully static UI text, no
+  // dynamic data, so a single createElement chain is just as clear).
   const popup = window.open("", "SheetsClearing", "width=600,height=400");
   if (popup) {
-    popup.document.write(
-      '<html><body style="background:#111827;color:#9ca3af;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;"><div style="text-align:center;"><h2>Clearing Google Sheets...</h2><p>Please wait...</p></div></body></html>'
-    );
+    const doc = popup.document;
+    doc.body.style.cssText =
+      "background:#111827;color:#9ca3af;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;";
+    const wrapper = doc.createElement("div");
+    wrapper.style.textAlign = "center";
+    const heading = doc.createElement("h2");
+    heading.textContent = "Clearing Google Sheets...";
+    const para = doc.createElement("p");
+    para.textContent = "Please wait...";
+    wrapper.appendChild(heading);
+    wrapper.appendChild(para);
+    doc.body.appendChild(wrapper);
   }
 
   const form = document.createElement("form");
