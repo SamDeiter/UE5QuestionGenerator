@@ -50,16 +50,14 @@ export const validateFile = (file) => {
 
 /**
  * Sanitizes a string to prevent CSV Injection (Formula Injection).
- * Removes leading characters that could trigger formula execution in Excel/Sheets.
- * @param {string} text - The text to sanitize.
- * @returns {string} - The sanitized text.
+ * Prepends a single quote if the value's first non-whitespace character is
+ * one of =, +, -, @, tab, or CR — any of which Excel / Google Sheets will
+ * interpret as a formula. Mirrors OWASP CSV-injection guidance.
  */
-// eslint-disable-next-line no-unused-vars
-const sanitizeCSVField = (text) => {
-  if (!text) return "";
+export const sanitizeCSVField = (text) => {
+  if (text === null || text === undefined || text === "") return "";
   const str = String(text);
-  // If the field starts with =, +, -, or @, prepend a single quote to force it as text
-  if (/^[=+\-@]/.test(str)) {
+  if (/^\s*[=+\-@\t\r]/.test(str)) {
     return "'" + str;
   }
   return str;

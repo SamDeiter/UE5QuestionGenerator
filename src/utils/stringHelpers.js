@@ -6,6 +6,7 @@
  */
 /* eslint-disable sonarjs/slow-regex */
 import DOMPurify from "dompurify";
+import { sanitizeCSVField } from "./security";
 
 /**
  * Calculate text similarity using Levenshtein distance (0-1 score)
@@ -144,7 +145,13 @@ export const safe = (t) => {
     .replace(/\s\s+/g, " ")
     .trim();
   content = content.replace(/(\r\n|\n|\r|\t)/gm, " ");
-  content = content.replace(/['"]/g, "");
+  // SECURITY: defend against CSV formula injection. A field starting with
+  // =/+/-/@/tab/CR would be executed as a formula by Excel/Sheets. The
+  // sanitizer prepends a single quote so the cell renders as text.
+  content = sanitizeCSVField(content);
+  // Escape embedded double-quotes per RFC 4180 (`"` becomes `""`). The old
+  // implementation stripped both single and double quotes, which destroyed
+  // legitimate apostrophes in question text.
   const escaped = content.replace(/"/g, '""');
   return `"${escaped}"`;
 };

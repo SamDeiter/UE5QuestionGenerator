@@ -105,9 +105,24 @@ describe("stringHelpers", () => {
       expect(result).toBe('"hello"');
     });
 
-    it("removes quotes from content", () => {
+    // Previously `safe()` stripped all quotes, which destroyed legitimate
+    // apostrophes/quotes in question text. RFC 4180 says embedded double
+    // quotes inside a quoted CSV cell should be DOUBLED, not stripped.
+    it("doubles embedded double quotes (RFC 4180)", () => {
       const result = safe('hello "world"');
-      expect(result).not.toContain('""');
+      expect(result).toBe('"hello ""world"""');
+    });
+
+    it("preserves apostrophes (no lossy strip)", () => {
+      const result = safe("don't drop me");
+      expect(result).toBe('"don\'t drop me"');
+    });
+
+    it("prefixes a single quote for formula-injection payloads", () => {
+      const result = safe('=HYPERLINK("//evil","click")');
+      // sanitizeCSVField adds the leading apostrophe; RFC 4180 wrapping then
+      // doubles the inner quotes.
+      expect(result.startsWith("\"'=HYPERLINK")).toBe(true);
     });
   });
 

@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
+  assertAppsScriptUrl,
   fetchQuestionsFromSheets,
   saveQuestionsToSheets,
   clearQuestionsFromSheets,
 } from "../googleSheets";
+
+const VALID_URL =
+  "https://script.google.com/macros/s/AKfycbyTESTDEPLOYMENTID/exec";
 
 describe("Google Sheets Service", () => {
   let appendChildSpy;
@@ -53,9 +57,7 @@ describe("Google Sheets Service", () => {
       // Mock removeChild to do nothing (or verify it's called)
       removeChildSpy.mockImplementation(() => {});
 
-      const result = await fetchQuestionsFromSheets(
-        "https://script.google.com/macros/s/ID/exec"
-      );
+      const result = await fetchQuestionsFromSheets(VALID_URL);
       expect(result).toEqual(mockData.data);
       expect(scriptMock.src).toContain("action=read");
     });
@@ -78,7 +80,9 @@ describe("Google Sheets Service", () => {
 
       removeChildSpy.mockImplementation(() => {});
 
-      await expect(fetchQuestionsFromSheets("url")).rejects.toThrow("Failed");
+      await expect(fetchQuestionsFromSheets(VALID_URL)).rejects.toThrow(
+        "Failed"
+      );
     });
 
     it("should reject on script load error", async () => {
@@ -94,7 +98,7 @@ describe("Google Sheets Service", () => {
 
       removeChildSpy.mockImplementation(() => {});
 
-      await expect(fetchQuestionsFromSheets("url")).rejects.toThrow(
+      await expect(fetchQuestionsFromSheets(VALID_URL)).rejects.toThrow(
         "Connection failed"
       );
     });
@@ -133,10 +137,10 @@ describe("Google Sheets Service", () => {
         },
       ];
 
-      await saveQuestionsToSheets("https://google.com", questions);
+      await saveQuestionsToSheets(VALID_URL, questions);
 
       expect(formMock.method).toBe("POST");
-      expect(formMock.action).toBe("https://google.com");
+      expect(formMock.action).toBe(VALID_URL);
       expect(formMock.target).toBe("SheetsSaving");
       expect(inputMock.name).toBe("data");
 
@@ -144,6 +148,96 @@ describe("Google Sheets Service", () => {
       expect(payload.questions[0].ID).toBe("1");
       expect(payload.questions[0].Discipline).toBe("Art");
       expect(formMock.submit).toHaveBeenCalled();
+    });
+
+    it("prefixes a single quote to formula-injection payload fields", async () => {
+      const formMock = {
+        method: "",
+        action: "",
+        target: "",
+        appendChild: vi.fn(),
+        submit: vi.fn(),
+      };
+      const inputMock = { type: "", name: "", value: "" };
+      createElementSpy.mockImplementation((tagName) => {
+        if (tagName === "form") return formMock;
+        if (tagName === "input") return inputMock;
+        return {};
+      });
+      appendChildSpy.mockImplementation(() => {});
+      removeChildSpy.mockImplementation(() => {});
+
+      const questions = [
+        {
+          uniqueId: "evil-1",
+          discipline: '=HYPERLINK("//evil.example","click")',
+          type: "MC",
+          difficulty: "Easy",
+          question: "+1+1+cmd|/c calc",
+          options: { A: "@SUM(1+1)", B: "B" },
+          correct: "A",
+          language: "English",
+        },
+      ];
+
+      await saveQuestionsToSheets(VALID_URL, questions);
+
+      const payload = JSON.parse(inputMock.value);
+      const q = payload.questions[0];
+      expect(q.Discipline.startsWith("'=HYPERLINK")).toBe(true);
+      expect(q.Question.startsWith("'+1+1")).toBe(true);
+      expect(q.OptionA.startsWith("'@SUM")).toBe(true);
+    });
+  });
+
+  describe("assertAppsScriptUrl", () => {
+    it("accepts a well-formed Apps Script URL", () => {
+      const out = assertAppsScriptUrl(VALID_URL);
+      expect(out).toBe(VALID_URL);
+    });
+
+    it.each([
+      ["missing", ""],
+      ["null", null],
+      ["non-string", 42],
+    ])("rejects %s input", (_label, input) => {
+      expect(() => assertAppsScriptUrl(input)).toThrow(/not configured/);
+    });
+
+    it("rejects http:// (insecure scheme)", () => {
+      // eslint-disable-next-line sonarjs/no-clear-text-protocols
+      const insecure = "http://script.google.com/macros/s/AKfycbyID/exec";
+      expect(() => assertAppsScriptUrl(insecure)).toThrow(/https/);
+    });
+
+    it("rejects javascript: scheme", () => {
+      // eslint-disable-next-line sonarjs/code-eval
+      const xss = "javascript:alert(1)";
+      expect(() => assertAppsScriptUrl(xss)).toThrow();
+    });
+
+    it("rejects an attacker-controlled host that contains the substring", () => {
+      expect(() =>
+        assertAppsScriptUrl(
+          "https://evil.example/script.google.com/macros/s/x/exec"
+        )
+      ).toThrow(/script\.google\.com/);
+    });
+
+    it("rejects the legitimate host with a wrong path", () => {
+      expect(() =>
+        assertAppsScriptUrl(
+          "https://script.google.com/something-else?id=AKfycbyID"
+        )
+      ).toThrow(/macros\/s/);
+    });
+
+    it("rejects URL with extra path segments after /exec", () => {
+      expect(() =>
+        assertAppsScriptUrl(
+          "https://script.google.com/macros/s/AKfycbyID/exec/dev"
+        )
+      ).toThrow(/macros\/s/);
     });
   });
 
@@ -167,12 +261,31 @@ describe("Google Sheets Service", () => {
       appendChildSpy.mockImplementation(() => {});
       removeChildSpy.mockImplementation(() => {});
 
-      await clearQuestionsFromSheets("https://google.com");
+      await clearQuestionsFromSheets(VALID_URL);
 
       expect(formMock.method).toBe("POST");
       // Check that action parameter is appended to URL
       expect(formMock.action).toContain("action=clear");
       expect(formMock.submit).toHaveBeenCalled();
+    });
+
+    it("alerts and returns without submitting when the URL is rejected", async () => {
+      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+      const formMock = {
+        method: "",
+        action: "",
+        target: "",
+        appendChild: vi.fn(),
+        submit: vi.fn(),
+      };
+      createElementSpy.mockImplementation(() => formMock);
+      appendChildSpy.mockImplementation(() => {});
+      removeChildSpy.mockImplementation(() => {});
+
+      await clearQuestionsFromSheets("https://evil.example/macros/s/x/exec");
+
+      expect(alertSpy).toHaveBeenCalled();
+      expect(formMock.submit).not.toHaveBeenCalled();
     });
   });
 });

@@ -120,12 +120,10 @@ describe("Import/Export Integration Tests", () => {
         "Reviewer"
       );
 
-      // CSV rules: fields with commas or quotes must be quoted, and internal quotes escaped
-      // Current implementation strips quotes instead of escaping them
-      // expect(csvContent).toContain('Question with ""quotes"" and, commas');
-
-      // Updated expectation based on current implementation (strips quotes)
-      expect(csvContent).toContain("Question with quotes and, commas");
+      // RFC 4180: fields with commas or quotes must be quoted, and internal
+      // quotes escaped by doubling. The old `safe()` stripped quotes (lossy);
+      // Phase B fixed it to escape per RFC 4180.
+      expect(csvContent).toContain('Question with ""quotes"" and, commas');
     });
   });
 });

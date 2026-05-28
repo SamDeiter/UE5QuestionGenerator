@@ -4,12 +4,61 @@
  * NOTE: Regex patterns are for HTML tag stripping - input is from trusted sources.
  */
 /* eslint-disable sonarjs/slow-regex */
+import { sanitizeCSVField } from "../utils/security";
+
 const stripHtmlTags = (str) => {
   if (!str) return "";
   return str.replace(/<[^>]*>/g, "");
 };
 
+/**
+ * Validate that a Google Apps Script deployment URL points at the official
+ * `script.google.com/macros/s/<id>/exec` endpoint. Throws on anything else,
+ * including bare hosts, http://, javascript:, or attacker-controlled domains
+ * that contain the substring "script.google.com" in the path or query.
+ *
+ * The Sheets bridge previously POSTed the entire question payload to any
+ * URL a user typed into Settings. This validator is the chokepoint.
+ */
+export const assertAppsScriptUrl = (sheetUrl) => {
+  if (!sheetUrl || typeof sheetUrl !== "string") {
+    throw new Error("Google Apps Script URL is not configured.");
+  }
+  let parsed;
+  try {
+    parsed = new URL(sheetUrl);
+  } catch {
+    throw new Error("Google Apps Script URL is malformed.");
+  }
+  if (parsed.protocol !== "https:") {
+    throw new Error(
+      "Google Apps Script URL must use https:// (refusing to send data over an insecure scheme)."
+    );
+  }
+  if (parsed.hostname !== "script.google.com") {
+    throw new Error(
+      `Google Apps Script URL must be on script.google.com (got ${parsed.hostname}). ` +
+        "Refusing to export to an unrecognized host."
+    );
+  }
+  if (!/^\/macros\/s\/[^/]+\/exec$/.test(parsed.pathname)) {
+    throw new Error(
+      "Google Apps Script URL must end in /macros/s/<deployment-id>/exec."
+    );
+  }
+  return parsed.toString();
+};
+
+// Apply CSV-formula sanitization + HTML strip in one pass for any string
+// field sent to Apps Script. Sheets will execute leading =/+/-/@ as formulas
+// unless we prefix them with a single quote.
+const safeSheetsCell = (value) => {
+  if (value === null || value === undefined) return "";
+  return sanitizeCSVField(stripHtmlTags(String(value)));
+};
+
 export const fetchQuestionsFromSheets = (sheetUrl) => {
+  const validUrl = assertAppsScriptUrl(sheetUrl);
   return new Promise((resolve, reject) => {
     // Create a unique callback name for JSONP
     // eslint-disable-next-line sonarjs/pseudo-random
@@ -28,9 +77,9 @@ export const fetchQuestionsFromSheets = (sheetUrl) => {
 
     // Create the script element
     const script = document.createElement("script");
-    // Append callback parameter to URL
-    const separator = sheetUrl.includes("?") ? "&" : "?";
-    script.src = `${sheetUrl}${separator}callback=${callbackName}&action=read`;
+    // Append callback parameter to validated URL.
+    const separator = validUrl.includes("?") ? "&" : "?";
+    script.src = `${validUrl}${separator}callback=${callbackName}&action=read`;
     script.onerror = () => {
       delete window[callbackName];
       document.body.removeChild(script);
@@ -47,39 +96,45 @@ export const fetchQuestionsFromSheets = (sheetUrl) => {
 };
 
 export const saveQuestionsToSheets = async (sheetUrl, questions) => {
-  // Transform into JSON array matching CSV structure (without headers)
+  const validUrl = assertAppsScriptUrl(sheetUrl);
+
+  // Transform into JSON array matching CSV structure (without headers).
+  // Every string field goes through safeSheetsCell, which strips HTML and
+  // prefixes leading =/+/-/@ with a single quote so Sheets renders the
+  // value as text rather than executing it as a formula.
   const payloadData = questions.map((row, i) => {
     const cleanedSourceUrl =
       row.sourceUrl && !row.sourceUrl.includes("grounding-api")
         ? row.sourceUrl
         : "";
     const o = row.options || {};
-    // Return data fields matching the User's Google Apps Script expected keys
     return {
-      ID: (i + 1).toString(), // Changed from "id" to "ID"
-      uniqueId: row.uniqueId, // This field is not used in the new GAS, but kept for consistency
-      Status: row.status || "accepted", // Added Status
-      Discipline: row.discipline, // Changed from "discipline" to "Discipline"
-      Type: row.type, // Changed from "type" to "Type"
-      Difficulty: row.difficulty, // Changed from "difficulty" to "Difficulty"
-      Question: stripHtmlTags(row.question), // Changed from "question" to "Question"
-      OptionA: stripHtmlTags(o.A), // Changed from "optionA" to "OptionA"
-      OptionB: stripHtmlTags(o.B), // Changed from "optionB" to "OptionB"
-      OptionC: stripHtmlTags(o.C), // Changed from "optionC" to "OptionC"
-      OptionD: stripHtmlTags(o.D || ""), // Changed from "optionD" to "OptionD"
-      Answer: row.correct, // Changed from "correctAnswer" to "Answer"
-      Explanation: stripHtmlTags(row.explanation || ""), // Added Explanation
-      Language: row.language || "English", // Changed from "language" to "Language"
-      SourceFile: cleanedSourceUrl, // Changed from "sourceUrl" to "SourceFile"
-      sourceExcerpt: stripHtmlTags(row.sourceExcerpt), // This field is not used in the new GAS, but kept for consistency
-      creator: row.creatorName, // This field is not used in the new GAS, but kept for consistency
-      reviewer: row.reviewerName, // This field is not used in the new GAS, but kept for consistency
-      QualityScore: row.critiqueScore || row.initialQuality || "",
-      AICritique: stripHtmlTags(row.critique || ""),
-      TokenCost: row.tokenCost || "", // Added Token Cost
-      RejectionReason: row.rejectionReason || "",
-      HumanVerifiedBy: row.humanVerifiedBy || "",
-      RejectedAt: row.rejectedAt || "",
+      ID: (i + 1).toString(),
+      uniqueId: safeSheetsCell(row.uniqueId),
+      Status: safeSheetsCell(row.status || "accepted"),
+      Discipline: safeSheetsCell(row.discipline),
+      Type: safeSheetsCell(row.type),
+      Difficulty: safeSheetsCell(row.difficulty),
+      Question: safeSheetsCell(row.question),
+      OptionA: safeSheetsCell(o.A),
+      OptionB: safeSheetsCell(o.B),
+      OptionC: safeSheetsCell(o.C),
+      OptionD: safeSheetsCell(o.D || ""),
+      Answer: safeSheetsCell(row.correct),
+      Explanation: safeSheetsCell(row.explanation || ""),
+      Language: safeSheetsCell(row.language || "English"),
+      SourceFile: safeSheetsCell(cleanedSourceUrl),
+      sourceExcerpt: safeSheetsCell(row.sourceExcerpt),
+      creator: safeSheetsCell(row.creatorName),
+      reviewer: safeSheetsCell(row.reviewerName),
+      QualityScore: safeSheetsCell(
+        row.critiqueScore || row.initialQuality || ""
+      ),
+      AICritique: safeSheetsCell(row.critique || ""),
+      TokenCost: safeSheetsCell(row.tokenCost || ""),
+      RejectionReason: safeSheetsCell(row.rejectionReason || ""),
+      HumanVerifiedBy: safeSheetsCell(row.humanVerifiedBy || ""),
+      RejectedAt: safeSheetsCell(row.rejectedAt || ""),
     };
   });
 
@@ -91,7 +146,7 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
   // Hidden iframes swallow auth errors silently.
   const form = document.createElement("form");
   form.method = "POST";
-  form.action = sheetUrl;
+  form.action = validUrl;
   form.target = "SheetsSaving"; // Open in popup window
 
   // Open popup window
@@ -113,10 +168,11 @@ export const saveQuestionsToSheets = async (sheetUrl, questions) => {
 };
 
 export const clearQuestionsFromSheets = async (sheetUrl) => {
-  if (!sheetUrl) {
-    alert(
-      "Error: No Google Sheet URL configured. Please add your Sheet URL in Settings."
-    );
+  let validUrl;
+  try {
+    validUrl = assertAppsScriptUrl(sheetUrl);
+  } catch (e) {
+    alert(`Error: ${e.message}`);
     return;
   }
 
@@ -131,8 +187,8 @@ export const clearQuestionsFromSheets = async (sheetUrl) => {
   const form = document.createElement("form");
   form.method = "POST";
   // Append action as URL parameter so Google Apps Script can read it via e.parameter
-  const separator = sheetUrl.includes("?") ? "&" : "?";
-  form.action = `${sheetUrl}${separator}action=clear`;
+  const separator = validUrl.includes("?") ? "&" : "?";
+  form.action = `${validUrl}${separator}action=clear`;
   form.target = "SheetsClearing"; // Target the popup window
 
   document.body.appendChild(form);

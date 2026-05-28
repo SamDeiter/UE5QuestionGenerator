@@ -144,7 +144,7 @@ const GlobalModals = ({ visibility, state, handlers }) => {
           controlling visibility, which defeated lazy-loading because the
           chunk was still fetched on first render. */}
       <Suspense fallback={null}>
-        {showBulkExportModal && (
+        {showBulkExportModal && isAdmin && (
           <BulkExportModal
             onClose={onCloseBulkExport}
             onExport={handleBulkExport}
