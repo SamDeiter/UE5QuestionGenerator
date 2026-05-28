@@ -35,6 +35,7 @@ const ViewRouter = ({
   onNavigateHome, // callback to go back to landing page
   onStartTutorial, // callback to start tutorial scenario
   allQuestionsMap, // all questions for analytics
+  allLanguageQuestions, // flat all-variants list (for SCORM per-language export)
   activeScenario, // active tutorial scenario for demo card injection
 }) => {
   const {
@@ -154,6 +155,7 @@ const ViewRouter = ({
       [APP_MODES.TEST]: isAdmin && (
         <TestView
           questions={[...questions, ...databaseQuestions]}
+          allLanguageQuestions={allLanguageQuestions}
           config={config}
           isAdmin={isAdmin}
         />
