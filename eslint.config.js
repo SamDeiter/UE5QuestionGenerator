@@ -10,6 +10,7 @@ export default [
   {
     ignores: [
       "dist/**",
+      "**/dist/**",
       "node_modules/**",
       "build/**",
       "*.config.js",
@@ -19,6 +20,7 @@ export default [
       "public/**",
       ".venv/**",
       "**/.venv/**",
+      ".claude/**",
       "antigravity-mcp-server/**",
       "mcp_wrapper.js",
       "mcp_wrapper.cjs",
