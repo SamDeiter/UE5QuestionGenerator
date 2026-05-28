@@ -51,9 +51,25 @@ const ScormExportModal = ({
     availableLanguages,
     languagesWithAccepted,
   } = useMemo(() => {
-    const uniqueIds = new Set(
-      questions.map((q) => q.uniqueId || q.id).filter(Boolean)
+    // Anchor counts on the English subset of the user's selection. Every
+    // other language counts ONLY variants that share a uniqueId with an
+    // accepted English question, so orphan non-English rows (standalone
+    // Korean/Japanese/etc. questions with no English counterpart) don't
+    // inflate translation counts. Result: English: N, Korean: up-to-N, etc.
+    //
+    // Fall back to the full selection's uniqueIds when no English rows are
+    // present, so a user filtered to a single non-English language can
+    // still export it.
+    const englishIds = new Set(
+      questions
+        .filter((q) => (q.language || "English") === "English")
+        .map((q) => q.uniqueId || q.id)
+        .filter(Boolean)
     );
+    const uniqueIds =
+      englishIds.size > 0
+        ? englishIds
+        : new Set(questions.map((q) => q.uniqueId || q.id).filter(Boolean));
     const variantPool =
       allLanguageQuestions.length > 0 ? allLanguageQuestions : questions;
     const accepted = new Map();
@@ -61,7 +77,8 @@ const ScormExportModal = ({
     variantPool.forEach((q) => {
       const lang = q.language || "English";
       const key = q.uniqueId || q.id;
-      // Match only variants of the questions the user actually selected.
+      // Skip variants whose uniqueId isn't in the English-anchored set —
+      // those are orphans, not translations of the questions being exported.
       // Fall back to including everything when uniqueIds aren't derivable
       // (e.g. mock data), so the export still works in dev.
       if (uniqueIds.size > 0 && !uniqueIds.has(key)) return;
@@ -209,9 +226,9 @@ const ScormExportModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 rounded-lg shadow-2xl max-w-md w-full border border-slate-700">
+      <div className="bg-slate-900 rounded-lg shadow-2xl max-w-md w-full border border-slate-700 max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-700">
+        <div className="flex items-center justify-between p-6 border-b border-slate-700 shrink-0">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <Icon name="download" size={20} />
             Export to SCORM 1.2
@@ -226,7 +243,7 @@ const ScormExportModal = ({
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto flex-1">
           {/* Quiz Title */}
           <div>
             <label className="block text-sm font-bold text-slate-300 mb-2">
@@ -494,7 +511,7 @@ const ScormExportModal = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-700">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-700 shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
