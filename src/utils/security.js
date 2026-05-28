@@ -1,4 +1,6 @@
 import { logger } from "../utils/logger";
+import { stripHtmlTags } from "./stringHelpers";
+import { assertHttpUrl } from "./urlValidator";
 /**
  * Security utility functions for file uploads and data processing.
  *
@@ -61,6 +63,59 @@ export const sanitizeCSVField = (text) => {
     return "'" + str;
   }
   return str;
+};
+
+/**
+ * Sanitizes a string read from an imported CSV row.
+ *
+ * The import path used to trust raw cell content. A poisoned CSV (either
+ * hand-crafted or a re-import of a tampered export) could deliver:
+ *   - <script>, <iframe>, or layout-clobbering tags
+ *   - formula payloads (=HYPERLINK, =cmd, etc.) that would survive a
+ *     subsequent re-export
+ *   - oversized strings used as a denial-of-service vector
+ *
+ * This helper strips HTML, normalizes whitespace, caps length, and (by
+ * default) re-applies the OWASP formula-injection guard so a re-export
+ * is still safe.
+ *
+ * @param {unknown} value - The raw cell value from the CSV parser.
+ * @param {object} [opts]
+ * @param {number} [opts.maxLength] - Truncate after this many code points.
+ * @param {boolean} [opts.applyCsvGuard=true] - Re-apply sanitizeCSVField.
+ * @returns {string} A safe string. Returns "" for null/undefined/non-string.
+ */
+export const sanitizeImportedField = (value, opts = {}) => {
+  const { maxLength, applyCsvGuard = true } = opts;
+  if (value === null || value === undefined) return "";
+  let str = String(value);
+  // Strip all HTML — imported question content is plain text. renderMarkdown
+  // re-strips at render time anyway, but stripping here keeps the stored
+  // value clean so a re-export doesn't ship attacker HTML.
+  str = stripHtmlTags(str) || "";
+  // Collapse whitespace and trim. CSV cells often have stray \r\n that the
+  // formula guard would otherwise treat as a prefix character.
+  str = str.replace(/\s+/g, " ").trim();
+  if (typeof maxLength === "number" && str.length > maxLength) {
+    str = str.slice(0, maxLength);
+  }
+  if (applyCsvGuard) {
+    str = sanitizeCSVField(str);
+  }
+  return str;
+};
+
+/**
+ * Sanitizes a URL read from an imported CSV row.
+ * Returns the URL if it parses to http: or https:, otherwise empty string.
+ * Other schemes (javascript:, data:, file:, vbscript:, ...) are stripped.
+ * @param {unknown} value
+ * @returns {string}
+ */
+export const sanitizeImportedUrl = (value) => {
+  if (value === null || value === undefined) return "";
+  const safe = assertHttpUrl(String(value));
+  return safe || "";
 };
 
 /**
