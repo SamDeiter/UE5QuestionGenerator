@@ -47,8 +47,8 @@ vi.mock("../../hooks/useConnectionStatus", () => ({
   default: () => ({ isOnline: true, queuedCount: 0, syncInProgress: false }),
 }));
 
-vi.mock("../../utils/secureStorage", () => ({
-  getSecureItem: () => "TestUser",
+vi.mock("../../utils/localPrefs", () => ({
+  getLocalPref: () => "TestUser",
 }));
 
 vi.mock("../../utils/logger", () => ({

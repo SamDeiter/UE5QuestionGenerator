@@ -1,58 +1,58 @@
 /**
- * secureStorage - Tests for localStorage wrapper utilities
+ * localPrefs - Tests for localStorage wrapper utilities
  * Uses jsdom environment for localStorage mocking
  * @vitest-environment jsdom
  */
 import { describe, it, expect, beforeEach } from "vitest";
-import { setSecureItem, getSecureItem } from "../secureStorage";
+import { setLocalPref, getLocalPref } from "../localPrefs";
 
-describe("secureStorage", () => {
+describe("localPrefs", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  describe("setSecureItem", () => {
+  describe("setLocalPref", () => {
     it("stores string value", () => {
-      setSecureItem("test-key", "test-value");
+      setLocalPref("test-key", "test-value");
       expect(localStorage.getItem("test-key")).toBe('"test-value"');
     });
 
     it("stores object value as JSON", () => {
-      setSecureItem("test-obj", { foo: "bar" });
+      setLocalPref("test-obj", { foo: "bar" });
       const stored = localStorage.getItem("test-obj");
       expect(JSON.parse(stored)).toEqual({ foo: "bar" });
     });
 
     it("stores array value", () => {
-      setSecureItem("test-arr", [1, 2, 3]);
+      setLocalPref("test-arr", [1, 2, 3]);
       const stored = localStorage.getItem("test-arr");
       expect(JSON.parse(stored)).toEqual([1, 2, 3]);
     });
 
     it("stores null value", () => {
-      setSecureItem("test-null", null);
+      setLocalPref("test-null", null);
       expect(localStorage.getItem("test-null")).toBe("null");
     });
   });
 
-  describe("getSecureItem", () => {
+  describe("getLocalPref", () => {
     it("retrieves stored string", () => {
       localStorage.setItem("test-key", '"test-value"');
-      expect(getSecureItem("test-key")).toBe("test-value");
+      expect(getLocalPref("test-key")).toBe("test-value");
     });
 
     it("retrieves stored object", () => {
       localStorage.setItem("test-obj", '{"foo":"bar"}');
-      expect(getSecureItem("test-obj")).toEqual({ foo: "bar" });
+      expect(getLocalPref("test-obj")).toEqual({ foo: "bar" });
     });
 
     it("returns null for missing key", () => {
-      expect(getSecureItem("nonexistent")).toBeNull();
+      expect(getLocalPref("nonexistent")).toBeNull();
     });
 
     it("returns null for invalid JSON", () => {
       localStorage.setItem("invalid", "not-valid-json");
-      expect(getSecureItem("invalid")).toBeNull();
+      expect(getLocalPref("invalid")).toBeNull();
     });
   });
 
@@ -63,8 +63,8 @@ describe("secureStorage", () => {
         discipline: "Blueprint",
         settings: { autoSave: true },
       };
-      setSecureItem("config", config);
-      expect(getSecureItem("config")).toEqual(config);
+      setLocalPref("config", config);
+      expect(getLocalPref("config")).toEqual(config);
     });
 
     it("handles complex nested objects", () => {
@@ -75,8 +75,8 @@ describe("secureStorage", () => {
         ],
         metadata: { version: 1 },
       };
-      setSecureItem("complex", data);
-      expect(getSecureItem("complex")).toEqual(data);
+      setLocalPref("complex", data);
+      expect(getLocalPref("complex")).toEqual(data);
     });
   });
 });
