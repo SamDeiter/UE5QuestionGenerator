@@ -4,14 +4,16 @@ This directory contains database migration and maintenance scripts for the UE5Qu
 
 ## Prerequisites
 
-1. **Python 3.7+** installed
-2. **Firebase Admin SDK** installed:
+1. **Python 3.7+** installed (for Python scripts)
+2. **Node 20+** installed (for JS scripts)
+3. **Firebase Admin SDK** installed:
 
    ```bash
-   pip install firebase-admin
+   pip install firebase-admin              # Python scripts
+   npm install                             # JS scripts (firebase-admin in devDependencies)
    ```
 
-3. **Service Account Key** (`serviceAccountKey.json`) in the project root
+4. **Service Account Key** — download from Firebase Console and save somewhere outside the repo.
 
 ### Getting Your Service Account Key
 
@@ -20,8 +22,30 @@ This directory contains database migration and maintenance scripts for the UE5Qu
 3. Click the gear icon → **Project Settings**
 4. Navigate to **Service Accounts** tab
 5. Click **Generate New Private Key**
-6. Save as `serviceAccountKey.json` in the project root
-7. **⚠️ NEVER commit this file to git** (already in `.gitignore`)
+6. Save it OUTSIDE the repository (e.g., `~/Downloads/ue5-questions-prod-admin-sdk.json`)
+7. **⚠️ NEVER commit this file to git**
+
+## Canonical SA-Key Convention (JS scripts)
+
+All JavaScript maintenance scripts in this directory expect the service-account
+key path via the `GOOGLE_APPLICATION_CREDENTIALS` environment variable. This is
+the [Google ADC](https://cloud.google.com/docs/authentication/application-default-credentials)
+convention and is what the `firebase-admin/app` `applicationDefault()` call
+picks up automatically.
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccountKey.json
+node scripts/backfill_human_verified.js --dry-run
+```
+
+Setting it this way means:
+
+- No file path is hard-coded inside any script (the previous convention
+  required dropping the key at `config/serviceAccountKey.json`, which is
+  the same directory as the firestore rules — easy to commit by accident).
+- The same key can serve every script.
+- The CI runner can supply credentials via a workload identity step
+  without rewriting scripts.
 
 ---
 

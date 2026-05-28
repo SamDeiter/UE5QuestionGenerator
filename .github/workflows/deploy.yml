@@ -4,6 +4,13 @@ on:
   push:
     branches: [main]
 
+# NOTE: `contents: write` is broader than ideal — it grants push access to
+# any branch including main. It's required here because the JamesIves
+# github-pages-deploy-action pushes the built site to the gh-pages branch.
+# To tighten further we would migrate to the official actions/deploy-pages
+# flow (pages: write + id-token: write only). Tracked as a follow-up; not
+# done in this PR to avoid bundling a deploy-mechanism change with
+# hardening cleanup.
 permissions:
   contents: write
 
@@ -14,6 +21,15 @@ jobs:
       - name: Checkout
         # Pinned to v4.1.7 for supply chain security
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks secret scan
+        # TODO: pin to SHA after Sam manually verifies a release SHA from
+        # https://github.com/gitleaks/gitleaks-action/releases.
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node
         # Pinned to v4.0.4 for supply chain security

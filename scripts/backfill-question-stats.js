@@ -5,36 +5,18 @@
  * from existing question data. Run this after deploying the trigger.
  *
  * Usage:
+ *   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccountKey.json
  *   node scripts/backfill-question-stats.js
  *
- * Note: Requires GOOGLE_APPLICATION_CREDENTIALS or running from Firebase CLI context.
+ * See scripts/README.md for the canonical SA-key convention used across
+ * all JS maintenance scripts.
  */
 
-import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { initializeApp, applicationDefault, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { readFileSync } from "fs";
-import { resolve, dirname } from "path";
-import { fileURLToPath } from "url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-// Try to find service account key
-let serviceAccount;
-const keyPath = resolve(__dirname, "../functions/.env");
-
-// Use default credentials if available (Firebase CLI context)
 if (getApps().length === 0) {
-  try {
-    // Try service account file first
-    const serviceAccountPath = resolve(__dirname, "../serviceAccountKey.json");
-    serviceAccount = JSON.parse(readFileSync(serviceAccountPath, "utf8"));
-    initializeApp({ credential: cert(serviceAccount) });
-    console.log("🔐 Initialized with service account key");
-  } catch {
-    // Fall back to application default credentials
-    initializeApp();
-    console.log("🔐 Initialized with application default credentials");
-  }
+  initializeApp({ credential: applicationDefault() });
 }
 
 const db = getFirestore();
