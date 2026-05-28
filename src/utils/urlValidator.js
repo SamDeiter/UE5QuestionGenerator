@@ -103,22 +103,54 @@ export function validateURL(url) {
 }
 
 /**
- * Batch validate URLs
- * @param {Array} questions - Array of question objects with SourceURL field
- * @returns {Array} Questions with urlValidation field added
+ * Asserts a URL uses http or https scheme. Returns the trimmed URL string
+ * if the protocol is allowed, otherwise null.
+ *
+ * Used to gate AI-supplied links (grounding sources, doc links) before
+ * rendering them in href attributes — blocks javascript:, data:, file:,
+ * vbscript:, etc. from reaching the DOM.
+ *
+ * @param {string} url
+ * @returns {string | null}
  */
+export function assertHttpUrl(url) {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+    return trimmed;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Simple check for Epic Games domains
- * @param {string} url - The URL to check
+ * Strict hostname-based check for Epic Games domains. Previous substring
+ * check matched anywhere in the URL, so "https://evil.com/epicgames.com"
+ * passed. This parses the URL and verifies the hostname matches
+ * epicgames.com or unrealengine.com (or any sub-domain).
+ * @param {string} url
  * @returns {boolean}
  */
 export function isEpicLink(url) {
   if (!url || typeof url !== "string") return false;
-  const trimmedUrl = url.trim();
-  if (!trimmedUrl.startsWith("https://")) return false;
+  let parsed;
+  try {
+    parsed = new URL(url.trim());
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "https:") return false;
+  const host = parsed.hostname.toLowerCase();
   return (
-    trimmedUrl.includes("epicgames.com") ||
-    trimmedUrl.includes("unrealengine.com")
+    host === "epicgames.com" ||
+    host.endsWith(".epicgames.com") ||
+    host === "unrealengine.com" ||
+    host.endsWith(".unrealengine.com")
   );
 }
 

@@ -65,8 +65,18 @@ export const textSimilarity = (str1, str2) => {
 export const renderMarkdown = (t) => {
   if (!t) return "";
 
+  // SECURITY: pre-strip all HTML from the input before running the
+  // markdown→HTML transforms below. The transforms emit our own trusted
+  // class= attributes (orange headers, code blocks, etc.) and DOMPurify
+  // is configured to allow `class`. Without this strip step, an AI-
+  // generated explanation could embed `<div class="fixed inset-0 z-[9999]">`
+  // and that class attribute would survive sanitization and clobber
+  // layout. Stripping first means the only HTML in the post-transform
+  // string is what we generated ourselves.
+  const textOnly = stripHtmlTags(String(t));
+
   // Step 1: Convert markdown-style formatting to HTML
-  const html = String(t)
+  const html = textOnly
     // Headers
     .replace(
       /^### (.*$)/gim,

@@ -68,6 +68,41 @@ describe("stringHelpers", () => {
       const result = renderMarkdown("plain text");
       expect(result).toContain("plain text");
     });
+
+    // SECURITY: AI-supplied content must not be able to ship HTML attributes
+    // through the markdown→HTML transforms. The renderer strips HTML before
+    // running markdown replacements, so a literal `<div class="...">` in the
+    // input becomes plain text and only the renderer's own trusted classes
+    // survive.
+    it("strips AI-injected class attributes", () => {
+      const malicious = '<div class="fixed inset-0 z-[9999] bg-black">x</div>';
+      const result = renderMarkdown(malicious);
+      expect(result).not.toContain("fixed inset-0");
+      expect(result).not.toContain("z-[9999]");
+    });
+
+    // stripHtmlTags extracts textContent — the <script> element is removed
+    // (no executable tag survives), and the JS body becomes inert text.
+    // Inert text containing the word "alert(1)" is harmless; the dangerous
+    // part is the script element which is gone.
+    it("strips AI-injected script tags (no executable <script> element survives)", () => {
+      const malicious = "explanation <script>alert(1)</script> text";
+      const result = renderMarkdown(malicious);
+      expect(result).not.toContain("<script");
+      expect(result).not.toContain("</script");
+    });
+
+    it("strips AI-injected style attributes", () => {
+      const malicious = '<span style="position:fixed;top:0">x</span>';
+      const result = renderMarkdown(malicious);
+      expect(result).not.toContain("position:fixed");
+      expect(result).not.toContain("style=");
+    });
+
+    it("still applies trusted classes from markdown transforms", () => {
+      const result = renderMarkdown("**bold**");
+      expect(result).toContain('class="text-orange-300');
+    });
   });
 
   describe("stripHtmlTags", () => {
