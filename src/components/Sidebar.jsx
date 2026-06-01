@@ -7,24 +7,14 @@ import TokenUsageDisplay from "./TokenUsageDisplay";
 const Sidebar = ({
   showGenSettings,
   setShowGenSettings,
-  config,
   handleChange,
-  allQuestionsMap,
-  approvedCounts: _approvedCounts,
-  overallPercentage: _overallPercentage,
-  totalApproved: _totalApproved,
-  TARGET_TOTAL: _TARGET_TOTAL,
-  TARGET_PER_CATEGORY: _TARGET_PER_CATEGORY,
   isTargetMet,
   maxBatchSize,
-  batchSizeWarning: _batchSizeWarning,
   handleGenerate,
   isGenerating,
   isApiReady,
   handleBulkTranslateMissing,
   isProcessing,
-  // setShowSettings, // REMOVED - settings moved to Admin Panel
-  handleSelectCategory: _handleSelectCategory,
   customTags = {},
   status = "", // Live generation status text
   isAdmin, // Add isAdmin prop
@@ -35,12 +25,10 @@ const Sidebar = ({
         <>
           <div data-tour="generation-settings">
             <GenerationSettings
-              config={config}
               handleChange={handleChange}
               customTags={customTags}
               isOpen={showGenSettings}
               onToggle={() => setShowGenSettings(!showGenSettings)}
-              allQuestionsMap={allQuestionsMap}
               setShowGenSettings={setShowGenSettings}
             />
           </div>
@@ -54,7 +42,6 @@ const Sidebar = ({
             isApiReady={isApiReady}
             handleBulkTranslateMissing={handleBulkTranslateMissing}
             isProcessing={isProcessing}
-            allQuestionsMap={allQuestionsMap}
             status={status}
           />
         </>

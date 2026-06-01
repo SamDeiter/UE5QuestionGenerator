@@ -1,33 +1,29 @@
 import { useMemo } from "react";
 
 /**
- * Hook to memoize sidebar props for MainLayout
+ * Hook to memoize sidebar props for MainLayout.
  *
- * Centralizes all props needed by the GenerationSidebar component
- * to improve code organization and prevent unnecessary re-renders.
+ * Now carries only handlers + stats-derived values + flags the sidebar actually
+ * consumes. State (`config`) and pure-derived data (`allQuestionsMap`) are read
+ * directly from the store inside the sidebar components, so they are no longer
+ * threaded here. Several previously-bundled props (approvedCounts,
+ * overallPercentage, totalApproved, batchSizeWarning, handleSelectCategory,
+ * setShowSettings) were dead pass-throughs and have been dropped.
  *
- * @param {Object} params - All sidebar-related state and handlers
+ * @param {Object} params - Sidebar handlers/stats/flags
  * @returns {Object} - Memoized sidebar props object
  */
 export function useSidebarProps({
   showGenSettings,
   setShowGenSettings,
-  config,
   handleChange,
-  allQuestionsMap,
-  approvedCounts,
-  overallPercentage,
-  totalApproved,
   isTargetMet,
   maxBatchSize,
-  batchSizeWarning,
   handleGenerate,
   isGenerating,
   isApiReady,
   handleBulkTranslateMissing,
   isProcessing,
-  setShowSettings,
-  handleSelectCategory,
   customTags,
   status,
   isAdmin,
@@ -36,22 +32,14 @@ export function useSidebarProps({
     () => ({
       showGenSettings,
       setShowGenSettings,
-      config,
       handleChange,
-      allQuestionsMap,
-      approvedCounts,
-      overallPercentage,
-      totalApproved,
       isTargetMet,
       maxBatchSize,
-      batchSizeWarning,
       handleGenerate,
       isGenerating,
       isApiReady,
       handleBulkTranslateMissing,
       isProcessing,
-      setShowSettings,
-      handleSelectCategory,
       customTags,
       status,
       isAdmin,
@@ -59,22 +47,14 @@ export function useSidebarProps({
     [
       showGenSettings,
       setShowGenSettings,
-      config,
       handleChange,
-      allQuestionsMap,
-      approvedCounts,
-      overallPercentage,
-      totalApproved,
       isTargetMet,
       maxBatchSize,
-      batchSizeWarning,
       handleGenerate,
       isGenerating,
       isApiReady,
       handleBulkTranslateMissing,
       isProcessing,
-      setShowSettings,
-      handleSelectCategory,
       customTags,
       status,
       isAdmin,

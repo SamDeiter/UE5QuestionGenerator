@@ -7,20 +7,25 @@ import { getMergedTags } from "../../utils/tagTaxonomy";
 import CoverageGapSuggester from "./CoverageGapSuggester";
 import { TARGET_PER_CATEGORY } from "../../utils/constants";
 import { useAccessibility } from "../../contexts/AccessibilityContext";
+import { useAppConfigStore } from "../../store/appConfigStore";
+import { useAllQuestionsMap } from "../../store/questionSelectors";
 
 /**
  * GenerationSettings - Configuration panel with progressive disclosure
  * Basic settings always visible, Advanced collapsed by default
+ *
+ * Reads `config` and the derived `allQuestionsMap` from the store directly;
+ * `handleChange` (the config writer) is still passed in as a prop.
  */
 const GenerationSettings = ({
-  config,
   handleChange,
   customTags = {},
   isOpen,
   onToggle,
-  allQuestionsMap = {},
   setShowGenSettings,
 }) => {
+  const config = useAppConfigStore((s) => s.config);
+  const allQuestionsMap = useAllQuestionsMap();
   const { colorblindMode } = useAccessibility();
   const cb = colorblindMode;
 
@@ -448,8 +453,6 @@ const GenerationSettings = ({
 
               {/* Coverage Gap Suggester - Inside Tags Section */}
               <CoverageGapSuggester
-                allQuestionsMap={allQuestionsMap}
-                config={config}
                 handleChange={handleChange}
                 setShowGenSettings={setShowGenSettings}
               />

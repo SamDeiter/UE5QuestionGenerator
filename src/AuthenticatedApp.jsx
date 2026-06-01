@@ -60,7 +60,6 @@ const AuthenticatedApp = ({
   effectiveApiKey,
   apiKeyStatus,
   setShowApiError,
-  batchSizeWarning,
   handleChange,
   handleNameSave,
   handleLanguageSwitch,
@@ -104,10 +103,7 @@ const AuthenticatedApp = ({
     translationMap,
     unifiedQuestions,
     allLanguageQuestions,
-    approvedCounts,
     approvedCount,
-    totalApproved,
-    overallPercentage,
     isTargetMet,
     maxBatchSize,
     deleteConfirmId,
@@ -335,13 +331,12 @@ const AuthenticatedApp = ({
     isAdmin,
   });
 
-  const { handleManualUpdate, handleSelectCategory, handleSaveApiKey } =
-    useAppHandlers({
-      updateQuestionInState,
-      setConfig,
-      handleChange,
-      setShowApiKeyModal,
-    });
+  const { handleManualUpdate, handleSaveApiKey } = useAppHandlers({
+    updateQuestionInState,
+    setConfig,
+    handleChange,
+    setShowApiKeyModal,
+  });
 
   const viewRouterHandlers = useViewRouterHandlers({
     handleLoadFromSheets,
@@ -365,22 +360,14 @@ const AuthenticatedApp = ({
   const sidebarProps = useSidebarProps({
     showGenSettings,
     setShowGenSettings,
-    config,
     handleChange,
-    allQuestionsMap,
-    approvedCounts,
-    overallPercentage,
-    totalApproved,
     isTargetMet,
     maxBatchSize,
-    batchSizeWarning,
     handleGenerate,
     isGenerating,
     isApiReady,
     handleBulkTranslateMissing,
     isProcessing,
-    setShowSettings,
-    handleSelectCategory,
     customTags,
     status,
     isAdmin,

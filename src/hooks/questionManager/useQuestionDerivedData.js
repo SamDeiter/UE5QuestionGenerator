@@ -6,6 +6,7 @@ import {
   TARGET_TOTAL,
   TARGET_PER_CATEGORY,
 } from "../../utils/constants";
+import { buildAllQuestionsMap } from "../../store/questionSelectors";
 
 /**
  * Hook for deriving various views, maps, and statistics from the main allQuestions state.
@@ -33,25 +34,13 @@ export const useQuestionDerivedData = (
     [allQuestions]
   );
 
-  // Central question storage map - memoized for performance
-  const allQuestionsMap = useMemo(() => {
-    const newMap = new Map();
-
-    allQuestions.forEach((q) => {
-      const id = q.uniqueId || q.id;
-      if (!id) return;
-      if (!newMap.has(id)) newMap.set(id, []);
-
-      const variants = newMap.get(id);
-      const lang = q.language || "English";
-
-      if (!variants.some((v) => (v.language || "English") === lang)) {
-        variants.push(q);
-      }
-    });
-
-    return newMap;
-  }, [allQuestions]);
+  // Central question storage map - memoized for performance.
+  // Shared builder with the store selector (useAllQuestionsMap) so the map
+  // logic has a single source of truth.
+  const allQuestionsMap = useMemo(
+    () => buildAllQuestionsMap(allQuestions),
+    [allQuestions]
+  );
 
   // Translation Map - derived from the stable allQuestionsMap
   const translationMap = useMemo(() => {
