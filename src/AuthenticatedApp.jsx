@@ -159,16 +159,10 @@ const AuthenticatedApp = ({
   // destructured here — only the values still consumed by AuthenticatedApp
   // (routing, navigation, url sync) remain.
   const {
-    searchTerm,
-    filterMode,
     setFilterMode,
     showHistory,
     setShowHistory,
-    filterByCreator,
-    setFilterByCreator,
-    currentReviewIndex,
     setCurrentReviewIndex,
-    sortBy,
     contextCounts,
     filteredQuestions,
     uniqueFilteredQuestions,
@@ -390,16 +384,8 @@ const AuthenticatedApp = ({
   });
 
   const viewRouterState = useViewRouterState({
-    currentReviewIndex,
-    translationMap,
-    filterByCreator,
     filteredQuestions,
-    questions,
     status,
-    filterMode,
-    sortBy,
-    searchTerm,
-    showHistory,
     user,
     userRole,
     isInitialLoading,
@@ -505,10 +491,6 @@ const AuthenticatedApp = ({
           allLanguageQuestions={allLanguageQuestions}
           viewRouterHandlers={viewRouterHandlers}
           viewRouterState={viewRouterState}
-          viewRouterSetters={{
-            setCurrentReviewIndex,
-            setFilterByCreator,
-          }}
           handleGoHome={handleGoHome}
           onStartTutorial={onStartTutorial}
           activeScenario={activeScenario}

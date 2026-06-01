@@ -117,7 +117,6 @@ const MainLayout = ({
   questions,
   status,
   databaseQuestions,
-  config,
   isProcessing,
   allQuestionsMap, // Add this prop
   allLanguageQuestions,
@@ -125,7 +124,6 @@ const MainLayout = ({
   // ViewRouter props
   viewRouterHandlers,
   viewRouterState,
-  viewRouterSetters,
   handleGoHome,
   onStartTutorial,
   activeScenario, // Tutorial state for demo card
@@ -173,17 +171,14 @@ const MainLayout = ({
 
           <Suspense fallback={<LoadingSpinner />}>
             <ViewRouter
-              appMode={appMode}
               uniqueFilteredQuestions={uniqueFilteredQuestions}
               databaseQuestions={databaseQuestions}
-              config={config}
               effectiveApiKey={effectiveApiKey}
               isAdmin={isAdmin}
               isProcessing={isProcessing}
               // ViewRouter props
               handlers={viewRouterHandlers}
               state={viewRouterState}
-              setters={viewRouterSetters}
               onNavigateToCreate={() => handleModeSelect(APP_MODES.CREATE)}
               onNavigateHome={handleGoHome}
               onStartTutorial={onStartTutorial}
