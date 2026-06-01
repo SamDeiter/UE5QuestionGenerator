@@ -1,4 +1,5 @@
 const functions = require("firebase-functions");
+const { getDb } = require("../db");
 const admin = require("firebase-admin");
 
 /**
@@ -28,7 +29,7 @@ exports.setupInitialAdmin = functions
 
     const userEmail = context.auth.token.email;
     const userId = context.auth.uid;
-    const db = admin.firestore();
+    const db = getDb();
 
     const SUPER_ADMIN_EMAIL = (process.env.SUPER_ADMIN_EMAIL || "").toLowerCase();
     const ADMIN_DOMAINS = ["epicgames.com", "xa.epicgames.com"];

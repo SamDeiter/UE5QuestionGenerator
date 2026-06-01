@@ -1,4 +1,5 @@
 const functions = require("firebase-functions");
+const { getDb } = require("../db");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 const { isAdminUser } = require("../utils/isAdminUser");
@@ -38,7 +39,7 @@ exports.createInvite = functions
       forEmail = null,
       tools = ["questions"], // Default to just Question Generator access
     } = data;
-    const db = admin.firestore();
+    const db = getDb();
 
     try {
       // 2. Validate and sanitize email if provided

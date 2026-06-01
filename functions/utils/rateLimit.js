@@ -8,6 +8,7 @@
 
 const admin = require("firebase-admin");
 
+const { getDb } = require("../db");
 // Constants for rate limiting
 const WINDOW_MS = 60 * 1000; // 1 minute window
 const RATE_LIMITS = {
@@ -24,7 +25,7 @@ const RATE_LIMITS = {
  * @returns {Promise<{allowed: boolean, message?: string}>}
  */
 async function checkRateLimit(userId, type = "generation") {
-  const db = admin.firestore();
+  const db = getDb();
   const counterRef = db.collection("rateLimits").doc(`${userId}_${type}`);
   const limit = RATE_LIMITS[type] || 10;
   const now = Date.now();

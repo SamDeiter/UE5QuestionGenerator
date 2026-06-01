@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const { getDb } = require("../db");
 
 // Import utility functions
 const { isAdminUser } = require("../utils/isAdminUser");
@@ -37,7 +38,7 @@ exports.importAIScores = functions
       );
     }
 
-    const db = admin.firestore();
+    const db = getDb();
     const timestamp = admin.firestore.Timestamp.now();
 
     let updated = 0;

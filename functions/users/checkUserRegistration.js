@@ -1,4 +1,5 @@
 const functions = require("firebase-functions");
+const { getDb } = require("../db");
 const admin = require("firebase-admin");
 
 // isAdminUser no longer needed — registeredUsers and admins are checked directly
@@ -82,7 +83,7 @@ exports.checkUserRegistration = functions
       return { registered: false };
     }
 
-    const db = admin.firestore();
+    const db = getDb();
     const userId = context.auth.uid;
     const email = context.auth.token.email;
 

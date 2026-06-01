@@ -1,5 +1,5 @@
 const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const { getDb } = require("../db");
 const { isAdminUser } = require("../utils/isAdminUser");
 
 /**
@@ -25,7 +25,7 @@ exports.listRegisteredUsers = functions
       );
     }
 
-    const db = admin.firestore();
+    const db = getDb();
 
     try {
       const usersSnapshot = await db

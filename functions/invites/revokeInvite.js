@@ -1,4 +1,5 @@
 const functions = require("firebase-functions");
+const { getDb } = require("../db");
 const admin = require("firebase-admin");
 const { isAdminUser } = require("../utils/isAdminUser");
 const { isBootstrapAdmin } = require("../utils/bootstrapAdmin");
@@ -32,7 +33,7 @@ exports.revokeInvite = functions
       throw new functions.https.HttpsError("invalid-argument", "Code required");
 
     try {
-      const db = admin.firestore();
+      const db = getDb();
       const inviteRef = db.collection("invites").doc(code);
       const inviteDoc = await inviteRef.get();
 

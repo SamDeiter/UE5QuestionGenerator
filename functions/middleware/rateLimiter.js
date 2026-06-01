@@ -12,7 +12,7 @@
  * while still preventing runaway abuse.
  */
 
-const admin = require("firebase-admin");
+const { getDb } = require("../db");
 const functions = require("firebase-functions");
 
 // Rate limit configuration
@@ -51,7 +51,7 @@ async function checkRateLimit(userId, limitType) {
     throw new Error(`Unknown limit type: ${limitType}`);
   }
 
-  const db = admin.firestore();
+  const db = getDb();
   const rateLimitRef = db
     .collection("rateLimits")
     .doc(`${userId}_${limitType}`);

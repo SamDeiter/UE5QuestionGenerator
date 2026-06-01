@@ -5,11 +5,12 @@
 
 const admin = require("firebase-admin");
 
+const { getDb } = require("../db");
 /**
  * Log API usage for rate limiting and analytics
  */
 async function logApiUsage(userId, data) {
-  const db = admin.firestore();
+  const db = getDb();
   await db.collection("apiUsage").add({
     userId,
     ...data,

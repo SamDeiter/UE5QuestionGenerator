@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const { getDb } = require("../db");
 
 // Rate limit constants
 const MAX_CALLS_PER_WINDOW = 10;
@@ -18,7 +19,7 @@ exports.logAuthFailure = functions
   .https.onCall(async (data, context) => {
     // Allow both authenticated and unauthenticated calls
     // (user might fail to authenticate, that's what we're logging)
-    const db = admin.firestore();
+    const db = getDb();
 
     // --- Rate Limiting (IP-based) ---
     const callerIp =
@@ -131,7 +132,7 @@ exports.getRecentAuthFailures = functions
       );
     }
 
-    const db = admin.firestore();
+    const db = getDb();
 
     // Check if user is admin
     const userDoc = await db

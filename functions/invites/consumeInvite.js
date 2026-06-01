@@ -1,4 +1,5 @@
 const functions = require("firebase-functions");
+const { getDb } = require("../db");
 const admin = require("firebase-admin");
 
 /**
@@ -20,7 +21,7 @@ exports.consumeInvite = functions
     const { code } = data;
     const userEmail = context.auth.token.email;
     const userId = context.auth.uid;
-    const db = admin.firestore();
+    const db = getDb();
 
     // 2. Sanitize code
     const sanitizedCode = (code || "")
