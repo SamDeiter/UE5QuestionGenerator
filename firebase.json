@@ -37,7 +37,9 @@
     ]
   },
   "firestore": {
-    "rules": "config/firestore/firestore.rules"
+    "database": "ue5qg-prod",
+    "rules": "config/firestore/firestore.rules",
+    "indexes": "config/firestore/firestore.indexes.json"
   },
   "functions": [
     {

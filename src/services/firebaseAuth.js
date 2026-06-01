@@ -24,6 +24,12 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
+// Firestore named database id. The Epic project (development-317819) stores
+// this app's data in a NAMED database "ue5qg-prod"; an empty value falls back
+// to the project's "(default)" database (legacy ue5-questions-prod behavior).
+export const firestoreDatabaseId =
+  import.meta.env.VITE_FIRESTORE_DATABASE_ID || "";
+
 // Validate required config
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   logger.error(

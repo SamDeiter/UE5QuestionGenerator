@@ -12,14 +12,16 @@ import {
   updateDoc,
   Timestamp,
 } from "firebase/firestore";
-import { app } from "./firebase";
+import { app, firestoreDatabaseId } from "./firebase";
 import { auth } from "./firebaseAuth";
 import { generateTagsSecure, generateCritiqueSecure } from "./geminiSecure";
 import { logger } from "../utils/logger";
 import { normalizeStatus } from "../utils/questionHelpers";
 import { calculateReviewerAverageScore } from "../utils/reviewerAnalytics";
 
-const db = getFirestore(app);
+const db = firestoreDatabaseId
+  ? getFirestore(app, firestoreDatabaseId)
+  : getFirestore(app);
 
 // Constants
 const BATCH_SIZE_DEFAULT = 500;

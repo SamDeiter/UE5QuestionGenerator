@@ -22,6 +22,7 @@ import { getToastMessage } from "../utils/errorMessages";
 import {
   app,
   auth,
+  firestoreDatabaseId,
   refreshAuthToken,
   markAuthActivity,
   isAuthPotentiallyStale,
@@ -37,7 +38,9 @@ let _persistenceStatus = "pending"; // "pending" | "enabled" | "failed"
 
 export const getDb = () => {
   if (!_db) {
-    _db = getFirestore(app);
+    _db = firestoreDatabaseId
+      ? getFirestore(app, firestoreDatabaseId)
+      : getFirestore(app);
 
     // Enable persistence in a non-blocking way
     if (!_persistenceInitialized && typeof window !== "undefined") {

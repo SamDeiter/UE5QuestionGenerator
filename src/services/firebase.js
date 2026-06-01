@@ -7,7 +7,7 @@
  * - firebaseQueries.js: Query/read functions
  * - firebaseSave.js: Save/write functions + offline queue
  */
-import { app, auth, firebaseConfig } from "./firebaseAuth";
+import { app, auth, firebaseConfig, firestoreDatabaseId } from "./firebaseAuth";
 import { logError } from "../utils/AppError";
 
 // NOTE: Analytics disabled - requires additional Firebase Console configuration
@@ -23,7 +23,7 @@ try {
   });
 }
 
-export { app, analytics, auth };
+export { app, analytics, auth, firestoreDatabaseId };
 
 // Re-export auth functions from firebaseAuth.js for backward compatibility
 export {
