@@ -1,6 +1,6 @@
 /**
- * AnalyticsDashboard
- * Main analytics dashboard component - thin orchestrator
+ * AnalyticsModal
+ * Main analytics dashboard modal - thin orchestrator
  *
  * This component manages:
  * - Modal open/close state
@@ -57,7 +57,7 @@ const filterByTimeRange = (data, timeRange) => {
   };
 };
 
-const AnalyticsDashboard = ({ isOpen, onClose }) => {
+const AnalyticsModal = ({ isOpen, onClose }) => {
   const [timeRange, setTimeRange] = useState("7d");
 
   // Re-fetch analytics data whenever modal opens
@@ -145,4 +145,4 @@ const AnalyticsDashboard = ({ isOpen, onClose }) => {
   );
 };
 
-export default AnalyticsDashboard;
+export default AnalyticsModal;

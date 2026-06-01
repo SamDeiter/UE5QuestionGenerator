@@ -11,7 +11,7 @@ import { useModals } from "../contexts/ModalContext";
 
 // Lazy-loaded modals. These previously contributed ~132 KB gzip to the
 // initial authenticated bundle even though their render is gated on an
-// `isOpen` flag — `AnalyticsDashboard` pulls in the entire `view-analytics`
+// `isOpen` flag — `AnalyticsModal` pulls in the entire `view-analytics`
 // chunk (recharts + d3, ~106 KB gzip), and `BulkExportModal` transitively
 // pulls in jszip via the SCORM exporter (~26 KB gzip). Splitting them
 // behind React.lazy + Suspense delays the fetch until the user actually
@@ -19,7 +19,7 @@ import { useModals } from "../contexts/ModalContext";
 // follow the same pattern for consistency, even though their individual
 // savings are smaller.
 const BulkExportModal = lazy(() => import("./BulkExportModal"));
-const AnalyticsDashboard = lazy(() => import("./AnalyticsDashboard"));
+const AnalyticsModal = lazy(() => import("./AnalyticsModal"));
 const DangerZoneModal = lazy(() => import("./DangerZoneModal"));
 const TutorialOverlay = lazy(() => import("./TutorialOverlay"));
 
@@ -140,7 +140,7 @@ const GlobalModals = ({ visibility, state, handlers }) => {
           Each is gated on its open flag so React doesn't even mount the
           lazy component — and therefore doesn't fetch its chunk — until
           the user actually triggers the modal. Previously
-          AnalyticsDashboard was rendered unconditionally with isOpen
+          AnalyticsModal was rendered unconditionally with isOpen
           controlling visibility, which defeated lazy-loading because the
           chunk was still fetched on first render. */}
       <Suspense fallback={null}>
@@ -153,10 +153,7 @@ const GlobalModals = ({ visibility, state, handlers }) => {
         )}
 
         {showAnalytics && (
-          <AnalyticsDashboard
-            isOpen={showAnalytics}
-            onClose={onCloseAnalytics}
-          />
+          <AnalyticsModal isOpen={showAnalytics} onClose={onCloseAnalytics} />
         )}
 
         {showDangerZone && (
