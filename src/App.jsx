@@ -62,7 +62,6 @@ const App = () => {
     effectiveApiKey,
     apiKeyStatus,
     setShowApiError,
-    batchSizeWarning,
     handleChange,
     handleNameSave,
     handleLanguageSwitch,
@@ -169,7 +168,6 @@ const App = () => {
             effectiveApiKey={effectiveApiKey}
             apiKeyStatus={apiKeyStatus}
             setShowApiError={setShowApiError}
-            batchSizeWarning={batchSizeWarning}
             handleChange={handleChange}
             handleNameSave={handleNameSave}
             handleLanguageSwitch={handleLanguageSwitch}

@@ -483,7 +483,6 @@ const AuthenticatedApp = ({
           questions={questions}
           status={status}
           databaseQuestions={databaseQuestions}
-          config={config}
           isProcessing={isProcessing}
           allQuestionsMap={allQuestionsMap}
           allLanguageQuestions={allLanguageQuestions}
