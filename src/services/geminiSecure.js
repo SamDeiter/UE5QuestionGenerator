@@ -225,9 +225,5 @@ export const generateTagsSecure = async (apiKey, questionText) => {
   }
 };
 
-// Re-export other functions from gemini.js for backward compatibility
-export {
-  rewriteQuestion,
-  listModels,
-  classifyQuestionDiscipline,
-} from "./gemini.js";
+// Re-export model listing from gemini.js (used by the generation settings UI)
+export { listModels } from "./gemini.js";
