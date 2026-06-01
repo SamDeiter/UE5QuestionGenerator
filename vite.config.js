@@ -21,6 +21,11 @@ const getGitCommitHash = () => {
   }
 };
 
+// Base path differs by host: "/UE5QuestionGenerator/" for GitHub Pages,
+// "/" for Firebase Hosting (served at the root domain). Override via the
+// VITE_BASE_PATH env var at build time.
+const BASE_PATH = process.env.VITE_BASE_PATH || "/UE5QuestionGenerator/";
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -114,8 +119,8 @@ export default defineConfig({
         theme_color: "#1a1a2e",
         background_color: "#1a1a2e",
         display: "standalone",
-        start_url: "/UE5QuestionGenerator/",
-        scope: "/UE5QuestionGenerator/",
+        start_url: BASE_PATH,
+        scope: BASE_PATH,
         icons: [
           {
             src: "logos/UE-Icon-2023-White.svg",
@@ -127,7 +132,7 @@ export default defineConfig({
       },
     }),
   ],
-  base: "/UE5QuestionGenerator/",
+  base: BASE_PATH,
   define: {
     __GIT_COMMIT__: JSON.stringify(getGitCommitHash()),
     __APP_VERSION__: JSON.stringify(APP_VERSION),

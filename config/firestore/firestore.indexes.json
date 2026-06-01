@@ -65,11 +65,6 @@
         { "fieldPath": "eventType", "order": "ASCENDING" },
         { "fieldPath": "timestamp", "order": "DESCENDING" }
       ]
-    },
-    {
-      "collectionGroup": "registeredUsers",
-      "queryScope": "COLLECTION",
-      "fields": [{ "fieldPath": "email", "order": "ASCENDING" }]
     }
   ],
   "fieldOverrides": []
