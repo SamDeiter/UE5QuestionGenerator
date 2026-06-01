@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "ue5-question-generator",
     "public": "dist",
     "ignore": [
       "firebase.json",
