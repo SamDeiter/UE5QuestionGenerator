@@ -32,7 +32,7 @@ import {
 import { useNavigation } from "./hooks/useNavigation";
 import { useAutoLoad } from "./hooks/useAutoLoad";
 import { useFileHandler } from "./hooks/useFileHandler";
-import { useConflictResolution } from "./hooks/useConflictResolution";
+import { useConflictResolutionModal } from "./hooks/useConflictResolutionModal";
 import { useUrlModeSync } from "./hooks/useUrlModeSync";
 import { useMessage } from "./contexts/MessageContext";
 import { useModals } from "./contexts/ModalContext";
@@ -290,7 +290,7 @@ const AuthenticatedApp = ({
     setPendingNavigationUniqueId,
   });
 
-  const handleResolveConflict = useConflictResolution({
+  const handleResolveConflict = useConflictResolutionModal({
     conflictData,
     handleUpdateQuestion,
     showMessage,

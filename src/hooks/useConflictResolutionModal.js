@@ -2,10 +2,12 @@ import { useCallback } from "react";
 import { TOAST_DURATION } from "../utils/constants";
 
 /**
- * Hook for handling concurrent editing conflict resolution
+ * Hook for the concurrent-editing conflict *modal* actions.
  *
- * Provides handlers for the conflict modal actions (discard local, overwrite server)
- * using lazy-loaded agent imports to avoid circular dependencies.
+ * Provides the handler for the conflict modal's buttons (discard local,
+ * overwrite server) using lazy-loaded agent imports to avoid circular
+ * dependencies. NOTE: conflict *detection* lives in the separate
+ * questionManager/useConflictResolution hook — this one only drives the modal.
  *
  * @param {Object} options - Hook options
  * @param {Object} options.conflictData - The current conflict data
@@ -15,7 +17,7 @@ import { TOAST_DURATION } from "../utils/constants";
  * @param {Object} options.user - Current user object
  * @returns {Function} - Conflict resolution handler
  */
-export function useConflictResolution({
+export function useConflictResolutionModal({
   conflictData,
   handleUpdateQuestion,
   showMessage,
