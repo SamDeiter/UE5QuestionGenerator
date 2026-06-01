@@ -5,6 +5,7 @@ const admin = require("firebase-admin");
 // Import utility functions
 const { logApiUsage } = require("../utils/apiUsage");
 const { sanitizeInput } = require("../utils/inputSanitizer");
+const { callVertexGenerateContent } = require("./vertexClient");
 
 
 /**
@@ -14,7 +15,6 @@ const { sanitizeInput } = require("../utils/inputSanitizer");
 
 exports.generateCritique = functions
   .runWith({
-    secrets: ["GEMINI_API_KEY"],
     timeoutSeconds: 60,
     memory: "256MB",
   })
@@ -105,15 +105,6 @@ exports.generateCritique = functions
     }
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-
-      if (!apiKey) {
-        throw new functions.https.HttpsError(
-          "failed-precondition",
-          "Gemini API key not configured."
-        );
-      }
-
       // Build critique prompt - Balanced and constructive evaluation
       const systemPrompt =
         "Expert UE5 Technical Reviewer. Output valid JSON only. Evaluate objectively and provide constructive feedback.";
@@ -189,20 +180,14 @@ exports.generateCritique = functions
       // Try each model in order until one works
       for (const fallbackModel of modelFallbacks) {
         try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent?key=${apiKey}`;
-
-          response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: userPrompt }] }],
-              systemInstruction: { parts: [{ text: systemPrompt }] },
-              generationConfig: {
-                temperature: 0.2,
-                maxOutputTokens: 8192,
-                responseMimeType: "application/json",
-              },
-            }),
+          response = await callVertexGenerateContent(fallbackModel, {
+            contents: [{ parts: [{ text: userPrompt }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 8192,
+              responseMimeType: "application/json",
+            },
           });
 
           if (response.ok) {
