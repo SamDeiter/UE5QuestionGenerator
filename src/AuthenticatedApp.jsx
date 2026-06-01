@@ -154,25 +154,21 @@ const AuthenticatedApp = ({
     );
 
   // 4. Filtering & Logic Hooks
+  // Filter state the toolbar owns (search/tags/score/reviewer/sort) is now
+  // read directly from the store by ContextToolbar, so it's no longer
+  // destructured here — only the values still consumed by AuthenticatedApp
+  // (routing, navigation, url sync) remain.
   const {
     searchTerm,
-    setSearchTerm,
     filterMode,
     setFilterMode,
     showHistory,
     setShowHistory,
     filterByCreator,
     setFilterByCreator,
-    filterTags,
-    setFilterTags,
-    filterScoreTier,
-    setFilterScoreTier,
-    filterByReviewer,
-    setFilterByReviewer,
     currentReviewIndex,
     setCurrentReviewIndex,
     sortBy,
-    setSortBy,
     contextCounts,
     filteredQuestions,
     uniqueFilteredQuestions,
@@ -376,26 +372,11 @@ const AuthenticatedApp = ({
   const toolbarProps = useToolbarProps({
     appMode,
     contextCounts,
-    filterMode,
-    setFilterMode,
-    filterByCreator,
-    setFilterByCreator,
-    filterTags,
-    setFilterTags,
-    filterScoreTier,
-    setFilterScoreTier,
-    filterByReviewer,
-    setFilterByReviewer,
     uniqueReviewers,
     customTags,
-    searchTerm,
-    setSearchTerm,
-    sortBy,
-    setSortBy,
     isProcessing,
     status,
     isAuthReady,
-    config,
     handleLoadFromSheets,
     handleLoadFromFirestore,
     setShowBulkExportModal,
