@@ -35,11 +35,9 @@ export function useGlobalModalsVisibility({
  * @returns {Object} - Memoized state props object
  */
 export function useGlobalModalsState({
-  config,
   isProcessing,
   status,
   translationProgress,
-  allQuestionsMap,
   appMode,
   currentStep,
   tutorialSteps,
@@ -52,11 +50,9 @@ export function useGlobalModalsState({
 }) {
   return useMemo(
     () => ({
-      config,
       isProcessing,
       status,
       translationProgress,
-      allQuestionsMap,
       appMode,
       currentStep,
       tutorialSteps,
@@ -70,11 +66,9 @@ export function useGlobalModalsState({
       isAdmin,
     }),
     [
-      config,
       isProcessing,
       status,
       translationProgress,
-      allQuestionsMap,
       appMode,
       currentStep,
       tutorialSteps,

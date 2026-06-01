@@ -8,6 +8,8 @@ import CookieConsentBanner from "./CookieConsentBanner";
 import AgeGateModal from "./AgeGateModal";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import { useModals } from "../contexts/ModalContext";
+import { useAppConfigStore } from "../store/appConfigStore";
+import { useAllQuestionsMap } from "../store/questionSelectors";
 
 // Lazy-loaded modals. These previously contributed ~132 KB gzip to the
 // initial authenticated bundle even though their render is gated on an
@@ -43,12 +45,14 @@ const GlobalModals = ({ visibility, state, handlers }) => {
     setTermsAccepted,
   } = useModals();
 
+  // config + the derived allQuestionsMap come straight from the store.
+  const config = useAppConfigStore((s) => s.config);
+  const allQuestionsMap = useAllQuestionsMap();
+
   const {
-    config,
     isProcessing,
     status,
     translationProgress,
-    allQuestionsMap,
     currentStep,
     tutorialSteps,
     activeScenario,

@@ -398,11 +398,9 @@ const AuthenticatedApp = ({
   });
 
   const globalModalsState = useGlobalModalsState({
-    config,
     isProcessing,
     status,
     translationProgress,
-    allQuestionsMap,
     appMode,
     currentStep,
     tutorialSteps,
