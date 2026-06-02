@@ -11,7 +11,7 @@
  * Input is application-controlled, not user-provided - no DoS risk.
  */
 /* eslint-disable sonarjs/slow-regex */
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 
 // Patterns for messages that should replace (not stack)
 const REPLACEABLE_PATTERNS = [
@@ -235,12 +235,27 @@ export function useToast() {
     [addToast]
   );
 
-  return {
-    toasts,
-    addToast,
-    removeToast,
-    updateProgress,
-    completeProgress,
-    showMessage,
-  };
+  // Memoize the returned object so its identity is stable across renders that
+  // don't change `toasts`. MessageContext passes this straight through as its
+  // context value, so without this every render of the provider's parent would
+  // hand consumers a new object and re-render all useMessage() consumers. The
+  // callbacks are already useCallback-stable; only `toasts` drives a new value.
+  return useMemo(
+    () => ({
+      toasts,
+      addToast,
+      removeToast,
+      updateProgress,
+      completeProgress,
+      showMessage,
+    }),
+    [
+      toasts,
+      addToast,
+      removeToast,
+      updateProgress,
+      completeProgress,
+      showMessage,
+    ]
+  );
 }
