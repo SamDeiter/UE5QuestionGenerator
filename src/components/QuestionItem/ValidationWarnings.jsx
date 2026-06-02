@@ -2,10 +2,11 @@ import React from "react";
 import Icon from "../Icon";
 
 const ValidationWarnings = ({ q }) => {
-  if (!q._validation?.isValid && !q.answerMismatch && !q.invalidUrl) {
-    return null;
-  }
-
+  // NOTE: do NOT early-return on validation state here. The tag suggestion
+  // depends only on tags.length and must show regardless of whether the
+  // question is validation-passed (previously it was hidden on unverified
+  // source questions while showing on translations). The single render guard
+  // below covers all warning types, including tags.
   const hasAnswerWarning =
     q.answerMismatch ||
     (q._validation &&
