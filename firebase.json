@@ -1,7 +1,14 @@
 {
   "hosting": {
+    "site": "ue5-question-generator",
     "public": "dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/*.gz",
+      "**/*.br"
+    ],
     "headers": [
       {
         "source": "**",
@@ -37,7 +44,9 @@
     ]
   },
   "firestore": {
-    "rules": "config/firestore/firestore.rules"
+    "database": "ue5qg-prod",
+    "rules": "config/firestore/firestore.rules",
+    "indexes": "config/firestore/firestore.indexes.json"
   },
   "functions": [
     {

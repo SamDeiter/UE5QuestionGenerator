@@ -18,19 +18,24 @@ const TranslationManagementView = React.lazy(
 import QuestionList from "./QuestionList";
 import { APP_MODES } from "../utils/constants";
 import { createTutorialDemoQuestion } from "../utils/tutorialDemoQuestion";
+import { useShallow } from "zustand/react/shallow";
+import { useAppConfigStore } from "../store/appConfigStore";
+import { useFilterStore } from "../store/filterStore";
+import {
+  useTranslationMap,
+  useSessionQuestions,
+} from "../store/questionSelectors";
 
 const ViewRouter = ({
-  appMode,
   uniqueFilteredQuestions,
   databaseQuestions,
 
-  config,
   effectiveApiKey,
   isAdmin,
   isProcessing,
   handlers,
   state,
-  setters,
+  setters = {},
   onNavigateToCreate, // callback to switch to Create mode
   onNavigateHome, // callback to go back to landing page
   onStartTutorial, // callback to start tutorial scenario
@@ -38,6 +43,34 @@ const ViewRouter = ({
   allLanguageQuestions, // flat all-variants list (for SCORM per-language export)
   activeScenario, // active tutorial scenario for demo card injection
 }) => {
+  // appMode + config + filter state + pure-derived views now come from the
+  // stores instead of being threaded through MainLayout's state/setters bags.
+  const appMode = useAppConfigStore((s) => s.appMode);
+  const config = useAppConfigStore((s) => s.config);
+  const translationMap = useTranslationMap();
+  const questions = useSessionQuestions();
+  const {
+    currentReviewIndex,
+    setCurrentReviewIndex,
+    filterByCreator,
+    setFilterByCreator,
+    filterMode,
+    sortBy,
+    searchTerm,
+    showHistory,
+  } = useFilterStore(
+    useShallow((s) => ({
+      currentReviewIndex: s.currentReviewIndex,
+      setCurrentReviewIndex: s.setCurrentReviewIndex,
+      filterByCreator: s.filterByCreator,
+      setFilterByCreator: s.setFilterByCreator,
+      filterMode: s.filterMode,
+      sortBy: s.sortBy,
+      searchTerm: s.searchTerm,
+      showHistory: s.showHistory,
+    }))
+  );
+
   const {
     handleLoadFromSheets,
     handleLoadFromFirestore,
@@ -54,17 +87,7 @@ const ViewRouter = ({
     handleManualUpdate,
   } = handlers;
 
-  const {
-    currentReviewIndex,
-    translationMap,
-    filterByCreator,
-    filteredQuestions,
-    questions,
-    status,
-    userRole,
-    isInitialLoading,
-  } = state;
-  const { setCurrentReviewIndex, setFilterByCreator } = setters;
+  const { filteredQuestions, status, userRole, isInitialLoading } = state;
 
   /**
    * Render the appropriate view based on appMode
@@ -144,9 +167,9 @@ const ViewRouter = ({
           onSwitchLanguage={handleLanguageSwitch}
           addQuestionsToState={handlers.addQuestionsToState}
           isProcessing={isProcessing}
-          filterMode={state.filterMode}
-          sortBy={state.sortBy}
-          searchTerm={state.searchTerm}
+          filterMode={filterMode}
+          sortBy={sortBy}
+          searchTerm={searchTerm}
           onStartTutorial={() => onStartTutorial(APP_MODES.DATABASE)}
           isAdmin={isAdmin}
           userRole={userRole}
@@ -198,8 +221,8 @@ const ViewRouter = ({
           onUpdateQuestion={handleManualUpdate}
           isProcessing={isProcessing}
           userRole={userRole}
-          searchTerm={state.searchTerm}
-          filterMode={state.filterMode}
+          searchTerm={searchTerm}
+          filterMode={filterMode}
           onRefresh={handleLoadFromFirestore}
         />
       ),
@@ -260,7 +283,7 @@ const ViewRouter = ({
           </div>
         )}
 
-      {!state.showHistory &&
+      {!showHistory &&
         uniqueFilteredQuestions.length === 0 &&
         questions.length === 0 &&
         !status &&

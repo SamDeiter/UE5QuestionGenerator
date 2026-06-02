@@ -1,15 +1,19 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { getLocalPref, setLocalPref } from "../../utils/localPrefs";
 import { STORAGE_KEYS, QUESTION_SOURCES } from "../../utils/constants";
+import { useQuestionStore } from "../../store/questionStore";
 
 /**
  * Hook for managing the raw question state and local persistence.
  * This is the lowest-level hook for question data.
+ *
+ * State now lives in `questionStore` (zustand) so consumers can read it
+ * directly without prop-drilling; the hook keeps the hydration / persistence /
+ * backfill side effects and preserves its original `[value, setter]` signature.
  */
 export const useQuestionState = (config) => {
-  // Unified State: Single source of truth for ALL questions
-  // Unified State: Single source of truth for ALL questions
-  const [allQuestions, setAllQuestions] = useState([]);
+  const allQuestions = useQuestionStore((s) => s.allQuestions);
+  const setAllQuestions = useQuestionStore((s) => s.setAllQuestions);
 
   // Load questions asynchronously to unblock initial render
   useEffect(() => {
@@ -26,6 +30,7 @@ export const useQuestionState = (config) => {
       }
     };
     loadState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Persist session questions ONLY to localStorage

@@ -5,6 +5,7 @@
  * This is a thin orchestrator that maps app modes to their respective toolbar components.
  * Each toolbar is responsible for its own state and rendering.
  */
+import { useShallow } from "zustand/react/shallow";
 import Icon from "../Icon";
 import CreateModeToolbar from "./CreateModeToolbar";
 import ReviewModeToolbar from "./ReviewModeToolbar";
@@ -16,6 +17,8 @@ import {
   AdminModeToolbar,
   PlaygroundModeToolbar,
 } from "./MinimalToolbars";
+import { useFilterStore } from "../../store/filterStore";
+import { useAppConfigStore } from "../../store/appConfigStore";
 
 // Mode to component mapping
 const TOOLBAR_BY_MODE = {
@@ -36,37 +39,59 @@ const _KNOWN_MODES = Object.keys(TOOLBAR_BY_MODE);
  * Routes to the appropriate mode-specific toolbar
  */
 const ContextToolbar = ({
-  mode,
   counts = {},
-  filterMode,
-  setFilterMode,
-  filterByCreator,
-  setFilterByCreator,
-  searchTerm,
-  setSearchTerm,
-  sortBy,
-  setSortBy,
   isProcessing,
   status,
   isAuthReady,
-  config,
   onLoadSheets,
   onLoadFirestore,
   onBulkExport,
   _onClearPending,
   _onBulkAcceptHighScores,
   _onBulkCritiqueAll,
-  filterTags = [],
-  setFilterTags,
-  filterScoreTier: _filterScoreTier = "",
-  setFilterScoreTier: _setFilterScoreTier,
-  filterByReviewer = "",
-  setFilterByReviewer,
   uniqueReviewers = [],
   customTags = {},
   isAdmin = false,
   handleChange,
 }) => {
+  // appMode + config + all filter state now come straight from the stores
+  // instead of being threaded through useToolbarProps -> MainLayout.
+  const mode = useAppConfigStore((s) => s.appMode);
+  const config = useAppConfigStore((s) => s.config);
+  const {
+    filterMode,
+    setFilterMode,
+    filterByCreator,
+    setFilterByCreator,
+    searchTerm,
+    setSearchTerm,
+    sortBy,
+    setSortBy,
+    filterTags,
+    setFilterTags,
+    filterScoreTier: _filterScoreTier,
+    setFilterScoreTier: _setFilterScoreTier,
+    filterByReviewer,
+    setFilterByReviewer,
+  } = useFilterStore(
+    useShallow((s) => ({
+      filterMode: s.filterMode,
+      setFilterMode: s.setFilterMode,
+      filterByCreator: s.filterByCreator,
+      setFilterByCreator: s.setFilterByCreator,
+      searchTerm: s.searchTerm,
+      setSearchTerm: s.setSearchTerm,
+      sortBy: s.sortBy,
+      setSortBy: s.setSortBy,
+      filterTags: s.filterTags,
+      setFilterTags: s.setFilterTags,
+      filterScoreTier: s.filterScoreTier,
+      setFilterScoreTier: s.setFilterScoreTier,
+      filterByReviewer: s.filterByReviewer,
+      setFilterByReviewer: s.setFilterByReviewer,
+    }))
+  );
+
   // Get the appropriate toolbar component for this mode
   const ToolbarComponent = TOOLBAR_BY_MODE[mode];
 

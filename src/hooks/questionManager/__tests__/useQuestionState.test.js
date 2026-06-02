@@ -1,6 +1,7 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionState } from "../useQuestionState";
+import { resetQuestionStore } from "../../../store/questionStore";
 import { getLocalPref, setLocalPref } from "../../../utils/localPrefs";
 import { STORAGE_KEYS, QUESTION_SOURCES } from "../../../utils/constants";
 
@@ -30,6 +31,9 @@ vi.mock("../../../utils/constants", () => ({
 describe("useQuestionState", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // State now lives in a module-level store; reset it so each case starts
+    // from the same empty baseline the old per-mount useState gave us.
+    resetQuestionStore();
   });
 
   it("should initialize with empty array if storage is empty", () => {

@@ -32,7 +32,7 @@ import {
 import { useNavigation } from "./hooks/useNavigation";
 import { useAutoLoad } from "./hooks/useAutoLoad";
 import { useFileHandler } from "./hooks/useFileHandler";
-import { useConflictResolution } from "./hooks/useConflictResolution";
+import { useConflictResolutionModal } from "./hooks/useConflictResolutionModal";
 import { useUrlModeSync } from "./hooks/useUrlModeSync";
 import { useMessage } from "./contexts/MessageContext";
 import { useModals } from "./contexts/ModalContext";
@@ -60,7 +60,6 @@ const AuthenticatedApp = ({
   effectiveApiKey,
   apiKeyStatus,
   setShowApiError,
-  batchSizeWarning,
   handleChange,
   handleNameSave,
   handleLanguageSwitch,
@@ -104,10 +103,7 @@ const AuthenticatedApp = ({
     translationMap,
     unifiedQuestions,
     allLanguageQuestions,
-    approvedCounts,
     approvedCount,
-    totalApproved,
-    overallPercentage,
     isTargetMet,
     maxBatchSize,
     deleteConfirmId,
@@ -158,25 +154,15 @@ const AuthenticatedApp = ({
     );
 
   // 4. Filtering & Logic Hooks
+  // Filter state the toolbar owns (search/tags/score/reviewer/sort) is now
+  // read directly from the store by ContextToolbar, so it's no longer
+  // destructured here — only the values still consumed by AuthenticatedApp
+  // (routing, navigation, url sync) remain.
   const {
-    searchTerm,
-    setSearchTerm,
-    filterMode,
     setFilterMode,
     showHistory,
     setShowHistory,
-    filterByCreator,
-    setFilterByCreator,
-    filterTags,
-    setFilterTags,
-    filterScoreTier,
-    setFilterScoreTier,
-    filterByReviewer,
-    setFilterByReviewer,
-    currentReviewIndex,
     setCurrentReviewIndex,
-    sortBy,
-    setSortBy,
     contextCounts,
     filteredQuestions,
     uniqueFilteredQuestions,
@@ -290,7 +276,7 @@ const AuthenticatedApp = ({
     setPendingNavigationUniqueId,
   });
 
-  const handleResolveConflict = useConflictResolution({
+  const handleResolveConflict = useConflictResolutionModal({
     conflictData,
     handleUpdateQuestion,
     showMessage,
@@ -335,13 +321,12 @@ const AuthenticatedApp = ({
     isAdmin,
   });
 
-  const { handleManualUpdate, handleSelectCategory, handleSaveApiKey } =
-    useAppHandlers({
-      updateQuestionInState,
-      setConfig,
-      handleChange,
-      setShowApiKeyModal,
-    });
+  const { handleManualUpdate, handleSaveApiKey } = useAppHandlers({
+    updateQuestionInState,
+    setConfig,
+    handleChange,
+    setShowApiKeyModal,
+  });
 
   const viewRouterHandlers = useViewRouterHandlers({
     handleLoadFromSheets,
@@ -365,22 +350,14 @@ const AuthenticatedApp = ({
   const sidebarProps = useSidebarProps({
     showGenSettings,
     setShowGenSettings,
-    config,
     handleChange,
-    allQuestionsMap,
-    approvedCounts,
-    overallPercentage,
-    totalApproved,
     isTargetMet,
     maxBatchSize,
-    batchSizeWarning,
     handleGenerate,
     isGenerating,
     isApiReady,
     handleBulkTranslateMissing,
     isProcessing,
-    setShowSettings,
-    handleSelectCategory,
     customTags,
     status,
     isAdmin,
@@ -389,26 +366,11 @@ const AuthenticatedApp = ({
   const toolbarProps = useToolbarProps({
     appMode,
     contextCounts,
-    filterMode,
-    setFilterMode,
-    filterByCreator,
-    setFilterByCreator,
-    filterTags,
-    setFilterTags,
-    filterScoreTier,
-    setFilterScoreTier,
-    filterByReviewer,
-    setFilterByReviewer,
     uniqueReviewers,
     customTags,
-    searchTerm,
-    setSearchTerm,
-    sortBy,
-    setSortBy,
     isProcessing,
     status,
     isAuthReady,
-    config,
     handleLoadFromSheets,
     handleLoadFromFirestore,
     setShowBulkExportModal,
@@ -422,16 +384,8 @@ const AuthenticatedApp = ({
   });
 
   const viewRouterState = useViewRouterState({
-    currentReviewIndex,
-    translationMap,
-    filterByCreator,
     filteredQuestions,
-    questions,
     status,
-    filterMode,
-    sortBy,
-    searchTerm,
-    showHistory,
     user,
     userRole,
     isInitialLoading,
@@ -444,11 +398,9 @@ const AuthenticatedApp = ({
   });
 
   const globalModalsState = useGlobalModalsState({
-    config,
     isProcessing,
     status,
     translationProgress,
-    allQuestionsMap,
     appMode,
     currentStep,
     tutorialSteps,
@@ -531,16 +483,11 @@ const AuthenticatedApp = ({
           questions={questions}
           status={status}
           databaseQuestions={databaseQuestions}
-          config={config}
           isProcessing={isProcessing}
           allQuestionsMap={allQuestionsMap}
           allLanguageQuestions={allLanguageQuestions}
           viewRouterHandlers={viewRouterHandlers}
           viewRouterState={viewRouterState}
-          viewRouterSetters={{
-            setCurrentReviewIndex,
-            setFilterByCreator,
-          }}
           handleGoHome={handleGoHome}
           onStartTutorial={onStartTutorial}
           activeScenario={activeScenario}

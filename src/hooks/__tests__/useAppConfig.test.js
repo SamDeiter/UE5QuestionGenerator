@@ -1,6 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useAppConfig } from "../useAppConfig";
+import { hydrateAppConfigStore } from "../../store/appConfigStore";
 import { STORAGE_KEYS, DEFAULT_CONFIG, APP_MODES } from "../../utils/constants";
 import * as localPrefs from "../../utils/localPrefs";
 
@@ -55,6 +56,9 @@ describe("useAppConfig", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    // appMode/config live in a module-level store initialized once at import;
+    // re-hydrate from the (now-cleared) storage so each case starts clean.
+    hydrateAppConfigStore();
   });
 
   it("should initialize with default config and landing mode", () => {
@@ -75,6 +79,9 @@ describe("useAppConfig", () => {
       discipline: "Design",
     };
     localPrefs.getLocalPref.mockReturnValue(savedConfig);
+    // Store reads storage at hydration time, not on every mount — rehydrate
+    // now that the mock returns the saved config.
+    hydrateAppConfigStore();
 
     const { result } = renderHook(() => useAppConfig());
 

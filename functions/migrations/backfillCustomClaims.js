@@ -9,6 +9,7 @@
  */
 
 const functions = require("firebase-functions");
+const { getDb } = require("../db");
 const admin = require("firebase-admin");
 
 // Initialize admin if not already done
@@ -87,7 +88,7 @@ exports.backfillCustomClaims = functions
       );
     }
 
-    const db = admin.firestore();
+    const db = getDb();
     const dryRun = data?.dryRun === true;
     const targetUserId = data?.userId;
 

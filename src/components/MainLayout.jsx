@@ -6,11 +6,7 @@ import ViewRouter from "./ViewRouter";
 import EmptyState from "./EmptyState";
 import ReviewModeBanner from "./ReviewModeBanner";
 import { SuspenseSpinner as LoadingSpinner } from "./LoadingSpinner";
-import {
-  TARGET_TOTAL,
-  TARGET_PER_CATEGORY,
-  APP_MODES,
-} from "../utils/constants";
+import { APP_MODES } from "../utils/constants";
 
 /**
  * MainLayout Component
@@ -121,7 +117,6 @@ const MainLayout = ({
   questions,
   status,
   databaseQuestions,
-  config,
   isProcessing,
   allQuestionsMap, // Add this prop
   allLanguageQuestions,
@@ -129,7 +124,6 @@ const MainLayout = ({
   // ViewRouter props
   viewRouterHandlers,
   viewRouterState,
-  viewRouterSetters,
   handleGoHome,
   onStartTutorial,
   activeScenario, // Tutorial state for demo card
@@ -146,13 +140,7 @@ const MainLayout = ({
 
   return (
     <div className="flex flex-1 overflow-hidden">
-      {appMode === APP_MODES.CREATE && (
-        <Sidebar
-          {...sidebarProps}
-          TARGET_TOTAL={TARGET_TOTAL}
-          TARGET_PER_CATEGORY={TARGET_PER_CATEGORY}
-        />
-      )}
+      {appMode === APP_MODES.CREATE && <Sidebar {...sidebarProps} />}
       <main className="flex-1 flex flex-col min-w-0 bg-slate-950 relative overflow-hidden">
         <div className="flex flex-col border-b border-slate-800 bg-slate-900 z-10 sticky top-0 flex-shrink-0">
           <AppNavigation
@@ -183,17 +171,14 @@ const MainLayout = ({
 
           <Suspense fallback={<LoadingSpinner />}>
             <ViewRouter
-              appMode={appMode}
               uniqueFilteredQuestions={uniqueFilteredQuestions}
               databaseQuestions={databaseQuestions}
-              config={config}
               effectiveApiKey={effectiveApiKey}
               isAdmin={isAdmin}
               isProcessing={isProcessing}
               // ViewRouter props
               handlers={viewRouterHandlers}
               state={viewRouterState}
-              setters={viewRouterSetters}
               onNavigateToCreate={() => handleModeSelect(APP_MODES.CREATE)}
               onNavigateHome={handleGoHome}
               onStartTutorial={onStartTutorial}

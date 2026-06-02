@@ -9,7 +9,7 @@
 import { useState } from "react";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { app } from "../../services/firebase";
+import { app, firestoreDatabaseId } from "../../services/firebase";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { logger } from "../../utils/logger";
@@ -21,7 +21,9 @@ import {
   deleteSoftDeletedQuestionsFromFirestore,
 } from "../../services/firebaseQueries";
 
-const db = getFirestore(app);
+const db = firestoreDatabaseId
+  ? getFirestore(app, firestoreDatabaseId)
+  : getFirestore(app);
 const functions = getFunctions(app, "us-central1");
 
 // Magic Number Constants - Simplified

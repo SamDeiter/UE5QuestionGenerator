@@ -1,4 +1,5 @@
 const functions = require("firebase-functions");
+const { getDb } = require("../db");
 const admin = require("firebase-admin");
 const { isAdminUser } = require("../utils/isAdminUser");
 const { requireRecentAuth } = require("../utils/requireRecentAuth");
@@ -51,7 +52,7 @@ exports.changeUserRole = functions
       );
     }
 
-    const db = admin.firestore();
+    const db = getDb();
 
     try {
       // Update registeredUsers collection

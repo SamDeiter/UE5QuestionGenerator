@@ -1,4 +1,5 @@
 const functions = require("firebase-functions");
+const { getDb } = require("../db");
 const admin = require("firebase-admin");
 
 // isAdminUser no longer needed — registeredUsers and admins are checked directly
@@ -82,7 +83,7 @@ exports.checkUserRegistration = functions
       return { registered: false };
     }
 
-    const db = admin.firestore();
+    const db = getDb();
     const userId = context.auth.uid;
     const email = context.auth.token.email;
 
@@ -123,22 +124,13 @@ exports.checkUserRegistration = functions
         };
       }
 
-      // 3. Brand-new Epic-domain user with NO record. Phase C policy is
-      // auto-reviewer — the actual create happens via setupInitialAdmin.
-      // Here we just signal that they're eligible to register without
-      // an invite, with role=reviewer. (Old policy returned admin.)
-      if (isEpicEmployee) {
-        console.log(`[checkUserRegistration] Epic employee, no record yet: ${email}`);
-        return {
-          registered: false,
-          eligibleForAutoRegister: true,
-          role: "reviewer",
-          isEmployee: true,
-          tools: ["questions"],
-        };
-      }
-
-      // 3. EMAIL FALLBACK: Query by email for orphaned docs
+      // 3. EMAIL FALLBACK: a returning user whose Firebase Auth UID changed
+      // (e.g. project migration — Auth identities are per-project) has an
+      // orphaned registeredUsers doc keyed to their OLD uid. Reconnect it by
+      // VERIFIED email and re-key to the current uid, PRESERVING the stored
+      // role. This MUST run before the Epic-domain auto-reviewer branch below,
+      // otherwise a migrated admin/super_admin would be silently downgraded to
+      // a brand-new reviewer.
       if (email) {
         console.log(
           `[checkUserRegistration] UID miss, checking email: ${email}`
@@ -181,6 +173,21 @@ exports.checkUserRegistration = functions
             return result;
           }
         }
+      }
+
+      // 4. Brand-new Epic-domain user with NO record (and no orphaned doc to
+      // migrate above). Phase C policy is auto-reviewer — the actual create
+      // happens via setupInitialAdmin. Here we just signal that they're
+      // eligible to register without an invite, with role=reviewer.
+      if (isEpicEmployee) {
+        console.log(`[checkUserRegistration] Epic employee, no record yet: ${email}`);
+        return {
+          registered: false,
+          eligibleForAutoRegister: true,
+          role: "reviewer",
+          isEmployee: true,
+          tools: ["questions"],
+        };
       }
 
       // 5. Check admins collection directly (legacy fallback)

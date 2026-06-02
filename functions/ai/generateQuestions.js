@@ -4,6 +4,7 @@ const functions = require("firebase-functions");
 const { checkRateLimit } = require("../middleware/rateLimiter");
 const { logApiUsage } = require("../utils/apiUsage");
 const { extractGroundingSources } = require("../utils/grounding");
+const { callVertexGenerateContent } = require("./vertexClient");
 const {
   sanitizeInput,
   validateNoPromptInjection,
@@ -22,7 +23,6 @@ const {
 
 exports.generateQuestions = functions
   .runWith({
-    secrets: ["GEMINI_API_KEY"],
     timeoutSeconds: 60,
     memory: "256MB",
   })
@@ -87,28 +87,14 @@ exports.generateQuestions = functions
     }
 
     try {
-      // 4. Get API key from Secret Manager (injected via process.env)
-      const apiKey = process.env.GEMINI_API_KEY;
-
-      if (!apiKey) {
-        console.error("[ERROR] GEMINI_API_KEY secret is not set.");
-        throw new functions.https.HttpsError(
-          "failed-precondition",
-          "Server configuration error: API Key missing."
-        );
-      }
-
-      // ... rest of logic
-
-      // 5. Call Gemini API
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
+      // 4. Build the Gemini request. Auth is via the function's ADC (no API
+      //    key); the runtime service account needs roles/aiplatform.user.
       const payload = {
         contents: [{ parts: [{ text: sanitizedUserPrompt }] }],
         systemInstruction: { parts: [{ text: sanitizedSystemPrompt }] },
         tools: [
           {
-            googleSearch: {}, // Enable grounding
+            googleSearch: {}, // Enable Google Search grounding
           },
         ],
         generationConfig: {
@@ -117,12 +103,8 @@ exports.generateQuestions = functions
         },
       };
 
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      // 5. Call Gemini via Vertex AI (response/grounding shape is identical)
+      const response = await callVertexGenerateContent(model, payload);
 
       if (!response.ok) {
         const errorText = await response.text();

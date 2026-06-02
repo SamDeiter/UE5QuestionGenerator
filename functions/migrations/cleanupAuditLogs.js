@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const { getDb } = require("../db");
 
 /**
  * Scheduled function: cleanupAuditLogs
@@ -16,7 +17,7 @@ exports.cleanupAuditLogs = functions
   .pubsub.schedule("0 3 * * *") // 3:00 AM UTC daily
   .timeZone("UTC")
   .onRun(async (_context) => {
-    const db = admin.firestore();
+    const db = getDb();
 
     // Calculate cutoff date
     const cutoffDate = new Date();

@@ -5,6 +5,7 @@ import {
   subscribeToRateLimitState,
   getRateLimitStatus,
 } from "../../utils/rateLimitState";
+import { useAllQuestionsMap } from "../../store/questionSelectors";
 
 /**
  * Get button content based on current state
@@ -44,9 +45,9 @@ const ActionFooter = ({
   isApiReady,
   handleBulkTranslateMissing,
   isProcessing,
-  allQuestionsMap,
   status = "", // Live status text from useGeneration hook
 }) => {
+  const allQuestionsMap = useAllQuestionsMap();
   // Subscribe to rate limit state for cooldown display
   const [rateLimitStatus, setRateLimitStatus] = useState(getRateLimitStatus());
 

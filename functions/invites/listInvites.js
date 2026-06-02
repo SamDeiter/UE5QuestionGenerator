@@ -1,5 +1,5 @@
 const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const { getDb } = require("../db");
 const { isAdminUser } = require("../utils/isAdminUser");
 const { isBootstrapAdmin } = require("../utils/bootstrapAdmin");
 
@@ -44,7 +44,7 @@ exports.listInvites = functions
     }
 
     try {
-      const db = admin.firestore();
+      const db = getDb();
       // Order newest-first so the most relevant invites surface at the top
       // of the Admin UI. `createdAt` is set unconditionally by createInvite,
       // so this ordering is safe for every doc the function emits.

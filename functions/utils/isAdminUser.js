@@ -5,6 +5,7 @@
 
 const admin = require("firebase-admin");
 
+const { getDb } = require("../db");
 /**
  * Check if a user is an admin
  * Priority: 1) Auth custom claims, 2) registeredUsers doc, 3) legacy admins collection
@@ -26,7 +27,7 @@ async function isAdminUser(uid) {
     console.warn("[isAdminUser] Claims lookup failed:", claimsError.message);
   }
 
-  const db = admin.firestore();
+  const db = getDb();
 
   // 2. Check registeredUsers (canonical source of truth)
   try {

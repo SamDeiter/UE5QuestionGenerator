@@ -1,13 +1,12 @@
 import { TAGS_BY_DISCIPLINE } from "../../utils/tagTaxonomy";
 import Icon from "../Icon";
 import { useMessage } from "../../contexts/MessageContext";
+import { useAppConfigStore } from "../../store/appConfigStore";
+import { useAllQuestionsMap } from "../../store/questionSelectors";
 
-const CoverageGapSuggester = ({
-  allQuestionsMap,
-  config,
-  handleChange,
-  setShowGenSettings,
-}) => {
+const CoverageGapSuggester = ({ handleChange, setShowGenSettings }) => {
+  const config = useAppConfigStore((s) => s.config);
+  const allQuestionsMap = useAllQuestionsMap();
   const { showMessage } = useMessage();
   // 1. Get stats for the current selected discipline
   const currentDiscipline = config.discipline || "Technical Art";

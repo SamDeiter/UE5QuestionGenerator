@@ -2,37 +2,25 @@ import { useMemo } from "react";
 import { APP_MODES } from "../utils/constants";
 
 /**
- * Hook to memoize toolbar props for MainLayout
+ * Hook to memoize toolbar props for MainLayout.
  *
- * Centralizes all props needed by the ContextToolbar component
- * to improve code organization and prevent unnecessary re-renders.
+ * appMode, config, and all filter/search/sort state are now read directly from
+ * the stores inside ContextToolbar, so they are no longer threaded here. This
+ * hook carries the derived counts, the reviewer list, flags, and the data /
+ * bulk-action handlers. `appMode` is still accepted to gate the review-only
+ * bulk handlers.
  *
- * @param {Object} params - All toolbar-related state and handlers
+ * @param {Object} params - Toolbar counts, flags, and handlers
  * @returns {Object} - Memoized toolbar props object
  */
 export function useToolbarProps({
   appMode,
   contextCounts,
-  filterMode,
-  setFilterMode,
-  filterByCreator,
-  setFilterByCreator,
-  filterTags,
-  setFilterTags,
-  filterScoreTier,
-  setFilterScoreTier,
-  filterByReviewer,
-  setFilterByReviewer,
   uniqueReviewers,
   customTags,
-  searchTerm,
-  setSearchTerm,
-  sortBy,
-  setSortBy,
   isProcessing,
   status,
   isAuthReady,
-  config,
   handleLoadFromSheets,
   handleLoadFromFirestore,
   setShowBulkExportModal,
@@ -46,28 +34,12 @@ export function useToolbarProps({
 }) {
   return useMemo(
     () => ({
-      mode: appMode,
       counts: contextCounts,
-      filterMode,
-      setFilterMode,
-      filterByCreator,
-      setFilterByCreator,
-      filterTags,
-      setFilterTags,
-      filterScoreTier,
-      setFilterScoreTier,
-      filterByReviewer,
-      setFilterByReviewer,
       uniqueReviewers,
       customTags,
-      searchTerm,
-      setSearchTerm,
-      sortBy,
-      setSortBy,
       isProcessing,
       status,
       isAuthReady,
-      config,
       onLoadSheets: handleLoadFromSheets,
       onLoadFirestore: handleLoadFromFirestore,
       onBulkExport: () => setShowBulkExportModal(true),
@@ -84,26 +56,11 @@ export function useToolbarProps({
     [
       appMode,
       contextCounts,
-      filterMode,
-      setFilterMode,
-      filterByCreator,
-      setFilterByCreator,
-      filterTags,
-      setFilterTags,
-      filterScoreTier,
-      setFilterScoreTier,
-      filterByReviewer,
-      setFilterByReviewer,
       uniqueReviewers,
       customTags,
-      searchTerm,
-      setSearchTerm,
-      sortBy,
-      setSortBy,
       isProcessing,
       status,
       isAuthReady,
-      config,
       handleLoadFromSheets,
       handleLoadFromFirestore,
       setShowBulkExportModal,

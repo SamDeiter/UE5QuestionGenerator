@@ -1,5 +1,5 @@
 const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const { getDb } = require("../db");
 
 /**
  * Cloud Function: checkToolAccess
@@ -30,7 +30,7 @@ exports.checkToolAccess = functions
     const email = context.auth.token.email;
     const userId = context.auth.uid;
     const claims = context.auth.token;
-    const db = admin.firestore();
+    const db = getDb();
 
     try {
       const emailLower = email ? email.toLowerCase() : "";

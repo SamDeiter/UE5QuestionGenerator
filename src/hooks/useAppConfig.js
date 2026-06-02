@@ -1,13 +1,19 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { getLocalPref, setLocalPref } from "../utils/localPrefs";
 import { logger } from "../utils/logger";
-import { DEFAULT_CONFIG, STORAGE_KEYS, APP_MODES } from "../utils/constants";
+import { STORAGE_KEYS } from "../utils/constants";
 import { validateDisplayName } from "../utils/nameValidation";
 import { useModals } from "../contexts/ModalContext";
+import { useAppConfigStore } from "../store/appConfigStore";
 
 /**
  * @param {Object} options
  * @param {Object} options.user - Firebase user object (optional)
+ *
+ * appMode / config / a few UI flags now live in `appConfigStore` (zustand) so
+ * consumers can read them without prop-drilling. This hook keeps the business
+ * logic: modal coupling, name validation, language switch, and the localStorage
+ * persistence effects. Its return shape is unchanged.
  */
 export const useAppConfig = ({ user = null } = {}) => {
   // Modal visibility now lives in ModalContext; this hook drives the
@@ -23,22 +29,21 @@ export const useAppConfig = ({ user = null } = {}) => {
     setShowApiKey,
   } = useModals();
 
-  // Application mode: 'landing' (home screen), 'create' (generation mode), 'review' (review mode), 'database' (view all)
-  const [appMode, setAppMode] = useState(() => {
-    // 1. Check URL parameters (Highest priority)
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const modeParam = params.get("mode");
-      if (modeParam && Object.values(APP_MODES).includes(modeParam)) {
-        logger.log("🔗 Found app mode in URL:", modeParam);
-        return modeParam;
-      }
-    }
-
-    // 2. Fallback to localStorage
-    if (typeof window === "undefined") return APP_MODES.LANDING;
-    return localStorage.getItem(STORAGE_KEYS.APP_MODE) || APP_MODES.LANDING;
-  });
+  // Domain state from the store (single source of truth).
+  const appMode = useAppConfigStore((s) => s.appMode);
+  const setAppMode = useAppConfigStore((s) => s.setAppMode);
+  const config = useAppConfigStore((s) => s.config);
+  const setConfig = useAppConfigStore((s) => s.setConfig);
+  const showApiError = useAppConfigStore((s) => s.showApiError);
+  const setShowApiError = useAppConfigStore((s) => s.setShowApiError);
+  const batchSizeWarning = useAppConfigStore((s) => s.batchSizeWarning);
+  const setBatchSizeWarning = useAppConfigStore((s) => s.setBatchSizeWarning);
+  const pendingNavigationUniqueId = useAppConfigStore(
+    (s) => s.pendingNavigationUniqueId
+  );
+  const setPendingNavigationUniqueId = useAppConfigStore(
+    (s) => s.setPendingNavigationUniqueId
+  );
 
   // Check if running in internal Canvas environment (has auto-injected API key)
   const isInternalEnvironment =
@@ -53,26 +58,8 @@ export const useAppConfig = ({ user = null } = {}) => {
   // 2. Never expose API keys in client-side code
   // 3. Use server-side authentication with the Gemini API
 
-  // Main application configuration (persisted to localStorage)
-  const [config, setConfig] = useState(() => {
-    const saved = getLocalPref(STORAGE_KEYS.CONFIG);
-
-    // Merge saved config with defaults
-    const initialConfig = saved
-      ? { ...DEFAULT_CONFIG, ...saved }
-      : { ...DEFAULT_CONFIG };
-
-    // Ensure all required fields have default values (double-check)
-    initialConfig.creatorName = initialConfig.creatorName || "";
-    initialConfig.reviewerName = initialConfig.reviewerName || "";
-    initialConfig.apiKey = initialConfig.apiKey || "";
-
-    return initialConfig;
-  });
-
   // API key status computed values
   // Cloud Functions are available when user is authenticated (checked via Firebase Auth in App.jsx)
-  // We'll accept auth status as a prop to determine if Cloud Functions are available
   const hasClientKey = config.apiKey && config.apiKey.length > 5;
   const isApiReady = isInternalEnvironment || hasClientKey || isAuthReady; // Cloud Functions count as "ready"
   const effectiveApiKey = isInternalEnvironment ? "" : config.apiKey;
@@ -88,10 +75,6 @@ export const useAppConfig = ({ user = null } = {}) => {
   } else {
     apiKeyStatus = "Not Set";
   }
-
-  // UI States (modal visibility moved to ModalContext above)
-  const [showApiError, setShowApiError] = useState(false);
-  const [batchSizeWarning, setBatchSizeWarning] = useState("");
 
   // Track if this is the initial mount
   const hasInitialized = useRef(false);
@@ -150,10 +133,6 @@ export const useAppConfig = ({ user = null } = {}) => {
   }, [appMode]);
 
   // Handlers
-  // pendingNavigationUniqueId tracks the uniqueId to navigate to after language switch
-  const [pendingNavigationUniqueId, setPendingNavigationUniqueId] =
-    useState(null);
-
   const handleLanguageSwitch = (lang, uniqueId = null) => {
     logger.log(
       "🌍 [handleLanguageSwitch] Switching global language filter to:",

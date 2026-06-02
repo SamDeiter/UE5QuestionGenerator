@@ -11,9 +11,10 @@
  */
 
 const functions = require("firebase-functions");
+const { getDb } = require("../db");
 const admin = require("firebase-admin");
 
-const db = admin.firestore();
+const db = getDb();
 const STATS_DOC_PATH = "_aggregates/questionStats";
 
 /**

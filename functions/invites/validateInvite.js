@@ -1,4 +1,5 @@
 const functions = require("firebase-functions");
+const { getDb } = require("../db");
 const admin = require("firebase-admin");
 
 /**
@@ -10,7 +11,7 @@ exports.validateInvite = functions
   .runWith({ timeoutSeconds: 30, memory: "256MB" })
   .https.onCall(async (data, context) => {
     const { code } = data;
-    const db = admin.firestore();
+    const db = getDb();
 
     if (!code || typeof code !== "string") {
       throw new functions.https.HttpsError(

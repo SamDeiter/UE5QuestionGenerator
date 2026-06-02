@@ -1,59 +1,31 @@
 import { useMemo } from "react";
 
 /**
- * Hook to memoize view router state for MainLayout
+ * Hook to memoize view router state for MainLayout.
  *
- * Centralizes all state needed by the ViewRouter component
- * to improve code organization and prevent unnecessary re-renders.
+ * Only carries the non-store values ViewRouter still needs: the filtered list,
+ * live status, and auth/loading info. appMode, config, all filter/search/sort
+ * state, the translation map, and the session question list are now read
+ * directly from the stores inside ViewRouter.
  *
- * @param {Object} params - All view router state values
+ * @param {Object} params - Remaining view router state values
  * @returns {Object} - Memoized view router state object
  */
 export function useViewRouterState({
-  currentReviewIndex,
-  translationMap,
-  filterByCreator,
   filteredQuestions,
-  questions,
   status,
-  filterMode,
-  sortBy,
-  searchTerm,
-  showHistory,
   user,
   userRole,
   isInitialLoading,
 }) {
   return useMemo(
     () => ({
-      currentReviewIndex,
-      translationMap,
-      filterByCreator,
       filteredQuestions,
-      questions,
       status,
-      filterMode,
-      sortBy,
-      searchTerm,
-      showHistory,
       currentUser: user,
       userRole,
       isInitialLoading,
     }),
-    [
-      currentReviewIndex,
-      translationMap,
-      filterByCreator,
-      filteredQuestions,
-      questions,
-      status,
-      filterMode,
-      sortBy,
-      searchTerm,
-      showHistory,
-      user,
-      userRole,
-      isInitialLoading,
-    ]
+    [filteredQuestions, status, user, userRole, isInitialLoading]
   );
 }

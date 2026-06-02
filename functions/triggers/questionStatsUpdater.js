@@ -10,10 +10,10 @@
  * @module triggers/questionStatsUpdater
  */
 
-const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const { onDocumentWritten } = require("firebase-functions/v2/firestore");
+const { getDb, databaseId } = require("../db");
 
-const db = admin.firestore();
 const STATS_DOC_PATH = "_aggregates/questionStats";
 
 /**
@@ -54,13 +54,17 @@ function buildFieldUpdates(fieldPath, before, after) {
  * Firestore trigger that updates aggregate stats when questions change.
  * Handles create, update, and delete operations.
  */
-exports.updateQuestionStats = functions.firestore
-  .document("questions/{questionId}")
-  .onWrite(async (change, context) => {
-    const statsRef = db.doc(STATS_DOC_PATH);
+exports.updateQuestionStats = onDocumentWritten(
+  {
+    document: "questions/{questionId}",
+    database: databaseId,
+    region: "us-central1",
+  },
+  async (event) => {
+    const statsRef = getDb().doc(STATS_DOC_PATH);
 
-    const before = change.before.exists ? change.before.data() : null;
-    const after = change.after.exists ? change.after.data() : null;
+    const before = event.data?.before?.exists ? event.data.before.data() : null;
+    const after = event.data?.after?.exists ? event.data.after.data() : null;
 
     const updates = {};
 
@@ -102,7 +106,7 @@ exports.updateQuestionStats = functions.firestore
       try {
         await statsRef.set(updates, { merge: true });
         console.log(
-          `[updateQuestionStats] Updated stats for question ${context.params.questionId}`,
+          `[updateQuestionStats] Updated stats for question ${event.params.questionId}`,
         );
       } catch (error) {
         console.error("[updateQuestionStats] Failed to update stats:", error);
@@ -111,4 +115,5 @@ exports.updateQuestionStats = functions.firestore
     }
 
     return null;
-  });
+  },
+);
