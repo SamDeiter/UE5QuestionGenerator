@@ -2,9 +2,18 @@ import { logger } from "../../utils/logger";
 
 /**
  * Sanitize question text for SCORM display
- * Removes markdown formatting, trailing asterisks, and normalizes whitespace
+ * Removes markdown formatting, trailing asterisks, and normalizes whitespace.
+ *
+ * SECURITY: This returns PLAIN TEXT, not HTML-safe markup. It deliberately
+ * decodes typographic entities (e.g. &mdash; -> "—") and does NOT escape
+ * "<", ">", "&". The exported SCORM player (scorm-template/game.js) is the
+ * authoritative escaping boundary: it calls escapeHtml() on this value before
+ * any innerHTML interpolation. Do NOT escape here as well — escaping in both
+ * places would double-encode and render literal "&lt;" to learners. Any new
+ * consumer that injects this text into the DOM MUST escape it at that sink.
+ *
  * @param {string} text - Raw text to sanitize
- * @returns {string} Cleaned text
+ * @returns {string} Cleaned plain text (must be HTML-escaped before innerHTML)
  */
 export function sanitizeQuestionText(text) {
   if (!text || typeof text !== "string") return "";
