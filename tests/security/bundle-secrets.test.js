@@ -9,6 +9,21 @@ import { join } from "path";
 describe("Security: Bundle Secret Detection", () => {
   const distDir = join(process.cwd(), "dist", "assets");
 
+  // The Firebase WEB api key is public by design (it identifies the project;
+  // access is enforced by Firestore rules + authorized domains), so it is
+  // expected to appear in the client bundle. We read its value from the build
+  // env (VITE_FIREBASE_API_KEY) rather than hard-coding it, so this test
+  // survives Firebase-project migrations (e.g. the move to the Epic project)
+  // instead of silently breaking when the key rotates.
+  //
+  // The value-match only runs in CI: there, the bundle is freshly built and the
+  // env is set from the deploy secret (the correct key), so the comparison is
+  // authoritative. Locally, vitest loads the stale dev .env files into
+  // process.env, which would value-match against the wrong project's key — so
+  // local runs fall back to the always-on "only one unique key may ship" check.
+  const firebasePublicKey = process.env.VITE_FIREBASE_API_KEY;
+  const enforceKeyValue = Boolean(process.env.CI && firebasePublicKey);
+
   it("CRITICAL: Production bundle must not contain Gemini API keys", () => {
     // Check if dist directory exists (might not if build hasn't run)
     if (!existsSync(distDir)) {
@@ -16,17 +31,26 @@ describe("Security: Bundle Secret Detection", () => {
       return;
     }
 
+    // Every Google API key (Firebase, Gemini, …) matches /AIza…/, so the only
+    // way to tell the safe public Firebase key apart from a leaked one is by
+    // value. Outside CI we can't trust the env value, so defer to the
+    // single-unique-key count check below rather than producing false failures.
+    if (!enforceKeyValue) {
+      console.warn(
+        "Not in CI (or VITE_FIREBASE_API_KEY unset) - skipping value-based key " +
+          "allowlist; single-key-count check still applies."
+      );
+      return;
+    }
+
     const files = readdirSync(distDir).filter((f) => f.endsWith(".js"));
     const geminiKeyPattern = /AIza[A-Za-z0-9_-]{35}/g;
-    const allowedKeys = [
-      "AIzaSyDHtXGk_e5ntXOqTBAr5whLnVU8LaWsqOQ", // Firebase public key (SAFE - from .env.production)
-    ];
 
     for (const file of files) {
       const content = readFileSync(join(distDir, file), "utf-8");
       const matches = content.match(geminiKeyPattern) || [];
 
-      const unauthorized = matches.filter((k) => !allowedKeys.includes(k));
+      const unauthorized = matches.filter((k) => k !== firebasePublicKey);
       expect(
         unauthorized,
         `Unauthorized API key found in ${file}`
@@ -81,11 +105,13 @@ describe("Security: Bundle Secret Detection", () => {
     const allKeys = allContent.match(apiKeyPattern) || [];
     const uniqueKeys = [...new Set(allKeys)];
 
-    // Should have exactly 1 unique key: the Firebase public key
+    // At most one unique AIza key may ship: the public Firebase web key.
     expect(uniqueKeys.length).toBeLessThanOrEqual(1);
 
-    if (uniqueKeys.length === 1) {
-      expect(uniqueKeys[0]).toBe("AIzaSyDHtXGk_e5ntXOqTBAr5whLnVU8LaWsqOQ");
+    // In CI, the single shipped key must equal the expected public Firebase key
+    // (guards against the wrong project's or a leaked key).
+    if (uniqueKeys.length === 1 && enforceKeyValue) {
+      expect(uniqueKeys[0]).toBe(firebasePublicKey);
     }
   });
 
