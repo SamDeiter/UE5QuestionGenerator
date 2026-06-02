@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import { configDefaults } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import viteCompression from "vite-plugin-compression";
@@ -148,6 +149,11 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./src/setupTests.js",
     css: true,
+    // Exclude Claude Code agent worktrees: they are full repo copies under
+    // .claude/worktrees, so without this vitest discovers and runs every test
+    // 1-per-worktree, inflating/duplicating results locally (harmless in CI,
+    // which is a fresh checkout). Keep vitest's defaults (node_modules, dist, …).
+    exclude: [...configDefaults.exclude, "**/.claude/**"],
   },
   esbuild: {
     drop: ["console", "debugger"],

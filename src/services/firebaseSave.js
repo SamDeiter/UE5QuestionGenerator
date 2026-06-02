@@ -29,6 +29,7 @@ import {
 } from "./firebaseAuth";
 import { cacheSavedQuestion, cacheSavedQuestions } from "./firebaseQueries";
 import { toastError } from "./toastEvents";
+import { removeUndefined } from "../utils/firestoreHelpers";
 
 // --- Lazy-load Firestore with Persistence ---
 let _db = null;
@@ -74,36 +75,6 @@ export const getDb = () => {
   }
   return _db;
 };
-
-/**
- * Q10: Ensure Firestore persistence is enabled before critical operations.
- *
- * Call this before operations that depend on offline support:
- * - Initial app load
- * - Before queuing offline writes
- * - Before enabling real-time listeners
- *
- * @returns {Promise<{success: boolean, status: string, reason?: string}>}
- */
-// eslint-disable-next-line no-unused-vars
-const ensurePersistence = async () => {
-  // Initialize db if not already done
-  getDb();
-
-  if (_persistencePromise) {
-    return await _persistencePromise;
-  }
-
-  // Browser doesn't support persistence or SSR
-  return { success: false, status: "unavailable", reason: "no-window" };
-};
-
-/**
- * Get current persistence status synchronously.
- * @returns {"pending" | "enabled" | "failed"}
- */
-// eslint-disable-next-line no-unused-vars
-const getPersistenceStatus = () => _persistenceStatus;
 
 // NOTE: Analytics disabled - requires Firebase Console configuration
 const analytics = null;
@@ -235,24 +206,6 @@ const connectionListeners = new Set();
 const notifyConnectionListeners = () => {
   const status = getConnectionStatus();
   connectionListeners.forEach((cb) => cb(status));
-};
-
-/**
- * Helper to recursively remove undefined values from an object
- * Firestore doesn't accept undefined values
- */
-const removeUndefined = (obj) => {
-  if (obj === null || obj === undefined) return obj;
-  if (typeof obj !== "object") return obj;
-  if (Array.isArray(obj)) return obj.map(removeUndefined);
-
-  const cleaned = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (value !== undefined) {
-      cleaned[key] = removeUndefined(value);
-    }
-  }
-  return cleaned;
 };
 
 /**

@@ -121,11 +121,3 @@ export const inferCorrectAnswer = (q) => {
   // 4. Truly unrecoverable
   return null;
 };
-
-/**
- * Check if a question has a valid correct answer.
- * @param {Object} q - Question object
- * @returns {boolean} True if correct answer is valid or inferable
- */
-// eslint-disable-next-line no-unused-vars
-const hasValidCorrectAnswer = (q) => inferCorrectAnswer(q) !== null;

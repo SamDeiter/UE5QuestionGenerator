@@ -10,7 +10,7 @@
 ### Before Making Changes
 
 ```bash
-npm test -- --run        # Run all tests (should see 354+ pass)
+npm test -- --run        # Run all tests (1000+ pass)
 npm run dev              # Start dev server
 ```
 

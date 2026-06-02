@@ -93,6 +93,13 @@ backups/
 # Claude Code agent worktrees (parallel agent working copies, never commit)
 .claude/worktrees/
 
+# Python bytecode caches (from scripts/)
+__pycache__/
+*.py[cod]
+
+# Firebase CLI local cache (hosting deploy cache, etc.)
+.firebase/
+
 # OS files
 .DS_Store
 Thumbs.db

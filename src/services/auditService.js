@@ -41,37 +41,6 @@ export const logAuditEvent = async (questionId, eventType, details = {}) => {
   }
 };
 
-/**
- * Log a bulk operation (affects multiple questions)
- * @param {string} action - The bulk action type
- * @param {Array<string>} questionIds - Array of affected question IDs
- * @param {object} details - Additional details
- */
-// eslint-disable-next-line no-unused-vars
-const logBulkOperation = async (action, questionIds, details = {}) => {
-  try {
-    const db = getDb();
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    const auditEntry = {
-      eventType: `BULK_${action}`,
-      timestamp: serverTimestamp(),
-      userId: user?.uid || "system",
-      userEmail: user?.email || "system@automated",
-      questionCount: questionIds.length,
-      questionIds: questionIds.slice(0, 100),
-      details,
-      sessionId: localStorage.getItem("ue5_session_agent_id") || "unknown",
-    };
-
-    await addDoc(collection(db, "audit-log"), auditEntry);
-    logger.log(`📋 Bulk Audit: ${action} on ${questionIds.length} questions`);
-  } catch (error) {
-    logger.error("Failed to log bulk audit event:", error);
-  }
-};
-
 // Action type constants for consistency
 export const AUDIT_ACTIONS = {
   STATUS_CHANGE: "STATUS_CHANGE",

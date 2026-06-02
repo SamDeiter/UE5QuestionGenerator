@@ -88,21 +88,4 @@ export const normalizeReviewerName = (rawName) => {
   return trimmed;
 };
 
-/**
- * Gets a reviewer identifier from a question object
- * Checks multiple fields in priority order
- * @param {Object} question - The question object
- * @returns {string|null} Normalized reviewer name, or null if none found
- */
-// eslint-disable-next-line no-unused-vars
-const getReviewerFromQuestion = (question) => {
-  if (!question) return null;
-
-  // Check fields in priority order for review actions
-  const rawReviewer =
-    question.humanVerifiedBy || question.acceptedBy || question.reviewerName;
-
-  return normalizeReviewerName(rawReviewer);
-};
-
 export default normalizeReviewerName;

@@ -12,20 +12,7 @@ import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { getDb } from "./firebase";
 import { logger } from "../utils/logger";
 import { REVIEWER_ALLOWED_FIELDS } from "../utils/constants";
-
-/**
- * Remove undefined values from object (Firestore rejects undefined)
- */
-const removeUndefined = (obj) => {
-  if (obj === null || typeof obj !== "object") return obj;
-  if (Array.isArray(obj)) return obj.map(removeUndefined);
-
-  return Object.fromEntries(
-    Object.entries(obj)
-      .filter(([, v]) => v !== undefined)
-      .map(([k, v]) => [k, removeUndefined(v)])
-  );
-};
+import { removeUndefined } from "../utils/firestoreHelpers";
 
 /**
  * Restricted save for reviewers.

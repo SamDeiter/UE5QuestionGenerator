@@ -74,19 +74,3 @@ export function validateQuestion(question) {
     },
   };
 }
-
-/**
- * Batch validate questions
- * @param {Array} questions
- * @returns {Array} Questions with validation metadata attached
- */
-// eslint-disable-next-line no-unused-vars
-function validateQuestionsBatch(questions) {
-  return questions.map((q) => {
-    const validation = validateQuestion(q);
-    return {
-      ...q,
-      _validation: validation,
-    };
-  });
-}
