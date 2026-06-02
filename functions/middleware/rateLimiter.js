@@ -136,9 +136,21 @@ async function checkRateLimit(userId, limitType) {
 
     return result;
   } catch (error) {
-    console.error("Rate limit check failed:", error);
-    // Fail open (allow request) on technical errors to prevent service outage
-    return { allowed: true };
+    // Fail CLOSED. This limiter is the primary cost-abuse control for the AI
+    // and bulk-export paths, so allowing requests through on error would let an
+    // attacker who can induce Firestore contention/outages bypass all limits.
+    // Firestore transactions already auto-retry internally, so reaching here
+    // means a persistent failure — deny and surface a retryable error rather
+    // than silently allowing. Logged at error level so it is alertable.
+    console.error(
+      `Rate limit check failed for ${userId}/${limitType}; failing closed:`,
+      error
+    );
+    return {
+      allowed: false,
+      transient: true,
+      reason: "Rate limiter temporarily unavailable",
+    };
   }
 }
 
@@ -163,6 +175,16 @@ function rateLimitMiddleware(limitType) {
     const result = await checkRateLimit(userId, limitType);
 
     if (!result.allowed) {
+      // Transient infrastructure failure (limiter failed closed): surface a
+      // distinct, retryable error instead of a misleading "rate limit exceeded".
+      if (result.transient) {
+        throw new functions.https.HttpsError(
+          "unavailable",
+          `${result.reason || "Service temporarily unavailable"}. Please try again.`,
+          { resetInSeconds: 5, retryable: true }
+        );
+      }
+
       const resetTime = result.resetAt
         ? Math.ceil((result.resetAt.getTime() - Date.now()) / 1000)
         : 3600;
