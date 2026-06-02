@@ -166,6 +166,9 @@ const ViewRouter = ({
           onTranslateSingle={handleTranslateSingle}
           onSwitchLanguage={handleLanguageSwitch}
           addQuestionsToState={handlers.addQuestionsToState}
+          // Tier 3b: silent local merge for lazy detail-field hydration (no
+          // "saved locally" toast, unlike onUpdateQuestion).
+          hydrateMerge={handleManualUpdate}
           isProcessing={isProcessing}
           filterMode={filterMode}
           sortBy={sortBy}

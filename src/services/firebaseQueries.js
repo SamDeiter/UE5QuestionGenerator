@@ -8,6 +8,8 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
+  doc,
   collection,
   orderBy,
   limit,
@@ -17,7 +19,12 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { logger } from "../utils/logger";
-import { TIMING, FIRESTORE_LIMITS, QUESTION_SOURCES } from "../utils/constants";
+import {
+  TIMING,
+  FIRESTORE_LIMITS,
+  QUESTION_SOURCES,
+  INDEX_OMITTED_FIELDS,
+} from "../utils/constants";
 import { toMillis } from "../utils/firestoreHelpers";
 import { auth, firebaseConfig } from "./firebaseAuth";
 import { getDb } from "./firebaseSave";
@@ -32,6 +39,28 @@ import {
 } from "./questionCache";
 import { parseQuestionDoc } from "../utils/questionDocParser";
 import { registerListener, unregisterListener } from "../utils/listenerTracker";
+
+// --- Compact-index read switch (Tier 3b) ---
+//
+// When true, the BULK read paths (full sync, incremental delta, paginated
+// Review) source from the compact `questionIndex` mirror instead of the full
+// `questions` collection. The mirror omits 5 large detail-only fields
+// (sourceExcerpt, sourceUrl, explanation, groundingSources, editHistory; see
+// functions/triggers/questionIndexProjection.js), shrinking the bulk payload
+// ~30-50%. Those fields are resolved on demand from the full `questions/{id}`
+// doc via getFullQuestionDoc() when a card is expanded / on export / on
+// translate.
+//
+// SAFETY: keep this `false` until the questionIndex composite indexes are
+// deployed AND report Enabled in prod — index-backed queries error otherwise.
+// Flipping it is a one-line, fully reversible change. All WRITES/DELETES and
+// single-doc/variant fetches always stay on `questions` (the mirror is
+// read-only to clients).
+export const USE_INDEX = false;
+const QUESTIONS_COLLECTION = "questions";
+const INDEX_COLLECTION = "questionIndex";
+// Source collection for bulk reads only. Never use this for writes.
+const READ_COLLECTION = USE_INDEX ? INDEX_COLLECTION : QUESTIONS_COLLECTION;
 
 // --- Cache Management ---
 let _questionsCache = null;
@@ -83,6 +112,9 @@ const invalidateMemoryQuestionsCache = () => {
 export const cacheSavedQuestion = async (question) => {
   invalidateMemoryQuestionsCache();
   if (!question?.uniqueId) return;
+  // Drop any memoized full doc so the next on-demand fetch sees the new values.
+  // Evict by both doc id and uniqueId (equal for English, differ for variants).
+  invalidateFullDocMemo(question.id, question.uniqueId);
   try {
     await updateIDBQuestion(question);
     const ts = toMillis(question.firestoreUpdatedAt);
@@ -101,6 +133,7 @@ export const cacheSavedQuestion = async (question) => {
 export const cacheSavedQuestions = async (questions) => {
   invalidateMemoryQuestionsCache();
   if (!Array.isArray(questions) || questions.length === 0) return;
+  for (const q of questions) invalidateFullDocMemo(q?.id, q?.uniqueId);
   try {
     await cacheQuestions(questions);
     let maxTs = 0;
@@ -122,6 +155,7 @@ export const cacheSavedQuestions = async (questions) => {
 export const removeCachedQuestion = async (uniqueId) => {
   invalidateMemoryQuestionsCache();
   if (!uniqueId) return;
+  invalidateFullDocMemo(uniqueId);
   try {
     await deleteIDBQuestion(uniqueId);
   } catch (error) {
@@ -137,6 +171,7 @@ export const removeCachedQuestion = async (uniqueId) => {
 export const removeCachedQuestions = async (uniqueIds) => {
   invalidateMemoryQuestionsCache();
   if (!Array.isArray(uniqueIds) || uniqueIds.length === 0) return;
+  for (const id of uniqueIds) invalidateFullDocMemo(id);
   try {
     // questionCache.deleteCachedQuestion is one-by-one but cheap (IDB key
     // delete). For really large bulk deletes a transactional batch would
@@ -300,7 +335,8 @@ export const getAllQuestionsFromFirestore = async (
     const disciplineCounts = {};
     let pages = 0;
     let capReached = false; // global stop flag once we hit fetchLimit
-    const collRef = collection(getDb(), "questions");
+    // Tier 3b: bulk-read from the compact mirror when USE_INDEX is on.
+    const collRef = collection(getDb(), READ_COLLECTION);
 
     const ingestSnapshot = (snapshot) => {
       snapshot.forEach((docSnapshot) => {
@@ -462,8 +498,9 @@ export const getQuestionsUpdatedSince = async (sinceMs) => {
   try {
     const startTime = performance.now();
     const sinceTs = Timestamp.fromMillis(sinceMs);
+    // Tier 3b: bulk delta read from the compact mirror when USE_INDEX is on.
     const q = query(
-      collection(getDb(), "questions"),
+      collection(getDb(), READ_COLLECTION),
       where("firestoreUpdatedAt", ">", sinceTs),
       orderBy("firestoreUpdatedAt", "asc")
     );
@@ -666,7 +703,10 @@ export const getQuestionsPaginatedWithFilters = async ({
       constraints.push(startAfter(lastDoc));
     }
 
-    const q = query(collection(getDb(), "questions"), ...constraints);
+    // Tier 3b: paginated Review read from the compact mirror when USE_INDEX
+    // is on. The (status, …) / (discipline, status, …) composites exist on
+    // questionIndex too (config/firestore/firestore.indexes.json).
+    const q = query(collection(getDb(), READ_COLLECTION), ...constraints);
     const startTime = performance.now();
     const snapshot = await getDocs(q);
     const duration = Math.round(performance.now() - startTime);
@@ -725,6 +765,121 @@ export const getQuestionVariantsForId = async (uniqueId) => {
     logger.error(`Error fetching variants for ${uniqueId}:`, error);
     return [];
   }
+};
+
+// --- On-demand full-doc resolver (Tier 3b) ---
+//
+// When the bulk loader sources from the compact `questionIndex` mirror, the
+// in-memory questions are missing 5 detail-only fields (sourceExcerpt,
+// sourceUrl, explanation, groundingSources, editHistory). These helpers fetch
+// the FULL doc from `questions/{docId}` on demand — used by the expanded card
+// detail, export, and translation. Always reads `questions`, regardless of
+// USE_INDEX, so it works identically whether or not the flag is flipped.
+//
+// IMPORTANT — key on the DOC ID, not the uniqueId. A question's Firestore doc
+// id is the bare uniqueId for the English canonical, but `{uniqueId}_{language}`
+// for each translation variant (verified against prod data). All variants share
+// the same `uniqueId` FIELD as a group key. parseQuestionDoc sets the in-memory
+// `q.id` to the doc id, so callers pass `q.id` to fetch the CORRECT per-language
+// doc — keying on uniqueId would collapse every variant onto the English doc and
+// bleed English source text onto translation tabs.
+
+// Small in-process memo so re-opening the same card (or re-running an export)
+// doesn't re-fetch. Keyed by DOC ID; bounded to avoid unbounded growth.
+const _fullDocMemo = new Map();
+const FULL_DOC_MEMO_MAX = 500;
+
+const memoizeFullDoc = (docId, question) => {
+  if (!docId || !question) return;
+  // Cheap LRU-ish bound: drop the oldest insertion when over capacity.
+  if (_fullDocMemo.size >= FULL_DOC_MEMO_MAX) {
+    const oldest = _fullDocMemo.keys().next().value;
+    if (oldest !== undefined) _fullDocMemo.delete(oldest);
+  }
+  _fullDocMemo.set(docId, question);
+};
+
+/**
+ * Drop a doc from the full-doc memo. Call after a save/delete so a stale full
+ * doc can't be served. Safe to call with unknown / undefined keys.
+ * @param {...string} docIds - one or more doc ids / uniqueIds to evict
+ */
+export const invalidateFullDocMemo = (...docIds) => {
+  for (const id of docIds) {
+    if (id) _fullDocMemo.delete(id);
+  }
+};
+
+/**
+ * Fetch one full question document (with all detail fields) by its DOC ID.
+ * For English this is the bare uniqueId; for translations `{uniqueId}_{lang}`.
+ * Pass the in-memory question's `q.id` (which parseQuestionDoc set to the doc
+ * id), NOT its `uniqueId`.
+ *
+ * @param {string} docId - the Firestore document id (== in-memory q.id)
+ * @param {boolean} [forceRefresh=false] - bypass the memo
+ * @returns {Promise<Object|null>} parsed full question, or null if missing
+ */
+export const getFullQuestionDoc = async (docId, forceRefresh = false) => {
+  if (!docId) return null;
+  if (!forceRefresh && _fullDocMemo.has(docId)) {
+    return _fullDocMemo.get(docId);
+  }
+  if (!auth.currentUser) {
+    logger.log("⚠️ No user signed in, cannot fetch full question doc");
+    return null;
+  }
+  try {
+    const snap = await getDoc(doc(getDb(), QUESTIONS_COLLECTION, docId));
+    if (!snap.exists()) return null;
+    const result = parseQuestionDoc({ id: snap.id, ...snap.data() });
+    const question = result?.valid ? result.question : null;
+    if (question) memoizeFullDoc(docId, question);
+    return question;
+  } catch (error) {
+    logger.error(`Error fetching full question doc ${docId}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Fetch many full question documents by doc id. Used by export to round-trip
+ * the full set before formatting. Resolves missing docs to nothing (skipped),
+ * so the result may be shorter than the input.
+ *
+ * @param {Array<string>} docIds - Firestore document ids (== in-memory q.id)
+ * @returns {Promise<Array<Object>>} parsed full questions (order not guaranteed)
+ */
+export const getFullQuestionDocs = async (docIds) => {
+  if (!Array.isArray(docIds) || docIds.length === 0) return [];
+  const results = await Promise.all(docIds.map((id) => getFullQuestionDoc(id)));
+  return results.filter(Boolean);
+};
+
+/**
+ * Return `list` with the 5 omitted detail fields filled in from each item's
+ * full `questions/{docId}` doc. Order-preserving, and a NO-OP when USE_INDEX is
+ * false (the in-memory questions already carry every field). Used by export,
+ * which must round-trip the full source/excerpt/explanation that the compact
+ * index drops. Items whose full doc can't be fetched are left as-is (so an
+ * export degrades to index-only fields rather than failing outright).
+ *
+ * @param {Array<Object>} list - questions (with `.id` doc ids) to hydrate
+ * @returns {Promise<Array<Object>>} same length/order, detail fields merged in
+ */
+export const hydrateQuestionDetails = async (list) => {
+  if (!USE_INDEX || !Array.isArray(list) || list.length === 0) return list;
+  const fulls = await getFullQuestionDocs(list.map((q) => q?.id));
+  const byId = new Map(fulls.map((f) => [f.id, f]));
+  return list.map((q) => {
+    const full = byId.get(q?.id);
+    if (!full) return q;
+    const patch = {};
+    for (const f of INDEX_OMITTED_FIELDS) {
+      if (full[f] !== undefined) patch[f] = full[f];
+    }
+    return Object.keys(patch).length > 0 ? { ...q, ...patch } : q;
+  });
 };
 
 // Stats / aggregation queries moved to firebaseStats.js. Re-exported

@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import Icon from "./Icon";
 import QuestionItem from "./QuestionItem";
+import { useQuestionDetailHydration } from "../hooks/useQuestionDetailHydration";
 
 const ReviewMode = ({
   questions,
@@ -57,9 +58,24 @@ const ReviewMode = ({
     }
   }, [effectiveQuestions, currentIndex, setCurrentIndex]);
 
-  if (!effectiveQuestions || effectiveQuestions.length === 0) return null;
+  // Compute the current question + its language variants up here (before any
+  // early return) so the detail-hydration hook below obeys the rules of hooks.
+  const currentQuestion = effectiveQuestions?.[currentIndex];
+  const variants = useMemo(
+    () => Array.from(allQuestionsMap.get(currentQuestion?.uniqueId) || []),
+    [allQuestionsMap, currentQuestion?.uniqueId]
+  );
 
-  const currentQuestion = effectiveQuestions[currentIndex];
+  // Tier 3b: when reading from the compact index, lazily fill the 5 detail-only
+  // fields for the focused card AND its variant tabs (so a translation tab gets
+  // its own per-language source text). No-op when USE_INDEX is false.
+  const hydrationTargets = useMemo(
+    () => (currentQuestion ? [currentQuestion, ...variants] : variants),
+    [currentQuestion, variants]
+  );
+  useQuestionDetailHydration(hydrationTargets, onUpdateQuestion);
+
+  if (!effectiveQuestions || effectiveQuestions.length === 0) return null;
 
   if (!currentQuestion) {
     return (
@@ -134,9 +150,7 @@ const ReviewMode = ({
           onSwitchLanguage={onSwitchLanguage}
           onDelete={onDelete}
           onUpdateQuestion={onUpdateQuestion}
-          availableVariants={Array.from(
-            allQuestionsMap.get(currentQuestion.uniqueId) || []
-          )}
+          availableVariants={variants}
           isProcessing={isProcessing}
           appMode="review"
           onKickBack={onKickBack}

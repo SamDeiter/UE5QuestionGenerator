@@ -680,6 +680,13 @@ const arePropsEqual = (prevProps, nextProps) => {
   if (prevProps.q?.sourceExcerpt !== nextProps.q?.sourceExcerpt) return false;
   if (prevProps.q?.sourceUrl !== nextProps.q?.sourceUrl) return false;
 
+  // Tier 3b: detail fields can arrive lazily (index-sourced card hydration).
+  // A question with an explanation/grounding but no source would otherwise be
+  // treated as unchanged and never re-render to show the filled-in detail.
+  if (prevProps.q?.explanation !== nextProps.q?.explanation) return false;
+  if (prevProps.q?.groundingSources !== nextProps.q?.groundingSources)
+    return false;
+
   // Standard shallow comparison for other props
   const prevKeys = Object.keys(prevProps);
   const nextKeys = Object.keys(nextProps);

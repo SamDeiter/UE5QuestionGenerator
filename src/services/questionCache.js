@@ -15,7 +15,13 @@ import { FIRESTORE_LIMITS } from "../utils/constants";
 const DB_NAME = "ue5-questions-cache";
 const QUESTIONS_STORE = "questions";
 const META_STORE = "meta";
-const DB_VERSION = 1;
+// v2 (Tier 3b): the questions store now holds the compact `questionIndex`
+// shape (5 detail-only fields omitted) when USE_INDEX is on. Bumping the
+// version drops & recreates the store so existing users do one clean cold
+// re-sync into the lighter shape instead of mixing heavy + light docs. The
+// `meta` store (incremental-sync watermark) is preserved — the watermark is a
+// plain epoch, valid against either the full collection or the mirror.
+const DB_VERSION = 2;
 
 /** @type {Promise<IDBDatabase>|null} */
 let dbPromise = null;
@@ -27,17 +33,33 @@ let dbPromise = null;
 const getDB = () => {
   if (!dbPromise) {
     dbPromise = openDB(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        // Questions store with indexes
-        if (!db.objectStoreNames.contains(QUESTIONS_STORE)) {
+      upgrade(db, oldVersion) {
+        const createQuestionsStore = () => {
           const store = db.createObjectStore(QUESTIONS_STORE, {
             keyPath: "uniqueId",
           });
           store.createIndex("status", "status");
           store.createIndex("discipline", "discipline");
           store.createIndex("firestoreUpdatedAt", "firestoreUpdatedAt");
+        };
+
+        // v2 (Tier 3b): drop the heavy-shape questions store so the next sync
+        // refills it with the compact index shape. The emptied store forces
+        // the post-upgrade load down the full-sync path regardless (the
+        // incremental path in useFirestoreSync requires a non-empty cache), and
+        // that full sync reseeds the watermark — so the preserved `meta`
+        // watermark is harmless and we leave it rather than wipe cache metadata
+        // unnecessarily. The store stays keyed by uniqueId (stable across both
+        // shapes), so merges remain correct.
+        if (oldVersion < 2 && db.objectStoreNames.contains(QUESTIONS_STORE)) {
+          db.deleteObjectStore(QUESTIONS_STORE);
         }
-        // Meta store for cache timestamps
+
+        // Questions store with indexes (fresh install or post-drop recreate).
+        if (!db.objectStoreNames.contains(QUESTIONS_STORE)) {
+          createQuestionsStore();
+        }
+        // Meta store for cache timestamps + incremental-sync watermark.
         if (!db.objectStoreNames.contains(META_STORE)) {
           db.createObjectStore(META_STORE);
         }

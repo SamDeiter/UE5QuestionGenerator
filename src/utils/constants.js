@@ -248,6 +248,20 @@ export const QUESTION_SOURCES = {
   IMPORT: "import",
 };
 
+// Tier 3b: the large, detail-only fields the compact `questionIndex` mirror
+// omits (must match functions/triggers/questionIndexProjection.js OMITTED_FIELDS).
+// When USE_INDEX is on, the bulk loader sources from the mirror, so these are
+// absent from in-memory questions and lazily resolved from the full
+// `questions/{docId}` doc on demand (see useQuestionDetailHydration). Only these
+// fields are merged back, so hydration never clobbers other in-memory state.
+export const INDEX_OMITTED_FIELDS = [
+  "sourceExcerpt",
+  "sourceUrl",
+  "explanation",
+  "groundingSources",
+  "editHistory",
+];
+
 // Question Statuses
 export const QUESTION_STATUS = {
   PENDING: "pending",
