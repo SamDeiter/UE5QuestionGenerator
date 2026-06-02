@@ -129,7 +129,18 @@ service cloud.firestore {
       // Delete: Admins only
       allow delete: if isAdmin();
     }
-    
+
+    // ============================================================
+    // QUESTION INDEX COLLECTION (compact read-mirror of questions)
+    // ============================================================
+    // Maintained exclusively by the maintainQuestionIndex Cloud Function
+    // (Admin SDK, which bypasses these rules). Clients only ever READ it to
+    // power the list / filters / counts / search; all writes are server-side.
+    match /questionIndex/{questionId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
     // ============================================================
     // EDIT LOCKS COLLECTION
     // ============================================================
