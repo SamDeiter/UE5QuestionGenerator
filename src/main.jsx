@@ -3,7 +3,6 @@ import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext.jsx";
-import { ErrorReporterProvider } from "./contexts/ErrorReporterContext.jsx";
 import { MessageProvider } from "./contexts/MessageContext.jsx";
 import { ModalProvider } from "./contexts/ModalContext.jsx";
 import { notifyUpdateAvailable } from "./components/UpdateAvailableBanner.jsx";
@@ -59,13 +58,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
       <AccessibilityProvider>
-        <ErrorReporterProvider>
-          <MessageProvider>
-            <ModalProvider>
-              <App />
-            </ModalProvider>
-          </MessageProvider>
-        </ErrorReporterProvider>
+        <MessageProvider>
+          <ModalProvider>
+            <App />
+          </ModalProvider>
+        </MessageProvider>
       </AccessibilityProvider>
     </ErrorBoundary>
   </React.StrictMode>
