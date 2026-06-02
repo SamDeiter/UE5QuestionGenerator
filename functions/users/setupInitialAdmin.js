@@ -1,6 +1,10 @@
 const functions = require("firebase-functions");
 const { getDb } = require("../db");
 const admin = require("firebase-admin");
+const {
+  isTrustedEpicIdentity,
+  isEmailVerified,
+} = require("../utils/identityGuard");
 
 /**
  * Cloud Function: setupInitialAdmin
@@ -27,16 +31,24 @@ exports.setupInitialAdmin = functions
       );
     }
 
-    const userEmail = context.auth.token.email;
+    const token = context.auth.token;
+    const userEmail = token.email;
     const userId = context.auth.uid;
     const db = getDb();
 
     const SUPER_ADMIN_EMAIL = (process.env.SUPER_ADMIN_EMAIL || "").toLowerCase();
-    const ADMIN_DOMAINS = ["epicgames.com", "xa.epicgames.com"];
     const emailDomain = (userEmail || "").toLowerCase().split("@")[1];
-    const isDomainUser = ADMIN_DOMAINS.includes(emailDomain);
+
+    // SECURITY: the Epic-domain auto-grant requires a VERIFIED Google SSO
+    // identity, not just an `@epicgames.com` string. An email/password account
+    // can claim any address unverified — `isTrustedEpicIdentity` rejects those
+    // so they can't self-grant reviewer without a real Epic Google sign-in.
+    const isDomainUser = isTrustedEpicIdentity(token);
+    // Bootstrap admin must at least have proven control of the email.
     const isBootstrapAdmin =
-      SUPER_ADMIN_EMAIL && userEmail.toLowerCase() === SUPER_ADMIN_EMAIL;
+      SUPER_ADMIN_EMAIL &&
+      (userEmail || "").toLowerCase() === SUPER_ADMIN_EMAIL &&
+      isEmailVerified(token);
 
     if (!isDomainUser && !isBootstrapAdmin) {
       throw new functions.https.HttpsError(

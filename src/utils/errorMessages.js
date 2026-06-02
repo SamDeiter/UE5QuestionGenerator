@@ -12,6 +12,7 @@ const ERROR_TYPES = {
   FIREBASE_AUTH_BLOCKED: "firebase-auth-blocked",
   ACCOUNT_EXISTS: "account-exists",
   EMAIL_IN_USE: "email-in-use",
+  EMAIL_NOT_VERIFIED: "email-not-verified",
   INVALID_CREDENTIAL: "invalid-credential",
   // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- This is an error type constant, not a password
   WEAK_PASSWORD: "weak-password",
@@ -48,12 +49,22 @@ const matchError = (error, patterns) => {
 const categorizeError = (error) => {
   const code = error?.code || "";
   const message = error?.message || "";
+  // Callable HttpsErrors surface their app-specific code under details.
+  const detailsCode = error?.details?.code || "";
 
   if (
     message.includes("securetoken.googleapis.com") &&
     message.includes("403")
   ) {
     return ERROR_TYPES.FIREBASE_AUTH_BLOCKED;
+  }
+
+  // Email not verified (e.g. consumeInvite rejects unverified redeemers).
+  if (
+    detailsCode === "auth/email-not-verified" ||
+    code === "auth/email-not-verified"
+  ) {
+    return ERROR_TYPES.EMAIL_NOT_VERIFIED;
   }
 
   // Auth Specific Errors
@@ -143,6 +154,18 @@ const getMessageConfig = (context, browser, usingSafari) => ({
     severity: "warning",
     canRetry: true,
   },
+  [ERROR_TYPES.EMAIL_NOT_VERIFIED]: {
+    title: "📧 Verify Your Email",
+    message:
+      "Check your inbox and click the verification link we sent, then redeem your invite.",
+    actions: [
+      "1. Open the verification email",
+      "2. Click the link",
+      "3. Return here and try again",
+    ],
+    severity: "warning",
+    canRetry: true,
+  },
   [ERROR_TYPES.WEAK_PASSWORD]: {
     title: "⚠️ Weak Password",
     message: "Password should be at least 6 characters.",
@@ -208,6 +231,7 @@ export const getToastMessage = (error, context = "saving") => {
     [ERROR_TYPES.FIREBASE_AUTH_BLOCKED]: "🔒 Auth blocked - refresh session",
     [ERROR_TYPES.PERMISSION_DENIED]: "🔐 Session stale - refresh session",
     [ERROR_TYPES.UNAUTHENTICATED]: "🔑 Session expired",
+    [ERROR_TYPES.EMAIL_NOT_VERIFIED]: "📧 Verify your email, then retry",
     [ERROR_TYPES.NETWORK_ERROR]: "📡 Connection issue - queued",
     [ERROR_TYPES.RATE_LIMITED]: "⏳ Too many requests",
     [ERROR_TYPES.UNKNOWN]: `❌ Error ${context}`,

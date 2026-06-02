@@ -1,6 +1,10 @@
 const functions = require("firebase-functions");
 const { getDb } = require("../db");
 const admin = require("firebase-admin");
+const {
+  isEmailVerified,
+  isTrustedEpicIdentity,
+} = require("../utils/identityGuard");
 
 // isAdminUser no longer needed — registeredUsers and admins are checked directly
 
@@ -131,7 +135,13 @@ exports.checkUserRegistration = functions
       // role. This MUST run before the Epic-domain auto-reviewer branch below,
       // otherwise a migrated admin/super_admin would be silently downgraded to
       // a brand-new reviewer.
-      if (email) {
+      //
+      // SECURITY: gate on email_verified. Without it, an attacker could create
+      // an unverified email/password account claiming a registered user's email
+      // and this block would migrate that victim's record (role and all) onto
+      // the attacker's account — an account/role takeover. Verification is the
+      // proof of email ownership the migration always assumed but never checked.
+      if (email && isEmailVerified(context.auth.token)) {
         console.log(
           `[checkUserRegistration] UID miss, checking email: ${email}`
         );
@@ -179,7 +189,11 @@ exports.checkUserRegistration = functions
       // migrate above). Phase C policy is auto-reviewer — the actual create
       // happens via setupInitialAdmin. Here we just signal that they're
       // eligible to register without an invite, with role=reviewer.
-      if (isEpicEmployee) {
+      //
+      // SECURITY: eligibility requires a VERIFIED Google SSO Epic identity, not
+      // just an `@epicgames.com` claim — mirrors setupInitialAdmin's gate so an
+      // unverified email/password account can't be told it's auto-eligible.
+      if (isTrustedEpicIdentity(context.auth.token)) {
         console.log(`[checkUserRegistration] Epic employee, no record yet: ${email}`);
         return {
           registered: false,

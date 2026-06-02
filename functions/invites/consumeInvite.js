@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const { getDb } = require("../db");
 const admin = require("firebase-admin");
+const { isEmailVerified } = require("../utils/identityGuard");
 
 /**
  * Cloud Function: consumeInvite
@@ -15,6 +16,20 @@ exports.consumeInvite = functions
       throw new functions.https.HttpsError(
         "unauthenticated",
         "Must be signed in to use invite",
+      );
+    }
+
+    // SECURITY: redemption requires a verified email. An invite's `forEmail`
+    // pin is only meaningful if the redeemer has proven they own that address —
+    // otherwise an intercepted code could be redeemed by an unverified
+    // email/password account claiming the target email. Google sign-ins are
+    // always verified and pass transparently.
+    if (!isEmailVerified(context.auth.token)) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "Please verify your email address before redeeming an invite. " +
+          "Check your inbox for the verification link, then try again.",
+        { code: "auth/email-not-verified" },
       );
     }
 
