@@ -177,7 +177,15 @@ const DatabaseView = ({
     targetLang,
     force = false
   ) => {
-    if ((currentQuestion.language || "English") === targetLang) return;
+    // Compare against the language CURRENTLY DISPLAYED (the active override, if
+    // any) — not currentQuestion.language, which is always the English source.
+    // Using the source language here made clicking the English flag a no-op,
+    // so a question switched to a translation could never be switched back.
+    const currentDisplayLang =
+      languageOverrides[currentQuestion.uniqueId] ||
+      currentQuestion.language ||
+      "English";
+    if (currentDisplayLang === targetLang) return;
 
     if (!currentQuestion.uniqueId) {
       showMessage("❌ Question ID missing, cannot switch language", 3000);
