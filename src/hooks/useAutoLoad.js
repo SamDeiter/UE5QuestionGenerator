@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { logger } from "../utils/logger";
 import { runLocalStorageMigration } from "../utils/migrateScores";
 
@@ -6,15 +6,27 @@ import { runLocalStorageMigration } from "../utils/migrateScores";
  * Hook to auto-load database questions on startup.
  * Runs once when user is authenticated and not loading.
  *
+ * `isInitialLoading` is OWNED by the caller (AuthenticatedApp) and passed in
+ * here as a setter, rather than owned locally. This lets sibling hooks that
+ * run BEFORE useAutoLoad in the render (e.g. useQuestionManager, which needs
+ * to gate its realtime listener on the initial-load flag) read the same
+ * state — useAutoLoad can't return it early enough for them because it
+ * depends on handleLoadFromFirestore, which depends on those very hooks.
+ *
  * @param {Object} options - Configuration options
  * @param {Object|null} options.user - The authenticated user object
  * @param {boolean} options.authLoading - Whether auth is still loading
  * @param {Function} options.handleLoadFromFirestore - Function to load questions from Firestore
- * @returns {Object} { hasAutoLoaded, isInitialLoading }
+ * @param {Function} options.setIsInitialLoading - Setter for the caller-owned initial-load flag
+ * @returns {Object} { hasAutoLoaded }
  */
-export function useAutoLoad({ user, authLoading, handleLoadFromFirestore }) {
+export function useAutoLoad({
+  user,
+  authLoading,
+  handleLoadFromFirestore,
+  setIsInitialLoading,
+}) {
   const hasAutoLoadedRef = useRef(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   useEffect(() => {
     // Still waiting for auth to resolve
@@ -53,9 +65,9 @@ export function useAutoLoad({ user, authLoading, handleLoadFromFirestore }) {
     };
 
     loadQuestions();
-  }, [user, authLoading, handleLoadFromFirestore]);
+  }, [user, authLoading, handleLoadFromFirestore, setIsInitialLoading]);
 
-  return { hasAutoLoaded: hasAutoLoadedRef.current, isInitialLoading };
+  return { hasAutoLoaded: hasAutoLoadedRef.current };
 }
 
 export default useAutoLoad;

@@ -8,7 +8,11 @@ import { subscribeToAllQuestions } from "../../services/firebaseQueries";
 /**
  * Hook for handling external synchronization (storage events, cloud auto-save).
  */
-export const useQuestionSync = (allQuestions, setAllQuestions) => {
+export const useQuestionSync = (
+  allQuestions,
+  setAllQuestions,
+  isInitialLoading = false
+) => {
   // Sync questions across browser tabs via storage event
   useEffect(() => {
     const handleStorageChange = (e) => {
@@ -41,6 +45,13 @@ export const useQuestionSync = (allQuestions, setAllQuestions) => {
 
   // PHASE 3.2: Real-time Firestore synchronization
   useEffect(() => {
+    // PERF: don't open the realtime listener during the initial 3-tier load.
+    // On a cold load it would otherwise fire a concurrent ~1k-doc onSnapshot
+    // that competes with the full-sync fetch at the worst moment. Once the
+    // initial load completes (isInitialLoading flips false) this effect
+    // re-runs and subscribes for live cross-user deltas.
+    if (isInitialLoading) return;
+
     // Only subscribe if we are in a mode that needs real-time DB updates
     // (e.g. not just purely local session mode)
     logger.log("📡 Enabling real-time database synchronization...");
@@ -92,7 +103,7 @@ export const useQuestionSync = (allQuestions, setAllQuestions) => {
       logger.log("🔌 Disabling real-time database synchronization");
       unsubscribe();
     };
-  }, [setAllQuestions]);
+  }, [setAllQuestions, isInitialLoading]);
 
   /**
    * Helper to perform cloud backup

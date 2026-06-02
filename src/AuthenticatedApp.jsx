@@ -93,6 +93,9 @@ const AuthenticatedApp = ({
   } = useModals();
 
   // 3. Core Domain Hooks
+  // Owned here (not in useAutoLoad) so useQuestionManager — which runs before
+  // useAutoLoad in this render — can gate its realtime listener on it.
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const { globalStats } = useGlobalStats();
   const { categoryStats } = useCategoryStats(config.discipline);
   const {
@@ -125,7 +128,13 @@ const AuthenticatedApp = ({
     replaceQuestions,
     bulkDeleteQuestions,
     moveQuestion,
-  } = useQuestionManager(config, showMessage, categoryStats, globalStats);
+  } = useQuestionManager(
+    config,
+    showMessage,
+    categoryStats,
+    globalStats,
+    isInitialLoading
+  );
 
   // 2. Lifecycle & Data Loading
   useAgentLifecycle({ user, authLoading });
@@ -230,10 +239,11 @@ const AuthenticatedApp = ({
     handleLoadFromFirestore
   );
 
-  const { isInitialLoading } = useAutoLoad({
+  useAutoLoad({
     user,
     authLoading,
     handleLoadFromFirestore,
+    setIsInitialLoading,
   });
 
   const {
