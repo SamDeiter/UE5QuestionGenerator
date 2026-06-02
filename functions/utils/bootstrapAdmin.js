@@ -17,7 +17,6 @@
  */
 
 const BOOTSTRAP_ADMIN_EMAILS = new Set([
-  "samdeiter@gmail.com",
   "samdeiter@epicgames.com",
 ]);
 
