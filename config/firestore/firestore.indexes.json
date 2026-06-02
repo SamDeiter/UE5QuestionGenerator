@@ -43,6 +43,32 @@
       ]
     },
     {
+      "collectionGroup": "questionIndex",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "firestoreUpdatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "questionIndex",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "discipline", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "firestoreUpdatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "questionIndex",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "critiqueScore", "order": "ASCENDING" },
+        { "fieldPath": "firestoreUpdatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "apiUsage",
       "queryScope": "COLLECTION",
       "fields": [

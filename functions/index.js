@@ -42,6 +42,7 @@ Object.assign(exports, require("./migrations/unifiedAccessMigration"));
 Object.assign(exports, require("./migrations/backfillCustomClaims"));
 Object.assign(exports, require("./migrations/cleanupAuditLogs"));
 Object.assign(exports, require("./migrations/backfillQuestionStats"));
+Object.assign(exports, require("./migrations/backfillQuestionIndex"));
 
 // ============================================================================
 // Email Functions
@@ -52,6 +53,7 @@ Object.assign(exports, require("./email/sendReviewerInvites"));
 // Firestore Triggers (Aggregations)
 // ============================================================================
 Object.assign(exports, require("./triggers/questionStatsUpdater"));
+Object.assign(exports, require("./triggers/questionIndexMaintainer"));
 
 // ============================================================================
 // Screenshot Functions
