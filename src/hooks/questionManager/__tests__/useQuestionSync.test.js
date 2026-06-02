@@ -2,10 +2,15 @@ import { renderHook } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuestionSync } from "../useQuestionSync";
 import { saveQuestionToFirestore } from "../../../services/firebase";
+import { subscribeToAllQuestions } from "../../../services/firebaseQueries";
 import { STORAGE_KEYS, QUESTION_SOURCES } from "../../../utils/constants";
 
 vi.mock("../../../services/firebase", () => ({
   saveQuestionToFirestore: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock("../../../services/firebaseQueries", () => ({
+  subscribeToAllQuestions: vi.fn(() => () => {}),
 }));
 
 vi.mock("../../../utils/logger", () => ({
@@ -80,5 +85,28 @@ describe("useQuestionSync", () => {
     await backupToCloud(newItems, "database");
 
     expect(saveQuestionToFirestore).not.toHaveBeenCalled();
+  });
+
+  describe("realtime listener gating (PERF: avoid concurrent cold-load reads)", () => {
+    it("does NOT open the realtime listener while the initial load is in progress", () => {
+      renderHook(() => useQuestionSync([], vi.fn(), true));
+      expect(subscribeToAllQuestions).not.toHaveBeenCalled();
+    });
+
+    it("opens the realtime listener once the initial load completes", () => {
+      renderHook(() => useQuestionSync([], vi.fn(), false));
+      expect(subscribeToAllQuestions).toHaveBeenCalledTimes(1);
+    });
+
+    it("subscribes when isInitialLoading flips from true to false", () => {
+      const { rerender } = renderHook(
+        ({ loading }) => useQuestionSync([], vi.fn(), loading),
+        { initialProps: { loading: true } }
+      );
+      expect(subscribeToAllQuestions).not.toHaveBeenCalled();
+
+      rerender({ loading: false });
+      expect(subscribeToAllQuestions).toHaveBeenCalledTimes(1);
+    });
   });
 });

@@ -153,11 +153,44 @@ export const useFirestoreSync = ({
           setStatus(cachedData.length > 0 ? "Syncing latest..." : "Loading...");
         }
 
+        // PERF: stream partial results into the UI as each page resolves so
+        // the first questions render after one round-trip instead of after
+        // the entire ~19,580-doc fetch + sort. getAllQuestionsFromFirestore
+        // includes the shared, growing `questions` array on every
+        // onProgress({ done:false }) tick; we render a snapshot of it.
+        //
+        // Gated on a COLD cache only (`cachedData.length === 0`). On warm /
+        // Refresh paths the cached list is already on screen, and replacing
+        // it with a growing partial would make the list visibly shrink then
+        // regrow. The final (sorted) replace below still runs in all cases.
+        const shouldStream = cachedData.length === 0 && !!replaceQuestions;
+        const progressCb = shouldStream
+          ? (progress) => {
+              if (onProgress) {
+                try {
+                  onProgress(progress);
+                } catch (cbError) {
+                  logger.warn("onProgress callback threw:", cbError);
+                }
+              }
+              if (
+                progress &&
+                progress.done === false &&
+                Array.isArray(progress.questions) &&
+                progress.questions.length > 0
+              ) {
+                const partial = processQuestions(progress.questions.slice());
+                replaceQuestions(partial, QUESTION_SOURCES.DATABASE);
+                replaceQuestions(partial, QUESTION_SOURCES.IMPORT);
+              }
+            }
+          : onProgress;
+
         const freshData = await getAllQuestionsFromFirestore(
           FULL_SYNC_COUNT,
           true,
           FULL_SYNC_COUNT,
-          onProgress
+          progressCb
         );
         const freshQuestions = processQuestions(freshData);
 

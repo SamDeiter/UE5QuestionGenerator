@@ -324,7 +324,12 @@ export const getAllQuestionsFromFirestore = async (
       pages++;
       if (onProgress) {
         try {
-          onProgress({ pages, loaded: questions.length, done: false });
+          onProgress({
+            pages,
+            loaded: questions.length,
+            done: false,
+            questions,
+          });
         } catch (cbError) {
           logger.warn("onProgress callback threw:", cbError);
         }
@@ -374,7 +379,7 @@ export const getAllQuestionsFromFirestore = async (
 
     if (onProgress) {
       try {
-        onProgress({ pages, loaded: questions.length, done: true });
+        onProgress({ pages, loaded: questions.length, done: true, questions });
       } catch (cbError) {
         logger.warn("onProgress callback threw:", cbError);
       }
@@ -513,7 +518,16 @@ export const subscribeToAllQuestions = (onNext) => {
   // Limit kept intentionally small: a single onSnapshot trying to deliver
   // 20k+ docs has been observed to fail. Bulk loading is handled by the
   // paginated getAllQuestionsFromFirestore; this listener carries live deltas.
-  const LISTENER_LIMIT = 5000;
+  //
+  // PERF: this listener no longer starts until the initial 3-tier load
+  // completes (gated by isInitialLoading in useQuestionSync), so it never
+  // competes with the cold full-sync. The limit is also kept modest because
+  // the merge is additive (it only updates/adds the docs it sees, never
+  // removes), and the watermark-based incremental sync on the next reload is
+  // the real freshness mechanism — this is best-effort live cross-user
+  // updates, which (with no orderBy) already only ever watched an arbitrary
+  // subset of the corpus.
+  const LISTENER_LIMIT = 1000;
   const q = query(collection(getDb(), "questions"), limit(LISTENER_LIMIT));
 
   // Register listener for observability

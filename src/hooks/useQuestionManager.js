@@ -11,7 +11,8 @@ export const useQuestionManager = (
   config,
   showMessage,
   categoryStats = {},
-  globalStats = null
+  globalStats = null,
+  isInitialLoading = false
 ) => {
   // 1. Core State & Persistence
   const [allQuestions, setAllQuestions] = useQuestionState(config);
@@ -25,7 +26,11 @@ export const useQuestionManager = (
   );
 
   // 3. External Synchronization & Backups
-  const { backupToCloud } = useQuestionSync(allQuestions, setAllQuestions);
+  const { backupToCloud } = useQuestionSync(
+    allQuestions,
+    setAllQuestions,
+    isInitialLoading
+  );
 
   // 4. User Actions & Interactive Logic
   const actions = useQuestionActions(
