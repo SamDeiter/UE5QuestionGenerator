@@ -31,3 +31,24 @@ export const toMillis = (v) => {
   }
   return 0;
 };
+
+/**
+ * Recursively strip keys whose value is `undefined`.
+ *
+ * Firestore rejects writes containing `undefined`, so save payloads are passed
+ * through this first. Arrays and nested objects are cleaned recursively; `null`,
+ * primitives, and other values pass through unchanged.
+ *
+ * @param {*} obj - Value to clean (typically a Firestore write payload object)
+ * @returns {*} The value with all `undefined` properties removed
+ */
+export const removeUndefined = (obj) => {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(removeUndefined);
+
+  return Object.fromEntries(
+    Object.entries(obj)
+      .filter(([, v]) => v !== undefined)
+      .map(([k, v]) => [k, removeUndefined(v)])
+  );
+};

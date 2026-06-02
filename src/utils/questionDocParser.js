@@ -151,34 +151,3 @@ export const parseQuestionDoc = (raw) => {
 
   return { valid: true, errors: [], question: normalized };
 };
-
-/**
- * Safe accessor for question text - never throws.
- *
- * @param {Object} question - Question object
- * @param {number} maxLength - Maximum length before truncation (default 100)
- * @returns {string} - Question text or placeholder
- */
-// eslint-disable-next-line no-unused-vars
-const getQuestionText = (question, maxLength = 100) => {
-  if (!question?.question) return "[No question text]";
-  return question.question.length > maxLength
-    ? question.question.slice(0, maxLength) + "..."
-    : question.question;
-};
-
-/**
- * Check if a question has all required fields for display.
- *
- * @param {Object} question - Question object
- * @returns {boolean} - True if displayable
- */
-// eslint-disable-next-line no-unused-vars
-const isDisplayable = (question) => {
-  return Boolean(
-    question &&
-    (question.id || question.uniqueId) &&
-    question.question &&
-    question.creatorId
-  );
-};
