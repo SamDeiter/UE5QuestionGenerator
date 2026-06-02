@@ -112,12 +112,13 @@ describe("firebaseQueries Tier 3b", () => {
       "miss",
       "uid-a",
       "uid-b",
-      "memo-1"
+      "memo-1",
+      "hydr-1"
     );
   });
 
-  it("ships with USE_INDEX disabled", () => {
-    expect(USE_INDEX).toBe(false);
+  it("USE_INDEX is enabled (compact-index mode is live)", () => {
+    expect(USE_INDEX).toBe(true);
   });
 
   describe("getFullQuestionDoc", () => {
@@ -170,20 +171,32 @@ describe("firebaseQueries Tier 3b", () => {
     });
   });
 
-  describe("hydrateQuestionDetails", () => {
-    it("is a no-op (returns the same list) while USE_INDEX is false", async () => {
-      const list = [{ id: "uid-1", question: "Q" }];
+  describe("hydrateQuestionDetails (USE_INDEX on)", () => {
+    it("fills missing detail fields from each item's full doc", async () => {
+      getDoc.mockResolvedValueOnce(
+        snap("hydr-1", true, { sourceUrl: "u", explanation: "e" })
+      );
+      const list = [{ id: "hydr-1", question: "Q" }];
       const out = await hydrateQuestionDetails(list);
-      expect(out).toBe(list); // same reference — no fetch, no copy
+      expect(out).not.toBe(list); // a new, hydrated list
+      expect(out[0].sourceUrl).toBe("u");
+      expect(out[0].explanation).toBe("e");
+      // always resolves from the full `questions` collection
+      expect(doc).toHaveBeenCalledWith(fakeDb, "questions", "hydr-1");
+    });
+
+    it("returns the input unchanged for an empty list (no fetch)", async () => {
+      const out = await hydrateQuestionDetails([]);
+      expect(out).toEqual([]);
       expect(getDoc).not.toHaveBeenCalled();
     });
   });
 
-  describe("read-collection wiring (flag = false)", () => {
-    it("getQuestionsUpdatedSince reads from `questions`", async () => {
+  describe("read-collection wiring (USE_INDEX on)", () => {
+    it("getQuestionsUpdatedSince reads from the `questionIndex` mirror", async () => {
       getDocs.mockResolvedValueOnce({ forEach: () => {} });
       await getQuestionsUpdatedSince(1000);
-      expect(collection).toHaveBeenCalledWith(fakeDb, "questions");
+      expect(collection).toHaveBeenCalledWith(fakeDb, "questionIndex");
     });
   });
 });
