@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { getCSVContent, segmentQuestions } from "../../utils/exportUtils";
 import { saveQuestionsToSheets } from "../../services/googleSheets";
+import { hydrateQuestionDetails } from "../../services/firebase";
 import { recordExportAttempt } from "../../services/cloudFunctions";
 import { downloadFile } from "../../utils/questionHelpers";
 import { formatDate } from "../../utils/dateHelpers";
@@ -33,7 +34,7 @@ export const useExportFormatting = ({
   setShowExportMenu,
   isAdmin = false,
 }) => {
-  const handleExportByGroup = useCallback(() => {
+  const handleExportByGroup = useCallback(async () => {
     const sourceList = showHistory
       ? [...questions, ...historicalQuestions]
       : questions;
@@ -47,7 +48,9 @@ export const useExportFormatting = ({
       return;
     }
 
-    const groupedData = segmentQuestions(valid);
+    // Tier 3b: fill the detail-only fields the compact index omits before
+    // formatting (no-op when reading from the full collection).
+    const groupedData = segmentQuestions(await hydrateQuestionDetails(valid));
 
     let filesGenerated = 0;
     const exportDate = new Date();
@@ -81,7 +84,7 @@ export const useExportFormatting = ({
     setShowExportMenu,
   ]);
 
-  const handleExportCurrentTarget = useCallback(() => {
+  const handleExportCurrentTarget = useCallback(async () => {
     const sourceList = showHistory
       ? [...questions, ...historicalQuestions]
       : questions;
@@ -113,8 +116,9 @@ export const useExportFormatting = ({
     const datePart = new Date().toISOString().split("T")[0].replace(/-/g, "");
     const langPart = (config.language || "English").replace(/ /g, "_");
 
+    // Tier 3b: hydrate detail-only fields before CSV formatting (no-op off-index).
     const csvContent = getCSVContent(
-      valid,
+      await hydrateQuestionDetails(valid),
       config.creatorName,
       config.reviewerName
     );
@@ -209,6 +213,11 @@ export const useExportFormatting = ({
         }
         return;
       }
+
+      // Tier 3b: after the rate-limit gate passes, fill the detail-only fields
+      // the compact index omits (sourceUrl/sourceExcerpt/explanation/grounding)
+      // before any formatter runs. No-op when reading the full collection.
+      questionsToExport = await hydrateQuestionDetails(questionsToExport);
 
       if (format === "sheets") {
         if (!config.sheetUrl) {

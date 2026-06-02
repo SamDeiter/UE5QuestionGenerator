@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { generateContentSecure as generateContent } from "../../services/geminiSecure";
+import { hydrateQuestionDetails } from "../../services/firebase";
 import { parseQuestions } from "../../utils/questionHelpers";
 import { TOAST_DURATION, AI_CONFIG } from "../../utils/constants";
 import {
@@ -59,6 +60,13 @@ export const useQuestionTranslation = ({
 
       setIsProcessing(true);
       setStatus(`Translating question to ${targetLang}...`);
+
+      // Tier 3b: the source question's detail fields (sourceUrl/sourceExcerpt/
+      // explanation) are absent when the list was loaded from the compact
+      // index. Hydrate before building the prompt and copying sourceUrl into
+      // the new variant. No-op when reading the full collection.
+      const [hydratedSource] = await hydrateQuestionDetails([q]);
+      if (hydratedSource) q = hydratedSource;
 
       const systemPrompt = getTranslationSystemPrompt(q.language, targetLang);
       const userPrompt = getTranslationUserPrompt(q);

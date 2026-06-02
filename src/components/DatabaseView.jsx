@@ -7,6 +7,7 @@ import { exportQuestionsForCritique } from "../utils/externalCritique";
 import { logger } from "../utils/logger";
 import { getQuestionVariantsForId } from "../services/firebaseQueries";
 import { useMessage } from "../contexts/MessageContext";
+import { useQuestionDetailHydration } from "../hooks/useQuestionDetailHydration";
 
 const DatabaseView = ({
   questions,
@@ -17,6 +18,7 @@ const DatabaseView = ({
   onTranslateSingle, // NEW: Support translation generation
   onSwitchLanguage: onGlobalSwitchLanguage, // NEW: Support global state updates
   addQuestionsToState, // NEW: To inject remote variants into local state
+  hydrateMerge, // Tier 3b: silent local merge for lazy detail-field hydration
   filterMode = "all", // Default to 'all' if not provided
   sortBy = "default", // Default to 'default' if not provided
   searchTerm = "", // Search filter from toolbar
@@ -27,6 +29,13 @@ const DatabaseView = ({
   const { showMessage } = useMessage();
   const [, setLoadMenuOpen] = useState(false);
   const loadMenuRef = useRef(null);
+  // Tier 3b: the on-screen Virtuoso window, so we hydrate ONLY visible cards'
+  // detail fields (the list can be thousands of rows — hydrating all would
+  // defeat the compact-index payload savings).
+  const [visibleRange, setVisibleRange] = useState({
+    startIndex: 0,
+    endIndex: 0,
+  });
 
   // Export for external critique (Admin only)
   const handleExport = () => {
@@ -160,6 +169,20 @@ const DatabaseView = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions, sortBy, filterMode, searchTerm]);
+
+  // Tier 3b: lazily fill the detail-only fields for the cards currently in the
+  // Virtuoso window. Only the English/own `q` of each visible row needs it —
+  // switching to a translation tab already fetches full variants via
+  // getQuestionVariantsForId + addQuestionsToState. No-op when USE_INDEX=false.
+  const visibleTargets = useMemo(() => {
+    const { startIndex, endIndex } = visibleRange;
+    if (endIndex < startIndex) return [];
+    // pad a little so rows just outside the window are ready before they scroll in
+    const from = Math.max(0, startIndex - 3);
+    const to = Math.min(sortedQuestions.length, endIndex + 4);
+    return sortedQuestions.slice(from, to);
+  }, [sortedQuestions, visibleRange]);
+  useQuestionDetailHydration(visibleTargets, hydrateMerge);
 
   // Local state to track language overrides for specific question cards
   const [languageOverrides, setLanguageOverrides] = useState({});
@@ -305,6 +328,7 @@ const DatabaseView = ({
           <Virtuoso
             style={{ height: "calc(100vh - 280px)" }}
             data={sortedQuestions}
+            rangeChanged={setVisibleRange}
             itemContent={(i, originalQ) => {
               // Apply language override if the user has clicked a translation flag
               // Use allQuestionsMap to find the variant globally (not limited to windowed view)

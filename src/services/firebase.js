@@ -42,6 +42,9 @@ export {
   getQuestionsFromFirestore,
   getAllQuestionsFromFirestore,
   getQuestionsUpdatedSince,
+  getFullQuestionDoc,
+  getFullQuestionDocs,
+  hydrateQuestionDetails,
   subscribeToAllQuestions,
   getQuestionsPaginated,
   invalidateQuestionsCache,
@@ -50,6 +53,7 @@ export {
   deleteQuestionFromFirestore,
   saveCustomTags,
   getCustomTags,
+  USE_INDEX,
 } from "./firebaseQueries";
 
 // Re-export save functions from firebaseSave.js for backward compatibility
