@@ -157,7 +157,7 @@ const InviteManagement = ({
           : "";
         return {
           email: inv.forEmail || "unknown@example.com",
-          inviteUrl: `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${inv.code}${emailParam}`,
+          inviteUrl: `${window.location.origin}/?invite=${inv.code}${emailParam}`,
           code: inv.code,
           note:
             inv.note ||
@@ -197,9 +197,7 @@ const InviteManagement = ({
       const emailPayload = [
         {
           email: invite.forEmail,
-          inviteUrl: `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${
-            invite.code
-          }${
+          inviteUrl: `${window.location.origin}/?invite=${invite.code}${
             invite.forEmail
               ? `&email=${encodeURIComponent(invite.forEmail)}`
               : ""
