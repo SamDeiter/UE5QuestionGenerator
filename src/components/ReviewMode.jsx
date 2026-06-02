@@ -22,6 +22,8 @@ const ReviewMode = ({
   onKickBack, // For restoring rejected questions
   userRole, // NEW
   allQuestionsMap,
+  onRequestMore, // Tier 2: pull the next paginated page (cold-load first paint)
+  hasMore = false, // Tier 2: whether more paginated pages exist
 }) => {
   // Auto-start tutorial if not completed (and compliance modals are done)
   useEffect(() => {
@@ -57,6 +59,20 @@ const ReviewMode = ({
       setCurrentIndex(effectiveQuestions.length - 1);
     }
   }, [effectiveQuestions, currentIndex, setCurrentIndex]);
+
+  // Tier 2: when navigating near the end of a paginated first-paint slice,
+  // pull the next page so the user never hits a premature wall before the
+  // full in-memory list takes over.
+  useEffect(() => {
+    if (
+      hasMore &&
+      onRequestMore &&
+      effectiveQuestions.length > 0 &&
+      currentIndex >= effectiveQuestions.length - 3
+    ) {
+      onRequestMore();
+    }
+  }, [hasMore, onRequestMore, currentIndex, effectiveQuestions.length]);
 
   // Compute the current question + its language variants up here (before any
   // early return) so the detail-hydration hook below obeys the rules of hooks.

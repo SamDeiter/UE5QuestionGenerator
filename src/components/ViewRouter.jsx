@@ -25,6 +25,7 @@ import {
   useTranslationMap,
   useSessionQuestions,
 } from "../store/questionSelectors";
+import { usePaginatedReview } from "../hooks/usePaginatedReview";
 
 const ViewRouter = ({
   uniqueFilteredQuestions,
@@ -58,6 +59,9 @@ const ViewRouter = ({
     sortBy,
     searchTerm,
     showHistory,
+    filterTags,
+    filterScoreTier,
+    filterByReviewer,
   } = useFilterStore(
     useShallow((s) => ({
       currentReviewIndex: s.currentReviewIndex,
@@ -68,6 +72,9 @@ const ViewRouter = ({
       sortBy: s.sortBy,
       searchTerm: s.searchTerm,
       showHistory: s.showHistory,
+      filterTags: s.filterTags,
+      filterScoreTier: s.filterScoreTier,
+      filterByReviewer: s.filterByReviewer,
     }))
   );
 
@@ -89,6 +96,31 @@ const ViewRouter = ({
 
   const { filteredQuestions, status, userRole, isInitialLoading } = state;
 
+  // Tier 2: first-paint pagination for Review mode. Only kicks in on a cold
+  // load (in-memory list still empty) and only for the "clean default" filter
+  // state the paginated query can faithfully reproduce server-side. As soon as
+  // the background sync fills the in-memory list, we switch back to it.
+  const hasMemoryData = uniqueFilteredQuestions.length > 0;
+  const cleanDefault =
+    searchTerm === "" &&
+    (filterTags?.length ?? 0) === 0 &&
+    filterScoreTier === "" &&
+    filterByReviewer === "" &&
+    filterByCreator === false &&
+    showHistory === false &&
+    sortBy === "default";
+  const {
+    questions: paginatedReviewQuestions,
+    hasMore: paginatedHasMore,
+    fetchNextPage: fetchMoreReview,
+  } = usePaginatedReview({
+    appMode,
+    filterMode,
+    discipline: config.discipline,
+    hasMemoryData,
+    cleanDefault,
+  });
+
   /**
    * Render the appropriate view based on appMode
    */
@@ -98,12 +130,22 @@ const ViewRouter = ({
       // Check if tutorial is active for review mode - ALWAYS use demo card during tutorial
       const isReviewTutorialActive = activeScenario === "review";
 
-      // During tutorial, always use demo card for consistent experience
-      // Otherwise, use real questions
+      // During tutorial, always use demo card for consistent experience.
+      // Otherwise prefer the in-memory list; on a cold load fall back to the
+      // Tier 2 paginated first-paint slice until the in-memory list arrives.
       let effectiveQuestions = uniqueFilteredQuestions;
       if (isReviewTutorialActive) {
         effectiveQuestions = [createTutorialDemoQuestion()];
+      } else if (effectiveQuestions.length === 0) {
+        effectiveQuestions = paginatedReviewQuestions;
       }
+
+      // Whether the card list is currently served by the paginated fallback
+      // (so we only wire prefetch when there are more server pages to pull).
+      const usingPaginated =
+        !isReviewTutorialActive &&
+        uniqueFilteredQuestions.length === 0 &&
+        paginatedReviewQuestions.length > 0;
 
       // Show loading state during initial data fetch (prevents false empty state on refresh)
       if (isInitialLoading && effectiveQuestions.length === 0) {
@@ -130,6 +172,8 @@ const ViewRouter = ({
             onKickBack={handleKickBackToReview}
             userRole={userRole}
             allQuestionsMap={allQuestionsMap}
+            onRequestMore={usingPaginated ? fetchMoreReview : undefined}
+            hasMore={usingPaginated ? paginatedHasMore : false}
           />
         );
       }
