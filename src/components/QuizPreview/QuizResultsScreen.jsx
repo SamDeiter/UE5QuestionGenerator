@@ -20,7 +20,7 @@ const QuizResultsScreen = ({ results, onClose }) => {
       <div className="max-w-lg w-full text-center">
         {/* UE Branding */}
         <img
-          src="/UE5QuestionGenerator/logos/UE-Secondary-Logo-2023-Horizontal-White.svg"
+          src={`${import.meta.env.BASE_URL}logos/UE-Secondary-Logo-2023-Horizontal-White.svg`}
           alt="Unreal Engine"
           className="h-8 mx-auto mb-8 opacity-60"
         />

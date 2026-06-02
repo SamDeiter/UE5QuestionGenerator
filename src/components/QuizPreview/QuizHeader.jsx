@@ -18,7 +18,7 @@ const QuizHeader = ({
           <div className="flex items-center gap-4">
             {/* UE Icon */}
             <img
-              src="/UE5QuestionGenerator/logos/UE-Icon-2023-White.svg"
+              src={`${import.meta.env.BASE_URL}logos/UE-Icon-2023-White.svg`}
               alt="Unreal Engine"
               className="h-6 w-6 opacity-80"
             />

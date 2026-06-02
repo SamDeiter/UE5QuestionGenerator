@@ -21,10 +21,10 @@ const getGitCommitHash = () => {
   }
 };
 
-// Base path differs by host: "/UE5QuestionGenerator/" for GitHub Pages,
-// "/" for Firebase Hosting (served at the root domain). Override via the
-// VITE_BASE_PATH env var at build time.
-const BASE_PATH = process.env.VITE_BASE_PATH || "/UE5QuestionGenerator/";
+// Base path differs by host: "/" for Firebase Hosting (served at the root
+// domain — current default). Set VITE_BASE_PATH="/UE5QuestionGenerator/" at
+// build time only for the legacy GitHub Pages subpath deploy.
+const BASE_PATH = process.env.VITE_BASE_PATH || "/";
 
 // https://vite.dev/config/
 export default defineConfig({

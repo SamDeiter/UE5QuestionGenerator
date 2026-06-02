@@ -23,12 +23,13 @@ service cloud.firestore {
     // future relaxation of registeredUsers writes would silently become
     // a privilege-escalation cliff.
     function isAdmin() {
-      return request.auth.token.role == 'admin';
+      return request.auth.token.role == 'admin'
+        || request.auth.token.role == 'super_admin';
     }
 
     function isReviewer() {
       return request.auth.token.role == 'reviewer'
-        || request.auth.token.role == 'admin';
+        || isAdmin();
     }
     
     // Version control: Require version increments by exactly 1 (no skipping)

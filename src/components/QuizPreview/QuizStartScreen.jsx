@@ -12,7 +12,7 @@ const QuizStartScreen = ({ questions, config, onClose, onStart }) => {
         <div className="mb-8">
           {/* Unreal Engine Logo */}
           <img
-            src="/UE5QuestionGenerator/logos/UE-Secondary-Logo-2023-Horizontal-White.svg"
+            src={`${import.meta.env.BASE_URL}logos/UE-Secondary-Logo-2023-Horizontal-White.svg`}
             alt="Unreal Engine"
             className="h-12 mx-auto mb-6"
           />

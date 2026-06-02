@@ -163,7 +163,7 @@ const Header = ({
         >
           <div className="p-2 transition-colors duration-500">
             <img
-              src="/UE5QuestionGenerator/logos/UE-Icon-2023-White.svg"
+              src={`${import.meta.env.BASE_URL}logos/UE-Icon-2023-White.svg`}
               alt="UE5 Logo"
               className="w-10 h-10 object-contain"
             />
