@@ -57,6 +57,27 @@ export async function generateScormPackageFiles(questions, config = {}) {
     return btoa(binary);
   };
 
+  // Escape a string for safe interpolation into HTML/XML (manifest, index.html).
+  // Prevents a crafted title/description from injecting markup or breaking the
+  // XML structure of imsmanifest.xml.
+  const escapeMarkup = (value) =>
+    String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  // Safely embed an arbitrary string as a JS string literal in generated
+  // questions.js. JSON.stringify handles quotes/backslashes/newlines; the extra
+  // </ and < escapes neutralize any "</script>"-style breakout for defense in
+  // depth (questions.js is loaded as an external script, but this keeps the
+  // value safe regardless of how it is consumed).
+  const toJsLiteral = (value) =>
+    JSON.stringify(String(value == null ? "" : value))
+      .replace(/</g, "\\u003c")
+      .replace(/>/g, "\\u003e");
+
   // Load template files from public directory
   // Use Vite's BASE_URL to handle GitHub Pages deployment path
   const basePath = import.meta.env.BASE_URL || "/";
@@ -74,26 +95,30 @@ export async function generateScormPackageFiles(questions, config = {}) {
   // Generate unique ID for the SCORM package
   const packageId = `com.ue5questiongen.${Date.now()}`;
 
-  // Replace template variables in manifest (both {{TITLE}}/{{ID}} placeholders and legacy strings)
+  // Replace template variables in manifest (both {{TITLE}}/{{ID}} placeholders and legacy strings).
+  // Function replacers are used so a title containing "$" (e.g. "$&", "$1") is
+  // inserted literally rather than interpreted as a replacement pattern, and the
+  // title is markup-escaped to keep the XML well-formed and injection-safe.
+  const safeTitle = escapeMarkup(title);
   const processedManifest = manifest
-    .replace(/\{\{TITLE\}\}/g, title)
-    .replace(/\{\{ID\}\}/g, packageId)
-    .replace(/UE5 Scenario Tracker/g, title)
-    .replace(/com\.example\.ue5scenario\.scorm12/g, packageId);
+    .replace(/\{\{TITLE\}\}/g, () => safeTitle)
+    .replace(/\{\{ID\}\}/g, () => packageId)
+    .replace(/UE5 Scenario Tracker/g, () => safeTitle)
+    .replace(/com\.example\.ue5scenario\.scorm12/g, () => packageId);
 
   // Replace template variables in index.html (both {{TITLE}} placeholders and legacy strings)
   const processedIndexHtml = indexHtml
-    .replace(/\{\{TITLE\}\}/g, title)
-    .replace(/UE5 Scenario Tracker/g, title);
+    .replace(/\{\{TITLE\}\}/g, () => safeTitle)
+    .replace(/UE5 Scenario Tracker/g, () => safeTitle);
 
   // Create questions.js file with our questions
   const questionsJs = `// Generated questions for SCORM package
 // Generated: ${new Date().toISOString()}
 
 window.QUIZ_CONFIG = {
-  title: "${title}",
-  description: "${description}",
-  language: "${language}",
+  title: ${toJsLiteral(title)},
+  description: ${toJsLiteral(description)},
+  language: ${toJsLiteral(language)},
   passingScore: ${passingScore},
   timeLimit: ${timeLimit * 60}, // Convert minutes to seconds
   totalQuestions: ${scormQuestions.length},

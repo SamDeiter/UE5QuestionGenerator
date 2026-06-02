@@ -633,6 +633,99 @@ describe("SCORM Exporter Service", () => {
   });
 
   // =====================================================
+  // INJECTION-SAFE INTERPOLATION - SECURITY REGRESSION TESTS
+  // Prevents a crafted title/description/question from breaking out of the
+  // generated questions.js / imsmanifest.xml / index.html and executing code.
+  // The question/choice text sink (innerHTML) is escaped in scorm-template/
+  // game.js via escapeHtml(); these tests cover the packager-side interpolation.
+  // =====================================================
+  describe("Injection-safe interpolation (Security Regression)", () => {
+    const fetchMock = vi.fn();
+
+    beforeEach(() => {
+      global.fetch = fetchMock;
+      fetchMock.mockImplementation((url) => {
+        if (url.includes("imsmanifest.xml")) {
+          return Promise.resolve({
+            ok: true,
+            text: () =>
+              Promise.resolve("<title>{{TITLE}}</title><id>{{ID}}</id>"),
+          });
+        }
+        if (url.includes("index.html")) {
+          return Promise.resolve({
+            ok: true,
+            text: () => Promise.resolve("<h1>{{TITLE}}</h1>"),
+          });
+        }
+        return Promise.resolve({ ok: true, text: () => Promise.resolve("") });
+      });
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("CRITICAL: a title with quotes cannot break out of the QUIZ_CONFIG JS string", async () => {
+      const title = '"; window.PWNED = true; var x = "';
+      const files = await generateScormPackageFiles([firestoreQuestion], {
+        title,
+      });
+      const js = files["questions.js"];
+      // The value must be embedded as a single JSON-encoded literal...
+      expect(js).toContain(`title: ${JSON.stringify(title)}`);
+      // ...so the raw breakout (empty string then live code) never appears.
+      expect(js).not.toMatch(/title: "";/);
+    });
+
+    it("CRITICAL: </script> in title/description is neutralized in QUIZ_CONFIG", async () => {
+      const files = await generateScormPackageFiles([firestoreQuestion], {
+        title: "Quiz </script><script>alert(1)</script>",
+        description: "</script> dangerous",
+      });
+      const js = files["questions.js"];
+      expect(js).not.toContain("</script>");
+      expect(js).not.toContain("<script>");
+    });
+
+    it("CRITICAL: HTML-escapes a malicious title injected into imsmanifest.xml", async () => {
+      const files = await generateScormPackageFiles([firestoreQuestion], {
+        title: "</title><script>alert(1)</script>",
+      });
+      const xml = files["imsmanifest.xml"];
+      expect(xml).not.toContain("<script>");
+      expect(xml).toContain("&lt;script&gt;");
+    });
+
+    it("CRITICAL: HTML-escapes a malicious title injected into index.html", async () => {
+      const files = await generateScormPackageFiles([firestoreQuestion], {
+        title: "<img src=x onerror=alert(1)>",
+      });
+      const html = files["index.html"];
+      expect(html).not.toContain("<img src=x onerror=alert(1)>");
+      expect(html).toContain("&lt;img");
+    });
+
+    it("treats a title containing $ replacement patterns literally", async () => {
+      const files = await generateScormPackageFiles([firestoreQuestion], {
+        title: "Cost $5 & up $& $1",
+      });
+      const xml = files["imsmanifest.xml"];
+      // $& / $1 must NOT be interpreted as regex replacement backreferences,
+      // and & must be entity-escaped for valid XML.
+      expect(xml).toContain("Cost $5 &amp; up $&amp; $1");
+    });
+
+    it("keeps raw angle brackets in question text (escaping is the player's job)", () => {
+      const q = { ...firestoreQuestion, question: "Use <Actor> or not?" };
+      const result = convertQuestionToScormFormat(q);
+      // sanitizeQuestionText returns plain text and does not escape tags;
+      // game.js escapeHtml() escapes at the innerHTML sink. See sanitize.js.
+      expect(result.text).toContain("<Actor>");
+    });
+  });
+
+  // =====================================================
   // ENGLISH LANGUAGE FILTERING - REGRESSION TESTS
   // Critical: Prevents Korean/non-Latin questions from being exported
   // =====================================================
