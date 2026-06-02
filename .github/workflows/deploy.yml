@@ -59,6 +59,11 @@ jobs:
           VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
+      # Cloud Functions security suite (pure unit tests, no emulator/Java).
+      - name: Run functions tests
+        run: cd functions && npm test
+
       - name: Validate Firestore Rules
         run: node scripts/validate-firestore-rules.js
 
@@ -73,6 +78,17 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           # SECURITY: VITE_GEMINI_API_KEY removed - API key must NEVER be in client bundle
           # SECURITY: VITE_SUPER_ADMIN_EMAIL removed - prevents admin identity enumeration
+
+      # Run the bundle-secret scan AFTER the build so dist/assets exists. In the
+      # main test step above (pre-build) this test self-skips because dist is
+      # absent, so without this step the "no Gemini API key in bundle" assertion
+      # never actually fires.
+      - name: Verify no secrets in built bundle
+        run: npx vitest run tests/security/bundle-secrets.test.js
+        env:
+          # Lets the test value-match the one allowed AIza key against the real
+          # public Firebase web key instead of relying only on the count check.
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
 
       - name: Deploy
         # Pinned to v4.6.3 for supply chain security
