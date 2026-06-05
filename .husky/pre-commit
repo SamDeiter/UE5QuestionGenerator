@@ -3,7 +3,9 @@
 # Block obvious secret-bearing files from ever being committed. This is a
 # fast first line of defense — gitleaks runs in CI as the deeper check.
 # Patterns:
-#   .env, .env.local, .env.production, etc.
+#   .env, .env.local, .env.development, .env.production, .env.test, etc.
+#   .env.example is intentionally excluded — it's a committed template with
+#   placeholder values, not actual secrets.
 #   *serviceAccountKey*.json (Firebase admin SDK)
 #   firebase-adminsdk-*.json (the format Firebase suggests for downloads)
 #   *credentials*.json (catch-all for misnamed creds)
@@ -12,13 +14,16 @@
 # legitimate case requires `git commit --no-verify` (recorded in reflog).
 STAGED=$(git diff --cached --name-only)
 
-if echo "$STAGED" | grep -E '(^|/)\.env($|\.)|serviceAccountKey|firebase-adminsdk-.*\.json$|credentials.*\.json$' >/dev/null; then
+SECRET_PATTERN='(^|/)\.env($|\.(local|development|production|test|staging|personal-bak))|serviceAccountKey|firebase-adminsdk-.*\.json$|credentials.*\.json$'
+
+if echo "$STAGED" | grep -E "$SECRET_PATTERN" >/dev/null; then
   echo ""
   echo "🚫 pre-commit: refusing to commit a file that looks like a secret bundle:"
-  echo "$STAGED" | grep -E '(^|/)\.env($|\.)|serviceAccountKey|firebase-adminsdk-.*\.json$|credentials.*\.json$' | sed 's/^/   - /'
+  echo "$STAGED" | grep -E "$SECRET_PATTERN" | sed 's/^/   - /'
   echo ""
   echo "If this is a false positive, re-run with: git commit --no-verify"
   exit 1
 fi
 
 npx lint-staged
+
