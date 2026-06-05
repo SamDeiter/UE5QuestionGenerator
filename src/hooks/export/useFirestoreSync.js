@@ -186,10 +186,14 @@ export const useFirestoreSync = ({
             }
           : onProgress;
 
+        // Pass null as customLimit so getAllQuestionsFromFirestore writes
+        // the result to both in-memory cache and IndexedDB. Without this,
+        // every cold load (Ctrl+Shift+R, first login) re-fetches all
+        // 19,580 docs from Firestore because IDB is never populated.
         const freshData = await getAllQuestionsFromFirestore(
           FULL_SYNC_COUNT,
           true,
-          FULL_SYNC_COUNT,
+          null,
           progressCb
         );
         const freshQuestions = processQuestions(freshData);

@@ -55,18 +55,35 @@ const UpdateAvailableBanner = () => {
   if (!needRefresh) return null;
 
   const handleReload = async () => {
-    // vite-plugin-pwa's updateSW(true) only posts SKIP_WAITING; the actual
-    // page reload depends on a `controlling` event firing inside workbox-
-    // window, which can silently no-op (e.g. if clientsClaim is missing or
-    // the SW handshake races the click). Belt-and-suspenders: post
-    // SKIP_WAITING, then force a hard reload ourselves so the button always
-    // does something visible.
+    // Dismiss first so a race-triggered re-registration doesn't re-show the
+    // banner on the reloaded page before the new SW has taken control.
+    _dismiss();
+
+    // Listen for the SW handoff before reloading. workbox-window fires
+    // controllerchange when the new SW takes control; reloading before that
+    // leaves the waiting SW still waiting, which causes onNeedRefresh to fire
+    // again on the next page load (the loop the user sees).
+    const reloadOnControl = () => window.location.reload();
+    navigator.serviceWorker?.addEventListener(
+      "controllerchange",
+      reloadOnControl,
+      { once: true }
+    );
+
+    // Fallback: if the SW doesn't take control within 3 s (e.g. no SW support,
+    // or clientsClaim timing edge-case), force the reload ourselves.
+    const fallback = setTimeout(reloadOnControl, 3000);
+
     try {
       if (typeof _updateSW === "function") {
-        await _updateSW(true);
+        await _updateSW(true); // posts SKIP_WAITING to the waiting SW
+      } else {
+        clearTimeout(fallback);
+        reloadOnControl();
       }
-    } finally {
-      window.location.reload();
+    } catch {
+      clearTimeout(fallback);
+      reloadOnControl();
     }
   };
 

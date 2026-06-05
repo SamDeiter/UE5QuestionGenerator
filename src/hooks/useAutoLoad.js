@@ -59,8 +59,8 @@ export function useAutoLoad({
       hasAutoLoadedRef.current = true;
       logger.log("📊 Loading all questions from Firestore...");
 
-      // Load all questions on startup
-      await handleLoadFromFirestore(true);
+      // Load all questions on startup (not silent so loading/loaded toasts show)
+      await handleLoadFromFirestore(false);
       setIsInitialLoading(false);
     };
 
