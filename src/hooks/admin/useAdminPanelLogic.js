@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useAdminUsers } from "./useAdminUsers";
 import { useAdminInvites } from "./useAdminInvites";
 import { useAdminAnalytics } from "./useAdminAnalytics";
@@ -30,6 +31,13 @@ export const useAdminPanelLogic = (showMessage) => {
 
   const { reviewerAnalytics, analyticsLoading, loadReviewerAnalytics } =
     useAdminAnalytics(showMessage);
+
+  useEffect(() => {
+    loadUsers();
+    loadInvites();
+    loadReviewerAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     // Users
