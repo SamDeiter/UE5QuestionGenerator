@@ -2,7 +2,7 @@ const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 
 // Firebase Storage bucket (default bucket)
-const BUCKET_NAME = "ue5-questions-prod.firebasestorage.app";
+const BUCKET_NAME = process.env.STORAGE_BUCKET || "development-317819.firebasestorage.app";
 
 // SECURITY: Max file size (5MB)
 const MAX_FILE_SIZE = 5 * 1024 * 1024;

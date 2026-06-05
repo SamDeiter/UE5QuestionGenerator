@@ -5,7 +5,7 @@ const admin = require("firebase-admin");
 // Import utility functions
 const { logApiUsage } = require("../utils/apiUsage");
 const { sanitizeInput } = require("../utils/inputSanitizer");
-const { callVertexGenerateContent } = require("./vertexClient");
+const { generateContent } = require("./vertexClient");
 
 
 /**
@@ -165,61 +165,46 @@ exports.generateCritique = functions
         Options: ${JSON.stringify(sanitizedOptions)}
         Correct: ${sanitizedCorrect}`;
 
-      // Model fallback list: prioritized by quota; gemini-1.5/2.0 retired
+      // Model fallback list: prioritized by cost; 2.5-series retires 2026-10-16
       const modelFallbacks = [
         model, // User-specified or default (gemini-2.5-flash)
-        "gemini-2.5-flash-lite", // huge quota, cheapest
+        "gemini-2.5-flash-lite", // highest quota, cheapest
         "gemini-2.5-flash", // good balance
-        "gemini-2.5-pro", // slower but more capable
+        "gemini-2.5-pro", // most capable
       ];
 
-      let response;
+      const payload = {
+        contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 8192,
+        },
+      };
+
+      let rawText;
       let lastError;
       let usedModel = model;
 
-      // Try each model in order until one works
+      // Try each model in order until one works — SDK throws on API errors
       for (const fallbackModel of modelFallbacks) {
         try {
-          response = await callVertexGenerateContent(fallbackModel, {
-            contents: [{ parts: [{ text: userPrompt }] }],
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            generationConfig: {
-              temperature: 0.2,
-              maxOutputTokens: 8192,
-              responseMimeType: "application/json",
-            },
-          });
-
-          if (response.ok) {
-            usedModel = fallbackModel;
-            console.log(`✅ Successfully used model: ${fallbackModel}`);
-            break; // Success! Exit the loop
-          }
-
-          // If 404, try next model
-          if (response.status === 404) {
-            console.log(`⚠️ Model ${fallbackModel} not found, trying next...`);
-            lastError = new Error(`Model ${fallbackModel} not found (404)`);
-            continue;
-          }
-
-          // For other errors, throw immediately
-          throw new Error(`API error: ${response.statusText}`);
+          const sdkResponse = await generateContent(fallbackModel, payload);
+          rawText = sdkResponse.text ?? "";
+          usedModel = fallbackModel;
+          console.log(`✅ Successfully used model: ${fallbackModel}`);
+          break;
         } catch (error) {
           lastError = error;
-          console.error(`❌ Error with model ${fallbackModel}:`, error.message);
+          const is404 = /404|not found/i.test(error.message);
+          console.error(`❌ ${is404 ? "model not found" : "error"} with ${fallbackModel}:`, error.message);
           // Continue to next model
         }
       }
 
-      // If all models failed, throw the last error
-      if (!response || !response.ok) {
+      if (rawText === undefined) {
         throw lastError || new Error("All model fallbacks failed");
       }
-
-      const responseData = await response.json();
-      const rawText =
-        responseData.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
       // Parse JSON response
       let result;

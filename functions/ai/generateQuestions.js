@@ -4,7 +4,7 @@ const functions = require("firebase-functions");
 const { checkRateLimit } = require("../middleware/rateLimiter");
 const { logApiUsage } = require("../utils/apiUsage");
 const { extractGroundingSources } = require("../utils/grounding");
-const { callVertexGenerateContent } = require("./vertexClient");
+const { generateContent } = require("./vertexClient");
 const {
   sanitizeInput,
   validateNoPromptInjection,
@@ -90,7 +90,7 @@ exports.generateQuestions = functions
       // 4. Build the Gemini request. Auth is via the function's ADC (no API
       //    key); the runtime service account needs roles/aiplatform.user.
       const payload = {
-        contents: [{ parts: [{ text: sanitizedUserPrompt }] }],
+        contents: [{ role: "user", parts: [{ text: sanitizedUserPrompt }] }],
         systemInstruction: { parts: [{ text: sanitizedSystemPrompt }] },
         tools: [
           {
@@ -103,30 +103,13 @@ exports.generateQuestions = functions
         },
       };
 
-      // 5. Call Gemini via Vertex AI (response/grounding shape is identical)
-      const response = await callVertexGenerateContent(model, payload);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(
-          `[ERROR] Gemini API failed: ${response.status} ${response.statusText}`,
-          errorText
-        );
-        throw new Error(
-          `Gemini API error: ${response.status} ${response.statusText}`
-        );
-      }
-
-      const responseData = await response.json();
-      const generatedText =
-        responseData.candidates?.[0]?.content?.parts?.[0]?.text;
-      const sources = extractGroundingSources(responseData);
+      // 5. Call Gemini via Vertex AI SDK (throws on API errors)
+      const sdkResponse = await generateContent(model, payload);
+      const generatedText = sdkResponse.text;
+      const sources = extractGroundingSources(sdkResponse);
 
       if (!generatedText) {
-        console.error(
-          "[ERROR] No content in Gemini response:",
-          JSON.stringify(responseData)
-        );
+        console.error("[ERROR] No content in Gemini response:", JSON.stringify(sdkResponse.candidates));
         throw new Error("No content generated from Gemini");
       }
 
