@@ -25,9 +25,8 @@ jobs:
           fetch-depth: 0
 
       - name: Gitleaks secret scan
-        # TODO: pin to SHA after Sam manually verifies a release SHA from
-        # https://github.com/gitleaks/gitleaks-action/releases.
-        uses: gitleaks/gitleaks-action@v2
+        # Pinned to v2.3.9 — https://github.com/gitleaks/gitleaks-action/releases/tag/v2.3.9
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
