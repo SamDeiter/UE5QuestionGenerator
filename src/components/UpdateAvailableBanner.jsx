@@ -55,35 +55,28 @@ const UpdateAvailableBanner = () => {
   if (!needRefresh) return null;
 
   const handleReload = async () => {
-    // Dismiss first so a race-triggered re-registration doesn't re-show the
-    // banner on the reloaded page before the new SW has taken control.
     _dismiss();
 
-    // Listen for the SW handoff before reloading. workbox-window fires
-    // controllerchange when the new SW takes control; reloading before that
-    // leaves the waiting SW still waiting, which causes onNeedRefresh to fire
-    // again on the next page load (the loop the user sees).
-    const reloadOnControl = () => window.location.reload();
+    // Safety net for the case where workbox-window's own 'controlling'
+    // listener doesn't fire (e.g. external SW, isUpdate=false edge case).
+    // Do NOT add a fallback timeout here — a timed reload before the SW
+    // activates causes the infinite-banner loop: the page reloads with the
+    // old SW still in control, the new SW stays in 'waiting', and
+    // onNeedRefresh fires again on the next load.
     navigator.serviceWorker?.addEventListener(
       "controllerchange",
-      reloadOnControl,
+      () => window.location.reload(),
       { once: true }
     );
 
-    // Fallback: if the SW doesn't take control within 3 s (e.g. no SW support,
-    // or clientsClaim timing edge-case), force the reload ourselves.
-    const fallback = setTimeout(reloadOnControl, 3000);
-
     try {
       if (typeof _updateSW === "function") {
-        await _updateSW(true); // posts SKIP_WAITING to the waiting SW
+        await _updateSW(true); // posts SKIP_WAITING; workbox reloads on 'controlling'
       } else {
-        clearTimeout(fallback);
-        reloadOnControl();
+        window.location.reload();
       }
     } catch {
-      clearTimeout(fallback);
-      reloadOnControl();
+      window.location.reload();
     }
   };
 
