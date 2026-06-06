@@ -56,7 +56,7 @@ import { registerListener, unregisterListener } from "../utils/listenerTracker";
 // Flipping it is a one-line, fully reversible change. All WRITES/DELETES and
 // single-doc/variant fetches always stay on `questions` (the mirror is
 // read-only to clients).
-export const USE_INDEX = true;
+export const USE_INDEX = false;
 const QUESTIONS_COLLECTION = "questions";
 const INDEX_COLLECTION = "questionIndex";
 // Source collection for bulk reads only. Never use this for writes.
