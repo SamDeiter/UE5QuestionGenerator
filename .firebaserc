@@ -2,7 +2,7 @@
   "projects": {
     "default": "ue5questionssoure",
     "dev": "ue5questionssoure",
-    "prod": "ue5-questions-prod",
+    "prod": "development-317819",
     "epic": "development-317819"
   }
 }

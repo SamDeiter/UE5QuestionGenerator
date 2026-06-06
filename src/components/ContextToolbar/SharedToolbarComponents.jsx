@@ -2,10 +2,13 @@
  * Shared Toolbar Components
  * Reusable UI elements across all toolbar modes
  */
+import { useState, useEffect } from "react";
 import Icon from "../Icon";
 
 /**
- * Search input with icon and clear button
+ * Search input with icon, clear button, and 200ms debounce.
+ * Local state keeps the input responsive; the store update is deferred so the
+ * filter pipeline doesn't fire on every keystroke.
  */
 export const SearchInput = ({
   searchTerm,
@@ -13,30 +16,48 @@ export const SearchInput = ({
   placeholder = "Search...",
   width = "w-48",
   focusColor = "indigo",
-}) => (
-  <div className="relative">
-    <Icon
-      name="search"
-      size={14}
-      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500"
-    />
-    <input
-      type="text"
-      placeholder={placeholder}
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      className={`${width} bg-slate-900 text-slate-300 placeholder-slate-600 border border-slate-700 focus:border-${focusColor}-500 focus:ring-1 focus:ring-${focusColor}-500 text-xs py-1.5 pl-8 pr-8 rounded-md transition-all`}
-    />
-    {searchTerm && (
-      <button
-        onClick={() => setSearchTerm("")}
-        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-red-400"
-      >
-        <Icon name="x" size={12} />
-      </button>
-    )}
-  </div>
-);
+}) => {
+  const [localValue, setLocalValue] = useState(searchTerm);
+
+  // Sync local value when the store is cleared externally (e.g. clear button in another component)
+  useEffect(() => {
+    setLocalValue(searchTerm);
+  }, [searchTerm]);
+
+  // Debounce: push to store 200ms after the user stops typing
+  useEffect(() => {
+    const id = setTimeout(() => setSearchTerm(localValue), 200);
+    return () => clearTimeout(id);
+  }, [localValue, setSearchTerm]);
+
+  return (
+    <div className="relative">
+      <Icon
+        name="search"
+        size={14}
+        className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500"
+      />
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        className={`${width} bg-slate-900 text-slate-300 placeholder-slate-600 border border-slate-700 focus:border-${focusColor}-500 focus:ring-1 focus:ring-${focusColor}-500 text-xs py-1.5 pl-8 pr-8 rounded-md transition-all`}
+      />
+      {localValue && (
+        <button
+          onClick={() => {
+            setLocalValue("");
+            setSearchTerm("");
+          }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-red-400"
+        >
+          <Icon name="x" size={12} />
+        </button>
+      )}
+    </div>
+  );
+};
 
 /**
  * Toolbar divider (vertical line)

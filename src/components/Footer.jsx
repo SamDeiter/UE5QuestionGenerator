@@ -1,4 +1,20 @@
-import { APP_VERSION } from "../utils/constants";
+import { APP_VERSION, BUILD_TIME } from "../utils/constants";
+
+const formatBuildTime = (iso) => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  const time = d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${date} · ${time}`;
+};
 
 /**
  * Footer - Legal links and copyright
@@ -19,7 +35,12 @@ const Footer = () => {
 
         {/* Legal Links with Version */}
         <div className="flex items-center gap-4">
-          <span className="text-slate-600 text-[10px]">{APP_VERSION}</span>
+          <span className="text-slate-600 text-[10px]">
+            {APP_VERSION}
+            {formatBuildTime(BUILD_TIME) && (
+              <> · {formatBuildTime(BUILD_TIME)}</>
+            )}
+          </span>
           <a
             href="https://legal.epicgames.com/en-US/epicgames/privacy-policy"
             target="_blank"

@@ -5,6 +5,25 @@ import {
 } from "../utils/questionFilters";
 import { logger } from "../utils/logger";
 
+// Defined at module scope so it is not recreated on every useMemo invocation.
+// Produces a compact string that captures all fields that should trigger a re-render
+// when changed (score, status, verification, rewrite, language, timestamps).
+const generateHash = (list) =>
+  list
+    .map((q) => {
+      const id = q.id || q.uniqueId;
+      const score = q.critiqueScore ?? "none";
+      const improved = q.improvedScore ?? "none";
+      const rewriteScore = q.suggestedRewrite?.critiqueScore ?? "none";
+      const status = q.status || "pending";
+      const verified = q.humanVerified ? "yes" : "no";
+      const rewrite = q.suggestedRewrite ? "yes" : "no";
+      const lang = q.language || "English";
+      const lastModified = q.lastModified || q.updatedAt || "0";
+      return `${id}:${score}:${status}:${verified}:${rewrite}:${rewriteScore}:${improved}:${lang}:${lastModified}`;
+    })
+    .join("|");
+
 /**
  * useFilteredQuestions Hook
  *
@@ -46,8 +65,11 @@ export function useFilteredQuestions({
   // STABILITY OPTIMIZATION
   // ========================================================================
 
-  // Track previous results to avoid unnecessary re-renders
+  // Track previous results and their derived strings to avoid unnecessary re-renders.
+  // Storing prevIds and prevHash in refs prevents recomputing them from the previous array.
   const prevContextFilteredRef = useRef([]);
+  const prevIdsRef = useRef("");
+  const prevHashRef = useRef("");
 
   // ========================================================================
   // COMPUTED: Context Filtered Questions (all filters except status)
@@ -71,43 +93,27 @@ export function useFilteredQuestions({
       filterByReviewer
     );
 
-    // Stability check - only return new array if content changed
+    // Stability check: only return a new array reference if content actually changed.
+    // prevIds and prevHash are stored in refs so we never recompute them from the previous array.
     const newIds = newResult.map((q) => q.id || q.uniqueId).join(",");
-    const prevIds = prevContextFilteredRef.current
-      .map((q) => q.id || q.uniqueId)
-      .join(",");
-
-    // Generate hash to detect meaningful changes
-    const generateHash = (list) =>
-      list
-        .map((q) => {
-          const id = q.id || q.uniqueId;
-          const score = q.critiqueScore ?? "none";
-          const improved = q.improvedScore ?? "none";
-          const rewriteScore = q.suggestedRewrite?.critiqueScore ?? "none";
-          const status = q.status || "pending";
-          const verified = q.humanVerified ? "yes" : "no";
-          const rewrite = q.suggestedRewrite ? "yes" : "no";
-          const lang = q.language || "English";
-          const lastModified = q.lastModified || q.updatedAt || "0";
-
-          return `${id}:${score}:${status}:${verified}:${rewrite}:${rewriteScore}:${improved}:${lang}:${lastModified}`;
-        })
-        .join("|");
-
-    const newHash = generateHash(newResult);
-    const prevHash = generateHash(prevContextFilteredRef.current);
 
     if (
-      newIds === prevIds &&
-      newHash === prevHash &&
-      prevContextFilteredRef.current.length > 0
+      newIds === prevIdsRef.current &&
+      prevContextFilteredRef.current.length > 0 &&
+      newResult.length === prevContextFilteredRef.current.length
     ) {
-      if (newResult.length === prevContextFilteredRef.current.length) {
+      // IDs match — pay for the field hash only when needed to detect score/status changes
+      const newHash = generateHash(newResult);
+      if (newHash === prevHashRef.current) {
         return prevContextFilteredRef.current;
       }
+      prevHashRef.current = newHash;
+    } else {
+      // IDs differ (common filter-change case) — skip prevHash recomputation entirely
+      prevHashRef.current = generateHash(newResult);
     }
 
+    prevIdsRef.current = newIds;
     prevContextFilteredRef.current = newResult;
     return newResult;
   }, [
@@ -132,51 +138,35 @@ export function useFilteredQuestions({
   // ========================================================================
 
   const contextCounts = useMemo(() => {
-    const getUniqueCountForStatus = (statusFilter) => {
-      let filtered;
-      if (statusFilter === "all") {
-        filtered = contextFilteredQuestions;
-      } else if (statusFilter === "pending") {
-        filtered = contextFilteredQuestions.filter(
-          (q) => !q.status || q.status === "pending"
-        );
-      } else if (statusFilter === "other") {
-        filtered = contextFilteredQuestions.filter(
-          (q) =>
-            q.status &&
-            q.status !== "pending" &&
-            q.status !== "accepted" &&
-            q.status !== "rejected"
-        );
-      } else {
-        filtered = contextFilteredQuestions.filter(
-          (q) => q.status === statusFilter
-        );
-      }
-      return createUniqueFilteredQuestions(filtered, language, allQuestionsMap)
-        .length;
-    };
+    // Single O(n) pass to bucket by status, replacing 5 separate array filters.
+    const pendingBucket = [];
+    const acceptedBucket = [];
+    const rejectedBucket = [];
+    const otherBucket = [];
 
-    const pending = getUniqueCountForStatus("pending");
-    const accepted = getUniqueCountForStatus("accepted");
-    const rejected = getUniqueCountForStatus("rejected");
-    const other = getUniqueCountForStatus("other");
-    const all = getUniqueCountForStatus("all");
+    contextFilteredQuestions.forEach((q) => {
+      const s = q.status;
+      if (!s || s === "pending") pendingBucket.push(q);
+      else if (s === "accepted") acceptedBucket.push(q);
+      else if (s === "rejected") rejectedBucket.push(q);
+      else otherBucket.push(q);
+    });
+
+    const count = (list) =>
+      createUniqueFilteredQuestions(list, language, allQuestionsMap).length;
+
+    const pending = count(pendingBucket);
+    const accepted = count(acceptedBucket);
+    const rejected = count(rejectedBucket);
+    const other = count(otherBucket);
+    const all = count(contextFilteredQuestions);
 
     // Diagnostic logging for non-standard statuses
     if (other > 0) {
-      const otherStatuses = contextFilteredQuestions
-        .filter(
-          (q) =>
-            q.status &&
-            q.status !== "pending" &&
-            q.status !== "accepted" &&
-            q.status !== "rejected"
-        )
-        .reduce((acc, q) => {
-          acc[q.status] = (acc[q.status] || 0) + 1;
-          return acc;
-        }, {});
+      const otherStatuses = otherBucket.reduce((acc, q) => {
+        acc[q.status] = (acc[q.status] || 0) + 1;
+        return acc;
+      }, {});
       logger.warn(
         "⚠️ [Count Discrepancy] Found non-standard statuses:",
         otherStatuses

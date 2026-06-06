@@ -137,6 +137,7 @@ export default defineConfig({
   define: {
     __GIT_COMMIT__: JSON.stringify(getGitCommitHash()),
     __APP_VERSION__: JSON.stringify(APP_VERSION),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
   server: {
     headers: {

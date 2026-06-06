@@ -106,21 +106,21 @@ export const createFilteredQuestions = (
     // 6. Search Term Filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      const searchFields = [
-        q.uniqueId,
-        q.question,
-        q.discipline,
-        q.difficulty,
-        // Search within options
-        ...(q.options ? Object.values(q.options) : []),
-      ];
+      // Check static fields first; only pay for Object.values(options) on a miss
+      const basicMatch =
+        (q.uniqueId && q.uniqueId.toLowerCase().includes(term)) ||
+        (q.question && q.question.toLowerCase().includes(term)) ||
+        (q.discipline && q.discipline.toLowerCase().includes(term)) ||
+        (q.difficulty && q.difficulty.toLowerCase().includes(term));
 
-      // Check if any field contains the term
-      const matches = searchFields.some(
-        (field) => field && field.toString().toLowerCase().includes(term)
-      );
-
-      if (!matches) return false;
+      if (!basicMatch) {
+        const optionMatch =
+          q.options &&
+          Object.values(q.options).some(
+            (o) => o && o.toString().toLowerCase().includes(term)
+          );
+        if (!optionMatch) return false;
+      }
     }
 
     // 7. Score Tier Filter - Filter by AI critique score ranges
@@ -194,65 +194,52 @@ export const createUniqueFilteredQuestions = (
   language = "English",
   allQuestionsMap = null
 ) => {
-  // FIX: Collect all unique IDs first, sort them, then process in stable order
-  // This prevents dependency on the iteration order of filteredQuestions
-  const uniqueIds = new Set();
-  filteredQuestions.forEach((q) => uniqueIds.add(q.uniqueId));
+  // Single O(n) pass: group variants by uniqueId, preserving encounter order for the sort below.
+  // Replaces the previous Set + per-ID re-filter pattern which was O(n \u00d7 k).
+  const variantsByUniqueId = new Map();
+  filteredQuestions.forEach((q) => {
+    if (!variantsByUniqueId.has(q.uniqueId))
+      variantsByUniqueId.set(q.uniqueId, []);
+    variantsByUniqueId.get(q.uniqueId).push(q);
+  });
 
-  const sortedUniqueIds = Array.from(uniqueIds).sort();
+  // Sort keys for stable output order (same behaviour as before)
+  const sortedIds = Array.from(variantsByUniqueId.keys()).sort();
   const uniqueQuestions = [];
 
-  sortedUniqueIds.forEach((id) => {
-    // FIX: Always get variants from the filtered list first to respect discipline filter
-    // This prevents questions from other disciplines appearing when "All Disciplines" is selected
-    let variants = filteredQuestions.filter((fq) => fq.uniqueId === id);
+  sortedIds.forEach((id) => {
+    // Always start from the filtered variants to respect discipline/status filters.
+    // This prevents questions from other disciplines appearing when "All Disciplines" is selected.
+    let variants = variantsByUniqueId.get(id);
 
-    // If allQuestionsMap exists and we found variants in filtered list,
-    // we can use the map to find additional language variants of the SAME question
-    // but ONLY if they would have passed the same filters (same discipline)
+    // If allQuestionsMap exists, widen to all language variants of the same discipline.
+    // Only the discipline of the first filtered variant is used as the reference to avoid
+    // pulling in cross-discipline duplicates.
     if (allQuestionsMap && allQuestionsMap.has(id) && variants.length > 0) {
-      // Use the first variant to check discipline
       const referenceDiscipline = variants[0].discipline;
-
-      // Get all variants from map and filter to match the reference discipline
-      const mapVariants = allQuestionsMap.get(id);
-      variants = mapVariants.filter(
-        (v) => v.discipline === referenceDiscipline
-      );
+      variants = allQuestionsMap
+        .get(id)
+        .filter((v) => v.discipline === referenceDiscipline);
     }
 
-    let selected = null;
+    // 1. Preferred language \u2192 2. English fallback
+    let selected =
+      variants.find((v) => (v.language || "English") === language) ||
+      variants.find((v) => (v.language || "English") === "English");
 
-    // 1. Try to find exact language match
-    selected = variants.find((v) => (v.language || "English") === language);
-
-    // 2. Fall back to English
-    if (!selected) {
-      selected = variants.find((v) => (v.language || "English") === "English");
-    }
-
-    // 4. Last resort fallback removed to prevent language leakage (e.g. Chinese questions appearing in English queue)
-    // If no variant exists for the preferred language or English, this question group is hidden from the current view.
-    // ADDED: Text-based sanity check for English fallbacks
+    // 3. Last-resort: English-tagged variant that passes Chinese-character sanity check.
+    // Prevents Chinese questions incorrectly tagged as English from leaking into the English queue.
     if (!selected) {
       const isEnglishView = language === "English";
       selected = variants.find((v) => {
-        const itemLang = v.language || "English";
-        if (itemLang !== "English") return false;
-
-        // If specifically viewing English, check for Chinese characters in text
-        // (This catches Chinese questions that are incorrectly tagged as English)
-        if (isEnglishView) {
-          const text = v.question || v.text || "";
-          if (/[\u4e00-\u9fa5]/.test(text)) return false;
-        }
+        if ((v.language || "English") !== "English") return false;
+        if (isEnglishView && /[\u4e00-\u9fa5]/.test(v.question || v.text || ""))
+          return false;
         return true;
       });
     }
 
-    if (selected) {
-      uniqueQuestions.push(selected);
-    }
+    if (selected) uniqueQuestions.push(selected);
   });
 
   return uniqueQuestions;

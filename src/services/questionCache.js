@@ -15,13 +15,12 @@ import { FIRESTORE_LIMITS } from "../utils/constants";
 const DB_NAME = "ue5-questions-cache";
 const QUESTIONS_STORE = "questions";
 const META_STORE = "meta";
-// v2 (Tier 3b): the questions store now holds the compact `questionIndex`
-// shape (5 detail-only fields omitted) when USE_INDEX is on. Bumping the
-// version drops & recreates the store so existing users do one clean cold
-// re-sync into the lighter shape instead of mixing heavy + light docs. The
-// `meta` store (incremental-sync watermark) is preserved — the watermark is a
-// plain epoch, valid against either the full collection or the mirror.
-const DB_VERSION = 2;
+// v2 (Tier 3b): compact `questionIndex` shape.
+// v3: keyPath changed from "uniqueId" to "id" (the Firestore doc ID) so that
+// all language variants of the same question can coexist in the cache —
+// previously they all collided at the same "uniqueId" key and only one variant
+// survived per question group, breaking language switching on warm loads.
+const DB_VERSION = 3;
 
 /** @type {Promise<IDBDatabase>|null} */
 let dbPromise = null;
@@ -36,22 +35,17 @@ const getDB = () => {
       upgrade(db, oldVersion) {
         const createQuestionsStore = () => {
           const store = db.createObjectStore(QUESTIONS_STORE, {
-            keyPath: "uniqueId",
+            keyPath: "id",
           });
           store.createIndex("status", "status");
           store.createIndex("discipline", "discipline");
           store.createIndex("firestoreUpdatedAt", "firestoreUpdatedAt");
         };
 
-        // v2 (Tier 3b): drop the heavy-shape questions store so the next sync
-        // refills it with the compact index shape. The emptied store forces
-        // the post-upgrade load down the full-sync path regardless (the
-        // incremental path in useFirestoreSync requires a non-empty cache), and
-        // that full sync reseeds the watermark — so the preserved `meta`
-        // watermark is harmless and we leave it rather than wipe cache metadata
-        // unnecessarily. The store stays keyed by uniqueId (stable across both
-        // shapes), so merges remain correct.
-        if (oldVersion < 2 && db.objectStoreNames.contains(QUESTIONS_STORE)) {
+        // v2 (Tier 3b): drop heavy-shape store for compact index shape.
+        // v3: drop uniqueId-keyed store to switch to id-keyed store so all
+        //     language variants coexist (previously they collided at the same key).
+        if (oldVersion < 3 && db.objectStoreNames.contains(QUESTIONS_STORE)) {
           db.deleteObjectStore(QUESTIONS_STORE);
         }
 
@@ -246,7 +240,7 @@ export const setLastSyncTime = async (timestampMs) => {
  * @returns {Promise<void>}
  */
 export const updateCachedQuestion = async (question) => {
-  if (!question?.uniqueId) return;
+  if (!question?.id) return;
 
   try {
     const db = await getDB();

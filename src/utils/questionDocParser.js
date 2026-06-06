@@ -149,5 +149,18 @@ export const parseQuestionDoc = (raw) => {
     ),
   };
 
+  // Some old-system translation docs stored the doc ID (e.g. "{base}_{lang}") as
+  // the uniqueId field instead of the base question ID. Strip the language suffix
+  // so all variants group correctly under the same base uniqueId.
+  if (normalized.language !== "English") {
+    const suffix = `_${normalized.language}`;
+    if (
+      typeof normalized.uniqueId === "string" &&
+      normalized.uniqueId.endsWith(suffix)
+    ) {
+      normalized.uniqueId = normalized.uniqueId.slice(0, -suffix.length);
+    }
+  }
+
   return { valid: true, errors: [], question: normalized };
 };

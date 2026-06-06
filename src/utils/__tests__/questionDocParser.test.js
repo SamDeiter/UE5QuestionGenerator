@@ -51,3 +51,51 @@ describe("parseQuestionDoc difficulty handling", () => {
     expect(question.difficulty).toBe("Intermediate");
   });
 });
+
+describe("parseQuestionDoc uniqueId normalization for translation variants", () => {
+  it("strips language suffix from uniqueId for Spanish variant", () => {
+    const { valid, question } = parseQuestionDoc({
+      id: "abc123_Spanish",
+      uniqueId: "abc123_Spanish",
+      question: "¿Qué hace X?",
+      creatorId: "creator-1",
+      answers: ["a", "b"],
+      language: "Spanish",
+    });
+    expect(valid).toBe(true);
+    expect(question.uniqueId).toBe("abc123");
+    expect(question.id).toBe("abc123_Spanish");
+  });
+
+  it("strips language suffix from uniqueId when uniqueId is absent (doc ID fallback)", () => {
+    const { valid, question } = parseQuestionDoc({
+      id: "abc123_French",
+      question: "Qu'est-ce que X fait ?",
+      creatorId: "creator-1",
+      answers: ["a", "b"],
+      language: "French",
+    });
+    expect(valid).toBe(true);
+    expect(question.uniqueId).toBe("abc123");
+    expect(question.id).toBe("abc123_French");
+  });
+
+  it("does not modify uniqueId when it does not end with the language suffix", () => {
+    const { valid, question } = parseQuestionDoc({
+      id: "abc123_Spanish",
+      uniqueId: "abc123",
+      question: "¿Qué hace X?",
+      creatorId: "creator-1",
+      answers: ["a", "b"],
+      language: "Spanish",
+    });
+    expect(valid).toBe(true);
+    expect(question.uniqueId).toBe("abc123");
+  });
+
+  it("does not modify uniqueId for English questions", () => {
+    const { valid, question } = parseQuestionDoc({ ...validBaseDoc });
+    expect(valid).toBe(true);
+    expect(question.uniqueId).toBe("uid-1");
+  });
+});

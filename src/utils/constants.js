@@ -1,6 +1,8 @@
-// APP_VERSION is automatically synced from package.json via vite.config.js
+// APP_VERSION and BUILD_TIME are automatically injected from vite.config.js
 export const APP_VERSION =
   typeof __APP_VERSION__ !== "undefined" ? `v${__APP_VERSION__}` : "v2.2.7";
+export const BUILD_TIME =
+  typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : null;
 
 export const LANGUAGE_FLAGS = {
   English: "🇺🇸",

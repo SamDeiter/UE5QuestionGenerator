@@ -1,7 +1,7 @@
 {
   "name": "ue5-question-generator",
   "private": true,
-  "version": "2.5.0",
+  "version": "2.5.1",
   "homepage": "https://samdeiter.github.io/UE5QuestionGenerator/",
   "type": "module",
   "scripts": {
@@ -16,7 +16,7 @@
     "test:ci": "vitest run src/components/__tests__/CriticalUI.regression.test.jsx",
     "test:rules": "firebase emulators:exec --only firestore \"vitest run firestore.rules\"",
     "predeploy": "npm run build",
-    "deploy": "firebase use prod && firebase deploy --only firestore:rules && gh-pages -d dist",
+    "deploy": "firebase deploy --only firestore:rules --project development-317819 && firebase deploy --only hosting --project ue5-questions-prod",
     "prepare": "husky",
     "env:dev": "python scripts/switch_env.py dev",
     "env:prod": "python scripts/switch_env.py prod",

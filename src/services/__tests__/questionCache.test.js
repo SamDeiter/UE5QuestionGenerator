@@ -13,7 +13,9 @@ const mockDB = {
   transaction: vi.fn(() => ({
     store: {
       put: vi.fn((value) => {
-        if (value.uniqueId) mockStore.set(value.uniqueId, value);
+        // keyPath is now "id" (v3 migration); fall back to uniqueId for test compat
+        const key = value.id || value.uniqueId;
+        if (key) mockStore.set(key, value);
         return Promise.resolve();
       }),
     },

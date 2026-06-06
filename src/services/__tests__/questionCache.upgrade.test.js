@@ -1,10 +1,11 @@
 /**
- * questionCache — DB_VERSION 2 upgrade path (Tier 3b).
+ * questionCache — DB_VERSION upgrade path tests.
  *
- * The v2 bump must drop & recreate the `questions` store (so it refills with
- * the compact index shape) while preserving the `meta` store (the
- * incremental-sync watermark). A regression here would either wipe the
- * watermark (forcing redundant full re-syncs) or leave heavy/light docs mixed.
+ * v2 bump: drop & recreate `questions` store for compact index shape while
+ *          preserving the `meta` store (incremental-sync watermark).
+ * v3 bump: drop & recreate `questions` store, switching keyPath from
+ *          "uniqueId" to "id" so all language variants coexist in the cache
+ *          (previously they collided at the same key, losing all but one).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -51,14 +52,14 @@ const makeFakeDb = (existing = []) => {
   };
 };
 
-describe("questionCache DB_VERSION 2 upgrade", () => {
+describe("questionCache DB_VERSION 3 upgrade", () => {
   beforeEach(async () => {
     // Trigger getDB() → openDB() so the upgrade callback is captured.
     await getCacheStats();
   });
 
-  it("opens at version 2", () => {
-    expect(capturedVersion).toBe(2);
+  it("opens at version 3", () => {
+    expect(capturedVersion).toBe(3);
     expect(typeof capturedUpgrade).toBe("function");
   });
 
@@ -67,23 +68,35 @@ describe("questionCache DB_VERSION 2 upgrade", () => {
     capturedUpgrade(db, 0);
     expect(db.deleteObjectStore).not.toHaveBeenCalled();
     expect(db.createObjectStore).toHaveBeenCalledWith("questions", {
-      keyPath: "uniqueId",
+      keyPath: "id",
     });
     expect(db._stores.has("questions")).toBe(true);
     expect(db._stores.has("meta")).toBe(true);
   });
 
-  it("v1 -> v2: drops & recreates `questions`, leaves `meta` untouched", () => {
+  it("v2 -> v3: drops & recreates `questions` with new keyPath, leaves `meta` untouched", () => {
     const db = makeFakeDb(["questions", "meta"]);
-    capturedUpgrade(db, 1);
-    // questions store dropped then recreated...
+    capturedUpgrade(db, 2);
+    // questions store dropped then recreated with "id" keyPath
     expect(db.deleteObjectStore).toHaveBeenCalledWith("questions");
     expect(db.createObjectStore).toHaveBeenCalledWith("questions", {
-      keyPath: "uniqueId",
+      keyPath: "id",
     });
-    // ...meta NOT dropped (watermark preserved) and not recreated.
+    // meta NOT dropped (watermark preserved) and not recreated
     expect(db.deleteObjectStore).not.toHaveBeenCalledWith("meta");
     expect(db.createObjectStore).not.toHaveBeenCalledWith("meta");
+    expect(db._stores.has("questions")).toBe(true);
+    expect(db._stores.has("meta")).toBe(true);
+  });
+
+  it("v1 -> v3: drops & recreates `questions`, leaves `meta` untouched", () => {
+    const db = makeFakeDb(["questions", "meta"]);
+    capturedUpgrade(db, 1);
+    expect(db.deleteObjectStore).toHaveBeenCalledWith("questions");
+    expect(db.createObjectStore).toHaveBeenCalledWith("questions", {
+      keyPath: "id",
+    });
+    expect(db.deleteObjectStore).not.toHaveBeenCalledWith("meta");
     expect(db._stores.has("questions")).toBe(true);
     expect(db._stores.has("meta")).toBe(true);
   });
@@ -96,7 +109,7 @@ describe("questionCache DB_VERSION 2 upgrade", () => {
       handle = { createIndex: vi.fn() };
       return handle;
     });
-    capturedUpgrade(db, 1);
+    capturedUpgrade(db, 2);
     expect(handle.createIndex).toHaveBeenCalledWith("status", "status");
     expect(handle.createIndex).toHaveBeenCalledWith("discipline", "discipline");
     expect(handle.createIndex).toHaveBeenCalledWith(
