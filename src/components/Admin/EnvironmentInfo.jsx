@@ -44,12 +44,10 @@ const EnvironmentInfo = ({ isCollapsed, onToggle }) => {
           <span className="text-slate-500">Environment:</span>
           <span
             className={`font-bold ${
-              import.meta.env.VITE_FIREBASE_PROJECT_ID?.includes("prod")
-                ? prodColor
-                : devColor
+              import.meta.env.VITE_ENV === "production" ? prodColor : devColor
             }`}
           >
-            {import.meta.env.VITE_FIREBASE_PROJECT_ID?.includes("prod")
+            {import.meta.env.VITE_ENV === "production"
               ? "🔴 PRODUCTION"
               : "🟢 DEVELOPMENT"}
           </span>

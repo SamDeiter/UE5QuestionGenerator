@@ -216,8 +216,7 @@ const LandingPage = ({
             </span>
           </div>
           {(() => {
-            const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
-            const isProd = projectId.includes("prod");
+            const isProd = import.meta.env.VITE_ENV === "production";
             const envLabel = isProd ? "PROD" : "DEV";
             const dotColor = isProd ? errorDot : successDot;
             const textColor = isProd ? errorText : successText;
@@ -235,8 +234,7 @@ const LandingPage = ({
             );
           })()}
           {(() => {
-            const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
-            const isProd = projectId.includes("prod");
+            const isProd = import.meta.env.VITE_ENV === "production";
             const envBorderBg = isProd
               ? `${errorText} border-rose-800 bg-rose-950/30`
               : `${successText} border-blue-800 bg-blue-950/30`;
