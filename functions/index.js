@@ -21,6 +21,7 @@ Object.assign(exports, require("./invites/consumeInvite"));
 Object.assign(exports, require("./invites/createInvite"));
 Object.assign(exports, require("./invites/revokeInvite"));
 Object.assign(exports, require("./invites/listInvites"));
+Object.assign(exports, require("./invites/cleanupInvites"));
 
 // ============================================================================
 // User Management Functions

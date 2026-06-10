@@ -8,7 +8,7 @@
  * install Playwright: npm install -D playwright
  */
 
-const LIVE_URL = "https://samdeiter.github.io/UE5QuestionGenerator/";
+const LIVE_URL = "https://ue5-question-generator.web.app/";
 
 // Critical elements that must exist in the built HTML
 const CRITICAL_ELEMENTS = {

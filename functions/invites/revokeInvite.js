@@ -1,6 +1,5 @@
 const functions = require("firebase-functions");
 const { getDb } = require("../db");
-const admin = require("firebase-admin");
 const { isAdminUser } = require("../utils/isAdminUser");
 const { isBootstrapAdmin } = require("../utils/bootstrapAdmin");
 
@@ -41,13 +40,9 @@ exports.revokeInvite = functions
         throw new functions.https.HttpsError("not-found", "Invite not found");
       }
 
-      await inviteRef.update({
-        isActive: false,
-        revokedAt: admin.firestore.Timestamp.now(),
-        revokedBy: context.auth.uid,
-      });
+      await inviteRef.delete();
 
-      console.log(`Invite ${code} revoked by ${context.auth.token.email}`);
+      console.log(`Invite ${code} deleted by ${context.auth.token.email}`);
       return { success: true };
     } catch (error) {
       if (error instanceof functions.https.HttpsError) throw error;

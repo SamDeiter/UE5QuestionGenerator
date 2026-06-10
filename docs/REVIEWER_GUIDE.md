@@ -26,7 +26,7 @@ Welcome to the UE5 Question Generator! This AI-powered tool helps create and rev
 
 ### Step-by-Step
 
-1. **Check your email** for the invite link (format: `https://samdeiter.github.io/UE5QuestionGenerator/?invite=XXXXX&email=your.email@example.com`)
+1. **Check your email** for the invite link (format: `https://ue5-question-generator.web.app/?invite=XXXXX&email=your.email@example.com`)
 2. **Click the link** (opens in browser)
 3. **Verify** your email is pre-filled correctly
 4. **Click "Sign in with Google"**
@@ -316,7 +316,7 @@ Accept questions that:
 
 **Last Updated**: December 17, 2025  
 **Version**: 2.2.3  
-**Application URL**: <https://samdeiter.github.io/UE5QuestionGenerator/>
+**Application URL**: <https://ue5-question-generator.web.app/>
 
 ---
 

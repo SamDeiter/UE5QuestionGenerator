@@ -12,7 +12,10 @@ import React, { useState } from "react";
 import Icon from "../Icon";
 import CollapsibleSection from "../CollapsibleSection";
 import { createInvite, revokeInvite } from "../../services/inviteService";
-import { sendReviewerInvitesViaEmail } from "../../services/cloudFunctions";
+import {
+  sendReviewerInvitesViaEmail,
+  cleanupInvitesViaCloudFunction,
+} from "../../services/cloudFunctions";
 import { logger } from "../../utils/logger";
 import { useMessage } from "../../contexts/MessageContext";
 
@@ -36,6 +39,7 @@ const InviteManagement = ({
   // Multi-select state for bulk actions
   const [selectedInvites, setSelectedInvites] = useState(new Set());
   const [bulkRevoking, setBulkRevoking] = useState(false);
+  const [cleaningUp, setCleaningUp] = useState(false);
 
   const handleCreateInvite = async () => {
     try {
@@ -187,6 +191,28 @@ const InviteManagement = ({
     } catch (error) {
       logger.error("❌ Email send error:", error);
       showMessage(`❌ Failed to send emails: ${error.message}`, 5000);
+    }
+  };
+
+  const handleCleanupInvites = async () => {
+    if (
+      !confirm(
+        "Delete all unused invites (never redeemed)? Used invites will be kept."
+      )
+    )
+      return;
+    setCleaningUp(true);
+    try {
+      const result = await cleanupInvitesViaCloudFunction();
+      showMessage(
+        `✅ Cleaned up ${result.deleted} unused invite(s). ${result.kept} kept.`,
+        5000
+      );
+      await onRefresh();
+    } catch (error) {
+      showMessage(`❌ Cleanup failed: ${error.message}`, 5000);
+    } finally {
+      setCleaningUp(false);
     }
   };
 
@@ -454,6 +480,19 @@ const InviteManagement = ({
             <h3 className="text-sm font-bold text-yellow-400 flex items-center gap-2">
               <Icon name="key" size={14} /> Active Invites ({invites.length})
             </h3>
+            <button
+              onClick={handleCleanupInvites}
+              disabled={cleaningUp}
+              className="px-3 py-1 bg-orange-700 hover:bg-orange-600 disabled:bg-slate-600 text-white text-xs rounded transition-all flex items-center gap-1"
+              title="Delete all unused (never redeemed) invites"
+            >
+              {cleaningUp ? (
+                <Icon name="loader" className="animate-spin" size={12} />
+              ) : (
+                <Icon name="trash-2" size={12} />
+              )}
+              Clean Up Unused
+            </button>
             {invites.length > 0 && (
               <div className="flex items-center gap-2">
                 <button

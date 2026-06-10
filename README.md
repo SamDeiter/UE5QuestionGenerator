@@ -2,14 +2,14 @@
 
 A powerful, AI-driven tool for generating, translating, and managing quiz questions for Unreal Engine 5 training. Built with React, Vite, Tailwind CSS, and Google Gemini AI.
 
-[![Deploy Status](https://img.shields.io/badge/deploy-GitHub%20Pages-blue)](https://samdeiter.github.io/UE5QuestionGenerator/)
+[![Deploy Status](https://img.shields.io/badge/deploy-Firebase%20Hosting-orange)](https://ue5-question-generator.web.app/)
 [![Tests](https://img.shields.io/badge/tests-1000%2B%20passing-brightgreen)](https://github.com/SamDeiter/UE5QuestionGenerator)
 [![Version](https://img.shields.io/badge/version-2.5.0-orange)](https://github.com/SamDeiter/UE5QuestionGenerator)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Live Demo
 
-**Production App**: [https://samdeiter.github.io/UE5QuestionGenerator/](https://samdeiter.github.io/UE5QuestionGenerator/)
+**Production App**: [https://ue5-question-generator.web.app/](https://ue5-question-generator.web.app/)
 
 ## ✨ Features
 

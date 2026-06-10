@@ -17,6 +17,51 @@ decisions when the commit messages alone aren't enough.
 
 ---
 
+## 2026-06-10 — Invite cleanup + URL migration + user account triage
+
+**Focus:** Fix stale GitHub Pages URLs throughout the codebase, triage reviewer access issues, and add invite cleanup tooling.
+
+**Shipped:**
+
+- Updated all hardcoded `samdeiter.github.io/UE5QuestionGenerator` URLs to `ue5-question-generator.web.app` across 7 files (createInvite.js, package.json, smoke-test.js, README.md, docs/README.md, docs/REVIEWER_GUIDE.md, functions/migrations/unifiedAccessMigration.js)
+- Deleted 52 unused (never-redeemed) invite documents from Firestore; 14 used invites kept as history
+- New `cleanupInvites` Cloud Function (admin-only) — deletes invites with `currentUses === 0`
+- "Clean Up Unused" button added to Admin Panel → Invite Management
+- Deployed functions; confirmed working
+
+**Decisions:**
+
+- Keep invites where `currentUses > 0` as historical record (registeredUsers already stores the inviteCode, but the invite doc has the full usedBy audit trail)
+- Cleanup rule is `currentUses === 0` only — doesn't matter if the invite was expired or revoked, if nobody used it it's junk
+
+**User account notes (2026-06-10):**
+
+- Greg Berridge (`gregberr77@gmail.com`) — already registered, role=reviewer, claims correct. Original error was caused by old GitHub Pages URL not preserving his session. Fix: send him `https://ue5-question-generator.web.app/` directly.
+- Laura Johnston (`laura.johnston@epicgames.com`) — role=admin in both Firestore and Auth claims. UI showed reviewer because her JWT was stale. Fix: sign out and back in.
+
+---
+
+## 2026-06-10 — First Firebase Hosting deploy since April 28
+
+**Focus:** Diagnose persistent PWA update-banner loop; root cause was that the live site had never been re-deployed after the April 28 initial commit — all subsequent fixes (PWA, security, Firestore migration, language, IDB) were unreleased.
+
+**Shipped:**
+
+- `npm run deploy` — Firebase Hosting updated to current HEAD (v2.5.1)
+- Firestore rules re-confirmed up-to-date (no change needed)
+
+**Decisions:**
+
+- Deployed all 6 weeks of accumulated commits at once rather than cherry-picking; the Firestore migration was already complete on the data side so no data-path risk.
+- Live site was running April 28 code (first-ever SW install) while the repo had three subsequent PWA fix commits. Every reload showed the banner because the old SW had a 3 s timeout that reloaded before `skipWaiting()` propagated, leaving the new SW stuck in "waiting" indefinitely.
+
+**Watch:**
+
+- Users will see the banner once more on their next visit (old SW detects new build). After clicking Reload it should stay gone.
+- USE_INDEX still disabled; re-enable once ~19,580 docs confirmed indexed in Firebase console.
+
+---
+
 ## 2026-05-26 — Phase 6 refactors + Gemini migration + translation tab rebuild
 
 **Focus:** Close out three concurrent threads — the god-function

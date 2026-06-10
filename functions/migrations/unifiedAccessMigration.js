@@ -146,7 +146,7 @@ exports.seedToolRegistry = functions
         name: "UE5 Question Generator",
         description:
           "Generate and review UE5 certification style questions with AI grounding.",
-        url: "https://samdeiter.github.io/UE5QuestionGenerator/",
+        url: "https://ue5-question-generator.web.app/",
         icon: "psychology",
         status: "Available",
         requiresAuth: true,

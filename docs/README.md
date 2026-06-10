@@ -32,7 +32,7 @@ Historical documents moved to `archive/` folder:
 
 ## 🚀 Quick Links
 
-**Production Site:** https://samdeiter.github.io/UE5QuestionGenerator/  
+**Production Site:** https://ue5-question-generator.web.app/  
 **Repository:** https://github.com/SamDeiter/UE5QuestionGenerator  
 **Firebase Console:** https://console.firebase.google.com/
 

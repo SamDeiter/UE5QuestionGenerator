@@ -122,7 +122,7 @@ exports.createInvite = functions
       const emailQuery = sanitizedEmail
         ? `&email=${encodeURIComponent(sanitizedEmail)}`
         : "";
-      const inviteUrl = `https://samdeiter.github.io/UE5QuestionGenerator/?invite=${code}${emailQuery}`;
+      const inviteUrl = `https://ue5-question-generator.web.app/?invite=${code}${emailQuery}`;
 
       return {
         success: true,

@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(git add *)",
+      "Bash(mkdir -p /tmp/claude-shipping)",
+      "Bash(git diff *)",
+      "Read(//tmp/claude-shipping/**)",
+      "Bash(git fetch *)",
+      "Bash(gh run *)",
+      "Bash(gh pr *)",
+      "Bash(npx eslint *)",
+      "Bash(npx vitest *)",
+      "Bash(git stash *)",
+      "Bash(git pull *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
+    ]
+  },
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "The git remote 'origin' is https://github.ol.epicgames.net/sam-deiter/UE5QuestionGenerator.git — the project's official Epic GitHub Enterprise repository and the trusted destination for git pushes. The github.com remote is kept as 'github-personal'. Pushing branches and tags to origin (github.ol.epicgames.net) is expected and authorized as part of migrating this project to Epic infrastructure."
+    ],
+    "allow": [
+      "$defaults",
+      "git push (any branch or tag) to the 'origin' remote on github.ol.epicgames.net — the project's Epic GitHub Enterprise repo"
+    ]
+  }
+}

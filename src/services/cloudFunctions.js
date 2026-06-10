@@ -255,6 +255,27 @@ export const recordExportAttempt = async ({
  * @param {Array} invites - Array of invite objects { email, inviteUrl, code, note }
  * @returns {Promise<{success: boolean, sent: string[], failed: object[], total: number}>}
  */
+/**
+ * Calls the cleanupInvites Cloud Function
+ * Deletes invite documents that were never used (currentUses === 0).
+ * ADMIN ONLY
+ * @returns {Promise<{success: boolean, deleted: number, kept: number}>}
+ */
+export const cleanupInvitesViaCloudFunction = async () => {
+  try {
+    await ensureFreshToken();
+    const fn = httpsCallable(functions, "cleanupInvites");
+    const result = await fn();
+    if (!result.data.success) {
+      throw new Error(result.data.error || "Cleanup failed");
+    }
+    return result.data;
+  } catch (error) {
+    logError(error, { operation: "cleanupInvitesViaCloudFunction" });
+    throw error;
+  }
+};
+
 export const sendReviewerInvitesViaEmail = async (invites) => {
   try {
     // Ensure token is fresh before calling Cloud Function
