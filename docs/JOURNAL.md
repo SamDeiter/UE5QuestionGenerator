@@ -17,6 +17,31 @@ decisions when the commit messages alone aren't enough.
 
 ---
 
+## 2026-06-10 — Email-first sign-in flow
+
+**Focus:** Replace the flat Google+email sign-in layout with a 2-step email-first flow; route external (non-Epic) users cleanly to email/password.
+
+**Shipped:**
+
+- `SignIn.jsx` refactored to 2-step flow: step 1 = email + Continue + Google (labeled "For Epic (@epicgames.com) accounts"); step 2 = static email display + ← Change + auto-focused password + "Set up or reset password →" button
+- Error messages updated for Firebase v9+ `auth/invalid-credential` collapsing (one message covers wrong-password and no-account-found)
+- "Set up or reset password" button (`sendPasswordResetEmail`) bridges Google-SSO-only accounts (e.g. Greg Berridge) to email/password — Firebase sends a reset link that adds a password credential without removing Google SSO
+- Deployed to live site
+
+**Decisions:**
+
+- OAuth consent screen stays in Testing mode — not publishing for external Google accounts. External reviewers use email/password + invite code instead.
+- Google sign-in kept on step 1 for Epic employees; just labeled to avoid confusion for externals rather than domain-gating in the frontend (domain enforcement is backend-only via `checkUserRegistration`)
+- `EmailLogin.jsx` not touched — it's used from InviteSignUp's "Already registered?" link and still works. It's a cleanup candidate for a future session.
+- `sendPasswordResetEmail` is the right bridge for Greg: Firebase's password reset flow works for Google-linked accounts and adds email/password as an additional provider without removing Google SSO.
+
+**Deferred:**
+
+- `EmailLogin.jsx` overlaps significantly with the new `SignIn.jsx`; consolidate in a future session
+- InviteSignUp's Google sign-in button is also broken for external users (same OAuth consent screen issue) — not in scope here
+
+---
+
 ## 2026-06-10 — Fix PWA Reload button
 
 **Focus:** "A new version is available" banner's Reload button wasn't reloading the page.
