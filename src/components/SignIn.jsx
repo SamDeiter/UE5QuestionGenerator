@@ -12,10 +12,9 @@ const SignIn = () => {
   const { colorblindMode } = useAccessibility();
   const cb = colorblindMode;
 
+  const [step, setStep] = useState("initial"); // "initial" | "email-entered"
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showEmailAuth, setShowEmailAuth] = useState(false);
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [resetSuccess, setResetSuccess] = useState(false);
@@ -23,6 +22,7 @@ const SignIn = () => {
 
   // A1: Synchronous guard to prevent double-submit race conditions
   const isSubmittingRef = useRef(false);
+  const passwordRef = useRef(null);
 
   // A11: Password reset rate-limiting cooldown timer
   useEffect(() => {
@@ -31,6 +31,13 @@ const SignIn = () => {
       return () => clearTimeout(timer);
     }
   }, [resetCooldown]);
+
+  // Auto-focus password field when advancing to step 2
+  useEffect(() => {
+    if (step === "email-entered") {
+      passwordRef.current?.focus();
+    }
+  }, [step]);
 
   const handleGoogleSignIn = async () => {
     // A1: Synchronous guard prevents multiple rapid clicks
@@ -69,17 +76,18 @@ const SignIn = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Sign in only - new accounts need invite codes via InviteSignUp
       await signInWithEmail(email, password);
     } catch (err) {
       logger.error(err);
       const getErrorMessage = (code) => {
         switch (code) {
+          // Firebase v9+ collapses wrong-password and user-not-found into
+          // auth/invalid-credential to prevent email enumeration — handle all
+          // sign-in failures with one message that guides all user types.
           case "auth/wrong-password":
           case "auth/invalid-credential":
-            return "Incorrect email or password.";
           case "auth/user-not-found":
-            return "No account found. You may need an invite code to register.";
+            return "Couldn't sign in. Double-check your password, or use \"Set up or reset password\" to get a link by email. If you're new here, you'll need an invite code from an admin.";
           case "auth/invalid-email":
             return "Invalid email address format.";
           case "auth/user-disabled":
@@ -115,7 +123,8 @@ const SignIn = () => {
       logger.error(err);
       let message = err.message || "Failed to send reset email";
       if (err.code === "auth/user-not-found") {
-        message = "No account found with this email address.";
+        message =
+          "No account found with this email. If you have an invite code, use the invite link your admin sent you.";
       } else if (err.code === "auth/invalid-email") {
         message = "Invalid email address format.";
       } else if (err.code === "auth/too-many-requests") {
@@ -127,22 +136,111 @@ const SignIn = () => {
       isSubmittingRef.current = false;
     }
   };
-  // Render content based on current view state
   const renderContent = () => {
-    if (showPasswordReset) {
+    // Step 2: password entry + recovery options
+    if (step === "email-entered") {
       return (
-        // Password Reset Form
-        <form onSubmit={handlePasswordReset} className="space-y-3 text-left">
+        <div className="space-y-3">
+          {/* Email display with change link */}
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-slate-300">{email}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setStep("initial");
+                setPassword("");
+                setError(null);
+                setResetSuccess(false);
+              }}
+              className="text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              ← Change
+            </button>
+          </div>
+
+          {/* Password sign-in form */}
+          <form onSubmit={handleEmailAuth} className="space-y-3 text-left">
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-slate-300 mb-2"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                ref={passwordRef}
+                type="password"
+                placeholder="Your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                required
+                autoComplete="current-password"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
+            >
+              {isLoading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+
+          {/* Reset / first-time setup */}
+          <button
+            type="button"
+            onClick={handlePasswordReset}
+            disabled={isLoading || resetCooldown > 0}
+            className="w-full text-sm text-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {resetCooldown > 0
+              ? `Email sent — wait ${resetCooldown}s to resend`
+              : "Set up or reset password →"}
+          </button>
+
+          {resetSuccess && (
+            <p
+              className={`text-xs ${cb ? "text-blue-400" : "text-green-400"} text-center`}
+            >
+              Check your email for a sign-in link. If you&apos;ve only ever
+              signed in with Google, clicking the link will let you add a
+              password to your account.
+            </p>
+          )}
+
+          <p className="text-xs text-slate-600 text-center pt-1">
+            Need an account? You&apos;ll need an invite code from an admin.
+          </p>
+        </div>
+      );
+    }
+
+    // Step 1: email entry + Google sign-in
+    return (
+      <div className="space-y-3">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setError(null);
+            setResetSuccess(false);
+            setStep("email-entered");
+          }}
+          className="space-y-3 text-left"
+        >
           <div>
             <label
-              htmlFor="reset-email"
+              htmlFor="email"
               className="block text-sm font-medium text-slate-300 mb-2"
             >
               Email Address
             </label>
             <input
-              id="reset-email"
+              id="email"
               type="email"
+              inputMode="email"
+              autoComplete="email"
               placeholder="your.email@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -152,34 +250,20 @@ const SignIn = () => {
           </div>
           <button
             type="submit"
-            disabled={isLoading || resetCooldown > 0}
+            disabled={isLoading}
             className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
           >
-            {(() => {
-              if (isLoading) return "Sending...";
-              if (resetCooldown > 0) return `Wait ${resetCooldown}s`;
-              return "Send Reset Email";
-            })()}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setShowPasswordReset(false);
-              setResetSuccess(false);
-              setError(null);
-            }}
-            className="w-full text-sm text-slate-500 hover:text-slate-300 transition-colors"
-          >
-            ← Back to sign in
+            Continue
           </button>
         </form>
-      );
-    }
 
-    if (!showEmailAuth) {
-      return (
-        // Auth Options
-        <div className="space-y-3">
+        <div className="flex items-center gap-3 text-slate-500 text-sm">
+          <div className="flex-1 h-px bg-slate-700" />
+          <span>or</span>
+          <div className="flex-1 h-px bg-slate-700" />
+        </div>
+
+        <div>
           <button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
@@ -192,98 +276,16 @@ const SignIn = () => {
             )}
             {isLoading ? "Signing in..." : "Sign in with Google"}
           </button>
-
-          <div className="flex items-center gap-3 text-slate-500 text-sm">
-            <div className="flex-1 h-px bg-slate-700" />
-            <span>or</span>
-            <div className="flex-1 h-px bg-slate-700" />
-          </div>
-
-          <button
-            onClick={() => setShowEmailAuth(true)}
-            className="w-full flex items-center justify-center gap-3 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all border border-slate-700"
-          >
-            <Icon name="mail" size={20} />
-            Continue with Email
-          </button>
-
-          <p className="text-xs text-slate-600">
-            Sign in with any Google or email account.
-          </p>
-          <p className="text-xs text-slate-500 pt-2">
-            💡 Works best in <strong>Chrome</strong>, <strong>Edge</strong>, or{" "}
-            <strong>Firefox</strong>.
+          <p className="text-xs text-slate-500 text-center mt-1">
+            For Epic (@epicgames.com) accounts
           </p>
         </div>
-      );
-    }
 
-    // Email/Password Form
-    return (
-      <form onSubmit={handleEmailAuth} className="space-y-3 text-left">
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-slate-300 mb-2"
-          >
-            Email Address
-          </label>
-          <input
-            id="email"
-            type="email"
-            placeholder="your.email@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-            required
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-slate-300 mb-2"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            placeholder="6+ characters"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-            required
-            minLength={6}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
-        >
-          {isLoading ? "Signing in..." : "Sign In"}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setShowPasswordReset(true);
-            setShowEmailAuth(false);
-          }}
-          className="w-full text-sm text-blue-400 hover:text-blue-300 transition-colors"
-        >
-          Forgot password?
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowEmailAuth(false)}
-          className="w-full text-sm text-slate-500 hover:text-slate-300 transition-colors"
-        >
-          ← Back to sign-in options
-        </button>
-        <p className="text-xs text-slate-600 text-center pt-2">
-          Need an account? Contact an admin for an invite code.
+        <p className="text-xs text-slate-500 pt-1">
+          Works best in <strong>Chrome</strong>, <strong>Edge</strong>, or{" "}
+          <strong>Firefox</strong>.
         </p>
-      </form>
+      </div>
     );
   };
 
@@ -314,18 +316,6 @@ const SignIn = () => {
             } border p-3 rounded-lg text-sm`}
           >
             {error}
-          </div>
-        )}
-
-        {resetSuccess && (
-          <div
-            className={`${
-              cb
-                ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
-                : "bg-green-500/10 border-green-500/20 text-green-400"
-            } border p-3 rounded-lg text-sm`}
-          >
-            Password reset email sent! Check your inbox and spam folder.
           </div>
         )}
 

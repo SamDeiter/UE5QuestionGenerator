@@ -12,7 +12,6 @@ import Button from "./ui/Button";
 import useConnectionStatus from "../hooks/useConnectionStatus";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 import { APP_VERSION, APP_MODES } from "../utils/constants";
-import { logger } from "../utils/logger";
 
 // Sub-components
 import HeaderStatusBar from "./Header/HeaderStatusBar";
@@ -20,14 +19,7 @@ import HeaderUserInfo from "./Header/HeaderUserInfo";
 import HeaderMobileMenu from "./Header/HeaderMobileMenu";
 
 const getVersionDisplay = () => {
-  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "";
-  logger.log(
-    "🔍 [Header] Project ID:",
-    projectId,
-    "| isProd:",
-    projectId.includes("prod")
-  );
-  const isProd = projectId.includes("prod");
+  const isProd = import.meta.env.VITE_ENV === "production";
   // Get git commit hash from build-time define (set in vite.config.js)
   const gitCommit = typeof __GIT_COMMIT__ !== "undefined" ? __GIT_COMMIT__ : "";
   const commitSuffix = gitCommit ? `-${gitCommit}` : "";
