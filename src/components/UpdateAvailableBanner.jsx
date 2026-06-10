@@ -57,24 +57,34 @@ const UpdateAvailableBanner = () => {
   const handleReload = async () => {
     _dismiss();
 
-    // Safety net for the case where workbox-window's own 'controlling'
-    // listener doesn't fire (e.g. external SW, isUpdate=false edge case).
-    // Do NOT add a fallback timeout here — a timed reload before the SW
-    // activates causes the infinite-banner loop: the page reloads with the
-    // old SW still in control, the new SW stays in 'waiting', and
-    // onNeedRefresh fires again on the next load.
-    navigator.serviceWorker?.addEventListener(
-      "controllerchange",
-      () => window.location.reload(),
-      { once: true }
-    );
-
     try {
-      if (typeof _updateSW === "function") {
-        await _updateSW(true); // posts SKIP_WAITING; workbox reloads on 'controlling'
-      } else {
+      const reg = await navigator.serviceWorker?.getRegistration();
+
+      if (!reg?.waiting) {
+        // No waiting SW (already activated, or no SW support) — reload directly.
         window.location.reload();
+        return;
       }
+
+      // Reload as soon as the new SW takes control of this client.
+      navigator.serviceWorker.addEventListener(
+        "controllerchange",
+        () => window.location.reload(),
+        { once: true }
+      );
+
+      // Tell the waiting SW to activate now.
+      reg.waiting.postMessage({ type: "SKIP_WAITING" });
+
+      // Guarded fallback: after 3 s, reload ONLY if reg.waiting has been
+      // cleared (new SW activated but controllerchange didn't reach our
+      // listener). If reg.waiting is still set, SKIP_WAITING never propagated;
+      // skipping the reload here prevents the infinite-banner loop (old SW
+      // still active → onNeedRefresh fires again on the next load).
+      setTimeout(async () => {
+        const r = await navigator.serviceWorker.getRegistration();
+        if (!r?.waiting) window.location.reload();
+      }, 3000);
     } catch {
       window.location.reload();
     }

@@ -17,6 +17,38 @@ decisions when the commit messages alone aren't enough.
 
 ---
 
+## 2026-06-10 — Fix PWA Reload button
+
+**Focus:** "A new version is available" banner's Reload button wasn't reloading the page.
+
+**Root cause:** `_updateSW(true)` from vite-plugin-pwa fire-and-forgets SKIP_WAITING and returns immediately. Workbox-window's internal `controlling` reload only fires when `event.isUpdate === true`, which is false after a hard-refresh (`navigator.serviceWorker.controller` is null at registration time). The explicit `controllerchange` listener was the only safety net, but it had no fallback if the event was missed.
+
+**Shipped:**
+
+- `UpdateAvailableBanner.handleReload`: bypass `_updateSW` entirely; use `navigator.serviceWorker.getRegistration()` to post SKIP_WAITING directly to `reg.waiting`; keep `controllerchange` as primary reload trigger; add guarded 3s fallback that reloads *only if `reg.waiting` is gone* (new SW activated) — this guard is what prevents the infinite-banner loop vs. the old blind 3s timeout
+- Deployed to live site
+
+**Decisions:**
+
+- Removed `_updateSW(true)` call entirely — it adds nothing when we post SKIP_WAITING directly. The SW's workbox-build template always includes the `{type: 'SKIP_WAITING'}` message listener when `skipWaiting: false`.
+- The guarded fallback (`if (!r?.waiting) reload`) is safe from the infinite loop: if SKIP_WAITING propagated and the new SW activated, `waiting` is gone → reload. If SKIP_WAITING failed and `waiting` is still set → skip reload, no loop.
+
+---
+
+## 2026-06-10 — Test view access for reviewers
+
+**Focus:** Expose the Test nav tab to users with `role === "reviewer"`.
+
+**Shipped:**
+
+- Threaded `userRole` from `AuthenticatedApp` → `MainLayout` → `AppNavigation` + `ViewRouter` → `TestView`
+- `AppNavigation`: added `reviewerAllowed: true` to Test nav item; filter now passes `adminOnly` items for reviewers when `reviewerAllowed` is set
+- `ViewRouter`: `APP_MODES.TEST` renders for `isAdmin || userRole === "reviewer"`
+- `TestView`: guard updated from `!isAdmin` to `!isAdmin && userRole !== "reviewer"`
+- Deployed to live site
+
+---
+
 ## 2026-06-10 — Invite cleanup + URL migration + user account triage
 
 **Focus:** Fix stale GitHub Pages URLs throughout the codebase, triage reviewer access issues, and add invite cleanup tooling.

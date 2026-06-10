@@ -98,6 +98,7 @@ const MainLayout = ({
   setAppMode,
   effectiveApiKey,
   isAdmin,
+  userRole,
 
   // Sidebar props
   sidebarProps,
@@ -148,6 +149,7 @@ const MainLayout = ({
             onNavigate={handleModeChange}
             counts={{ pending: pendingCount }}
             isAdmin={isAdmin}
+            userRole={userRole}
             isInitialLoading={isInitialLoading}
           />
           <ContextToolbar {...toolbarProps} isAdmin={isAdmin} />
@@ -175,6 +177,7 @@ const MainLayout = ({
               databaseQuestions={databaseQuestions}
               effectiveApiKey={effectiveApiKey}
               isAdmin={isAdmin}
+              userRole={userRole}
               isProcessing={isProcessing}
               // ViewRouter props
               handlers={viewRouterHandlers}

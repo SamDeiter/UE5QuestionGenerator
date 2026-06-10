@@ -482,6 +482,7 @@ const AuthenticatedApp = ({
           setAppMode={setAppMode}
           effectiveApiKey={effectiveApiKey}
           isAdmin={isAdmin}
+          userRole={userRole}
           sidebarProps={sidebarProps}
           handleModeSelect={handleModeSelect}
           handleViewDatabase={handleViewDatabase}

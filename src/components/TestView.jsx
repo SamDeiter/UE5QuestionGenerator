@@ -17,6 +17,7 @@ const TestView = ({
   allLanguageQuestions = [],
   config: _appConfig,
   isAdmin,
+  userRole,
 }) => {
   const { showMessage } = useMessage();
   // Quiz configuration state
@@ -200,7 +201,7 @@ const TestView = ({
     setShowPreview(true);
   };
 
-  if (!isAdmin) {
+  if (!isAdmin && userRole !== "reviewer") {
     return (
       <div className="flex items-center justify-center h-64 text-slate-400">
         <div className="text-center">

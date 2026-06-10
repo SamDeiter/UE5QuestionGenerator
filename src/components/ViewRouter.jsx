@@ -222,12 +222,13 @@ const ViewRouter = ({
           userRole={userRole}
         />
       ),
-      [APP_MODES.TEST]: isAdmin && (
+      [APP_MODES.TEST]: (isAdmin || userRole === "reviewer") && (
         <TestView
           questions={[...questions, ...databaseQuestions]}
           allLanguageQuestions={allLanguageQuestions}
           config={config}
           isAdmin={isAdmin}
+          userRole={userRole}
         />
       ),
       [APP_MODES.PLAYGROUND]: isAdmin && (

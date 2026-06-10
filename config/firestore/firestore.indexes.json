@@ -20,6 +20,14 @@
       "collectionGroup": "questions",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "creatorId", "order": "ASCENDING" },
+        { "fieldPath": "estimatedCost", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "critiqueScore", "order": "ASCENDING" },
         { "fieldPath": "firestoreUpdatedAt", "order": "DESCENDING" }

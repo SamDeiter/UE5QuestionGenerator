@@ -16,6 +16,7 @@ const AppNavigation = ({
   onNavigate,
   counts = {},
   isAdmin,
+  userRole,
   // While the initial Firestore load is in flight, the only questions
   // visible to the count machinery are the user's session-stored ones
   // (from localStorage, see useQuestionState). That set is almost always
@@ -55,6 +56,7 @@ const AppNavigation = ({
       icon: "clipboard-list",
       color: "orange",
       adminOnly: true,
+      reviewerAllowed: true,
     },
     {
       id: "playground",
@@ -77,7 +79,12 @@ const AppNavigation = ({
       color: "red",
       adminOnly: true,
     },
-  ].filter((item) => !item.adminOnly || isAdmin);
+  ].filter(
+    (item) =>
+      !item.adminOnly ||
+      isAdmin ||
+      (item.reviewerAllowed && userRole === "reviewer")
+  );
 
   // Note: Analytics in App.jsx was a modal (setShowAnalytics).
   // The plan suggests making it a tab or at least part of this nav.
