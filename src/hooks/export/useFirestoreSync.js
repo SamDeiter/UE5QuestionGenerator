@@ -140,6 +140,49 @@ export const useFirestoreSync = ({
           return;
         }
 
+        // SNAPSHOT PATH: a cold cache (new browser / cleared storage) would
+        // otherwise read the whole collection (~19.5k docs). If a static
+        // snapshot is served with the app, start from it and only ask
+        // Firestore for docs changed since it was generated. Skipped on an
+        // explicit refresh (fullSync) so deletions are still caught.
+        if (!fullSync && cachedData.length === 0) {
+          const { loadQuestionSnapshot } = await import(
+            "../../services/questionSnapshot"
+          );
+          const snapshot = await loadQuestionSnapshot();
+          if (snapshot) {
+            if (!silent) setStatus("Loading...");
+            const delta = await getQuestionsUpdatedSince(
+              snapshot.generatedAtMs
+            );
+            const byId = new Map(snapshot.questions.map((q) => [q.id, q]));
+            for (const q of delta) {
+              if (q?.id) byId.set(q.id, q);
+            }
+            const all = Array.from(byId.values());
+            const snapshotQuestions = processQuestions(all);
+
+            if (replaceQuestions && snapshotQuestions.length > 0) {
+              replaceQuestions(snapshotQuestions, QUESTION_SOURCES.DATABASE);
+              replaceQuestions(snapshotQuestions, QUESTION_SOURCES.IMPORT);
+            }
+            await cacheQuestions(all);
+            const maxTs = all.reduce(
+              (max, q) => Math.max(max, toMillis(q.firestoreUpdatedAt)),
+              0
+            );
+            if (maxTs > 0) await setLastSyncTime(maxTs);
+
+            logger.log(
+              `⚡ SNAPSHOT: ${snapshot.questions.length} from file + ${delta.length} from Firestore`
+            );
+            if (!silent) {
+              showMessage(`Loaded ${snapshotQuestions.length} questions!`, 3000);
+            }
+            return;
+          }
+        }
+
         // FULL-SYNC PATH — runs when:
         //   • Caller asked for it (fullSync=true, e.g. the Refresh button)
         //   • IDB cache is cold (first-ever load or after manual clear)

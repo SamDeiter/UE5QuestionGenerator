@@ -5,6 +5,12 @@ import { STORAGE_KEYS, QUESTION_SOURCES } from "../../utils/constants";
 import { saveQuestionToFirestore } from "../../services/firebase";
 import { subscribeToAllQuestions } from "../../services/firebaseQueries";
 
+// The live listener re-reads up to 1000 docs at the start of every session and
+// again after any reconnect, which dominates Firestore read usage. The
+// watermark-based incremental sync on each load is the real freshness
+// mechanism, so this stays off unless live cross-user updates are needed.
+const ENABLE_REALTIME_LISTENER = false;
+
 /**
  * Hook for handling external synchronization (storage events, cloud auto-save).
  */
@@ -50,7 +56,7 @@ export const useQuestionSync = (
     // that competes with the full-sync fetch at the worst moment. Once the
     // initial load completes (isInitialLoading flips false) this effect
     // re-runs and subscribes for live cross-user deltas.
-    if (isInitialLoading) return;
+    if (!ENABLE_REALTIME_LISTENER || isInitialLoading) return;
 
     // Only subscribe if we are in a mode that needs real-time DB updates
     // (e.g. not just purely local session mode)
