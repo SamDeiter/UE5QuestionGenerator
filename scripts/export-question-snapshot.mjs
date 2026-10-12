@@ -20,18 +20,10 @@ import { mkdirSync, writeFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
-// Be explicit about the target: this repo spans two projects (data may live in
-// the named database "ue5qg-prod" on development-317819, or in the "(default)"
-// database of ue5-questions-prod). Match whatever the deployed app's
-// VITE_FIREBASE_PROJECT_ID / VITE_FIRESTORE_DATABASE_ID are set to.
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
-const DATABASE_ID = process.env.FIRESTORE_DATABASE_ID || "(default)";
-if (!PROJECT_ID) {
-  console.error(
-    "Set FIREBASE_PROJECT_ID (and FIRESTORE_DATABASE_ID if the app uses a named database)."
-  );
-  process.exit(1);
-}
+// The app's data lives in the named database "ue5qg-prod" on the Epic project
+// development-317819. Override with env vars only for another environment.
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "development-317819";
+const DATABASE_ID = process.env.FIRESTORE_DATABASE_ID || "ue5qg-prod";
 // Overlap so docs written while the export ran are re-fetched as deltas
 const OVERLAP_MS = 10 * 60 * 1000;
 
