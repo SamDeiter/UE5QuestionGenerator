@@ -6,8 +6,7 @@
  *
  * Usage (reads the whole `questions` collection once, ~20k reads):
  *   gcloud auth application-default login      # sign in as your Epic account
- *   FIREBASE_PROJECT_ID=<project> FIRESTORE_DATABASE_ID=<db> \
- *     node scripts/export-question-snapshot.mjs
+ *   node scripts/export-question-snapshot.mjs
  *   # then deploy the app so the new file is served
  *
  * Re-run it daily or whenever a lot of questions changed. A stale snapshot is
